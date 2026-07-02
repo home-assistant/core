@@ -1,6 +1,6 @@
 """Satel Integra base entity."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from satel_integra import AsyncSatel
 
@@ -64,6 +64,7 @@ class SatelIntegraEntity[_CoordinatorT: SatelIntegraBaseCoordinator](
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._controller.connected

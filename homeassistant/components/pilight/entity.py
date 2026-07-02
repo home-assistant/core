@@ -1,6 +1,6 @@
 """Base class for pilight."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -91,6 +91,7 @@ class PilightBaseDevice(RestoreEntity):
 
         self._brightness: int | None = 255
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()

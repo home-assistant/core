@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 import logging
-from typing import Any
+from typing import Any, override
 
 from goodwe import Inverter, Sensor, SensorKind
 
@@ -206,7 +206,7 @@ class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
         """Initialize an inverter sensor."""
         super().__init__(coordinator)
         self._attr_name = sensor.name.strip()
-        self._attr_unique_id = f"{DOMAIN}-{sensor.id_}-{inverter.serial_number}"
+        self._attr_unique_id = f"{DOMAIN}-{sensor.id_}-{inverter.serial_number}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = device_info
         self._attr_entity_category = (
             EntityCategory.DIAGNOSTIC if sensor.id_ not in _MAIN_SENSORS else None
@@ -227,11 +227,13 @@ class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
         self._stop_reset: Callable[[], None] | None = None
 
     @property
+    @override
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
         return self.entity_description.value(self.coordinator, self._sensor.id_)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available.
 
@@ -262,6 +264,7 @@ class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
             self.hass, self.async_reset, next_midnight
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Schedule reset task at midnight."""
         if self._sensor.id_ in DAILY_RESET:
@@ -273,6 +276,7 @@ class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
             )
         await super().async_added_to_hass()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove reset task at midnight."""
         if self._sensor.id_ in DAILY_RESET and self._stop_reset is not None:

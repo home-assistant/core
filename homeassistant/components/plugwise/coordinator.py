@@ -1,5 +1,7 @@
 """DataUpdateCoordinator for Plugwise."""
 
+from typing import override
+
 from packaging.version import Version
 from plugwise import GwEntityData, Smile
 from plugwise.exceptions import (
@@ -79,6 +81,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
         if self._connected and self.api.smile.type == "power":
             self.update_interval = P1_UPDATE_INTERVAL
 
+    @override
     async def _async_setup(self) -> None:
         """Initialize the update_data process."""
         device_reg = dr.async_get(self.hass)
@@ -92,6 +95,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
             if identifier[0] == DOMAIN
         }
 
+    @override
     async def _async_update_data(self) -> dict[str, GwEntityData]:
         """Fetch data from Plugwise."""
         try:

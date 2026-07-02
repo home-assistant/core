@@ -12,7 +12,6 @@ from bluecurrent_api.exceptions import (
 import pytest
 from voluptuous import MultipleInvalid
 
-from homeassistant.components.blue_current import async_setup_entry
 from homeassistant.components.blue_current.const import (
     CHARGING_CARD_ID,
     DOMAIN,
@@ -21,12 +20,7 @@ from homeassistant.components.blue_current.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    IntegrationError,
-    ServiceValidationError,
-)
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from . import init_integration
@@ -59,30 +53,28 @@ async def test_load_unload_entry(
 
 
 @pytest.mark.parametrize(
-    ("api_error", "config_error"),
+    ("api_error", "config_state"),
     [
-        (InvalidApiToken, ConfigEntryAuthFailed),
-        (BlueCurrentException, ConfigEntryNotReady),
+        (InvalidApiToken, ConfigEntryState.SETUP_ERROR),
+        (BlueCurrentException, ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_config_exceptions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     api_error: BlueCurrentException,
-    config_error: IntegrationError,
+    config_state: ConfigEntryState,
 ) -> None:
-    """Test if the correct config error is raised when connecting to the api fails."""
+    """Test if the correct config state is set when connecting to the api fails."""
     config_entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.blue_current.Client.validate_api_token",
-            side_effect=api_error,
-        ),
-        pytest.raises(config_error),
+    with patch(
+        "homeassistant.components.blue_current.Client.validate_api_token",
+        side_effect=api_error,
     ):
-        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
-        await async_setup_entry(hass, config_entry)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is config_state
 
 
 async def test_connect_websocket_error(

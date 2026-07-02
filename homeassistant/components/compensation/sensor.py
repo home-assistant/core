@@ -1,7 +1,7 @@
 """Support for compensation sensor."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import numpy as np
 
@@ -121,6 +121,7 @@ class CompensationSensor(SensorEntity):
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
         self.async_on_remove(
@@ -132,6 +133,7 @@ class CompensationSensor(SensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         ret = {

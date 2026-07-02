@@ -1,5 +1,7 @@
 """Base Entities for Homee integration."""
 
+from typing import override
+
 from pyHomee.const import AttributeState, AttributeType, NodeProfile, NodeState
 from pyHomee.model import HomeeAttribute, HomeeNode
 from websockets.exceptions import ConnectionClosed
@@ -47,6 +49,7 @@ class HomeeEntity(Entity):
 
         self._host_connected = entry.runtime_data.connected
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add the homee attribute entity to home assistant."""
         self.async_on_remove(
@@ -59,6 +62,7 @@ class HomeeEntity(Entity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the underlying node."""
         return (self._attribute.state == AttributeState.NORMAL) and self._host_connected
@@ -115,6 +119,7 @@ class HomeeNodeEntity(Entity):
 
         self._host_connected = entry.runtime_data.connected
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add the homee binary sensor device to home assistant."""
         self.async_on_remove(self._node.add_on_changed_listener(self._on_node_updated))
@@ -125,6 +130,7 @@ class HomeeNodeEntity(Entity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the underlying node."""
         return self._node.state == NodeState.AVAILABLE and self._host_connected

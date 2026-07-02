@@ -11,7 +11,8 @@
     "step": {
       "confirm": {
         "data": {
-          "code": "Verification code (OTP)"
+          "code": "Verification code (OTP)",
+          "qr_code": "QR code"
         },
         "data_description": {
           "code": "The six-digit code currently displayed in your authentication app."

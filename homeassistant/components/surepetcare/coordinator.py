@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from surepy import Surepy, SurepyEntity
 from surepy.enums import EntityType, Location, LockState
@@ -57,6 +58,7 @@ class SurePetcareDataCoordinator(DataUpdateCoordinator[dict[int, SurepyEntity]])
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[int, SurepyEntity]:
         """Get the latest data from Sure Petcare."""
         try:

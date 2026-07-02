@@ -1,6 +1,6 @@
 """Provides conditions for humidifiers."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import voluptuous as vol
 
@@ -57,6 +57,7 @@ class IsTargetHumidityCondition(EntityNumericalConditionBase):
     _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_HUMIDITY)}
     _valid_unit = PERCENTAGE
 
+    @override
     def _should_include(self, state: State) -> bool:
         """Skip humidifier entities that do not expose a target humidity."""
         return (
@@ -78,6 +79,7 @@ class IsModeCondition(EntityStateConditionBase):
             assert config.options is not None
         self._states = set(config.options[CONF_MODE])
 
+    @override
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities of this domain."""
         entities = super().entity_filter(entities)

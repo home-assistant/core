@@ -1,7 +1,7 @@
 """Config flow for Monarch Money integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from monarchmoney import LoginFailedException, RequireMFAException
 from monarchmoney.monarchmoney import SESSION_FILE
@@ -108,6 +108,7 @@ class MonarchMoneyConfigFlow(ConfigFlow, domain=DOMAIN):
         self.email: str | None = None
         self.password: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

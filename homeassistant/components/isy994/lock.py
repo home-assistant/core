@@ -1,6 +1,6 @@
 """Support for ISY locks."""
 
-from typing import Any
+from typing import Any, override
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
@@ -68,17 +68,20 @@ class ISYLockEntity(ISYNodeEntity, LockEntity):
     """Representation of an ISY lock device."""
 
     @property
+    @override
     def is_locked(self) -> bool | None:
         """Get whether the lock is in locked state."""
         if self._node.status == ISY_VALUE_UNKNOWN:
             return None
         return VALUE_TO_STATE.get(self._node.status)
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Send the lock command to the ISY device."""
         if not await self._node.secure_lock():
             raise HomeAssistantError(f"Unable to lock device {self._node.address}")
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Send the unlock command to the ISY device."""
         if not await self._node.secure_unlock():
@@ -103,15 +106,18 @@ class ISYLockProgramEntity(ISYProgramEntity, LockEntity):
     """Representation of a ISY lock program."""
 
     @property
+    @override
     def is_locked(self) -> bool:
         """Return true if the device is locked."""
         return bool(self._node.status)
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         if not await self._actions.run_then():
             raise HomeAssistantError(f"Unable to lock device {self._node.address}")
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         if not await self._actions.run_else():

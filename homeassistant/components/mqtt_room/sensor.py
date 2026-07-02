@@ -3,7 +3,7 @@
 from datetime import timedelta
 from functools import lru_cache
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -125,6 +125,7 @@ class MQTTRoomSensor(SensorEntity):
         self._distance = None
         self._updated = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
 
@@ -166,16 +167,19 @@ class MQTTRoomSensor(SensorEntity):
         await mqtt.async_subscribe(self.hass, self._state_topic, message_received, 1)
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {ATTR_DISTANCE: self._distance}
 
     @property
+    @override
     def native_value(self):
         """Return the current room of the entity."""
         return self._state

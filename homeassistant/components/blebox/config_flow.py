@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from blebox_uniapi.box import Box
 from blebox_uniapi.error import (
@@ -17,6 +17,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import get_maybe_authenticated_session
@@ -75,6 +76,21 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"address": f"{host}:{port}"},
         )
 
+    async def _async_box_from_host_or_abort(
+        self, api_host: ApiHost
+    ) -> Box | ConfigFlowResult:
+        """Try to connect to the device; return product or an abort result."""
+        try:
+            return await Box.async_from_host(api_host)
+        except UnsupportedBoxVersion:
+            return self.async_abort(reason="unsupported_device_version")
+        except UnsupportedBoxResponse:
+            return self.async_abort(reason="unsupported_device_response")
+        except UnauthorizedRequest:
+            return self.async_abort(reason="authorization_required")
+        except Error:
+            return self.async_abort(reason="cannot_connect")
+
     async def _async_from_host_or_form(
         self, api_host: ApiHost, user_input: dict[str, Any], step_id: str
     ) -> tuple[Box, None] | tuple[None, ConfigFlowResult]:
@@ -101,44 +117,51 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
                 ex, schema, host, port, UNKNOWN, _LOGGER.error, step_id
             )
 
-    async def async_step_zeroconf(
-        self, discovery_info: ZeroconfServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle zeroconf discovery."""
-        hass = self.hass
-        ipaddress = (discovery_info.host, discovery_info.port)
-        self.device_config["host"] = discovery_info.host
-        self.device_config["port"] = discovery_info.port
+    async def _async_handle_discovery(self, host: str, port: int) -> ConfigFlowResult:
+        """Handle discovery by IP and port; probe device then confirm with the user."""
+        self.device_config["host"] = host
+        self.device_config["port"] = port
 
-        websession = async_get_clientsession(hass)
-
+        websession = async_get_clientsession(self.hass)
         api_host = ApiHost(
-            *ipaddress, DEFAULT_SETUP_TIMEOUT, websession, hass.loop, _LOGGER
+            host, port, DEFAULT_SETUP_TIMEOUT, websession, self.hass.loop, _LOGGER
         )
 
-        try:
-            product = await Box.async_from_host(api_host)
-        except UnauthorizedRequest:
-            return self.async_abort(reason="authorization_required")
-        except UnsupportedBoxVersion:
-            return self.async_abort(reason="unsupported_device_version")
-        except UnsupportedBoxResponse:
-            return self.async_abort(reason="unsupported_device_response")
+        result = await self._async_box_from_host_or_abort(api_host)
+        if not isinstance(result, Box):
+            return result
+        product = result
 
         self.device_config["name"] = product.name
         # Check if configured but IP changed since
         await self.async_set_unique_id(product.unique_id)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         self.context.update(
             {
                 "title_placeholders": {
                     "name": self.device_config["name"],
-                    "host": self.device_config["host"],
+                    "host": host,
                 },
-                "configuration_url": f"http://{discovery_info.host}",
+                "configuration_url": f"http://{host}",
             }
         )
         return await self.async_step_confirm_discovery()
+
+    @override
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle DHCP discovery."""
+        return await self._async_handle_discovery(discovery_info.ip, DEFAULT_PORT)
+
+    @override
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+        return await self._async_handle_discovery(
+            discovery_info.host, discovery_info.port or DEFAULT_PORT
+        )
 
     async def async_step_confirm_discovery(
         self, user_input: dict[str, Any] | None = None
@@ -158,10 +181,10 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "name": self.device_config["name"],
                 "host": self.device_config["host"],
-                "port": self.device_config["port"],
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

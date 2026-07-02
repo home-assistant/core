@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'analog_antenna',
         'analog_cable',
         'av1',
@@ -56,11 +56,11 @@
 # name: test_entities_created[media_player.lg_tv-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'tv',
-      'friendly_name': 'LG TV',
-      'is_volume_muted': False,
-      'source': 'hdmi1',
-      'source_list': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tv',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV',
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'hdmi1',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'analog_antenna',
         'analog_cable',
         'av1',
@@ -76,8 +76,8 @@
         'hdmi4',
         'rgb_pc',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 3468>,
-      'volume_level': 0.2,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 3468>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.2,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.lg_tv',

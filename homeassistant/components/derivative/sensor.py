@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
+from typing import override
 
 import voluptuous as vol
 
@@ -367,6 +368,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         if last_state:
             self._attr_device_class = last_state.attributes.get(ATTR_DEVICE_CLASS)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()

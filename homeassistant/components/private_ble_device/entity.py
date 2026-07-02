@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 import binascii
+from typing import override
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
@@ -37,6 +38,7 @@ class BasePrivateDeviceEntity(Entity):
         self._irk = binascii.unhexlify(irk)
         self._last_info: bluetooth.BluetoothServiceInfoBleak | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Configure entity when it is added to Home Assistant."""
         coordinator = async_get_coordinator(self.hass)

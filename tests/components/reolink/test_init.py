@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -47,6 +47,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     CONF_BC_CONNECT,
@@ -1075,7 +1076,7 @@ async def test_privacy_mode_change_callback(
         def register_callback(
             self, callback_id: str, callback: Callable[[], None], *args, **key_args
         ) -> None:
-            if callback_id == "privacy_mode_change":
+            if callback_id == "privacy_mode_change_623":
                 self.callback_func = callback
 
     callback_mock = callback_mock_class()
@@ -1205,7 +1206,7 @@ async def test_firmware_update_delay(
     call_count: int,
 ) -> None:
     """Test delay of firmware update check."""
-    now = datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
+    now = dt_util.utcnow()
     check_delay = (
         now
         + timedelta(seconds=seconds)

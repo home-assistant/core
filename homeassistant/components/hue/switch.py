@@ -1,6 +1,6 @@
 """Support for switch platform for Hue resources (V2 only)."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.config import BehaviorInstance, BehaviorInstanceController
@@ -87,16 +87,19 @@ class HueResourceEnabledEntity(HueBaseEntity, SwitchEntity):
     )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the switch is on."""
         return self.resource.enabled
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.bridge.async_request_call(
             self.controller.set_enabled, self.resource.id, enabled=True
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.bridge.async_request_call(
@@ -116,6 +119,7 @@ class HueBehaviorInstanceEnabledEntity(HueResourceEnabledEntity):
     )
 
     @property
+    @override
     def name(self) -> str:
         """Return name for this entity."""
         return f"Automation: {self.resource.metadata.name}"

@@ -1,5 +1,7 @@
 """Support for KNX button entities."""
 
+from typing import override
+
 from xknx.devices import RawValue as XknxRawValue
 
 from homeassistant import config_entries
@@ -47,6 +49,7 @@ class KNXButton(KnxYamlEntity, ButtonEntity):
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._device.set(self._payload)

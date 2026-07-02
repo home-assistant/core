@@ -3,10 +3,9 @@
 import astroid
 from pylint.checkers import BaseChecker
 from pylint.testutils.unittest_linter import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 import pytest
 
-from tests.pylint import assert_no_messages
+from tests.pylint import assert_no_messages, walk_checker
 
 
 @pytest.mark.parametrize(
@@ -71,11 +70,9 @@ def test_enforce_config_flow_no_polling(
 ) -> None:
     """Good test cases."""
     root_node = astroid.parse(code, module_name)
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_config_flow_no_polling_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, enforce_config_flow_no_polling_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -133,10 +130,8 @@ def test_enforce_config_flow_no_polling_bad(
 ) -> None:
     """Bad test cases."""
     root_node = astroid.parse(code, module_name)
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_config_flow_no_polling_checker)
 
-    walker.walk(root_node)
+    walk_checker(linter, enforce_config_flow_no_polling_checker, root_node)
     messages = linter.release_messages()
     assert len(messages) == 1
     assert messages[0].msg_id == "home-assistant-config-flow-polling-field"

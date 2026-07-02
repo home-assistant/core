@@ -5,7 +5,7 @@ from datetime import datetime
 import html
 from logging import getLogger
 from time import gmtime, struct_time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 from urllib.error import URLError
 
 import feedparser
@@ -121,6 +121,7 @@ class FeedReaderCoordinator(
         self.feed_version = feedparser.api.SUPPORTED_VERSIONS.get(feed["version"])
         self._feed = feed
 
+    @override
     async def _async_update_data(self) -> list[feedparser.FeedParserDict] | None:
         """Update the feed and publish new entries to the event bus."""
         assert self._feed is not None

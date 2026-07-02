@@ -113,6 +113,19 @@ async def test_siren_not_created_without_public_bootstrap(
     assert_entity_counts(hass, Platform.SIREN, 0, 0)
 
 
+async def test_siren_ws_update_without_subscription_is_ignored(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
+    """A public siren WS update for an unsubscribed siren is a no-op."""
+    await init_entry(hass, ufp, [])
+    assert ufp.devices_ws_subscription is not None
+
+    ufp.devices_ws_subscription(_make_ws_msg(_make_siren()))
+    await hass.async_block_till_done()
+
+    assert_entity_counts(hass, Platform.SIREN, 0, 0)
+
+
 async def test_siren_created_off(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -411,15 +424,15 @@ async def test_siren_availability_follows_websocket_state(
     assert state is not None
     assert state.state == STATE_OFF
 
-    assert ufp_with_siren.ws_state_subscription is not None
-    ufp_with_siren.ws_state_subscription(WebsocketState.DISCONNECTED)
+    assert ufp_with_siren.devices_ws_state_subscription is not None
+    ufp_with_siren.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
 
     state = hass.states.get(SIREN_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    ufp_with_siren.ws_state_subscription(WebsocketState.CONNECTED)
+    ufp_with_siren.devices_ws_state_subscription(WebsocketState.CONNECTED)
     await hass.async_block_till_done()
 
     state = hass.states.get(SIREN_ENTITY_ID)

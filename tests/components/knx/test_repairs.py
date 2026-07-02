@@ -17,7 +17,6 @@ from .conftest import KNXTestKit
 from .test_config_flow import FIXTURE_UPLOAD_UUID, patch_file_upload
 
 from tests.components.repairs import (
-    async_process_repairs_platforms,
     get_repairs,
     process_repair_fix_flow,
     start_repair_fix_flow,
@@ -88,7 +87,6 @@ async def test_data_secure_group_key_issue_repair_flow(
     issues = await get_repairs(hass, hass_ws_client)
     assert issues
 
-    await async_process_repairs_platforms(hass)
     client = await hass_client()
     flow = await start_repair_fix_flow(
         client, DOMAIN, REPAIR_ISSUE_DATA_SECURE_GROUP_KEY

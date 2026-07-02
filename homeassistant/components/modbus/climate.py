@@ -1,7 +1,7 @@
 """Support for Generic Modbus Thermostats."""
 
 import struct
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -309,6 +309,7 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
         else:
             self._hvac_onoff_coil = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
@@ -316,6 +317,7 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
         if state and state.attributes.get(ATTR_TEMPERATURE):
             self._attr_target_temperature = float(state.attributes[ATTR_TEMPERATURE])
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if self._hvac_onoff_register is not None:
@@ -373,6 +375,7 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
 
         await self.async_local_update(cancel_pending_update=True)
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if self._fan_mode_register is not None:
@@ -395,6 +398,7 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
 
         await self.async_local_update(cancel_pending_update=True)
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing mode."""
         if self._swing_mode_register:
@@ -418,6 +422,7 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
                     break
         await self.async_local_update(cancel_pending_update=True)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temperature = (
@@ -473,6 +478,7 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
         self._attr_available = result is not None
         await self.async_local_update(cancel_pending_update=True)
 
+    @override
     async def _async_update(self) -> None:
         """Update Target & Current Temperature."""
         self._attr_target_temperature = await self._async_read_register(

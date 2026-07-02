@@ -34,11 +34,23 @@
   },
   "entity": {
     "sensor": {
-      "meter_value": {
-        "name": "Meter value"
+      "available_volume": {
+        "name": "Available volume"
       },
-      "water_level": {
-        "name": "Water level"
+      "ground_water_level": {
+        "name": "Ground water level"
+      },
+      "in_flow": {
+        "name": "Inflow"
+      },
+      "level_from_sensor": {
+        "name": "Level from sensor"
+      },
+      "level_from_top": {
+        "name": "Level from top"
+      },
+      "out_volume": {
+        "name": "Outflow"
       }
     }
   },

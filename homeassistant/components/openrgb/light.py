@@ -1,7 +1,7 @@
 """OpenRGB light platform."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from openrgb.orgb import Device
 from openrgb.utils import ModeColors, ModeData, RGBColor
@@ -223,6 +223,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             self._attr_is_on = on_by_color
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self.available:
@@ -235,6 +236,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         self._update_events.clear()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the light is available."""
         return super().available and self.device_key in self.coordinator.data
@@ -308,6 +310,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
                     },
                 ) from err
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         mode = None
@@ -393,6 +396,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
 
         await self._async_refresh_data()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         if self._supports_off_mode:

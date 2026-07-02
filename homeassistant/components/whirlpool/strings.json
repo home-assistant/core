@@ -46,6 +46,17 @@
     }
   },
   "entity": {
+    "button": {
+      "oven_stop": {
+        "name": "Stop"
+      },
+      "oven_stop_lower": {
+        "name": "Lower oven stop"
+      },
+      "oven_stop_upper": {
+        "name": "Upper oven stop"
+      }
+    },
     "select": {
       "refrigerator_temperature_level": {
         "name": "Temperature level"

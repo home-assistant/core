@@ -1,7 +1,7 @@
 """Reolink integration for HomeAssistant."""
 
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 import logging
 from random import uniform
 from time import time
@@ -26,6 +26,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 from .const import (
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
@@ -192,7 +193,7 @@ async def async_setup_entry(
         hass.config_entries.async_update_entry(config_entry, data=data)
 
     # If camera WAN blocked, firmware check fails and takes long, do not prevent setup
-    now = datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
+    now = dt_util.utcnow()
     check_time = timedelta(seconds=check_time_sec)
     delta_midnight = now - now.replace(hour=0, minute=0, second=0, microsecond=0)
     firmware_check_delay = check_time - delta_midnight
@@ -285,7 +286,10 @@ async def register_callbacks(
         return async_camera_wake
 
     host.api.baichuan.register_callback(
-        "privacy_mode_change", async_privacy_mode_change, 623
+        "privacy_mode_change_623", async_privacy_mode_change, 623
+    )
+    host.api.baichuan.register_callback(
+        "privacy_mode_change_574", async_privacy_mode_change, 574
     )
     for channel in host.api.channels:
         if host.api.supported(channel, "battery"):
@@ -305,7 +309,8 @@ async def async_unload_entry(
 
     await host.stop()
 
-    host.api.baichuan.unregister_callback("privacy_mode_change")
+    host.api.baichuan.unregister_callback("privacy_mode_change_623")
+    host.api.baichuan.unregister_callback("privacy_mode_change_574")
     for channel in host.api.channels:
         if host.api.supported(channel, "battery"):
             host.api.baichuan.unregister_callback(f"camera_{channel}_wake")

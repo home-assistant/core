@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'tracking_type': <TrackingType.POSITION: 'position'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -42,18 +42,18 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'altitude': 0,
-      'friendly_name': 'Wallet',
-      'gps_accuracy': 13.496111,
-      'in_zones': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wallet',
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 13.496111,
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
       'is_lost': False,
       'last_lost_timestamp': datetime.datetime(1970, 1, 1, 3, 0, tzinfo=datetime.timezone.utc),
       'last_timestamp': datetime.datetime(2020, 8, 13, 0, 55, 26, tzinfo=datetime.timezone.utc),
-      'latitude': 1,
-      'longitude': 1,
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 1,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 1,
       'ring_state': 'STOPPED',
-      'source_type': <SourceType.GPS: 'gps'>,
-      'tracking_type': <TrackingType.POSITION: 'position'>,
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
       'voip_state': 'OFFLINE',
     }),
     'context': <ANY>,

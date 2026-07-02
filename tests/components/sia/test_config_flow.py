@@ -312,6 +312,30 @@ async def test_unknown_account(hass: HomeAssistant, flow_at_user_step) -> None:
         assert result_err["data_schema"] == ACCOUNT_SCHEMA
 
 
+async def test_options_not_loaded(hass: HomeAssistant) -> None:
+    """Test options flow works when entry is not loaded."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=BASE_OUT["data"],
+        options=BASE_OUT["options"],
+        title="SIA Alarm on port 7777",
+        entry_id=BASIS_CONFIG_ENTRY_ID,
+        version=1,
+    )
+    config_entry.add_to_hass(hass)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "options"
+
+    updated = await hass.config_entries.options.async_configure(
+        result["flow_id"], BASIC_OPTIONS
+    )
+    assert updated["type"] is FlowResultType.CREATE_ENTRY
+    assert updated["data"] == {
+        CONF_ACCOUNTS: {BASIC_CONFIG[CONF_ACCOUNT]: BASIC_OPTIONS}
+    }
+
+
 async def test_options_basic(hass: HomeAssistant) -> None:
     """Test options flow for single account."""
     config_entry = MockConfigEntry(

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
+from typing import override
 
 from pydrawise import HydrawiseBase
 from pydrawise.schema import Controller, ControllerWaterUseSummary, Sensor, User, Zone
@@ -88,6 +89,7 @@ class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
         """Begin tracking zone and controller add/remove on updates."""
         self.async_add_listener(self._add_remove_zones)
 
+    @override
     async def _async_update_data(self) -> HydrawiseData:
         """Fetch the latest data from Hydrawise."""
         # Don't fetch zones. We'll fetch them for each controller later.
@@ -219,6 +221,7 @@ class HydrawiseWaterUseDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
         self.data.zone_id_to_controller = main_data.zone_id_to_controller
         self.data.sensors = main_data.sensors
 
+    @override
     async def _async_update_data(self) -> HydrawiseData:
         """Fetch the latest data from Hydrawise."""
         daily_water_summary: dict[int, ControllerWaterUseSummary] = {}

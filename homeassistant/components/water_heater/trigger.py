@@ -1,5 +1,7 @@
 """Provides triggers for water heaters."""
 
+from typing import override
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -62,6 +64,7 @@ class _WaterHeaterTargetTemperatureTriggerMixin(
     _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_TEMPERATURE)}
     _unit_converter = TemperatureConverter
 
+    @override
     def _should_include(self, state: State) -> bool:
         """Skip water heater entities that do not expose a target temperature."""
         return (
@@ -69,6 +72,7 @@ class _WaterHeaterTargetTemperatureTriggerMixin(
             and state.attributes.get(ATTR_TEMPERATURE) is not None
         )
 
+    @override
     def _get_entity_unit(self, state: State) -> str | None:
         """Get the temperature unit of a water heater entity from its state."""
         # Water heater entities convert temperatures to the system unit via show_temp

@@ -49,6 +49,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "blackout_dismissible": {
+        "name": "Blackout dismissible"
+      },
       "blackout_state": {
         "name": "Blackout"
       },
@@ -91,6 +94,33 @@
     "sensor": {
       "ambient_light": {
         "name": "Ambient light"
+      },
+      "blackout_background": {
+        "name": "Blackout background color"
+      },
+      "blackout_button_background": {
+        "name": "Blackout button background color"
+      },
+      "blackout_button_foreground": {
+        "name": "Blackout button foreground color"
+      },
+      "blackout_button_text": {
+        "name": "Blackout button text"
+      },
+      "blackout_expire": {
+        "name": "Blackout expiry"
+      },
+      "blackout_foreground": {
+        "name": "Blackout foreground color"
+      },
+      "blackout_icon": {
+        "name": "Blackout icon"
+      },
+      "blackout_sound": {
+        "name": "Blackout sound"
+      },
+      "blackout_text": {
+        "name": "Blackout text"
       },
       "last_interaction": {
         "name": "Last interaction"

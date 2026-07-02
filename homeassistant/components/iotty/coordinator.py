@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from iottycloud.device import Device
 from iottycloud.shutter import Shutter
@@ -70,12 +71,14 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
         )
         self._device_registry = dr.async_get(hass)
 
+    @override
     async def _async_setup(self) -> None:
         """Get devices."""
         _LOGGER.debug("Fetching devices list from iottyCloud")
         self._devices = await self.iotty.get_devices()
         _LOGGER.debug("There are %d devices", len(self._devices))
 
+    @override
     async def _async_update_data(self) -> IottyData:
         """Fetch data from iottyCloud device."""
         _LOGGER.debug("Fetching devices status from iottyCloud")

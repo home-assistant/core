@@ -1,6 +1,6 @@
 """Platform allowing several valves to be grouped into one valve."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -124,6 +124,7 @@ class ValveGroup(GroupEntity, ValveEntity):
         self._attr_unique_id = unique_id
 
     @callback
+    @override
     def async_update_supported_features(
         self,
         entity_id: str,
@@ -150,6 +151,7 @@ class ValveGroup(GroupEntity, ValveEntity):
         else:
             self._valves[KEY_SET_POSITION].discard(entity_id)
 
+    @override
     async def async_open_valve(self) -> None:
         """Open the valves."""
         data = {ATTR_ENTITY_ID: self._valves[KEY_OPEN_CLOSE]}
@@ -157,7 +159,8 @@ class ValveGroup(GroupEntity, ValveEntity):
             VALVE_DOMAIN, SERVICE_OPEN_VALVE, data, blocking=True, context=self._context
         )
 
-    async def async_handle_open_valve(self) -> None:  # type: ignore[misc]
+    @override  # type: ignore[misc]
+    async def async_handle_open_valve(self) -> None:
         """Open the valves.
 
         Override the base class to avoid calling the set position service
@@ -166,6 +169,7 @@ class ValveGroup(GroupEntity, ValveEntity):
         """
         await self.async_open_valve()
 
+    @override
     async def async_close_valve(self) -> None:
         """Close valves."""
         data = {ATTR_ENTITY_ID: self._valves[KEY_OPEN_CLOSE]}
@@ -177,7 +181,8 @@ class ValveGroup(GroupEntity, ValveEntity):
             context=self._context,
         )
 
-    async def async_handle_close_valve(self) -> None:  # type: ignore[misc]
+    @override  # type: ignore[misc]
+    async def async_handle_close_valve(self) -> None:
         """Close the valves.
 
         Override the base class to avoid calling the set position service
@@ -186,6 +191,7 @@ class ValveGroup(GroupEntity, ValveEntity):
         """
         await self.async_close_valve()
 
+    @override
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valves to a specific position."""
         data = {
@@ -200,6 +206,7 @@ class ValveGroup(GroupEntity, ValveEntity):
             context=self._context,
         )
 
+    @override
     async def async_stop_valve(self) -> None:
         """Stop the valves."""
         data = {ATTR_ENTITY_ID: self._valves[KEY_STOP]}
@@ -208,6 +215,7 @@ class ValveGroup(GroupEntity, ValveEntity):
         )
 
     @callback
+    @override
     def async_update_group_state(self) -> None:
         """Update state and attributes."""
         states = [

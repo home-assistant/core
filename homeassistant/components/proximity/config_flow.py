@@ -1,6 +1,6 @@
 """Config flow for proximity."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -85,10 +85,12 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> ProximityOptionsFlow:
         """Get the options flow for this handler."""
         return ProximityOptionsFlow()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

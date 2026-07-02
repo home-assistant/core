@@ -1,5 +1,7 @@
 """Support for the Philips Hue sensor devices."""
 
+from typing import override
+
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import DeviceInfo
 
@@ -30,11 +32,13 @@ class GenericHueDevice(entity.Entity):  # pylint: disable=home-assistant-enforce
         return self.unique_id[:23]
 
     @property
+    @override
     def unique_id(self):
         """Return the ID of this Hue sensor."""
         return self.sensor.uniqueid
 
     @property
+    @override
     def name(self):
         """Return a friendly name for the sensor."""
         return self._name
@@ -45,6 +49,7 @@ class GenericHueDevice(entity.Entity):  # pylint: disable=home-assistant-enforce
         return self.primary_sensor.raw.get("swupdate", {}).get("state")
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info.
 

@@ -13,7 +13,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -85,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
     device_registry = dr.async_get(hass)
     connections: set[tuple[str, str]] = set()
     if mac := entry.data.get(CONF_MAC):
-        connections.add((CONNECTION_NETWORK_MAC, format_mac(mac)))
+        connections.add((CONNECTION_NETWORK_MAC, mac))
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, hub.hub_serial)},

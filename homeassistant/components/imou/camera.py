@@ -1,5 +1,7 @@
 """Support for Imou camera entities."""
 
+from typing import override
+
 from pyimouapi.const import PARAM_HD, PARAM_MOTION_DETECT, PARAM_STATE
 from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice
@@ -73,6 +75,7 @@ class ImouCamera(ImouEntity, Camera):
         Camera.__init__(self)
         super().__init__(coordinator, entity_type, device)
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the live stream URL from the Imou cloud."""
         try:
@@ -84,6 +87,7 @@ class ImouCamera(ImouEntity, Camera):
         except ImouException as err:
             raise HomeAssistantError(str(err)) from err
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -97,6 +101,7 @@ class ImouCamera(ImouEntity, Camera):
             raise HomeAssistantError(str(err)) from err
 
     @property
+    @override
     def motion_detection_enabled(self) -> bool:
         """Return True when human and/or motion detection switch is on."""
         header = self.device.switches.get(PARAM_HEADER_DETECT)

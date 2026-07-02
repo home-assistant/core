@@ -38,6 +38,7 @@ from .coordinator import (
     PowerwallRuntimeData,
     PowerwallUpdateCoordinator,
 )
+from .helpers import is_api_404
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
@@ -72,6 +73,7 @@ class PowerwallDataManager:
         self.power_wall = power_wall
         self.cookie_jar = cookie_jar
         self.entry = entry
+        self.restricted = runtime_data["base_info"].restricted
 
     @property
     def api_changed(self) -> int:
@@ -101,7 +103,9 @@ class PowerwallDataManager:
             try:
                 if attempt == 1:
                     await self._recreate_powerwall_login()
-                data = await _fetch_powerwall_data(self.power_wall)
+                data = await _fetch_powerwall_data(
+                    self.power_wall, restricted=self.restricted
+                )
             except (TimeoutError, PowerwallUnreachableError) as err:
                 raise UpdateFailed("Unable to fetch data from powerwall") from err
             except MissingAttributeError as err:
@@ -170,7 +174,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
         for tries in range(2):
             try:
                 base_info = await _login_and_fetch_base_info(
-                    power_wall, ip_address, password, use_auth_cookie
+                    power_wall,
+                    ip_address,
+                    password,
+                    use_auth_cookie,
+                    fallback_din=entry.unique_id,
                 )
 
                 # Cancel closing power_wall on success
@@ -239,6 +247,8 @@ async def async_migrate_entity_unique_ids(
     hass: HomeAssistant, entry: PowerwallConfigEntry, base_info: PowerwallBaseInfo
 ) -> None:
     """Migrate old entity unique ids to use gateway_din."""
+    if not base_info.serial_numbers:
+        return
     old_base_unique_id = "_".join(base_info.serial_numbers)
     new_base_unique_id = base_info.gateway_din
 
@@ -260,24 +270,55 @@ async def async_migrate_entity_unique_ids(
 
 
 async def _login_and_fetch_base_info(
-    power_wall: Powerwall, host: str, password: str | None, use_auth_cookie: bool
+    power_wall: Powerwall,
+    host: str,
+    password: str | None,
+    use_auth_cookie: bool,
+    fallback_din: str | None = None,
 ) -> PowerwallBaseInfo:
     """Login to the powerwall and fetch the base info."""
     # Login step is skipped if password is None or if we are using the auth cookie
     if not (password is None or use_auth_cookie):
         await power_wall.login(password)
-    return await _call_base_info(power_wall, host)
+    return await _call_base_info(power_wall, host, fallback_din)
 
 
-async def _call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo:
+async def _call_base_info(
+    power_wall: Powerwall, host: str, fallback_din: str | None = None
+) -> PowerwallBaseInfo:
     """Return PowerwallBaseInfo for the device."""
     # We await each call individually since the powerwall
     # supports http keep-alive and we want to reuse the connection
     # as its faster than establishing a new connection when
     # run concurrently.
-    gateway_din = await power_wall.get_gateway_din()
-    site_info = await power_wall.get_site_info()
+    url = f"https://{host}"
+    # Probe via get_gateway_din (hits /api/powerwalls) to detect the restricted
+    # PW3-style surface. PW3 (and recent firmware revisions) return HTTP 404 on
+    # /api/powerwalls and most other legacy endpoints; only meters/aggregates,
+    # system_status/soe, and system_status/grid_status are guaranteed to work.
+    try:
+        gateway_din = await power_wall.get_gateway_din()
+    except ApiError as err:
+        if not is_api_404(err):
+            raise
+        # No DIN available — fall back to the caller-supplied identifier
+        # (typically the MAC saved as the config-entry unique_id) so the device
+        # identifier is stable across restarts.
+        identifier = fallback_din or host
+        return PowerwallBaseInfo(
+            gateway_din=identifier,
+            site_name=f"Powerwall {host}",
+            site_info=None,
+            status=None,
+            device_type=None,
+            serial_numbers=[],
+            url=url,
+            batteries={},
+            restricted=True,
+        )
+
     status = await power_wall.get_status()
+    site_info = await power_wall.get_site_info()
     device_type = await power_wall.get_device_type()
     serial_numbers = await power_wall.get_serial_numbers()
     batteries = await power_wall.get_batteries()
@@ -285,11 +326,12 @@ async def _call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo
     # for backwards compatibility.
     return PowerwallBaseInfo(
         gateway_din=gateway_din,
+        site_name=site_info.site_name,
         site_info=site_info,
         status=status,
         device_type=device_type,
         serial_numbers=sorted(serial_numbers),
-        url=f"https://{host}",
+        url=url,
         batteries={battery.serial_number: battery for battery in batteries},
     )
 
@@ -302,6 +344,22 @@ async def get_backup_reserve_percentage(power_wall: Powerwall) -> float | None:
         return None
 
 
+async def get_max_charge_power(power_wall: Powerwall) -> int | None:
+    """Return the instantaneous max charge power."""
+    try:
+        return await power_wall.get_instantaneous_max_charge_power()
+    except MissingAttributeError:
+        return None
+
+
+async def get_max_discharge_power(power_wall: Powerwall) -> int | None:
+    """Return the instantaneous max discharge power."""
+    try:
+        return await power_wall.get_instantaneous_max_discharge_power()
+    except MissingAttributeError:
+        return None
+
+
 async def get_operation_mode(power_wall: Powerwall) -> OperationMode | None:
     """Return the operation mode."""
     try:
@@ -310,19 +368,36 @@ async def get_operation_mode(power_wall: Powerwall) -> OperationMode | None:
         return None
 
 
-async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
+async def _fetch_powerwall_data(
+    power_wall: Powerwall, restricted: bool = False
+) -> PowerwallData:
     """Process and update powerwall data."""
     # We await each call individually since the powerwall
     # supports http keep-alive and we want to reuse the connection
     # as its faster than establishing a new connection when
     # run concurrently.
-    backup_reserve = await get_backup_reserve_percentage(power_wall)
-    operation_mode = await get_operation_mode(power_wall)
     charge = await power_wall.get_charge()
-    site_master = await power_wall.get_sitemaster()
     meters = await power_wall.get_meters()
     grid_services_active = await power_wall.is_grid_services_active()
     grid_status = await power_wall.get_grid_status()
+    if restricted:
+        return PowerwallData(
+            charge=charge,
+            site_master=None,
+            meters=meters,
+            grid_services_active=grid_services_active,
+            grid_status=grid_status,
+            backup_reserve=None,
+            max_charge_power=None,
+            max_discharge_power=None,
+            operation_mode=None,
+            batteries={},
+        )
+    backup_reserve = await get_backup_reserve_percentage(power_wall)
+    max_charge_power = await get_max_charge_power(power_wall)
+    max_discharge_power = await get_max_discharge_power(power_wall)
+    operation_mode = await get_operation_mode(power_wall)
+    site_master = await power_wall.get_sitemaster()
     batteries = await power_wall.get_batteries()
     return PowerwallData(
         charge=charge,
@@ -331,6 +406,8 @@ async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
         grid_services_active=grid_services_active,
         grid_status=grid_status,
         backup_reserve=backup_reserve,
+        max_charge_power=max_charge_power,
+        max_discharge_power=max_discharge_power,
         operation_mode=operation_mode,
         batteries={battery.serial_number: battery for battery in batteries},
     )

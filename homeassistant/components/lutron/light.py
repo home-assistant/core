@@ -1,7 +1,7 @@
 """Support for Lutron lights."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from pylutron import Lutron, LutronEntity, Output
 
@@ -74,6 +74,7 @@ class LutronLight(LutronDevice, LightEntity):
         super().__init__(area_name, lutron_device, controller)
         self._config_entry = config_entry
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if flash := kwargs.get(ATTR_FLASH):
@@ -93,6 +94,7 @@ class LutronLight(LutronDevice, LightEntity):
                 args["fade_time_seconds"] = kwargs[ATTR_TRANSITION]
             self._lutron_device.set_level(**args)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         args = {"new_level": 0}
@@ -101,14 +103,17 @@ class LutronLight(LutronDevice, LightEntity):
         self._lutron_device.set_level(**args)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return {"lutron_integration_id": self._lutron_device.id}
 
+    @override
     def _request_state(self) -> None:
         """Request the state from the device."""
         _ = self._lutron_device.level
 
+    @override
     def _update_attrs(self) -> None:
         """Update the state attributes."""
         level = self._lutron_device.last_level()

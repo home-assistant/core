@@ -6,12 +6,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'quiet',
         'low',
         'auto',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
@@ -19,9 +19,9 @@
         <HVACMode.FAN_ONLY: 'fan_only'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 30.0,
-      'min_temp': 18.0,
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18.0,
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'horizontal',
         'auto',
         'swing',
@@ -60,17 +60,17 @@
 # name: test_climate_entity[climate.living_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_humidity': 45.0,
-      'current_temperature': 23.5,
-      'fan_mode': 'auto',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 45.0,
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23.5,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'quiet',
         'low',
         'auto',
       ]),
-      'friendly_name': 'Living Room',
-      'hvac_action': <HVACAction.COOLING: 'cooling'>,
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.COOLING: 'cooling'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
@@ -78,18 +78,18 @@
         <HVACMode.FAN_ONLY: 'fan_only'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 30.0,
-      'min_temp': 18.0,
-      'supported_features': <ClimateEntityFeature: 171>,
-      'swing_mode': 'auto',
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 171>,
+      <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'auto',
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'horizontal',
         'auto',
         'swing',
       ]),
-      'target_temp_high': None,
-      'target_temp_low': None,
-      'temperature': 24.0,
+      <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 24.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.living_room',

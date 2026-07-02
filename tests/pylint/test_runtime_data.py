@@ -5,10 +5,9 @@ from pathlib import Path
 import astroid
 from pylint.checkers import BaseChecker
 from pylint.testutils.unittest_linter import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 import pytest
 
-from . import assert_no_messages
+from . import assert_no_messages, walk_checker
 
 
 @pytest.mark.parametrize(
@@ -104,11 +103,9 @@ def test_enforce_runtime_data(
 ) -> None:
     """Good test cases."""
     root_node = astroid.parse(code, module_name)
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_runtime_data_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, enforce_runtime_data_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -160,10 +157,8 @@ def test_enforce_runtime_data_bad(
 ) -> None:
     """Bad test cases."""
     root_node = astroid.parse(code, module_name)
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_runtime_data_checker)
 
-    walker.walk(root_node)
+    walk_checker(linter, enforce_runtime_data_checker, root_node)
     messages = linter.release_messages()
     assert len(messages) == 1
     assert messages[0].msg_id == "home-assistant-use-runtime-data"
@@ -187,11 +182,8 @@ def test_enforce_runtime_data_no_config_flow(
     root_node = astroid.parse(code, "homeassistant.components.yaml_only")
     root_node.file = str(init_file)
 
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_runtime_data_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, enforce_runtime_data_checker, root_node)
 
 
 def test_enforce_runtime_data_with_config_flow(
@@ -213,10 +205,7 @@ def test_enforce_runtime_data_with_config_flow(
     root_node = astroid.parse(code, "homeassistant.components.modern")
     root_node.file = str(init_file)
 
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_runtime_data_checker)
-
-    walker.walk(root_node)
+    walk_checker(linter, enforce_runtime_data_checker, root_node)
     messages = linter.release_messages()
     assert len(messages) == 1
     assert messages[0].msg_id == "home-assistant-use-runtime-data"

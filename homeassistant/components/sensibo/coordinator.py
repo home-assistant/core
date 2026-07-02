@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the Sensibo integration."""
 
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pysensibo import SensiboClient
 from pysensibo.exceptions import AuthenticationError, SensiboError
@@ -80,6 +80,7 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator[SensiboData]):
         )
         return (new_devices, remove_devices, new_added_devices)
 
+    @override
     async def _async_update_data(self) -> SensiboData:
         """Fetch data from Sensibo."""
         try:

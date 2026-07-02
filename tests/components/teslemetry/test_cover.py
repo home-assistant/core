@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tesla_fleet_api.exceptions import InvalidCommand
 from teslemetry_stream import Signal
 
 from homeassistant.components.cover import (
@@ -15,10 +16,11 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, setup_platform
-from .const import COMMAND_OK, METADATA_NOSCOPE, VEHICLE_DATA_ALT
+from .const import COMMAND_ERRORS, COMMAND_OK, METADATA_NOSCOPE, VEHICLE_DATA_ALT
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -219,6 +221,49 @@ async def test_cover_services(
         state = hass.states.get(entity_id)
         assert state
         assert state.state == CoverState.CLOSED
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_legacy")
+@pytest.mark.parametrize("response", COMMAND_ERRORS)
+async def test_cover_command_errors(hass: HomeAssistant, response: dict) -> None:
+    """Tests that vehicle command failures raise HomeAssistantError."""
+
+    await setup_platform(hass, [Platform.COVER])
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.window_control",
+            return_value=response,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: ["cover.test_windows"]},
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_legacy")
+async def test_cover_command_exception(hass: HomeAssistant) -> None:
+    """Tests that a command SDK exception raises HomeAssistantError."""
+
+    await setup_platform(hass, [Platform.COVER])
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.window_control",
+            side_effect=InvalidCommand,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: ["cover.test_windows"]},
+            blocking=True,
+        )
 
 
 async def test_cover_streaming(

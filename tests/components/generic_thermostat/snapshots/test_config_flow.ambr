@@ -55,23 +55,23 @@
 # name: test_options[with_away]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 15.0,
-      'friendly_name': 'My thermostat',
-      'hvac_action': <HVACAction.OFF: 'off'>,
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 15.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My thermostat',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.OFF: 'off'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'preset_mode': 'none',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'away',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
-      'target_temp_step': 0.1,
-      'temperature': 7,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 7,
     }),
     'context': <ANY>,
     'entity_id': 'climate.my_thermostat',
@@ -84,18 +84,18 @@
 # name: test_options[without_away]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 15.0,
-      'friendly_name': 'My thermostat',
-      'hvac_action': <HVACAction.OFF: 'off'>,
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 15.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My thermostat',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.OFF: 'off'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'supported_features': <ClimateEntityFeature: 385>,
-      'target_temp_step': 0.1,
-      'temperature': 7.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 7.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.my_thermostat',

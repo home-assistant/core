@@ -4,9 +4,9 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
+from zhaquirks.builder import QuirkBuilder
 from zigpy.device import Device
 from zigpy.profiles import zha
-from zigpy.quirks.v2 import QuirkBuilder
 from zigpy.zcl import Cluster
 from zigpy.zcl.clusters import general, homeautomation, hvac, measurement, smartenergy
 from zigpy.zcl.clusters.hvac import Thermostat

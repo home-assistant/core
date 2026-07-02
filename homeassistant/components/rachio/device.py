@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 from rachiopy import Rachio
 import voluptuous as vol
@@ -291,6 +291,7 @@ class RachioIro:
         current_webhook_id = new_webhook[1][KEY_ID]
         self.hass.bus.listen(EVENT_HOMEASSISTANT_STOP, _deinit_webhooks)
 
+    @override
     def __str__(self) -> str:
         """Display the controller as a string."""
         return f'Rachio controller "{self.name}"'

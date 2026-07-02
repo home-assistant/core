@@ -1,6 +1,6 @@
 """Config flow for flo integration."""
 
-from typing import Any
+from typing import Any, override
 
 from aioflo import async_get_api
 from aioflo.errors import RequestError
@@ -38,6 +38,7 @@ class FloConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

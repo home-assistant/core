@@ -19,11 +19,19 @@ from .coordinator import DucoConfigEntry
 TO_REDACT = {
     CONF_HOST,
     "mac",
+    "Mac",
     "host_name",
+    "HostName",
     "serial_board_box",
+    "SerialBoardBox",
     "serial_board_comm",
+    "SerialBoardComm",
     "serial_duco_box",
+    "SerialDucoBox",
     "serial_duco_comm",
+    "SerialDucoComm",
+    "WifiApKey",
+    "WifiApSsid",
 }
 
 
@@ -56,7 +64,6 @@ async def async_get_config_entry_diagnostics(
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="api_error",
-            translation_placeholders={"error": repr(err)},
         ) from err
 
     api_info: dict[str, Any] = {"public_api_version": api_info_obj.public_api_version}

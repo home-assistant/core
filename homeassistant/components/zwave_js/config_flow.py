@@ -6,7 +6,7 @@ from contextlib import suppress
 from datetime import datetime
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -411,6 +411,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return discovery_info_config
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -445,6 +446,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             ],
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -484,6 +486,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB Discovery."""
         if not is_hassio(self.hass):
@@ -630,6 +633,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -1624,7 +1628,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         # save the backup to a file just in case
         self.backup_filepath = Path(
             self.hass.config.path(
-                f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"
+                f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"  # pylint: disable=home-assistant-enforce-naive-now
             )
         )
         try:

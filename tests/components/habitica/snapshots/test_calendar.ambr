@@ -967,13 +967,13 @@
 # name: test_calendar_platform[calendar.test_user_dailies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'all_day': True,
-      'description': 'Klicke um Deinen Terminplan festzulegen!',
-      'end_time': '2024-09-22 00:00:00',
-      'friendly_name': 'test-user Dailies',
-      'location': '',
-      'message': '5 Minuten ruhig durchatmen',
-      'start_time': '2024-09-21 00:00:00',
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: True,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'Klicke um Deinen Terminplan festzulegen!',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-09-22 00:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Dailies',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: '5 Minuten ruhig durchatmen',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-09-21 00:00:00',
       'yesterdaily': False,
     }),
     'context': <ANY>,
@@ -1024,13 +1024,13 @@
 # name: test_calendar_platform[calendar.test_user_daily_reminders-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'all_day': False,
-      'description': 'Klicke um Deinen Terminplan festzulegen!',
-      'end_time': '2024-09-21 21:00:00',
-      'friendly_name': 'test-user Daily reminders',
-      'location': '',
-      'message': '5 Minuten ruhig durchatmen',
-      'start_time': '2024-09-21 20:00:00',
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'Klicke um Deinen Terminplan festzulegen!',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-09-21 21:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Daily reminders',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: '5 Minuten ruhig durchatmen',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-09-21 20:00:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.test_user_daily_reminders',
@@ -1080,13 +1080,13 @@
 # name: test_calendar_platform[calendar.test_user_to_do_reminders-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'all_day': False,
-      'description': 'Strom- und Internetrechnungen rechtzeitig überweisen.',
-      'end_time': '2024-09-22 03:00:00',
-      'friendly_name': 'test-user To-do reminders',
-      'location': '',
-      'message': 'Rechnungen bezahlen',
-      'start_time': '2024-09-22 02:00:00',
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'Strom- und Internetrechnungen rechtzeitig überweisen.',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-09-22 03:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user To-do reminders',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Rechnungen bezahlen',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-09-22 02:00:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.test_user_to_do_reminders',
@@ -1136,13 +1136,13 @@
 # name: test_calendar_platform[calendar.test_user_to_do_s-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'all_day': True,
-      'description': 'Den Ausflug für das kommende Wochenende organisieren.',
-      'end_time': '2024-09-22 00:00:00',
-      'friendly_name': "test-user To-Do's",
-      'location': '',
-      'message': 'Wochenendausflug planen',
-      'start_time': '2024-09-21 00:00:00',
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: True,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'Den Ausflug für das kommende Wochenende organisieren.',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-09-22 00:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "test-user To-Do's",
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Wochenendausflug planen',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-09-21 00:00:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.test_user_to_do_s',

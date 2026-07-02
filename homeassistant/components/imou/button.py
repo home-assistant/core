@@ -1,5 +1,7 @@
 """Support for Imou button controls."""
 
+from typing import override
+
 from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice
 
@@ -96,6 +98,7 @@ class ImouButton(ImouEntity, ButtonEntity):
             self._attr_device_class = device_class
             self._attr_translation_key = None
 
+    @override
     async def async_press(self) -> None:
         """Handle button press."""
         duration = PTZ_MOVE_DURATION_MS if self._entity_type in PTZ_BUTTON_TYPES else 0

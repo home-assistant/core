@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from dataclasses import dataclass
 from functools import wraps
-from typing import Any, Concatenate, cast
+from typing import Any, Concatenate, cast, override
 
 from aioshelly.block_device import Block
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
@@ -376,6 +376,7 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         self._attr_device_info = get_entity_block_device_info(coordinator, block)
         self._attr_unique_id = f"{coordinator.mac}-{block.description}"
 
+    @override
     # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to HASS."""
@@ -419,6 +420,7 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         self._attr_unique_id = f"{coordinator.mac}-{key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Check if device is available and initialized or sleepy."""
         coordinator = self.coordinator
@@ -431,6 +433,7 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Device status by entity key."""
         return cast(dict, self.coordinator.device.status[self.key])
 
+    @override
     # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to HASS."""
@@ -478,6 +481,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, Entity):
         return cast(StateType, self.entity_description.value(value))
 
     @property
+    @override
     def available(self) -> bool:
         """Available."""
         available = super().available
@@ -511,6 +515,7 @@ class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         self._last_value = None
 
     @property
+    @override
     def available(self) -> bool:
         """Available."""
         return self.block_coordinator.last_update_success
@@ -587,6 +592,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
         return self._last_value
 
     @property
+    @override
     def available(self) -> bool:
         """Available."""
         available = super().available
@@ -637,6 +643,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
             self._attr_unique_id = entry.unique_id
 
     @callback
+    @override
     def _update_callback(self) -> None:
         """Handle device update."""
         if self.block is not None or not self.coordinator.device.initialized:
@@ -660,6 +667,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
                 super()._update_callback()
                 return
 
+    @override
     async def async_update(self) -> None:
         """Update the entity."""
         LOGGER.info(
@@ -696,6 +704,7 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
         if not coordinator.device.initialized and entry is not None:
             self._attr_name = cast(str, entry.original_name)
 
+    @override
     async def async_update(self) -> None:
         """Update the entity."""
         LOGGER.info(

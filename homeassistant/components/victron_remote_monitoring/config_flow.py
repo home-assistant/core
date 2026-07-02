@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from victron_vrm import VictronVRMClient
 from victron_vrm.exceptions import AuthenticationError, VictronVRMError
@@ -99,6 +99,7 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
             raise SiteNotFound(f"Site with ID {site_id} not found")
         return site_data
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

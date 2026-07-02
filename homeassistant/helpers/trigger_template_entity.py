@@ -2,7 +2,7 @@
 
 import itertools
 import logging
-from typing import Any
+from typing import Any, override
 
 import jinja2
 import voluptuous as vol
@@ -27,7 +27,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
@@ -204,26 +204,31 @@ class TriggerBaseEntity(Entity):
         self._available = True
 
     @property
+    @override
     def name(self) -> str | None:
         """Name of the entity."""
         return self._rendered.get(CONF_NAME)
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return unique ID of the entity."""
         return self._unique_id
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return icon."""
         return self._rendered.get(CONF_ICON)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return entity picture."""
         return self._rendered.get(CONF_PICTURE)
 
     @property
+    @override
     def available(self) -> bool:
         """Return availability of the entity."""
         if self._availability_template is None:
@@ -232,6 +237,7 @@ class TriggerBaseEntity(Entity):
         return self._available
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return extra attributes."""
         return self._rendered.get(CONF_ATTRIBUTES)
@@ -239,21 +245,6 @@ class TriggerBaseEntity(Entity):
     def _set_unique_id(self, unique_id: str | None) -> None:
         """Set unique id."""
         self._unique_id = unique_id
-
-    def restore_attributes(self, last_state: State) -> None:
-        """Restore attributes."""
-        for conf_key, attr in CONF_TO_ATTRIBUTE.items():
-            if conf_key not in self._config or attr not in last_state.attributes:
-                continue
-            self._rendered[conf_key] = last_state.attributes[attr]
-
-        if CONF_ATTRIBUTES in self._config:
-            extra_state_attributes = {}
-            for attr in self._config[CONF_ATTRIBUTES]:
-                if attr not in last_state.attributes:
-                    continue
-                extra_state_attributes[attr] = last_state.attributes[attr]
-            self._rendered[CONF_ATTRIBUTES] = extra_state_attributes
 
     def _template_variables(self, run_variables: dict[str, Any] | None = None) -> dict:
         """Render template variables."""

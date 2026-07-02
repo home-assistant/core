@@ -1,7 +1,7 @@
 """Support for Lutron events."""
 
 from enum import StrEnum
-from typing import cast
+from typing import cast, override
 
 from pylutron import Button, Keypad, Lutron, LutronEntity, LutronEvent
 
@@ -72,6 +72,7 @@ class LutronEventEntity(LutronKeypad, EventEntity):
         self._full_id = slugify(f"{area_name} {name}")
         self._id = slugify(name)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()

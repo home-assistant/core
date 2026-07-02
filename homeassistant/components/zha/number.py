@@ -2,7 +2,7 @@
 
 import functools
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.number import NumberDeviceClass, NumberMode, RestoreNumber
 from homeassistant.config_entries import ConfigEntry
@@ -54,31 +54,37 @@ class ZhaNumber(ZHAEntity, RestoreNumber):
         self._attr_mode = NumberMode(entity.mode)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         return self.entity_data.entity.native_value
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the minimum value."""
         return self.entity_data.entity.native_min_value
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum value."""
         return self.entity_data.entity.native_max_value
 
     @property
+    @override
     def native_step(self) -> float | None:
         """Return the value step."""
         return self.entity_data.entity.native_step
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         return self.entity_data.entity.native_unit_of_measurement
 
     @convert_zha_error_to_ha_error()
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
         await self.entity_data.entity.async_set_native_value(value=value)

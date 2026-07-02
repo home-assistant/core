@@ -43,7 +43,6 @@ async def test_turn_on_switch(
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "switch.zone_1"
-
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
@@ -63,7 +62,6 @@ async def test_turn_off_switch(
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "switch.zone_1"
-
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,

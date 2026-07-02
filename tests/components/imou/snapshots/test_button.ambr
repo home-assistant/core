@@ -39,7 +39,7 @@
 # name: test_button_entities_snapshot[button.device_1_mute-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device 1 Mute',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Mute',
     }),
     'context': <ANY>,
     'entity_id': 'button.device_1_mute',
@@ -89,7 +89,7 @@
 # name: test_button_entities_snapshot[button.device_1_ptz_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device 1 PTZ up',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 PTZ up',
     }),
     'context': <ANY>,
     'entity_id': 'button.device_1_ptz_up',
@@ -139,8 +139,8 @@
 # name: test_button_entities_snapshot[button.device_1_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Device 1 Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.device_1_restart',

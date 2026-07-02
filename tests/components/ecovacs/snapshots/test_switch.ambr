@@ -39,7 +39,7 @@
 # name: test_switch_entities[55uoqe][switch.dbmini_border_spin:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DBMini Border spin',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DBMini Border spin',
     }),
     'context': <ANY>,
     'entity_id': 'switch.dbmini_border_spin',
@@ -89,7 +89,7 @@
 # name: test_switch_entities[55uoqe][switch.dbmini_carpet_auto_boost_suction:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DBMini Carpet auto-boost suction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DBMini Carpet auto-boost suction',
     }),
     'context': <ANY>,
     'entity_id': 'switch.dbmini_carpet_auto_boost_suction',
@@ -139,7 +139,7 @@
 # name: test_switch_entities[55uoqe][switch.dbmini_child_lock:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DBMini Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DBMini Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.dbmini_child_lock',
@@ -189,7 +189,7 @@
 # name: test_switch_entities[55uoqe][switch.dbmini_continuous_cleaning:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DBMini Continuous cleaning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DBMini Continuous cleaning',
     }),
     'context': <ANY>,
     'entity_id': 'switch.dbmini_continuous_cleaning',
@@ -239,7 +239,7 @@
 # name: test_switch_entities[55uoqe][switch.dbmini_true_detect:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DBMini True detect',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DBMini True detect',
     }),
     'context': <ANY>,
     'entity_id': 'switch.dbmini_true_detect',
@@ -289,7 +289,7 @@
 # name: test_switch_entities[5xu9h3][switch.goat_g1_advanced_mode:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Goat G1 Advanced mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Advanced mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.goat_g1_advanced_mode',
@@ -339,7 +339,7 @@
 # name: test_switch_entities[5xu9h3][switch.goat_g1_border_switch:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Goat G1 Border switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Border switch',
     }),
     'context': <ANY>,
     'entity_id': 'switch.goat_g1_border_switch',
@@ -389,7 +389,7 @@
 # name: test_switch_entities[5xu9h3][switch.goat_g1_child_lock:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Goat G1 Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.goat_g1_child_lock',
@@ -439,7 +439,7 @@
 # name: test_switch_entities[5xu9h3][switch.goat_g1_cross_map_border_warning:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Goat G1 Cross map border warning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Cross map border warning',
     }),
     'context': <ANY>,
     'entity_id': 'switch.goat_g1_cross_map_border_warning',
@@ -489,7 +489,7 @@
 # name: test_switch_entities[5xu9h3][switch.goat_g1_move_up_warning:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Goat G1 Move up warning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Move up warning',
     }),
     'context': <ANY>,
     'entity_id': 'switch.goat_g1_move_up_warning',
@@ -539,7 +539,7 @@
 # name: test_switch_entities[5xu9h3][switch.goat_g1_safe_protect:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Goat G1 Safe protect',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Safe protect',
     }),
     'context': <ANY>,
     'entity_id': 'switch.goat_g1_safe_protect',
@@ -589,7 +589,7 @@
 # name: test_switch_entities[5xu9h3][switch.goat_g1_true_detect:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Goat G1 True detect',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 True detect',
     }),
     'context': <ANY>,
     'entity_id': 'switch.goat_g1_true_detect',
@@ -639,7 +639,7 @@
 # name: test_switch_entities[yna5x1][switch.ozmo_950_advanced_mode:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Advanced mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Advanced mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.ozmo_950_advanced_mode',
@@ -689,7 +689,7 @@
 # name: test_switch_entities[yna5x1][switch.ozmo_950_carpet_auto_boost_suction:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Carpet auto-boost suction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Carpet auto-boost suction',
     }),
     'context': <ANY>,
     'entity_id': 'switch.ozmo_950_carpet_auto_boost_suction',
@@ -739,7 +739,7 @@
 # name: test_switch_entities[yna5x1][switch.ozmo_950_continuous_cleaning:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Continuous cleaning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Continuous cleaning',
     }),
     'context': <ANY>,
     'entity_id': 'switch.ozmo_950_continuous_cleaning',

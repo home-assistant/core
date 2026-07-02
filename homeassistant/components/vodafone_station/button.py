@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from json.decoder import JSONDecodeError
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiovodafone.exceptions import (
     AlreadyLogged,
@@ -113,6 +113,7 @@ class VodafoneStationSensorEntity(
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
 

@@ -1,5 +1,7 @@
 """Component to embed Aqualink devices."""
 
+from typing import override
+
 from iaqualink.device import AqualinkDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -39,6 +41,7 @@ class AqualinkEntity[AqualinkDeviceT: AqualinkDevice](
         )
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Return whether the state is based on actual reading from the device."""
         return self.dev.system.online in [False, None]

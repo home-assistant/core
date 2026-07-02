@@ -6,7 +6,7 @@ from datetime import timedelta
 from enum import IntEnum
 from functools import partial
 from math import floor, log10
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiolifx.aiolifx import (
     Light,
@@ -337,6 +337,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
             )
         return calls
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""
         device = self.device

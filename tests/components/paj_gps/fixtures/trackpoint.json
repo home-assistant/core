@@ -3,6 +3,6 @@
   "lat": 52.0,
   "lng": 13.0,
   "speed": 50,
-  "battery": 80,
+  "battery_level": 80,
   "direction": 90
 }

@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from datetime import timedelta
 import logging
+from typing import override
 
 from solarlog_cli.solarlog_connector import SolarLogConnector
 from solarlog_cli.solarlog_exceptions import (
@@ -51,6 +52,7 @@ class SolarLogBasicDataCoordinator(DataUpdateCoordinator[SolarlogData]):
         self.unique_id = config_entry.entry_id
         self.solarlog = api
 
+    @override
     async def _async_setup(self) -> None:
         """Do initialization logic."""
         _LOGGER.debug("Start async_setup")
@@ -62,6 +64,7 @@ class SolarLogBasicDataCoordinator(DataUpdateCoordinator[SolarlogData]):
             device_list = await self.solarlog.update_device_list()
             self.solarlog.set_enabled_devices(dict.fromkeys(device_list, True))
 
+    @override
     async def _async_update_data(self) -> SolarlogData:
         """Update the data from the SolarLog device."""
         _LOGGER.debug("Start basic data update")
@@ -142,6 +145,7 @@ class SolarLogDeviceDataCoordinator(DataUpdateCoordinator[dict[int, InverterData
         self._devices_last_update: set[tuple[int, str]] = set()
         self.solarlog = api
 
+    @override
     async def _async_update_data(self) -> dict[int, InverterData]:
         """Update the data from the SolarLog device."""
         _LOGGER.debug("Start device data update")
@@ -238,6 +242,7 @@ class SolarLogLongtimeDataCoordinator(DataUpdateCoordinator[EnergyData]):
         self.solarlog = api
         self.connection_timeout = timeout
 
+    @override
     async def _async_setup(self) -> None:
         """Do initialization logic."""
         _LOGGER.debug("Start SolarLogLongtimeDataCoordinator async_setup")
@@ -269,6 +274,7 @@ class SolarLogLongtimeDataCoordinator(DataUpdateCoordinator[EnergyData]):
                 translation_key="update_failed",
             ) from ex
 
+    @override
     async def _async_update_data(self) -> EnergyData:
         """Update the energy data from the SolarLog device."""
         _LOGGER.debug(

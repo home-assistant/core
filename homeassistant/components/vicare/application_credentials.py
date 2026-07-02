@@ -1,5 +1,7 @@
 """Application credentials platform for Viessmann ViCare."""
 
+from typing import override
+
 from PyViCare.PyViCareAbstractOAuthManager import (
     AUTHORIZE_URL,
     SCOPE_IOT,
@@ -33,6 +35,7 @@ class ViCareOAuth2Implementation(LocalOAuth2ImplementationWithPkce):
     """ViCare OAuth2 implementation with PKCE."""
 
     @property
+    @override
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
         return super().extra_authorize_data | {

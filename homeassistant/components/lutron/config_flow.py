@@ -1,7 +1,7 @@
 """Config flow to configure the Lutron integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.error import HTTPError
 
 from pylutron import Lutron
@@ -27,6 +27,7 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -78,6 +79,7 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: LutronConfigEntry,
     ) -> OptionsFlowHandler:

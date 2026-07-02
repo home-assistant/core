@@ -3,10 +3,10 @@
   set({
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'power',
-        'friendly_name': 'Outlet 1 Power',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet 1 Power',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.outlet_1_power',
@@ -17,10 +17,10 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'power',
-        'friendly_name': 'Outlet 2 Power',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet 2 Power',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.outlet_2_power',
@@ -31,10 +31,10 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'wind_direction',
-        'friendly_name': 'Statistics issues Issue 5',
-        'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
-        'unit_of_measurement': '°',
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_direction',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Statistics issues Issue 5',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
       }),
       'context': <ANY>,
       'entity_id': 'sensor.statistics_issues_issue_5',
@@ -45,9 +45,9 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Statistics issues Issue 1',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Statistics issues Issue 1',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.statistics_issues_issue_1',
@@ -58,9 +58,9 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Statistics issues Issue 2',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': 'dogs',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Statistics issues Issue 2',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dogs',
       }),
       'context': <ANY>,
       'entity_id': 'sensor.statistics_issues_issue_2',
@@ -71,8 +71,8 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Statistics issues Issue 3',
-        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Statistics issues Issue 3',
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.statistics_issues_issue_3',
@@ -87,10 +87,10 @@
   set({
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'power',
-        'friendly_name': 'Outlet 1 Power',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet 1 Power',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.outlet_1_power',
@@ -101,10 +101,10 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'power',
-        'friendly_name': 'Outlet 2 Power',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet 2 Power',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.outlet_2_power',
@@ -115,10 +115,10 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'wind_direction',
-        'friendly_name': 'Statistics issues Issue 5',
-        'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
-        'unit_of_measurement': '°',
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_direction',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Statistics issues Issue 5',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
       }),
       'context': <ANY>,
       'entity_id': 'sensor.statistics_issues_issue_5',
@@ -129,7 +129,7 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Sensor test',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sensor test',
       }),
       'context': <ANY>,
       'entity_id': 'sensor.sensor_test',
@@ -140,9 +140,9 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Statistics issues Issue 1',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Statistics issues Issue 1',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.statistics_issues_issue_1',
@@ -153,9 +153,9 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Statistics issues Issue 2',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': 'dogs',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Statistics issues Issue 2',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dogs',
       }),
       'context': <ANY>,
       'entity_id': 'sensor.statistics_issues_issue_2',
@@ -166,8 +166,8 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Statistics issues Issue 3',
-        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Statistics issues Issue 3',
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.statistics_issues_issue_3',

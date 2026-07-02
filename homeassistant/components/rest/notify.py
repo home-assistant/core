@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 import httpx
 import voluptuous as vol
@@ -145,6 +145,7 @@ class RestNotificationService(BaseNotificationService):
         self._auth = auth
         self._verify_ssl = verify_ssl
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         data = {self._message_param_name: message}

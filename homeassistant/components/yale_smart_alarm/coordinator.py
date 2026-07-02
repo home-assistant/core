@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the Yale integration."""
 
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from yalesmartalarmclient import YaleLock
 from yalesmartalarmclient.client import YaleSmartAlarmClient
@@ -45,6 +45,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         locks = yale.get_locks()
         return yale, locks
 
+    @override
     async def _async_setup(self) -> None:
         """Set up connection to Yale."""
         try:
@@ -56,6 +57,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except YALE_BASE_ERRORS as error:
             raise UpdateFailed from error
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Yale."""
 

@@ -6,7 +6,9 @@ from unittest.mock import patch
 import pytest
 from zha.application import Platform as ZhaPlatform
 from zha.application.platforms import PlatformEntity
+from zha.quirks import DEVICE_REGISTRY
 from zha.zigbee.device import DeviceEntityAddedEvent, DeviceEntityRemovedEvent
+from zhaquirks.builder import QuirkBuilder
 from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
@@ -257,3 +259,71 @@ async def test_remove_entity_reference_when_ieee_already_cleared(
     await hass.async_block_till_done()
 
     assert ieee not in gateway_proxy._ha_entity_refs
+
+
+async def test_reinterview_quirk_class_swap_rebinds_proxy(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
+    """A re-interview that changes the ZHA `Device` class re-binds the proxy."""
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+    gateway_proxy = get_zha_gateway_proxy(hass)
+
+    endpoints = {
+        1: {
+            SIG_EP_INPUT: [general.Basic.cluster_id, general.OnOff.cluster_id],
+            SIG_EP_OUTPUT: [],
+            SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+            SIG_EP_PROFILE: zha.PROFILE_ID,
+        }
+    }
+
+    # Join with no matching quirk: resolves to the base `Device` class.
+    zigpy_device = zigpy_device_mock(
+        endpoints,
+        ieee="01:2d:6f:00:0a:90:69:e8",
+        manufacturer="Fake",
+        model="Model_A",
+    )
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    proxy = gateway_proxy.get_device_proxy(zigpy_device.ieee)
+    assert proxy is not None
+    original_device = proxy.device
+    assert not original_device.quirk_applied
+
+    switch_id = find_entity_id(Platform.SWITCH, proxy, hass)
+    assert switch_id is not None
+    assert hass.states.get(switch_id).state == STATE_OFF
+
+    with DEVICE_REGISTRY.preserve_state():
+        # Register a v2 quirk for the re-interviewed model -> `QuirkV2Device`.
+        (
+            QuirkBuilder("Fake", "Model_B")
+            .friendly_name(model="Quirk B", manufacturer="Fake")
+            .add_to_registry()
+        )
+
+        reinterviewed = zigpy_device_mock(
+            endpoints,
+            ieee="01:2d:6f:00:0a:90:69:e8",
+            manufacturer="Fake",
+            model="Model_B",
+        )
+        gateway.device_reinterviewed(reinterviewed)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The `Device` object was replaced by a quirked one
+    new_device = gateway.get_device(zigpy_device.ieee)
+    assert new_device is not original_device
+    assert new_device.quirk_applied
+
+    # The proxy followed the swap
+    assert proxy.device is new_device
+
+    # And the switch entity was re-materialized on the new object.
+    assert hass.states.get(switch_id).state == STATE_OFF

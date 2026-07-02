@@ -432,15 +432,6 @@ async def async_set_credential(
                 translation_key="no_available_credential_slots",
                 translation_placeholders={"credential_type": cred_type_str},
             )
-    elif not 1 <= credential_slot <= type_cap.number_of_credential_slots:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="credential_slot_out_of_range",
-            translation_placeholders={
-                "credential_type": cred_type_str,
-                "max_slot": str(type_cap.number_of_credential_slots),
-            },
-        )
 
     status = await node.access_control.set_credential(
         user_id, credential_type, credential_slot, credential_data

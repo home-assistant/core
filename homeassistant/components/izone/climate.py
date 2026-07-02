@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Mapping
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from pizone import Controller, Zone
 import voluptuous as vol
@@ -199,6 +199,7 @@ class ControllerDevice(ClimateEntity):
         for zone in controller.zones:
             self.zones[zone] = ZoneDevice(self, zone)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call on adding to hass."""
 
@@ -269,6 +270,7 @@ class ControllerDevice(ClimateEntity):
                 zone.async_schedule_update_ha_state()
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the optional state attributes."""
         return {
@@ -298,6 +300,7 @@ class ControllerDevice(ClimateEntity):
         }
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
         if not self._controller.is_on:
@@ -311,6 +314,7 @@ class ControllerDevice(ClimateEntity):
 
     @property
     @_return_on_connection_error([])
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         if self._controller.free_air:
@@ -319,12 +323,14 @@ class ControllerDevice(ClimateEntity):
 
     @property
     @_return_on_connection_error(PRESET_NONE)
+    @override
     def preset_mode(self) -> str:
         """Eco mode is external air."""
         return PRESET_ECO if self._controller.free_air else PRESET_NONE
 
     @property
     @_return_on_connection_error([PRESET_NONE])
+    @override
     def preset_modes(self) -> list[str]:
         """Available preset modes, normal or eco."""
         if self._controller.free_air_enabled:
@@ -333,6 +339,7 @@ class ControllerDevice(ClimateEntity):
 
     @property
     @_return_on_connection_error()
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self._controller.mode == Controller.Mode.FREE_AIR:
@@ -369,6 +376,7 @@ class ControllerDevice(ClimateEntity):
 
     @property
     @_return_on_connection_error()
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach.
 
@@ -384,23 +392,27 @@ class ControllerDevice(ClimateEntity):
         return self._controller.temp_supply
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return _IZONE_FAN_TO_HA[self._controller.fan]
 
     @property
+    @override
     def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes."""
         return list(self._fan_to_pizone)
 
     @property
     @_return_on_connection_error(0.0)
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._controller.temp_min
 
     @property
     @_return_on_connection_error(50.0)
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._controller.temp_max
@@ -414,6 +426,7 @@ class ControllerDevice(ClimateEntity):
         else:
             self.set_available(True)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if not self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
@@ -422,11 +435,13 @@ class ControllerDevice(ClimateEntity):
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             await self.wrap_and_catch(self._controller.set_temp_setpoint(temp))
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         fan = self._fan_to_pizone[fan_mode]
         await self.wrap_and_catch(self._controller.set_fan(fan))
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if hvac_mode == HVACMode.OFF:
@@ -439,12 +454,14 @@ class ControllerDevice(ClimateEntity):
         mode = self._state_to_pizone[hvac_mode]
         await self.wrap_and_catch(self._controller.set_mode(mode))
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
         await self.wrap_and_catch(
             self._controller.set_free_air(preset_mode == PRESET_ECO)
         )
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         await self.wrap_and_catch(self._controller.set_on(True))
@@ -492,6 +509,7 @@ class ZoneDevice(ClimateEntity):
             via_device=(DOMAIN, controller.unique_id),
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call on adding to hass."""
 
@@ -524,12 +542,14 @@ class ZoneDevice(ClimateEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._controller.available
 
     @property
     @_return_on_connection_error(ClimateEntityFeature(0))
+    @override
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         if self._zone.mode == Zone.Mode.AUTO:
@@ -537,6 +557,7 @@ class ZoneDevice(ClimateEntity):
         return self._attr_supported_features & ~ClimateEntityFeature.TARGET_TEMPERATURE
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
         mode = self._zone.mode
@@ -546,16 +567,19 @@ class ZoneDevice(ClimateEntity):
         return None
 
     @property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         return list(self._state_to_pizone)
 
     @property
+    @override
     def current_temperature(self) -> float:
         """Return the current temperature."""
         return self._zone.temp_current
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self._zone.type != Zone.Type.AUTO:
@@ -563,11 +587,13 @@ class ZoneDevice(ClimateEntity):
         return self._zone.temp_setpoint
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._controller.min_temp
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._controller.max_temp
@@ -596,6 +622,7 @@ class ZoneDevice(ClimateEntity):
         )
         self.async_write_ha_state()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if self._zone.mode != Zone.Mode.AUTO:
@@ -603,6 +630,7 @@ class ZoneDevice(ClimateEntity):
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             await self._controller.wrap_and_catch(self._zone.set_temp_setpoint(temp))
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         mode = self._state_to_pizone[hvac_mode]
@@ -614,6 +642,7 @@ class ZoneDevice(ClimateEntity):
         """Return true if on."""
         return self._zone.mode != Zone.Mode.CLOSE
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn device on (open zone)."""
         if self._zone.type == Zone.Type.AUTO:
@@ -622,6 +651,7 @@ class ZoneDevice(ClimateEntity):
             await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.OPEN))
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn device off (close zone)."""
         await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.CLOSE))
@@ -633,6 +663,7 @@ class ZoneDevice(ClimateEntity):
         return self._zone.index
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the optional state attributes."""
         return {

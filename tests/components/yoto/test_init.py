@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, Mock, patch
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from yoto_api import AuthenticationError, YotoAPIError, YotoError
+from yoto_api import AuthenticationError, Device, YotoAPIError, YotoError, YotoPlayer
 
 from homeassistant.components.yoto.const import (
     DOMAIN,
@@ -18,11 +18,13 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 
 from . import setup_integration
+from .conftest import PLAYER_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -316,3 +318,92 @@ async def test_periodic_poll_fails_on_api_error(
 
     coordinator = mock_config_entry.runtime_data
     assert coordinator.last_update_success is False
+
+
+def _build_second_player() -> YotoPlayer:
+    """Build a second Yoto player discovered after setup."""
+    return YotoPlayer(
+        device=Device(
+            device_id="player-2",
+            name="Playroom Yoto",
+            device_type="v3",
+            device_family="v3",
+            generation="gen3",
+        ),
+        is_online=True,
+    )
+
+
+async def test_dynamic_device_added(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A player discovered after setup gets its entity without a reload."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("media_player.nursery_yoto") is not None
+    assert hass.states.get("media_player.playroom_yoto") is None
+
+    mock_yoto_client.players["player-2"] = _build_second_player()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("media_player.playroom_yoto") is not None
+    assert hass.states.get("binary_sensor.playroom_yoto_charging") is not None
+    assert hass.states.get("sensor.playroom_yoto_battery") is not None
+    assert hass.states.get("time.playroom_yoto_day_mode_start") is not None
+    assert hass.states.get("number.playroom_yoto_day_mode_brightness") is not None
+    assert hass.states.get("select.playroom_yoto_day_mode_color") is not None
+    assert hass.states.get("switch.playroom_yoto_bluetooth_pairing") is not None
+    mock_yoto_client.subscribe_player_events.assert_called_once_with("player-2")
+
+
+async def test_subscription_failure_does_not_fail_refresh(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A subscription error keeps the refreshed data and retries next cycle."""
+    await setup_integration(hass, mock_config_entry)
+    mock_yoto_client.players["player-2"] = _build_second_player()
+    mock_yoto_client.subscribe_player_events.side_effect = YotoAPIError("boom")
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("media_player.playroom_yoto") is not None
+    assert mock_config_entry.runtime_data.last_update_success is True
+
+    mock_yoto_client.subscribe_player_events.side_effect = None
+    mock_yoto_client.subscribe_player_events.reset_mock()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_yoto_client.subscribe_player_events.assert_called_once_with("player-2")
+
+
+async def test_stale_device_removed(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A player removed from the account has its device dropped."""
+    await setup_integration(hass, mock_config_entry)
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, PLAYER_ID)}) is not None
+    )
+
+    mock_yoto_client.players.clear()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get_device(identifiers={(DOMAIN, PLAYER_ID)}) is None
+    mock_yoto_client.unsubscribe_player_events.assert_called_once_with(PLAYER_ID)

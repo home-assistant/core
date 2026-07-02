@@ -3,7 +3,7 @@
 import asyncio
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, override
 
 import upb_lib
 import voluptuous as vol
@@ -73,6 +73,7 @@ class UPBConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 3
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

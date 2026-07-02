@@ -1,6 +1,6 @@
 """Provides conditions for water heaters."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import voluptuous as vol
 
@@ -44,6 +44,7 @@ class WaterHeaterOnCondition(EntityConditionBase):
 
     _domain_specs = {DOMAIN: DomainSpec()}
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the water heater is in a non-off state."""
         return entity_state.state != STATE_OFF
@@ -62,6 +63,7 @@ class WaterHeaterOperationModeCondition(EntityConditionBase):
             assert config.options is not None
         self._operation_modes: set[str] = set(config.options[ATTR_OPERATION_MODE])
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches any of the expected operation modes."""
         return entity_state.state in self._operation_modes
@@ -74,6 +76,7 @@ class WaterHeaterTargetTemperatureCondition(EntityNumericalConditionWithUnitBase
     _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_TEMPERATURE)}
     _unit_converter = TemperatureConverter
 
+    @override
     def _should_include(self, state: State) -> bool:
         """Skip water heater entities that do not expose a target temperature."""
         return (
@@ -81,6 +84,7 @@ class WaterHeaterTargetTemperatureCondition(EntityNumericalConditionWithUnitBase
             and state.attributes.get(ATTR_TEMPERATURE) is not None
         )
 
+    @override
     def _get_entity_unit(self, entity_state: State) -> str | None:
         """Get the temperature unit of a water heater entity from its state."""
         # Water heater entities convert temperatures to the system unit via show_temp
