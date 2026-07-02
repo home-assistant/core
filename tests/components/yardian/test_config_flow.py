@@ -74,3 +74,36 @@ async def test_form_errors(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_form_missing_yid(
+    hass: HomeAssistant,
+    mock_yardian_client: AsyncMock,
+) -> None:
+    """Test missing device identifier is handled as a form error."""
+    mock_yardian_client.fetch_device_info.return_value = {"name": "fake_name"}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": "fake_host", "access_token": "fake_token"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_response"}
+
+    mock_yardian_client.fetch_device_info.return_value = {
+        "name": "fake_name",
+        "yid": "fake_yid",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": "fake_host", "access_token": "fake_token"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY

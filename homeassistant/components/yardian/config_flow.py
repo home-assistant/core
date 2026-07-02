@@ -60,12 +60,16 @@ class YardianConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(device_info["yid"])
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    data=user_input | device_info,
-                    title=PRODUCT_NAME,
-                )
+                if not (yid := device_info.get("yid")):
+                    _LOGGER.debug("Yardian device info is missing device identifier")
+                    errors["base"] = "invalid_response"
+                else:
+                    await self.async_set_unique_id(yid)
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        data=user_input | device_info,
+                        title=PRODUCT_NAME,
+                    )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
