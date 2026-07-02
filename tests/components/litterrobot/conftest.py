@@ -51,6 +51,7 @@ def create_mock_robot(
         robot.change_filter = AsyncMock(side_effect=side_effect)
         robot.set_night_light_brightness = AsyncMock(side_effect=side_effect)
         robot.set_night_light_mode = AsyncMock(side_effect=side_effect)
+        robot.set_night_light_settings = AsyncMock(side_effect=side_effect)
         robot.set_panel_brightness = AsyncMock(side_effect=side_effect)
     elif v4:
         robot = LitterRobot4(data={**ROBOT_4_DATA, **robot_data}, account=account)
