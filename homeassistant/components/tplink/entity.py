@@ -273,7 +273,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
             if self._attr_available:
                 _LOGGER.warning(
                     "Unable to read data for %s %s: %s",
-                    self._device,
+                    self._device.host,
                     self.entity_id,
                     ex,
                 )
