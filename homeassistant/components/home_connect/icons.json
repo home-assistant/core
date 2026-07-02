@@ -46,6 +46,50 @@
         "default": "mdi:stop"
       }
     },
+    "event": {
+      "bean_container_empty": {
+        "default": "mdi:coffee-maker",
+        "state": {
+          "confirmed": "mdi:coffee-maker-check",
+          "present": "mdi:coffee-maker-outline"
+        }
+      },
+      "drip_tray_full": {
+        "default": "mdi:tray",
+        "state": {
+          "confirmed": "mdi:tray-full",
+          "present": "mdi:tray-alert"
+        }
+      },
+      "freezer_door_alarm": {
+        "default": "mdi:snowflake",
+        "state": {
+          "confirmed": "mdi:snowflake-check",
+          "present": "mdi:snowflake-alert"
+        }
+      },
+      "freezer_temperature_alarm": {
+        "default": "mdi:thermometer",
+        "state": {
+          "confirmed": "mdi:thermometer-check",
+          "present": "mdi:thermometer-alert"
+        }
+      },
+      "refrigerator_door_alarm": {
+        "default": "mdi:fridge",
+        "state": {
+          "confirmed": "mdi:fridge-alert-outline",
+          "present": "mdi:fridge-alert"
+        }
+      },
+      "water_tank_empty": {
+        "default": "mdi:water",
+        "state": {
+          "confirmed": "mdi:water-check",
+          "present": "mdi:water-alert"
+        }
+      }
+    },
     "number": {
       "finish_in_relative": {
         "default": "mdi:progress-clock"
