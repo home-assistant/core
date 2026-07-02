@@ -2031,6 +2031,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/window/ @home-assistant/core
 /tests/components/window/ @home-assistant/core
 /homeassistant/components/wirelesstag/ @sergeymaysak
+/tests/components/wirelesstag/ @sergeymaysak
 /homeassistant/components/withings/ @joostlek
 /tests/components/withings/ @joostlek
 /homeassistant/components/wiz/ @sbidy @arturpragacz
