@@ -4364,7 +4364,6 @@
       "iot_class": "local_polling"
     },
     "modbus": {
-      "name": "Manual Modbus",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
@@ -8488,6 +8487,7 @@
     "local_todo",
     "min_max",
     "mobile_app",
+    "modbus",
     "moehlenhoff_alpha2",
     "mold_indicator",
     "moon",
