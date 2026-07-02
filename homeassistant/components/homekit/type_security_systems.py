@@ -3,6 +3,7 @@
 import logging
 from typing import Any, override
 
+from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_ALARM_SYSTEM
 
 from homeassistant.components.alarm_control_panel import (
@@ -27,6 +28,7 @@ from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_CURRENT_SECURITY_STATE,
     CHAR_TARGET_SECURITY_STATE,
+    PROP_VALID_VALUES,
     SERV_SECURITY_SYSTEM,
 )
 
@@ -72,6 +74,43 @@ HK_TO_SERVICE = {
 }
 
 
+DEFAULT_SUPPORTED_FEATURES = (
+    AlarmControlPanelEntityFeature.ARM_HOME
+    | AlarmControlPanelEntityFeature.ARM_VACATION
+    | AlarmControlPanelEntityFeature.ARM_AWAY
+    | AlarmControlPanelEntityFeature.ARM_NIGHT
+    | AlarmControlPanelEntityFeature.TRIGGER
+)
+
+
+def _supported_states(supported_features: int) -> tuple[list[int], list[int]]:
+    """Return the supported (current_states, target_services) for the features.
+
+    Mirrors how HomeKit's valid values are derived from the alarm entity's
+    supported_features, so the accessory build and the runtime staleness check
+    stay in sync.
+    """
+    current_supported_states = [HK_ALARM_DISARMED, HK_ALARM_TRIGGERED]
+    target_supported_services = [HK_ALARM_DISARMED]
+
+    if supported_features & AlarmControlPanelEntityFeature.ARM_HOME:
+        current_supported_states.append(HK_ALARM_STAY_ARMED)
+        target_supported_services.append(HK_ALARM_STAY_ARMED)
+
+    if supported_features & (
+        AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_VACATION
+    ):
+        current_supported_states.append(HK_ALARM_AWAY_ARMED)
+        target_supported_services.append(HK_ALARM_AWAY_ARMED)
+
+    if supported_features & AlarmControlPanelEntityFeature.ARM_NIGHT:
+        current_supported_states.append(HK_ALARM_NIGHT_ARMED)
+        target_supported_services.append(HK_ALARM_NIGHT_ARMED)
+
+    return current_supported_states, target_supported_services
+
+
 @TYPES.register("SecuritySystem")
 class SecuritySystem(HomeAccessory):
     """Generate an SecuritySystem accessory for an alarm control panel."""
@@ -84,39 +123,18 @@ class SecuritySystem(HomeAccessory):
         self._alarm_code = self.config.get(ATTR_CODE)
 
         supported_states = state.attributes.get(
-            ATTR_SUPPORTED_FEATURES,
-            (
-                AlarmControlPanelEntityFeature.ARM_HOME
-                | AlarmControlPanelEntityFeature.ARM_VACATION
-                | AlarmControlPanelEntityFeature.ARM_AWAY
-                | AlarmControlPanelEntityFeature.ARM_NIGHT
-                | AlarmControlPanelEntityFeature.TRIGGER
-            ),
+            ATTR_SUPPORTED_FEATURES, DEFAULT_SUPPORTED_FEATURES
         )
 
         serv_alarm = self.add_preload_service(SERV_SECURITY_SYSTEM)
         current_char = serv_alarm.get_characteristic(CHAR_CURRENT_SECURITY_STATE)
         target_char = serv_alarm.get_characteristic(CHAR_TARGET_SECURITY_STATE)
-        default_current_states = current_char.properties.get("ValidValues")
-        default_target_services = target_char.properties.get("ValidValues")
+        default_current_states = current_char.properties.get(PROP_VALID_VALUES)
+        default_target_services = target_char.properties.get(PROP_VALID_VALUES)
 
-        current_supported_states = [HK_ALARM_DISARMED, HK_ALARM_TRIGGERED]
-        target_supported_services = [HK_ALARM_DISARMED]
-
-        if supported_states & AlarmControlPanelEntityFeature.ARM_HOME:
-            current_supported_states.append(HK_ALARM_STAY_ARMED)
-            target_supported_services.append(HK_ALARM_STAY_ARMED)
-
-        if supported_states & (
-            AlarmControlPanelEntityFeature.ARM_AWAY
-            | AlarmControlPanelEntityFeature.ARM_VACATION
-        ):
-            current_supported_states.append(HK_ALARM_AWAY_ARMED)
-            target_supported_services.append(HK_ALARM_AWAY_ARMED)
-
-        if supported_states & AlarmControlPanelEntityFeature.ARM_NIGHT:
-            current_supported_states.append(HK_ALARM_NIGHT_ARMED)
-            target_supported_services.append(HK_ALARM_NIGHT_ARMED)
+        current_supported_states, target_supported_services = _supported_states(
+            supported_states
+        )
 
         self.char_current_state = serv_alarm.configure_char(
             CHAR_CURRENT_SECURITY_STATE,
@@ -151,6 +169,27 @@ class SecuritySystem(HomeAccessory):
             params[ATTR_CODE] = self._alarm_code
         self.async_call_service(ALARM_CONTROL_PANEL_DOMAIN, service, params)
 
+    def _set_if_valid(self, char: Characteristic, value: int) -> bool:
+        """Push value to char, skipping states it doesn't currently advertise.
+
+        The characteristic's valid values are frozen from supported_features at
+        accessory build time and can go stale: a feature change can slip past
+        the reload guard in async_update_event_state_callback when it arrives
+        across an unavailable boundary. Pushing a value outside the frozen set
+        would raise ValueError in pyhap, so skip and log instead. A newly-added
+        mode stays invisible until the accessory is rebuilt by other means;
+        reconciling valid values in place is a separate follow-up.
+
+        Returns True if the value was pushed, False if it was skipped.
+        """
+        if value in char.properties.get(PROP_VALID_VALUES, {}).values():
+            char.set_value(value)
+            return True
+        _LOGGER.debug(
+            "%s: Skipping unsupported security state %d", self.entity_id, value
+        )
+        return False
+
     @callback
     @override
     def async_update_state(self, new_state: State) -> None:
@@ -161,19 +200,20 @@ class SecuritySystem(HomeAccessory):
             return
         if hass_state is not None:
             hass_state = AlarmControlPanelState(hass_state)
-        if (
-            hass_state
-            and (current_state := HASS_TO_HOMEKIT_CURRENT.get(hass_state)) is not None
+        if not hass_state:
+            return
+        current_state = HASS_TO_HOMEKIT_CURRENT.get(hass_state)
+        target_state = HASS_TO_HOMEKIT_TARGET.get(hass_state)
+        if current_state is None and target_state is None:
+            return
+        if current_state is not None and self._set_if_valid(
+            self.char_current_state, current_state
         ):
-            self.char_current_state.set_value(current_state)
             _LOGGER.debug(
                 "%s: Updated current state to %s (%d)",
                 self.entity_id,
                 hass_state,
                 current_state,
             )
-        if (
-            hass_state
-            and (target_state := HASS_TO_HOMEKIT_TARGET.get(hass_state)) is not None
-        ):
-            self.char_target_state.set_value(target_state)
+        if target_state is not None:
+            self._set_if_valid(self.char_target_state, target_state)
