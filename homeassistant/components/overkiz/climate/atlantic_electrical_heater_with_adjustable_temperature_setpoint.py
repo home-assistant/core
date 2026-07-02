@@ -163,9 +163,7 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     @override
     def target_temperature(self) -> float | None:
         """Return the temperature."""
-        # In auto mode the active preset's setpoint is only exposed via
-        # io:EffectiveTemperatureSetpointState; core:TargetTemperatureState
-        # stays pinned to the comfort setpoint.
+        # core:TargetTemperatureState stays pinned to comfort in auto mode.
         state_name = (
             OverkizState.IO_EFFECTIVE_TEMPERATURE_SETPOINT
             if self.hvac_mode == HVACMode.AUTO
@@ -191,8 +189,7 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
-        # In auto mode, setTargetTemperature would overwrite the comfort
-        # setpoint instead of temporarily overriding the active preset.
+        # setTargetTemperature would overwrite comfort instead of the preset.
         command = (
             OverkizCommand.SET_DEROGATED_TARGET_TEMPERATURE
             if self.hvac_mode == HVACMode.AUTO

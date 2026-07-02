@@ -30,8 +30,8 @@ VALVE = FixtureDevice(
 
 # Atlantic Calissia (io:AtlanticElectricalHeaterWithAdjustableTemperatureSetpointIOComponent)
 ELECTRICAL_HEATER_ADJUSTABLE = FixtureDevice(
-    "setup/cloud_atlantic_electrical_heater_adjustable.json",
-    "io://1234-5678-9012/11009627#1",
+    "setup/cloud_atlantic_cozytouch.json",
+    "io://1234-5678-5643/11009627#1",
     "climate.my_home_living_room_heater",
 )
 
