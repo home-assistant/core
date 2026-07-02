@@ -55,8 +55,8 @@
       "latest_commit": {
         "name": "Latest commit"
       },
-      "latest_commit_committed": {
-        "name": "Latest commit committed"
+      "latest_commit_date": {
+        "name": "Latest commit date"
       },
       "latest_discussion": {
         "name": "Latest discussion"
@@ -88,14 +88,14 @@
       "latest_release": {
         "name": "Latest release"
       },
-      "latest_release_published": {
-        "name": "Latest release published"
+      "latest_release_date": {
+        "name": "Latest release date"
       },
       "latest_tag": {
         "name": "Latest tag"
       },
-      "latest_tag_committed": {
-        "name": "Latest tag committed"
+      "latest_tag_date": {
+        "name": "Latest tag date"
       },
       "merged_pulls_count": {
         "name": "Merged pull requests",

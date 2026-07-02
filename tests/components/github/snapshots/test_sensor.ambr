@@ -325,7 +325,7 @@
     'state': 'Fix all the bugs',
   })
 # ---
-# name: test_all_entities[sensor.octocat_hello_world_latest_commit_committed-entry]
+# name: test_all_entities[sensor.octocat_hello_world_latest_commit_date-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -339,7 +339,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.octocat_hello_world_latest_commit_committed',
+    'entity_id': 'sensor.octocat_hello_world_latest_commit_date',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -347,30 +347,30 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Latest commit committed',
+    'object_id_base': 'Latest commit date',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Latest commit committed',
+    'original_name': 'Latest commit date',
     'platform': 'github',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'latest_commit_committed',
-    'unique_id': '1296269_latest_commit_committed',
+    'translation_key': 'latest_commit_date',
+    'unique_id': '1296269_latest_commit_date',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.octocat_hello_world_latest_commit_committed-state]
+# name: test_all_entities[sensor.octocat_hello_world_latest_commit_date-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest commit committed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest commit date',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.octocat_hello_world_latest_commit_committed',
+    'entity_id': 'sensor.octocat_hello_world_latest_commit_date',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -901,7 +901,7 @@
     'state': 'v1.0.0',
   })
 # ---
-# name: test_all_entities[sensor.octocat_hello_world_latest_release_published-entry]
+# name: test_all_entities[sensor.octocat_hello_world_latest_release_date-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -915,7 +915,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.octocat_hello_world_latest_release_published',
+    'entity_id': 'sensor.octocat_hello_world_latest_release_date',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -923,30 +923,30 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Latest release published',
+    'object_id_base': 'Latest release date',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Latest release published',
+    'original_name': 'Latest release date',
     'platform': 'github',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'latest_release_published',
-    'unique_id': '1296269_latest_release_published',
+    'translation_key': 'latest_release_date',
+    'unique_id': '1296269_latest_release_date',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.octocat_hello_world_latest_release_published-state]
+# name: test_all_entities[sensor.octocat_hello_world_latest_release_date-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest release published',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest release date',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.octocat_hello_world_latest_release_published',
+    'entity_id': 'sensor.octocat_hello_world_latest_release_date',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1005,7 +1005,7 @@
     'state': 'v1.0.0',
   })
 # ---
-# name: test_all_entities[sensor.octocat_hello_world_latest_tag_committed-entry]
+# name: test_all_entities[sensor.octocat_hello_world_latest_tag_date-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1019,7 +1019,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.octocat_hello_world_latest_tag_committed',
+    'entity_id': 'sensor.octocat_hello_world_latest_tag_date',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1027,30 +1027,30 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Latest tag committed',
+    'object_id_base': 'Latest tag date',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Latest tag committed',
+    'original_name': 'Latest tag date',
     'platform': 'github',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'latest_tag_committed',
-    'unique_id': '1296269_latest_tag_committed',
+    'translation_key': 'latest_tag_date',
+    'unique_id': '1296269_latest_tag_date',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.octocat_hello_world_latest_tag_committed-state]
+# name: test_all_entities[sensor.octocat_hello_world_latest_tag_date-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest tag committed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest tag date',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.octocat_hello_world_latest_tag_committed',
+    'entity_id': 'sensor.octocat_hello_world_latest_tag_date',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
