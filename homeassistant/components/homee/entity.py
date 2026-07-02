@@ -14,6 +14,8 @@ from . import HomeeConfigEntry
 from .const import DOMAIN
 from .helpers import get_name_for_enum
 
+FIRST_UNAVAILABLE_ATTRIBUTE_STATE = 5
+
 
 class HomeeEntity(Entity):
     """Represents a Homee entity consisting of a single HomeeAttribute."""
@@ -65,9 +67,8 @@ class HomeeEntity(Entity):
     @override
     def available(self) -> bool:
         """Return the availability of the underlying node."""
-        first_unavailable_attribute_state = 5
         return (
-            self._attribute.state < first_unavailable_attribute_state
+            self._attribute.state < FIRST_UNAVAILABLE_ATTRIBUTE_STATE
         ) and self._host_connected
 
     async def async_set_homee_value(self, value: float) -> None:
