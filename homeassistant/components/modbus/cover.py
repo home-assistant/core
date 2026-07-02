@@ -2,18 +2,35 @@
 
 from typing import Any, override
 
-from homeassistant.components.cover import CoverEntity, CoverEntityFeature, CoverState
-from homeassistant.const import CONF_COVERS, CONF_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+import voluptuous as vol
 
-from . import get_hub
+from homeassistant.components.cover import (
+    DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
+    CoverEntity,
+    CoverEntityFeature,
+    CoverState,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_COVERS,
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
+
 from .const import (
     CALL_TYPE_COIL,
+    CALL_TYPE_DISCRETE,
+    CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_REGISTER_INPUT,
     CALL_TYPE_WRITE_COIL,
     CALL_TYPE_WRITE_REGISTER,
+    CONF_INPUT_TYPE,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OPEN,
@@ -22,22 +39,55 @@ from .const import (
     CONF_STATUS_REGISTER_TYPE,
 )
 from .entity import ModbusBaseEntity
-from .modbus import ModbusHub
+from .modbus import ModbusHub, get_hub
+from .validators import BASE_COMPONENT_SCHEMA
+
+COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
+    {
+        vol.Optional(
+            CONF_INPUT_TYPE,
+            default=CALL_TYPE_REGISTER_HOLDING,
+        ): vol.In(
+            [
+                CALL_TYPE_COIL,
+                CALL_TYPE_REGISTER_HOLDING,
+                CALL_TYPE_REGISTER_INPUT,
+            ]
+        ),
+        vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_STATE_CLOSED, default=0): cv.positive_int,
+        vol.Optional(CONF_STATE_CLOSING, default=3): cv.positive_int,
+        vol.Optional(CONF_STATE_OPEN, default=1): cv.positive_int,
+        vol.Optional(CONF_STATE_OPENING, default=2): cv.positive_int,
+        vol.Optional(CONF_STATUS_REGISTER): cv.positive_int,
+        vol.Optional(
+            CONF_STATUS_REGISTER_TYPE,
+            default=CALL_TYPE_REGISTER_HOLDING,
+        ): vol.In(
+            [
+                CALL_TYPE_COIL,
+                CALL_TYPE_REGISTER_HOLDING,
+                CALL_TYPE_REGISTER_INPUT,
+                CALL_TYPE_DISCRETE,
+            ]
+        ),
+    }
+)
 
 PARALLEL_UPDATES = 1
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Read configuration and create Modbus cover."""
-    if discovery_info is None or not (covers := discovery_info[CONF_COVERS]):
-        return
-    hub = get_hub(hass, discovery_info[CONF_NAME])
-    async_add_entities(ModbusCover(hass, hub, config) for config in covers)
+    """Set up Modbus covers from a config entry."""
+    hub = get_hub(hass, config_entry.data[CONF_NAME])
+    async_add_entities(
+        ModbusCover(hass, hub, config)
+        for config in config_entry.data.get(CONF_COVERS, [])
+    )
 
 
 class ModbusCover(ModbusBaseEntity, CoverEntity, RestoreEntity):

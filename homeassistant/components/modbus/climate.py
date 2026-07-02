@@ -3,6 +3,8 @@
 import struct
 from typing import Any, cast, override
 
+import voluptuous as vol
+
 from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_DIFFUSE,
@@ -24,6 +26,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_ADDRESS,
@@ -35,15 +38,15 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import get_hub
 from .const import (
     _LOGGER,
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_REGISTER_INPUT,
     CALL_TYPE_WRITE_COIL,
     CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
@@ -101,12 +104,162 @@ from .const import (
     CONF_TARGET_TEMP_SCALE,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_WRITE_REGISTERS,
+    DEFAULT_HVAC_OFF_VALUE,
+    DEFAULT_HVAC_ON_VALUE,
     DEFAULT_OFFSET,
     DEFAULT_SCALE,
+    DEFAULT_TEMP_UNIT,
     DataType,
 )
 from .entity import ModbusStructEntity
-from .modbus import ModbusHub
+from .modbus import ModbusHub, get_hub
+from .validators import (
+    BASE_STRUCT_SCHEMA,
+    duplicate_fan_mode_validator,
+    duplicate_swing_mode_validator,
+    ensure_and_check_conflicting_scales_and_offsets,
+    hvac_fixedsize_reglist_validator,
+    not_zero_value,
+    register_int_list_validator,
+)
+
+CLIMATE_SCHEMA = vol.All(
+    BASE_STRUCT_SCHEMA.extend(
+        {
+            vol.Required(CONF_TARGET_TEMP): hvac_fixedsize_reglist_validator,
+            vol.Optional(CONF_TARGET_TEMP_WRITE_REGISTERS, default=False): cv.boolean,
+            vol.Optional(CONF_MAX_TEMP, default=35): vol.Coerce(int),
+            vol.Optional(CONF_MIN_TEMP, default=5): vol.Coerce(int),
+            vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
+            vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
+            vol.Exclusive(CONF_HVAC_ONOFF_COIL, "hvac_onoff_type"): cv.positive_int,
+            vol.Exclusive(CONF_HVAC_ONOFF_REGISTER, "hvac_onoff_type"): cv.positive_int,
+            vol.Optional(CONF_CURRENT_TEMP_SCALE): vol.All(
+                vol.Coerce(float),
+                lambda v: not_zero_value(
+                    v, "Current temperature scale cannot be zero."
+                ),
+            ),
+            vol.Optional(CONF_TARGET_TEMP_SCALE): vol.All(
+                vol.Coerce(float),
+                lambda v: not_zero_value(v, "Target temperature scale cannot be zero."),
+            ),
+            vol.Optional(CONF_CURRENT_TEMP_OFFSET): vol.Coerce(float),
+            vol.Optional(CONF_TARGET_TEMP_OFFSET): vol.Coerce(float),
+            vol.Optional(
+                CONF_HVAC_ON_VALUE, default=DEFAULT_HVAC_ON_VALUE
+            ): cv.positive_int,
+            vol.Optional(
+                CONF_HVAC_OFF_VALUE, default=DEFAULT_HVAC_OFF_VALUE
+            ): cv.positive_int,
+            vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
+            vol.Optional(CONF_HVAC_MODE_REGISTER): vol.Maybe(
+                {
+                    CONF_ADDRESS: cv.positive_int,
+                    CONF_HVAC_MODE_VALUES: {
+                        vol.Optional(CONF_HVAC_MODE_OFF): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_HEAT): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_COOL): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_HEAT_COOL): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_AUTO): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_DRY): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_FAN_ONLY): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                    },
+                    vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
+                }
+            ),
+            vol.Optional(CONF_HVAC_ACTION_REGISTER): vol.Maybe(
+                {
+                    CONF_ADDRESS: cv.positive_int,
+                    CONF_HVAC_ACTION_VALUES: {
+                        vol.Optional(CONF_HVAC_ACTION_COOLING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_DEFROSTING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_DRYING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_FAN): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_HEATING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_IDLE): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_OFF): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_PREHEATING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                    },
+                    vol.Optional(
+                        CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING
+                    ): vol.In(
+                        [
+                            CALL_TYPE_REGISTER_HOLDING,
+                            CALL_TYPE_REGISTER_INPUT,
+                        ]
+                    ),
+                }
+            ),
+            vol.Optional(CONF_FAN_MODE_REGISTER): vol.Maybe(
+                vol.All(
+                    {
+                        vol.Required(CONF_ADDRESS): register_int_list_validator,
+                        CONF_FAN_MODE_VALUES: {
+                            vol.Optional(CONF_FAN_MODE_ON): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_OFF): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_AUTO): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_LOW): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_MEDIUM): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_HIGH): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_TOP): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_MIDDLE): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_FOCUS): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_DIFFUSE): cv.positive_int,
+                        },
+                    },
+                    duplicate_fan_mode_validator,
+                ),
+            ),
+            vol.Optional(CONF_SWING_MODE_REGISTER): vol.Maybe(
+                vol.All(
+                    {
+                        vol.Required(CONF_ADDRESS): register_int_list_validator,
+                        CONF_SWING_MODE_VALUES: {
+                            vol.Optional(CONF_SWING_MODE_SWING_ON): cv.positive_int,
+                            vol.Optional(CONF_SWING_MODE_SWING_OFF): cv.positive_int,
+                            vol.Optional(CONF_SWING_MODE_SWING_HORIZ): cv.positive_int,
+                            vol.Optional(CONF_SWING_MODE_SWING_VERT): cv.positive_int,
+                            vol.Optional(CONF_SWING_MODE_SWING_BOTH): cv.positive_int,
+                        },
+                    },
+                    duplicate_swing_mode_validator,
+                )
+            ),
+        },
+    ),
+    ensure_and_check_conflicting_scales_and_offsets,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -122,17 +275,17 @@ HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY = {
 }
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Read configuration and create Modbus climate."""
-    if discovery_info is None or not (climates := discovery_info[CONF_CLIMATES]):
-        return
-    hub = get_hub(hass, discovery_info[CONF_NAME])
-    async_add_entities(ModbusThermostat(hass, hub, config) for config in climates)
+    """Set up Modbus climate entities from a config entry."""
+    hub = get_hub(hass, config_entry.data[CONF_NAME])
+    async_add_entities(
+        ModbusThermostat(hass, hub, config)
+        for config in config_entry.data.get(CONF_CLIMATES, [])
+    )
 
 
 class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):

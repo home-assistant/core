@@ -2,18 +2,20 @@
 
 from typing import Any, override
 
+import voluptuous as vol
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     ColorMode,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LIGHTS, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import get_hub
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_WRITE_REGISTER,
@@ -29,22 +31,32 @@ from .const import (
     LIGHT_MODBUS_SCALE_MIN,
 )
 from .entity import ModbusToggleEntity
-from .modbus import ModbusHub
+from .modbus import ModbusHub, get_hub
+from .validators import BASE_SWITCH_SCHEMA
+
+LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend(
+    {
+        vol.Optional(CONF_BRIGHTNESS_REGISTER): cv.positive_int,
+        vol.Optional(CONF_COLOR_TEMP_REGISTER): cv.positive_int,
+        vol.Optional(CONF_MIN_TEMP): cv.positive_int,
+        vol.Optional(CONF_MAX_TEMP): cv.positive_int,
+    }
+)
 
 PARALLEL_UPDATES = 1
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Read configuration and create Modbus lights."""
-    if discovery_info is None or not (lights := discovery_info[CONF_LIGHTS]):
-        return
-    hub = get_hub(hass, discovery_info[CONF_NAME])
-    async_add_entities(ModbusLight(hass, hub, config) for config in lights)
+    """Set up Modbus lights from a config entry."""
+    hub = get_hub(hass, config_entry.data[CONF_NAME])
+    async_add_entities(
+        ModbusLight(hass, hub, config)
+        for config in config_entry.data.get(CONF_LIGHTS, [])
+    )
 
 
 class ModbusLight(ModbusToggleEntity, LightEntity):
