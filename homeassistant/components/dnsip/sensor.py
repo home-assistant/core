@@ -158,15 +158,9 @@ class WanIpSensor(SensorEntity):
             return ips
 
         for res in response.answer:
-            if type(res.data) is pycares.CNAMERecordData:
-                addr = await self.async_resolve(res.data.cname)
-                ips.extend(addr)
-            else:
-                if TYPE_CHECKING:
-                    assert isinstance(
-                        res.data, (pycares.AAAARecordData, pycares.ARecordData)
-                    )
-                ips.append(res.data.addr)
+            if isinstance(res.data, (pycares.AAAARecordData, pycares.ARecordData)):
+                addr = res.data.addr
+                ips.append(addr)
         return ips
 
     async def async_update(self) -> None:

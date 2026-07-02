@@ -16,10 +16,7 @@ class RetrieveDNS:
     """Return list of test information."""
 
     def __init__(
-        self,
-        nameservers: list[str] | None = None,
-        error: Exception | None = None,
-        cname_runs: int = 0,
+        self, nameservers: list[str] | None = None, error: Exception | None = None
     ) -> None:
         """Initialize DNS class."""
         if nameservers:
@@ -27,7 +24,6 @@ class RetrieveDNS:
         self._nameservers = ["1.2.3.4"]
         self.error = error
         self._closed = False
-        self.cname_runs = cname_runs
 
     async def query_dns(
         self, host: str, qtype: str, qclass: str | None = None
@@ -35,21 +31,6 @@ class RetrieveDNS:
         """Return dns information."""
         if self.error:
             raise self.error
-        if self.cname_runs > 0:
-            self.cname_runs -= 1
-            return pycares.DNSResult(
-                answer=[
-                    pycares.DNSRecord(
-                        name="test",
-                        type=pycares.QUERY_TYPE_A,
-                        record_class=pycares.QUERY_CLASS_IN,
-                        data=pycares.CNAMERecordData(cname="test.testing.com"),
-                        ttl=60,
-                    ),
-                ],
-                authority=[],
-                additional=[],
-            )
         if qtype == "AAAA":
             results = pycares.DNSResult(
                 answer=[
@@ -88,6 +69,13 @@ class RetrieveDNS:
         else:
             results = pycares.DNSResult(
                 answer=[
+                    pycares.DNSRecord(
+                        name="test",
+                        type=pycares.QUERY_TYPE_CNAME,
+                        record_class=pycares.QUERY_CLASS_IN,
+                        data=pycares.CNAMERecordData(cname="test.testing.com"),
+                        ttl=60,
+                    ),
                     pycares.DNSRecord(
                         name="test",
                         type=pycares.QUERY_TYPE_A,

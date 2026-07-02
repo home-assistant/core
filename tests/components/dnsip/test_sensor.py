@@ -237,7 +237,7 @@ async def test_sensor_timeout(
 
 
 async def test_handle_cname(hass: HomeAssistant) -> None:
-    """Test handling of CNAME records."""
+    """Test CNAME records are dropped."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_USER,
@@ -260,7 +260,7 @@ async def test_handle_cname(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.dnsip.aiodns.DNSResolver",
-        side_effect=[RetrieveDNS(cname_runs=2)],
+        return_value=RetrieveDNS(),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
