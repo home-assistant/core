@@ -18,6 +18,12 @@ from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
+USER_INPUT = {
+    "host": "1.1.1.1",
+    "username": "api",
+    "password": "test-password",
+}
+
 
 async def test_user_flow(hass: HomeAssistant) -> None:
     """Test we get the form and create an entry."""
@@ -33,21 +39,13 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "api",
-                "password": "test-password",
-            },
+            USER_INPUT,
         )
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Flow-it Device"
-    assert result["data"] == {
-        "host": "http://1.1.1.1",
-        "username": "api",
-        "password": "test-password",
-    }
+    assert result["data"] == {**USER_INPUT, "host": "http://1.1.1.1"}
     assert result["result"].unique_id == "00:11:22:33:44:55"
 
 
@@ -73,11 +71,7 @@ async def test_user_flow_exceptions(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "api",
-                "password": "test-password",
-            },
+            USER_INPUT,
         )
 
     assert result["type"] == FlowResultType.FORM
@@ -89,21 +83,13 @@ async def test_user_flow_exceptions(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "api",
-                "password": "test-password",
-            },
+            USER_INPUT,
         )
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Flow-it Device"
-    assert result["data"] == {
-        "host": "http://1.1.1.1",
-        "username": "api",
-        "password": "test-password",
-    }
+    assert result["data"] == {**USER_INPUT, "host": "http://1.1.1.1"}
     assert result["result"].unique_id == "00:11:22:33:44:55"
 
 
@@ -236,11 +222,7 @@ async def test_user_already_configured(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "api",
-                "password": "test-password",
-            },
+            USER_INPUT,
         )
 
     assert result["type"] == FlowResultType.ABORT
@@ -292,11 +274,7 @@ async def test_user_flow_with_http(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "http://1.1.1.1",
-                "username": "api",
-                "password": "test-password",
-            },
+            {**USER_INPUT, "host": "http://1.1.1.1"},
         )
         await hass.async_block_till_done()
 
