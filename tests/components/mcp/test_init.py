@@ -15,6 +15,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     HomeAssistantError,
+    OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import llm
@@ -526,3 +527,64 @@ async def test_tool_call_timeout(
             ),
             create_llm_context(),
         )
+
+
+async def test_tool_call_transient_oauth_failure(
+    hass: HomeAssistant,
+    credential: None,
+    config_entry_with_auth: MockConfigEntry,
+    mock_mcp_client: Mock,
+) -> None:
+    """Test tool call transient token refresh failure does not trigger reauth."""
+    mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
+        tools=[SEARCH_MEMORY_TOOL]
+    )
+
+    await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
+    assert config_entry_with_auth.state is ConfigEntryState.LOADED
+
+    apis = llm.async_get_apis(hass)
+    api = next(iter([api for api in apis if api.name == TEST_API_NAME]))
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    tool = api_instance.tools[0]
+
+    # Mock transient token validation failure (e.g. 503 Service Unavailable)
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            side_effect=OAuth2TokenRequestError(
+                request_info=Mock(), history=(), domain=DOMAIN
+            ),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await tool.async_call(
+            hass,
+            llm.ToolInput(
+                tool_name="search_memory", tool_args={"query": "User's birth month"}
+            ),
+            create_llm_context(),
+        )
+
+    # Verify no reauth flow is initiated
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 0
+
+
+async def test_mcp_server_setup_transient_oauth_failure(
+    hass: HomeAssistant,
+    credential: None,
+    config_entry_with_auth: MockConfigEntry,
+) -> None:
+    """Test setup transient OAuth failure does not trigger reauth."""
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=OAuth2TokenRequestError(
+            request_info=Mock(), history=(), domain=DOMAIN
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
+        assert config_entry_with_auth.state is ConfigEntryState.SETUP_RETRY
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 0
