@@ -1,0 +1,29 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_station": "The station ID is invalid or does not exist.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "station": "Station ID"
+        },
+        "data_description": {
+          "station": "The numeric ID of the hydrological measuring station."
+        },
+        "description": "Enter the ID of a station from the Federal Office for the Environment (FOEN)."
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue": {
+      "description": "Configuring Swiss Hydrological Data using YAML is deprecated.\n\nWhile importing your configuration, an error occurred when trying to connect to the FOEN API. Please restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
+      "title": "Swiss Hydrological Data YAML configuration deprecated"
+    }
+  }
+}

@@ -1,0 +1,178 @@
+# serializer version: 1
+# name: test_sensor_entities[sensor.aare_discharge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aare_discharge',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Aare discharge',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:waves',
+    'original_name': 'Aare discharge',
+    'platform': 'swiss_hydrological_data',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '2289_discharge',
+    'unit_of_measurement': 'm3/s',
+  })
+# ---
+# name: test_sensor_entities[sensor.aare_discharge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by the Swiss Federal Office for the Environment FOEN',
+      'friendly_name': 'Aare discharge',
+      'icon': 'mdi:waves',
+      'max_24h': 135.2,
+      'mean_24h': 128.3,
+      'min_24h': 120.1,
+      'station': 'Bern',
+      'station_update': '2023-01-01T12:00:00',
+      'unit_of_measurement': 'm3/s',
+      'water_body_type': 'river',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aare_discharge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '125.4',
+  })
+# ---
+# name: test_sensor_entities[sensor.aare_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aare_level',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Aare level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:zodiac-aquarius',
+    'original_name': 'Aare level',
+    'platform': 'swiss_hydrological_data',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '2289_level',
+    'unit_of_measurement': 'm ü.M.',
+  })
+# ---
+# name: test_sensor_entities[sensor.aare_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by the Swiss Federal Office for the Environment FOEN',
+      'friendly_name': 'Aare level',
+      'icon': 'mdi:zodiac-aquarius',
+      'max_24h': 491.02,
+      'mean_24h': 490.62,
+      'min_24h': 490.12,
+      'station': 'Bern',
+      'station_update': '2023-01-01T12:00:00',
+      'unit_of_measurement': 'm ü.M.',
+      'water_body_type': 'river',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aare_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '490.52',
+  })
+# ---
+# name: test_sensor_entities[sensor.aare_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aare_temperature',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Aare temperature',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:oil-temperature',
+    'original_name': 'Aare temperature',
+    'platform': 'swiss_hydrological_data',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '2289_temperature',
+    'unit_of_measurement': '°C',
+  })
+# ---
+# name: test_sensor_entities[sensor.aare_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by the Swiss Federal Office for the Environment FOEN',
+      'friendly_name': 'Aare temperature',
+      'icon': 'mdi:oil-temperature',
+      'max_24h': 6.1,
+      'mean_24h': 5.4,
+      'min_24h': 4.8,
+      'station': 'Bern',
+      'station_update': '2023-01-01T12:00:00',
+      'unit_of_measurement': '°C',
+      'water_body_type': 'river',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aare_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.2',
+  })
+# ---
