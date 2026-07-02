@@ -1,0 +1,11 @@
+{
+  "domain": "led_infrared",
+  "name": "LED Infrared",
+  "codeowners": ["@tr4nt0r"],
+  "config_flow": true,
+  "dependencies": ["infrared"],
+  "documentation": "https://www.home-assistant.io/integrations/led_infrared",
+  "integration_type": "device",
+  "iot_class": "assumed_state",
+  "quality_scale": "bronze"
+}
