@@ -15,7 +15,14 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ALARM_STATE_TO_HA, CONF_GIID, DOMAIN, LOGGER
+from .const import (
+    ALARM_STATE_TO_HA,
+    CONF_FORCE_ARM,
+    CONF_GIID,
+    DEFAULT_FORCE_ARM,
+    DOMAIN,
+    LOGGER,
+)
 from .coordinator import VerisureConfigEntry, VerisureDataUpdateCoordinator
 
 
@@ -114,8 +121,12 @@ class VerisureAlarm(
         """Send arm home command."""
         self._attr_alarm_state = AlarmControlPanelState.ARMING
         self.async_write_ha_state()
+        force_arm = self.coordinator.config_entry.options.get(
+            CONF_FORCE_ARM, DEFAULT_FORCE_ARM
+        )
         await self._async_set_arm_state(
-            "ARMED_HOME", self.coordinator.verisure.arm_home(code)
+            "ARMED_HOME",
+            self.coordinator.verisure.arm_home(code, force_arm=force_arm),
         )
 
     @override
@@ -123,8 +134,12 @@ class VerisureAlarm(
         """Send arm away command."""
         self._attr_alarm_state = AlarmControlPanelState.ARMING
         self.async_write_ha_state()
+        force_arm = self.coordinator.config_entry.options.get(
+            CONF_FORCE_ARM, DEFAULT_FORCE_ARM
+        )
         await self._async_set_arm_state(
-            "ARMED_AWAY", self.coordinator.verisure.arm_away(code)
+            "ARMED_AWAY",
+            self.coordinator.verisure.arm_away(code, force_arm=force_arm),
         )
 
     def _update_alarm_attributes(self) -> None:
