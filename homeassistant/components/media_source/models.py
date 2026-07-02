@@ -4,13 +4,35 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.translation import async_get_cached_translations
 
-from .const import MEDIA_SOURCE_DATA, URI_SCHEME, URI_SCHEME_REGEX
+from .const import (
+    DATA_LOCAL_SOURCE,
+    DATA_MEDIA_SOURCE_PLATFORMS,
+    DOMAIN,
+    URI_SCHEME,
+    URI_SCHEME_REGEX,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+
+async def _async_get_media_sources(hass: HomeAssistant) -> dict[str, MediaSource]:
+    """Return all media sources, loading integration platforms on demand."""
+    sources: dict[str, MediaSource] = {DOMAIN: hass.data[DATA_LOCAL_SOURCE]}
+    sources.update(await hass.data[DATA_MEDIA_SOURCE_PLATFORMS].async_get_platforms())
+    return sources
+
+
+async def _async_get_media_source(
+    hass: HomeAssistant, domain: str
+) -> MediaSource | None:
+    """Return the media source for a domain, loading it on demand."""
+    if domain == DOMAIN:
+        return hass.data[DATA_LOCAL_SOURCE]
+    return await hass.data[DATA_MEDIA_SOURCE_PLATFORMS].async_get_platform(domain)
 
 
 @dataclass(slots=True)
@@ -81,6 +103,7 @@ class MediaSourceItem:
                 can_expand=True,
                 children_media_class=MediaClass.APP,
             )
+            sources = await _async_get_media_sources(self.hass)
             base.children = sorted(
                 (
                     BrowseMediaSource(
@@ -93,24 +116,28 @@ class MediaSourceItem:
                         can_play=False,
                         can_expand=True,
                     )
-                    for source in self.hass.data[MEDIA_SOURCE_DATA].values()
+                    for source in sources.values()
                 ),
                 key=lambda item: item.title,
             )
             return base
 
-        return await self.async_media_source().async_browse_media(self)
+        source = await self._async_media_source()
+        return await source.async_browse_media(self)
 
     async def async_resolve(self) -> PlayMedia:
         """Resolve to playable item."""
-        return await self.async_media_source().async_resolve_media(self)
+        source = await self._async_media_source()
+        return await source.async_resolve_media(self)
 
-    @callback
-    def async_media_source(self) -> MediaSource:
+    async def _async_media_source(self) -> MediaSource:
         """Return media source that owns this item."""
         if TYPE_CHECKING:
             assert self.domain is not None
-        return self.hass.data[MEDIA_SOURCE_DATA][self.domain]
+        # Existence is validated by _get_media_item before browse/resolve.
+        source = await _async_get_media_source(self.hass, self.domain)
+        assert source is not None
+        return source
 
     @classmethod
     def from_uri(
