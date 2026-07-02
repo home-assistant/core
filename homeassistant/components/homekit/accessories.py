@@ -87,6 +87,7 @@ from .const import (
     TYPE_AIR_PURIFIER,
     TYPE_FAN,
     TYPE_FAUCET,
+    TYPE_IRRIGATION_SYSTEM,
     TYPE_OUTLET,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
@@ -107,6 +108,7 @@ from .util import (
 _LOGGER = logging.getLogger(__name__)
 SWITCH_TYPES = {
     TYPE_FAUCET: "ValveSwitch",
+    TYPE_IRRIGATION_SYSTEM: "IrrigationSystem",
     TYPE_OUTLET: "Outlet",
     TYPE_SHOWER: "ValveSwitch",
     TYPE_SPRINKLER: "ValveSwitch",
