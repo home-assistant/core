@@ -72,6 +72,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # executor thread (_sync_update_data). Bool assignment is atomic under CPython's GIL.
         self._fetch_device_list: bool = False
 
+        self.api: Any
         if self.api_version == "v1":
             self.username = None
             self.password = None
@@ -183,6 +184,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 # todayEnergy -> today_energy
                 # totalEnergy -> total_energy
                 # invTodayPpv -> current_power
+
                 try:
                     total_info = self.api.plant_energy_overview(self.plant_id)
                 except growattServer.GrowattV1ApiError as err:
@@ -220,6 +222,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.data = self.api.inverter_detail(self.device_id)
         elif self.device_type == "min":
             # Open API V1: min device
+
             try:
                 min_details = self.api.min_detail(self.device_id)
                 min_settings = self.api.min_settings(self.device_id)
