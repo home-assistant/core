@@ -153,7 +153,7 @@ async def check_migration(
     old_unique_id: str,
     new_unique_id: str,
 ) -> None:
-    """Helper-function for checking a unique_id migration."""
+    """Helper function for checking a unique_id migration."""
     mock_config_entry.add_to_hass(hass)
 
     entity_registry = er.async_get(hass)
