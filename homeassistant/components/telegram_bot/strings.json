@@ -88,7 +88,8 @@
     "allowed_chat_ids": {
       "abort": {
         "already_configured": "Chat already configured",
-        "entry_not_loaded": "[%key:component::telegram_bot::exceptions::entry_not_loaded::message%]"
+        "entry_not_loaded": "[%key:component::telegram_bot::exceptions::entry_not_loaded::message%]",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
       "entry_type": "Allowed chat ID",
       "error": {
@@ -99,12 +100,25 @@
         "user": "Add allowed chat ID"
       },
       "step": {
-        "user": {
+        "reconfigure": {
           "data": {
-            "chat_id": "Chat ID"
+            "chat_id": "[%key:component::telegram_bot::config_subentries::allowed_chat_ids::step::user::data::chat_id%]",
+            "message_thread_id": "[%key:component::telegram_bot::config_subentries::allowed_chat_ids::step::user::data::message_thread_id%]"
           },
           "data_description": {
-            "chat_id": "ID representing the user or group chat to which messages can be sent."
+            "chat_id": "[%key:component::telegram_bot::config_subentries::allowed_chat_ids::step::user::data_description::chat_id%]",
+            "message_thread_id": "[%key:component::telegram_bot::config_subentries::allowed_chat_ids::step::user::data_description::message_thread_id%]"
+          },
+          "title": "Update chat"
+        },
+        "user": {
+          "data": {
+            "chat_id": "Chat ID",
+            "message_thread_id": "Message thread ID"
+          },
+          "data_description": {
+            "chat_id": "ID representing the user or group chat to which messages can be sent.",
+            "message_thread_id": "Optional Telegram forum topic thread ID. Leave empty for chats without topics or to send to the default thread."
           },
           "description": "Before you proceed, send any message to your bot: [{bot_username}]({bot_url}). This is required because Telegram prevents bots from initiating chats with users.\n\nThen follow these steps to get your chat ID:\n\n1. Open Telegram and start a chat with [{id_bot_username}]({id_bot_url}).\n1. Send any message to the bot.\n1. Your chat ID is in the `ID` field of the bot's response.\n\nMost recent chat: {most_recent_chat}",
           "title": "Add chat"
