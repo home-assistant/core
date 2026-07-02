@@ -1,5 +1,6 @@
 """Ban logic for HTTP component."""
 
+import asyncio
 from collections import defaultdict
 from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
@@ -22,13 +23,15 @@ from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
-from .const import KEY_HASS, is_supervisor_unix_socket_request
+from .const import DOMAIN, KEY_HASS, is_supervisor_unix_socket_request
 from .view import HomeAssistantView
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -49,6 +52,14 @@ SCHEMA_IP_BAN_ENTRY: Final = vol.Schema(
     {vol.Optional("banned_at"): vol.Any(None, cv.datetime)}
 )
 
+SERVICE_UNBAN: Final = "unban"
+
+SCHEMA_UNBAN_SERVICE: Final = vol.Schema(
+    {
+        vol.Required(CONF_IP_ADDRESS): cv.string,
+    }
+)
+
 
 @callback
 def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> None:
@@ -63,6 +74,26 @@ def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> N
         await app[KEY_BAN_MANAGER].async_load()
 
     app.on_startup.append(ban_startup)
+
+    async def async_handle_unban_service(service: ServiceCall) -> None:
+        """Handle calls to http.unban."""
+        try:
+            unbanned_ip_address = ip_address(service.data[CONF_IP_ADDRESS])
+        except ValueError as exc:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unban_invalid_ip_address",
+                translation_placeholders={"ip_address": service.data[CONF_IP_ADDRESS]},
+            ) from exc
+        await app[KEY_BAN_MANAGER].async_remove_ban(unbanned_ip_address)
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_UNBAN,
+        async_handle_unban_service,
+        schema=SCHEMA_UNBAN_SERVICE,
+    )
 
 
 @middleware
@@ -176,7 +207,7 @@ def process_success_login(request: Request) -> None:
 
     Reset failed login attempts counter for remote IP address.
     No release IP address from banned list function, it can only be done by
-    manual modify ip bans config file.
+    manually modifying ip bans config file or by calling the http.unban action.
     """
     app = request.app
     # Check if ban middleware is loaded
@@ -213,6 +244,7 @@ class IpBanManager:
         self.hass = hass
         self.path = hass.config.path(IP_BANS_FILE)
         self.ip_bans_lookup: dict[IPv4Address | IPv6Address, IpBan] = {}
+        self.ip_bans_lock = asyncio.Lock()
 
     async def async_load(self) -> None:
         """Load the existing IP bans."""
@@ -241,17 +273,44 @@ class IpBanManager:
 
         self.ip_bans_lookup = ip_bans_lookup
 
+    @staticmethod
+    def _get_ban_entry(ip_ban: IpBan) -> dict[str, str]:
+        """Get the ban entry for a given IP ban."""
+        return {ATTR_BANNED_AT: ip_ban.banned_at.isoformat()}
+
     def _add_ban(self, ip_ban: IpBan) -> None:
         """Update config file with new banned IP address."""
         with open(self.path, "a", encoding="utf8") as out:
-            ip_ = {
-                str(ip_ban.ip_address): {ATTR_BANNED_AT: ip_ban.banned_at.isoformat()}
-            }
+            ban_entry = {str(ip_ban.ip_address): self._get_ban_entry(ip_ban)}
             # Write in a single write call to avoid interleaved writes
-            out.write("\n" + yaml_util.dump(ip_))
+            out.write("\n" + yaml_util.dump(ban_entry))
+
+    def _save_all_bans(self) -> None:
+        """Save all banned IP addresses to the config file."""
+        ip_bans = {
+            str(ip_ban.ip_address): self._get_ban_entry(ip_ban)
+            for ip_ban in self.ip_bans_lookup.values()
+        }
+        try:
+            yaml_util.save_yaml(self.path, ip_bans)
+        except OSError as exc:
+            _LOGGER.error("Failed to save IP bans to file: %s", exc)
 
     async def async_add_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
         """Add a new IP address to the banned list."""
-        if remote_addr not in self.ip_bans_lookup:
-            new_ban = self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
-            await self.hass.async_add_executor_job(self._add_ban, new_ban)
+        async with self.ip_bans_lock:
+            if remote_addr not in self.ip_bans_lookup:
+                new_ban = self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
+                await self.hass.async_add_executor_job(self._add_ban, new_ban)
+
+    async def async_remove_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
+        """Remove a banned IP address from the banned list."""
+        async with self.ip_bans_lock:
+            if self.ip_bans_lookup.pop(remote_addr, None):
+                await self.hass.async_add_executor_job(self._save_all_bans)
+            else:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="unban_not_banned_ip_address",
+                    translation_placeholders={"ip_address": str(remote_addr)},
+                )

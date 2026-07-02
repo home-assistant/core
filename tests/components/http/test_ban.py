@@ -22,7 +22,7 @@ from homeassistant.components.http.ban import (
 )
 from homeassistant.components.http.view import request_handler_factory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.http import KEY_AUTHENTICATED, KEY_HASS
 from homeassistant.setup import async_setup_component
 
@@ -76,6 +76,62 @@ async def test_access_from_banned_ip(
         set_real_ip(remote_addr)
         resp = await client.get("/")
         assert resp.status == HTTPStatus.FORBIDDEN
+
+
+async def test_unban(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test unbanning IP addresses."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+    setup_bans(hass, app, 5)
+    set_real_ip = mock_real_ip(app)
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        return_value={
+            banned_ip: {"banned_at": "2016-11-16T19:20:03"} for banned_ip in BANNED_IPS
+        },
+    ):
+        client = await aiohttp_client(app)
+
+    for remote_addr in BANNED_IPS:
+        set_real_ip(remote_addr)
+        resp = await client.get("/")
+        assert resp.status == HTTPStatus.FORBIDDEN
+
+    with patch(
+        "homeassistant.components.http.ban.yaml_util.save_yaml", return_value=None
+    ):
+        for remote_address in BANNED_IPS:
+            await hass.services.async_call(
+                "http",
+                "unban",
+                {"ip_address": remote_address},
+                blocking=True,
+            )
+        for remote_address in BANNED_IPS:
+            with pytest.raises(ServiceValidationError):
+                await hass.services.async_call(
+                    "http",
+                    "unban",
+                    {"ip_address": remote_address},
+                    blocking=True,
+                )
+        with pytest.raises(ServiceValidationError):
+            await hass.services.async_call(
+                "http",
+                "unban",
+                {"ip_address": "xyzzy"},
+                blocking=True,
+            )
+
+    assert len(app[KEY_BAN_MANAGER].ip_bans_lookup) == 0
+
+    for remote_addr in BANNED_IPS:
+        set_real_ip(remote_addr)
+        resp = await client.get("/")
+        assert resp.status != HTTPStatus.FORBIDDEN
 
 
 async def test_access_from_banned_ip_with_partially_broken_yaml_file(
