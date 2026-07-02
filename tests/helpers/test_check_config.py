@@ -608,3 +608,44 @@ async def test_removed_yaml_support(hass: HomeAssistant) -> None:
 
         assert res.keys() == {"homeassistant"}
         _assert_warnings_errors(res, [], [])
+
+
+@pytest.mark.parametrize(
+    ("provider_type", "missing_key"),
+    [
+        ("trusted_networks", "trusted_networks"),
+        ("command_line", "command"),
+    ],
+)
+async def test_auth_provider_missing_required_key(
+    hass: HomeAssistant, provider_type: str, missing_key: str
+) -> None:
+    """Test config check flags missing required key in auth provider config."""
+    files = {
+        YAML_CONFIG_FILE: BASE_CONFIG
+        + f"  auth_providers:\n    - type: {provider_type}\n"
+    }
+    with patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+        res = await async_check_ha_config_file(hass)
+        log_ha_config(res)
+
+        assert len(res.errors) == 1
+        assert missing_key in res.errors[0].message
+
+
+async def test_auth_provider_valid_trusted_networks(
+    hass: HomeAssistant,
+) -> None:
+    """Test config check accepts a valid trusted_networks provider config."""
+    files = {
+        YAML_CONFIG_FILE: BASE_CONFIG
+        + "  auth_providers:\n"
+        + "    - type: trusted_networks\n"
+        + "      trusted_networks:\n"
+        + "        - 192.168.0.0/24\n"
+    }
+    with patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+        res = await async_check_ha_config_file(hass)
+        log_ha_config(res)
+
+        _assert_warnings_errors(res, [], [])
