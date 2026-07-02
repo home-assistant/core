@@ -8450,6 +8450,12 @@
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "virtual_remote": {
+      "name": "Virtual Remote",
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_push"
     }
   },
   "translated_name": [

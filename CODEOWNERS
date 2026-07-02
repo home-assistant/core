@@ -1954,6 +1954,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/victron_remote_monitoring/ @AndyTempel
 /homeassistant/components/vilfo/ @ManneW
 /tests/components/vilfo/ @ManneW
+/homeassistant/components/virtual_remote/ @orandasoft
+/tests/components/virtual_remote/ @orandasoft
 /homeassistant/components/vistapool/ @fdebrus
 /tests/components/vistapool/ @fdebrus
 /homeassistant/components/vivotek/ @HarlemSquirrel
