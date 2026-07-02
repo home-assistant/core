@@ -805,15 +805,17 @@ def _get_test_integration_with_usb_matcher(
                 {
                     "vid": "10C4",
                     "pid": "EA60",
+                    "manufacturer": "silicon labs",
+                    "description": "*cc2652*",
                     "known_devices": ["slae.sh cc2652rb stick"],
                 },
-                {"vid": "1CF1", "pid": "0030", "known_devices": ["Conbee II"]},
                 {
-                    "vid": "1A86",
-                    "pid": "7523",
-                    "known_devices": ["Electrolama zig-a-zig-ah"],
+                    "vid": "1CF1",
+                    "pid": "0030",
+                    "manufacturer": "dresden elektronik",
+                    "description": "*conbee*",
+                    "known_devices": ["Conbee II"],
                 },
-                {"vid": "10C4", "pid": "8A2A", "known_devices": ["Nortek HUSBZB-1"]},
             ],
         },
     )
@@ -987,11 +989,64 @@ async def test_get_usb(hass: HomeAssistant) -> None:
         usb = await loader.async_get_usb(hass)
         usb_for_domain = [entry for entry in usb if entry["domain"] == "test_1"]
         assert usb_for_domain == [
-            {"domain": "test_1", "vid": "10C4", "pid": "EA60"},
-            {"domain": "test_1", "vid": "1CF1", "pid": "0030"},
-            {"domain": "test_1", "vid": "1A86", "pid": "7523"},
-            {"domain": "test_1", "vid": "10C4", "pid": "8A2A"},
+            {
+                "domain": "test_1",
+                "vid": "10C4",
+                "pid": "EA60",
+                "manufacturer": "silicon labs",
+                "description": "*cc2652*",
+            },
+            {
+                "domain": "test_1",
+                "vid": "1CF1",
+                "pid": "0030",
+                "manufacturer": "dresden elektronik",
+                "description": "*conbee*",
+            },
         ]
+
+
+async def test_get_usb_drops_incomplete_entries(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """USB matchers missing vid, pid, manufacturer, or description are dropped."""
+    integration = loader.Integration(
+        hass,
+        "homeassistant.components.test",
+        None,
+        {
+            "name": "test",
+            "domain": "test",
+            "config_flow": True,
+            "dependencies": [],
+            "requirements": [],
+            "usb": [
+                {
+                    "vid": "10C4",
+                    "pid": "EA60",
+                    "manufacturer": "silicon labs",
+                    "description": "*cc2652*",
+                },
+                {"vid": "10C4", "pid": "EA60"},
+            ],
+        },
+    )
+
+    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
+        mock_get.return_value = {"test": integration}
+        usb = await loader.async_get_usb(hass)
+
+    assert [entry for entry in usb if entry["domain"] == "test"] == [
+        {
+            "domain": "test",
+            "vid": "10C4",
+            "pid": "EA60",
+            "manufacturer": "silicon labs",
+            "description": "*cc2652*",
+        },
+    ]
+    assert "Ignoring USB discovery entry" in caplog.text
+    assert "custom integration test" in caplog.text
 
 
 async def test_get_homekit(hass: HomeAssistant) -> None:
