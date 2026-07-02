@@ -1,8 +1,10 @@
 """Coordinator for speedtestdotnet."""
 
 from datetime import timedelta
+from http.client import InvalidURL
 import logging
 from typing import Any, cast, override
+from urllib.parse import urlsplit, urlunsplit
 
 import speedtest
 
@@ -15,6 +17,20 @@ from .const import CONF_SERVER_ID, DEFAULT_SCAN_INTERVAL, DEFAULT_SERVER, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 type SpeedTestConfigEntry = ConfigEntry[SpeedTestDataCoordinator]
+
+
+def _normalize_server_url(server: dict[str, Any]) -> None:
+    """Normalize a speedtest server URL."""
+    url_parts = urlsplit(server["url"])
+    server["url"] = urlunsplit(
+        (
+            url_parts.scheme,
+            url_parts.netloc.strip(),
+            url_parts.path,
+            url_parts.query,
+            url_parts.fragment,
+        )
+    )
 
 
 class SpeedTestDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -45,6 +61,9 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         test_servers_list = [
             server for servers in test_servers.values() for server in servers
         ]
+        for server in test_servers_list:
+            _normalize_server_url(server)
+
         for server in sorted(
             test_servers_list,
             key=lambda server: (
@@ -81,5 +100,7 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return await self.hass.async_add_executor_job(self.update_data)
         except speedtest.NoMatchedServers as err:
             raise UpdateFailed("Selected server is not found.") from err
+        except InvalidURL as err:
+            raise UpdateFailed(err) from err
         except speedtest.SpeedtestException as err:
             raise UpdateFailed(err) from err
