@@ -510,16 +510,14 @@ class AssistAPI(API):
         if not exposed_entities or not exposed_entities["entities"]:
             return NO_ENTITIES_PROMPT
 
-        # Collect all parts, filtering out any None values
         prompt_parts = [
             DEVICE_CONTROL_TOOL_USAGE_PROMPT,
-            DYNAMIC_CONTEXT_PROMPT,
-            *self._async_get_exposed_entities_prompt(exposed_entities),
             self._async_get_voice_satellite_area_prompt(llm_context),
             self._async_get_no_timer_prompt(llm_context),
+            DYNAMIC_CONTEXT_PROMPT,
+            *self._async_get_exposed_entities_prompt(exposed_entities),
         ]
 
-        # Filter out None and empty strings before joining
         return "\n".join([part for part in prompt_parts if part])
 
     @callback
@@ -532,35 +530,15 @@ class AssistAPI(API):
 
     @callback
     def _async_get_voice_satellite_area_prompt(self, llm_context: LLMContext) -> str:
-        """Return the area prompt for the voice satellite."""
-        floor: fr.FloorEntry | None = None
-        area: ar.AreaEntry | None = None
-        extra = ""
         if llm_context.device_id:
-            device_reg = dr.async_get(self.hass)
-            device = device_reg.async_get(llm_context.device_id)
-
-            if device:
-                area_reg = ar.async_get(self.hass)
-                if device.area_id and (area := area_reg.async_get_area(device.area_id)):
-                    floor_reg = fr.async_get(self.hass)
-                    if area.floor_id:
-                        floor = floor_reg.async_get_floor(area.floor_id)
-
-            extra = (
-                "and all generic commands like"
-                " 'turn on the lights' should target"
-                " this area."
+            return (
+                "When a request names a generic device without an area, "
+                "treat it as the user's current area and call "
+                "`GetCurrentLocation` to resolve it before targeting."
             )
-
-        if floor and area:
-            return f"You are in area {area.name} (floor {floor.name}) {extra}".strip()
-        if area:
-            return f"You are in area {area.name} {extra}".strip()
         return (
-            "When a user asks to turn on all devices of a specific type, "
-            "ask the user to specify an area, unless there"
-            " is only one device of that type."
+            "When a request names a generic device without an area, "
+            "ask the user to specify which area they mean before targeting."
         )
 
     @callback
@@ -646,6 +624,9 @@ class AssistAPI(API):
 
         if exposed_domains:
             tools.append(GetLiveContextTool())
+
+            if llm_context.device_id:
+                tools.append(GetCurrentLocationTool())
 
         return tools
 
@@ -1376,3 +1357,54 @@ class GetDateTimeTool(Tool):
                 "weekday": now.strftime("%A"),
             },
         }
+
+
+class GetCurrentLocationTool(Tool):
+    """Tool for getting the area (and floor) of the requesting device."""
+
+    name = "GetCurrentLocation"
+    description = (
+        "Returns the user's current area, and floor when set. "
+        "Call this to resolve the area when a request names a generic "
+        "device without specifying one."
+    )
+
+    async def async_call(
+        self,
+        hass: HomeAssistant,
+        tool_input: ToolInput,
+        llm_context: LLMContext,
+    ) -> JsonObjectType:
+        """Get the area and floor of the requesting device."""
+        if not llm_context.device_id:
+            return {
+                "success": False,
+                "error": "This request is not associated with a device",
+            }
+
+        device = dr.async_get(hass).async_get(llm_context.device_id)
+        if device is None:
+            return {
+                "success": False,
+                "error": "The requesting device was not found",
+            }
+        if device.area_id is None:
+            return {
+                "success": False,
+                "error": "The requesting device is not assigned to an area",
+            }
+
+        area = ar.async_get(hass).async_get_area(device.area_id)
+        if area is None:
+            return {
+                "success": False,
+                "error": "The area assigned to the requesting device was not found",
+            }
+
+        result: dict[str, Any] = {"area": area.name}
+        if area.floor_id and (
+            floor := fr.async_get(hass).async_get_floor(area.floor_id)
+        ):
+            result["floor"] = floor.name
+
+        return {"success": True, "result": result}
