@@ -1,6 +1,8 @@
 """Google config for Cloud."""
 
 import asyncio
+from collections.abc import Mapping
+from contextlib import suppress
 from http import HTTPStatus
 import logging
 from typing import TYPE_CHECKING, Any, override
@@ -10,6 +12,9 @@ from hass_nabucasa.google_report_state import ErrorResponse
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.google_assistant import DOMAIN as GOOGLE_DOMAIN
+from homeassistant.components.google_assistant.const import (  # pylint: disable=home-assistant-component-root-import
+    CONF_ALIASES,
+)
 from homeassistant.components.google_assistant.helpers import (  # pylint: disable=home-assistant-component-root-import
     AbstractConfig,
 )
@@ -22,6 +27,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_should_expose,
 )
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import CONF_NAME
 from homeassistant.core import (
     CoreState,
     Event,
@@ -42,6 +48,8 @@ from .const import (
     DEFAULT_DISABLE_2FA,
     DOMAIN,
     PREF_DISABLE_2FA,
+    PREF_ENTITY_ALIASES,
+    PREF_ENTITY_NAME,
     PREF_SHOULD_EXPOSE,
 )
 from .prefs import GOOGLE_SETTINGS_VERSION, CloudPreferences
@@ -217,6 +225,34 @@ class CloudGoogleConfig(AbstractConfig):
                     _2fa_disabled,
                 )
 
+    def _migrate_google_entity_settings_v2(self) -> None:
+        """Seed per-Google name and nicknames from existing entity registry aliases."""
+        entity_registry = er.async_get(self.hass)
+        for entry in entity_registry.entities.values():
+            if not entry.aliases or not self.should_expose(entry.entity_id):
+                continue
+            options: Mapping[str, Any] = entry.options.get(CLOUD_GOOGLE, {})
+
+            name, *aliases = entry.aliases
+            if name is not er.COMPUTED_NAME and PREF_ENTITY_NAME not in options:
+                async_set_assistant_option(
+                    self.hass,
+                    CLOUD_GOOGLE,
+                    entry.entity_id,
+                    PREF_ENTITY_NAME,
+                    name,
+                )
+
+            nicknames = [alias for alias in aliases if isinstance(alias, str)]
+            if nicknames and PREF_ENTITY_ALIASES not in options:
+                async_set_assistant_option(
+                    self.hass,
+                    CLOUD_GOOGLE,
+                    entry.entity_id,
+                    PREF_ENTITY_ALIASES,
+                    nicknames,
+                )
+
     @override
     async def async_initialize(self) -> None:
         """Perform async initialization of config."""
@@ -243,6 +279,8 @@ class CloudGoogleConfig(AbstractConfig):
                     )
                 ):
                     self._migrate_google_entity_settings_v1()
+                if self._prefs.google_settings_version < 4:
+                    self._migrate_google_entity_settings_v2()
 
                 _LOGGER.info(
                     "Finished migration of Google Assistant settings from v%s to v%s",
@@ -363,6 +401,35 @@ class CloudGoogleConfig(AbstractConfig):
 
         assistant_options = settings.get(CLOUD_GOOGLE, {})
         return not assistant_options.get(PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
+
+    @override
+    def get_entity_names(
+        self, entry: er.RegistryEntry | None, state: State
+    ) -> tuple[str, list[str]]:
+        """Return the primary name and aliases for an entity."""
+        entity_conf = self.entity_config.get(state.entity_id, {})
+        config_name: str | None = entity_conf.get(CONF_NAME)
+        config_aliases: list[str] | None = entity_conf.get(CONF_ALIASES)
+
+        options: Mapping[str, Any] = {}
+        with suppress(HomeAssistantError, KeyError):
+            settings = async_get_entity_settings(self.hass, state.entity_id)
+            options = settings[CLOUD_GOOGLE]
+
+        if config_name is not None:
+            name = config_name
+        elif (name_override := options.get(PREF_ENTITY_NAME)) is not None:
+            name = name_override
+        elif entry is not None and (
+            full_name := er.async_get_full_entity_name(self.hass, entry)
+        ):
+            name = full_name
+        else:
+            name = state.name
+
+        if config_aliases is not None:
+            return name, config_aliases
+        return name, options.get(PREF_ENTITY_ALIASES, [])
 
     @override
     async def async_report_state(

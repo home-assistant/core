@@ -12,14 +12,16 @@ import jwt
 
 from homeassistant.components import webhook
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.core import HomeAssistant, callback, split_entity_id
+from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, intent
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import STORAGE_DIR, Store
 from homeassistant.util import dt as dt_util, json as json_util
 
 from .const import (
+    CONF_ALIASES,
     CONF_CLIENT_EMAIL,
     CONF_ENTITY_CONFIG,
     CONF_EXPOSE,
@@ -203,6 +205,26 @@ class GoogleConfig(AbstractConfig):
     def should_2fa(self, state):
         """If an entity should have 2FA checked."""
         return True
+
+    @override
+    def get_entity_names(
+        self, entry: er.RegistryEntry | None, state: State
+    ) -> tuple[str, list[str]]:
+        """Return the primary name and aliases for an entity."""
+        entity_conf = self.entity_config.get(state.entity_id, {})
+        config_name: str | None = entity_conf.get(CONF_NAME)
+        config_aliases: list[str] | None = entity_conf.get(CONF_ALIASES)
+
+        name, *aliases = intent.async_get_entity_aliases(
+            self.hass, entry, state=state, allow_empty=False
+        )
+
+        if config_name is not None:
+            name = config_name
+        if config_aliases is not None:
+            aliases = config_aliases
+
+        return name, aliases
 
     @override
     async def _async_request_sync_devices(self, agent_user_id: str) -> HTTPStatus:

@@ -18,7 +18,6 @@ from homeassistant.components import webhook
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
-    CONF_NAME,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, State, callback
@@ -26,7 +25,6 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
-    intent,
     start,
 )
 from homeassistant.helpers.event import async_call_later
@@ -36,7 +34,6 @@ from homeassistant.util.dt import utcnow
 
 from . import trait
 from .const import (
-    CONF_ALIASES,
     CONF_ROOM_HINT,
     DEVICE_CLASS_TO_GOOGLE_TYPES,
     DOMAIN,
@@ -187,6 +184,12 @@ class AbstractConfig(ABC):
     @abstractmethod
     def should_expose(self, entity_id: str) -> bool:
         """Return if entity should be exposed."""
+
+    @abstractmethod
+    def get_entity_names(
+        self, entry: er.RegistryEntry | None, state: State
+    ) -> tuple[str, list[str]]:
+        """Return the primary name and aliases for an entity."""
 
     @abstractmethod
     def should_2fa(self, state):
@@ -613,18 +616,10 @@ class GoogleEntity:
                 state.domain, state.attributes.get(ATTR_DEVICE_CLASS)
             ),
         }
-        # Add name and aliases.
-        # The entity's alias list is ordered: the first slot naturally serves
-        # as the primary name (set to the auto-generated full entity name by
-        # default), while the rest serve as alternative names (nicknames).
-        aliases = intent.async_get_entity_aliases(
-            self.hass, entity_entry, state=state, allow_empty=False
-        )
-        name, *aliases = aliases
-        name = entity_config.get(CONF_NAME) or name
+        name, aliases = self.config.get_entity_names(entity_entry, state)
         device["name"] = {"name": name}
-        if (config_aliases := entity_config.get(CONF_ALIASES, [])) or aliases:
-            device["name"]["nicknames"] = [name, *config_aliases, *aliases]
+        if aliases:
+            device["name"]["nicknames"] = [name, *aliases]
 
         # Add local SDK info if enabled
         if self.config.is_local_sdk_active and self.should_expose_local():

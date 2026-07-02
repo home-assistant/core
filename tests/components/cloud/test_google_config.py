@@ -10,24 +10,27 @@ from homeassistant.components.cloud import GACTIONS_SCHEMA
 from homeassistant.components.cloud.const import (
     DATA_CLOUD,
     PREF_DISABLE_2FA,
+    PREF_ENTITY_ALIASES,
+    PREF_ENTITY_NAME,
     PREF_GOOGLE_DEFAULT_EXPOSE,
     PREF_GOOGLE_ENTITY_CONFIGS,
     PREF_SHOULD_EXPOSE,
 )
-from homeassistant.components.cloud.google_config import CloudGoogleConfig
+from homeassistant.components.cloud.google_config import CLOUD_GOOGLE, CloudGoogleConfig
 from homeassistant.components.cloud.prefs import CloudPreferences
 from homeassistant.components.google_assistant import helpers as ga_helpers
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
     async_expose_entity,
     async_get_entity_settings,
+    async_set_assistant_option,
 )
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     EntityCategory,
 )
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -869,6 +872,134 @@ async def test_google_config_migrate_expose_entity_prefs_default(
     }
 
 
+async def test_google_config_migrate_entity_settings_v3(
+    hass: HomeAssistant,
+    cloud_prefs: CloudPreferences,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration of registry aliases to per-Google name and aliases (v3 → v4)."""
+    hass.set_state(CoreState.not_running)
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    # Computed-name primary slot: only nicknames get seeded.
+    entity_computed = entity_registry.async_get_or_create(
+        "light", "test", "computed", suggested_object_id="computed"
+    )
+    entity_registry.async_update_entity(
+        entity_computed.entity_id, aliases=[er.COMPUTED_NAME, "nick1", "nick2"]
+    )
+
+    # Named primary slot: both name and remaining nicknames get seeded.
+    entity_named = entity_registry.async_get_or_create(
+        "light", "test", "named", suggested_object_id="named"
+    )
+    entity_registry.async_update_entity(
+        entity_named.entity_id, aliases=["MyName", "nick"]
+    )
+
+    # Single name, no nicknames.
+    entity_solo = entity_registry.async_get_or_create(
+        "light", "test", "solo", suggested_object_id="solo"
+    )
+    entity_registry.async_update_entity(entity_solo.entity_id, aliases=["SoloName"])
+
+    # Not exposed: migration must skip it.
+    entity_unexposed = entity_registry.async_get_or_create(
+        "light", "test", "unexposed", suggested_object_id="unexposed"
+    )
+    entity_registry.async_update_entity(
+        entity_unexposed.entity_id, aliases=["ShouldNotMigrate"]
+    )
+
+    # Existing PREF_ENTITY_NAME must not be overwritten; aliases still seeded.
+    entity_existing_name = entity_registry.async_get_or_create(
+        "light", "test", "existing_name", suggested_object_id="existing_name"
+    )
+    entity_registry.async_update_entity(
+        entity_existing_name.entity_id, aliases=["FromRegistry", "extra"]
+    )
+
+    # Existing PREF_ENTITY_ALIASES must not be overwritten; name still seeded.
+    entity_existing_aliases = entity_registry.async_get_or_create(
+        "light", "test", "existing_aliases", suggested_object_id="existing_aliases"
+    )
+    entity_registry.async_update_entity(
+        entity_existing_aliases.entity_id, aliases=["NameFromRegistry", "extra"]
+    )
+
+    await cloud_prefs.async_update(
+        google_enabled=True,
+        google_report_state=False,
+        google_settings_version=3,
+    )
+
+    for entry in (
+        entity_computed,
+        entity_named,
+        entity_solo,
+        entity_existing_name,
+        entity_existing_aliases,
+    ):
+        expose_entity(hass, entry.entity_id, True)
+    expose_entity(hass, entity_unexposed.entity_id, False)
+
+    async_set_assistant_option(
+        hass, CLOUD_GOOGLE, entity_existing_name.entity_id, PREF_ENTITY_NAME, "Pinned"
+    )
+    async_set_assistant_option(
+        hass,
+        CLOUD_GOOGLE,
+        entity_existing_aliases.entity_id,
+        PREF_ENTITY_ALIASES,
+        ["pinned"],
+    )
+
+    conf = CloudGoogleConfig(
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, Mock(is_logged_in=False)
+    )
+    await conf.async_initialize()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    computed_options = async_get_entity_settings(hass, entity_computed.entity_id)[
+        CLOUD_GOOGLE
+    ]
+    assert PREF_ENTITY_NAME not in computed_options
+    assert computed_options[PREF_ENTITY_ALIASES] == ["nick1", "nick2"]
+
+    named_options = async_get_entity_settings(hass, entity_named.entity_id)[
+        CLOUD_GOOGLE
+    ]
+    assert named_options[PREF_ENTITY_NAME] == "MyName"
+    assert named_options[PREF_ENTITY_ALIASES] == ["nick"]
+
+    solo_options = async_get_entity_settings(hass, entity_solo.entity_id)[CLOUD_GOOGLE]
+    assert solo_options[PREF_ENTITY_NAME] == "SoloName"
+    assert PREF_ENTITY_ALIASES not in solo_options
+
+    unexposed_options = async_get_entity_settings(hass, entity_unexposed.entity_id)[
+        CLOUD_GOOGLE
+    ]
+    assert PREF_ENTITY_NAME not in unexposed_options
+    assert PREF_ENTITY_ALIASES not in unexposed_options
+
+    existing_name_options = async_get_entity_settings(
+        hass, entity_existing_name.entity_id
+    )[CLOUD_GOOGLE]
+    assert existing_name_options[PREF_ENTITY_NAME] == "Pinned"
+    assert existing_name_options[PREF_ENTITY_ALIASES] == ["extra"]
+
+    existing_aliases_options = async_get_entity_settings(
+        hass, entity_existing_aliases.entity_id
+    )[CLOUD_GOOGLE]
+    assert existing_aliases_options[PREF_ENTITY_NAME] == "NameFromRegistry"
+    assert existing_aliases_options[PREF_ENTITY_ALIASES] == ["pinned"]
+
+    assert cloud_prefs.google_settings_version == 4
+
+
 @pytest.mark.usefixtures("mock_cloud_login")
 async def test_google_config_get_agent_user_id(
     hass: HomeAssistant, cloud_prefs: CloudPreferences
@@ -923,3 +1054,93 @@ async def test_google_config_get_agent_users(
     )
     assert config.async_get_agent_users() == ("blah",)
     username_mock.assert_called()
+
+
+@pytest.mark.parametrize(
+    ("yaml_name", "override_name", "registry_name", "expected"),
+    [
+        pytest.param("Yaml", "Override", "Registry", "Yaml", id="yaml-wins"),
+        pytest.param(None, "Override", "Registry", "Override", id="override-wins"),
+        pytest.param(None, None, "Registry", "Registry", id="registry-wins"),
+        pytest.param(None, None, None, "State", id="state-fallback"),
+    ],
+)
+async def test_get_entity_name_fallback_chain(
+    hass: HomeAssistant,
+    cloud_prefs: CloudPreferences,
+    entity_registry: er.EntityRegistry,
+    yaml_name: str | None,
+    override_name: str | None,
+    registry_name: str | None,
+    expected: str,
+) -> None:
+    """Test name fallback: YAML > override > registry full name > state name."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    if registry_name is not None:
+        entry = entity_registry.async_update_entity(entry.entity_id, name=registry_name)
+
+    if override_name is not None:
+        async_set_assistant_option(
+            hass, CLOUD_GOOGLE, entry.entity_id, PREF_ENTITY_NAME, override_name
+        )
+
+    entity_config = {entry.entity_id: {"name": yaml_name}} if yaml_name else {}
+    conf = CloudGoogleConfig(
+        hass,
+        GACTIONS_SCHEMA({"entity_config": entity_config}),
+        "mock-user-id",
+        cloud_prefs,
+        Mock(is_logged_in=False),
+    )
+
+    state = State(entry.entity_id, "on", {"friendly_name": "State"})
+    name, _ = conf.get_entity_names(entry, state)
+    assert name == expected
+
+
+@pytest.mark.parametrize(
+    ("yaml_aliases", "override_aliases", "expected"),
+    [
+        pytest.param(["a", "b"], ["c"], ["a", "b"], id="yaml-wins"),
+        pytest.param(None, ["c", "d"], ["c", "d"], id="override-wins"),
+        pytest.param(None, None, [], id="empty-fallback"),
+    ],
+)
+async def test_get_entity_aliases_fallback_chain(
+    hass: HomeAssistant,
+    cloud_prefs: CloudPreferences,
+    entity_registry: er.EntityRegistry,
+    yaml_aliases: list[str] | None,
+    override_aliases: list[str] | None,
+    expected: list[str],
+) -> None:
+    """Test alias fallback: YAML aliases > PREF_ENTITY_ALIASES > []."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+
+    if override_aliases is not None:
+        async_set_assistant_option(
+            hass, CLOUD_GOOGLE, entry.entity_id, PREF_ENTITY_ALIASES, override_aliases
+        )
+
+    entity_config = (
+        {entry.entity_id: {"aliases": yaml_aliases}} if yaml_aliases is not None else {}
+    )
+    conf = CloudGoogleConfig(
+        hass,
+        GACTIONS_SCHEMA({"entity_config": entity_config}),
+        "mock-user-id",
+        cloud_prefs,
+        Mock(is_logged_in=False),
+    )
+
+    state = State(entry.entity_id, "on", {"friendly_name": "State"})
+    _, aliases = conf.get_entity_names(entry, state)
+    assert aliases == expected
