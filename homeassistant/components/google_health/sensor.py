@@ -128,7 +128,7 @@ class GoogleHealthStepsSensor(
         """Return the steps count."""
         if self.coordinator.data is None or self.coordinator.data.steps is None:
             return 0
-        return self.coordinator.data.steps.data.count_sum
+        return self.coordinator.data.steps.count_sum
 
 
 class GoogleHealthDistanceSensor(
@@ -161,7 +161,7 @@ class GoogleHealthDistanceSensor(
         """Return the daily distance in meters."""
         if self.coordinator.data is None or self.coordinator.data.distance is None:
             return 0.0
-        return self.coordinator.data.distance.data.millimeters_sum / 1000.0
+        return self.coordinator.data.distance.millimeters_sum / 1000.0
 
 
 class GoogleHealthWeightSensor(

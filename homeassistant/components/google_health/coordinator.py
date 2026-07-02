@@ -15,7 +15,6 @@ from google_health_api.exceptions import (
 )
 from google_health_api.model import (
     DailyRestingHeartRate,
-    DailyRollupDataPoint,
     DistanceRollupValue,
     StepsRollupValue,
     Weight,
@@ -32,14 +31,15 @@ _LOGGER = logging.getLogger(__name__)
 
 POLLING_INTERVAL = timedelta(minutes=15)
 BODY_POLLING_INTERVAL = timedelta(hours=1)
+DEFAULT_PAGE_SIZE = 100
 
 
 @dataclass
 class GoogleHealthActivityData:
     """Class to hold activity data."""
 
-    steps: DailyRollupDataPoint[StepsRollupValue] | None = None
-    distance: DailyRollupDataPoint[DistanceRollupValue] | None = None
+    steps: StepsRollupValue | None = None
+    distance: DistanceRollupValue | None = None
 
 
 @dataclass
@@ -92,9 +92,13 @@ class GoogleHealthActivityCoordinator(DataUpdateCoordinator[GoogleHealthActivity
     async def _async_update_data(self) -> GoogleHealthActivityData:
         """Fetch steps and distance rollup for today."""
         with handle_api_errors():
-            steps = await self.api.steps.today(self.hass.config.time_zone)
-            distance = await self.api.distance.today(self.hass.config.time_zone)
-            return GoogleHealthActivityData(steps=steps, distance=distance)
+            steps_rollup = await self.api.steps.today(self.hass.config.time_zone)
+            distance_rollup = await self.api.distance.today(self.hass.config.time_zone)
+
+        steps = steps_rollup.data if steps_rollup else None
+        distance = distance_rollup.data if distance_rollup else None
+
+        return GoogleHealthActivityData(steps=steps, distance=distance)
 
 
 class GoogleHealthBodyCoordinator(DataUpdateCoordinator[GoogleHealthBodyData]):
@@ -119,9 +123,14 @@ class GoogleHealthBodyCoordinator(DataUpdateCoordinator[GoogleHealthBodyData]):
     @override
     async def _async_update_data(self) -> GoogleHealthBodyData:
         """Fetch latest body weight and resting heart rate."""
+        # Using a page size larger than 1 is necessary because the Google Health API
+        # returns data points sorted chronologically (oldest first). A page size of 1
+        # would return the oldest measurement, not the newest.
         with handle_api_errors():
-            weight_result = await self.api.weight.list(page_size=100)
-            hr_result = await self.api.daily_resting_heart_rate.list(page_size=100)
+            weight_result = await self.api.weight.list(page_size=DEFAULT_PAGE_SIZE)
+            hr_result = await self.api.daily_resting_heart_rate.list(
+                page_size=DEFAULT_PAGE_SIZE
+            )
 
         weight = (
             weight_result.data_points[-1].data if weight_result.data_points else None
