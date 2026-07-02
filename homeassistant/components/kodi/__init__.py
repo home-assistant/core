@@ -22,12 +22,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_WS_PORT, DOMAIN
+from .screensaver import KodiScreensaver
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.MEDIA_PLAYER]
 
 type KodiConfigEntry = ConfigEntry[KodiRuntimeData]
 
@@ -38,6 +39,7 @@ class KodiRuntimeData:
 
     connection: KodiHTTPConnection | KodiWSConnection
     kodi: Kodi
+    screensaver: KodiScreensaver
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -77,7 +79,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: KodiConfigEntry) -> bool
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
-    entry.runtime_data = KodiRuntimeData(connection=conn, kodi=kodi)
+    entry.runtime_data = KodiRuntimeData(
+        connection=conn,
+        kodi=kodi,
+        screensaver=KodiScreensaver(entry.entry_id, conn, kodi),
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
