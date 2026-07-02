@@ -8,6 +8,7 @@
     "error": {
       "cannot_connect": "Cannot connect to the charger. Check Bluetooth proxy range and active connection support.",
       "invalid_auth": "The charger rejected the PIN.",
+      "no_connectable_path": "No connectable Bluetooth path is available for this charger.",
       "unknown": "Unexpected error"
     },
     "step": {
