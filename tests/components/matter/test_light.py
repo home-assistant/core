@@ -117,6 +117,216 @@ async def test_light_turn_on_off(
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
+        ("mock_dimmable_light", "light.mock_dimmable_light"),
+    ],
+)
+async def test_dimmable_light_turn_off_transition(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+) -> None:
+    """Test turning a dimmable light off with a transition."""
+
+    # A transition fades to the minimum level, which turns the light off
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {
+            "entity_id": entity_id,
+            "transition": 3,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.LevelControl.Commands.MoveToLevelWithOnOff(
+            level=1,
+            transitionTime=30,
+        ),
+    )
+    matter_client.send_device_command.reset_mock()
+
+    # Without a transition the OnOff cluster is used
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {
+            "entity_id": entity_id,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.OnOff.Commands.Off(),
+    )
+    matter_client.send_device_command.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_dimmable_light", "light.mock_dimmable_light"),
+    ],
+)
+async def test_dimmable_light_restore_brightness_after_off_transition(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+) -> None:
+    """Test the brightness is restored after turning off with a transition."""
+
+    # The light is on at level 50 (out of 254)
+    set_node_attribute(matter_node, 1, 8, 0, 50)
+    await trigger_subscription_callback(hass, matter_client)
+
+    # Turn the light off with a transition, fading it down to the minimum level
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {"entity_id": entity_id, "transition": 3},
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.LevelControl.Commands.MoveToLevelWithOnOff(
+            level=1,
+            transitionTime=30,
+        ),
+    )
+    matter_client.send_device_command.reset_mock()
+
+    # The device reports it has reached the minimum level and turned off
+    set_node_attribute(matter_node, 1, 8, 0, 1)
+    set_node_attribute(matter_node, 1, 6, 0, False)
+    await trigger_subscription_callback(hass, matter_client)
+
+    # Turning back on without a brightness should restore the previous brightness
+    # instead of coming back at the minimum level we faded down to
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.LevelControl.Commands.MoveToLevelWithOnOff(
+            level=50,
+            transitionTime=0,
+        ),
+    )
+    matter_client.send_device_command.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_dimmable_light", "light.mock_dimmable_light"),
+    ],
+)
+async def test_off_transition_brightness_invalidated_when_turned_on_externally(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+) -> None:
+    """Test the cached brightness is dropped when another fabric turns the light on.
+
+    A Matter device can be part of multiple fabrics, so we must not restore our
+    cached "off with transition" brightness once the light has been turned on
+    again by someone else.
+    """
+
+    # The light is on at level 50 (out of 254)
+    set_node_attribute(matter_node, 1, 8, 0, 50)
+    await trigger_subscription_callback(hass, matter_client)
+
+    # Turn the light off with a transition, caching the previous brightness
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {"entity_id": entity_id, "transition": 3},
+        blocking=True,
+    )
+    matter_client.send_device_command.reset_mock()
+
+    # The device reports it has reached the minimum level and turned off
+    set_node_attribute(matter_node, 1, 8, 0, 1)
+    set_node_attribute(matter_node, 1, 6, 0, False)
+    await trigger_subscription_callback(hass, matter_client)
+
+    # Another fabric turns the light back on at a different level
+    set_node_attribute(matter_node, 1, 8, 0, 200)
+    set_node_attribute(matter_node, 1, 6, 0, True)
+    await trigger_subscription_callback(hass, matter_client)
+
+    # A plain turn_on must not restore the cached brightness anymore and should
+    # simply use the OnOff cluster, respecting the device's current state
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.OnOff.Commands.On(),
+    )
+    matter_client.send_device_command.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_onoff_light", "light.mock_onoff_light"),
+    ],
+)
+async def test_onoff_light_turn_off_transition(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+) -> None:
+    """Test that a light without brightness ignores the off transition."""
+
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {
+            "entity_id": entity_id,
+            "transition": 3,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.OnOff.Commands.Off(),
+    )
+    matter_client.send_device_command.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
         ("extended_color_light", "light.mock_extended_color_light"),
         ("color_temperature_light", "light.mock_color_temperature_light"),
         ("mock_dimmable_light", "light.mock_dimmable_light"),
