@@ -1880,6 +1880,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/tts/ @home-assistant/core
 /homeassistant/components/tuya/ @Tuya @zlinoliver
 /tests/components/tuya/ @Tuya @zlinoliver
+/homeassistant/components/tween_light_ir/ @tr4nt0r
+/tests/components/tween_light_ir/ @tr4nt0r
 /homeassistant/components/twentemilieu/ @frenck
 /tests/components/twentemilieu/ @frenck
 /homeassistant/components/twinkly/ @dr1rrb @Robbie1221 @Olen

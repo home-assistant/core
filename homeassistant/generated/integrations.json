@@ -7414,6 +7414,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "tween_light_ir": {
+      "name": "Tween Light Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "twentemilieu": {
       "name": "Twente Milieu",
       "integration_type": "service",
