@@ -12,8 +12,18 @@ from indevolt_api import (
 
 DOMAIN: Final = "indevolt"
 
-# Default configurations
+# API Configurations
 DEFAULT_PORT: Final = 8080
+
+SCAN_INTERVAL_LOW: Final = 60
+SCAN_INTERVAL_MEDIUM: Final = 30
+SCAN_INTERVAL_HIGH: Final = 5
+
+SCAN_INTERVAL_OPTIONS: Final[dict[str, int]] = {
+    "frequency_low": SCAN_INTERVAL_LOW,
+    "frequency_medium": SCAN_INTERVAL_MEDIUM,
+    "frequency_high": SCAN_INTERVAL_HIGH,
+}
 
 # Config entry fields
 CONF_SERIAL_NUMBER: Final = "serial_number"

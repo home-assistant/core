@@ -1,6 +1,7 @@
 """Tests the Indevolt config flow."""
 
 from dataclasses import replace
+from datetime import timedelta
 from ipaddress import IPv4Address
 from unittest.mock import AsyncMock
 
@@ -11,6 +12,9 @@ from homeassistant.components.indevolt.const import (
     CONF_GENERATION,
     CONF_SERIAL_NUMBER,
     DOMAIN,
+    SCAN_INTERVAL_HIGH,
+    SCAN_INTERVAL_LOW,
+    SCAN_INTERVAL_MEDIUM,
 )
 from homeassistant.config_entries import (
     SOURCE_DHCP,
@@ -18,7 +22,7 @@ from homeassistant.config_entries import (
     SOURCE_USER,
     SOURCE_ZEROCONF,
 )
-from homeassistant.const import CONF_HOST, CONF_MODEL
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -406,3 +410,61 @@ async def test_dhcp_registered_device_ip_change(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == TEST_HOST_ALT
+
+
+@pytest.mark.usefixtures("mock_indevolt")
+@pytest.mark.parametrize(
+    ("option_key", "expected_interval"),
+    [
+        pytest.param("frequency_low", SCAN_INTERVAL_LOW, id="low"),
+        pytest.param("frequency_medium", SCAN_INTERVAL_MEDIUM, id="medium"),
+        pytest.param("frequency_high", SCAN_INTERVAL_HIGH, id="high"),
+    ],
+)
+async def test_options_flow_scan_interval(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    option_key: str,
+    expected_interval: int,
+) -> None:
+    """Test options flow stores the selected scan interval for all three frequency flavors."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SCAN_INTERVAL: option_key},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_SCAN_INTERVAL: expected_interval}
+    assert mock_config_entry.options == {CONF_SCAN_INTERVAL: expected_interval}
+
+
+@pytest.mark.usefixtures("mock_indevolt")
+async def test_options_flow_updates_coordinator_interval(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that changing options updates the coordinator's update_interval."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.update_interval == timedelta(seconds=SCAN_INTERVAL_MEDIUM)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SCAN_INTERVAL: "frequency_high"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert coordinator.update_interval == timedelta(seconds=SCAN_INTERVAL_HIGH)

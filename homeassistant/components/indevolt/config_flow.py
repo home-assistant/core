@@ -7,13 +7,27 @@ from aiohttp import ClientError
 from indevolt_api import IndevoltAPI
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MODEL
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_SCAN_INTERVAL
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_GENERATION, CONF_SERIAL_NUMBER, DEFAULT_PORT, DOMAIN
+from .const import (
+    CONF_GENERATION,
+    CONF_SERIAL_NUMBER,
+    DEFAULT_PORT,
+    DOMAIN,
+    SCAN_INTERVAL_MEDIUM,
+    SCAN_INTERVAL_OPTIONS,
+)
+from .coordinator import IndevoltConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +43,15 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         super().__init__()
         self._discovered_host: str | None = None
         self._discovered_device_data: dict[str, Any] | None = None
+
+    @override
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: IndevoltConfigEntry,
+    ) -> IndevoltOptionsFlowHandler:
+        """Return the options flow handler."""
+        return IndevoltOptionsFlowHandler()
 
     @override
     async def async_step_user(
@@ -203,3 +226,48 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_GENERATION: device_data["generation"],
             CONF_MODEL: device_data["type"],
         }
+
+
+class IndevoltOptionsFlowHandler(OptionsFlow):
+    """Handle Indevolt options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(
+                data={
+                    CONF_SCAN_INTERVAL: SCAN_INTERVAL_OPTIONS[
+                        user_input[CONF_SCAN_INTERVAL]
+                    ]
+                }
+            )
+
+        current_interval = self.config_entry.options.get(
+            CONF_SCAN_INTERVAL, SCAN_INTERVAL_MEDIUM
+        )
+        # Reverse-look up the semantic key for the currently stored interval
+        current_key = next(
+            (k for k, v in SCAN_INTERVAL_OPTIONS.items() if v == current_interval),
+            "frequency_medium",
+        )
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    # Polling interval is user-configurable for power users
+                    # pylint: disable-next=home-assistant-config-flow-polling-field
+                    vol.Required(
+                        CONF_SCAN_INTERVAL,
+                        default=current_key,
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=list(SCAN_INTERVAL_OPTIONS),
+                            mode=SelectSelectorMode.LIST,
+                            translation_key="scan_interval",
+                        )
+                    )
+                }
+            ),
+        )
