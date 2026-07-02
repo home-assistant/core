@@ -112,6 +112,8 @@ async def test_sensor_unknown_device_returns_unknown(
         pytest.param(4, "critical_alarm", id="critical_alarm"),
         pytest.param(5, "hushed", id="hushed"),
         pytest.param(6, "not_present", id="not_present"),
+        pytest.param(None, "not_present", id="null_value"),
+        pytest.param(99, "not_present", id="out_of_range_value"),
     ],
 )
 async def test_sensor_all_alarm_states(
