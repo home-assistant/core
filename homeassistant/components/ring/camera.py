@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any, Generic, cast, override
+from typing import TYPE_CHECKING, Any, Generic, Protocol, cast, override
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
@@ -43,6 +43,14 @@ MOTION_DETECTION_CAPABILITY = "motion_detection"
 _LOGGER = logging.getLogger(__name__)
 
 RingCameraDevice = RingDoorBell | RingOther
+
+
+class RingSnapshotDevice(Protocol):
+    """Protocol for Ring devices that can return a snapshot."""
+
+    async def async_get_snapshot(self) -> bytes | None:
+        """Return a fresh snapshot."""
+        ...
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -87,7 +95,14 @@ async def async_setup_entry(
     devices_coordinator = ring_data.devices_coordinator
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
 
-    devices = [*ring_data.devices.video_devices, *ring_data.devices.other]
+    devices: list[RingCameraDevice] = [
+        *[
+            device
+            for device in ring_data.devices.video_devices
+            if isinstance(device, RingDoorBell)
+        ],
+        *ring_data.devices.other,
+    ]
 
     cams = [
         RingCam(camera, devices_coordinator, description, ffmpeg_manager=ffmpeg_manager)
@@ -134,9 +149,10 @@ class RingCam(RingEntity[RingCameraDevice], Camera):
     @override
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
-        self._device = self._get_coordinator_data().get_device(
-            self._device.device_api_id
-        )
+        device = self._get_coordinator_data().get_device(self._device.device_api_id)
+        if not isinstance(device, RingDoorBell | RingOther):
+            return
+        self._device = device
 
         if isinstance(self._device, RingOther):
             self._last_event = None
@@ -204,7 +220,7 @@ class RingCam(RingEntity[RingCameraDevice], Camera):
     async def _async_get_fresh_snapshot(self) -> bytes | None:
         """Get a fresh snapshot from the camera."""
         if isinstance(self._device, RingOther):
-            return await self._device.async_get_snapshot()
+            return await cast(RingSnapshotDevice, self._device).async_get_snapshot()
         return None
 
     @override
