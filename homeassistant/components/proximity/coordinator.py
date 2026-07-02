@@ -154,6 +154,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         if (in_zones := device.attributes.get(ATTR_IN_ZONES)) is not None:
             return zone.entity_id in in_zones
 
+        # This can be removed when legacy device trackers are removed.
         zone_friendly_name = zone.attributes.get(ATTR_FRIENDLY_NAME)
         return (
             zone_friendly_name is not None
