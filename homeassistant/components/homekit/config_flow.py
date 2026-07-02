@@ -44,8 +44,10 @@ from homeassistant.loader import async_get_integrations
 from .const import (
     CONF_ENTITY_CONFIG,
     CONF_EXCLUDE_ACCESSORY_MODE,
+    CONF_EXCLUDE_LABELS,
     CONF_FILTER,
     CONF_HOMEKIT_MODE,
+    CONF_INCLUDE_LABELS,
     CONF_SUPPORT_AUDIO,
     CONF_VIDEO_CODEC,
     DEFAULT_CONFIG_FLOW_PORT,
@@ -139,6 +141,8 @@ class EntityFilterDict(TypedDict, total=False):
     include_entities: list[str]
     exclude_domains: list[str]
     exclude_entities: list[str]
+    include_labels: list[str]
+    exclude_labels: list[str]
 
 
 def _make_entity_filter(
@@ -146,14 +150,21 @@ def _make_entity_filter(
     include_entities: list[str] | None = None,
     exclude_domains: list[str] | None = None,
     exclude_entities: list[str] | None = None,
+    include_labels: list[str] | None = None,
+    exclude_labels: list[str] | None = None,
 ) -> EntityFilterDict:
     """Create a filter dict."""
-    return EntityFilterDict(
+    entity_filter = EntityFilterDict(
         include_domains=include_domains or [],
         include_entities=include_entities or [],
         exclude_domains=exclude_domains or [],
         exclude_entities=exclude_entities or [],
     )
+    if include_labels:
+        entity_filter["include_labels"] = include_labels
+    if exclude_labels:
+        entity_filter["exclude_labels"] = exclude_labels
+    return entity_filter
 
 
 async def _async_domain_names(hass: HomeAssistant, domains: list[str]) -> str:
@@ -166,9 +177,11 @@ async def _async_domain_names(hass: HomeAssistant, domains: list[str]) -> str:
 
 @callback
 def _async_build_entities_filter(
-    domains: list[str], entities: list[str]
+    domains: list[str],
+    entities: list[str],
+    include_labels: list[str] | None = None,
 ) -> EntityFilterDict:
-    """Build an entities filter from domains and entities."""
+    """Build an entities filter from domains, entities, and labels."""
     # Include all of the domain if there are no entities
     # explicitly included as the user selected the domain
     return _make_entity_filter(
@@ -176,6 +189,7 @@ def _async_build_entities_filter(
             set(domains).difference(_domains_set_from_entities(entities))
         ),
         include_entities=entities,
+        include_labels=include_labels,
     )
 
 
@@ -536,14 +550,20 @@ class OptionsFlowHandler(OptionsFlow):
         domains = hk_options[CONF_DOMAINS]
         if user_input is not None:
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
+            selected_include_labels = cv.ensure_list(
+                user_input.get(CONF_INCLUDE_LABELS, [])
+            )
             self.included_cameras = _async_cameras_from_entities(entities)
-            hk_options[CONF_FILTER] = _async_build_entities_filter(domains, entities)
+            hk_options[CONF_FILTER] = _async_build_entities_filter(
+                domains, entities, selected_include_labels
+            )
             if self.included_cameras:
                 return await self.async_step_cameras()
             return await self.async_step_bridged_device_triggers()
 
         entity_filter: EntityFilterDict = hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
+        current_include_labels: list[str] = entity_filter.get("include_labels", [])
         all_supported_entities = _async_get_matching_entities(
             self.hass, domains, include_entity_category=True, include_hidden=True
         )
@@ -567,6 +587,11 @@ class OptionsFlowHandler(OptionsFlow):
                             include_entities=all_supported_entities,
                         )
                     ),
+                    vol.Optional(
+                        CONF_INCLUDE_LABELS, default=current_include_labels
+                    ): selector.LabelSelector(
+                        selector.LabelSelectorConfig(multiple=True)
+                    ),
                 }
             ),
         )
@@ -581,6 +606,9 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             self.included_cameras = []
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
+            selected_exclude_labels = cv.ensure_list(
+                user_input.get(CONF_EXCLUDE_LABELS, [])
+            )
             if CAMERA_DOMAIN in domains:
                 camera_entities = _async_get_matching_entities(
                     self.hass, [CAMERA_DOMAIN]
@@ -591,7 +619,9 @@ class OptionsFlowHandler(OptionsFlow):
                     if entity_id not in entities
                 ]
             hk_options[CONF_FILTER] = _make_entity_filter(
-                include_domains=domains, exclude_entities=entities
+                include_domains=domains,
+                exclude_entities=entities,
+                exclude_labels=selected_exclude_labels,
             )
             if self.included_cameras:
                 return await self.async_step_cameras()
@@ -599,6 +629,7 @@ class OptionsFlowHandler(OptionsFlow):
 
         entity_filter = self.hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
+        current_exclude_labels: list[str] = entity_filter.get("exclude_labels", [])
 
         all_supported_entities = _async_get_matching_entities(self.hass, domains)
         if not entities:
@@ -623,6 +654,11 @@ class OptionsFlowHandler(OptionsFlow):
                             multiple=True,
                             include_entities=all_supported_entities,
                         )
+                    ),
+                    vol.Optional(
+                        CONF_EXCLUDE_LABELS, default=current_exclude_labels
+                    ): selector.LabelSelector(
+                        selector.LabelSelectorConfig(multiple=True)
                     ),
                 }
             ),
