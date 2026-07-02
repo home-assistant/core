@@ -365,6 +365,8 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
+        if entry_data and "auth_header" in entry_data:
+            self.auth_header = entry_data["auth_header"]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -376,6 +378,8 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         config_entry = self._get_reauth_entry()
         self.data = {**config_entry.data}
         if "auth_implementation" not in self.data:
+            if self.auth_header:
+                return await self.async_step_auth_discovery()
             try:
                 await validate_input(self.hass, self.data)
             except InvalidAuth as err:

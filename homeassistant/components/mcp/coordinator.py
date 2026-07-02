@@ -139,7 +139,14 @@ class ModelContextProtocolTool(llm.Tool):
         except httpx.HTTPStatusError as error:
             _LOGGER.debug("Error when calling tool: %s", error)
             if error.response.status_code == 401:
-                self.config_entry.async_start_reauth(hass)
+                from .config_flow import AuthenticateHeader  # noqa: PLC0415
+
+                auth_header = AuthenticateHeader.from_header(
+                    self.server_url, error.response
+                )
+                self.config_entry.async_start_reauth(
+                    hass, data={"auth_header": auth_header}
+                )
                 raise ConfigEntryAuthFailed(
                     "The MCP server requires authentication"
                 ) from error

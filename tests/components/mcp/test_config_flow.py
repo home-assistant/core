@@ -9,6 +9,7 @@ import pytest
 import respx
 
 from homeassistant import config_entries
+from homeassistant.components.mcp.config_flow import AuthenticateHeader
 from homeassistant.components.mcp.const import (
     CONF_AUTHORIZATION_URL,
     CONF_SCOPE,
@@ -1066,3 +1067,51 @@ async def test_reauth_flow_upgrade_to_oauth_success_no_auth_needed(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@respx.mock
+async def test_reauth_flow_upgrade_to_oauth_with_passed_auth_header(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    credential: None,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test reauth flow upgrading a no-auth entry to OAuth using a passed auth header."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: MCP_SERVER_URL},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    auth_header = AuthenticateHeader(
+        resource_metadata_url="https://example.com/custom-discovery",
+        scopes=["read", "write"],
+    )
+
+    # Start reauth flow passing auth_header
+    config_entry.async_start_reauth(hass, data={"auth_header": auth_header})
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    result = flows[0]
+    assert result["step_id"] == "reauth_confirm"
+
+    # Mock discovery URLs (mock_mcp_client validate_input should NOT be called)
+    respx.get("https://example.com/custom-discovery").mock(
+        return_value=OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE
+    )
+    respx.get(OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    # Click Submit on reauth_confirm
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Flow should proceed directly to credentials choice menu (without validate_input)
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "credentials_choice"
