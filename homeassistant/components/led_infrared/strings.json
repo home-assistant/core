@@ -37,6 +37,15 @@
               "flash": "Flash",
               "green": "Color: Green",
               "light_green": "Color: Light green",
+              "mode_1": "Mode 1",
+              "mode_2": "Mode 2",
+              "mode_3": "Mode 3",
+              "mode_4": "Mode 4",
+              "mode_5": "Mode 5",
+              "mode_6": "Mode 6",
+              "mode_7": "Mode 7",
+              "mode_8": "Mode 8",
+
               "orange": "Color: Orange",
               "orange_red": "Color: Orange red",
               "plum": "Color: Plum",
@@ -59,6 +68,7 @@
   "selector": {
     "device_type": {
       "options": {
+        "generic_13_key": "13-key remote control",
         "generic_24_key": "24-key remote control"
       }
     }
