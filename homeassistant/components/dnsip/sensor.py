@@ -35,14 +35,14 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=120)
 
 
-def sort_ips(ips: list, querytype: Literal["A", "AAAA"]) -> list:
+def sort_ips(ips: list[str], querytype: Literal["A", "AAAA"]) -> list[str]:
     """Join IPs into a single string."""
-
+    _ips: list[IPv4Address | IPv6Address]
     if querytype == "AAAA":
-        ips = [IPv6Address(ip) for ip in ips]
+        _ips = [IPv6Address(ip) for ip in ips]
     else:
-        ips = [IPv4Address(ip) for ip in ips]
-    return [str(ip) for ip in sorted(ips)][:MAX_RESULTS]
+        _ips = [IPv4Address(ip) for ip in ips]
+    return [str(ip) for ip in sorted(_ips)][:MAX_RESULTS]
 
 
 async def async_setup_entry(
@@ -143,7 +143,7 @@ class WanIpSensor(SensorEntity):
             self.entry.runtime_data.resolver_ipv4 = new_resolver
 
     async def async_resolve(self, hostname: str) -> list[str]:
-        """Resolve a hostname to an IP address."""
+        """Resolve a hostname to its IP addresses."""
         ips: list[str] = []
         try:
             async with asyncio.timeout(10):
@@ -168,8 +168,8 @@ class WanIpSensor(SensorEntity):
         if self._resolver._closed:  # noqa: SLF001
             self.create_dns_resolver()
 
-        if response := await self.async_resolve(self.hostname):
-            sorted_ips = sort_ips(response, querytype=self.querytype)
+        if ips := await self.async_resolve(self.hostname):
+            sorted_ips = sort_ips(ips, querytype=self.querytype)
             self._attr_native_value = sorted_ips[0]
             self._attr_extra_state_attributes["ip_addresses"] = sorted_ips
             self._attr_available = True
