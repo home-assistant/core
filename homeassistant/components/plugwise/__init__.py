@@ -44,8 +44,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) ->
 def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None:
     """Migrate Plugwise entity entries.
 
-    Migrates old unique ID's from old binary_sensors and
-    switches to the new unique ID's.
+    Migrates to new unique ID's for climate, binary_sensor and switch platforms.
     """
     if entry.domain == Platform.CLIMATE and entry.unique_id.endswith("-climate"):
         return {"new_unique_id": entry.unique_id.replace("-climate", "-thermostat")}
