@@ -1,6 +1,6 @@
 """Test the SMTP config flow."""
 
-from smtplib import SMTPAuthenticationError
+from smtplib import SMTPAuthenticationError, SMTPServerDisconnected
 from socket import gaierror
 from ssl import SSLCertVerificationError
 from unittest.mock import AsyncMock, MagicMock
@@ -105,6 +105,11 @@ async def test_form_already_configured(
         (SMTPAuthenticationError(0, ""), "invalid_auth"),
         (ConnectionRefusedError, "cannot_connect"),
         (gaierror, "cannot_connect"),
+        (
+            SMTPServerDisconnected("Connection unexpectedly closed: timed out"),
+            "cannot_connect",
+        ),
+        (TimeoutError, "cannot_connect"),
         (SSLCertVerificationError, "invalid_cert"),
         (ValueError, "unknown"),
     ],
@@ -143,6 +148,28 @@ async def test_form_errors(
     assert result["title"] == "Home Assistant"
     assert result["data"] == USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_error_quit_fails(
+    hass: HomeAssistant,
+    smtp: MagicMock,
+) -> None:
+    """Test the flow survives quit failing on a dead connection."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    smtp.login.side_effect = SMTPServerDisconnected("Connection unexpectedly closed")
+    smtp.quit.side_effect = SMTPServerDisconnected("please run connect() first")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 @pytest.mark.usefixtures("smtp")
