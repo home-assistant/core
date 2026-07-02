@@ -27,7 +27,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.aiohttp import MockStreamReader
 
 from .common import MockConfigEntry, setup_platform
-from .device_mocks import FRONT_DEVICE_ID
+from .device_mocks import FRONT_DEVICE_ID, INGRESS_DEVICE_ID
 
 from tests.common import async_fire_time_changed, snapshot_platform
 from tests.typing import WebSocketGenerator
@@ -355,6 +355,37 @@ async def test_camera_live_view_no_subscription(
     # Requesting an image without subscription should raise an error
     with pytest.raises(HomeAssistantError):
         await async_get_image(hass, "camera.front_live_view")
+
+
+async def test_camera_live_view_for_video_intercom(
+    hass: HomeAssistant,
+    mock_ring_client,
+    mock_ring_devices,
+) -> None:
+    """Test live view camera is added for video capable intercoms."""
+    intercom_mock = mock_ring_devices.get_device(INGRESS_DEVICE_ID)
+    has_capability = intercom_mock.has_capability.side_effect
+
+    def _has_capability(capability):
+        if capability == ring_doorbell.RingCapability.VIDEO:
+            return True
+        return has_capability(capability)
+
+    intercom_mock.has_capability.side_effect = _has_capability
+    intercom_mock.async_get_snapshot = AsyncMock(return_value=SMALLEST_VALID_JPEG_BYTES)
+    intercom_mock.generate_async_webrtc_stream = AsyncMock()
+    intercom_mock.on_webrtc_candidate = AsyncMock()
+    intercom_mock.sync_close_webrtc_stream = Mock()
+
+    await setup_platform(hass, Platform.CAMERA)
+
+    state = hass.states.get("camera.ingress_live_view")
+    assert state is not None
+    assert state.attributes["supported_features"] is CameraEntityFeature.STREAM
+    assert hass.states.get("camera.ingress_last_recording") is None
+    camera = get_camera_from_entity_id(hass, "camera.ingress_live_view")
+    assert await camera._async_get_fresh_snapshot() == SMALLEST_VALID_JPEG_BYTES
+    intercom_mock.async_get_snapshot.assert_called_once()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
