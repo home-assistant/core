@@ -158,26 +158,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
 async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> bool:
     """Migrate old config entry."""
 
-    # 1.1 Migrate config_entry to add additional ssl settings
-    if entry.version == 1 and entry.minor_version == 1:
-        new_minor_version = 2
-        new_data = {**entry.data}
-        additional_data = {
-            CONF_SSL: DEFAULT_SSL,
-            CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
-        }
-        new_data[SECTION_ADDITIONAL_SETTINGS] = additional_data
+    new_version = entry.version
+    new_minor_version = entry.minor_version
+    new_data = {**entry.data}
+    update_entry = False
+    default_additional_data = {
+        CONF_SSL: DEFAULT_SSL,
+        CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+    }
 
-        hass.config_entries.async_update_entry(
-            entry,
-            data=new_data,
-            minor_version=new_minor_version,
-        )
+    # 1.1 Migrate config_entry to add additional ssl settings
+    if new_version == 1 and new_minor_version == 1:
+        new_minor_version = 2
+        new_data[SECTION_ADDITIONAL_SETTINGS] = default_additional_data
+        update_entry = True
 
     # 2.1 Migrate binary_sensor entity unique_id from device_id to mac_address
     #     Step 1 - migrate binary_sensor entity unique_id
     #     Step 2 - migrate device entity identifier
-    if entry.version == 1:
+    if new_version == 1:
         new_version = 2
         new_minor_version = 1
 
@@ -215,8 +214,20 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
                 device_entry.id, new_identifiers=new_identifiers
             )
 
+            update_entry = True
+
+    # 2.2 Fix renaming of advanced #173016
+    if new_version == 2:
+        new_version = 3
+
+        if "advanced_settings" in new_data:
+            new_data[SECTION_ADDITIONAL_SETTINGS] = new_data.pop("advanced_settings")
+
+        update_entry = True
+
+    if update_entry:
         hass.config_entries.async_update_entry(
-            entry, version=new_version, minor_version=new_minor_version
+            entry, data=new_data, version=new_version, minor_version=new_minor_version
         )
 
     return True
