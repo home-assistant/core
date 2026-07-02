@@ -591,6 +591,7 @@ FLOWS = {
         "portainer",
         "powerfox",
         "powerfox_local",
+        "powersensor_au",
         "powerwall",
         "prana",
         "private_ble_device",
