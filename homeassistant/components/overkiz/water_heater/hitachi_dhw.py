@@ -101,8 +101,7 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
 
         commands: list[Command] = []
 
-        # Turn water heater on, when off. This modbus component only accepts
-        # run/stop for setControlDHW, not on/off.
+        # Start the water heater ('run') when off
         if self.current_operation == OverkizCommandParam.OFF:
             commands.append(
                 Command(
