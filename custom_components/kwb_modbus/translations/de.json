@@ -7,12 +7,21 @@
         "data": {
           "host": "IP-Adresse",
           "port": "Port",
-          "scan_interval": "Abfrageintervall (Sekunden)"
+          "scan_interval": "Abfrageintervall (Sekunden)",
+          "expert_mode": "Enable expert mode"
         },
         "data_description": {
           "host": "IP-Adresse oder Hostname des KWB-Controllers.",
           "port": "TCP-Port für Modbus (Standard: 502).",
-          "scan_interval": "Intervall für die Abfrage von Modbus-Daten in Sekunden."
+          "scan_interval": "Intervall für die Abfrage von Modbus-Daten in Sekunden.",
+          "expert_mode": "Enable or disable expert select entities (Boiler program, External specification, Ignition settings)."
+        }
+      },
+      "register_profile": {
+        "title": "Registerprofil auswählen",
+        "description": "Erkannte Firmware: {detected_version}. Vorgeschlagenes Profil: {detected_profile}. Du kannst Auto-Erkennung behalten oder manuell überschreiben.",
+        "data": {
+          "register_profile": "Registerprofil"
         }
       },
       "device": {
@@ -26,8 +35,7 @@
         "title": "Zusatzmodule auswählen",
         "description": "Wähle die installierten Zusatzmodule. Leer lassen wenn keine vorhanden.",
         "data": {
-          "addon_modules": "Zusatzmodule",
-          "expert_mode": "Expertenmodus aktivieren (Kesselprogramm, Externe Vorgabe, Zündungseinstellungen)"
+          "addon_modules": "Zusatzmodule"
         }
       },
       "module_instances": {
@@ -42,17 +50,23 @@
         "description": "Vergib für jede {module_name}-Instanz einen Anzeigenamen. Dieser Name wird für alle Entitäten dieser Instanz verwendet (z.B. 'Fußbodenheizung', 'Badezimmer')."
       },
       "reconfigure": {
-        "title": "Verbindung aktualisieren",
-        "description": "Passe die Verbindungseinstellungen für diesen Eintrag an.",
+        "title": "Verbindung und Module aktualisieren",
+        "description": "Passe die Verbindungseinstellungen und ausgewählten Module für diesen Eintrag an.",
         "data": {
           "host": "Host",
           "port": "Port",
-          "scan_interval": "Abfrage-Intervall (Sekunden)"
+          "scan_interval": "Abfrage-Intervall (Sekunden)",
+          "expert_mode": "Enable expert mode",
+          "register_profile": "Registerprofil",
+          "addon_modules": "Zusatzmodule"
         },
         "data_description": {
           "host": "IP-Adresse oder Hostname des KWB-Controllers.",
           "port": "TCP-Port für Modbus (Standard: 502).",
-          "scan_interval": "Intervall für die Abfrage von Modbus-Daten in Sekunden."
+          "scan_interval": "Intervall für die Abfrage von Modbus-Daten in Sekunden.",
+          "expert_mode": "Enable or disable expert select entities (Boiler program, External specification, Ignition settings).",
+          "register_profile": "Wähle, welches firmware-spezifische Registerprofil verwendet werden soll.",
+          "addon_modules": "Wähle installierte Zusatzmodule aus. Module können hier hinzugefügt oder entfernt werden."
         }
       }
     },
@@ -69,6 +83,7 @@
     "heating_device": {
       "options": {
         "easyfire": "KWB EasyFire",
+        "ef3": "KWB EF3",
         "multifire": "KWB MultiFire",
         "pelletfire_plus": "KWB PelletFire+",
         "combifire": "KWB CombiFire",
@@ -87,7 +102,969 @@
         "secondary_heating_sources": "Sekundärwärmequellen",
         "heat_quantity_meter": "Wärmemengenzähler",
         "boiler_master_slave": "Kessel Master-Slave",
-        "wmm_autonom": "WMM Autonom"
+        "wmm_autonom": "WMM Autonom",
+        "easyair_plus": "KWB EasyAir Plus",
+        "transfer_station": "Übergabestation"
+      }
+    },
+    "register_profile": {
+      "options": {
+        "auto": "Automatisch erkennen",
+        "v22": "KWB v22 (22.4.0)",
+        "v25": "KWB v25 (25.4.1)"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "fuel_consumption_day": {
+        "name": "Pelletverbrauch Tag"
+      },
+      "fuel_consumption_week": {
+        "name": "Pelletverbrauch Woche"
+      },
+      "fuel_consumption_month": {
+        "name": "Pelletverbrauch Monat"
+      },
+      "fuel_consumption_year": {
+        "name": "Pelletverbrauch Jahr"
+      },
+      "reg_ak_anforderung_bl_ursache": {
+        "name": "Brennerleistung bestimmt durch"
+      },
+      "reg_ak_externe_brennerleistung": {
+        "name": "Brennerleistung extern"
+      },
+      "reg_ak_externe_kessel_solltemperatur": {
+        "name": "Kesseltemp. Soll Extern"
+      },
+      "reg_ak_kesselstatus_anzeige_ak": {
+        "name": "Status Pelletmodul"
+      },
+      "reg_ak_pl_geblaesestufe": {
+        "name": "Primärgebläse"
+      },
+      "reg_boi_anforderung": {
+        "name": "Anforderung"
+      },
+      "reg_boi_i_ist_temperatur_2_status": {
+        "name": "Temperatur 2 (status)"
+      },
+      "reg_boi_i_ist_temperatur_2_value": {
+        "name": "Temperatur 2 (value)"
+      },
+      "reg_boi_i_ist_temperatur_status": {
+        "name": "Temperatur Ist (status)"
+      },
+      "reg_boi_i_ist_temperatur_value": {
+        "name": "Temperatur Ist (value)"
+      },
+      "reg_boi_i_temp_heizstab_bei_sensorwahl_status": {
+        "name": "Temperatur bei Heizstab (status)"
+      },
+      "reg_boi_i_temp_heizstab_bei_sensorwahl_value": {
+        "name": "Temperatur bei Heizstab (value)"
+      },
+      "reg_boi_i_temp_waermepumpe_bei_senswahl_status": {
+        "name": "Speichertemp. Wärmepumpe (status)"
+      },
+      "reg_boi_i_temp_waermepumpe_bei_senswahl_value": {
+        "name": "Speichertemp. Wärmepumpe (value)"
+      },
+      "reg_boi_o_heizstab_anforderung": {
+        "name": "Anforderung Heizstab"
+      },
+      "reg_boi_o_pumpe": {
+        "name": "Ladepumpe"
+      },
+      "reg_boi_o_waermepumpe_anforderung": {
+        "name": "Anforderung Wärmepumpe"
+      },
+      "reg_boi_soll_temperatur": {
+        "name": "Temperatur Soll"
+      },
+      "reg_boi_status": {
+        "name": "Status"
+      },
+      "reg_boi_waermepumpe_status": {
+        "name": "Status Wärmepumpe"
+      },
+      "reg_cf2_betriebsmodus": {
+        "name": "Betriebsmodus"
+      },
+      "reg_cf2_i_pl_klappe_ist_promille": {
+        "name": "Primärluftklappe"
+      },
+      "reg_cf2_i_sl_klappe_ist_promille": {
+        "name": "Sekundärluftklappe"
+      },
+      "reg_cf2_i_tuer_geschlossen": {
+        "name": "Füllraumtüre"
+      },
+      "reg_cf2_kesselstatus_anzeige_sh": {
+        "name": "Status Stückholz"
+      },
+      "reg_cf2_max_befuellgrad_anzeige": {
+        "name": "Maximaler Befüllgrad"
+      },
+      "reg_cf2_o_zuendung_heizung_sh": {
+        "name": "Zündung Heizung"
+      },
+      "reg_cf2_pm_betriebsminuten_summe": {
+        "name": "Volllaststunden"
+      },
+      "reg_eapdev_anforderung_ursache": {
+        "name": "Anforderung durch"
+      },
+      "reg_eapdev_ansauglufttemperatur": {
+        "name": "Ansauglufttemperatur"
+      },
+      "reg_eapdev_aufgenommene_elektr_leistung": {
+        "name": "Aufgenommene el. Leistung"
+      },
+      "reg_eapdev_bivalenz_elh": {
+        "name": "Bivalenz-ELH"
+      },
+      "reg_eapdev_cop": {
+        "name": "COP"
+      },
+      "reg_eapdev_drehzahl_cp": {
+        "name": "Drehzahl CP"
+      },
+      "reg_eapdev_drehzahl_ist": {
+        "name": "Drehzahl Ist"
+      },
+      "reg_eapdev_drehzahl_soll": {
+        "name": "Drehzahl Soll"
+      },
+      "reg_eapdev_drehzahl_ventilator": {
+        "name": "Drehzahl Ventilator"
+      },
+      "reg_eapdev_erweiterter_betriebsstatus": {
+        "name": "Erw. Betriebsstatus"
+      },
+      "reg_eapdev_fluester1_beginn": {
+        "name": "Zeitfenster Beginn"
+      },
+      "reg_eapdev_fluester1_ende": {
+        "name": "Zeifenster Ende"
+      },
+      "reg_eapdev_fluester2_beginn": {
+        "name": "Zeitfenster Beginn"
+      },
+      "reg_eapdev_fluester2_ende": {
+        "name": "Zeifenster Ende"
+      },
+      "reg_eapdev_fluester_max_drehzahl": {
+        "name": "Max. Drehzahl"
+      },
+      "reg_eapdev_heissgastemperatur": {
+        "name": "Heissgastemperatur"
+      },
+      "reg_eapdev_hochdruck": {
+        "name": "Hochdruck (relativ)"
+      },
+      "reg_eapdev_kondensationstemperatur": {
+        "name": "Kondensationstemperatur"
+      },
+      "reg_eapdev_leistungsbegrenzung": {
+        "name": "Leistungsbegrenzung"
+      },
+      "reg_eapdev_max_leistung_heizen": {
+        "name": "Max. Leistung Heizen"
+      },
+      "reg_eapdev_max_leistung_kuehlen": {
+        "name": "Max. Leistung Kühlen"
+      },
+      "reg_eapdev_max_leistung_warmwasser": {
+        "name": "Max. Leistung Warmwasser"
+      },
+      "reg_eapdev_min_leistung_heizen": {
+        "name": "Min. Leistung Heizen"
+      },
+      "reg_eapdev_min_leistung_kuehlen": {
+        "name": "Min. Leistung Kühlen"
+      },
+      "reg_eapdev_min_leistung_warmwasser": {
+        "name": "Min. Leistung Warmwasser"
+      },
+      "reg_eapdev_momentanleistung": {
+        "name": "Momentanleistung"
+      },
+      "reg_eapdev_niederdruck": {
+        "name": "Niederdruck (relativ)"
+      },
+      "reg_eapdev_position_erstes_expansionsventil": {
+        "name": "Position 1. EX-Ventil"
+      },
+      "reg_eapdev_position_zweites_expansionsventi": {
+        "name": "Position 2. EX-Ventil"
+      },
+      "reg_eapdev_ruecklauftemperatur_ist": {
+        "name": "Rücklauftemperatur Ist"
+      },
+      "reg_eapdev_sauggastemperatur": {
+        "name": "Sauggastemperatur"
+      },
+      "reg_eapdev_sollwert_heizkreisbetrieb": {
+        "name": "Sollwert für Heizkreisbetrieb"
+      },
+      "reg_eapdev_sollwert_kuehlbetrieb": {
+        "name": "Sollwert für Kühlbetrieb"
+      },
+      "reg_eapdev_sollwert_speicherbetrieb": {
+        "name": "Sollwert für Speicherbetrieb"
+      },
+      "reg_eapdev_status": {
+        "name": "Status"
+      },
+      "reg_eapdev_temperatur_fluessigkeitsleitung": {
+        "name": "Temp. Flüssigkeitsleitung"
+      },
+      "reg_eapdev_ueberhitzung": {
+        "name": "Überhitzung"
+      },
+      "reg_eapdev_unterkuehlung": {
+        "name": "Unterkühlung"
+      },
+      "reg_eapdev_verdampfungstemperatur": {
+        "name": "Verdampfungstemperatur"
+      },
+      "reg_eapdev_volumenstrom": {
+        "name": "Volumenstrom"
+      },
+      "reg_eapdev_volumenstrom_gemittelt": {
+        "name": "Volumenstrom gemittelt"
+      },
+      "reg_eapdev_vorlauftemperatur_ist": {
+        "name": "Vorlauftemperatur Ist"
+      },
+      "reg_eapdev_vorlauftemperatur_soll": {
+        "name": "WEZ Sollwert"
+      },
+      "reg_eapdev_zustand_waermepumpe": {
+        "name": "Zustand Wärmepumpe"
+      },
+      "reg_ef2_brennstofffaktor": {
+        "name": "Brennstofffaktor"
+      },
+      "reg_ef2_ef3_differenzdruck_ist": {
+        "name": "Differenzdruck Ist"
+      },
+      "reg_fs_o_motor_foerdersystem_1": {
+        "name": "Antrieb Fördersystem"
+      },
+      "reg_fs_pelletsverbrauch": {
+        "name": "Brennstoffverbrauch"
+      },
+      "reg_fs_pelletverbrauch_reset_counter": {
+        "name": "Brennstoffverbrauch Rücksetzzähler"
+      },
+      "reg_grp_verbraucher_anf_temperatur": {
+        "name": "Verbraucher Soll"
+      },
+      "reg_hk_i_aussen_temperatur_status": {
+        "name": "Außentemperatur (status)"
+      },
+      "reg_hk_i_aussen_temperatur_value": {
+        "name": "Außentemperatur (value)"
+      },
+      "reg_hk_i_raum_temperatur_status": {
+        "name": "Raumtemperatur Ist (status)"
+      },
+      "reg_hk_i_raum_temperatur_value": {
+        "name": "Raumtemperatur Ist (value)"
+      },
+      "reg_hk_i_vorlauf_temperatur_status": {
+        "name": "Vorlauftemperatur Ist (status)"
+      },
+      "reg_hk_i_vorlauf_temperatur_value": {
+        "name": "Vorlauftemperatur Ist (value)"
+      },
+      "reg_hk_o_pumpe": {
+        "name": "Pumpe"
+      },
+      "reg_hk_raum_temperatur_soll": {
+        "name": "Raumtemperatur Soll"
+      },
+      "reg_hk_status": {
+        "name": "Status"
+      },
+      "reg_hk_vorlauf_temperatur_soll": {
+        "name": "Vorlauftemperatur Soll"
+      },
+      "reg_kfk_i_stoerung": {
+        "name": "Störung"
+      },
+      "reg_kfk_o_anforderung": {
+        "name": "Anforderung"
+      },
+      "reg_kfs_anzahl_angeforderte_kessel": {
+        "name": "Anlagen angefordert"
+      },
+      "reg_kfs_anzahl_kessel": {
+        "name": "Anlagen"
+      },
+      "reg_kfs_i_aussen_temperatur_mittelwert_status": {
+        "name": "Außentemperatur gemittelt (status)"
+      },
+      "reg_kfs_i_aussen_temperatur_mittelwert_value": {
+        "name": "Außentemperatur gemittelt (value)"
+      },
+      "reg_kfs_mittlere_durchladetemperatur": {
+        "name": "Mittlere Durchladetemp."
+      },
+      "reg_kfs_mittlere_puffertemperatur": {
+        "name": "Mittlere Puffertemp."
+      },
+      "reg_kfs_netz_ruecklauf_status": {
+        "name": "Netzrücklauf (status)"
+      },
+      "reg_kfs_netz_ruecklauf_value": {
+        "name": "Netzrücklauf (value)"
+      },
+      "reg_kfs_netz_vorlauf_status": {
+        "name": "Netzvorlauf (status)"
+      },
+      "reg_kfs_netz_vorlauf_value": {
+        "name": "Netzvorlauf (value)"
+      },
+      "reg_kfs_o_anforderung_spitzenlastkessel": {
+        "name": "Anf. Spitzenlastkessel"
+      },
+      "reg_kfs_o_stoerung_dauer": {
+        "name": "Störkontakt Dauer"
+      },
+      "reg_kfs_puffer_durchladegrad": {
+        "name": "Pufferdurchladegrad"
+      },
+      "reg_kfs_puffer_fuellgrad": {
+        "name": "Pufferfüllgrad"
+      },
+      "reg_kfs_puffer_solltemperatur_anzeige": {
+        "name": "Puffersolltemperatur"
+      },
+      "reg_kfs_puffer_temperatur_1_status": {
+        "name": "Puffer Temperatur 1 (status)"
+      },
+      "reg_kfs_puffer_temperatur_1_value": {
+        "name": "Puffer Temperatur 1 (value)"
+      },
+      "reg_kfs_puffer_temperatur_2_status": {
+        "name": "Puffer Temperatur 2 (status)"
+      },
+      "reg_kfs_puffer_temperatur_2_value": {
+        "name": "Puffer Temperatur 2 (value)"
+      },
+      "reg_kfs_puffer_temperatur_3_status": {
+        "name": "Puffer Temperatur 3 (status)"
+      },
+      "reg_kfs_puffer_temperatur_3_value": {
+        "name": "Puffer Temperatur 3 (value)"
+      },
+      "reg_kfs_puffer_temperatur_4_status": {
+        "name": "Puffer Temperatur 4 (status)"
+      },
+      "reg_kfs_puffer_temperatur_4_value": {
+        "name": "Puffer Temperatur 4 (value)"
+      },
+      "reg_kfs_puffer_temperatur_5_status": {
+        "name": "Puffer Temperatur 5 (status)"
+      },
+      "reg_kfs_puffer_temperatur_5_value": {
+        "name": "Puffer Temperatur 5 (value)"
+      },
+      "reg_ksm_ai_feuerraum_unterdruck": {
+        "name": "Unterdruck Ist"
+      },
+      "reg_ksm_anlage_kein_alarm_keine_stoerung": {
+        "name": "Anlage OK"
+      },
+      "reg_ksm_anlage_keine_stoerung": {
+        "name": "System OK"
+      },
+      "reg_ksm_anlage_stoerung": {
+        "name": "Boiler fault"
+      },
+      "reg_ksm_anlage_stoerung_mit_abschaltung": {
+        "name": "Summenstörung mit Kesselabschaltung"
+      },
+      "reg_ksm_aschefuellstand": {
+        "name": "Füllstand Aschebehälter"
+      },
+      "reg_ksm_betriebsminuten_summe": {
+        "name": "Volllaststunden"
+      },
+      "reg_ksm_brennerleistung": {
+        "name": "Kesselleistung"
+      },
+      "reg_ksm_do_kesselpumpe": {
+        "name": "Kesselpumpe"
+      },
+      "reg_ksm_do_pelletssauger": {
+        "name": "Saugturbine"
+      },
+      "reg_ksm_i_drehzahl_saugzug": {
+        "name": "Drehzahl Saugzug"
+      },
+      "reg_ksm_i_extern1": {
+        "name": "Extern 1"
+      },
+      "reg_ksm_i_extern2": {
+        "name": "Extern 2"
+      },
+      "reg_ksm_i_extern3": {
+        "name": "Extern 3"
+      },
+      "reg_ksm_i_flammtemp_ist_status": {
+        "name": "Flammtemperatur Ist (status)"
+      },
+      "reg_ksm_i_flammtemp_ist_value": {
+        "name": "Flammtemperatur Ist (value)"
+      },
+      "reg_ksm_i_kesseltemp_ist_status": {
+        "name": "Kesseltemperatur Ist (status)"
+      },
+      "reg_ksm_i_kesseltemp_ist_value": {
+        "name": "Kesseltemperatur Ist (value)"
+      },
+      "reg_ksm_i_rauchgastemp_ist_status": {
+        "name": "Abgastemperatur (status)"
+      },
+      "reg_ksm_i_rauchgastemp_ist_value": {
+        "name": "Abgastemperatur (value)"
+      },
+      "reg_ksm_i_ruecklauftemp_ist_status": {
+        "name": "Rücklauftemperatur Ist (status)"
+      },
+      "reg_ksm_i_ruecklauftemp_ist_value": {
+        "name": "Rücklauftemperatur Ist (value)"
+      },
+      "reg_ksm_kesselpumpe_steuerstufe": {
+        "name": "Kesselpumpe %"
+      },
+      "reg_ksm_kesselstatus_anzeige": {
+        "name": "Kesselstatus"
+      },
+      "reg_ksm_kesselstatus_anzeige_simple": {
+        "name": "Kesselstatus"
+      },
+      "reg_ksm_kesseltemp_soll": {
+        "name": "Kesseltemperatur Soll"
+      },
+      "reg_ksm_modbus_commit_lifetick": {
+        "name": "Modbus Commit Lifetick"
+      },
+      "reg_ksm_modbus_puffertemperatur_oben_status": {
+        "name": "Modbus Puffertemperatur oben für Restwärmenutzung (status)"
+      },
+      "reg_ksm_modbus_puffertemperatur_unten_status": {
+        "name": "Modbus Puffertemperatur unten für Restwärmenutzung (status)"
+      },
+      "reg_ksm_modbus_ueberhitzung": {
+        "name": "Modbus Überhitzung"
+      },
+      "reg_ksm_modbus_waermeabnahme_max": {
+        "name": "Modbus Wärmeabnahme Max"
+      },
+      "reg_ksm_o2ist": {
+        "name": "Sauerstoff Ist"
+      },
+      "reg_ksm_o_multifunktionsausgang_1": {
+        "name": "Multifunktionsausgang 1 (125)"
+      },
+      "reg_ksm_o_multifunktionsausgang_2": {
+        "name": "Multifunktionsausgang 2 (127)"
+      },
+      "reg_ksm_o_multifunktionsausgang_3": {
+        "name": "Multifunktionsausgang 3 (124)"
+      },
+      "reg_ksm_o_multifunktionsausgang_4": {
+        "name": "Multifunktionsausgang 4 (126)"
+      },
+      "reg_ksm_saugzugstufe": {
+        "name": "Saugzugstufe"
+      },
+      "reg_ksm_serviceintervallreststunden": {
+        "name": "Nächste Wartung in"
+      },
+      "reg_ksm_summen_alarm_oder_stoerung": {
+        "name": "Summenstörung"
+      },
+      "reg_ksm_verbraucher_anforderung": {
+        "name": "Verbraucher Anforderung"
+      },
+      "reg_ksm_waermemenge_gesamt": {
+        "name": "Heat quantity total"
+      },
+      "reg_ksm_waermemenge_gesamt_kwh": {
+        "name": "Wärmemenge gesamt"
+      },
+      "reg_mbus_energie": {
+        "name": "Energie"
+      },
+      "reg_mbus_leistung": {
+        "name": "Leistung"
+      },
+      "reg_mbus_ruecklauftemp": {
+        "name": "Rücklauf"
+      },
+      "reg_mbus_vol_akt": {
+        "name": "Volumen akt."
+      },
+      "reg_mbus_vol_ges": {
+        "name": "Volumen ges."
+      },
+      "reg_mbus_vorlauftemp": {
+        "name": "Vorlauf"
+      },
+      "reg_mf2_ai_fuellstand_zwischenbehaelter": {
+        "name": "Ultraschallsensor ist"
+      },
+      "reg_mf2_brennstofffaktor": {
+        "name": "Brennstofffaktor"
+      },
+      "reg_mf2_glutbettniveau": {
+        "name": "Glutbett"
+      },
+      "reg_mf2_i_aschebehaelter_90_prz": {
+        "name": "Asche 90% voll"
+      },
+      "reg_mf2_i_ausbrandtemp_status": {
+        "name": "Ausbrandtemperatur (status)"
+      },
+      "reg_mf2_i_ausbrandtemp_value": {
+        "name": "Ausbrandtemperatur (value)"
+      },
+      "reg_mf2_luftverschiebung_gesamt": {
+        "name": "Luftverschiebung"
+      },
+      "reg_mf2_sl_geblaesestufe": {
+        "name": "Sekundärgebläse"
+      },
+      "reg_mf2_slgeblaesestufe": {
+        "name": "Secondary fan"
+      },
+      "reg_mf2_zwischenbehaelter_fuellstand_prz": {
+        "name": "Zwischenbehälter Füllstand"
+      },
+      "reg_puf_anforderung": {
+        "name": "Anforderung"
+      },
+      "reg_puf_i_ist_temperatur_1_status": {
+        "name": "Temperatur 1 (status)"
+      },
+      "reg_puf_i_ist_temperatur_1_value": {
+        "name": "Temperatur 1 (value)"
+      },
+      "reg_puf_i_ist_temperatur_2_status": {
+        "name": "Temperatur 2 (status)"
+      },
+      "reg_puf_i_ist_temperatur_2_value": {
+        "name": "Temperatur 2 (value)"
+      },
+      "reg_puf_i_ist_temperatur_3_status": {
+        "name": "Temperatur 3 (status)"
+      },
+      "reg_puf_i_ist_temperatur_3_value": {
+        "name": "Temperatur 3 (value)"
+      },
+      "reg_puf_i_ist_temperatur_4_status": {
+        "name": "Temperatur 4 (status)"
+      },
+      "reg_puf_i_ist_temperatur_4_value": {
+        "name": "Temperatur 4 (value)"
+      },
+      "reg_puf_i_ist_temperatur_5_status": {
+        "name": "Temperatur 5 (status)"
+      },
+      "reg_puf_i_ist_temperatur_5_value": {
+        "name": "Temperatur 5 (value)"
+      },
+      "reg_puf_i_temp_heizstab_bei_sensorwahl_status": {
+        "name": "Temperatur bei Heizstab (status)"
+      },
+      "reg_puf_i_temp_heizstab_bei_sensorwahl_value": {
+        "name": "Temperatur bei Heizstab (value)"
+      },
+      "reg_puf_o_heizstab_anforderung": {
+        "name": "Anforderung Heizstab"
+      },
+      "reg_puf_o_pumpe": {
+        "name": "Pumpe"
+      },
+      "reg_puf_o_umschaltventil": {
+        "name": "Umschaltventil"
+      },
+      "reg_sol_i_ist_temperatur_speicher_1_status": {
+        "name": "Temperatur Speicher 1 (status)"
+      },
+      "reg_sol_i_ist_temperatur_speicher_1_value": {
+        "name": "Temperatur Speicher 1 (value)"
+      },
+      "reg_sol_i_ist_temperatur_speicher_2_status": {
+        "name": "Temperatur Speicher 2 (status)"
+      },
+      "reg_sol_i_ist_temperatur_speicher_2_value": {
+        "name": "Temperatur Speicher 2 (value)"
+      },
+      "reg_sol_i_kollektor_durchfluss_status": {
+        "name": "Durchfluss (status)"
+      },
+      "reg_sol_i_kollektor_durchfluss_value": {
+        "name": "Durchfluss (value)"
+      },
+      "reg_sol_i_kollektor_ruecklauf_temperatur_status": {
+        "name": "Kollektor Rücklauftemperatur (status)"
+      },
+      "reg_sol_i_kollektor_ruecklauf_temperatur_value": {
+        "name": "Kollektor Rücklauftemperatur (value)"
+      },
+      "reg_sol_i_kollektor_temperatur_status": {
+        "name": "Kollektortemperatur (status)"
+      },
+      "reg_sol_i_kollektor_temperatur_value": {
+        "name": "Kollektortemperatur (value)"
+      },
+      "reg_sol_i_ruecklauf_temperatur_primaer_status": {
+        "name": "Rücklauftemperatur Primär (status)"
+      },
+      "reg_sol_i_ruecklauf_temperatur_primaer_value": {
+        "name": "Rücklauftemperatur Primär (value)"
+      },
+      "reg_sol_i_ruecklauf_temperatur_sekundaer_status": {
+        "name": "Rücklauftemperatur Sekundär (status)"
+      },
+      "reg_sol_i_ruecklauf_temperatur_sekundaer_value": {
+        "name": "Rücklauftemperatur Sekundär (value)"
+      },
+      "reg_sol_i_vorlauf_temperatur_sekundaer_status": {
+        "name": "Vorlauftemperatur Sekundär (status)"
+      },
+      "reg_sol_i_vorlauf_temperatur_sekundaer_value": {
+        "name": "Vorlauftemperatur Sekundär (value)"
+      },
+      "reg_sol_i_vorlauf_temperatur_status": {
+        "name": "Kollektor Vorlauftemperatur (status)"
+      },
+      "reg_sol_i_vorlauf_temperatur_value": {
+        "name": "Kollektor Vorlauftemperatur (value)"
+      },
+      "reg_sol_o_pumpe_1": {
+        "name": "Pumpe 1"
+      },
+      "reg_sol_o_pumpe_2": {
+        "name": "Pumpe 2"
+      },
+      "reg_sol_o_umschaltventil": {
+        "name": "Umschaltventil"
+      },
+      "reg_sol_pumpe_1_steuerstufe": {
+        "name": "Pumpe 1"
+      },
+      "reg_sol_pumpe_2_steuerstufe": {
+        "name": "Pumpe 2"
+      },
+      "reg_sol_status": {
+        "name": "Status"
+      },
+      "reg_sol_status_ursache": {
+        "name": "Statusursache"
+      },
+      "reg_sol_waermeleistung": {
+        "name": "Wärmeleistung"
+      },
+      "reg_sol_waermemenge_gesamt": {
+        "name": "Heat amount total"
+      },
+      "reg_sol_waermemenge_gesamt_kwh": {
+        "name": "Wärmemenge gesamt"
+      },
+      "reg_sol_waermemenge_tag": {
+        "name": "Wärmemenge Tag"
+      },
+      "reg_system_alarme_offen": {
+        "name": "Anzahl offene Alarme"
+      },
+      "reg_system_alarme_total": {
+        "name": "Anzahl Alarme"
+      },
+      "reg_system_bge_serial_number": {
+        "name": "BGE"
+      },
+      "reg_system_comfortenergy_status": {
+        "name": "Clee Status"
+      },
+      "reg_system_gui_kessel_typ": {
+        "name": "Kesseltyp"
+      },
+      "reg_system_i_aussen_temperatur_status": {
+        "name": "Außentemperatur Istwert (status)"
+      },
+      "reg_system_i_aussen_temperatur_value": {
+        "name": "Außentemperatur Istwert (value)"
+      },
+      "reg_system_kessel_seriennummer": {
+        "name": "Seriennummer"
+      },
+      "reg_system_kessel_seriennummer_san_code": {
+        "name": "SAN Code"
+      },
+      "reg_system_sw_revision": {
+        "name": "Revision"
+      },
+      "reg_system_wmm_rolle": {
+        "name": "WMM Rolle"
+      },
+      "reg_uebergabe_o_ventil": {
+        "name": "Ventil"
+      },
+      "reg_uebergabe_ruecklauftemp_primaer_ist_status": {
+        "name": "Rücklauftemperatur Primär (status)"
+      },
+      "reg_uebergabe_ruecklauftemp_primaer_ist_value": {
+        "name": "Rücklauftemperatur Primär (value)"
+      },
+      "reg_uebergabe_uegs_status": {
+        "name": "Status"
+      },
+      "reg_uebergabe_vorlauftemp_primaer_ist_status": {
+        "name": "Vorlauftemperatur Primär (status)"
+      },
+      "reg_uebergabe_vorlauftemp_primaer_ist_value": {
+        "name": "Vorlauftemperatur Primär (value)"
+      },
+      "reg_uebergabe_vorlauftemp_sekundaer_ist_status": {
+        "name": "Vorlauftemperatur Sekundär (status)"
+      },
+      "reg_uebergabe_vorlauftemp_sekundaer_ist_value": {
+        "name": "Vorlauftemperatur Sekundär (value)"
+      },
+      "reg_uebergabe_vorlauftemp_sekundaer_soll": {
+        "name": "Vorlauftemperatur Soll"
+      },
+      "reg_zirk_i_temperatur_status": {
+        "name": "Temperatur (status)"
+      },
+      "reg_zirk_i_temperatur_value": {
+        "name": "Temperatur (value)"
+      },
+      "reg_zirk_o_pumpe": {
+        "name": "Pumpe"
+      },
+      "reg_zk_i_puffertemp_bei_sensor_auswahl_status": {
+        "name": "Puffertemperatur (status)"
+      },
+      "reg_zk_i_puffertemp_bei_sensor_auswahl_value": {
+        "name": "Puffertemperatur (value)"
+      },
+      "reg_zk_i_stoerung": {
+        "name": "Störung"
+      },
+      "reg_zk_i_temperatur_status": {
+        "name": "Temperatur (status)"
+      },
+      "reg_zk_i_temperatur_value": {
+        "name": "Temperatur (value)"
+      },
+      "reg_zk_o_anforderung": {
+        "name": "Anforderung"
+      },
+      "reg_zk_o_pumpe": {
+        "name": "Kesselpumpe"
+      },
+      "reg_zk_status": {
+        "name": "Status"
+      }
+    },
+    "number": {
+      "reg_boi_heizstab_temperatur_max": {
+        "name": "Max. Temperatur Heizstab"
+      },
+      "reg_boi_temperatur_grenzen_max": {
+        "name": "Temperatur Min/Max (max)"
+      },
+      "reg_boi_temperatur_grenzen_min": {
+        "name": "Temperatur Min/Max (min)"
+      },
+      "reg_boi_waermepumpe_temperatur_max": {
+        "name": "Max. Temperatur Wärmepumpe"
+      },
+      "reg_cf2_kesseltemp_soll_1": {
+        "name": "Kesseltemperatur Soll"
+      },
+      "reg_eapdev_modbus_max_verdichterdrehz_soll": {
+        "name": "Mobus Max. Verdichter Soll"
+      },
+      "reg_eapdev_modbus_vorlauf_soll": {
+        "name": "Modbus VL-Temp. Soll"
+      },
+      "reg_ef2_kesseltempsoll1": {
+        "name": "Solltemperatur 1"
+      },
+      "reg_ef2_kesseltempsoll2": {
+        "name": "Solltemperatur 2"
+      },
+      "reg_hk_modbus_temperatur": {
+        "name": "Modbus Vorlauftemperatur Soll"
+      },
+      "reg_hk_raum_temperatur_soll_nacht": {
+        "name": "Absenktemperatur"
+      },
+      "reg_hk_raum_temperatur_soll_tag": {
+        "name": "Komforttemperatur"
+      },
+      "reg_kfs_puffer_solltemperatur_sommer": {
+        "name": "Puffersolltemperatur Sommer"
+      },
+      "reg_kfs_puffer_solltemperatur_winter": {
+        "name": "Puffersolltemperatur Winter"
+      },
+      "reg_ksm_modbus_kesseltemp_vorgabe": {
+        "name": "Modbus Kesseltemperatur"
+      },
+      "reg_ksm_modbus_leistung_vorgabe": {
+        "name": "Modbus Kesselleistung"
+      },
+      "reg_ksm_modbus_lifetick": {
+        "name": "Modbus Lifetick"
+      },
+      "reg_ksm_modbus_puffertemperatur_oben_value": {
+        "name": "Modbus Puffertemperatur oben für Restwärmenutzung (value)"
+      },
+      "reg_ksm_modbus_puffertemperatur_unten_value": {
+        "name": "Modbus Puffertemperatur unten für Restwärmenutzung (value)"
+      },
+      "reg_ksm_restmenge_brennstofflager": {
+        "name": "Restmenge Brennstofflager"
+      },
+      "reg_ksm_ruecklauftempmin": {
+        "name": "Rücklauftemperatur Minimum"
+      },
+      "reg_mf2_kesseltempsoll1": {
+        "name": "Solltemperatur 1"
+      },
+      "reg_mf2_kesseltempsoll2": {
+        "name": "Solltemperatur 2"
+      },
+      "reg_puf_brauchwassertemp_min": {
+        "name": "Brauchwassertemp. min."
+      },
+      "reg_puf_heizstab_temperatur_max": {
+        "name": "Max. Temperatur Heizstab"
+      },
+      "reg_puf_temperatur_grenzen_max": {
+        "name": "Temperatur Min/Max (max)"
+      },
+      "reg_puf_temperatur_grenzen_min": {
+        "name": "Temperatur Min/Max (min)"
+      },
+      "reg_sol_modbus_vorlauf_temperatur_soll": {
+        "name": "Modbus Vorlauftemp. Soll"
+      },
+      "reg_uebergabe_grenz_temp": {
+        "name": "Grenztemperatur"
+      },
+      "reg_uebergabe_temperatur_anhebung": {
+        "name": "Temperaturerhöhung"
+      },
+      "reg_zk_puffertemperatur_max": {
+        "name": "Puffertemperatur Max."
+      }
+    },
+    "select": {
+      "reg_ak_anlage_ein": {
+        "name": "Kessel Ein/Aus"
+      },
+      "reg_ak_externe_vorgabe": {
+        "name": "Externe Vorgabe"
+      },
+      "reg_ak_kesselprogramm": {
+        "name": "Kesselprogramm"
+      },
+      "reg_boi_heizstab_modbus_anforderung": {
+        "name": "Modbus Anforderung Heizstab"
+      },
+      "reg_boi_programm": {
+        "name": "Programm wählen"
+      },
+      "reg_boi_schnellladung": {
+        "name": "Brauchwasser 1x erhitzen"
+      },
+      "reg_boi_waermepumpe_modbus_anforderung": {
+        "name": "Modbus Anf. Wärmepumpe"
+      },
+      "reg_cf2_automatische_zuendung_sh": {
+        "name": "Automatische Zündung Funktion"
+      },
+      "reg_hk_modbus_anforderung": {
+        "name": "Modbus Anforderung"
+      },
+      "reg_hk_modbus_programm": {
+        "name": "Modbus Programm"
+      },
+      "reg_hk_programm": {
+        "name": "Programm wählen"
+      },
+      "reg_kfs_active_profile": {
+        "name": "Aktives Profil"
+      },
+      "reg_kfs_anlage_ein": {
+        "name": "Kesselfolgeschaltung"
+      },
+      "reg_ksm_hk_modbus_temperatur_auswahl": {
+        "name": "HK Sollvorgabe"
+      },
+      "reg_ksm_modbus_kesselanforderung": {
+        "name": "Modbus Kesselanforderung"
+      },
+      "reg_ksm_modbus_puffertemperatur_oben_status": {
+        "name": "Modbus Puffertemperatur oben für Restwärmenutzung (status)"
+      },
+      "reg_ksm_modbus_puffertemperatur_unten_status": {
+        "name": "Modbus Puffertemperatur unten für Restwärmenutzung (status)"
+      },
+      "reg_puf_heizstab_modbus_anforderung": {
+        "name": "Modbus Anforderung Heizstab"
+      },
+      "reg_puf_programm": {
+        "name": "Programm wählen"
+      },
+      "reg_system_alarme_beheben_von_extern": {
+        "name": "Alarme beheben"
+      },
+      "reg_system_modbus_clee_ueberschusstrom": {
+        "name": "Modbus Überstromnutzung"
+      },
+      "reg_system_modbus_lifetick_ignor_uestrommfa": {
+        "name": "Modbus Lifetick Überschussstromkontakt (MFA) ignorieren"
+      },
+      "reg_system_modbus_lifetick_ignore_hk": {
+        "name": "Modbus Lifetick Heizkreise ignorieren"
+      },
+      "reg_system_modbus_lifetick_ignore_kessel": {
+        "name": "Modbus Lifetick Kessel ignorieren"
+      },
+      "reg_system_modbus_lifetick_ignore_solar": {
+        "name": "Modbus Lifetick Solaranlagen ignorieren"
+      },
+      "reg_system_modbus_lifetick_ignore_wp": {
+        "name": "Modbus Lifetick Wärmepumpe ignorieren"
+      },
+      "reg_system_modbus_lifetick_ignore_wp_zwq": {
+        "name": "Modbus Lifetick Zweitwärmequellen Wärmepumpen ignorieren"
+      },
+      "reg_system_modbus_lifetick_ignore_zuswq": {
+        "name": "Modbus Lifetick Zusatzwärmequellen ignorieren"
+      },
+      "reg_uebergabe_ruecklauftemp_begrenzung": {
+        "name": "Rücklauftemp. Begrenzung"
+      },
+      "reg_zirk_programm": {
+        "name": "Programm wählen"
+      },
+      "reg_zk_waermepumpe_modbus_anforderung": {
+        "name": "Modbus Anforderung"
       }
     }
   }

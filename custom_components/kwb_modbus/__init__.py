@@ -17,7 +17,12 @@ from .coordinator import KWBDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-_PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BUTTON, Platform.SELECT]
+_PLATFORMS: list[Platform] = [
+    Platform.SENSOR,
+    Platform.BUTTON,
+    Platform.SELECT,
+    Platform.NUMBER,
+]
 
 type KwbModbusConfigEntry = ConfigEntry[KWBDataUpdateCoordinator]
 

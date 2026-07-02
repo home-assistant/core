@@ -1,0 +1,53 @@
+name: Sync to HACS repo
+
+"on":
+  push:
+    branches:
+      - kwb_modbus
+    paths:
+      - "custom_components/kwb_modbus/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  sync:
+    name: Sync
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Checkout HACS repo
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          repository: tobim99/kwb-modbus # <-- dein HACS-Repo anpassen
+          ssh-key: ${{ secrets.HACS_REPO_DEPLOY_KEY }}
+          path: hacs-repo
+          persist-credentials: true
+
+      - name: Sync integration files
+        run: |
+          rsync -av --delete \
+            custom_components/kwb_modbus/ \
+            hacs-repo/custom_components/kwb_modbus/
+
+      - name: Commit and push
+        working-directory: hacs-repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to sync."
+          else
+            git commit -m "sync: $(git -C $GITHUB_WORKSPACE log -1 --pretty='%h %s')"
+            git push
+          fi

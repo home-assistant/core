@@ -22,6 +22,7 @@ WRITE_MULTIPLE_REGISTERS = 16  # write_registers command
 # Conf keys
 CONF_HEATING_DEVICE = "heating_device"
 CONF_ADDON_MODULES = "addon_modules"
+CONF_REGISTER_PROFILE = "register_profile"
 CONF_SLAVE_ID = "slave_id"
 CONF_DISCOVERED_SENSORS = "discovered_sensors"
 # Maps module_key → list of selected instance labels (e.g. {"heating_circuits": ["HC 1.1", "HC 2.1"]})
@@ -31,8 +32,14 @@ CONF_INSTANCE_NAMES = "instance_names"
 
 DEFAULT_SLAVE_ID = 1
 
+REGISTER_PROFILE_AUTO = "auto"
+REGISTER_PROFILE_V22 = "v22"
+REGISTER_PROFILE_V25 = "v25"
+DEFAULT_REGISTER_PROFILE = REGISTER_PROFILE_V22
+
 HEATING_DEVICES = {
     "easyfire": "KWB EasyFire",
+    "ef3": "KWB EF3",
     "multifire": "KWB MultiFire",
     "pelletfire_plus": "KWB PelletFire+",
     "combifire": "KWB CombiFire",
@@ -52,6 +59,8 @@ ADDON_MODULES = {
     "heat_quantity_meter": "Heat Quantity Meter",
     "boiler_master_slave": "Boiler Master-Slave Circuit",
     "wmm_autonom": "WMM Autonom",
+    "easyair_plus": "KWB EasyAir Plus",
+    "transfer_station": "Transfer Station",
 }
 
 # Sensor status values from Modbus ValueTable system_sensor_status_t
@@ -88,7 +97,7 @@ DIAGNOSTIC_ADDRESSES = {
 # Used in addition to DIAGNOSTIC_ADDRESSES and register.is_status.
 DIAGNOSTIC_PARAMS: frozenset[str] = frozenset({
     # Combustion technical
-    "KSM.i_flammtemp_ist", "KSM.O2Ist", "KSM.i_rauchgastemp_ist",
+    "KSM.i_flammtemp_ist.value", "KSM.O2Ist", "KSM.i_rauchgastemp_ist.value",
     "KSM.AI_Feuerraum_Unterdruck", "KSM.Saugzugstufe", "KSM.i_drehzahl_saugzug",
     "KSM.kesselpumpe_steuerstufe", "KSM.DO_Pelletssauger",
     # External I/O and internal signals
@@ -102,7 +111,7 @@ DIAGNOSTIC_PARAMS: frozenset[str] = frozenset({
     # Boiler technical outputs
     "AK.anforderung_bl_ursache", "AK.pl_geblaesestufe",
     # MF2 combustion internals
-    "MF2.Glutbettniveau", "MF2.i_ausbrandtemp", "MF2.luftverschiebung_gesamt",
+    "MF2.Glutbettniveau", "MF2.i_ausbrandtemp.value", "MF2.luftverschiebung_gesamt",
     "MF2.AI_Fuellstand_Zwischenbehaelter", "MF2.SLGeblaesestufe",
     # CF2 technical outputs
     "CF2.i_pl_klappe_ist_promille", "CF2.i_sl_klappe_ist_promille",
@@ -125,27 +134,14 @@ DIAGNOSTIC_PARAMS: frozenset[str] = frozenset({
     "SYSTEM.sw_revision", "SYSTEM.alarme_total",
 })
 
-# Select params that should be EntityCategory.CONFIG (settings, setpoints, limits).
-# These are infrequently changed calibration or configuration values.
+# Select params that should be EntityCategory.CONFIG.
+# Keep this list aligned with actually implemented Select entities.
 CONFIG_SELECT_PARAMS: frozenset[str] = frozenset({
-    # HC temperature setpoints
-    "HK.raum_temperatur_soll", "HK.raum_temperatur_soll_nacht",
-    "HK.raum_temperatur_soll_tag", "HK.vorlauf_temperatur_soll",
-    # Boiler limits
-    "KSM.RuecklauftempMin",
-    # Buffer/DHW limits
-    "PUF.brauchwassertemp_min", "PUF.temperatur_grenzen.min", "PUF.temperatur_grenzen.max",
-    "BOI.soll_temperatur", "BOI.temperatur_grenzen.min", "BOI.temperatur_grenzen.max",
-    # Boiler setpoints per device type
-    "CF2.kesseltemp_soll_1", "CF2.max_befuellgrad_anzeige",
-    "EF2.KesseltempSoll1", "EF2.KesseltempSoll2",
-    "MF2.KesseltempSoll1", "MF2.KesseltempSoll2",
-    # Calibration
-    "EF2.Brennstofffaktor", "MF2.Brennstofffaktor",
-    # KFS/buffer setpoints
-    "KFS.puffer_solltemperatur_sommer", "KFS.puffer_solltemperatur_winter",
-    # AK external setpoints
-    "AK.externe_brennerleistung", "AK.externe_kessel_solltemperatur",
+    # Program/profile selects
+    "HK.programm", "PUF.programm", "BOI.programm", "ZIRK.programm",
+    "KFS.active_profile",
+    # Expert selects (also gated by address in EXPERT_SELECT_ADDRESSES)
+    "AK.externe_vorgabe", "AK.kesselprogramm", "CF2.automatische_Zuendung_SH",
 })
 
 # Select addresses that are only visible in expert mode
@@ -168,6 +164,8 @@ INDEXED_MODULES = [
     "secondary_heating_sources",
     "solar",
     "heat_quantity_meter",
+    "easyair_plus",
+    "transfer_station",
 ]
 
 

@@ -16,7 +16,7 @@ repos:
           - --skip="./.*,*.csv,*.json,*.ambr"
           - --quiet-level=2
         exclude_types: [csv, json, html]
-        exclude: ^tests/fixtures/|homeassistant/generated/|tests/components/.*/snapshots/
+        exclude: ^tests/fixtures/|homeassistant/generated/|tests/components/.*/snapshots/|custom_components/kwb_modbus/register_maps/v\d.*\.py
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
     rev: v1.22.0
     hooks:
