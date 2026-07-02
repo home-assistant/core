@@ -273,10 +273,7 @@ async def test_hitachi_turn_on_uses_run(
     mock_client: MockOverkizClient,
     setup_overkiz_integration: SetupOverkizIntegration,
 ) -> None:
-    """Selecting a mode while off issues setControlDHW['run'], not ['on'].
-
-    The modbus:ControlDHWState of this component only accepts run/stop.
-    """
+    """Test turning on from off sends setControlDHW['run'] then setDHWMode."""
     await setup_overkiz_integration(fixture=DHW_HITACHI_YUTAKI.fixture)
 
     await hass.services.async_call(
@@ -286,12 +283,14 @@ async def test_hitachi_turn_on_uses_run(
         blocking=True,
     )
 
-    calls = mock_client.execute_action_group.await_args_list
-    commands = [call.kwargs["actions"][0].commands[0] for call in calls]
-    assert [(command.name, command.parameters) for command in commands] == [
-        ("setControlDHW", ["run"]),
-        ("setDHWMode", ["standard"]),
-    ]
+    assert_commands_call(
+        mock_client,
+        device_url=DHW_HITACHI_YUTAKI.device_url,
+        commands=[
+            ("setControlDHW", ["run"]),
+            ("setDHWMode", ["standard"]),
+        ],
+    )
 
 
 async def test_hitachi_turn_off_uses_stop(
@@ -299,7 +298,7 @@ async def test_hitachi_turn_off_uses_stop(
     mock_client: MockOverkizClient,
     setup_overkiz_integration: SetupOverkizIntegration,
 ) -> None:
-    """Turning off issues setControlDHW['stop']."""
+    """Test turning off sends setControlDHW['stop']."""
     await setup_overkiz_integration(fixture=DHW_HITACHI_YUTAKI.fixture)
 
     await hass.services.async_call(
