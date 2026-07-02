@@ -15,6 +15,7 @@ from uiprotect.data import (
     Camera,
     Event,
     EventType,
+    LinkStation,
     ModelType,
     ProtectAdoptableDeviceModel,
     PTZPatrol,
@@ -96,6 +97,9 @@ class ProtectData:
         ] = defaultdict(set)
         self._public_subscriptions: defaultdict[
             str, set[Callable[[PublicDeviceModel | None], None]]
+        ] = defaultdict(set)
+        self._alarm_hub_subscriptions: defaultdict[
+            str, set[Callable[[LinkStation], None]]
         ] = defaultdict(set)
         self._pending_camera_ids: set[str] = set()
         self._unsubs: list[CALLBACK_TYPE] = []
@@ -226,19 +230,23 @@ class ProtectData:
 
         DEVICES_WS_SUBSCRIBED_MODELS is an empty set, which the API client treats
         as "all models", so messages are not pre-filtered. NVR messages signal the
-        private NVR so alarm entities pick up the new arm state. Relay and Siren
-        messages dispatch the merged object by mac so relay-output and siren
-        entities refresh. Any other public device is dispatched generically by mac
-        to entities whose description was migrated to the public path via
-        ``ufp_public_value`` (such as battery and battery_low); the NVR/Relay/Siren
-        returns above intentionally short-circuit that generic path.
+        private NVR so alarm entities pick up the new arm state. Relay, Siren and
+        LinkStation (alarm hub) messages dispatch the merged object by mac so the
+        relay-output, siren and alarm-hub entities refresh. Any other public device
+        is dispatched generically by mac to entities whose description was migrated
+        to the public path via ``ufp_public_value`` (such as battery and
+        battery_low); the NVR/Relay/Siren/LinkStation returns above intentionally
+        short-circuit that generic path.
         """
         new_obj = message.new_obj
         if new_obj is None:
             # Delete event: notify subscribers so entities can be marked unavailable.
             old_obj = message.old_obj
-            if old_obj is not None and old_obj.model is ModelType.SIREN:
-                self._async_signal_siren_update(cast(Siren, old_obj))
+            if old_obj is not None:
+                if old_obj.model is ModelType.SIREN:
+                    self._async_signal_siren_update(cast(Siren, old_obj))
+                elif old_obj.model is ModelType.LINK_STATION:
+                    self._async_signal_alarm_hub_update(cast(LinkStation, old_obj))
             return
         if new_obj.model is ModelType.NVR:
             self._async_signal_device_update(self.api.bootstrap.nvr)
@@ -248,6 +256,9 @@ class ProtectData:
             return
         if new_obj.model is ModelType.SIREN:
             self._async_signal_siren_update(cast(Siren, new_obj))
+            return
+        if new_obj.model is ModelType.LINK_STATION:
+            self._async_signal_alarm_hub_update(cast(LinkStation, new_obj))
             return
         # Generic public-device dispatch (e.g. sensor) keyed by mac, for
         # descriptions migrated to the public path via ``ufp_public_value``.
@@ -310,6 +321,8 @@ class ProtectData:
             self._async_signal_relay_update(relay)
         for siren in api.public_bootstrap.sirens.values():
             self._async_signal_siren_update(siren)
+        for hub in api.public_bootstrap.alarm_hubs.values():
+            self._async_signal_alarm_hub_update(hub)
         # Migrated entities (e.g. battery) recompute from their cached object.
         for subscriptions in self._public_subscriptions.values():
             for update_callback in subscriptions:
@@ -602,6 +615,33 @@ class ProtectData:
             "PublicDeviceModel | None",
             api.public_bootstrap.get(device.model, device.id),
         )
+
+    @callback
+    def async_subscribe_alarm_hub(
+        self, mac: str, update_callback: Callable[[LinkStation], None]
+    ) -> CALLBACK_TYPE:
+        """Add a callback subscriber for alarm hub updates."""
+        self._alarm_hub_subscriptions[mac].add(update_callback)
+        return partial(self._async_unsubscribe_alarm_hub, mac, update_callback)
+
+    @callback
+    def _async_unsubscribe_alarm_hub(
+        self, mac: str, update_callback: Callable[[LinkStation], None]
+    ) -> None:
+        """Remove an alarm hub callback subscriber."""
+        self._alarm_hub_subscriptions[mac].remove(update_callback)
+        if not self._alarm_hub_subscriptions[mac]:
+            del self._alarm_hub_subscriptions[mac]
+
+    @callback
+    def _async_signal_alarm_hub_update(self, hub: LinkStation) -> None:
+        """Call the callbacks for an alarm hub mac."""
+        mac = hub.mac
+        if not (subscriptions := self._alarm_hub_subscriptions.get(mac)):
+            return
+        _LOGGER.debug("Updating alarm hub: %s (%s)", hub.name, mac)
+        for update_callback in subscriptions:
+            update_callback(hub)
 
     @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:

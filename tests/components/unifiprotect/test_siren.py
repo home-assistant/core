@@ -70,6 +70,7 @@ def _make_public_bootstrap(siren: Mock | None) -> Mock:
     pb = Mock(spec=PublicBootstrap)
     pb.sirens = {siren.id: siren} if siren is not None else {}
     pb.relays = {}
+    pb.alarm_hubs = {}
     pb.arm_mode = None
     pb.arm_profiles = {}
     return pb

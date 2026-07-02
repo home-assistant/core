@@ -9,8 +9,10 @@ from typing import Any, override
 
 from uiprotect.data import (
     NVR,
+    AlarmHubConnectionState,
     Camera,
     Light,
+    LinkStation,
     ModelType,
     ProtectAdoptableDeviceModel,
     ProtectDeviceModel,
@@ -39,6 +41,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
+    BaseAlarmHubEntity,
     BaseProtectEntity,
     EventEntityMixin,
     PermRequired,
@@ -569,6 +572,76 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
 }
 
 
+@dataclass(frozen=True, kw_only=True)
+class ProtectAlarmHubSensorEntityDescription(SensorEntityDescription):
+    """Describes a UniFi Protect alarm hub (public API) sensor."""
+
+    value_fn: Callable[[LinkStation], datetime | float | str | None]
+
+
+def _alarm_hub_battery_voltage(hub: LinkStation) -> float | None:
+    """Return the backup-battery voltage, or None when no battery is connected.
+
+    A disconnected, removed or fully flat backup battery all report
+    ``connection: disconnected`` with ``voltage: 0``; reading unknown rather
+    than 0.0 V avoids implying a real measurement when there is no usable cell.
+    """
+    battery = hub.alarm_hub_battery
+    if battery is None or battery.connection is not AlarmHubConnectionState.CONNECTED:
+        return None
+    return battery.voltage
+
+
+def _alarm_hub_last_event(hub: LinkStation) -> datetime | None:
+    """Return the last-event timestamp, if reported."""
+    return hub.last_event
+
+
+ALARM_HUB_SENSORS: tuple[ProtectAlarmHubSensorEntityDescription, ...] = (
+    ProtectAlarmHubSensorEntityDescription(
+        key="battery_voltage",
+        translation_key="alarm_hub_battery_voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_alarm_hub_battery_voltage,
+    ),
+    ProtectAlarmHubSensorEntityDescription(
+        key="last_event",
+        translation_key="alarm_hub_last_event",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_alarm_hub_last_event,
+    ),
+)
+
+
+class ProtectAlarmHubSensor(BaseAlarmHubEntity, SensorEntity):
+    """A sensor entity for a UniFi Protect alarm hub."""
+
+    entity_description: ProtectAlarmHubSensorEntityDescription
+
+    @callback
+    @override
+    def _async_update_attrs(self, hub: LinkStation) -> None:
+        super()._async_update_attrs(hub)
+        self._attr_native_value = self.entity_description.value_fn(hub)
+
+
+@callback
+def _async_alarm_hub_entities(data: ProtectData) -> list[ProtectAlarmHubSensor]:
+    """Build alarm hub sensor entities from the public bootstrap."""
+    api = data.api
+    if not api.has_public_bootstrap:
+        return []
+    return [
+        ProtectAlarmHubSensor(data, hub, description)
+        for hub in api.public_bootstrap.alarm_hubs.values()
+        for description in ALARM_HUB_SENSORS
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
@@ -606,6 +679,11 @@ async def async_setup_entry(
     entities += _async_nvr_entities(data)
 
     async_add_entities(entities)
+    # Alarm hubs come from the public bootstrap, which has no runtime-adopt
+    # signal (async_subscribe_adopt fires only for private-WS adoptable
+    # devices), so they are enumerated once and need a config-entry reload to
+    # pick up new hubs, like the siren and relay platforms.
+    async_add_entities(_async_alarm_hub_entities(data))
 
 
 @callback
