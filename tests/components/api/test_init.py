@@ -1,10 +1,11 @@
 """The tests for the Home Assistant API component."""
 
 import asyncio
+from contextlib import AbstractContextManager, nullcontext
 from http import HTTPStatus
 import json
 from typing import Any
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, AsyncMock, patch
 
 from aiohttp import ServerDisconnectedError, web
 from aiohttp.test_utils import TestClient
@@ -916,25 +917,48 @@ async def test_api_call_service_not_found(
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
-async def test_api_call_service_bad_data(
-    hass: HomeAssistant, mock_api_client: TestClient
+async def _raise_timeout(*args: Any, **kwargs: Any) -> None:
+    raise TimeoutError
+
+
+@pytest.mark.parametrize(
+    ("schema", "request_data", "service_call_patch", "expected_status"),
+    [
+        pytest.param(
+            vol.Schema({"hello": str}),
+            {"hello": 5},
+            nullcontext(),
+            HTTPStatus.BAD_REQUEST,
+            id="bad_data",
+        ),
+        pytest.param(
+            None,
+            {},
+            patch.object(ha.ServiceRegistry, "async_call", _raise_timeout),
+            HTTPStatus.GATEWAY_TIMEOUT,
+            id="timeout",
+        ),
+    ],
+)
+async def test_api_call_service_error(
+    hass: HomeAssistant,
+    mock_api_client: TestClient,
+    schema: vol.Schema | None,
+    request_data: dict[str, Any],
+    service_call_patch: AbstractContextManager,
+    expected_status: HTTPStatus,
 ) -> None:
-    """Test if the API fails 400 if unknown service."""
-    test_value = []
-
-    @ha.callback
-    def listener(service_call):
-        """Record that our service got called."""
-        test_value.append(1)
-
+    """Test service call returns the expected error response."""
     hass.services.async_register(
-        "test_domain", "test_service", listener, schema=vol.Schema({"hello": str})
+        "test_domain", "test_service", AsyncMock(), schema=schema
     )
 
-    resp = await mock_api_client.post(
-        "/api/services/test_domain/test_service", json={"hello": 5}
-    )
-    assert resp.status == HTTPStatus.BAD_REQUEST
+    with service_call_patch:
+        resp = await mock_api_client.post(
+            "/api/services/test_domain/test_service", json=request_data
+        )
+
+    assert resp.status == expected_status
 
 
 async def test_api_status(hass: HomeAssistant, mock_api_client: TestClient) -> None:
