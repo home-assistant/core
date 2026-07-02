@@ -8297,7 +8297,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'GIEX Watering Timer (unsupported)',
+    'model': 'GIEX Watering Timer',
     'model_id': '7ytb3h8u',
     'name': 'GIEX Watering Timer',
     'name_by_user': None,
