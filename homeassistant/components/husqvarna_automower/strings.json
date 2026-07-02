@@ -501,6 +501,12 @@
       "message": "This mower does not support work areas."
     }
   },
+  "issues": {
+    "invalid_mower": {
+      "description": "The mower \"{mower_name}\" cannot be added and is ignored by this integration. For further assistance contact Husqvarna by sending an email to \"feedback@developer.husqvarnagroup.cloud\" and let them know that the mower reports \"0-0\" as a serial number and also send the actual serial number of the mower to them. You can find the actual serial number in the Automower Connect app.",
+      "title": "The mower {mower_name} cannot be added"
+    }
+  },
   "selector": {
     "override_modes": {
       "options": {
