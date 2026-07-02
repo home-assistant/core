@@ -84,9 +84,6 @@ CONF_TEMPERATURE_ACTION = "set_temperature"
 CONF_TEMPERATURE = "temperature"
 CONF_XY_ACTION = "set_xy"
 
-DEFAULT_MIN_MIREDS = 153
-DEFAULT_MAX_MIREDS = 500
-
 DEFAULT_NAME = "Template Light"
 
 SCRIPT_FIELDS = (
@@ -700,28 +697,21 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
 
     @callback
     def _validate_temperature(self, result: Any) -> int | None:
-        """Validate the temperature from the template."""
+        """Validate the color temperature in Kelvin from the template."""
         if template_validators.check_result_for_none(result):
             return None
 
-        if (min_kelvin := self._attr_min_color_temp_kelvin) is not None:
-            max_mireds = color_util.color_temperature_kelvin_to_mired(min_kelvin)
-        else:
-            max_mireds = DEFAULT_MAX_MIREDS
+        min_kelvin = self._attr_min_color_temp_kelvin or DEFAULT_MIN_KELVIN
+        max_kelvin = self._attr_max_color_temp_kelvin or DEFAULT_MAX_KELVIN
 
-        if (max_kelvin := self._attr_max_color_temp_kelvin) is not None:
-            min_mireds = color_util.color_temperature_kelvin_to_mired(max_kelvin)
-        else:
-            min_mireds = DEFAULT_MIN_MIREDS
-
-        if isinstance(result, (int, float)) and min_mireds <= result <= max_mireds:
-            return color_util.color_temperature_mired_to_kelvin(result)
+        if isinstance(result, (int, float)) and min_kelvin <= result <= max_kelvin:
+            return int(result)
 
         template_validators.log_validation_result_error(
             self,
             CONF_TEMPERATURE,
             result,
-            f"expected a number between {min_mireds} and {max_mireds}",
+            f"expected a number between {min_kelvin} and {max_kelvin}",
         )
         return None
 
