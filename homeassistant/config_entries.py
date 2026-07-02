@@ -922,7 +922,8 @@ class ConfigEntry[_DataT = Any]:
                     hass, integration, exc
                 )
                 if isinstance(exc, asyncio.CancelledError):
-                    raise
+                    if (task := asyncio.current_task()) and task.cancelling() > 0:
+                        raise
                 if isinstance(exc, ConfigEntryNotReady):
                     return
 
@@ -962,7 +963,8 @@ class ConfigEntry[_DataT = Any]:
                 hass, integration, exc
             )
             if isinstance(exc, asyncio.CancelledError):
-                raise
+                if (task := asyncio.current_task()) and task.cancelling() > 0:
+                    raise
             if isinstance(exc, ConfigEntryNotReady):
                 return
 
