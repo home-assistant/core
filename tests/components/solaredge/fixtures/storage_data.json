@@ -6,17 +6,31 @@
         "telemetries": [
           {
             "timeStamp": "2025-01-01 00:00:00",
-            "lifeTimeEnergyCharged": 1000.0,
-            "lifeTimeEnergyDischarged": 500.0,
+            "lifeTimeEnergyCharged": 0,
+            "lifeTimeEnergyDischarged": 0,
             "batteryPercentageState": 50.0,
-            "power": 100.0
+            "power": 0.0
           },
           {
-            "timeStamp": "2025-01-01 12:00:00",
-            "lifeTimeEnergyCharged": 1500.0,
-            "lifeTimeEnergyDischarged": 800.0,
-            "batteryPercentageState": 75.0,
-            "power": 200.0
+            "timeStamp": "2025-01-01 01:00:00",
+            "lifeTimeEnergyCharged": 0,
+            "lifeTimeEnergyDischarged": 0,
+            "batteryPercentageState": 80.0,
+            "power": 2000.0
+          },
+          {
+            "timeStamp": "2025-01-01 02:00:00",
+            "lifeTimeEnergyCharged": 0,
+            "lifeTimeEnergyDischarged": 0,
+            "batteryPercentageState": 90.0,
+            "power": 0.0
+          },
+          {
+            "timeStamp": "2025-01-01 03:00:00",
+            "lifeTimeEnergyCharged": 0,
+            "lifeTimeEnergyDischarged": 0,
+            "batteryPercentageState": 70.0,
+            "power": -1000.0
           }
         ]
       }

@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
+from aiosolaredge import StorageData
 import pytest
 
 from homeassistant.components.solaredge.const import CONF_SITE_ID, DOMAIN
@@ -71,8 +72,10 @@ def mock_solaredge_api_fixture() -> Generator[Mock]:
     api.get_energy_details = AsyncMock(
         return_value=load_json_object_fixture("energy_details.json", DOMAIN)
     )
-    api.get_storage_data = AsyncMock(
-        return_value=load_json_object_fixture("storage_data.json", DOMAIN)
+    api.get_parsed_storage_data = AsyncMock(
+        return_value=StorageData.from_response(
+            load_json_object_fixture("storage_data.json", DOMAIN)
+        )
     )
     with (
         patch(

@@ -359,70 +359,35 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
         """Update the data from the SolarEdge Monitoring API."""
         now = dt_util.now()
         start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        data = await self.api.get_storage_data(
-            self.site_id,
-            start_of_day,
-            now,
-        )
-        storage_data = data.get("storageData")
-        if storage_data is None:
-            raise UpdateFailed("Storage data not available from API")
-
-        batteries = storage_data.get("batteries")
-        if batteries is None:
-            raise UpdateFailed("Battery data not available from API")
+        try:
+            storage = await self.api.get_parsed_storage_data(
+                self.site_id,
+                start_of_day,
+                now,
+            )
+        except KeyError as ex:
+            raise UpdateFailed("Storage data not available from API") from ex
 
         self.data = {}
         self.attributes = {}
 
-        if not batteries:
+        if not storage.batteries:
             LOGGER.debug("No batteries found in storage data")
             return
 
-        # Aggregate totals across all batteries
-        total_charge_energy = 0.0
-        total_discharge_energy = 0.0
+        # aiosolaredge derives the charged/discharged energy by integrating the
+        # power telemetry, because SolarEdge frequently leaves
+        # lifeTimeEnergyCharged/Discharged at 0 even while the battery is
+        # cycling. See issue #169964.
+        for battery in storage.batteries:
+            serial = battery.serial_number
+            self.data[f"{serial}_state_of_charge"] = battery.state_of_charge
+            self.data[f"{serial}_power"] = battery.power
+            self.data[f"{serial}_charge_energy"] = battery.charge_energy
+            self.data[f"{serial}_discharge_energy"] = battery.discharge_energy
 
-        for battery in batteries:
-            serial = battery.get("serialNumber")
-            if not serial:
-                LOGGER.debug("Skipping battery without serialNumber")
-                continue
-
-            telemetries = battery.get("telemetries", [])
-
-            if not telemetries:
-                continue
-
-            latest = telemetries[-1]
-
-            # Per-battery current values
-            self.data[f"{serial}_state_of_charge"] = latest.get(
-                "batteryPercentageState"
-            )
-            self.data[f"{serial}_power"] = latest.get("power")
-
-            # Compute daily charge/discharge delta from lifetime counters
-            if len(telemetries) >= 2:
-                first = telemetries[0]
-                charge_energy = latest.get("lifeTimeEnergyCharged", 0.0) - first.get(
-                    "lifeTimeEnergyCharged", 0.0
-                )
-                discharge_energy = latest.get(
-                    "lifeTimeEnergyDischarged", 0.0
-                ) - first.get("lifeTimeEnergyDischarged", 0.0)
-            else:
-                charge_energy = 0.0
-                discharge_energy = 0.0
-
-            total_charge_energy += charge_energy
-            total_discharge_energy += discharge_energy
-
-            self.data[f"{serial}_charge_energy"] = charge_energy
-            self.data[f"{serial}_discharge_energy"] = discharge_energy
-
-        self.data["charge_energy"] = total_charge_energy
-        self.data["discharge_energy"] = total_discharge_energy
+        self.data["charge_energy"] = storage.total_charge_energy
+        self.data["discharge_energy"] = storage.total_discharge_energy
 
         LOGGER.debug("Updated SolarEdge storage data: %s", self.data)
 
