@@ -1,14 +1,26 @@
-"""Fixtures for AquaLogic tests."""
+"""Fixtures for the AquaLogic integration tests."""
 
-from collections.abc import Callable
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.aqualogic import DOMAIN, AquaLogicProcessor
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.components.aqualogic.const import DOMAIN, UPDATE_TOPIC
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers.dispatcher import dispatcher_send
+
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.2.3.4", CONF_PORT: 8899},
+        entry_id="test_aqualogic_entry",
+    )
 
 
 @pytest.fixture
@@ -30,47 +42,51 @@ def mock_panel() -> MagicMock:
 
 
 @pytest.fixture
-def mock_processor(mock_panel: MagicMock) -> MagicMock:
-    """Return a mock AquaLogicProcessor registered in hass.data."""
-    with patch("homeassistant.components.aqualogic.AquaLogicProcessor") as mock_cls:
-        processor = MagicMock()
+def mock_aqualogic_device() -> Generator[MagicMock]:
+    """Return a mock AquaLogic device that immediately triggers the data callback."""
+    with patch(
+        "homeassistant.components.aqualogic.config_flow.AquaLogic"
+    ) as mock_al_class:
+
+        def _fake_process(callback: object) -> None:
+            callback(mock_al_class.return_value)
+
+        mock_al_class.return_value.process.side_effect = _fake_process
+        yield mock_al_class
+
+
+@pytest.fixture
+def mock_processor(hass: HomeAssistant, mock_panel: MagicMock) -> Generator[MagicMock]:
+    """Mock the AquaLogic processor thread."""
+    with patch(
+        "homeassistant.components.aqualogic.AquaLogicProcessor"
+    ) as mock_processor_class:
+        processor = mock_processor_class.return_value
         processor.panel = mock_panel
-        mock_cls.return_value = processor
+        processor.data_changed.side_effect = lambda _: dispatcher_send(
+            hass, UPDATE_TOPIC
+        )
         yield processor
 
 
 @pytest.fixture
 async def init_integration(
-    hass: HomeAssistant, mock_panel: MagicMock
-) -> AquaLogicProcessor:
-    """Set up the AquaLogic integration and run one pass of run() to register the callback.
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_processor: MagicMock,
+    platforms: list[Platform],
+) -> MockConfigEntry:
+    """Set up the AquaLogic integration for testing."""
+    mock_config_entry.add_to_hass(hass)
 
-    AquaLogic is mocked so mock_panel becomes processor.panel. _shutdown is set before
-    run() so it exits after a single iteration, registering the data_changed callback
-    with panel.process() without starting a real network thread.
-    """
-    with patch("homeassistant.components.aqualogic.AquaLogic") as mock_al:
-        mock_al.return_value = mock_panel
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {DOMAIN: {CONF_HOST: "1.2.3.4", CONF_PORT: 8899}},
-        )
+    with patch("homeassistant.components.aqualogic.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        processor: AquaLogicProcessor = hass.data[DOMAIN]
-        processor._shutdown = True
-        processor.run()
-    return processor
+
+    return mock_config_entry
 
 
 @pytest.fixture
-def update_callback(
-    init_integration: AquaLogicProcessor, mock_panel: MagicMock
-) -> Callable[[], None]:
-    """Return a callable that fires a panel data update through the registered callback.
-
-    Extracts the data_changed callback from the mock's process() call args so tests
-    trigger updates through the same path as real panel data arriving.
-    """
-    callback = mock_panel.process.call_args[0][0]
-    return lambda: callback(mock_panel)
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return [Platform.SENSOR, Platform.SWITCH]
