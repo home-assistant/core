@@ -1,7 +1,6 @@
 """Support for airthings ble sensors."""
 
 from collections.abc import Callable
-import dataclasses
 from dataclasses import dataclass
 import logging
 from typing import override
@@ -19,6 +18,7 @@ from homeassistant.const import (
     EntityCategory,
     Platform,
     UnitOfPressure,
+    UnitOfRadiationConcentration,
     UnitOfRatio,
     UnitOfSoundPressure,
     UnitOfTemperature,
@@ -33,9 +33,8 @@ from homeassistant.helpers.entity_registry import (
 )
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE
+from .const import DOMAIN
 from .coordinator import AirthingsBLEConfigEntry, AirthingsBLEDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,14 +64,16 @@ SENSORS_MAPPING_TEMPLATE: dict[str, AirthingsBLESensorEntityDescription] = {
     "radon_1day_avg": AirthingsBLESensorEntityDescription(
         key="radon_1day_avg",
         translation_key="radon_1day_avg",
-        native_unit_of_measurement=VOLUME_BECQUEREL,
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
         suggested_display_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "radon_longterm_avg": AirthingsBLESensorEntityDescription(
         key="radon_longterm_avg",
         translation_key="radon_longterm_avg",
-        native_unit_of_measurement=VOLUME_BECQUEREL,
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
         suggested_display_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -210,26 +211,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Airthings BLE sensors."""
-    is_metric = hass.config.units is METRIC_SYSTEM
-
     coordinator = entry.runtime_data
-
-    # we need to change some units
-    sensors_mapping = SENSORS_MAPPING_TEMPLATE.copy()
-    if not is_metric:
-        for key, val in sensors_mapping.items():
-            if val.native_unit_of_measurement is not VOLUME_BECQUEREL:
-                continue
-            sensors_mapping[key] = dataclasses.replace(
-                val,
-                native_unit_of_measurement=VOLUME_PICOCURIE,
-                suggested_display_precision=1,
-            )
 
     entities = []
     _LOGGER.debug("got sensors: %s", coordinator.data.sensors)
     for sensor_type, sensor_value in coordinator.data.sensors.items():
-        if sensor_type not in sensors_mapping:
+        if sensor_type not in SENSORS_MAPPING_TEMPLATE:
             _LOGGER.debug(
                 "Unknown sensor type detected: %s, %s",
                 sensor_type,
@@ -238,7 +225,9 @@ async def async_setup_entry(
             continue
         async_migrate(hass, coordinator.data.address, sensor_type)
         entities.append(
-            AirthingsSensor(coordinator, coordinator.data, sensors_mapping[sensor_type])
+            AirthingsSensor(
+                coordinator, coordinator.data, SENSORS_MAPPING_TEMPLATE[sensor_type]
+            )
         )
 
     async_add_entities(entities)
