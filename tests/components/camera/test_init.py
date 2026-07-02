@@ -53,6 +53,21 @@ async def image_mock_url_fixture(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
+@pytest.fixture
+async def register_provider_and_get_camera(
+    hass: HomeAssistant,
+) -> tuple[Camera, Callable[[], None]]:
+    """Fixture for mock camera."""
+    await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # Register test provider
+    unsub = await _register_test_webrtc_provider(hass)
+    camera_obj = get_camera_from_entity_id(hass, "camera.demo_camera")
+    assert camera_obj.webrtc_provider is not None
+    return camera_obj, unsub
+
+
 @pytest.mark.usefixtures("image_mock_url")
 async def test_get_image_from_camera(hass: HomeAssistant) -> None:
     """Grab an image from camera entity."""
@@ -960,7 +975,7 @@ async def test_webrtc_provider_not_added_for_native_webrtc(
     """Test that a WebRTC provider is not added for native WebRTC."""
     camera_obj = get_camera_from_entity_id(hass, "camera.async")
     assert camera_obj
-    assert camera_obj._webrtc_provider is None
+    assert camera_obj.webrtc_provider is None
     assert camera_obj._supports_native_async_webrtc is True
 
 
@@ -1014,21 +1029,18 @@ async def test_camera_capabilities_changing_native_support(
 @pytest.mark.usefixtures("mock_camera", "mock_stream_source")
 async def test_snapshot_service_webrtc_provider(
     hass: HomeAssistant,
+    register_provider_and_get_camera: tuple[Camera, Callable[[], None]],
 ) -> None:
     """Test snapshot service with the webrtc provider."""
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-    unsub = await _register_test_webrtc_provider(hass)
-    camera_obj = get_camera_from_entity_id(hass, "camera.demo_camera")
-    assert camera_obj._webrtc_provider
+    camera_obj, unsub = register_provider_and_get_camera
 
     with (
         patch.object(camera_obj, "use_stream_for_stills", return_value=True),
         patch("homeassistant.components.camera.open"),
         patch.object(
-            camera_obj._webrtc_provider,
+            camera_obj.webrtc_provider,
             "async_get_image",
-            wraps=camera_obj._webrtc_provider.async_get_image,
+            wraps=camera_obj.webrtc_provider.async_get_image,
         ) as webrtc_get_image_mock,
         patch.object(camera_obj, "stream", AsyncMock()) as stream_mock,
         patch(
@@ -1073,7 +1085,7 @@ async def test_snapshot_service_webrtc_provider(
         # Deregister provider
         unsub()
         await hass.async_block_till_done()
-        assert camera_obj._webrtc_provider is None
+        assert camera_obj.webrtc_provider is None
         webrtc_get_image_mock.reset_mock()
         stream_mock.reset_mock()
 
@@ -1104,7 +1116,7 @@ async def test_provider_change_register_unregister_called(
     await hass.async_block_till_done()
 
     camera_obj = get_camera_from_entity_id(hass, "camera.demo_camera")
-    assert camera_obj._webrtc_provider is provider
+    assert camera_obj.webrtc_provider is provider
 
     with (
         patch.object(
@@ -1115,7 +1127,7 @@ async def test_provider_change_register_unregister_called(
         # Make provider unsupported
         provider._is_supported = False
         await camera_obj.async_refresh_providers()
-        assert camera_obj._webrtc_provider is None
+        assert camera_obj.webrtc_provider is None
 
         # Verify unregister was called
         mock_unregister.assert_called_once_with(camera_obj)
@@ -1125,7 +1137,7 @@ async def test_provider_change_register_unregister_called(
         mock_unregister.reset_mock()
         provider._is_supported = True
         await camera_obj.async_refresh_providers()
-        assert camera_obj._webrtc_provider is provider
+        assert camera_obj.webrtc_provider is provider
 
         # Verify register was called
         mock_register.assert_called_once_with(camera_obj)
@@ -1136,19 +1148,13 @@ async def test_provider_change_register_unregister_called(
 async def test_camera_prefs_update_calls_provider_callback(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    register_provider_and_get_camera: tuple[Camera, Callable[[], None]],
 ) -> None:
     """Test that async_on_camera_prefs_update is called when prefs are updated."""
-    await async_setup_component(hass, "camera", {})
-    await hass.async_block_till_done()
-
-    # Register test provider
-    await _register_test_webrtc_provider(hass)
-    camera_obj = get_camera_from_entity_id(hass, "camera.demo_camera")
-    assert camera_obj._webrtc_provider
-
+    camera_obj, _ = register_provider_and_get_camera
     # Patch the callback method
     with patch.object(
-        camera_obj._webrtc_provider,
+        camera_obj.webrtc_provider,
         "async_on_camera_prefs_update",
         AsyncMock(),
     ) as mock_prefs_update:
@@ -1197,18 +1203,14 @@ async def test_camera_prefs_update_calls_provider_callback(
 async def test_camera_prefs_update_provider_callback_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    register_provider_and_get_camera: tuple[Camera, Callable[[], None]],
     side_effect: Exception,
 ) -> None:
     """Test prefs update succeeds even if the provider callback raises."""
-    await async_setup_component(hass, "camera", {})
-    await hass.async_block_till_done()
-
-    await _register_test_webrtc_provider(hass)
-    camera_obj = get_camera_from_entity_id(hass, "camera.demo_camera")
-    assert camera_obj._webrtc_provider
+    camera_obj, _ = register_provider_and_get_camera
 
     with patch.object(
-        camera_obj._webrtc_provider,
+        camera_obj.webrtc_provider,
         "async_on_camera_prefs_update",
         AsyncMock(side_effect=side_effect),
     ) as mock_prefs_update:

@@ -177,9 +177,9 @@ async def _test_setup_and_signaling(
     await test("session_3")
 
     rest_client.streams.add.assert_not_called()
-    assert isinstance(camera._webrtc_provider, WebRTCProvider)
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
 
-    provider = camera._webrtc_provider
+    provider = camera.webrtc_provider
     for session in sessions:
         assert session in provider._sessions
 
@@ -812,12 +812,12 @@ async def test_async_get_image(
 ) -> None:
     """Test getting snapshot from go2rtc."""
     camera = init_test_integration
-    assert isinstance(camera._webrtc_provider, WebRTCProvider)
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
 
     image_bytes = load_fixture_bytes("snapshot.jpg", DOMAIN)
 
     rest_client.get_jpeg_snapshot.return_value = image_bytes
-    assert await camera._webrtc_provider.async_get_image(camera) == image_bytes
+    assert await camera.webrtc_provider.async_get_image(camera) == image_bytes
 
     image = await async_get_image(hass, camera.entity_id)
     assert image.content == image_bytes
@@ -838,7 +838,7 @@ async def test_generic_workaround(
 ) -> None:
     """Test workaround for generic integration cameras."""
     camera = init_test_integration
-    assert isinstance(camera._webrtc_provider, WebRTCProvider)
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
 
     image_bytes = load_fixture_bytes("snapshot.jpg", DOMAIN)
 
@@ -869,7 +869,7 @@ async def _test_camera_orientation(
 ) -> None:
     """Test camera orientation handling in go2rtc provider."""
     # Ensure go2rtc provider is initialized
-    assert isinstance(camera._webrtc_provider, WebRTCProvider)
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
 
     # Set the specific orientation for this test by directly setting the dynamic stream settings
     test_settings = DynamicStreamSettings(orientation=orientation, preload_stream=False)
@@ -1210,22 +1210,27 @@ async def test_basic_auth_with_debug_ui(hass: HomeAssistant, server_dir: Path) -
 
 
 @pytest.mark.usefixtures("init_integration", "ws_client")
-async def test_preload_not_enabled_when_preference_disabled(
+@pytest.mark.parametrize("preload", [True, False])
+async def test_preload_settings_is_applied_on_register(
     hass: HomeAssistant,
     rest_client: AsyncMock,
     init_test_integration: MockCamera,
+    preload: bool,
 ) -> None:
-    """Test preload is not enabled when camera has no preload preference."""
+    """Test preload settings are applied when camera is registered."""
     camera = init_test_integration
     test_settings = DynamicStreamSettings(
-        orientation=Orientation.NO_TRANSFORM, preload_stream=False
+        orientation=Orientation.NO_TRANSFORM, preload_stream=preload
     )
     await _setup_camera_prefs(hass, camera.entity_id, test_settings)
-
-    await camera.async_handle_async_webrtc_offer(OFFER_SDP, "session_id", Mock())
-
-    # Verify preload was not enabled
-    rest_client.preload.enable.assert_not_called()
+    provider = camera.webrtc_provider
+    await provider.async_register_camera(camera)
+    if preload:
+        rest_client.preload.enable.assert_called_once_with(
+            get_camera_identifier(camera)
+        )
+    else:
+        rest_client.preload.enable.assert_not_called()
 
 
 @pytest.mark.usefixtures("init_integration", "ws_client")
@@ -1235,8 +1240,8 @@ async def test_preload_disabled_on_unregister(
 ) -> None:
     """Test async_unregister_camera disables preload when stream exists."""
     camera = init_test_integration
-    assert isinstance(camera._webrtc_provider, WebRTCProvider)
-    provider = camera._webrtc_provider
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    provider = camera.webrtc_provider
     identifier = get_camera_identifier(camera)
     rest_client.streams.list.return_value = {
         identifier: Stream([Producer("rtsp://stream")])
@@ -1256,8 +1261,8 @@ async def test_preload_not_disabled_when_no_stream_exists(
 ) -> None:
     """Test async_unregister_camera doesn't disable preload when no stream exists."""
     camera = init_test_integration
-    assert isinstance(camera._webrtc_provider, WebRTCProvider)
-    provider = camera._webrtc_provider
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    provider = camera.webrtc_provider
 
     await provider.async_unregister_camera(camera)
 
@@ -1273,8 +1278,8 @@ async def test_preload_toggle_on_preference_update(
 ) -> None:
     """Test preload is toggled when camera preferences are updated."""
     camera = init_test_integration
-    assert isinstance(camera._webrtc_provider, WebRTCProvider)
-    provider = camera._webrtc_provider
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    provider = camera.webrtc_provider
     identifier = get_camera_identifier(camera)
     test_settings = DynamicStreamSettings(
         orientation=Orientation.NO_TRANSFORM, preload_stream=True
@@ -1314,8 +1319,8 @@ async def test_preload_no_change_when_already_enabled(
 ) -> None:
     """Test preload enable is not called when already enabled."""
     camera = init_test_integration
-    assert isinstance(camera._webrtc_provider, WebRTCProvider)
-    provider = camera._webrtc_provider
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    provider = camera.webrtc_provider
     rest_client.preload.list.return_value = {get_camera_identifier(camera)}
     test_settings = DynamicStreamSettings(
         orientation=Orientation.NO_TRANSFORM, preload_stream=True
@@ -1338,8 +1343,8 @@ async def test_preload_no_change_when_already_disabled(
 ) -> None:
     """Test preload disable is not called when already disabled."""
     camera = init_test_integration
-    assert isinstance(camera._webrtc_provider, WebRTCProvider)
-    provider = camera._webrtc_provider
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    provider = camera.webrtc_provider
     test_settings = DynamicStreamSettings(
         orientation=Orientation.NO_TRANSFORM, preload_stream=False
     )
