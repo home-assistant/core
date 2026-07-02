@@ -15,6 +15,7 @@ from homeassistant.components.camera import (
     StreamType,
     async_get_image,
     async_get_mjpeg_stream,
+    get_camera_from_entity_id,
 )
 from homeassistant.components.ring.camera import FORCE_REFRESH_INTERVAL
 from homeassistant.components.ring.const import SCAN_INTERVAL
