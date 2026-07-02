@@ -85,6 +85,9 @@
     },
     "error_while_turn_on": {
       "message": "An error occurred while turning on AdGuard Home switch."
+    },
+    "invalid_device_id": {
+      "message": "No device found with ID {device_id}."
     }
   },
   "services": {
@@ -141,6 +144,20 @@
         }
       },
       "name": "Remove URL"
+    },
+    "get_url_enabled": {
+      "description": "Checks if a filter subscription is enabled in AdGuard Home.",
+      "fields": {
+        "device_id": {
+          "description": "The AdGuard Home instance to check.",
+          "name": "Device"
+        },
+        "url": {
+          "description": "The filter subscription URL to check.",
+          "name": "[%key:common::config_flow::data::url%]"
+        }
+      },
+      "name": "Get URL Enabled"
     }
   }
 }

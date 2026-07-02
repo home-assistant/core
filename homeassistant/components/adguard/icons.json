@@ -80,6 +80,9 @@
     },
     "remove_url": {
       "service": "mdi:link-off"
+    },
+    "get_url_enabled": {
+      "service": "mdi:web-check"
     }
   }
 }
