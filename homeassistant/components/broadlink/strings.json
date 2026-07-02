@@ -52,6 +52,9 @@
     "infrared": {
       "infrared_emitter": {
         "name": "IR emitter"
+      },
+      "infrared_receiver": {
+        "name": "IR receiver"
       }
     },
     "radio_frequency": {
@@ -91,6 +94,9 @@
   "exceptions": {
     "connect_failed": {
       "message": "Failed to connect to the device at {host}: {error}"
+    },
+    "enter_learning_command_failed": {
+      "message": "Failed to enter learning mode: {error}"
     },
     "frequency_not_supported": {
       "message": "Broadlink devices cannot transmit on {frequency} MHz"
