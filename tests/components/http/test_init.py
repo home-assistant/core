@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Callable
-from datetime import timedelta
 from http import HTTPStatus
 import logging
 import os
@@ -1396,7 +1395,7 @@ async def test_pending_config_auto_reverts_to_stable(
 
     # After the delay elapses without a promotion, pending is dropped and a
     # restart is requested so the stable config is applied.
-    freezer.tick(timedelta(minutes=5, seconds=1))
+    freezer.tick(AUTO_REVERT_DELAY)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -1445,7 +1444,7 @@ async def test_pending_config_promote_cancels_revert(
     }
 
     # The cancelled revert must not fire after the delay.
-    freezer.tick(timedelta(minutes=5, seconds=1))
+    freezer.tick(AUTO_REVERT_DELAY)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

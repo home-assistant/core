@@ -72,9 +72,6 @@ KEY_STABLE: Final = "stable"
 KEY_PENDING: Final = "pending"
 KEY_YAML_MIGRATION_DONE: Final = "yaml_migration_done"
 
-# Loading a pending config is a trial. If the user does not confirm it within
-# this window, it is reverted to the stable config so a bad config cannot lock
-# the user out permanently.
 AUTO_REVERT_DELAY: Final = timedelta(minutes=5)
 
 DATA_STORE: HassKey[HTTPConfigStore] = HassKey(STORAGE_KEY)
