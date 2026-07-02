@@ -1,23 +1,22 @@
 """Tests for integration setup and unload."""
+# pylint: disable=home-assistant-tests-direct-async-setup-entry,home-assistant-tests-direct-async-unload-entry
 
 from types import SimpleNamespace
 from typing import Any, cast
 
-from besen_bs20 import client as client_module
 from besen_bs20.exceptions import CannotConnect, InvalidAuth
 from bleak.backends.device import BLEDevice
 import pytest
 
-from homeassistant.components import bluetooth
+from homeassistant.components import besen_bs20 as integration_module, bluetooth
 from homeassistant.components.besen_bs20 import (
     BesenBS20ConfigEntry,
     async_setup_entry,
     async_unload_entry,
-    coordinator as coordinator_module,
-    repairs,
 )
 from homeassistant.components.besen_bs20.const import CONF_SYNC_CLOCK, PLATFORMS
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 
@@ -28,13 +27,13 @@ class _FakeConfigEntries:
         """Initialize the manager."""
 
         self.unload_ok = unload_ok
-        self.forwarded: list[tuple[object, list[str]]] = []
-        self.unloaded: list[tuple[object, list[str]]] = []
+        self.forwarded: list[tuple[object, list[Platform]]] = []
+        self.unloaded: list[tuple[object, list[Platform]]] = []
 
     async def async_forward_entry_setups(
         self,
         entry: object,
-        platforms: list[str],
+        platforms: list[Platform],
     ) -> None:
         """Record forwarded platforms."""
 
@@ -43,7 +42,7 @@ class _FakeConfigEntries:
     async def async_unload_platforms(
         self,
         entry: object,
-        platforms: list[str],
+        platforms: list[Platform],
     ) -> bool:
         """Record unloaded platforms."""
 
@@ -66,7 +65,7 @@ class _FakeCoordinator:
 
     next_error: Exception | None = None
 
-    def __init__(self, hass: object, client: _FakeClient) -> None:
+    def __init__(self, hass: HomeAssistant, client: _FakeClient) -> None:
         """Initialize the fake coordinator."""
 
         del hass
@@ -125,14 +124,14 @@ def _patch_setup_dependencies(
     """Patch setup dependencies and return repair calls."""
 
     repair_calls: list[tuple[str, str]] = []
-    monkeypatch.setattr(client_module, "BesenBS20Client", _FakeClient)
-    monkeypatch.setattr(coordinator_module, "BesenBS20Coordinator", _FakeCoordinator)
+    monkeypatch.setattr(integration_module, "BesenBS20Client", _FakeClient)
+    monkeypatch.setattr(integration_module, "BesenBS20Coordinator", _FakeCoordinator)
     monkeypatch.setattr(
         _bluetooth_module(),
         "async_ble_device_from_address",
-        lambda *args, **kwargs: cast(BLEDevice, ble_device)
-        if ble_device is not None
-        else None,
+        lambda *args, **kwargs: (
+            cast(BLEDevice, ble_device) if ble_device is not None else None
+        ),
     )
     monkeypatch.setattr(
         _bluetooth_module(),
@@ -147,22 +146,22 @@ def _patch_setup_dependencies(
         raising=False,
     )
     monkeypatch.setattr(
-        repairs,
+        integration_module,
         "async_create_no_connectable_path_issue",
         lambda hass, entry_id: repair_calls.append(("create_path", entry_id)),
     )
     monkeypatch.setattr(
-        repairs,
+        integration_module,
         "async_delete_no_connectable_path_issue",
         lambda hass, entry_id: repair_calls.append(("delete_path", entry_id)),
     )
     monkeypatch.setattr(
-        repairs,
+        integration_module,
         "async_create_reauth_issue",
         lambda hass, entry_id: repair_calls.append(("create_reauth", entry_id)),
     )
     monkeypatch.setattr(
-        repairs,
+        integration_module,
         "async_delete_reauth_issue",
         lambda hass, entry_id: repair_calls.append(("delete_reauth", entry_id)),
     )
@@ -199,9 +198,11 @@ async def test_setup_entry_no_connectable_path(
 
     repairs_called = _patch_setup_dependencies(monkeypatch)
 
-    with pytest.raises(ConfigEntryNotReady, match="diagnostic reason"):
+    with pytest.raises(ConfigEntryNotReady) as err:
         await async_setup_entry(cast(Any, _hass()), _entry())
 
+    assert err.value.translation_key == "no_connectable_path"
+    assert err.value.translation_placeholders == {"reason": "diagnostic reason"}
     assert repairs_called == [("create_path", "entry")]
 
 
@@ -217,8 +218,11 @@ async def test_setup_entry_auth_and_connect_errors(
         await async_setup_entry(cast(Any, _hass()), _entry())
 
     _FakeCoordinator.next_error = CannotConnect("offline")
-    with pytest.raises(ConfigEntryNotReady, match="offline"):
+    with pytest.raises(ConfigEntryNotReady) as err:
         await async_setup_entry(cast(Any, _hass()), _entry())
+
+    assert err.value.translation_key == "cannot_connect"
+    assert err.value.translation_placeholders == {"error": "offline"}
 
     _FakeCoordinator.next_error = None
 
@@ -228,7 +232,7 @@ async def test_unload_entry_shutdowns_only_when_platforms_unload() -> None:
     """Unload shuts down runtime data only when platforms unload successfully."""
 
     entry = _entry()
-    coordinator = _FakeCoordinator(object(), _FakeClient())
+    coordinator = _FakeCoordinator(cast(HomeAssistant, object()), _FakeClient())
     cast(Any, entry).runtime_data = SimpleNamespace(coordinator=coordinator)
 
     assert await async_unload_entry(cast(Any, _hass()), entry) is True

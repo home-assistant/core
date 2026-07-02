@@ -10,6 +10,7 @@ from besen_bs20.models import BesenBS20Data, ChargerInfo
 import pytest
 
 from homeassistant.components.besen_bs20.coordinator import BesenBS20Coordinator
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -104,7 +105,7 @@ def _patch_coordinator_base(monkeypatch: pytest.MonkeyPatch) -> None:
 
     def _init(
         self: object,
-        hass: object,
+        hass: HomeAssistant,
         logger: logging.Logger,
         *,
         name: str,

@@ -4,7 +4,7 @@ from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BesenBS20ConfigEntry
 from .coordinator import BesenBS20Coordinator
@@ -16,7 +16,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BesenBS20ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Besen BS20 switches."""
 

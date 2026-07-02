@@ -105,6 +105,7 @@ def _entry() -> SimpleNamespace:
         entry_id="entry",
         data={CONF_ADDRESS: "AA:BB", CONF_NAME: "ACP#Garage", CONF_PIN: "123456"},
         options={CONF_SYNC_CLOCK: True},
+        update_listeners=[],
     )
 
 
@@ -148,6 +149,12 @@ async def test_validate_input_success_and_errors(
         _bluetooth_module(),
         "async_ble_device_from_address",
         lambda *args, **kwargs: cast(BLEDevice, object()),
+    )
+    monkeypatch.setattr(
+        _bluetooth_module(),
+        "async_request_active_scan",
+        _validate_ok,
+        raising=False,
     )
 
     title = await config_flow._async_validate_input(
@@ -300,9 +307,7 @@ async def test_user_step_success_and_error(monkeypatch: pytest.MonkeyPatch) -> N
             "_async_validate_input",
             _validation_raiser(exception),
         )
-        result = await flow.async_step_user(
-            {CONF_ADDRESS: "AA:BB", CONF_PIN: "123456"}
-        )
+        result = await flow.async_step_user({CONF_ADDRESS: "AA:BB", CONF_PIN: "123456"})
         assert result["errors"] == {"base": error}
 
 

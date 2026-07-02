@@ -1,9 +1,42 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "This charger is already configured.",
+      "no_connectable_path": "No connectable Bluetooth path is available for this charger."
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the charger. Check Bluetooth proxy range and active connection support.",
+      "invalid_auth": "The charger rejected the PIN.",
+      "unknown": "Unexpected error"
+    },
     "step": {
+      "bluetooth_confirm": {
+        "data": {
+          "pin": "PIN",
+          "sync_clock": "Sync charger clock"
+        },
+        "data_description": {
+          "pin": "The 6-digit Bluetooth PIN configured on the charger.",
+          "sync_clock": "Update the charger's internal clock during heartbeat handling."
+        },
+        "description": "Enter the 6-digit Bluetooth PIN for this charger.",
+        "title": "Set up {name}"
+      },
+      "reauth_confirm": {
+        "data": {
+          "pin": "PIN"
+        },
+        "description": "The charger rejected the configured PIN. Enter the current 6-digit PIN.",
+        "title": "Update Besen BS20 PIN"
+      },
+      "reconfigure": {
+        "data": {
+          "pin": "PIN",
+          "sync_clock": "Sync charger clock"
+        },
+        "title": "Reconfigure Besen BS20"
+      },
       "user": {
-        "title": "Set up Besen BS20",
-        "description": "Enter the Bluetooth address and PIN for your charger.",
         "data": {
           "address": "Bluetooth address",
           "pin": "PIN",
@@ -13,71 +46,13 @@
           "address": "The BLE address of the charger advertising as ACP#...",
           "pin": "The 6-digit Bluetooth PIN configured on the charger.",
           "sync_clock": "Update the charger's internal clock during heartbeat handling."
-        }
-      },
-      "bluetooth_confirm": {
-        "title": "Set up {name}",
-        "description": "Enter the 6-digit Bluetooth PIN for this charger.",
-        "data": {
-          "pin": "PIN",
-          "sync_clock": "Sync charger clock"
         },
-        "data_description": {
-          "pin": "The 6-digit Bluetooth PIN configured on the charger.",
-          "sync_clock": "Update the charger's internal clock during heartbeat handling."
-        }
-      },
-      "reauth_confirm": {
-        "title": "Update Besen BS20 PIN",
-        "description": "The charger rejected the configured PIN. Enter the current 6-digit PIN.",
-        "data": {
-          "pin": "PIN"
-        }
-      },
-      "reconfigure": {
-        "title": "Reconfigure Besen BS20",
-        "data": {
-          "pin": "PIN",
-          "sync_clock": "Sync charger clock"
-        }
+        "description": "Enter the Bluetooth address and PIN for your charger.",
+        "title": "Set up Besen BS20"
       }
-    },
-    "error": {
-      "cannot_connect": "Cannot connect to the charger. Check Bluetooth proxy range and active connection support.",
-      "invalid_auth": "The charger rejected the PIN.",
-      "unknown": "Unexpected error"
-    },
-    "abort": {
-      "already_configured": "This charger is already configured.",
-      "no_connectable_path": "No connectable Bluetooth path is available for this charger."
     }
   },
   "entity": {
-    "sensor": {
-      "current_power": { "name": "Current Energy" },
-      "total_energy": { "name": "Total Energy" },
-      "session_energy": { "name": "Session Energy" },
-      "temperature": { "name": "Temperature" },
-      "outer_temperature": { "name": "Outer Temperature" },
-      "l1_voltage": { "name": "L1 Voltage" },
-      "l1_current": { "name": "L1 Amperage" },
-      "l2_voltage": { "name": "L2 Voltage" },
-      "l2_current": { "name": "L2 Amperage" },
-      "l3_voltage": { "name": "L3 Voltage" },
-      "l3_current": { "name": "L3 Amperage" },
-      "error_state": { "name": "Error State" },
-      "charging_status": { "name": "Status" },
-      "charging_message": { "name": "Message" },
-      "plug_state": { "name": "Plug State" },
-      "output_state": { "name": "Output State" },
-      "current_state": { "name": "Current State" },
-      "rssi": { "name": "RSSI" },
-      "system_time": { "name": "System Time" },
-      "software_version": { "name": "Software Version" }
-    },
-    "switch": {
-      "charging": { "name": "Charge" }
-    },
     "number": {
       "charge_amps": { "name": "Charge Amps" },
       "lcd_brightness": { "name": "LCD Brightness" }
@@ -86,23 +61,54 @@
       "language": { "name": "Language" },
       "temperature_unit": { "name": "Temperature Unit" }
     },
+    "sensor": {
+      "charging_message": { "name": "Message" },
+      "charging_status": { "name": "Status" },
+      "current_power": { "name": "Current Energy" },
+      "current_state": { "name": "Current State" },
+      "error_state": { "name": "Error State" },
+      "l1_current": { "name": "L1 Amperage" },
+      "l1_voltage": { "name": "L1 Voltage" },
+      "l2_current": { "name": "L2 Amperage" },
+      "l2_voltage": { "name": "L2 Voltage" },
+      "l3_current": { "name": "L3 Amperage" },
+      "l3_voltage": { "name": "L3 Voltage" },
+      "outer_temperature": { "name": "Outer Temperature" },
+      "output_state": { "name": "Output State" },
+      "plug_state": { "name": "Plug State" },
+      "rssi": { "name": "RSSI" },
+      "session_energy": { "name": "Session Energy" },
+      "software_version": { "name": "Software Version" },
+      "system_time": { "name": "System Time" },
+      "temperature": { "name": "Temperature" },
+      "total_energy": { "name": "Total Energy" }
+    },
+    "switch": {
+      "charging": { "name": "Charge" }
+    },
     "text": {
       "device_name": { "name": "Name" }
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Cannot connect to the charger: {error}"
+    },
     "command_failed": {
       "message": "The charger did not accept the command."
+    },
+    "no_connectable_path": {
+      "message": "No connectable Bluetooth path is available for this charger: {reason}"
     }
   },
   "issues": {
     "no_connectable_path": {
-      "title": "No connectable Bluetooth path",
-      "description": "The charger is visible, but Home Assistant cannot reach it through an adapter or Bluetooth proxy that supports active GATT connections. Move an active ESPHome Bluetooth proxy closer to the charger or add a supported Bluetooth adapter."
+      "description": "The charger is visible, but Home Assistant cannot reach it through an adapter or Bluetooth proxy that supports active GATT connections. Move an active ESPHome Bluetooth proxy closer to the charger or add a supported Bluetooth adapter.",
+      "title": "No connectable Bluetooth path"
     },
     "reauth_required": {
-      "title": "Besen BS20 PIN rejected",
-      "description": "The charger rejected the configured PIN. Reauthenticate the integration with the current 6-digit PIN."
+      "description": "The charger rejected the configured PIN. Reauthenticate the integration with the current 6-digit PIN.",
+      "title": "Besen BS20 PIN rejected"
     }
   }
 }

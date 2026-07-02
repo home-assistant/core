@@ -15,16 +15,18 @@ from besen_bs20.const import (
     TEMPERATURE_UNITS,
 )
 
+from homeassistant.const import Platform
+
 DOMAIN: Final = "besen_bs20"
 NAME: Final = "Besen BS20"
 VERSION: Final = "0.2.0"
 
 PLATFORMS: Final = [
-    "sensor",
-    "switch",
-    "number",
-    "select",
-    "text",
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TEXT,
 ]
 
 CONF_SYNC_CLOCK: Final = "sync_clock"

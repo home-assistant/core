@@ -11,6 +11,7 @@ from homeassistant.components.besen_bs20.const import DOMAIN
 from homeassistant.components.besen_bs20.diagnostics import (
     async_get_config_entry_diagnostics,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
 
@@ -54,7 +55,7 @@ def test_repair_issue_helpers(monkeypatch: pytest.MonkeyPatch) -> None:
     deleted: list[tuple[str, str]] = []
 
     def _create_issue(
-        hass: object,
+        hass: HomeAssistant,
         domain: str,
         issue_id: str,
         *,
@@ -65,7 +66,7 @@ def test_repair_issue_helpers(monkeypatch: pytest.MonkeyPatch) -> None:
         del hass, severity
         created.append((domain, issue_id, translation_key, is_fixable))
 
-    def _delete_issue(hass: object, domain: str, issue_id: str) -> None:
+    def _delete_issue(hass: HomeAssistant, domain: str, issue_id: str) -> None:
         del hass
         deleted.append((domain, issue_id))
 

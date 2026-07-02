@@ -13,7 +13,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BesenBS20ConfigEntry
 from .const import FALLBACK_MAX_CHARGE_AMPS, MIN_CHARGE_AMPS
@@ -65,7 +65,7 @@ NUMBERS: tuple[BesenNumberEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BesenBS20ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Besen BS20 numbers."""
 

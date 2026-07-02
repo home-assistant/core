@@ -285,9 +285,8 @@ def test_config_and_command_parsers() -> None:
     )
     assert parse_system_language(b"\x02\x03", "") == {"language": "Deutsch"}
     assert parse_system_language(b"\x02\xff", "") == {"language": None}
-    assert parse_temperature_unit(b"\x02\x02", "") == {
-        "temperature_unit": "Fahrenheit"
-    }
+    assert parse_temperature_unit(b"\x02\x01", "") == {"temperature_unit": "Celsius"}
+    assert parse_temperature_unit(b"\x02\x02", "") == {"temperature_unit": "Fahrenheit"}
     assert parse_charge_start(b"\x01\x00\x01\x00\x10", "") == {
         "line_id": 1,
         "reservation_result": "No error",

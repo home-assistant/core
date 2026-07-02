@@ -9,7 +9,7 @@ from besen_bs20.models import BesenBS20Data
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BesenBS20ConfigEntry
 from .const import LANGUAGES, TEMPERATURE_UNITS
@@ -50,7 +50,7 @@ SELECTS: tuple[BesenSelectEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BesenBS20ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Besen BS20 selects."""
 

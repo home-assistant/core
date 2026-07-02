@@ -11,7 +11,7 @@ from homeassistant.components import bluetooth
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import CONF_SYNC_CLOCK, DEFAULT_SYNC_CLOCK, PLATFORMS
+from .const import CONF_SYNC_CLOCK, DEFAULT_SYNC_CLOCK, DOMAIN, PLATFORMS
 from .coordinator import BesenBS20Coordinator
 from .repairs import (
     async_create_no_connectable_path_issue,
@@ -78,7 +78,11 @@ async def async_setup_entry(
         )
         if callable(diagnostics) and intent is not None:
             reason = diagnostics(hass, address, intent)
-        raise ConfigEntryNotReady(reason)
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="no_connectable_path",
+            translation_placeholders={"reason": reason},
+        )
 
     client = BesenBS20Client(
         address=address,
@@ -97,7 +101,11 @@ async def async_setup_entry(
         raise ConfigEntryAuthFailed from err
     except CannotConnect as err:
         async_create_no_connectable_path_issue(hass, entry.entry_id)
-        raise ConfigEntryNotReady(str(err)) from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
     async_delete_no_connectable_path_issue(hass, entry.entry_id)
     async_delete_reauth_issue(hass, entry.entry_id)

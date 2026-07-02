@@ -100,6 +100,7 @@ FLOWS = {
         "balboa",
         "bang_olufsen",
         "bayesian",
+        "besen_bs20",
         "blebox",
         "blink",
         "blue_current",

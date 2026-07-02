@@ -1,5 +1,6 @@
 """Config flow for Besen BS20."""
 
+from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, override
 
@@ -250,7 +251,7 @@ class BesenBS20ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(
         self,
-        entry_data: dict[str, Any],
+        entry_data: Mapping[str, Any],
     ) -> ConfigFlowResult:
         """Handle reauthentication."""
 
