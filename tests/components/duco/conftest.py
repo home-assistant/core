@@ -5,14 +5,18 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from duco_connectivity import (
+    ActionItem,
+    ActionValueType,
     ApiEndpointInfo,
     ApiInfo,
     BoardInfo,
     DiagComponent,
-    DiagStatus,
+    KnownActionName,
     LanInfo,
     Node,
+    NodeActionItemList,
     NodeGeneralInfo,
+    NodeListActionItemList,
     NodeMotorStateInfo,
     NodeSensorInfo,
     NodeVentilationInfo,
@@ -22,6 +26,8 @@ import pytest
 from homeassistant.components.duco.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+
+from . import setup_integration
 
 from tests.common import MockConfigEntry, load_json_array_fixture
 
@@ -159,112 +165,37 @@ def mock_lan_info() -> LanInfo:
 @pytest.fixture
 def mock_nodes() -> list[Node]:
     """Return a list of nodes covering all supported types."""
-    return [
-        Node(
-            node_id=1,
-            general=NodeGeneralInfo(
-                node_type="BOX",
-                sub_type=1,
-                network_type="VIRT",
-                parent=0,
-                asso=0,
-                name="Living",
-                identify=0,
+    return load_nodes_fixture("nodes.json")
+
+
+@pytest.fixture
+def mock_node_actions() -> NodeListActionItemList:
+    """Return node actions for supported ventilation control nodes."""
+    return NodeListActionItemList(
+        nodes=[
+            NodeActionItemList(
+                node_id=1,
+                actions=[
+                    ActionItem(
+                        action=KnownActionName.SET_VENTILATION_STATE,
+                        val_type=ActionValueType.ENUM,
+                        enum_values=[
+                            "AUTO",
+                            "CNT1",
+                            "CNT2",
+                            "CNT3",
+                            "MAN1",
+                            "MAN2",
+                            "MAN3",
+                        ],
+                    )
+                ],
             ),
-            ventilation=NodeVentilationInfo(
-                state="AUTO",
-                time_state_remain=0,
-                time_state_end=0,
-                mode="AUTO",
-                flow_lvl_tgt=0,
-            ),
-            sensor=NodeSensorInfo(
-                co2=None,
-                iaq_co2=None,
-                rh=None,
-                iaq_rh=None,
-                temp=27.9,
-            ),
-        ),
-        Node(
-            node_id=2,
-            general=NodeGeneralInfo(
-                node_type="UCCO2",
-                sub_type=0,
-                network_type="RF",
-                parent=1,
-                asso=1,
-                name="Office CO2",
-                identify=0,
-            ),
-            ventilation=NodeVentilationInfo(
-                state="AUTO",
-                time_state_remain=0,
-                time_state_end=0,
-                mode="-",
-                flow_lvl_tgt=None,
-            ),
-            sensor=NodeSensorInfo(
-                co2=405,
-                iaq_co2=80,
-                rh=None,
-                iaq_rh=None,
-                temp=19.8,
-            ),
-        ),
-        Node(
-            node_id=113,
-            general=NodeGeneralInfo(
-                node_type="BSRH",
-                sub_type=0,
-                network_type="RF",
-                parent=1,
-                asso=1,
-                name="Bathroom RH",
-                identify=0,
-            ),
-            ventilation=NodeVentilationInfo(
-                state="AUTO",
-                time_state_remain=0,
-                time_state_end=0,
-                mode="-",
-                flow_lvl_tgt=None,
-            ),
-            sensor=NodeSensorInfo(
-                co2=None,
-                iaq_co2=None,
-                rh=42.0,
-                iaq_rh=85,
-                temp=27.9,
-            ),
-        ),
-        Node(
-            node_id=50,
-            general=NodeGeneralInfo(
-                node_type="UCRH",
-                sub_type=0,
-                network_type="RF",
-                parent=1,
-                asso=1,
-                name="Kitchen RH",
-                identify=0,
-            ),
-            ventilation=NodeVentilationInfo(
-                state="AUTO",
-                time_state_remain=0,
-                time_state_end=0,
-                mode="-",
-                flow_lvl_tgt=None,
-            ),
-            sensor=NodeSensorInfo(
-                co2=None,
-                iaq_co2=None,
-                rh=61.0,
-                iaq_rh=90,
-                temp=22.5,
-            ),
-        ),
-    ]
+            NodeActionItemList(node_id=2, actions=[]),
+            NodeActionItemList(node_id=50, actions=[]),
+            NodeActionItemList(node_id=113, actions=[]),
+        ]
+    )
 
 
 @pytest.fixture
@@ -287,6 +218,7 @@ def mock_duco_client(
     mock_board_info: BoardInfo,
     mock_lan_info: LanInfo,
     mock_nodes: list[Node],
+    mock_node_actions: NodeListActionItemList,
 ) -> Generator[AsyncMock]:
     """Return a mocked DucoClient used by both the integration and config flow."""
     with (
@@ -304,8 +236,10 @@ def mock_duco_client(
         client.async_get_board_info.return_value = mock_board_info
         client.async_get_lan_info.return_value = mock_lan_info
         client.async_get_nodes.return_value = mock_nodes
+        client.async_get_node_actions.return_value = mock_node_actions
+        client.async_get_time_filter_remaining.return_value = 180
         client.async_get_diagnostics.return_value = [
-            DiagComponent(component="Ventilation", status=DiagStatus.OK)
+            DiagComponent(component="Ventilation", status="Ok")
         ]
         client.async_get_write_requests_remaining.return_value = 100
         yield client
@@ -327,7 +261,4 @@ async def init_integration(
     mock_duco_client: AsyncMock,
 ) -> MockConfigEntry:
     """Set up the Duco integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    return mock_config_entry
+    return await setup_integration(hass, mock_config_entry)

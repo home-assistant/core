@@ -4,6 +4,7 @@ from collections import defaultdict
 from collections.abc import AsyncGenerator
 import io
 import logging
+from typing import override
 import wave
 
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
@@ -85,13 +86,15 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
             self._attr_default_language = self._attr_supported_languages[0]
 
         self._attr_name = self._tts_service.name
-        self._attr_unique_id = f"{config_entry.entry_id}-tts"
+        self._attr_unique_id = f"{config_entry.entry_id}-tts"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @callback
+    @override
     def async_get_supported_voices(self, language: str) -> list[tts.Voice] | None:
         """Return a list of supported voices for a language."""
         return self._voices.get(language)
 
+    @override
     async def async_get_tts_audio(self, message, language, options):
         """Load TTS from TCP socket."""
         voice_name: str | None = options.get(tts.ATTR_VOICE)
@@ -137,10 +140,12 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
 
         return ("wav", data)
 
+    @override
     def async_supports_streaming_input(self) -> bool:
         """Return if the TTS engine supports streaming input."""
         return self._tts_service.supports_synthesize_streaming
 
+    @override
     async def async_stream_tts_audio(
         self, request: tts.TTSAudioRequest
     ) -> tts.TTSAudioResponse:

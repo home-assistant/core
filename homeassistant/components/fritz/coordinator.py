@@ -7,11 +7,11 @@ from datetime import datetime, timedelta
 from functools import partial
 import logging
 import re
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict, cast, override
 from xml.etree.ElementTree import ParseError
 
 from fritzconnection import FritzConnection
-from fritzconnection.core.exceptions import FritzActionError
+from fritzconnection.core.exceptions import FritzActionError, FritzConnectionException
 from fritzconnection.lib.fritzcall import FritzCall
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
@@ -267,9 +267,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         ) = self._update_device_info()
 
         if self.fritz_status.has_wan_support:
-            self.device_conn_type = (
-                self.fritz_status.get_default_connection_service().connection_service
-            )
+            self.device_conn_type = self.fritz_status.connection_service
             self.device_is_router = self.fritz_status.has_wan_enabled
 
         self.has_call_deflections = "X_AVM-DE_OnTel1" in self.connection.services
@@ -307,6 +305,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 )
         return entity_states
 
+    @override
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
         """Update FritzboxTools data."""
         entity_data: UpdateCoordinatorDataType = {
@@ -681,7 +680,18 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
     async def async_trigger_reconnect(self) -> None:
         """Trigger device reconnect."""
-        await self.hass.async_add_executor_job(self.connection.reconnect)
+        try:
+            await self.hass.async_add_executor_job(
+                self.connection.call_action,
+                f"{self.device_conn_type}1",
+                "ForceTermination",
+            )
+        except FritzConnectionException as ex:
+            # ignore UPnPError:
+            # errorCode: 707
+            # errorDescription: DisconnectInProgress
+            if "disconnectinprogress" not in str(ex).lower():
+                raise
 
     async def async_trigger_set_guest_password(
         self, password: str | None, length: int
@@ -938,3 +948,15 @@ class AvmWrapper(FritzBoxTools):
             "X_AVM-DE_WakeOnLANByMACAddress",
             NewMACAddress=mac_address,
         )
+
+    async def async_get_firmware_extra_infos(self) -> dict[str, Any]:
+        """Return extra infos for firmware."""
+        return await self._async_service_call("UserInterface", "1", "X_AVM-DE_GetInfo")
+
+    async def async_get_device_uptime_hours(self) -> int:
+        """Get device uptime in hours."""
+
+        def _get_uptime_hours() -> int:
+            return int(self.fritz_status.device_uptime // 3600)
+
+        return await self.hass.async_add_executor_job(_get_uptime_hours)

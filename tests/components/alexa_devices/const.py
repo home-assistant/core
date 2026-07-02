@@ -77,6 +77,11 @@ TEST_DEVICE_1 = AmazonDevice(
         ),
     },
     media_player_supported=True,
+    communication_settings={
+        "announcements": "ON",
+        "communications": "ON",
+        "dropin": "All",
+    },
 )
 
 TEST_DEVICE_2_SN = "echo_test_2_serial_number"
@@ -109,11 +114,12 @@ TEST_DEVICE_2 = AmazonDevice(
     notifications_supported=False,
     notifications={},
     media_player_supported=False,
+    communication_settings={},
 )
 
 TEST_VOCAL_RECORD_INITIAL = AmazonVocalRecord(
     timestamp=1000,
-    utterance_type="WAKE_WORD_UTTERANCE",
+    history_type="WAKE_WORD_UTTERANCE",
     intent="PlayMusicIntent",
     title="Play some music",
     sub_title="Echo Test",
@@ -121,7 +127,7 @@ TEST_VOCAL_RECORD_INITIAL = AmazonVocalRecord(
 
 TEST_VOCAL_RECORD_EVENT = AmazonVocalRecord(
     timestamp=1234567890,
-    utterance_type="WAKE_WORD_UTTERANCE",
+    history_type="WAKE_WORD_UTTERANCE",
     intent="PlayMusicIntent",
     title="Play some music",
     sub_title="Echo Test",

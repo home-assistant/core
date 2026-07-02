@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from awesomeversion import AwesomeVersion
@@ -54,6 +54,7 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
         )
         self.client = client
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the Twinkly data."""
         try:
@@ -66,6 +67,7 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
             MIN_EFFECT_VERSION
         )
 
+    @override
     async def _async_update_data(self) -> TwinklyData:
         """Fetch data from Twinkly."""
         movies: list[dict[str, Any]] = []

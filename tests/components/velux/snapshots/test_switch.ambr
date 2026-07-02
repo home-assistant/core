@@ -39,7 +39,7 @@
 # name: test_switch_setup[mock_onoff_switch][switch.test_on_off_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test On Off Switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test On Off Switch',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_on_off_switch',

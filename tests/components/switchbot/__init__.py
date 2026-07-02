@@ -1099,6 +1099,32 @@ FLOOR_LAMP_SERVICE_INFO = BluetoothServiceInfoBleak(
     tx_power=-127,
 )
 
+CANDLE_WARMER_LAMP_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Candle Warmer Lamp",
+    manufacturer_data={
+        2409: b"\x90\xe5\xb1h\xda\xaa\n\xb0 \x00",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b'\x00\x00\x00\x00\x11"\xb8'},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Candle Warmer Lamp",
+        manufacturer_data={
+            2409: b"\x90\xe5\xb1h\xda\xaa\n\xb0 \x00",
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b'\x00\x00\x00\x00\x11"\xb8'
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Candle Warmer Lamp"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
 RGBICWW_STRIP_LIGHT_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="RGBICWW Strip Light",
     manufacturer_data={
@@ -1505,6 +1531,53 @@ WEATHER_STATION_SERVICE_INFO = BluetoothServiceInfoBleak(
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
     device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Weather Station"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+CONTACT_SENSOR_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="WoContact",
+    manufacturer_data={2409: b"\xaa\xbb\xcc\xdd\xee\xff\x00\x00\x00\x00\x00\x00\x00"},
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"d\x00\x64"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="WoContact",
+        manufacturer_data={
+            2409: b"\xaa\xbb\xcc\xdd\xee\xff\x00\x00\x00\x00\x00\x00\x00"
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"d\x00\x64"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoContact"),
+    time=0,
+    connectable=False,
+    tx_power=-127,
+)
+
+STANDING_FAN_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="WoStandingFan",
+    manufacturer_data={2409: b"\xb0\xe9\xfe\x01\x02\x03~\xd3R9"},
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x11\x07\x60"
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="WoStandingFan",
+        manufacturer_data={2409: b"\xb0\xe9\xfe\x01\x02\x03~\xd3R9"},
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x11\x07\x60"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoStandingFan"),
     time=0,
     connectable=True,
     tx_power=-127,

@@ -9,6 +9,6 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["yoto_api"],
-  "quality_scale": "bronze",
-  "requirements": ["yoto-api==3.1.3"]
+  "quality_scale": "platinum",
+  "requirements": ["yoto-api==4.3.1"]
 }

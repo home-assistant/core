@@ -98,6 +98,14 @@
           "non_neutral": "Non-neutral",
           "tilted": "Tilted"
         }
+      },
+      "window_state": {
+        "name": "Window state",
+        "state": {
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]",
+          "tilted": "Tilted"
+        }
       }
     }
   },

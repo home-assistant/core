@@ -3,7 +3,7 @@
 import binascii
 import logging
 from re import sub
-from typing import Any
+from typing import Any, override
 
 import pyotp
 import voluptuous as vol
@@ -41,6 +41,7 @@ class TOTPConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     user_input: dict[str, Any]
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,5 +1,7 @@
 """Support for EZVIZ sensors."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -99,6 +101,7 @@ class EzvizSensor(EzvizEntity, SensorEntity):
         self.entity_description = SENSOR_TYPES[sensor]
 
     @property
+    @override
     def native_value(self) -> int | str:
         """Return the state of the sensor."""
         return self.data[self._sensor_name]

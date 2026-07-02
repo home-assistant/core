@@ -12,7 +12,7 @@ from pathlib import Path
 import socket
 import ssl
 from tempfile import NamedTemporaryFile
-from typing import Any, Final, TypedDict, cast
+from typing import Any, Final, TypedDict, cast, override
 
 from aiohttp import web
 from aiohttp.abc import AbstractStreamWriter
@@ -336,6 +336,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class HomeAssistantRequest(web.Request):
     """Home Assistant request object."""
 
+    @override
     async def json(self, *, loads: JSONDecoder = json_loads) -> Any:
         """Return body as JSON."""
         # json_loads is a wrapper around orjson.loads that handles
@@ -346,6 +347,7 @@ class HomeAssistantRequest(web.Request):
 class HomeAssistantApplication(web.Application):
     """Home Assistant application."""
 
+    @override
     def _make_request(
         self,
         message: RawRequestMessage,

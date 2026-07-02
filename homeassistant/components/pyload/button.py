@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, override
 
 from pyloadapi import CannotConnect, InvalidAuth, PyLoadAPI
 
@@ -80,6 +80,7 @@ class PyLoadBinarySensor(BasePyLoadEntity, ButtonEntity):
 
     entity_description: PyLoadButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         try:

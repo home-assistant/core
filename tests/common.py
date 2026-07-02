@@ -492,7 +492,7 @@ def async_fire_time_changed_exact(
     approach, as this is only for testing.
     """
     if datetime_ is None:
-        utc_datetime = datetime.now(UTC)
+        utc_datetime = datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
     else:
         utc_datetime = dt_util.as_utc(datetime_)
 
@@ -515,7 +515,7 @@ def async_fire_time_changed(
     for an exact microsecond, use async_fire_time_changed_exact.
     """
     if datetime_ is None:
-        utc_datetime = datetime.now(UTC)
+        utc_datetime = datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
     else:
         utc_datetime = dt_util.as_utc(datetime_)
 
@@ -1587,7 +1587,16 @@ async def flush_store(store: storage.Store) -> None:
 
 async def get_system_health_info(hass: HomeAssistant, domain: str) -> dict[str, Any]:
     """Get system health info."""
-    return await hass.data["system_health"][domain].info_callback(hass)
+    from homeassistant.components.system_health import (  # noqa: PLC0415
+        DATA_SYSTEM_HEALTH_PLATFORMS,
+        DOMAIN as SYSTEM_HEALTH_DOMAIN,
+    )
+
+    platform_registrations = await hass.data[
+        DATA_SYSTEM_HEALTH_PLATFORMS
+    ].async_get_platforms()
+    registrations = {**hass.data[SYSTEM_HEALTH_DOMAIN], **platform_registrations}
+    return await registrations[domain].info_callback(hass)
 
 
 @contextmanager

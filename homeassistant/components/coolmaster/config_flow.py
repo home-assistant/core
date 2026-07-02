@@ -1,6 +1,6 @@
 """Config flow to configure Coolmaster."""
 
-from typing import Any
+from typing import Any, override
 
 from pycoolmasternet_async import CoolMasterNet
 import voluptuous as vol
@@ -78,6 +78,7 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

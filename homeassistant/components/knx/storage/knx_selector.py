@@ -2,7 +2,7 @@
 
 from collections.abc import Hashable, Iterable
 from enum import Enum
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -55,6 +55,7 @@ class KNXSectionFlat(KNXSelectorBase):
         """Initialize the section."""
         self.collapsible = collapsible
 
+    @override
     def serialize(self) -> dict[str, Any]:
         """Serialize the selector to a dictionary."""
         return {
@@ -78,6 +79,7 @@ class KNXSection(KNXSelectorBase):
         self.collapsible = collapsible
         self.schema = vol.Schema(schema)
 
+    @override
     def serialize(self) -> dict[str, Any]:
         """Serialize the section to a dictionary."""
         return {
@@ -97,6 +99,7 @@ class GroupSelectOption(KNXSelectorBase):
         self.translation_key = translation_key
         self.schema = vol.Schema(schema)
 
+    @override
     def serialize(self) -> dict[str, Any]:
         """Serialize the group select option to a dictionary."""
         return {
@@ -112,6 +115,7 @@ class GroupSelectSchema(vol.Any):
     show proper invalid markers for sub-schema items in the UI.
     """
 
+    @override
     def _exec(self, funcs: Iterable, v: Any, path: list[Hashable] | None = None) -> Any:
         """Execute the validation functions."""
         errors: list[vol.Invalid] = []
@@ -145,6 +149,7 @@ class GroupSelect(KNXSelectorBase):
         self.collapsible = collapsible
         self.schema = GroupSelectSchema(*options)
 
+    @override
     def serialize(self) -> dict[str, Any]:
         """Serialize the group select to a dictionary."""
         return {
@@ -180,6 +185,7 @@ class GASelector(KNXSelectorBase):
 
         self.schema = self.build_schema()
 
+    @override
     def serialize(self) -> dict[str, Any]:
         """Serialize the selector to a dictionary."""
 
@@ -280,6 +286,7 @@ class SyncStateSelector(KNXSelectorBase):
         """Initialize the sync state validator."""
         self.allow_false = allow_false
 
+    @override
     def serialize(self) -> dict[str, Any]:
         """Serialize the selector to a dictionary."""
         return {
@@ -287,6 +294,7 @@ class SyncStateSelector(KNXSelectorBase):
             "allow_false": self.allow_false,
         }
 
+    @override
     def __call__(self, data: Any) -> Any:
         """Validate the passed data."""
         if not self.allow_false and not data:

@@ -10,7 +10,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_LOCALE, DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS, RenaultConfigurationKeys
 from .renault_hub import RenaultHub
 from .services import async_setup_services
 
@@ -28,7 +28,7 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: RenaultConfigEntry
 ) -> bool:
     """Load a config entry."""
-    renault_hub = RenaultHub(hass, config_entry.data[CONF_LOCALE])
+    renault_hub = RenaultHub(hass, config_entry.data[RenaultConfigurationKeys.LOCALE])
     try:
         await renault_hub.async_initialise(config_entry)
     except NotAuthenticatedException as exc:

@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from satel_integra import AlarmState
 
@@ -166,6 +167,7 @@ class SatelIntegraTemperaturesCoordinator(
             if subentry.data.get(CONF_ENABLE_TEMPERATURE_SENSOR, False)
         ]
 
+    @override
     async def _async_update_data(self) -> dict[int, float | None]:
         """Fetch temperatures from the alarm."""
         if not self._zone_numbers:
