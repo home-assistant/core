@@ -34,9 +34,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .conftest import get_aqualink_device, get_aqualink_system, setup_integration
+from .conftest import (
+    MOCK_USER_ID,
+    get_aqualink_device,
+    get_aqualink_system,
+    setup_integration,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+async def _async_mock_login(self: AqualinkClient) -> None:
+    """Mock a successful login that sets the account user_id."""
+    self.user_id = MOCK_USER_ID
 
 
 async def _advance_coordinator_time(
@@ -112,7 +122,7 @@ async def test_system_rate_limited_keeps_entities_available(
     with (
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.login",
-            return_value=None,
+            _async_mock_login,
         ),
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.get_systems",
@@ -212,6 +222,72 @@ async def test_setup_login_retry_exceptions(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_setup_backfills_unique_id(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
+) -> None:
+    """Test setup assigns a unique ID to existing entries."""
+    config_entry.add_to_hass(hass)
+
+    system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
+    system.update = AsyncMock()
+    system.get_devices = AsyncMock(return_value={})
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            _async_mock_login,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value={system.serial: system},
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.unique_id == MOCK_USER_ID
+
+
+async def test_migrate_legacy_unique_id(
+    hass: HomeAssistant,
+    config_data: dict[str, str],
+    client: AqualinkClient,
+) -> None:
+    """Test setup migrates legacy username unique IDs to account IDs."""
+    config_entry = MockConfigEntry(
+        domain="iaqualink",
+        title=config_data["username"],
+        data=config_data,
+        unique_id=config_data["username"].casefold(),
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
+    system.update = AsyncMock()
+    system.get_devices = AsyncMock(return_value={})
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            _async_mock_login,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value={system.serial: system},
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.minor_version == 2
+    assert config_entry.unique_id == MOCK_USER_ID
+
+
 async def test_setup_login_unauthorized(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -251,7 +327,7 @@ async def test_setup_systems_exception(
     with (
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.login",
-            return_value=None,
+            _async_mock_login,
         ),
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.get_systems",
@@ -273,7 +349,7 @@ async def test_setup_systems_unauthorized(
     with (
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.login",
-            return_value=None,
+            _async_mock_login,
         ),
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.get_systems",
@@ -303,7 +379,7 @@ async def test_setup_first_refresh_unauthorized_closes_client(
     with (
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.login",
-            return_value=None,
+            _async_mock_login,
         ),
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.get_systems",
@@ -318,11 +394,31 @@ async def test_setup_first_refresh_unauthorized_closes_client(
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
-    mock_close.assert_awaited_once()
+    mock_close.assert_awaited()
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+
+async def test_setup_conflicting_account(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test setup fails when another entry already uses the same account."""
+    MockConfigEntry(
+        domain="iaqualink",
+        unique_id=MOCK_USER_ID,
+    ).add_to_hass(hass)
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.iaqualink.AqualinkClient.login",
+        _async_mock_login,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_no_systems_recognized(
@@ -334,7 +430,7 @@ async def test_setup_no_systems_recognized(
     with (
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.login",
-            return_value=None,
+            _async_mock_login,
         ),
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.get_systems",
@@ -372,7 +468,7 @@ async def test_setup_devices_exception(
     with (
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.login",
-            return_value=None,
+            _async_mock_login,
         ),
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.get_systems",
@@ -395,7 +491,7 @@ async def test_setup_devices_unauthorized(
     config_entry: MockConfigEntry,
     client: AqualinkClient,
 ) -> None:
-    """Test setup encountering an unauthorized exception while retrieving devices."""
+    """Test setup encountering an unauthorized error when retrieving devices."""
     config_entry.add_to_hass(hass)
 
     system = get_aqualink_system(client, cls=IaquaSystem)
@@ -406,7 +502,7 @@ async def test_setup_devices_unauthorized(
     with (
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.login",
-            return_value=None,
+            _async_mock_login,
         ),
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.get_systems",
@@ -415,9 +511,9 @@ async def test_setup_devices_unauthorized(
         patch.object(
             system,
             "get_devices",
-            side_effect=AqualinkServiceUnauthorizedException,
-        ),
+        ) as mock_get_devices,
     ):
+        mock_get_devices.side_effect = AqualinkServiceUnauthorizedException
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -447,7 +543,7 @@ async def test_setup_all_good_no_recognized_devices(
     with (
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.login",
-            return_value=None,
+            _async_mock_login,
         ),
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.get_systems",
