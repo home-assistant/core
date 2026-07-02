@@ -14,10 +14,6 @@ TEST_CREDENTIALS = {CONF_EMAIL: "test@test.com", CONF_PASSWORD: "SomePassword"}
 TEST_ACCESS_JWT = jwt.encode({"sub": TEST_UNIQUE_ID}, key="secret")
 
 INVALID_TEST_UNIQUE_ID = "0839246e-eb26-11f0-895d-325096b39f47"
-INVALID_TEST_CREDENTIALS = {
-    CONF_EMAIL: "invalid@invalid.com",
-    CONF_PASSWORD: "InvalidPassword",
-}
 INVALID_TEST_ACCESS_JWT = jwt.encode({"sub": INVALID_TEST_UNIQUE_ID}, key="secret")
 
 
