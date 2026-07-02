@@ -9,6 +9,8 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.panasonic_viera.const import (
     ATTR_DEVICE_INFO,
+    ATTR_UDN,
+    CONF_ON_ACTION,
     DEFAULT_NAME,
     DOMAIN,
     ERROR_INVALID_PIN_CODE,
@@ -22,6 +24,7 @@ from .conftest import (
     MOCK_CONFIG_DATA,
     MOCK_DEVICE_INFO,
     MOCK_ENCRYPTION_DATA,
+    MOCK_TURN_ON_ACTION,
     get_mock_remote,
 )
 
@@ -566,3 +569,55 @@ async def test_imported_flow_encrypted_already_configured_abort(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test setting turn_on_action through the options flow."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_DEVICE_INFO[ATTR_UDN],
+        data={
+            **MOCK_CONFIG_DATA,
+            **MOCK_ENCRYPTION_DATA,
+            ATTR_DEVICE_INFO: MOCK_DEVICE_INFO,
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_ON_ACTION: MOCK_TURN_ON_ACTION},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_entry.options == {CONF_ON_ACTION: MOCK_TURN_ON_ACTION}
+
+
+async def test_options_flow_prefills_legacy_yaml_action(hass: HomeAssistant) -> None:
+    """Test that the options flow exposes a legacy YAML-imported action.
+
+    Entries originally imported from configuration.yaml store turn_on_action in
+    ``data``. The options flow must read the existing value so the user can edit
+    it instead of losing it on first save.
+    """
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_DEVICE_INFO[ATTR_UDN],
+        data={
+            **MOCK_CONFIG_DATA,
+            CONF_ON_ACTION: MOCK_TURN_ON_ACTION,
+            ATTR_DEVICE_INFO: MOCK_DEVICE_INFO,
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    schema = result["data_schema"].schema
+    on_action_marker = next(key for key in schema if key.schema == CONF_ON_ACTION)
+    assert on_action_marker.default() == MOCK_TURN_ON_ACTION
