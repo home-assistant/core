@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+import whirlpool
 
 from homeassistant.components.select import ATTR_OPTION, DOMAIN as SELECT_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION, Platform
@@ -92,5 +93,130 @@ async def test_select_option_value_error(
                 ATTR_ENTITY_ID: "select.beer_fridge_temperature_level",
                 ATTR_OPTION: "something",
             },
+            blocking=True,
+        )
+
+
+@pytest.fixture(
+    params=[
+        (
+            "select.single_cavity_oven_cook_mode",
+            "mock_oven_single_cavity_api",
+            whirlpool.oven.Cavity.Upper,
+        ),
+        (
+            "select.dual_cavity_oven_upper_oven_cook_mode",
+            "mock_oven_dual_cavity_api",
+            whirlpool.oven.Cavity.Upper,
+        ),
+        (
+            "select.dual_cavity_oven_lower_oven_cook_mode",
+            "mock_oven_dual_cavity_api",
+            whirlpool.oven.Cavity.Lower,
+        ),
+    ]
+)
+def oven_cook_mode_entity(
+    request: pytest.FixtureRequest,
+) -> tuple[str, str, whirlpool.oven.Cavity]:
+    """Parametrize the oven cook-mode select entities."""
+    return request.param
+
+
+async def test_oven_cook_mode_current(
+    hass: HomeAssistant,
+    oven_cook_mode_entity: tuple[str, str, whirlpool.oven.Cavity],
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test reading the current cook mode."""
+    entity_id, mock_fixture, _ = oven_cook_mode_entity
+    mock = request.getfixturevalue(mock_fixture)
+    await init_integration(hass)
+
+    assert hass.states.get(entity_id).state == "bake"
+    mock.get_cook_mode.return_value = whirlpool.oven.CookMode.Broil
+    await trigger_attr_callback(hass, mock)
+    assert hass.states.get(entity_id).state == "broil"
+
+
+async def test_oven_cook_mode_select(
+    hass: HomeAssistant,
+    oven_cook_mode_entity: tuple[str, str, whirlpool.oven.Cavity],
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test selecting a cook mode issues a cook command."""
+    entity_id, mock_fixture, cavity = oven_cook_mode_entity
+    mock = request.getfixturevalue(mock_fixture)
+    await init_integration(hass)
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "broil"},
+        blocking=True,
+    )
+    mock.set_cook.assert_called_once_with(
+        target_temp=200, mode=whirlpool.oven.CookMode.Broil, cavity=cavity
+    )
+
+
+async def test_oven_cook_mode_select_from_idle(
+    hass: HomeAssistant,
+    oven_cook_mode_entity: tuple[str, str, whirlpool.oven.Cavity],
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test selecting a mode with no target set uses the default temperature."""
+    entity_id, mock_fixture, cavity = oven_cook_mode_entity
+    mock = request.getfixturevalue(mock_fixture)
+    mock.get_target_temp.return_value = None
+    await init_integration(hass)
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "broil"},
+        blocking=True,
+    )
+    mock.set_cook.assert_called_once_with(
+        target_temp=175, mode=whirlpool.oven.CookMode.Broil, cavity=cavity
+    )
+
+
+async def test_oven_cook_mode_select_standby(
+    hass: HomeAssistant,
+    oven_cook_mode_entity: tuple[str, str, whirlpool.oven.Cavity],
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test selecting standby stops the cook instead of starting one."""
+    entity_id, mock_fixture, cavity = oven_cook_mode_entity
+    mock = request.getfixturevalue(mock_fixture)
+    await init_integration(hass)
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "standby"},
+        blocking=True,
+    )
+    mock.stop_cook.assert_called_once_with(cavity)
+    mock.set_cook.assert_not_called()
+
+
+async def test_oven_cook_mode_select_value_error(
+    hass: HomeAssistant,
+    oven_cook_mode_entity: tuple[str, str, whirlpool.oven.Cavity],
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test a ValueError while setting the cook mode raises ServiceValidationError."""
+    entity_id, mock_fixture, _ = oven_cook_mode_entity
+    mock = request.getfixturevalue(mock_fixture)
+    mock.set_cook.side_effect = ValueError
+    await init_integration(hass)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "broil"},
             blocking=True,
         )
