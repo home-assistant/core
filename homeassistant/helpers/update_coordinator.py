@@ -782,6 +782,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         self._storage_scope = storage_scope
         self._store_manager = _async_get_restore_store_manager(hass)
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator and restore stored data."""
         await super()._async_setup()
@@ -805,6 +806,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
             self._storage_scope, self._storage_key, self.data, self._save_delay
         )
 
+    @override
     @callback
     def _async_refresh_finished(self) -> None:
         """Persist data after a successful refresh."""
@@ -812,6 +814,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         if self.last_update_success and self.data is not None:
             self._schedule_save()
 
+    @override
     @callback
     def async_set_updated_data(self, data: _DataT) -> None:
         """Manually update data and persist it."""
