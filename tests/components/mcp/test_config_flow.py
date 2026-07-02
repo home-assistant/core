@@ -913,8 +913,13 @@ async def test_reauth_flow_upgrade_to_oauth(
     )
     config_entry.add_to_hass(hass)
 
-    # Start reauth flow
-    config_entry.async_start_reauth(hass)
+    auth_header = AuthenticateHeader(
+        resource_metadata_url="https://example.com/custom-discovery",
+        scopes=SCOPES_SUPPORTED,
+    )
+
+    # Start reauth flow passing auth_header
+    config_entry.async_start_reauth(hass, data={"auth_header": auth_header})
     await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
@@ -922,8 +927,11 @@ async def test_reauth_flow_upgrade_to_oauth(
     result = flows[0]
     assert result["step_id"] == "reauth_confirm"
 
-    # Mock discovery on the default server URL (since there is no auth_header)
-    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+    # Mock discovery URLs (bypassing connection validation)
+    respx.get("https://example.com/custom-discovery").mock(
+        return_value=OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE
+    )
+    respx.get(OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT).mock(
         return_value=OAUTH_SERVER_METADATA_RESPONSE
     )
 
@@ -948,7 +956,7 @@ async def test_reauth_flow_upgrade_to_oauth(
         result,
         authorize_url=OAUTH_AUTHORIZE_URL,
         token_url=OAUTH_TOKEN_URL,
-        scopes=["read", "write"],
+        scopes=SCOPES_SUPPORTED,
     )
 
     # Verify we can connect to the server now with the token
@@ -970,7 +978,7 @@ async def test_reauth_flow_upgrade_to_oauth(
         CONF_URL: MCP_SERVER_URL,
         CONF_AUTHORIZATION_URL: OAUTH_AUTHORIZE_URL,
         CONF_TOKEN_URL: OAUTH_TOKEN_URL,
-        CONF_SCOPE: ["read", "write"],
+        CONF_SCOPE: SCOPES_SUPPORTED,
     }
     assert token
     token.pop("expires_at")
@@ -981,7 +989,7 @@ async def test_reauth_flow_upgrade_to_oauth(
 
 @pytest.mark.usefixtures("current_request_with_host")
 @respx.mock
-async def test_reauth_flow_upgrade_to_oauth_with_passed_auth_header(
+async def test_reauth_flow_upgrade_to_oauth_no_auth_header(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_mcp_client: Mock,
@@ -989,7 +997,7 @@ async def test_reauth_flow_upgrade_to_oauth_with_passed_auth_header(
     aioclient_mock: AiohttpClientMocker,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
-    """Test reauth flow upgrading a no-auth entry to OAuth using a passed auth header."""
+    """Test reauth flow upgrading a no-auth entry to OAuth when no auth header is passed (fallback)."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_URL: MCP_SERVER_URL},
@@ -997,13 +1005,8 @@ async def test_reauth_flow_upgrade_to_oauth_with_passed_auth_header(
     )
     config_entry.add_to_hass(hass)
 
-    auth_header = AuthenticateHeader(
-        resource_metadata_url="https://example.com/custom-discovery",
-        scopes=["read", "write"],
-    )
-
-    # Start reauth flow passing auth_header
-    config_entry.async_start_reauth(hass, data={"auth_header": auth_header})
+    # Start reauth flow without passing auth_header
+    config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
@@ -1011,11 +1014,8 @@ async def test_reauth_flow_upgrade_to_oauth_with_passed_auth_header(
     result = flows[0]
     assert result["step_id"] == "reauth_confirm"
 
-    # Mock discovery URLs (mock_mcp_client validate_input should NOT be called)
-    respx.get("https://example.com/custom-discovery").mock(
-        return_value=OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE
-    )
-    respx.get(OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT).mock(
+    # Mock discovery on the default server URL (since there is no auth_header)
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
         return_value=OAUTH_SERVER_METADATA_RESPONSE
     )
 
