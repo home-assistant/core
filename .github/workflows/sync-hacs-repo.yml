@@ -6,6 +6,7 @@ name: Sync to HACS repo
       - kwb_modbus
     paths:
       - "custom_components/kwb_modbus/**"
+  workflow_dispatch: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
