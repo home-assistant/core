@@ -305,17 +305,27 @@ def script_execution_get() -> str | None:
     return data.script_execution
 
 
-@contextmanager
-def trace_path(suffix: str | list[str]) -> Generator[None]:
+class trace_path:
     """Go deeper in the config tree.
 
-    Can not be used as a decorator on couroutine functions.
+    Can not be used as a decorator on coroutine functions.
     """
-    count = trace_path_push(suffix)
-    try:
-        yield
-    finally:
-        trace_path_pop(count)
+
+    __slots__ = ("_count", "_suffix")
+
+    _count: int
+
+    def __init__(self, suffix: str | list[str]) -> None:
+        """Store the path suffix to push on enter."""
+        self._suffix = suffix
+
+    def __enter__(self) -> None:
+        """Go deeper in the config tree."""
+        self._count = trace_path_push(self._suffix)
+
+    def __exit__(self, *exc: object) -> None:
+        """Go back up in the config tree."""
+        trace_path_pop(self._count)
 
 
 def async_trace_path[*_Ts](
