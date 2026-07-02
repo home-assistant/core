@@ -1348,6 +1348,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/paj_gps/ @skipperro
 /homeassistant/components/palazzetti/ @dotvav
 /tests/components/palazzetti/ @dotvav
+/homeassistant/components/panasonic_window_ac_hk/ @sam0737
+/tests/components/panasonic_window_ac_hk/ @sam0737
 /homeassistant/components/panel_custom/ @home-assistant/frontend
 /tests/components/panel_custom/ @home-assistant/frontend
 /homeassistant/components/paperless_ngx/ @fvgarrel

@@ -569,6 +569,7 @@ FLOWS = {
         "paj_gps",
         "palazzetti",
         "panasonic_viera",
+        "panasonic_window_ac_hk",
         "paperless_ngx",
         "peblar",
         "peco",

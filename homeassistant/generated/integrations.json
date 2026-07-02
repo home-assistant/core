@@ -5239,6 +5239,12 @@
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Panasonic Viera"
+        },
+        "panasonic_window_ac_hk": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "name": "Panasonic Window Air Conditioner (Hong Kong/Macau)"
         }
       }
     },
