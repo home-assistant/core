@@ -3293,6 +3293,12 @@
       "integration_type": "hub",
       "config_flow": false
     },
+    "intertechno_tristate": {
+      "name": "Intertechno TriState",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "intesishome": {
       "name": "IntesisHome",
       "integration_type": "hub",

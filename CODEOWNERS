@@ -888,6 +888,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/intent/ @home-assistant/core @synesthesiam @arturpragacz
 /homeassistant/components/intent_script/ @arturpragacz
 /tests/components/intent_script/ @arturpragacz
+/homeassistant/components/intertechno_tristate/ @Phunkafizer
+/tests/components/intertechno_tristate/ @Phunkafizer
 /homeassistant/components/intesishome/ @jnimmo
 /homeassistant/components/iometer/ @jukrebs
 /tests/components/iometer/ @jukrebs
