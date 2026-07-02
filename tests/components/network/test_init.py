@@ -1,5 +1,6 @@
 """Test the Network Configuration."""
 
+from copy import deepcopy
 from ipaddress import IPv4Address
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
@@ -13,12 +14,15 @@ from homeassistant.components.network.const import (
     ATTR_CONFIGURED_ADAPTERS,
     DOMAIN,
     MDNS_TARGET_IP,
+    SIGNAL_NETWORK_ADAPTERS_CHANGED,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.components.network.network import async_get_loaded_network
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
 from . import LOOPBACK_IPADDR, NO_LOOPBACK_IPADDR
@@ -698,6 +702,49 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
         "name": "vtun0",
     },
 ]
+
+
+@pytest.mark.usefixtures("mock_socket_loopback")
+async def test_async_reload_adapters(hass: HomeAssistant) -> None:
+    """Test reloading adapters dispatches a signal only when they change."""
+    with patch(
+        "homeassistant.components.network.network.async_load_adapters",
+        return_value=deepcopy(_ADAPTERS_WITH_MANUAL_CONFIG),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    signals: list[None] = []
+
+    @callback
+    def _track() -> None:
+        signals.append(None)
+
+    async_dispatcher_connect(hass, SIGNAL_NETWORK_ADAPTERS_CHANGED, _track)
+
+    # The same hardware loads unconfigured (all disabled); once configured it
+    # matches the current adapters, so no signal is dispatched.
+    unconfigured = deepcopy(_ADAPTERS_WITH_MANUAL_CONFIG)
+    for adapter in unconfigured:
+        adapter["enabled"] = False
+    with patch(
+        "homeassistant.components.network.network.async_load_adapters",
+        return_value=unconfigured,
+    ):
+        await network.async_reload_adapters(hass)
+    assert signals == []
+
+    # A physically different adapter set dispatches a signal.
+    changed = deepcopy(_ADAPTERS_WITH_MANUAL_CONFIG)
+    changed[1]["ipv4"][0]["address"] = "192.168.1.99"
+    with patch(
+        "homeassistant.components.network.network.async_load_adapters",
+        return_value=changed,
+    ):
+        await network.async_reload_adapters(hass)
+    assert len(signals) == 1
+    # Read the singleton directly; async_get_loaded_adapters is globally mocked.
+    assert async_get_loaded_network(hass).adapters == changed
 
 
 async def test_async_get_announce_addresses(hass: HomeAssistant) -> None:

@@ -7,6 +7,7 @@ from pathlib import Path
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 from homeassistant.util import package
 
@@ -17,9 +18,10 @@ from .const import (
     LOOPBACK_TARGET_IP,
     MDNS_TARGET_IP,
     PUBLIC_TARGET_IP,
+    SIGNAL_NETWORK_ADAPTERS_CHANGED,
 )
 from .models import Adapter
-from .network import Network, async_get_loaded_network, async_get_network
+from .network import DATA_NETWORK, Network, async_get_loaded_network, async_get_network
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +51,14 @@ async def async_get_adapters(hass: HomeAssistant) -> list[Adapter]:
 def async_get_loaded_adapters(hass: HomeAssistant) -> list[Adapter]:
     """Get the network adapter configuration."""
     return async_get_loaded_network(hass).adapters
+
+
+async def async_reload_adapters(hass: HomeAssistant) -> None:
+    """Reload the network adapters and notify listeners if they changed."""
+    if DATA_NETWORK not in hass.data:
+        return
+    if await async_get_loaded_network(hass).async_reload():
+        async_dispatcher_send(hass, SIGNAL_NETWORK_ADAPTERS_CHANGED)
 
 
 async def async_get_source_ip(

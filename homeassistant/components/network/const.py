@@ -19,6 +19,8 @@ MDNS_TARGET_IP: Final = "224.0.0.251"
 PUBLIC_TARGET_IP: Final = "8.8.8.8"
 IPV4_BROADCAST_ADDR: Final = "255.255.255.255"
 
+SIGNAL_NETWORK_ADAPTERS_CHANGED: Final = "network_adapters_changed"
+
 NETWORK_CONFIG_SCHEMA = vol.Schema(
     {
         vol.Optional(

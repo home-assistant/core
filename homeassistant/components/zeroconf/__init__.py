@@ -11,6 +11,7 @@ from zeroconf import InterfaceChoice, IPVersion
 from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant.components import network
+from homeassistant.components.network import SIGNAL_NETWORK_ADAPTERS_CHANGED
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_STOP,
@@ -18,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, instance_id
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_homekit, async_get_zeroconf
@@ -173,6 +175,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await discovery.async_setup()
     hass.data[DATA_DISCOVERY] = discovery
     websocket_api.async_setup(hass)
+
+    @callback
+    def _async_adapters_changed() -> None:
+        """Reconcile the zeroconf sockets when the network adapters change."""
+        zc_args = _async_get_zc_args(hass)
+        # async_update_interfaces serializes concurrent calls and no-ops when
+        # the interface set is unchanged, so overlapping tasks are safe.
+        hass.async_create_background_task(
+            aio_zc.async_update_interfaces(
+                interfaces=zc_args["interfaces"],
+                ip_version=zc_args["ip_version"],
+            ),
+            "zeroconf_update_interfaces",
+        )
+
+    async_dispatcher_connect(
+        hass, SIGNAL_NETWORK_ADAPTERS_CHANGED, _async_adapters_changed
+    )
 
     async def _async_zeroconf_hass_start(hass: HomeAssistant, comp: str) -> None:
         """Expose Home Assistant on zeroconf when it starts.

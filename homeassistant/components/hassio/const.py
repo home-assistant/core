@@ -91,6 +91,7 @@ EVENT_ISSUE_CHANGED = "issue_changed"
 EVENT_ISSUE_REMOVED = "issue_removed"
 EVENT_JOB = "job"
 
+UPDATE_KEY_NETWORK = "network"
 UPDATE_KEY_SUPERVISOR = "supervisor"
 STARTUP_COMPLETE = "complete"
 
