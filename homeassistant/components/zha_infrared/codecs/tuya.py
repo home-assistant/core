@@ -1,8 +1,7 @@
 """Tuya/Zosung codec helpers."""
 
-from __future__ import annotations
-
 from base64 import b64decode, b64encode
+from binascii import Error as BinasciiError
 import json
 import struct
 from typing import Any
@@ -29,7 +28,7 @@ def decode_tuya_payload_to_raw_timings(payload: Any) -> list[int] | None:
 
     try:
         raw = _b64decode_loose(payload)
-    except Exception:
+    except (BinasciiError, TypeError, ValueError):
         return None
     if not raw or len(raw) % 2 != 0:
         return None

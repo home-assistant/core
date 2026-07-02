@@ -1,7 +1,6 @@
 {
   "domain": "zha_infrared",
   "name": "ZHA Infrared",
-  "version": "0.1.0",
   "codeowners": ["@slavonnet"],
   "config_flow": true,
   "dependencies": ["infrared", "zha"],

@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from homeassistant.components.zha.const import DOMAIN as ZHA_DOMAIN
+from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import DOMAIN

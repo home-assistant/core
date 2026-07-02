@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import logging
 import time
 from types import SimpleNamespace
+from typing import Any
 from typing import override
 
 from homeassistant.components.infrared import (
@@ -14,7 +15,7 @@ from homeassistant.components.infrared import (
     InfraredReceivedSignal,
     InfraredReceiverEntity,
 )
-from homeassistant.components.zha.const import DOMAIN as ZHA_DOMAIN
+from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -52,7 +53,7 @@ def _resolve_cluster_availability(cluster: object | None) -> bool:
     if callable(available_value):
         try:
             return bool(available_value())
-        except Exception:
+        except (TypeError, ValueError):
             return True
 
     is_available_value = getattr(device, "is_available", None)
@@ -61,7 +62,7 @@ def _resolve_cluster_availability(cluster: object | None) -> bool:
     if callable(is_available_value):
         try:
             return bool(is_available_value())
-        except Exception:
+        except (TypeError, ValueError):
             return True
 
     return True
@@ -98,15 +99,17 @@ class ZhaInfraredEmitterEntity(InfraredEmitterEntity):
         self._device = device
         self._ieee = device.ieee
         self._endpoint_id = device.endpoint_id
-        self._attr_unique_id = f"{self._ieee}-{self._endpoint_id}-infrared-emitter"
+        self._attr_unique_id = f"{self._ieee}-{self._endpoint_id}-emitter"
         self._attr_name = f"{device.name} IR emitter"
 
+    @override
     @property
     def available(self) -> bool:
         """Return whether the underlying ZHA device is currently available."""
         cluster = get_ir_cluster(self.hass, self._device)
         return _resolve_cluster_availability(cluster)
 
+    @override
     @property
     def device_info(self) -> dr.DeviceInfo:
         """Associate this entity with the underlying ZHA device."""
@@ -154,7 +157,7 @@ class ZhaInfraredEmitterEntity(InfraredEmitterEntity):
                 self.entity_id,
                 self._device.profile.transport.command_id,
             )
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001
             _LOGGER.debug(
                 "zha_infrared send step=cluster_command_error entity=%s cluster_cmd_id=%s error=%s",
                 self.entity_id,
@@ -179,7 +182,7 @@ class ZhaInfraredReceiverEntity(InfraredReceiverEntity):
         self._device = device
         self._ieee = device.ieee
         self._endpoint_id = device.endpoint_id
-        self._attr_unique_id = f"{self._ieee}-{self._endpoint_id}-infrared-receiver"
+        self._attr_unique_id = f"{self._ieee}-{self._endpoint_id}-receiver"
         self._attr_name = f"{device.name} IR receiver"
         self._last_payload: str | None = None
         self._receive_lock = asyncio.Lock()
@@ -195,12 +198,14 @@ class ZhaInfraredReceiverEntity(InfraredReceiverEntity):
         self._poll_tick_counter = 0
         self._arm_tick_counter = 0
 
+    @override
     @property
     def available(self) -> bool:
         """Return whether the underlying ZHA device is currently available."""
         cluster = get_ir_cluster(self.hass, self._device)
         return _resolve_cluster_availability(cluster)
 
+    @override
     @property
     def device_info(self) -> dr.DeviceInfo:
         """Associate this entity with the underlying ZHA device."""
@@ -466,7 +471,7 @@ class ZhaInfraredReceiverEntity(InfraredReceiverEntity):
             )
 
     async def _async_send_arm_command_with_interval(
-        self, cluster: object, arm_command: ReceiveArmCommandSpec, value: object
+        self, cluster: Any, arm_command: ReceiveArmCommandSpec, value: object
     ) -> bool:
         """Send arm command while enforcing minimum inter-command delay."""
         min_interval = getattr(arm_command, "min_command_interval_seconds", 2)
@@ -505,8 +510,7 @@ class ZhaInfraredReceiverEntity(InfraredReceiverEntity):
                 value,
                 self._last_arm_transport_command_monotonic,
             )
-            return True
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001
             _LOGGER.debug(
                 "zha_infrared receiver step=send_arm_error entity=%s command_id=%s arg=%s value=%s error=%s",
                 self.entity_id,
@@ -516,6 +520,8 @@ class ZhaInfraredReceiverEntity(InfraredReceiverEntity):
                 err,
             )
             return False
+        else:
+            return True
 
     async def _async_read_receive_attribute(self) -> None:
         """Read receive/arm attributes and process updates."""
@@ -569,7 +575,7 @@ class ZhaInfraredReceiverEntity(InfraredReceiverEntity):
                 allow_cache=False,
                 only_cache=False,
             )
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001
             _LOGGER.debug(
                 "zha_infrared receiver step=read_error entity=%s attrs=%s error=%s",
                 self.entity_id,
@@ -596,7 +602,7 @@ class ZhaInfraredReceiverEntity(InfraredReceiverEntity):
                         allow_cache=False,
                         only_cache=False,
                     )
-                except Exception as err:
+                except Exception as err:  # noqa: BLE001
                     _LOGGER.debug(
                         "zha_infrared receiver step=arm_state_read_error entity=%s attr=%s error=%s",
                         self.entity_id,
@@ -835,7 +841,7 @@ class ZhaInfraredReceiverEntity(InfraredReceiverEntity):
 
         try:
             timings = decode_received_payload(self._device.profile.codec.name, payload)
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001
             _LOGGER.debug(
                 "zha_infrared receiver step=process_payload_decode_error entity=%s codec=%s error=%s",
                 self.entity_id,

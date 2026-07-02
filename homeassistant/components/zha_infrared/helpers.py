@@ -1,14 +1,12 @@
 """Helper utilities for ZHA Infrared."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from zigpy.types.named import EUI64
 
-from homeassistant.components.zha.helpers import get_zha_gateway_proxy
+from homeassistant.components.zha import get_zha_data
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml
@@ -103,9 +101,8 @@ class SupportedDevice:
 
 def get_supported_devices(hass: HomeAssistant) -> list[SupportedDevice]:
     """Resolve supported Zigbee IR endpoints using manifest-driven profiles."""
-    try:
-        gateway_proxy = get_zha_gateway_proxy(hass)
-    except ValueError:
+    gateway_proxy = get_zha_data(hass).gateway_proxy
+    if gateway_proxy is None:
         return []
 
     profiles = _load_profiles(hass)
@@ -162,9 +159,8 @@ def get_cluster_by_id(
     hass: HomeAssistant, device: SupportedDevice, cluster_id: int
 ) -> Any | None:
     """Resolve endpoint in-cluster by id for a supported device."""
-    try:
-        gateway_proxy = get_zha_gateway_proxy(hass)
-    except ValueError:
+    gateway_proxy = get_zha_data(hass).gateway_proxy
+    if gateway_proxy is None:
         return None
 
     device_proxy = gateway_proxy.get_device_proxy(EUI64.convert(device.ieee))

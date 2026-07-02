@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.zha_infrared.const import DOMAIN
+from homeassistant.components.zha_infrared import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
