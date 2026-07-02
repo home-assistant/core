@@ -3303,7 +3303,7 @@
       "name": "IOmeter",
       "integration_type": "device",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "ios": {
       "name": "Home Assistant iOS",
