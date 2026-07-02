@@ -36,7 +36,13 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
-from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+from .const import (
+    DEFAULT_HOST,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DOMAIN,
+    SUBENTRY_TYPE_CHANNEL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,9 +113,9 @@ async def async_setup_platform(
         context={"source": SOURCE_IMPORT},
         data=data,
     )
-    if (
-        result["type"] is FlowResultType.ABORT
-        and result["reason"] != "already_configured"
+    if result["type"] is FlowResultType.ABORT and result["reason"] not in (
+        "already_configured",
+        "subentry_added",
     ):
         ir.async_create_issue(
             hass,
@@ -151,40 +157,51 @@ async def async_setup_entry(
     """Set up Volkszaehler sensors from a config entry."""
     conditions = SENSOR_KEYS
 
-    vz_api = VolkszaehlerData(
-        Volkszaehler(
-            async_get_clientsession(hass),
-            entry.data[CONF_UUID],
-            host=entry.data[CONF_HOST],
-            port=entry.data[CONF_PORT],
+    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_CHANNEL):
+        vz_api = VolkszaehlerData(
+            Volkszaehler(
+                async_get_clientsession(hass),
+                subentry.data[CONF_UUID],
+                host=entry.data[CONF_HOST],
+                port=entry.data[CONF_PORT],
+            )
         )
-    )
 
-    await vz_api.async_update()
+        await vz_api.async_update()
 
-    if vz_api.api.data is None:
-        raise PlatformNotReady
+        if vz_api.api.data is None:
+            raise PlatformNotReady
 
-    entities = [
-        VolkszaehlerSensor(vz_api, entry.title, description)
-        for description in SENSOR_TYPES
-        if description.key in conditions
-    ]
+        entities = [
+            VolkszaehlerSensor(
+                vz_api,
+                subentry.title,
+                subentry.data[CONF_UUID],
+                description,
+            )
+            for description in SENSOR_TYPES
+            if description.key in conditions
+        ]
 
-    async_add_entities(entities, True)
+        async_add_entities(entities, True, config_subentry_id=subentry.subentry_id)
 
 
 class VolkszaehlerSensor(SensorEntity):
     """Implementation of a Volkszaehler sensor."""
 
     def __init__(
-        self, vz_api: VolkszaehlerData, name: str, description: SensorEntityDescription
+        self,
+        vz_api: VolkszaehlerData,
+        name: str,
+        uuid: str,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the Volkszaehler sensor."""
         self.entity_description = description
         self.vz_api = vz_api
 
         self._attr_name = f"{name} {description.name}"
+        self._attr_unique_id = f"{uuid}_{description.key}"
 
     @property
     @override

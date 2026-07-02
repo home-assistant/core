@@ -20,8 +20,28 @@
           "port": "Port number of the Volkszaehler server.",
           "uuid": "UUID of the channel to monitor. In the Volkszaehler Web UI, click the (i) icon next to the channel to find it."
         },
-        "description": "Enter your Volkszaehler channel details to add it to Home Assistant.",
+        "description": "Enter your Volkszaehler server and first channel details.",
         "title": "Set up Volkszaehler"
+      }
+    }
+  },
+  "config_subentries": {
+    "channel": {
+      "entry_type": "Channel",
+      "initiate_flow": {
+        "user": "Add Channel"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "uuid": "UUID"
+          },
+          "data_description": {
+            "uuid": "UUID of the channel to monitor. In the Volkszaehler Web UI, click the (i) icon next to the channel to find it."
+          },
+          "description": "Add another Volkszaehler channel.",
+          "title": "Add Volkszaehler channel"
+        }
       }
     }
   },
