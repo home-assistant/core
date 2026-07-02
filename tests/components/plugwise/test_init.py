@@ -227,14 +227,14 @@ async def test_migrate_binary_sensor_switch_unique_id(
             f"{CLIMATE_ID}-thermostat",
         )
     ],
-)
+ )
+@pytest.mark.usefixtures("mock_smile_adam_jip")
 async def test_migrate_climate_unique_id(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
-    mock_smile_adam_jip: MagicMock,
 ) -> None:
     """Test migration of climate unique_id."""
     await check_migration(
