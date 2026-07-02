@@ -135,7 +135,7 @@ async def test_scan_source_callback_forwards_advertisement(
     forwarded: list[AdvertisementData] = []
     captured: dict[str, object] = {}
 
-    def fake_register(hass_, cb, _matcher, _mode):
+    def fake_register(hass_, cb, _matcher, _mode, **_kwargs):
         captured["cb"] = cb
         return MagicMock()
 
@@ -168,7 +168,7 @@ async def test_scan_source_drops_replayed_history(
     forwarded: list[AdvertisementData] = []
     captured: dict[str, object] = {}
 
-    def fake_register(hass_, cb, _matcher, _mode):
+    def fake_register(hass_, cb, _matcher, _mode, **_kwargs):
         captured["cb"] = cb
         return MagicMock()
 
@@ -196,7 +196,7 @@ async def test_scan_source_callback_swallows_exceptions(
     """A raising user callback is logged but does not bubble out of HA."""
     captured: dict[str, object] = {}
 
-    def fake_register(hass_, cb, _matcher, _mode):
+    def fake_register(hass_, cb, _matcher, _mode, **_kwargs):
         captured["cb"] = cb
         return MagicMock()
 
