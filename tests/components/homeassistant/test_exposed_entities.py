@@ -6,6 +6,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.homeassistant import DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
+    LEGACY_ENTITY_PURGE_INTERVAL,
     ExposedEntities,
     ExposedEntity,
     async_expose_entity,
@@ -14,13 +15,14 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_listen_entity_updates,
     async_should_expose,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
-from tests.common import flush_store
+from tests.common import async_fire_time_changed, flush_store
 from tests.typing import WebSocketGenerator
 
 
@@ -548,3 +550,90 @@ async def test_listeners(
 
     entry1 = entity_registry.async_get_or_create("switch", "test", "unique1")
     async_expose_entity(hass, "test1", entry1.entity_id, True)
+
+
+async def test_legacy_entity_kept_while_state_exists(hass: HomeAssistant) -> None:
+    """Legacy exposed entities are kept as long as their state is present."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    hass.states.async_set("sensor.no_unique_id", "on", {})
+    async_expose_entity(hass, "test1", "sensor.no_unique_id", True)
+
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+
+    # A regular state update (not a removal) must not purge the entry
+    hass.states.async_set("sensor.no_unique_id", "off", {})
+    await hass.async_block_till_done()
+
+    assert "sensor.no_unique_id" in exposed_entities.entities
+
+
+async def test_legacy_entity_survives_transient_removal(hass: HomeAssistant) -> None:
+    """A brief removal (e.g. a platform reload) must not drop the entry.
+
+    There is deliberately no real-time state-removal listener: only the
+    periodic sweep purges legacy entries. This preserves the user's
+    exposure preference when an entity's state disappears and reappears
+    shortly after (e.g. during a reload), well within the sweep interval.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    hass.states.async_set("sensor.no_unique_id", "on", {})
+    async_expose_entity(hass, "test1", "sensor.no_unique_id", True)
+
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    assert exposed_entities.entities["sensor.no_unique_id"].assistants == {
+        "test1": {"should_expose": True}
+    }
+
+    hass.states.async_remove("sensor.no_unique_id")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.no_unique_id", "on", {})
+    await hass.async_block_till_done()
+
+    assert exposed_entities.entities["sensor.no_unique_id"].assistants == {
+        "test1": {"should_expose": True}
+    }
+
+
+async def test_purge_stale_legacy_entities_periodic_sweep(hass: HomeAssistant) -> None:
+    """Stale legacy entries with no live state are purged by the periodic sweep.
+
+    This covers entries left behind by an integration that created and
+    later removed many entities across restarts. The sweep is
+    intentionally not tied to startup: it only fires after
+    LEGACY_ENTITY_PURGE_INTERVAL has elapsed, so a slow-starting
+    integration has time to re-register its entities before being treated
+    as gone.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    hass.states.async_set("sensor.still_around", "on", {})
+    async_expose_entity(hass, "test1", "sensor.still_around", True)
+    async_expose_entity(hass, "test1", "sensor.long_gone", True)
+
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    assert set(exposed_entities.entities) == {"sensor.still_around", "sensor.long_gone"}
+
+    async_fire_time_changed(hass, dt_util.utcnow() + LEGACY_ENTITY_PURGE_INTERVAL)
+    await hass.async_block_till_done()
+
+    assert set(exposed_entities.entities) == {"sensor.still_around"}
+
+
+async def test_purge_sweep_cancelled_on_stop(hass: HomeAssistant) -> None:
+    """The periodic sweep timer is cancelled on Home Assistant stop."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    async_expose_entity(hass, "test1", "sensor.long_gone", True)
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    assert "sensor.long_gone" in exposed_entities.entities
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + LEGACY_ENTITY_PURGE_INTERVAL)
+    await hass.async_block_till_done()
+
+    # The sweep must not have run after stop, so the entry is untouched
+    assert "sensor.long_gone" in exposed_entities.entities

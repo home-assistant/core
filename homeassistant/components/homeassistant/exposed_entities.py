@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Mapping
 import dataclasses
+from datetime import datetime, timedelta
 from itertools import chain
 from typing import Any, TypedDict
 
@@ -10,16 +11,35 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback, split_entity_id
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HomeAssistant,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import get_device_class
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.storage import Store
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .const import DATA_EXPOSED_ENTITIES, DOMAIN
 
 KNOWN_ASSISTANTS = ("cloud.alexa", "cloud.google_assistant", "conversation")
+
+# How often to sweep for legacy exposed-entity records whose entity no
+# longer exists. Deliberately the only cleanup mechanism (no real-time
+# state-removal listener): a transient removal, e.g. a platform reload,
+# would otherwise wipe the user's exposure preference for an entity that
+# comes right back. A day-long staleness window is an acceptable trade-off
+# for records that only ever grow, never contain live data, and previously
+# weren't cleaned up at all. async_track_time_interval only fires after the
+# interval elapses, so the first sweep happens well after boot, giving
+# slow-starting integrations time to re-register their entities too.
+LEGACY_ENTITY_PURGE_INTERVAL = timedelta(hours=24)
 
 STORAGE_KEY = f"{DOMAIN}.exposed_entities"
 STORAGE_VERSION = 1
@@ -122,6 +142,25 @@ class ExposedEntities:
         websocket_api.async_register_command(self._hass, ws_expose_new_entities_set)
         websocket_api.async_register_command(self._hass, ws_list_exposed_entities)
         await self._async_load_data()
+        # Entities without a unique_id are never in the entity registry, so
+        # registry removal events can't be used to prune them. Periodic sweep
+        # is the only cleanup: it drops legacy records with no live entity
+        # behind them, e.g. left behind by an integration that created and
+        # later removed many entities across restarts.
+        cancel_purge = async_track_time_interval(
+            self._hass,
+            self._async_purge_stale_legacy_entities,
+            LEGACY_ENTITY_PURGE_INTERVAL,
+        )
+
+        @callback
+        def _on_homeassistant_stop(_event: Event) -> None:
+            """Cancel the periodic purge."""
+            cancel_purge()
+
+        self._hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop
+        )
 
     @callback
     def async_listen_entity_updates(
@@ -187,6 +226,26 @@ class ExposedEntities:
         self._async_schedule_save()
         for listener in self._listeners.get(assistant, []):
             listener()
+
+    @callback
+    def _async_purge_stale_legacy_entities(self, _now: datetime) -> None:
+        """Periodic sweep to drop legacy entries with no entity behind them.
+
+        A day-long staleness window (rather than an immediate state-removal
+        listener) is intentional: it avoids wiping a user's exposure
+        preference for an entity that briefly disappears during a platform
+        reload and comes right back.
+        """
+        stale_entity_ids = [
+            entity_id
+            for entity_id in self.entities
+            if self._hass.states.get(entity_id) is None
+        ]
+        if not stale_entity_ids:
+            return
+        for entity_id in stale_entity_ids:
+            del self.entities[entity_id]
+        self._async_schedule_save()
 
     @callback
     def async_get_expose_new_entities(self, assistant: str) -> bool:
