@@ -2,11 +2,11 @@
 
 from typing import Any
 
-from homeassistant.const import ATTR_MODEL, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DEV_CLASS, DOMAIN, LOGGER, PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 
 
@@ -47,14 +47,8 @@ def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None
     Migrates old unique ID's from old binary_sensors and
     switches to the new unique ID's.
     """
-    if entry.domain == Platform.CLIMATE and entry.unique_id.endswith(
-        "-climate"
-    ):
-        return {
-            "new_unique_id": entry.unique_id.replace(
-                "-climate", "-thermostat"
-            )
-        }
+    if entry.domain == Platform.CLIMATE and entry.unique_id.endswith("-climate"):
+        return {"new_unique_id": entry.unique_id.replace("-climate", "-thermostat")}
     if entry.domain == Platform.BINARY_SENSOR and entry.unique_id.endswith(
         "-slave_boiler_state"
     ):

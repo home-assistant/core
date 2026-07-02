@@ -12,13 +12,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_MODEL,
-    ATTR_TEMPERATURE,
-    STATE_OFF,
-    STATE_ON,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
