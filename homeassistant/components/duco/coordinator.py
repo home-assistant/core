@@ -11,7 +11,12 @@ from duco_connectivity.exceptions import (
     DucoError,
     DucoResponseError,
 )
-from duco_connectivity.models import BoardInfo, Node, NodeListActionItemList
+from duco_connectivity.models import (
+    BoardInfo,
+    DiagComponent,
+    Node,
+    NodeListActionItemList,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -26,12 +31,13 @@ _LOGGER = logging.getLogger(__name__)
 type DucoConfigEntry = ConfigEntry[DucoCoordinator]
 
 
-@dataclass
+@dataclass(slots=True, kw_only=True)
 class DucoData:
     """Data returned by the Duco coordinator."""
 
     nodes: dict[int, Node]
     node_actions: NodeListActionItemList
+    diagnostic_subsystems: tuple[DiagComponent, ...]
     rssi_wifi: int | None
     time_filter_remain: int | None
 
@@ -41,6 +47,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
     config_entry: DucoConfigEntry
     board_info: BoardInfo
+    _initial_diagnostics_loaded: bool
     _supports_time_filter_remain: bool
 
     def __init__(
@@ -58,6 +65,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             update_interval=SCAN_INTERVAL,
         )
         self.client = client
+        self._initial_diagnostics_loaded = False
         self._supports_time_filter_remain = True
 
     @override
@@ -130,6 +138,40 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         else:
             rssi_wifi = lan_info.rssi_wifi
 
+        if not self._initial_diagnostics_loaded:
+            # Diagnostics entities are created during setup, so the initial
+            # diagnostics payload must be present before the entry can load.
+            try:
+                diagnostic_info = await self.client.async_get_diagnostics_info()
+            except DucoConnectionError as err:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                ) from err
+            except DucoError as err:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                ) from err
+
+            diagnostic_subsystems = diagnostic_info.diagnostic_subsystems
+            if not diagnostic_subsystems:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                )
+            self._initial_diagnostics_loaded = True
+        else:
+            # After setup, diagnostics only back existing box-linked sensors, so
+            # transient diagnostics endpoint failures should not unload them.
+            diagnostic_subsystems = self.data.diagnostic_subsystems
+            try:
+                diagnostic_info = await self.client.async_get_diagnostics_info()
+            except DucoError as err:
+                _LOGGER.debug("Could not fetch Duco diagnostics info", exc_info=err)
+            else:
+                diagnostic_subsystems = diagnostic_info.diagnostic_subsystems
+
         # Heat recovery info only backs the optional filter timer sensor, so
         # failures on this supplemental endpoint should not make the primary
         # node entities unavailable.
@@ -142,6 +184,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         return DucoData(
             nodes={node.node_id: node for node in nodes},
             node_actions=node_actions,
+            diagnostic_subsystems=diagnostic_subsystems,
             rssi_wifi=rssi_wifi,
             time_filter_remain=time_filter_remain,
         )
