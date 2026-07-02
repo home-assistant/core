@@ -2,7 +2,9 @@
   "domain": "actiontec",
   "name": "Actiontec",
   "codeowners": [],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/actiontec",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "quality_scale": "legacy"
 }

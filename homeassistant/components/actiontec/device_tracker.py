@@ -1,27 +1,28 @@
 """Support for Actiontec MI424WR (Verizon FIOS) routers."""
 
-import logging
-from typing import Final, override
+from typing import override
 
-import telnetlib  # pylint: disable=deprecated-module
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    DeviceScanner,
+    AsyncSeeCallback,
+    ScannerEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import LEASES_REGEX
+from .const import DOMAIN
+from .coordinator import ActiontecConfigEntry, ActiontecDataUpdateCoordinator
 from .model import Device
 
-_LOGGER: Final = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA: Final = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -30,87 +31,120 @@ PLATFORM_SCHEMA: Final = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(
-    hass: HomeAssistant, config: ConfigType
-) -> ActiontecDeviceScanner | None:
-    """Validate the configuration and return an Actiontec scanner."""
-    scanner = ActiontecDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
-    return scanner if scanner.success_init else None
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    _async_see: AsyncSeeCallback,
+    _discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
+    """Set up the legacy Actiontec device tracker."""
+    import_data = {
+        CONF_HOST: config[CONF_HOST],
+        CONF_USERNAME: config[CONF_USERNAME],
+        CONF_PASSWORD: config[CONF_PASSWORD],
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=import_data
+    )
+
+    if result["type"] is FlowResultType.ABORT and result["reason"] == "cannot_connect":
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "yaml_import_cannot_connect",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="yaml_import_cannot_connect",
+            translation_placeholders={"host": import_data[CONF_HOST]},
+        )
+        return False
+
+    # A previous failed import may have raised this issue; clear it on success.
+    ir.async_delete_issue(hass, DOMAIN, "yaml_import_cannot_connect")
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Actiontec",
+        },
+    )
+    return True
 
 
-class ActiontecDeviceScanner(DeviceScanner):
-    """Class which queries an actiontec router for connected devices."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ActiontecConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Actiontec device tracker from a config entry."""
+    coordinator = config_entry.runtime_data
+    tracked: set[str] = set()
 
-    def __init__(self, config: ConfigType) -> None:
-        """Initialize the scanner."""
-        self.host: str = config[CONF_HOST]
-        self.username: str = config[CONF_USERNAME]
-        self.password: str = config[CONF_PASSWORD]
-        self.last_results: list[Device] = []
-        data = self.get_actiontec_data()
-        self.success_init = data is not None
+    @callback
+    def _async_add_new_devices() -> None:
+        """Add newly discovered devices from the coordinator."""
+        new_entities: list[ActiontecScannerEntity] = []
+        for device in coordinator.data:
+            if device.mac_address in tracked:
+                continue
+            tracked.add(device.mac_address)
+            new_entities.append(ActiontecScannerEntity(coordinator, device.mac_address))
+        if new_entities:
+            async_add_entities(new_entities)
 
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
+    _async_add_new_devices()
+
+
+class ActiontecScannerEntity(
+    CoordinatorEntity[ActiontecDataUpdateCoordinator], ScannerEntity
+):
+    """Representation of a device connected to the Actiontec router."""
+
+    def __init__(
+        self, coordinator: ActiontecDataUpdateCoordinator, mac_address: str
+    ) -> None:
+        """Initialize the tracked device."""
+        super().__init__(coordinator)
+        self._mac_address = mac_address
+        if (device := self._device) is not None:
+            self._attr_name = device.ip_address
+
+    @property
+    def _device(self) -> Device | None:
+        """Return the current device data."""
+        return next(
+            (
+                device
+                for device in self.coordinator.data
+                if device.mac_address == self._mac_address
+            ),
+            None,
+        )
+
+    @property
     @override
-    def scan_devices(self) -> list[str]:
-        """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
-        return [client.mac_address for client in self.last_results]
+    def is_connected(self) -> bool:
+        """Return true if the device is connected to the Actiontec router."""
+        return self._device is not None
 
+    @property
     @override
-    def get_device_name(self, device: str) -> str | None:
-        """Return the name of the given device or None if we don't know."""
-        for client in self.last_results:
-            if client.mac_address == device:
-                return client.ip_address
+    def ip_address(self) -> str | None:
+        """Return the primary IP address of the device."""
+        if (device := self._device) is not None:
+            return device.ip_address
         return None
 
-    def _update_info(self) -> bool:
-        """Ensure the information from the router is up to date.
-
-        Return boolean if scanning successful.
-        """
-        _LOGGER.debug("Scanning")
-        if not self.success_init:
-            return False
-
-        if (actiontec_data := self.get_actiontec_data()) is None:
-            return False
-        self.last_results = [
-            device for device in actiontec_data if device.timevalid > -60
-        ]
-        _LOGGER.debug("Scan successful")
-        return True
-
-    def get_actiontec_data(self) -> list[Device] | None:
-        """Retrieve data from Actiontec MI424WR and return parsed result."""
-        try:
-            telnet = telnetlib.Telnet(self.host)
-            telnet.read_until(b"Username: ")
-            telnet.write((f"{self.username}\n").encode("ascii"))
-            telnet.read_until(b"Password: ")
-            telnet.write((f"{self.password}\n").encode("ascii"))
-            prompt = telnet.read_until(b"Wireless Broadband Router> ").split(b"\n")[-1]
-            telnet.write(b"firewall mac_cache_dump\n")
-            telnet.write(b"\n")
-            telnet.read_until(prompt)
-            leases_result = telnet.read_until(prompt).split(b"\n")[1:-1]
-            telnet.write(b"exit\n")
-        except EOFError:
-            _LOGGER.exception("Unexpected response from router")
-            return None
-        except ConnectionRefusedError:
-            _LOGGER.exception("Connection refused by router. Telnet enabled?")
-            return None
-
-        devices: list[Device] = []
-        for lease in leases_result:
-            match = LEASES_REGEX.search(lease.decode("utf-8"))
-            if match is not None:
-                devices.append(
-                    Device(
-                        match.group("ip"),
-                        match.group("mac").upper(),
-                        int(match.group("timevalid")),
-                    )
-                )
-        return devices
+    @property
+    @override
+    def mac_address(self) -> str:
+        """Return the MAC address of the device."""
+        return self._mac_address
