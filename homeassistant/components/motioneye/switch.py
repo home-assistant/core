@@ -1,5 +1,6 @@
 """Switch platform for motionEye."""
 
+import asyncio
 from collections.abc import Mapping
 from typing import Any, override
 
@@ -121,13 +122,18 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
 
     async def _async_send_set_camera(self, value: bool) -> None:
         """Set a switch value."""
-
         # Fetch the very latest camera config to reduce the risk of updating with a
         # stale configuration.
         camera = await self._client.async_get_camera(self._camera_id)
         if camera:
             camera[self.entity_description.key] = value
             await self._client.async_set_camera(self._camera_id, camera)
+            # Wait 2 seconds to allow slower hardware like Raspberry Pi to apply
+            # the new state before the coordinator refreshes.
+            await asyncio.sleep(2)
+            await self.coordinator.async_request_refresh()
+        else:
+            await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
