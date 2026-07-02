@@ -7,6 +7,7 @@
       'ChargeCurrentLimitSource': 'Current limiter',
       'CpState': 'State C',
       'Force1Phase': False,
+      'LockState': False,
     }),
     'meter': dict({
       'CurrentPhase1': 14242,
