@@ -143,6 +143,63 @@ async def test_setup_rexel_local_uses_local_client(
     assert mock_rexel_local_config_entry.state is ConfigEntryState.LOADED
 
 
+ENTITY_BUTTON_PERGOLA_MY_POSITION = "button.bioclimatic_pergola_my_position"
+ENTITY_BUTTON_VENETIAN_BLIND_MY_POSITION = "button.venetian_blind_my_position"
+
+
+async def test_go_to_alias_button_unique_id_migration(
+    hass: HomeAssistant, mock_client: MockOverkizClient
+) -> None:
+    """Test migration of the legacy goToAlias button unique_id.
+
+    Devices without core:SupportedAliases lose their legacy button; devices
+    with an alias keep it, renamed to the per-alias unique_id.
+    """
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
+        minor_version=2,
+    )
+    mock_entry.add_to_hass(hass)
+
+    mock_registry(
+        hass,
+        {
+            ENTITY_BUTTON_PERGOLA_MY_POSITION: RegistryEntryWithDefaults(
+                entity_id=ENTITY_BUTTON_PERGOLA_MY_POSITION,
+                unique_id="ogp://1234-1234-6233/10943109-goToAlias",
+                platform=DOMAIN,
+                config_entry_id=mock_entry.entry_id,
+            ),
+            ENTITY_BUTTON_VENETIAN_BLIND_MY_POSITION: RegistryEntryWithDefaults(
+                entity_id=ENTITY_BUTTON_VENETIAN_BLIND_MY_POSITION,
+                unique_id="ogp://1234-1234-6233/16730100-goToAlias",
+                platform=DOMAIN,
+                config_entry_id=mock_entry.entry_id,
+            ),
+        },
+    )
+
+    mock_client.set_setup_fixture("setup/cloud_somfy_tahoma_v2_europe.json")
+
+    with patch(
+        "homeassistant.components.overkiz.create_cloud_client",
+        return_value=mock_client,
+    ):
+        assert await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    ent_reg = er.async_get(hass)
+
+    assert ent_reg.async_get(ENTITY_BUTTON_PERGOLA_MY_POSITION) is None
+    assert (
+        entry := ent_reg.async_get(ENTITY_BUTTON_VENETIAN_BLIND_MY_POSITION)
+    ) is not None
+    assert entry.unique_id == "ogp://1234-1234-6233/16730100-goToAlias_1"
+    assert mock_entry.minor_version == 3
+
+
 async def test_setup_token_reauth_error_starts_reauth(
     hass: HomeAssistant, mock_rexel_config_entry: MockConfigEntry
 ) -> None:

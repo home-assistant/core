@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OverkizDataConfigEntry
-from .const import IGNORED_OVERKIZ_DEVICES
+from .const import IGNORED_OVERKIZ_DEVICES, LOGGER
 from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity, OverkizEntity
 
@@ -121,7 +121,7 @@ async def async_setup_entry(
                             device.device_url,
                             data.coordinator,
                             alias_id=str(alias["id"]),
-                            alias_type=alias.get("type", ""),
+                            alias_type=alias["type"],
                         )
                         for alias in cast(list, attribute.value)
                     )
@@ -169,6 +169,12 @@ class OverkizAliasButton(OverkizEntity, ButtonEntity):
         if alias_type in ALIAS_TYPES_WITH_TRANSLATION:
             self._attr_translation_key = f"go_to_alias_{alias_type}"
         else:
+            LOGGER.warning(
+                "Unsupported goToAlias type %s (%s) has been returned for %s",
+                alias_type,
+                alias_id,
+                device_url,
+            )
             self._attr_name = f"{alias_type.capitalize()} position"
         self._attr_unique_id = (
             f"{self.device_url}-{OverkizCommand.GO_TO_ALIAS}_{alias_id}"

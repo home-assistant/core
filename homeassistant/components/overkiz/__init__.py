@@ -13,7 +13,15 @@ from pyoverkiz.auth.credentials import (
 )
 from pyoverkiz.client import OverkizClient, OverkizClientSettings
 from pyoverkiz.const import REXEL_OAUTH_CLIENT_ID
-from pyoverkiz.enums import APIType, OverkizState, Server, UIClass, UIWidget
+from pyoverkiz.enums import (
+    APIType,
+    OverkizAttribute,
+    OverkizCommand,
+    OverkizState,
+    Server,
+    UIClass,
+    UIWidget,
+)
 from pyoverkiz.exceptions import (
     BadCredentialsError,
     MaintenanceError,
@@ -163,6 +171,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
 
     await coordinator.async_config_entry_first_refresh()
 
+    # Requires live device data, so it can't run in async_migrate_entry.
+    if entry.version == 1 and entry.minor_version < 3:
+        await _async_migrate_go_to_alias_button_unique_ids(hass, entry, coordinator)
+        hass.config_entries.async_update_entry(entry, minor_version=3)
+
     if coordinator.is_stateless:
         LOGGER.debug(
             "All devices have an assumed state."
@@ -230,6 +243,53 @@ async def async_migrate_entry(
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
     return True
+
+
+async def _async_migrate_go_to_alias_button_unique_ids(
+    hass: HomeAssistant,
+    config_entry: OverkizDataConfigEntry,
+    coordinator: OverkizDataUpdateCoordinator,
+) -> None:
+    """Migrate the legacy single goToAlias button to a per-alias unique_id."""
+    entity_registry = er.async_get(hass)
+    legacy_suffix = f"-{OverkizCommand.GO_TO_ALIAS}"
+
+    @callback
+    def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
+        if entry.domain != Platform.BUTTON or not entry.unique_id.endswith(
+            legacy_suffix
+        ):
+            return None
+
+        device_url = entry.unique_id.removesuffix(legacy_suffix)
+        device = coordinator.data.get(device_url)
+        aliases = (
+            device.attributes.get(OverkizAttribute.CORE_SUPPORTED_ALIASES)
+            if device
+            else None
+        )
+
+        # Legacy entities were hardcoded to alias id "1".
+        if aliases and any(alias["id"] == "1" for alias in cast(list, aliases.value)):
+            new_unique_id = f"{entry.unique_id}_1"
+            LOGGER.debug(
+                "Migrating entity '%s' unique_id from '%s' to '%s'",
+                entry.entity_id,
+                entry.unique_id,
+                new_unique_id,
+            )
+            return {"new_unique_id": new_unique_id}
+
+        # No alias id "1" to migrate to, so the entity has no counterpart.
+        LOGGER.debug(
+            "Removing entity '%s', device no longer exposes a goToAlias"
+            " button for alias id 1",
+            entry.entity_id,
+        )
+        entity_registry.async_remove(entry.entity_id)
+        return None
+
+    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
 
 async def _async_migrate_strenum_unique_ids(
