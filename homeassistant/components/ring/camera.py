@@ -1,10 +1,10 @@
 """Component providing support to the Ring Door Bell camera."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any, Generic, cast, override
+from typing import TYPE_CHECKING, Any, Generic, override
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
@@ -43,16 +43,6 @@ MOTION_DETECTION_CAPABILITY = "motion_detection"
 _LOGGER = logging.getLogger(__name__)
 
 RingCameraDevice = RingDoorBell | RingOther
-RingSnapshotGetter = Callable[[], Awaitable[bytes | None]]
-
-
-def _snapshot_getter(device: RingOther) -> RingSnapshotGetter | None:
-    """Return the snapshot getter for video-capable Ring other devices."""
-    getter = getattr(device, "async_get_snapshot", None)
-    if not callable(getter):
-        return None
-    return cast(RingSnapshotGetter, getter)
-
 
 @dataclass(frozen=True, kw_only=True)
 class RingCameraEntityDescription(CameraEntityDescription, Generic[RingDeviceT]):  # noqa: UP046
@@ -220,9 +210,8 @@ class RingCam(RingEntity[RingCameraDevice], Camera):
     @exception_wrap
     async def _async_get_fresh_snapshot(self) -> bytes | None:
         """Get a fresh snapshot from the camera."""
-        if isinstance(self._device, RingOther):
-            if getter := _snapshot_getter(self._device):
-                return await getter()
+        if isinstance(self._device, RingOther) and callable(self._device.async_get_snapshot):
+            return await self._device.async_get_snapshot()
         return None
 
     @override
@@ -269,7 +258,7 @@ class RingCam(RingEntity[RingCameraDevice], Camera):
                     )
                 )
 
-        await cast(Any, self._device).generate_async_webrtc_stream(
+        await self._device.generate_async_webrtc_stream(
             offer_sdp, session_id, message_wrapper, keep_alive_timeout=None
         )
 
@@ -286,7 +275,7 @@ class RingCam(RingEntity[RingCameraDevice], Camera):
                     "device": self._device.name,
                 },
             )
-        await cast(Any, self._device).on_webrtc_candidate(
+        await self._device.on_webrtc_candidate(
             session_id, candidate.candidate, candidate.sdp_m_line_index
         )
 
@@ -294,7 +283,7 @@ class RingCam(RingEntity[RingCameraDevice], Camera):
     @override
     def close_webrtc_session(self, session_id: str) -> None:
         """Close a WebRTC session."""
-        cast(Any, self._device).sync_close_webrtc_stream(session_id)
+        self._device.sync_close_webrtc_stream(session_id)
 
     @override
     async def async_update(self) -> None:
