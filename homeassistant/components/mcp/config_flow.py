@@ -350,6 +350,9 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         config_entry = self._get_reauth_entry()
         self.data = {**config_entry.data}
         if "auth_implementation" not in self.data:
+            # If the reauth flow was triggered by a tool call that returned a WWW-Authenticate header,
+            # we skip validating input via initialize (which might succeed without authentication
+            # if the server only restricts specific tools) and proceed directly to discovery.
             if self.auth_header:
                 return await self.async_step_auth_discovery()
             try:
@@ -357,9 +360,15 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             except InvalidAuth as err:
                 self.auth_header = err.metadata
                 return await self.async_step_auth_discovery()
-            except Exception as err:  # pylint: disable=broad-except # noqa: BLE001
-                _LOGGER.error("Reauthentication connection failed: %s", err)
+            except TimeoutConnectError:
+                return self.async_abort(reason="timeout_connect")
+            except CannotConnect:
                 return self.async_abort(reason="cannot_connect")
+            except MissingCapabilities:
+                return self.async_abort(reason="missing_capabilities")
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception during reauth")
+                return self.async_abort(reason="unknown")
             return self.async_abort(reason="reauth_successful")
 
         self.flow_impl = await async_get_config_entry_implementation(  # type: ignore[assignment]

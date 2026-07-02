@@ -10,6 +10,7 @@ import respx
 
 from homeassistant import config_entries
 from homeassistant.components.mcp.auth import AuthenticateHeader
+from homeassistant.components.mcp.config_flow import MissingCapabilities
 from homeassistant.components.mcp.const import (
     CONF_AUTHORIZATION_URL,
     CONF_SCOPE,
@@ -997,15 +998,26 @@ async def test_reauth_flow_upgrade_to_oauth(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "expected_reason"),
+    [
+        (httpx.HTTPError("Connection failed"), "cannot_connect"),
+        (httpx.TimeoutException("Timeout"), "timeout_connect"),
+        (MissingCapabilities("Missing tools"), "missing_capabilities"),
+        (ValueError("Unexpected error"), "unknown"),
+    ],
+)
 @pytest.mark.usefixtures("current_request_with_host")
 @respx.mock
-async def test_reauth_flow_upgrade_to_oauth_cannot_connect(
+async def test_reauth_flow_upgrade_to_oauth_failures(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_mcp_client: Mock,
     credential: None,
+    side_effect: Exception,
+    expected_reason: str,
 ) -> None:
-    """Test reauth flow upgrading a no-auth entry to OAuth aborts if connection fails."""
+    """Test reauth flow upgrading a no-auth entry to OAuth aborts if connection/validation fails."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_URL: MCP_SERVER_URL},
@@ -1022,14 +1034,21 @@ async def test_reauth_flow_upgrade_to_oauth_cannot_connect(
     result = flows[0]
     assert result["step_id"] == "reauth_confirm"
 
-    # Mock validate_input raising TimeoutException/HTTPError during reauth_confirm
-    mock_mcp_client.side_effect = httpx.HTTPError("Connection failed")
+    if isinstance(side_effect, httpx.HTTPError | httpx.TimeoutException):
+        mock_mcp_client.side_effect = side_effect
+    # Mock initialize to raise other errors or return capability missing response
+    elif isinstance(side_effect, MissingCapabilities):
+        response = Mock()
+        response.capabilities.tools = False
+        mock_mcp_client.return_value.initialize.return_value = response
+    else:
+        mock_mcp_client.return_value.initialize.side_effect = side_effect
 
     # Click Submit on reauth_confirm
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == expected_reason
 
 
 @pytest.mark.usefixtures("current_request_with_host")

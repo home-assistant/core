@@ -150,6 +150,13 @@ class ModelContextProtocolTool(llm.Tool):
                     "The MCP server requires authentication"
                 ) from error
             raise HomeAssistantError(f"Error when calling tool: {error}") from error
+        except httpx.HTTPError as error:
+            _LOGGER.debug(
+                "Error communicating with MCP server when calling tool: %s", error
+            )
+            raise HomeAssistantError(
+                f"Error communicating with MCP server when calling tool: {error}"
+            ) from error
         return result.model_dump(exclude_unset=True, exclude_none=True)
 
 
