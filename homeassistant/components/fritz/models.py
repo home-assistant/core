@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import NotRequired, TypedDict
 
 from homeassistant.util import dt as dt_util
@@ -84,11 +84,13 @@ class FritzDevice:
     _name: str
     _ssid: str | None
     _wan_access: bool | None
+    _wan_access_skip_until: datetime | None
 
     def __init__(self, mac: str, dev_info: Device, consider_home: float) -> None:
         """Initialize device info."""
         self._mac = mac
         self._last_activity = None
+        self._wan_access_skip_until = None
         self.update(dev_info, consider_home)
 
     def update(self, dev_info: Device, consider_home: float) -> None:
@@ -113,7 +115,21 @@ class FritzDevice:
         self._connection_type = dev_info.connection_type
         self._ip_address = dev_info.ip_address
         self._ssid = dev_info.ssid
-        self._wan_access = dev_info.wan_access
+        if (
+            self._wan_access_skip_until is not None
+            and utc_point_in_time < self._wan_access_skip_until
+            and isinstance(dev_info.wan_access, bool)
+            and dev_info.wan_access != self._wan_access
+        ):
+            # After a manual wan_access toggle, skip polled bool updates that
+            # differ from the verified state. get_hosts_attributes can
+            # return stale X_AVM-DE_WANAccess for ~10s after a change.
+            # Non-bool values (None for unknown/unavailable) always propagate
+            # and end the skip window so device removal isn't suppressed.
+            pass
+        else:
+            self._wan_access_skip_until = None
+            self._wan_access = dev_info.wan_access
 
     @property
     def connected_to(self) -> str:
@@ -164,6 +180,7 @@ class FritzDevice:
     def wan_access(self, allowed: bool) -> None:
         """Set device wan access."""
         self._wan_access = allowed
+        self._wan_access_skip_until = dt_util.utcnow() + timedelta(seconds=60)
 
 
 class SwitchInfo(TypedDict):
