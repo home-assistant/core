@@ -8,6 +8,7 @@ from typing import Any
 
 from .const import CLI_2_DOCKER_IMAGE, CORE_PROJECT_ID, INTEGRATIONS_DIR
 from .error import ExitApp
+from .upload import generate_upload_data
 from .util import (
     flatten_translations,
     get_lokalise_token,
@@ -144,6 +145,9 @@ def run() -> None:
     DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
     run_download_docker()
+
+    # English is this checkout's strings.json, not the dev-sourced Lokalise round-trip.
+    save_json(DOWNLOAD_DIR / "en.json", generate_upload_data())
 
     delete_old_translations()
 
