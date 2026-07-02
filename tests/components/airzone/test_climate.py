@@ -220,7 +220,9 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
         HVACMode.OFF,
     ]
     assert state.attributes.get(ATTR_MAX_TEMP) == 32.2
-    assert state.attributes.get(ATTR_MIN_TEMP) == 17.8
+    assert (
+        state.attributes.get(ATTR_MIN_TEMP) == 10.0
+    )  # heat_temp_min (50°F), not cooling floor (64°F)
     assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
     assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 25.0
     assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 22.8
