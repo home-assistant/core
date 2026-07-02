@@ -48,20 +48,24 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            normalized_url = str(URL(user_input[CONF_URL]).origin())
-            user_input[CONF_URL] = normalized_url
-
-            self._async_abort_entries_match({CONF_URL: normalized_url})
-
             try:
-                await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception during Gatus setup")
-                errors["base"] = "unknown"
+                normalized_url = str(URL(user_input[CONF_URL]).origin())
+            except ValueError:
+                errors["base"] = "invalid_url"
             else:
-                return self.async_create_entry(title="Gatus", data=user_input)
+                user_input[CONF_URL] = normalized_url
+
+                self._async_abort_entries_match({CONF_URL: normalized_url})
+
+                try:
+                    await validate_input(self.hass, user_input)
+                except CannotConnect:
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception during Gatus setup")
+                    errors["base"] = "unknown"
+                else:
+                    return self.async_create_entry(title="Gatus", data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
