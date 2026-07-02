@@ -1,5 +1,6 @@
 """Test the Whirlpool Sixth Sense init."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
@@ -7,14 +8,16 @@ import pytest
 from whirlpool.auth import AccountLockedError
 from whirlpool.backendselector import Brand, Region
 
+from homeassistant.components.whirlpool import STATE_REFRESH_INTERVAL
 from homeassistant.components.whirlpool.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from . import init_integration, init_integration_with_entry
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup(
@@ -146,3 +149,36 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
+
+
+async def test_periodic_data_refresh(
+    hass: HomeAssistant, mock_appliances_manager_api: MagicMock
+) -> None:
+    """Test appliance data is re-fetched periodically as a push fallback."""
+    await init_integration(hass)
+    manager = mock_appliances_manager_api.return_value
+    manager.fetch_all_data.assert_not_called()
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + STATE_REFRESH_INTERVAL + timedelta(seconds=1)
+    )
+    await hass.async_block_till_done()
+    manager.fetch_all_data.assert_called_once()
+
+
+async def test_periodic_data_refresh_stops_after_unload(
+    hass: HomeAssistant, mock_appliances_manager_api: MagicMock
+) -> None:
+    """Test the periodic refresh is cancelled when the entry is unloaded."""
+    entry = await init_integration(hass)
+    manager = mock_appliances_manager_api.return_value
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    manager.fetch_all_data.reset_mock()
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + STATE_REFRESH_INTERVAL + timedelta(seconds=1)
+    )
+    await hass.async_block_till_done()
+    manager.fetch_all_data.assert_not_called()
