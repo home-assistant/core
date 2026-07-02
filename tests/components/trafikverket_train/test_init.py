@@ -242,7 +242,7 @@ async def test_migrate_entry_from_future_version_fails(
     ],
 )
 async def test_migrate_entry_fails(
-    hass: HomeAssistant, side_effect: Exception, state: ConfigEntryState
+    hass: HomeAssistant, side_effect: type[Exception], state: ConfigEntryState
 ) -> None:
     """Test migrate entry fails."""
     entry = MockConfigEntry(
