@@ -92,14 +92,14 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
         """Return the current preset mode."""
         speed = self.coordinator.data.state.data.mode.speed
         if speed in PRESET_MODES:
-            return str(speed)
+            return speed
         return None
 
     @override
     @property
     def preset_modes(self) -> list[str] | None:
         """Return the list of available preset modes."""
-        return [str(s) for s in PRESET_MODES]
+        return list(PRESET_MODES)
 
     async def _async_send_command(
         self, speed: Speed, flow_in: bool, flow_out: bool
