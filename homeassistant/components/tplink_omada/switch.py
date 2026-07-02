@@ -8,6 +8,7 @@ from typing import Any, override
 from tplink_omada_client import (
     GatewayPortSettings,
     OmadaSiteClient,
+    OmadaVpnPolicy,
     PortProfileOverrides,
     SwitchPortSettings,
 )
@@ -35,7 +36,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OmadaConfigEntry
 from .controller import OmadaGatewayCoordinator, OmadaSwitchPortCoordinator
-from .coordinator import OmadaCoordinator
+from .coordinator import OmadaCoordinator, OmadaVpnPoliciesCoordinator
 from .entity import OmadaDeviceEntity
 
 PARALLEL_UPDATES = 0
@@ -118,6 +119,33 @@ async def async_setup_entry(
         ),
         entity_callback=_create_gateway_port_entities,
     )
+
+    # Set up VPN policy switches, assigned to the gateway device
+    gateway_coordinator = controller.gateway_coordinator
+    if gateway_coordinator:
+        vpn_coordinator = controller.vpn_policies_coordinator
+        gateway = next(iter(gateway_coordinator.data.values()))
+        known_policy_ids: set[str] = set()
+
+        @callback
+        def _async_add_vpn_entities() -> None:
+            new_policies = [
+                policy
+                for policy_id, policy in vpn_coordinator.data.items()
+                if policy_id not in known_policy_ids
+            ]
+            if not new_policies:
+                return
+            known_policy_ids.update(policy.policy_id for policy in new_policies)
+            async_add_entities(
+                OmadaVpnSwitch(vpn_coordinator, gateway, policy)
+                for policy in new_policies
+            )
+
+        config_entry.async_on_unload(
+            vpn_coordinator.async_add_listener(_async_add_vpn_entities)
+        )
+        _async_add_vpn_entities()
 
 
 def _get_switch_port_base_name(port: OmadaSwitchPortDetails) -> str:
@@ -347,3 +375,51 @@ class OmadaDevicePortSwitchEntity[
         """Handle updated data from the coordinator."""
         self._do_update()
         self.async_write_ha_state()
+
+
+class OmadaVpnSwitch(
+    OmadaDeviceEntity[OmadaVpnPoliciesCoordinator],
+    SwitchEntity,
+):
+    """Switch entity for enabling and disabling an Omada VPN policy."""
+
+    _attr_translation_key = "vpn_policy"
+
+    def __init__(
+        self,
+        coordinator: OmadaVpnPoliciesCoordinator,
+        gateway: OmadaGateway,
+        policy: OmadaVpnPolicy,
+    ) -> None:
+        """Initialize the VPN policy switch."""
+        super().__init__(coordinator, gateway)
+        self._policy_id = policy.policy_id
+        self._attr_unique_id = f"vpn_{policy.unique_id}"
+        self._attr_name = policy.name
+        self._attr_extra_state_attributes = {
+            "vpn_type": policy.vpn_type_name,
+            "category": policy.category.value,
+        }
+
+    @override
+    @property
+    def available(self) -> bool:
+        """Return true if the VPN policy still exists on the controller."""
+        return super().available and self._policy_id in self.coordinator.data
+
+    @override
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the VPN policy is enabled."""
+        policy = self.coordinator.data.get(self._policy_id)
+        return policy.enabled if policy else None
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable the VPN policy."""
+        await self.coordinator.set_vpn_policy_enabled(self._policy_id, True)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disable the VPN policy."""
+        await self.coordinator.set_vpn_policy_enabled(self._policy_id, False)
