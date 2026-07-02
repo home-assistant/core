@@ -300,6 +300,38 @@ def test_device_selector_schema_error(schema) -> None:
         (
             {
                 "filter": [
+                    {
+                        "device": {
+                            "manufacturer": "mock-manuf",
+                            "model": "mock-model",
+                            "model_id": "mock-model_id",
+                        }
+                    }
+                ]
+            },
+            ("light.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
+        (
+            {
+                "filter": [
+                    {
+                        "domain": "binary_sensor",
+                        "device": {
+                            "integration": "zha",
+                            "manufacturer": "mock-manuf",
+                            "model": "mock-model",
+                            "model_id": "mock-model_id",
+                        },
+                    },
+                    {
+                        "device": {
+                            "integration": "matter",
+                            "manufacturer": "other-mock-manuf",
+                            "model": "other-mock-model",
+                            "model_id": "other-mock-model_id",
+                        },
+                    },
                     {"unit_of_measurement": "baguette"},
                 ]
             },
@@ -341,6 +373,10 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
         {"unit_of_measurement": ["currywurst", "bratwurst"]},
         # Invalid unit_of_measurement
         {"filter": [{"unit_of_measurement": 42}]},
+        # Device properties must be grouped under the device key
+        {"filter": [{"manufacturer": "mock-manuf"}]},
+        {"filter": [{"model": "mock-model"}]},
+        {"filter": [{"model_id": "mock-model_id"}]},
         # reorder can only be used when multiple is true
         {"reorder": True},
         {"reorder": True, "multiple": False},
