@@ -15,6 +15,7 @@ import pytest
 from homeassistant.components import hue
 from homeassistant.components.hue.v1 import sensor_base as hue_sensor_base
 from homeassistant.components.hue.v2.device import async_setup_devices
+from homeassistant.components.hue.v2.scene_activity import HueSceneActivityManager
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -62,6 +63,8 @@ def create_mock_bridge(hass: HomeAssistant, api_version: int = 1) -> Mock:
             bridge.config_entry.runtime_data = bridge
         if bridge.api_version == 2:
             await async_setup_devices(bridge)
+            bridge.scene_activity_manager = HueSceneActivityManager(hass, bridge.api)
+            bridge.scene_activity_manager.start()
         return True
 
     bridge.async_initialize_bridge = async_initialize_bridge
