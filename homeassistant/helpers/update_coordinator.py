@@ -673,7 +673,8 @@ def _async_get_restore_store_manager(hass: HomeAssistant) -> _RestoreStoreManage
 class _RestoreStoreManager:
     """Manage the single store holding the data of all restore coordinators.
 
-    The store maps config entry id to a map of storage key to coordinator data.
+    The store maps a scope, a config entry id or an integration domain, to a map
+    of storage key to coordinator data.
     """
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -692,26 +693,26 @@ class _RestoreStoreManager:
             self._data = stored
 
     @callback
-    def async_get(self, entry_id: str, storage_key: str) -> Any:
+    def async_get(self, scope: str, storage_key: str) -> Any:
         """Return the data stored for a coordinator, or None if nothing is stored."""
-        return self._data.get(entry_id, {}).get(storage_key)
+        return self._data.get(scope, {}).get(storage_key)
 
     @callback
     def async_schedule_save(
-        self, entry_id: str, storage_key: str, data: Any, delay: float
+        self, scope: str, storage_key: str, data: Any, delay: float
     ) -> None:
         """Schedule saving the data of a coordinator."""
-        self._data.setdefault(entry_id, {})[storage_key] = data
+        self._data.setdefault(scope, {})[storage_key] = data
         self._store.async_delay_save(self._data_to_save, delay)
 
     @callback
-    def async_remove_data(self, entry_id: str, storage_key: str) -> None:
+    def async_remove_data(self, scope: str, storage_key: str) -> None:
         """Remove the data stored for a coordinator."""
-        if storage_key not in self._data.get(entry_id, {}):
+        if storage_key not in self._data.get(scope, {}):
             return
-        del self._data[entry_id][storage_key]
-        if not self._data[entry_id]:
-            del self._data[entry_id]
+        del self._data[scope][storage_key]
+        if not self._data[scope]:
+            del self._data[scope]
         self._store.async_delay_save(self._data_to_save)
 
     @callback
@@ -736,7 +737,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     Data is saved after each successful refresh and after async_set_updated_data,
     batched by save_delay. The data of all restore coordinators is kept in a single
     store; storage_key only needs to be unique within the config entry. Stored data
-    is removed when the config entry is removed.
+    is removed when the config entry is removed if one was provided.
     """
 
     def __init__(
@@ -744,7 +745,8 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         hass: HomeAssistant,
         logger: logging.Logger,
         *,
-        config_entry: config_entries.ConfigEntry,
+        config_entry: config_entries.ConfigEntry | None,
+        domain: str | None = None,
         name: str,
         storage_key: str,
         update_interval: timedelta | None = None,
@@ -755,6 +757,13 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         save_delay: float = RESTORE_SAVE_DELAY,
     ) -> None:
         """Initialize the restoring data update coordinator."""
+        if config_entry is not None:
+            # Entry ids (uppercase ULIDs) cannot collide with domains (lowercase)
+            storage_scope = config_entry.entry_id
+        elif domain is not None:
+            storage_scope = domain
+        else:
+            raise ValueError("config_entry or domain is required")
         super().__init__(
             hass,
             logger,
@@ -768,7 +777,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         )
         self._save_delay = save_delay
         self._storage_key = storage_key
-        self._entry_id = config_entry.entry_id
+        self._storage_scope = storage_scope
         self._store_manager = _async_get_restore_store_manager(hass)
 
     async def _async_setup(self) -> None:
@@ -783,7 +792,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         Called automatically by async_config_entry_first_refresh. Coordinators not
         driven by that method must call this once before their first update.
         """
-        stored = self._store_manager.async_get(self._entry_id, self._storage_key)
+        stored = self._store_manager.async_get(self._storage_scope, self._storage_key)
         if stored is not None:
             self.data = stored
 
@@ -791,7 +800,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     def _schedule_save(self) -> None:
         """Schedule saving the current data to storage."""
         self._store_manager.async_schedule_save(
-            self._entry_id, self._storage_key, self.data, self._save_delay
+            self._storage_scope, self._storage_key, self.data, self._save_delay
         )
 
     @callback
@@ -815,7 +824,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
 
         Safe to call when nothing is stored.
         """
-        self._store_manager.async_remove_data(self._entry_id, self._storage_key)
+        self._store_manager.async_remove_data(self._storage_scope, self._storage_key)
 
 
 class BaseCoordinatorEntity[

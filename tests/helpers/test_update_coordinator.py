@@ -1381,6 +1381,8 @@ async def test_callbacks_does_not_stop_coordinator(
 
 
 RESTORE_KEY = "test_restore_coordinator"
+# Storage bucket used for coordinators created without a config entry
+RESTORE_DOMAIN = "test_domain"
 
 
 @pytest.fixture
@@ -1392,21 +1394,23 @@ def restore_entry() -> MockConfigEntry:
 async def set_stored_data(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-    entry: MockConfigEntry,
+    entry: MockConfigEntry | None,
     data: Any,
 ) -> None:
     """Seed the restore coordinator store and load it, as bootstrap would."""
+    bucket = entry.entry_id if entry else RESTORE_DOMAIN
     hass_storage[update_coordinator.RESTORE_STORAGE_KEY] = {
         "version": 1,
-        "data": {entry.entry_id: {RESTORE_KEY: data}},
+        "data": {bucket: {RESTORE_KEY: data}},
     }
     await update_coordinator.async_load(hass)
 
 
-def get_stored_data(hass_storage: dict[str, Any], entry: MockConfigEntry) -> Any:
+def get_stored_data(hass_storage: dict[str, Any], entry: MockConfigEntry | None) -> Any:
     """Return the stored data of the coordinator under test."""
     store_data = hass_storage[update_coordinator.RESTORE_STORAGE_KEY]["data"]
-    return store_data[entry.entry_id][RESTORE_KEY]
+    bucket = entry.entry_id if entry else RESTORE_DOMAIN
+    return store_data[bucket][RESTORE_KEY]
 
 
 async def flush_restore_store(hass: HomeAssistant) -> None:
@@ -1417,19 +1421,22 @@ async def flush_restore_store(hass: HomeAssistant) -> None:
 def get_restore_crd(
     hass: HomeAssistant,
     *,
-    config_entry: config_entries.ConfigEntry,
+    config_entry: config_entries.ConfigEntry | None,
+    domain: str | None = None,
     storage_key: str = RESTORE_KEY,
     update_method: Callable[[], Awaitable[Any]] | None = None,
     save_delay: float = 0,
 ) -> update_coordinator.RestoreDataUpdateCoordinator[Any]:
     """Make a restore coordinator with its config entry ready for first refresh."""
-    config_entry._async_set_state(
-        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, "For testing"
-    )
+    if config_entry:
+        config_entry._async_set_state(
+            hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, "For testing"
+        )
     return update_coordinator.RestoreDataUpdateCoordinator[Any](
         hass,
         _LOGGER,
         config_entry=config_entry,
+        domain=domain,
         name="test",
         storage_key=storage_key,
         update_method=update_method,
@@ -1877,3 +1884,80 @@ async def test_async_restore_data_skips_when_data_present(
     assert crd.data == {"value": "pushed"}
 
     await flush_restore_store(hass)
+
+
+async def test_restore_without_config_entry(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test stored data is restored for a coordinator without a config entry."""
+    await set_stored_data(hass, hass_storage, None, {"value": "stored"})
+    crd = get_restore_crd(hass, config_entry=None, domain=RESTORE_DOMAIN)
+
+    assert crd.data is None
+    crd.async_restore_data()
+    assert crd.data == {"value": "stored"}
+
+
+async def test_persist_without_config_entry(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a coordinator without a config entry persists refreshed data."""
+
+    async def update_method() -> dict[str, Any]:
+        return {"value": "fetched"}
+
+    crd = get_restore_crd(
+        hass, config_entry=None, domain=RESTORE_DOMAIN, update_method=update_method
+    )
+    await crd.async_refresh()
+    await flush_restore_store(hass)
+
+    assert hass_storage[update_coordinator.RESTORE_STORAGE_KEY]["data"] == {
+        RESTORE_DOMAIN: {RESTORE_KEY: {"value": "fetched"}}
+    }
+
+
+async def test_entry_removal_keeps_data_without_config_entry(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test removing a config entry keeps data stored without a config entry."""
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+
+    hass_storage[update_coordinator.RESTORE_STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            entry.entry_id: {RESTORE_KEY: {"value": "entry"}},
+            RESTORE_DOMAIN: {RESTORE_KEY: {"value": "no entry"}},
+        },
+    }
+    await update_coordinator.async_load(hass)
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    await flush_restore_store(hass)
+
+    assert hass_storage[update_coordinator.RESTORE_STORAGE_KEY]["data"] == {
+        RESTORE_DOMAIN: {RESTORE_KEY: {"value": "no entry"}}
+    }
+
+
+async def test_remove_stored_data_without_config_entry(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test async_remove_stored_data for a coordinator without a config entry."""
+    await set_stored_data(hass, hass_storage, None, {"value": "stored"})
+    crd = get_restore_crd(hass, config_entry=None, domain=RESTORE_DOMAIN)
+
+    crd.async_remove_stored_data()
+    await flush_restore_store(hass)
+    assert hass_storage[update_coordinator.RESTORE_STORAGE_KEY]["data"] == {}
+
+
+async def test_no_config_entry_requires_domain(hass: HomeAssistant) -> None:
+    """Test a coordinator without a config entry must be given a domain."""
+    with pytest.raises(ValueError, match="config_entry or domain is required"):
+        get_restore_crd(hass, config_entry=None)
