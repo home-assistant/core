@@ -657,6 +657,7 @@ FLOWS = {
         "ruuvitag_ble",
         "rympro",
         "sabnzbd",
+        "saj",
         "samsung_infrared",
         "samsungtv",
         "sanix",

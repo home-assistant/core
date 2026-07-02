@@ -2,7 +2,7 @@
 
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from pyHomee.const import AttributeType, NodeProfile
 from pyHomee.model import HomeeAttribute, HomeeNode
@@ -166,6 +166,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         )
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return the cover's position."""
         # Translate the homee position values to HA's 0-100 scale
@@ -182,6 +183,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         return None
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int | None:
         """Return the cover's tilt position."""
         # Translate the homee position values to HA's 0-100 scale
@@ -200,6 +202,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         return None
 
     @property
+    @override
     def is_opening(self) -> bool | None:
         """Return the opening status of the cover."""
         if self._open_close_attribute is not None:
@@ -212,6 +215,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         return None
 
     @property
+    @override
     def is_closing(self) -> bool | None:
         """Return the closing status of the cover."""
         if self._open_close_attribute is not None:
@@ -224,6 +228,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         return None
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
         if (
@@ -248,6 +253,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
         return attribute.get_value() == attribute.minimum
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         assert self._open_close_attribute is not None
@@ -260,6 +266,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
                 self._open_close_attribute, HomeeCoverState.CLOSED
             )
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         assert self._open_close_attribute is not None
@@ -272,6 +279,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
                 self._open_close_attribute, HomeeCoverState.OPEN
             )
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         if CoverEntityFeature.SET_POSITION in self.supported_features:
@@ -287,6 +295,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
                 await self.async_set_homee_value(attribute, homee_position)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         if self._open_close_attribute is not None:
@@ -294,6 +303,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
                 self._open_close_attribute, HomeeCoverState.STOPPED
             )
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         if (
@@ -306,6 +316,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
             else:
                 await self.async_set_homee_value(slat_attribute, HomeeSlatState.CLOSED)
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         if (
@@ -318,6 +329,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
             else:
                 await self.async_set_homee_value(slat_attribute, HomeeSlatState.OPEN)
 
+    @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
         if (
@@ -327,6 +339,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         ) is not None:
             await self.async_set_homee_value(slat_attribute, HomeeSlatState.STOPPED)
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         if CoverEntityFeature.SET_TILT_POSITION in self.supported_features:

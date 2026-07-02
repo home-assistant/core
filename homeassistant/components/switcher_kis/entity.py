@@ -1,7 +1,7 @@
 """Base class for Switcher entities."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioswitcher.api import SwitcherApi
 from aioswitcher.api.messages import SwitcherBaseResponse
@@ -30,6 +30,7 @@ class SwitcherEntity(CoordinatorEntity[SwitcherDataUpdateCoordinator]):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_data()

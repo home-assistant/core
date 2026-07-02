@@ -9,12 +9,11 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     CONF_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
+    UnitOfDensity,
+    UnitOfRatio,
 )
 from homeassistant.core import HomeAssistant
 
@@ -24,7 +23,6 @@ from tests.components.common import (
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     parametrize_numerical_state_value_changed_trigger_states,
     parametrize_numerical_state_value_crossed_threshold_trigger_states,
@@ -34,10 +32,10 @@ from tests.components.common import (
 )
 
 _UGM3_UNIT_ATTRIBUTES = {
-    ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    ATTR_UNIT_OF_MEASUREMENT: UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
 }
-_PPB_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION}
-_PPM_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_MILLION}
+_PPB_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: UnitOfRatio.PARTS_PER_BILLION}
+_PPM_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: UnitOfRatio.PARTS_PER_MILLION}
 
 
 @pytest.fixture
@@ -52,50 +50,6 @@ async def target_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "sensor")
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "air_quality.gas_detected",
-        "air_quality.gas_cleared",
-        "air_quality.co_detected",
-        "air_quality.co_cleared",
-        "air_quality.smoke_detected",
-        "air_quality.smoke_cleared",
-        "air_quality.co_changed",
-        "air_quality.co_crossed_threshold",
-        "air_quality.co2_changed",
-        "air_quality.co2_crossed_threshold",
-        "air_quality.pm1_changed",
-        "air_quality.pm1_crossed_threshold",
-        "air_quality.pm25_changed",
-        "air_quality.pm25_crossed_threshold",
-        "air_quality.pm4_changed",
-        "air_quality.pm4_crossed_threshold",
-        "air_quality.pm10_changed",
-        "air_quality.pm10_crossed_threshold",
-        "air_quality.ozone_changed",
-        "air_quality.ozone_crossed_threshold",
-        "air_quality.voc_changed",
-        "air_quality.voc_crossed_threshold",
-        "air_quality.voc_ratio_changed",
-        "air_quality.voc_ratio_crossed_threshold",
-        "air_quality.no_changed",
-        "air_quality.no_crossed_threshold",
-        "air_quality.no2_changed",
-        "air_quality.no2_crossed_threshold",
-        "air_quality.n2o_changed",
-        "air_quality.n2o_crossed_threshold",
-        "air_quality.so2_changed",
-        "air_quality.so2_crossed_threshold",
-    ],
-)
-async def test_air_quality_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the air quality triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
-
-
 _CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
 _PLAIN_CROSSED_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 _PPB_CROSSED_THRESHOLD = {
@@ -103,7 +57,7 @@ _PPB_CROSSED_THRESHOLD = {
         "type": "above",
         "value": {
             "number": 50,
-            "unit_of_measurement": CONCENTRATION_PARTS_PER_BILLION,
+            "unit_of_measurement": UnitOfRatio.PARTS_PER_BILLION,
         },
     }
 }
@@ -112,13 +66,12 @@ _UGM3_CROSSED_THRESHOLD = {
         "type": "above",
         "value": {
             "number": 50,
-            "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            "unit_of_measurement": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         },
     }
 }
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -173,7 +126,6 @@ async def test_air_quality_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -255,7 +207,6 @@ async def test_air_quality_trigger_binary_sensor_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -334,7 +285,6 @@ async def test_air_quality_trigger_binary_sensor_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -413,7 +363,6 @@ async def test_air_quality_trigger_binary_sensor_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -425,86 +374,86 @@ async def test_air_quality_trigger_binary_sensor_behavior_all(
         *parametrize_numerical_state_value_changed_trigger_states(
             "air_quality.co_changed",
             device_class=SensorDeviceClass.CO,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.co_crossed_threshold",
             device_class=SensorDeviceClass.CO,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_changed_trigger_states(
             "air_quality.ozone_changed",
             device_class=SensorDeviceClass.OZONE,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.ozone_crossed_threshold",
             device_class=SensorDeviceClass.OZONE,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_changed_trigger_states(
             "air_quality.voc_changed",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.voc_crossed_threshold",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_changed_trigger_states(
             "air_quality.no_changed",
             device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.no_crossed_threshold",
             device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_changed_trigger_states(
             "air_quality.no2_changed",
             device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.no2_crossed_threshold",
             device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_changed_trigger_states(
             "air_quality.so2_changed",
             device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.so2_crossed_threshold",
             device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         # With unit conversion (ppb base unit)
         *parametrize_numerical_state_value_changed_trigger_states(
             "air_quality.voc_ratio_changed",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
-            threshold_unit=CONCENTRATION_PARTS_PER_BILLION,
+            threshold_unit=UnitOfRatio.PARTS_PER_BILLION,
             unit_attributes=_PPB_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.voc_ratio_crossed_threshold",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
-            threshold_unit=CONCENTRATION_PARTS_PER_BILLION,
+            threshold_unit=UnitOfRatio.PARTS_PER_BILLION,
             unit_attributes=_PPB_UNIT_ATTRIBUTES,
         ),
         # Without unit conversion (single-unit device classes)
@@ -593,7 +542,6 @@ async def test_air_quality_trigger_sensor_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -605,44 +553,44 @@ async def test_air_quality_trigger_sensor_behavior_each(
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.co_crossed_threshold",
             device_class=SensorDeviceClass.CO,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.ozone_crossed_threshold",
             device_class=SensorDeviceClass.OZONE,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.voc_crossed_threshold",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.no_crossed_threshold",
             device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.no2_crossed_threshold",
             device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.so2_crossed_threshold",
             device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         # With unit conversion (ppb base unit)
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.voc_ratio_crossed_threshold",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
-            threshold_unit=CONCENTRATION_PARTS_PER_BILLION,
+            threshold_unit=UnitOfRatio.PARTS_PER_BILLION,
             unit_attributes=_PPB_UNIT_ATTRIBUTES,
         ),
         # Without unit conversion (single-unit device classes)
@@ -704,7 +652,6 @@ async def test_air_quality_trigger_sensor_crossed_threshold_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -716,44 +663,44 @@ async def test_air_quality_trigger_sensor_crossed_threshold_behavior_first(
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.co_crossed_threshold",
             device_class=SensorDeviceClass.CO,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.ozone_crossed_threshold",
             device_class=SensorDeviceClass.OZONE,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.voc_crossed_threshold",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.no_crossed_threshold",
             device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.no2_crossed_threshold",
             device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.so2_crossed_threshold",
             device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
-            threshold_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
         # With unit conversion (ppb base unit)
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.voc_ratio_crossed_threshold",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
-            threshold_unit=CONCENTRATION_PARTS_PER_BILLION,
+            threshold_unit=UnitOfRatio.PARTS_PER_BILLION,
             unit_attributes=_PPB_UNIT_ATTRIBUTES,
         ),
         # Without unit conversion (single-unit device classes)
@@ -815,7 +762,6 @@ async def test_air_quality_trigger_sensor_crossed_threshold_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_air_quality_trigger_unit_conversion_co_ppm_to_ugm3(
     hass: HomeAssistant,
 ) -> None:
@@ -830,7 +776,7 @@ async def test_air_quality_trigger_unit_conversion_co_ppm_to_ugm3(
         "0.5",
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.CO,
-            ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_MILLION,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfRatio.PARTS_PER_MILLION,
         },
     )
     await hass.async_block_till_done()
@@ -854,7 +800,7 @@ async def test_air_quality_trigger_unit_conversion_co_ppm_to_ugm3(
         "0.5",
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.CO,
-            ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_MILLION,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfRatio.PARTS_PER_MILLION,
         },
     )
     await hass.async_block_till_done()
@@ -866,7 +812,7 @@ async def test_air_quality_trigger_unit_conversion_co_ppm_to_ugm3(
         "1",
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.CO,
-            ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_MILLION,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfRatio.PARTS_PER_MILLION,
         },
     )
     await hass.async_block_till_done()

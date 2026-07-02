@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pysmlight.exceptions import SmlightAuthError
+from pysmlight.models import BleFeatures
 from pysmlight.sse import sseClient
 from pysmlight.web import ActionWrapper, CmdWrapper, Firmware, Info, Sensors
 import pytest
@@ -24,6 +25,29 @@ MOCK_HOST = "192.168.1.161"
 MOCK_HOSTNAME = "slzb-06p7.lan"
 MOCK_USERNAME = "test-user"
 MOCK_PASSWORD = "test-pass"
+
+
+@pytest.fixture(autouse=True)
+def mock_bluetooth_scanner() -> Generator[MagicMock]:
+    """Mock bluetooth scanner."""
+    with patch(
+        "homeassistant.components.smlight.bluetooth.async_register_scanner"
+    ) as mock_register:
+        yield mock_register
+
+
+@pytest.fixture(autouse=True)
+def mock_connect_scanner() -> Generator[MagicMock]:
+    """Mock bleak_smlight connect_scanner."""
+    with patch(
+        "homeassistant.components.smlight.bluetooth.connect_scanner"
+    ) as mock_connect:
+        client_data = MagicMock()
+        client_data.scanner = MagicMock()
+        client_data.client = MagicMock()
+        client_data.client.start = AsyncMock()
+        mock_connect.return_value = client_data
+        yield mock_connect
 
 
 @pytest.fixture
@@ -127,6 +151,7 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
 MOCK_ULTIMA = Info(
     MAC="AA:BB:CC:DD:EE:FF",
     model="SLZB-Ultima3",
+    ble=BleFeatures(ble_enabled=True, proxy_enabled=True),
 )
 
 

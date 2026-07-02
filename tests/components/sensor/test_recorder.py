@@ -2807,6 +2807,7 @@ async def test_compile_hourly_statistics_partially_unavailable(
         ("weight", "oz", 30),
     ],
 )
+@pytest.mark.timeout(25)
 async def test_compile_hourly_statistics_unavailable(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
