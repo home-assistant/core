@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from here_routing import (
     HERERoutingApi,
@@ -113,12 +113,14 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> HERETravelTimeOptionsFlow:
         """Get the options flow."""
         return HERETravelTimeOptionsFlow()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

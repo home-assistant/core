@@ -1,6 +1,6 @@
 """Support for MySensors sensors."""
 
-from typing import Any
+from typing import Any, override
 
 from awesomeversion import AwesomeVersion
 from mysensors import BaseAsyncGateway
@@ -259,16 +259,19 @@ class MyBatterySensor(MySensorNodeEntity, SensorEntity):
     _attr_force_update = True
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID for use in home assistant."""
         return f"{self.gateway_id}-{self.node_id}-battery"
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of this entity."""
         return f"{self.node_name} Battery"
 
     @callback
+    @override
     def _async_update_callback(self) -> None:
         """Update the controller with the latest battery level."""
         self._attr_native_value = self._node.battery_level
@@ -287,11 +290,13 @@ class MySensorsSensor(MySensorsChildEntity, SensorEntity):
             self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self._values.get(self.value_type)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity."""
         set_req = self.gateway.const.SetReq

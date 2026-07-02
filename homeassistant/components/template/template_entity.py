@@ -3,7 +3,7 @@
 from collections.abc import Callable, Mapping
 import contextlib
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from propcache.api import under_cached_property
 import voluptuous as vol
@@ -43,7 +43,7 @@ from homeassistant.helpers.template import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
+from .const import CONF_AVAILABILITY, CONF_PICTURE
 from .entity import AbstractTemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -161,7 +161,6 @@ class TemplateEntity(AbstractTemplateEntity):
         AbstractTemplateEntity.__init__(self, hass, config)
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
-        self._attr_extra_state_attributes = {}
         self._self_ref_update_count = 0
         self._attr_unique_id = unique_id
         self._preview_callback: (
@@ -177,7 +176,6 @@ class TemplateEntity(AbstractTemplateEntity):
             | None
         ) = None
         self._run_variables: ScriptVariables | dict
-        self._attribute_templates = config.get(CONF_ATTRIBUTES)
         self._availability_template = config.get(CONF_AVAILABILITY)
         self._run_variables = config.get(CONF_VARIABLES, {})
         self._blueprint_inputs = config.get("raw_blueprint_inputs")
@@ -191,6 +189,7 @@ class TemplateEntity(AbstractTemplateEntity):
                 self.entity_id = None  # type: ignore[assignment]
 
             @under_cached_property
+            @override
             def name(self) -> str:
                 """Name of this state."""
                 return "<None>"
@@ -258,6 +257,7 @@ class TemplateEntity(AbstractTemplateEntity):
         )
 
     @property
+    @override
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
         if self._blueprint_inputs is None:
@@ -283,6 +283,7 @@ class TemplateEntity(AbstractTemplateEntity):
 
         return TemplateStateFromEntityId(self.hass, entity_id)
 
+    @override
     def _render_script_variables(self) -> dict[str, Any]:
         """Render configured variables."""
         if isinstance(self._run_variables, dict):
@@ -292,6 +293,7 @@ class TemplateEntity(AbstractTemplateEntity):
             self.hass, {"this": self._get_this_variable()}
         )
 
+    @override
     def setup_state_template(
         self,
         attribute: str,
@@ -341,6 +343,7 @@ class TemplateEntity(AbstractTemplateEntity):
             none_on_template_error=False,
         )
 
+    @override
     def setup_template(
         self,
         option: str,
@@ -564,11 +567,20 @@ class TemplateEntity(AbstractTemplateEntity):
             preview_callback(None, None, None, str(err))
         return self._call_on_remove_callbacks
 
+    @override
+    def restore_attribute(self, conf_attr: str, attr: str, restored_value: Any) -> None:
+        """Restore an attribute from the last value."""
+        setattr(self, attr, restored_value)
+
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+
         self._async_setup_templates()
 
         async_at_start(self.hass, self._async_template_startup)
+        await self.async_restore_last_state()
 
     async def async_update(self) -> None:
         """Call for forced update."""

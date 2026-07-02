@@ -1,6 +1,6 @@
 """Telegram bot notification entity."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.notify import (
     NotifyEntity,
@@ -47,6 +47,7 @@ class TelegramBotNotifyEntity(TelegramBotEntity, NotifyEntity):
         self.chat_id = subentry.data[CONF_CHAT_ID]
         self._attr_name = subentry.title
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
         kwargs: dict[str, Any] = {ATTR_TITLE: title}

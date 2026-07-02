@@ -39,7 +39,7 @@
 # name: test_switch[switch.tracker_device_id_123_buzzer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Tracker device_id_123 Buzzer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tracker device_id_123 Buzzer',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tracker_device_id_123_buzzer',
@@ -89,7 +89,7 @@
 # name: test_switch[switch.tracker_device_id_123_led-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Tracker device_id_123 LED',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tracker device_id_123 LED',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tracker_device_id_123_led',
@@ -139,7 +139,7 @@
 # name: test_switch[switch.tracker_device_id_123_live_tracking-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Tracker device_id_123 Live tracking',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tracker device_id_123 Live tracking',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tracker_device_id_123_live_tracking',

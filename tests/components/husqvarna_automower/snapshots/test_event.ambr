@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'alarm_mower_in_motion',
         'alarm_mower_lifted',
         'alarm_mower_stopped',
@@ -165,8 +165,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'date_time': HAFakeDatetime(2025, 7, 13, 15, 30, tzinfo=datetime.timezone.utc),
-      'event_type': 'wheel_motor_overloaded_rear_left',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'wheel_motor_overloaded_rear_left',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'alarm_mower_in_motion',
         'alarm_mower_lifted',
         'alarm_mower_stopped',
@@ -290,7 +290,7 @@
         'wrong_pin_code',
         'zone_generator_problem',
       ]),
-      'friendly_name': 'Test Mower 1 Message',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Message',
       'latitude': 49.0,
       'longitude': 10.0,
       'severity': <Severity.ERROR: 'error'>,

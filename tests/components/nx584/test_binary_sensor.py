@@ -206,6 +206,27 @@ def test_nx584_watcher_process_zone_event(mock_update) -> None:
 
 
 @mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
+def test_nx584_watcher_process_zone_event_updates_bypass(mock_update) -> None:
+    """Test the processing of zone events updates bypass state."""
+    zone = {"number": 1, "name": "foo", "state": True, "bypassed": False}
+    zones = {1: nx584.NX584ZoneSensor(zone, "motion")}
+    watcher = nx584.NX584Watcher(None, zones)
+
+    watcher._process_zone_event(
+        {"zone": 1, "zone_state": False, "zone_flags": ["Bypass"]}
+    )
+
+    assert zone["bypassed"]
+    assert not zone["state"]
+
+    watcher._process_zone_event({"zone": 1, "zone_state": True, "zone_flags": []})
+
+    assert not zone["bypassed"]
+    assert zone["state"]
+    assert mock_update.call_count == 2
+
+
+@mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
 def test_nx584_watcher_process_zone_event_missing_zone(mock_update) -> None:
     """Test the processing of zone events with missing zones."""
     watcher = nx584.NX584Watcher(None, {})

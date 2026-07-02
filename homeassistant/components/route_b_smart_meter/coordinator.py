@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 import logging
 import time
+from typing import override
 
 from momonga import Momonga, MomongaError
 
@@ -66,6 +67,7 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
 
         self.device_info_data = BRouteDeviceInfo()
 
+    @override
     async def _async_setup(self) -> None:
         def fetch() -> None:
             self.api.open()
@@ -103,6 +105,7 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
             total_consumption=self.api.get_measured_cumulative_energy(),
         )
 
+    @override
     async def _async_update_data(self) -> BRouteData:
         """Update data."""
         try:

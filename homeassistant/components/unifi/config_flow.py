@@ -10,7 +10,7 @@ from collections.abc import Mapping
 import operator
 import socket
 from types import MappingProxyType
-from typing import Any
+from typing import Any, override
 
 from aiounifi.interfaces.sites import Sites
 import voluptuous as vol
@@ -71,6 +71,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: UnifiConfigEntry,
     ) -> UnifiOptionsFlowHandler:
@@ -82,6 +83,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         self.config: dict[str, Any] = {}
         self.reauth_schema: dict[vol.Marker, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -208,6 +210,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:

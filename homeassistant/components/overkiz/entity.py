@@ -1,6 +1,6 @@
 """Parent class for every Overkiz device."""
 
-from typing import cast
+from typing import cast, override
 
 from pyoverkiz.enums import APIType, OverkizAttribute, OverkizCommandParam, OverkizState
 from pyoverkiz.models import Device
@@ -38,6 +38,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         self._attr_device_info = self.generate_device_info()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if self.device.available:
@@ -74,16 +75,18 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
             )
 
         manufacturer = (
-            self.executor.select_attribute(OverkizAttribute.CORE_MANUFACTURER)
-            or self.executor.select_state(OverkizState.CORE_MANUFACTURER_NAME)
+            self.device.attributes.get_value(OverkizAttribute.CORE_MANUFACTURER)
+            or self.device.states.get_value(OverkizState.CORE_MANUFACTURER_NAME)
             or self.coordinator.client.server_config.manufacturer
         )
 
         model = (
-            self.executor.select_state(
-                OverkizState.CORE_MODEL,
-                OverkizState.CORE_PRODUCT_MODEL_NAME,
-                OverkizState.IO_MODEL,
+            self.device.states.first_value(
+                [
+                    OverkizState.CORE_MODEL,
+                    OverkizState.CORE_PRODUCT_MODEL_NAME,
+                    OverkizState.IO_MODEL,
+                ]
             )
             or self.device.ui_class.value
         )
@@ -101,7 +104,9 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
             model=str(model),
             sw_version=cast(
                 str,
-                self.executor.select_attribute(OverkizAttribute.CORE_FIRMWARE_REVISION),
+                self.device.attributes.get_value(
+                    OverkizAttribute.CORE_FIRMWARE_REVISION
+                ),
             ),
             model_id=self.device.widget,
             hw_version=self.device.controllable_name,
@@ -126,8 +131,9 @@ class OverkizDescriptiveEntity(OverkizEntity):
         self._attr_unique_id = f"{super().unique_id}-{self.entity_description.key}"
 
         if self.device.identifier.is_sub_device:
-            # In case of sub device, use the provided label
-            # and append the name of the type of entity
-            self._attr_name = f"{self.device.label} {description.name}"
+            if isinstance(description.name, str):
+                self._attr_name = f"{self.device.label} {description.name}"
+            else:
+                self._attr_name = self.device.label
         elif isinstance(description.name, str):
             self._attr_name = description.name
