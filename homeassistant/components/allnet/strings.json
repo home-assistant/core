@@ -1,0 +1,71 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "already_in_progress": "Configuration is already in progress",
+      "cannot_connect": "Cannot connect to device",
+      "not_allnet_device": "Not an ALLNET device",
+      "reauth_successful": "Re-authentication was successful"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error",
+      "unsupported_firmware": "Device does not support the ALLNET JSON API. Check firmware version."
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "Password",
+          "username": "Username"
+        },
+        "description": "The ALLNET device at {host} rejected the stored credentials. Enter new credentials.",
+        "title": "Re-authenticate ALLNET"
+      },
+      "user": {
+        "data": {
+          "device_profile": "Device profile",
+          "host": "Host",
+          "password": "Password",
+          "use_ssl": "Use SSL",
+          "username": "Username",
+          "verify_ssl": "Verify SSL certificate"
+        },
+        "data_description": {
+          "device_profile": "Select the device type, or leave on Auto to detect automatically.",
+          "host": "The hostname or IP address of the ALLNET device.",
+          "password": "The password for the ALLNET web interface, if authentication is enabled.",
+          "use_ssl": "Enable this if the ALLNET device is configured for HTTPS.",
+          "username": "The username for the ALLNET web interface, if authentication is enabled.",
+          "verify_ssl": "Disable this to allow self-signed or untrusted SSL certificates."
+        },
+        "title": "Connect to ALLNET"
+      },
+      "zeroconf_confirm": {
+        "data": {
+          "device_profile": "Device profile",
+          "password": "Password",
+          "username": "Username",
+          "verify_ssl": "Verify SSL certificate"
+        },
+        "data_description": {
+          "device_profile": "Select the device type, or leave on Auto to detect automatically.",
+          "password": "Password if authentication is enabled on the device.",
+          "username": "Username if authentication is enabled on the device.",
+          "verify_ssl": "Disable this to allow self-signed or untrusted SSL certificates."
+        },
+        "description": "Do you want to add the ALLNET device **{name}** at {host}?",
+        "title": "Discovered ALLNET device"
+      }
+    }
+  },
+  "selector": {
+    "device_profile": {
+      "options": {
+        "auto": "Auto-detect",
+        "managed_switch": "Managed switch",
+        "msr": "MSR (measurement/control device)"
+      }
+    }
+  }
+}
