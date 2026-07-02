@@ -2,6 +2,7 @@
 
 from collections import OrderedDict
 from collections.abc import Mapping
+from ipaddress import IPv6Address, ip_address
 import json
 import logging
 from typing import Any, cast, override
@@ -72,6 +73,8 @@ from .manager import async_replace_device
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
 ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
 ERROR_INVALID_PASSWORD_AUTH = "invalid_auth"
+ERROR_CONNECTION = "connection_error"
+ERROR_RESOLVE = "resolve_error"
 _LOGGER = logging.getLogger(__name__)
 
 ZERO_NOISE_PSK = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
@@ -88,6 +91,17 @@ _BLUETOOTH_SCANNING_MODE_SELECTOR = SelectSelector(
         mode=SelectSelectorMode.DROPDOWN,
     )
 )
+
+
+def _format_host_for_display(host: str) -> str:
+    """Return host formatted for host:port display."""
+    try:
+        address = ip_address(host)
+    except ValueError:
+        return host
+    if isinstance(address, IPv6Address):
+        return f"[{host}]"
+    return host
 
 
 class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -292,8 +306,49 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         if response == ERROR_REQUIRES_ENCRYPTION_KEY:
             return await self.async_step_encryption_key()
         if response is not None:
+            if (
+                self.source == SOURCE_RECONFIGURE
+                and response in (ERROR_CONNECTION, ERROR_RESOLVE)
+                and self._async_reconfigure_connection_changed()
+            ):
+                return await self.async_step_reconfigure_confirm_unreachable()
             return await self._async_step_user_base(error=response)
         return await self._async_authenticate_or_add()
+
+    @callback
+    def _async_reconfigure_connection_changed(self) -> bool:
+        """Return if the reconfigure flow has a new host or port."""
+        assert self._host is not None
+        assert self._port is not None
+        return self._host != self._reconfig_entry.data.get(
+            CONF_HOST
+        ) or self._port != self._reconfig_entry.data.get(CONF_PORT, DEFAULT_PORT)
+
+    async def async_step_reconfigure_confirm_unreachable(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm saving reconfigured connection details without validation."""
+        assert self._host is not None
+        assert self._port is not None
+
+        if user_input is not None:
+            return self.async_update_reload_and_abort(
+                self._reconfig_entry,
+                data={
+                    **self._reconfig_entry.data,
+                    CONF_HOST: self._host,
+                    CONF_PORT: self._port,
+                },
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure_confirm_unreachable",
+            description_placeholders={
+                "host": _format_host_for_display(self._host),
+                "name": self._async_get_human_readable_name(),
+                "port": str(self._port),
+            },
+        )
 
     async def _async_authenticate_or_add(self) -> ConfigFlowResult:
         # Only show authentication step if device uses password
@@ -833,9 +888,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                     self._name = ex.received_name
             return ERROR_INVALID_ENCRYPTION_KEY
         except ResolveAPIError:
-            return "resolve_error"
+            return ERROR_RESOLVE
         except APIConnectionError:
-            return "connection_error"
+            return ERROR_CONNECTION
         finally:
             await cli.disconnect(force=True)
         self._device_mac = format_mac(self._device_info.mac_address)
@@ -883,7 +938,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         except InvalidAuthAPIError:
             return "invalid_auth"
         except APIConnectionError:
-            return "connection_error"
+            return ERROR_CONNECTION
         finally:
             await cli.disconnect(force=True)
 
