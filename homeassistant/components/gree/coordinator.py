@@ -19,6 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util.dt import utcnow
 
 from .const import (
+    DEFAULT_PORT,
     DISCOVERY_TIMEOUT,
     DISPATCH_DEVICE_DISCOVERED,
     DOMAIN,
@@ -32,11 +33,19 @@ _LOGGER = logging.getLogger(__name__)
 type GreeConfigEntry = ConfigEntry[GreeRuntimeData]
 
 
+async def async_create_and_bind_device(ip_address: str) -> Device:
+    """Create a Gree device at the given IP address and bind to it."""
+    device_info = DeviceInfo(ip_address, DEFAULT_PORT, "", "")
+    device = Device(device_info)
+    await device.bind()
+    return device
+
+
 @dataclass
 class GreeRuntimeData:
     """RUntime data for Gree Climate integration."""
 
-    discovery_service: DiscoveryService
+    discovery_service: DiscoveryService | None
     coordinators: list[DeviceDataUpdateCoordinator]
 
 
