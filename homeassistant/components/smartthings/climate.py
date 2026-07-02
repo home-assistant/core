@@ -63,6 +63,7 @@ OPERATING_STATE_TO_ACTION = {
 
 AC_MODE_TO_STATE = {
     "auto": HVACMode.AUTO,
+    "aIComfort": HVACMode.AUTO,
     "cool": HVACMode.COOL,
     "dry": HVACMode.DRY,
     "coolClean": HVACMode.COOL,
@@ -450,6 +451,20 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             tasks.append(self.async_turn_on())
 
         mode = STATE_TO_AC_MODE[hvac_mode]
+
+        # If new hvac_mode is HVACMode.AUTO and
+        # AirConditioner doesn't support "auto"
+        # but supports "aIComfort", change mode to "aIComfort"
+        if hvac_mode == HVACMode.AUTO:
+            supported_modes = (
+                self.get_attribute_value(
+                    Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
+                )
+                or []
+            )
+            if "auto" not in supported_modes and "aIComfort" in supported_modes:
+                mode = "aIComfort"
+
         # If new hvac_mode is HVAC_MODE_FAN_ONLY and
         # AirConditioner supports "wind" or "fan" mode,
         # the AirConditioner new mode has to be "wind" or "fan"
