@@ -13,8 +13,8 @@ from miio import (
     DeviceException,
     PowerStrip,
 )
-from miio.gateway.devices.switch import Switch
-from miio.powerstrip import PowerMode
+from miio.integrations.lumi.gateway.devices.switch import Switch
+from miio.integrations.zimi.powerstrip.powerstrip import PowerMode
 import voluptuous as vol
 
 from homeassistant.components.switch import (
