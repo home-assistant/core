@@ -312,6 +312,14 @@ class EsphomeAssistSatellite(
             # If the device supports announcements, it will return a config.
             _LOGGER.debug("Waiting for satellite configuration")
             await self._update_satellite_config()
+        else:
+            # The device may return a config, but we can't be sure and therefore
+            # shouldn't block.
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self._update_satellite_config(),
+                "esphome satellite configuration",
+            )
 
         if not (feature_flags & VoiceAssistantFeature.SPEAKER):
             # Will use media player for TTS/announcements

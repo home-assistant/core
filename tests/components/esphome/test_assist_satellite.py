@@ -40,7 +40,10 @@ from homeassistant.components.assist_satellite import (
 
 # pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
-from homeassistant.components.esphome.assist_satellite import VoiceAssistantUDPServer
+from homeassistant.components.esphome.assist_satellite import (
+    EsphomeAssistSatellite,
+    VoiceAssistantUDPServer,
+)
 from homeassistant.components.esphome.const import NO_WAKE_WORD
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
@@ -2428,3 +2431,49 @@ async def test_multichannel_audio_fallback_channel_0(
             await satellite.handle_audio(b"channel 0", b"channel 1")
             await satellite.handle_pipeline_stop(abort=False)
             await pipeline_finished.wait()
+
+
+async def test_get_configuration_without_announce_feature(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test getting the satellite configuration in the background without ANNOUNCE."""
+    expected_config = AssistSatelliteConfiguration(
+        available_wake_words=[
+            AssistSatelliteWakeWord("1234", "okay nabu", ["en"]),
+            AssistSatelliteWakeWord("5678", "hey jarvis", ["en"]),
+        ],
+        active_wake_words=["1234"],
+        max_active_wake_words=2,
+    )
+
+    original_update_satellite_config = EsphomeAssistSatellite._update_satellite_config
+    config_event = asyncio.Event()
+
+    async def update_satellite_config(self):
+        await original_update_satellite_config(self)
+        config_event.set()
+
+    EsphomeAssistSatellite._update_satellite_config = update_satellite_config
+
+    mock_client.get_voice_assistant_configuration.return_value = expected_config
+
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    # Ensure the config has been sent.
+    # We have to wait because the config will be retrieved in a background task.
+    async with asyncio.timeout(1):
+        await config_event.wait()
+
+    actual_config = satellite.async_get_configuration()
+    assert actual_config == expected_config
