@@ -1113,6 +1113,9 @@
     "auth_failed_invalid_token": {
       "message": "Access token is invalid, please reauthenticate"
     },
+    "auth_failed_login_required": {
+      "message": "Login is no longer valid, please reauthenticate"
+    },
     "auth_failed_migration": {
       "message": "Failed to migrate to OAuth, please reauthenticate"
     },
