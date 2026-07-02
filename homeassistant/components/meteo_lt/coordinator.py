@@ -42,7 +42,9 @@ class MeteoLtUpdateCoordinator(DataUpdateCoordinator[MeteoLtForecast]):
     async def _async_update_data(self) -> MeteoLtForecast:
         """Fetch data from Meteo.lt API."""
         try:
-            forecast = await self.client.get_forecast(self.place_code)
+            forecast = await self.client.get_forecast(
+                self.place_code, include_warnings=False
+            )
         except aiohttp.ClientResponseError as err:
             raise UpdateFailed(
                 f"API returned error status {err.status}: {err.message}"

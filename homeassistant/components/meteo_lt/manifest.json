@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["meteo-lt-pkg==0.2.4"]
+  "requirements": ["meteo-lt-pkg==0.7.1"]
 }
