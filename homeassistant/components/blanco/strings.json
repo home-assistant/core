@@ -1,0 +1,63 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "access_not_granted": "Invalid authentication. Please grant access via the BLANCO UNIT app and try again. You must be within Bluetooth range of the device to grant access.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "device_type_not_supported": "This device type is currently not supported for smart home applications.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "serial": "Serial number",
+          "service_code": "Service code"
+        },
+        "data_description": {
+          "serial": "The serial number of your BLANCO device, found on the device label (e.g. 123456789012).",
+          "service_code": "The service code shown in the BLANCO UNIT app under Settings → Smart Home."
+        },
+        "description": "Please enter the serial number and the service code of your BLANCO device.\nMake sure that the RCA (secure connection link) has been activated beforehand in the UNIT app under Settings → Smart Home."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "co2_rest": {
+        "name": "CO2: Remaining capacity"
+      },
+      "error_count_critical": {
+        "name": "Critical errors"
+      },
+      "error_count_warning": {
+        "name": "Warnings"
+      },
+      "filter_rest": {
+        "name": "Filter: Remaining capacity"
+      },
+      "online": {
+        "name": "Last online"
+      },
+      "set_point_cooling": {
+        "name": "Temperature: Cold"
+      },
+      "set_point_heating": {
+        "name": "Temperature: Hot"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to the BLANCO API."
+    },
+    "token_expired": {
+      "message": "Authentication failed. Please reconfigure the integration."
+    },
+    "update_failed": {
+      "message": "Failed to update data from the BLANCO API."
+    }
+  }
+}
