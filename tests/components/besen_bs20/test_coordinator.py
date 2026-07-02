@@ -116,8 +116,6 @@ async def test_coordinator_start_failure_cleans_up(hass: HomeAssistant) -> None:
 
     assert client.removed is True
     assert client.calls == ["stop"]
-    assert client.removed is True
-    assert client.calls == ["start", "stop"]
 
 
 async def test_coordinator_commands_and_failures(hass: HomeAssistant) -> None:
