@@ -99,14 +99,9 @@ async def async_setup_entry(
     async_add_entities(cams)
 
 
-<<<<<<< HEAD
-class RingCam(RingEntity[RingGeneric], Camera):
-    """Representation of a Ring camera-capable device."""
-=======
 class RingCam(RingEntity[RingCameraDevice], Camera):
     """Representation of a Ring camera-capable device."""
 
->>>>>>> 54b65695178 (Use concrete Ring camera device types)
     def __init__(
         self,
         device: RingCameraDevice,
