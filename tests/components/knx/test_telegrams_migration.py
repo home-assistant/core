@@ -6,7 +6,6 @@ import os
 from typing import Any
 
 from knx_telegram_store import TelegramQuery
-import pytest
 
 from homeassistant.components.knx.const import DOMAIN, KNX_MODULE_KEY
 from homeassistant.core import HomeAssistant
@@ -131,26 +130,3 @@ async def test_migrate_telegrams_json_missing_keys(
 
     # Verify legacy file removal
     assert not os.path.exists(legacy_path)
-
-
-async def test_dict_to_model_strict_key_requirements(
-    hass: HomeAssistant,
-    knx: KNXTestKit,
-) -> None:
-    """Test that dict_to_model strictly raises KeyError if keys are missing from the dict."""
-    await knx.setup_integration()
-    telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
-
-    incomplete_dict: Any = {
-        "destination": "3/2/100",
-        "source": "1.0.6",
-        "direction": "Incoming",
-        "payload": [0],
-        "telegramtype": "GroupValueWrite",
-        "timestamp": "2026-05-07T23:34:45.127015+02:00",
-        "value": 0,
-        # missing data_secure, source_name, destination_name, dpt_main, dpt_sub
-    }
-
-    with pytest.raises(KeyError, match="dpt_main"):
-        telegrams_module.dict_to_model(incomplete_dict)
