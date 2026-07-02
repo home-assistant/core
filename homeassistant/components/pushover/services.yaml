@@ -1,0 +1,7 @@
+cancel:
+  fields:
+    tag:
+      required: false
+      example: "alarm"
+      selector:
+        text:
