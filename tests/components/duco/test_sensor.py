@@ -59,7 +59,7 @@ async def test_ventilation_related_sensors_created_for_supported_node_types(
         ventilation=replace(
             mock_sensor_nodes[0].ventilation,
             flow_lvl_tgt=42,
-            time_state_end=1700000400,
+            time_state_end=1700000459,
         ),
     )
     mock_duco_client.async_get_nodes.return_value = [
@@ -79,7 +79,7 @@ async def test_ventilation_related_sensors_created_for_supported_node_types(
 
     state = hass.states.get("sensor.living_state_end_time")
     assert state is not None
-    assert state.state == "2023-11-14T22:20:00+00:00"
+    assert state.state == "2023-11-14T22:20:59+00:00"
 
     assert hass.states.get("sensor.office_co2_ventilation_state") is None
     assert hass.states.get("sensor.office_co2_target_flow_level") is None
