@@ -217,8 +217,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
             update_entry = True
 
     # 2.2 Fix renaming of advanced #173016
-    if new_version == 2 and new_minor_version == 1:
-        new_minor_version = 2
+    if new_version == 2:
+        new_version = 3
 
         if "advanced_settings" in new_data:
             new_data[SECTION_ADDITIONAL_SETTINGS] = new_data.pop("advanced_settings")

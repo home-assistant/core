@@ -90,8 +90,8 @@ STEP_MANUAL_DATA_SCHEMA = STEP_DISCOVERY_DATA_SCHEMA.extend(
 class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ubiquiti airOS."""
 
-    VERSION = 2
-    MINOR_VERSION = 2
+    VERSION = 3
+    MINOR_VERSION = 1
 
     _discovery_task: asyncio.Task | None = None
 
