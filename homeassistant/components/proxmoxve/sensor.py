@@ -525,7 +525,8 @@ async def async_setup_entry(
             (node_data, vm_data)
             for node_data in coordinator.data.values()
             for vmid, vm_data in node_data.vms.items()
-            if (node_data.node["node"], vmid) in coordinator.known_vms
+            if vmid in coordinator.known_vms
+            and coordinator.vmid_node_map.get(vmid) == node_data.node["node"]
         ]
     )
     _async_add_new_containers(
@@ -533,7 +534,8 @@ async def async_setup_entry(
             (node_data, container_data)
             for node_data in coordinator.data.values()
             for vmid, container_data in node_data.containers.items()
-            if (node_data.node["node"], vmid) in coordinator.known_containers
+            if vmid in coordinator.known_containers
+            and coordinator.ctid_node_map.get(vmid) == node_data.node["node"]
         ]
     )
     _async_add_new_storages(
