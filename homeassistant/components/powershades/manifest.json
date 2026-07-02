@@ -1,0 +1,16 @@
+{
+  "domain": "powershades",
+  "name": "PowerShades Blinds",
+  "codeowners": ["@vemboy200"],
+  "config_flow": true,
+  "dependencies": ["network"],
+  "dhcp": [
+    { "hostname": "ps-*", "macaddress": "D83AF5*" },
+    { "registered_devices": true }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/powershades",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "quality_scale": "silver",
+  "requirements": ["pyowershades==0.1.1"]
+}

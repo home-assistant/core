@@ -5465,6 +5465,12 @@
         }
       }
     },
+    "powershades": {
+      "name": "PowerShades Blinds",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "prana": {
       "name": "Prana",
       "integration_type": "device",

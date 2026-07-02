@@ -1396,6 +1396,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/powerfox/ @klaasnicolaas
 /homeassistant/components/powerfox_local/ @klaasnicolaas
 /tests/components/powerfox_local/ @klaasnicolaas
+/homeassistant/components/powershades/ @vemboy200
+/tests/components/powershades/ @vemboy200
 /homeassistant/components/powerwall/ @bdraco @jrester @daniel-simpson
 /tests/components/powerwall/ @bdraco @jrester @daniel-simpson
 /homeassistant/components/prana/ @prana-dev-official

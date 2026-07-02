@@ -447,6 +447,7 @@ homeassistant.components.pooldose.*
 homeassistant.components.portainer.*
 homeassistant.components.powerfox.*
 homeassistant.components.powerfox_local.*
+homeassistant.components.powershades.*
 homeassistant.components.powerwall.*
 homeassistant.components.private_ble_device.*
 homeassistant.components.prometheus.*
