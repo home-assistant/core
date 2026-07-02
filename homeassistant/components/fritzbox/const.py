@@ -15,6 +15,9 @@ COLOR_TEMP_MODE: Final = "4"
 
 DEFAULT_HOST: Final = "fritz.box"
 DEFAULT_USERNAME: Final = "admin"
+# value in seconds
+# default is 10min, same as the default internal open window detection, max is 24h (per API)
+DEFAULT_OPEN_WINDOW_PERIOD: Final[float] = 600.0
 
 DOMAIN: Final = "fritzbox"
 
