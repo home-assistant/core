@@ -3,7 +3,6 @@
     "abort": {
       "already_configured": "This Electrolux account is already configured.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The provided credentials don't belong to the account the configuration entry was set up with originally."
     },
     "error": {
