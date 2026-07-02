@@ -27,8 +27,8 @@ from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.json import JsonObjectType
 
+from .auth import AuthenticateHeader
 from .const import DOMAIN
-from .types import AuthenticateHeader
 
 _LOGGER = logging.getLogger(__name__)
 

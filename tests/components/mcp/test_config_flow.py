@@ -9,7 +9,7 @@ import pytest
 import respx
 
 from homeassistant import config_entries
-from homeassistant.components.mcp.config_flow import AuthenticateHeader
+from homeassistant.components.mcp.auth import AuthenticateHeader
 from homeassistant.components.mcp.const import (
     CONF_AUTHORIZATION_URL,
     CONF_SCOPE,

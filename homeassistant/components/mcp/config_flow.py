@@ -23,9 +23,9 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
+from .auth import AuthenticateHeader
 from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_TOKEN_URL, DOMAIN
 from .coordinator import TokenManager, mcp_client
-from .types import AuthenticateHeader
 
 _LOGGER = logging.getLogger(__name__)
 
