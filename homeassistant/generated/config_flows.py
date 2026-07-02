@@ -12,6 +12,7 @@ FLOWS = {
         "group",
         "history_stats",
         "integration",
+        "local_timer_list",
         "min_max",
         "mold_indicator",
         "otp",

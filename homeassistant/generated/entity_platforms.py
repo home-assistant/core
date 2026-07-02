@@ -46,6 +46,7 @@ class EntityPlatforms(StrEnum):
     SWITCH = "switch"
     TEXT = "text"
     TIME = "time"
+    TIMER_LIST = "timer_list"
     TODO = "todo"
     TTS = "tts"
     UPDATE = "update"
