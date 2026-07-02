@@ -83,21 +83,12 @@ class V2CSelectEntity(V2CBaseEntity, SelectEntity):
         """Initialize the V2C select entity."""
         super().__init__(coordinator, description)
         self._attr_unique_id = f"{entry_id}_{description.key}"
-
-    @property
-    @override
-    def current_option(self) -> str | None:
-        """Return the current selected option."""
-        return self.entity_description.current_option_fn(self.data)
-
-    @property
-    @override
-    def options(self) -> list[str]:
-        """Return the list of available options."""
-        return self.entity_description.options
+        self._attr_current_option = description.current_option_fn(self.data)
+        self._attr_options = description.options
 
     @override
     async def async_select_option(self, option: str) -> None:
         """Update the setting."""
         await self.entity_description.update_fn(self.coordinator.evse, option)
         await self.coordinator.async_request_refresh()
+        self._attr_current_option = self.entity_description.current_option_fn(self.data)

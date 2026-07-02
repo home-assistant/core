@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'monophasic',
         'threephasic',
         'mixed',
@@ -45,8 +45,8 @@
 # name: test_select[select.evse_1_1_1_1_charge_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'EVSE 1.1.1.1 Charge mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'EVSE 1.1.1.1 Charge mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'monophasic',
         'threephasic',
         'mixed',
