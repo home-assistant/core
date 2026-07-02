@@ -922,6 +922,14 @@ class ConfigEntry[_DataT = Any]:
                         raise
                 if isinstance(exc, ConfigEntryNotReady):
                     return
+                self._async_set_state(
+                    hass,
+                    ConfigEntryState.SETUP_ERROR,
+                    error_reason,
+                    error_reason_translation_key,
+                    error_reason_translation_placeholders,
+                )
+                return
 
             setup_phase = SetupPhases.CONFIG_ENTRY_SETUP
         else:
