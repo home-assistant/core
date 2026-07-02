@@ -1,0 +1,88 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_wallbox": "No wallbox was found on this device.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your KEBA P40 wallbox.",
+          "password": "The password for the wallbox 'admin' web/REST user.",
+          "port": "The REST API port (default 8443)."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "session_active": { "name": "Charging session active" },
+      "vehicle_plugged": { "name": "Vehicle plugged in" }
+    },
+    "lock": {
+      "socket_lock": { "name": "Socket lock" }
+    },
+    "number": {
+      "charging_current_limit": { "name": "Charging current limit" }
+    },
+    "select": {
+      "phases": {
+        "name": "Phase mode",
+        "state": {
+          "single": "Single-phase",
+          "three": "Three-phase"
+        }
+      }
+    },
+    "sensor": {
+      "current_l1": { "name": "Current L1" },
+      "current_l2": { "name": "Current L2" },
+      "current_l3": { "name": "Current L3" },
+      "current_offered": { "name": "Current offered" },
+      "energy": { "name": "Energy" },
+      "error_code": { "name": "Error code" },
+      "max_current": { "name": "Maximum current" },
+      "power": { "name": "Power" },
+      "power_factor": { "name": "Power factor" },
+      "status": {
+        "name": "Status",
+        "state": {
+          "charging": "Charging",
+          "degraded": "Degraded",
+          "idle": "Idle",
+          "installer_mode": "Installer mode",
+          "offline": "Offline",
+          "ready_for_charging": "Ready for charging",
+          "recover_from_error": "Recovering from error",
+          "suspended": "Suspended",
+          "token_programming_mode": "Token programming mode",
+          "unavailable": "Unavailable",
+          "unrecoverable_error": "Unrecoverable error"
+        }
+      },
+      "temperature": { "name": "Temperature" },
+      "voltage_l1": { "name": "Voltage L1" },
+      "voltage_l2": { "name": "Voltage L2" },
+      "voltage_l3": { "name": "Voltage L3" }
+    },
+    "switch": {
+      "available": { "name": "Available" },
+      "charging": { "name": "Charging" }
+    }
+  },
+  "exceptions": {
+    "auth_failed": { "message": "Authentication with the KEBA P40 failed." },
+    "command_failed": { "message": "The KEBA P40 rejected the command." },
+    "update_failed": { "message": "Error communicating with the KEBA P40." }
+  }
+}

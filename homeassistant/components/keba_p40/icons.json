@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "select": {
+      "phases": {
+        "default": "mdi:sine-wave"
+      }
+    },
+    "switch": {
+      "charging": {
+        "default": "mdi:ev-station"
+      }
+    }
+  }
+}

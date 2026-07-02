@@ -385,6 +385,7 @@ FLOWS = {
         "justnimbus",
         "jvc_projector",
         "kaleidescape",
+        "keba_p40",
         "keenetic_ndms2",
         "kegtron",
         "keymitt_ble",
