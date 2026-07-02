@@ -7941,6 +7941,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "willow": {
+      "name": "Willow",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "wirelesstag": {
       "name": "Wireless Sensor Tags",
       "integration_type": "hub",

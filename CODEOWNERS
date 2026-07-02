@@ -2028,6 +2028,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/wiim/ @Linkplay2020
 /homeassistant/components/wilight/ @leofig-rj
 /tests/components/wilight/ @leofig-rj
+/homeassistant/components/willow/ @paxprz
+/tests/components/willow/ @paxprz
 /homeassistant/components/window/ @home-assistant/core
 /tests/components/window/ @home-assistant/core
 /homeassistant/components/wirelesstag/ @sergeymaysak
