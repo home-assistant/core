@@ -18,7 +18,7 @@ class RepairsFlowResult(data_entry_flow.FlowResult, total=False):
     """Typed result dict."""
 
     next_flow: tuple[FlowType, str]
-    result: ConfigEntry
+    result: ConfigEntry | None
 
 
 class RepairsFlow(
@@ -93,11 +93,16 @@ class RepairsFlow(
                 self.hass.config_entries.subentries.async_get(flow_id)
             )
             entry_id, _ = subentry_flow["handler"]
-        else:  # FlowType.OPTIONS_FLOW
+        else:  # flow_type is guaranteed to be FlowType.OPTIONS_FLOW due to the previous check
             config_flow = self.hass.config_entries.options.async_get(flow_id)
             entry_id = config_flow["handler"]
-        if entry_id is not None:
-            result["result"] = self.hass.config_entries.async_get_known_entry(entry_id)
+        # entry_id can be None for config_flow["source"] not in [SOURCE_REAUTH, SOURCE_RECONFIGURE]
+        # as these flows have not created a config entry yet and result["result"] is expected to be None
+        result["result"] = (
+            self.hass.config_entries.async_get_known_entry(entry_id)
+            if entry_id is not None
+            else None
+        )
         result["next_flow"] = next_flow
 
 
