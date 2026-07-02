@@ -19,6 +19,38 @@ PARALLEL_UPDATES = 1
 
 _CastTypeT = TypeVar("_CastTypeT", int, float, str)
 
+# Fully saturated colors (every channel 0 or 255) are the only ones the LED
+# renders accurately at all brightness levels; intermediate colors drift. They
+# are offered as named presets while the light's RGB picker stays available for
+# custom colors.
+NIGHT_LIGHT_PRESETS: dict[str, str] = {
+    "red": "#FF0000",
+    "green": "#00FF00",
+    "blue": "#0000FF",
+    "cyan": "#00FFFF",
+    "magenta": "#FF00FF",
+    "yellow": "#FFFF00",
+    "white": "#FFFFFF",
+}
+
+# The LR5 globe LED renders brightness non-monotonically (a firmware quirk also
+# present in the Whisker app), so LOW/MEDIUM/HIGH map to the percentages that
+# read as dim/medium/bright on the LR5 rather than the LR4 25/50/100 levels. The
+# light entity exposes the full continuous range.
+LR5_GLOBE_BRIGHTNESS: dict[str, int] = {"low": 10, "medium": 100, "high": 75}
+
+
+def _active_night_light_preset(robot: LitterRobot5) -> str | None:
+    """Return the preset matching the current color, or None for a custom color."""
+    if (color := robot.night_light_color) is None:
+        return None
+    # The device may echo an 8-digit #RRGGBBAA value; compare on the RGB part.
+    normalized = "#" + color.lstrip("#").upper()[:6]
+    return next(
+        (name for name, value in NIGHT_LIGHT_PRESETS.items() if value == normalized),
+        None,
+    )
+
 
 @dataclass(frozen=True, kw_only=True)
 class RobotSelectEntityDescription(
@@ -46,8 +78,11 @@ ROBOT_SELECT_MAP: dict[
             select_fn=lambda robot, opt: robot.set_wait_time(int(opt)),
         ),
     ),
-    (LitterRobot4, LitterRobot5): (
-        RobotSelectEntityDescription[LitterRobot4 | LitterRobot5, str](
+    # LR4 globe brightness uses the device's discrete BrightnessLevel enum
+    # (25/50/100). LR5 has its own globe_brightness below with eye-calibrated
+    # percentages, since LR5 firmware renders brightness non-monotonically.
+    LitterRobot4: (
+        RobotSelectEntityDescription[LitterRobot4, str](
             key="globe_brightness",
             translation_key="globe_brightness",
             current_fn=(
@@ -64,6 +99,8 @@ ROBOT_SELECT_MAP: dict[
                 )
             ),
         ),
+    ),
+    (LitterRobot4, LitterRobot5): (
         RobotSelectEntityDescription[LitterRobot4 | LitterRobot5, str](
             key="globe_light",
             translation_key="globe_light",
@@ -96,6 +133,36 @@ ROBOT_SELECT_MAP: dict[
                 lambda robot, opt: robot.set_panel_brightness(
                     BrightnessLevel[opt.upper()]
                 )
+            ),
+        ),
+    ),
+    LitterRobot5: (
+        RobotSelectEntityDescription[LitterRobot5, str](
+            key="globe_brightness",
+            translation_key="globe_brightness",
+            current_fn=lambda robot: next(
+                (
+                    level
+                    for level, pct in LR5_GLOBE_BRIGHTNESS.items()
+                    if pct == robot.night_light_brightness
+                ),
+                None,
+            ),
+            options_fn=lambda _: list(LR5_GLOBE_BRIGHTNESS),
+            select_fn=lambda robot, opt: robot.set_night_light_brightness(
+                LR5_GLOBE_BRIGHTNESS[opt]
+            ),
+        ),
+        RobotSelectEntityDescription[LitterRobot5, str](
+            key="night_light_preset",
+            translation_key="night_light_preset",
+            current_fn=_active_night_light_preset,
+            options_fn=lambda _: list(NIGHT_LIGHT_PRESETS),
+            select_fn=lambda robot, opt: robot.set_night_light_settings(
+                # The API replaces the whole object, so keep mode + brightness.
+                mode=robot.night_light_mode or NightLightMode.ON,
+                brightness=robot.night_light_brightness,
+                color=NIGHT_LIGHT_PRESETS[opt],
             ),
         ),
     ),
@@ -166,7 +233,8 @@ class LitterRobotSelectEntity(
     @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return str(self.entity_description.current_fn(self.robot))
+        option = self.entity_description.current_fn(self.robot)
+        return None if option is None else str(option)
 
     @whisker_command
     @override

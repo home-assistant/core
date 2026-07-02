@@ -34,6 +34,11 @@
         "default": "mdi:delete-variant"
       }
     },
+    "light": {
+      "night_light": {
+        "default": "mdi:lightbulb-night"
+      }
+    },
     "select": {
       "brightness_level": {
         "default": "mdi:lightbulb-question",
@@ -63,6 +68,9 @@
       },
       "meal_insert_size": {
         "default": "mdi:scale"
+      },
+      "night_light_preset": {
+        "default": "mdi:palette"
       }
     },
     "sensor": {
