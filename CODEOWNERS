@@ -633,6 +633,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/geniushub/ @manzanotti
 /homeassistant/components/gentex_homelink/ @Gentex-Corporation/Homelink @rjones-gentex
 /tests/components/gentex_homelink/ @Gentex-Corporation/Homelink @rjones-gentex
+/homeassistant/components/gentex_place/ @niaexa @andrewtran-gentex
+/tests/components/gentex_place/ @niaexa @andrewtran-gentex
 /homeassistant/components/geo_json_events/ @exxamalte
 /tests/components/geo_json_events/ @exxamalte
 /homeassistant/components/geo_location/ @home-assistant/core

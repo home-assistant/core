@@ -1839,6 +1839,9 @@ phone-modem==0.1.1
 # homeassistant.components.remote_rpi_gpio
 pigpio==1.78
 
+# homeassistant.components.gentex_place
+place-integration-api==0.2.0
+
 # homeassistant.components.plex
 plexauth==0.0.6
 
