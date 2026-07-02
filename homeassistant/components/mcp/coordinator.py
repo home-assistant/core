@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     HomeAssistantError,
-    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import llm
 from homeassistant.helpers.httpx_client import create_async_httpx_client
@@ -130,7 +130,7 @@ class ModelContextProtocolTool(llm.Tool):
         except TimeoutError as error:
             _LOGGER.debug("Timeout when calling tool: %s", error)
             raise HomeAssistantError(f"Timeout when calling tool: {error}") from error
-        except OAuth2TokenRequestError as error:
+        except OAuth2TokenRequestReauthError as error:
             _LOGGER.debug("OAuth token request failed when calling tool: %s", error)
             self.config_entry.async_start_reauth(hass)
             raise ConfigEntryAuthFailed(
@@ -183,7 +183,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         except TimeoutError as error:
             _LOGGER.debug("Timeout when listing tools: %s", error)
             raise UpdateFailed(f"Timeout when listing tools: {error}") from error
-        except OAuth2TokenRequestError as error:
+        except OAuth2TokenRequestReauthError as error:
             _LOGGER.debug("OAuth token request failed: %s", error)
             raise ConfigEntryAuthFailed("OAuth token request failed") from error
         except httpx.HTTPStatusError as error:

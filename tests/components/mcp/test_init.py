@@ -15,7 +15,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     HomeAssistantError,
-    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import llm
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -445,7 +445,7 @@ async def test_tool_call_expired_oauth_failure(
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-            side_effect=OAuth2TokenRequestError(
+            side_effect=OAuth2TokenRequestReauthError(
                 request_info=Mock(), history=(), domain=DOMAIN
             ),
         ),
@@ -473,7 +473,7 @@ async def test_mcp_server_setup_oauth_failure(
     # Mock token validation failure (e.g. refresh token expired)
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-        side_effect=OAuth2TokenRequestError(
+        side_effect=OAuth2TokenRequestReauthError(
             request_info=Mock(), history=(), domain=DOMAIN
         ),
     ):

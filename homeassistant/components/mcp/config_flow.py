@@ -383,7 +383,8 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 return await self.async_step_auth_discovery()
             except Exception as err:  # pylint: disable=broad-except # noqa: BLE001
                 _LOGGER.error("Reauthentication connection failed: %s", err)
-            return self.async_abort(reason="cannot_connect")
+                return self.async_abort(reason="cannot_connect")
+            return self.async_abort(reason="reauth_successful")
 
         self.flow_impl = await async_get_config_entry_implementation(  # type: ignore[assignment]
             self.hass, config_entry
