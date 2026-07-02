@@ -78,7 +78,7 @@ class FlowItCoordinator(DataUpdateCoordinator[FlowItCoordinatorData]):
             return FlowItCoordinatorData(state=self.vmc.state)
 
 
-@dataclass
+@dataclass(kw_only=True, frozen=True)
 class FlowItData:
     """Data for the Flow-it integration."""
 
