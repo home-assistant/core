@@ -5152,6 +5152,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "osram_infrared": {
+      "name": "OSRAM Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "osramlightify": {
       "name": "Osramlightify",
       "integration_type": "hub",
