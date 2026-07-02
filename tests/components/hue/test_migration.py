@@ -7,6 +7,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.json import JsonArrayType
 
+from .conftest import setup_bridge
+
 from tests.common import MockConfigEntry
 
 
@@ -229,3 +231,61 @@ async def test_group_entity_migration_with_v2_group_id(
     migrated_entity = entity_registry.async_get("light.hue_migrated_grouped_light")
     assert migrated_entity is not None
     assert migrated_entity.unique_id == "e937f8db-2f0e-49a0-936e-027e60e15b34"
+
+
+async def test_zigbee_connection_migration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+) -> None:
+    """Test that a zigbee mac stored as a network mac is migrated."""
+    config_entry = MockConfigEntry(
+        domain=hue.DOMAIN,
+        data={"host": "mock-host", "api_version": 2, "api_key": ""},
+        minor_version=1,
+    )
+
+    # device of `Wall switch with 2 controls` with its zigbee mac
+    device_id = "3ff06175-29e8-44a8-8fe7-af591b0025da"
+    zigbee_mac = "00:17:88:01:0b:aa:bb:99"
+
+    config_entry.add_to_hass(hass)
+    # create device with the zigbee mac incorrectly stored as a network mac
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(hue.DOMAIN, device_id)},
+        connections={(dr.CONNECTION_NETWORK_MAC, zigbee_mac)},
+    )
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, zigbee_mac)}
+
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    with patch(
+        "homeassistant.components.hue.HueBridgeV2",
+        return_value=mock_bridge_v2.api,
+    ):
+        await setup_bridge(hass, mock_bridge_v2, config_entry)
+
+    migrated_device = device_registry.async_get(device.id)
+    assert migrated_device is not None
+    assert migrated_device.connections == {(dr.CONNECTION_ZIGBEE, zigbee_mac)}
+    assert config_entry.minor_version == 2
+
+
+async def test_migrate_entry_v1(
+    hass: HomeAssistant,
+    mock_bridge_v1: Mock,
+) -> None:
+    """Test the migration entry skips the connection migration for v1 bridges."""
+    config_entry = MockConfigEntry(
+        domain=hue.DOMAIN,
+        data={"host": "mock-host", "api_version": 1, "api_key": ""},
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.hue.HueBridgeV2") as mock_api:
+        await setup_bridge(hass, mock_bridge_v1, config_entry)
+
+    assert len(mock_api.mock_calls) == 0
+    assert config_entry.minor_version == 2
