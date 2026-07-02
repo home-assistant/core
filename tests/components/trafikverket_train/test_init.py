@@ -233,15 +233,17 @@ async def test_migrate_entry_from_future_version_fails(
 
 
 @pytest.mark.parametrize(
-    ("side_effect"),
+    ("side_effect", "state"),
     [
-        (InvalidAuthentication),
-        (NoTrainStationFound),
-        (UnknownError),
-        (Exception),
+        (InvalidAuthentication, ConfigEntryState.SETUP_ERROR),
+        (NoTrainStationFound, ConfigEntryState.MIGRATION_ERROR),
+        (UnknownError, ConfigEntryState.MIGRATION_ERROR),
+        (Exception, ConfigEntryState.MIGRATION_ERROR),
     ],
 )
-async def test_migrate_entry_fails(hass: HomeAssistant, side_effect: Exception) -> None:
+async def test_migrate_entry_fails(
+    hass: HomeAssistant, side_effect: type[Exception], state: ConfigEntryState
+) -> None:
     """Test migrate entry fails."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -263,7 +265,7 @@ async def test_migrate_entry_fails(hass: HomeAssistant, side_effect: Exception) 
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is state
 
 
 async def test_migrate_entry_fails_multiple_stations(

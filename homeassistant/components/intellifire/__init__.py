@@ -17,7 +17,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 
 from .const import (
     API_MODE_LOCAL,
@@ -89,7 +93,9 @@ async def async_migrate_entry(
                 new_data = cloud_interface.user_data.get_data_for_ip(new[CONF_HOST])
 
             if not new_data:
-                raise ConfigEntryAuthFailed
+                raise HomeAssistantError(
+                    "Could not retrieve data for IP address from cloud interface"
+                )
             new[CONF_API_KEY] = new_data.api_key
             new[CONF_WEB_CLIENT_ID] = new_data.web_client_id
             new[CONF_AUTH_COOKIE] = new_data.auth_cookie
