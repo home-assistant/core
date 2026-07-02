@@ -1,0 +1,13 @@
+{
+  "domain": "trovis557x",
+  "name": "Samson Trovis 557x",
+  "codeowners": ["@Tom-Bom-badil"],
+  "config_flow": true,
+  "dependencies": ["modbus_connection"],
+  "documentation": "https://www.home-assistant.io/integrations/trovis557x",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["modbus_connection", "trovis_modbus", "tmodbus"],
+  "quality_scale": "bronze",
+  "requirements": ["trovis-modbus==1.0.0"]
+}

@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Select the Modbus connection the controller is reached through and its unit address.",
+        "data": {
+          "connection_entry_id": "Modbus connection",
+          "unit_id": "Modbus unit"
+        },
+        "data_description": {
+          "connection_entry_id": "The Modbus connection this controller is reached through.",
+          "unit_id": "The controller's Modbus station address (PA1; default 246)."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect. Check that the controller is reachable on the selected connection and unit."
+    }
+  }
+}
