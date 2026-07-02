@@ -97,7 +97,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up AWS component."""
+    """Set up AWS integration."""
     if (conf := config.get(DOMAIN)) is None:
         # create a default conf using default profile
         conf = CONFIG_SCHEMA({ATTR_CREDENTIALS: DEFAULT_CREDENTIAL})
