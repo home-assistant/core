@@ -498,6 +498,7 @@ homeassistant.components.ruuvitag_ble.*
 homeassistant.components.samsung_infrared.*
 homeassistant.components.samsungtv.*
 homeassistant.components.saunum.*
+homeassistant.components.scaleway_object_storage.*
 homeassistant.components.scene.*
 homeassistant.components.schedule.*
 homeassistant.components.schlage.*
