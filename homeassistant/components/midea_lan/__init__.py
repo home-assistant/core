@@ -10,13 +10,14 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_PROTOCOL,
+    CONF_TOKEN,
     CONF_TYPE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_SUBTYPE
+from .const import CONF_KEY, CONF_SUBTYPE
 from .entity import MideaLanConfigEntry
 
 _PLATFORMS: list[Platform] = [Platform.CLIMATE]
@@ -35,8 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaLanConfigEntry) -> 
         data.get(CONF_TYPE, DeviceType.AC),
         data[CONF_IP_ADDRESS],
         data[CONF_PORT],
-        "",
-        "",
+        data.get(CONF_TOKEN, ""),
+        data.get(CONF_KEY, ""),
         ProtocolVersion(data[CONF_PROTOCOL]),
         data[CONF_MODEL],
         data.get(CONF_SUBTYPE, 0),
