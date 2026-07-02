@@ -71,7 +71,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Growatt Server component."""
+    """Set up the Growatt Server integration."""
     # Register services
     async_setup_services(hass)
     return True
