@@ -1,16 +1,19 @@
 """Tests for the Overkiz climate platform."""
 
 from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import OverkizState
 from pyoverkiz.models import Event
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import ATTR_HVAC_ACTION, HVACAction
 from homeassistant.const import ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
 from .helpers import (
@@ -21,6 +24,8 @@ from .helpers import (
     device_state_changed_event,
     device_unavailable_event,
 )
+
+from tests.common import snapshot_platform
 
 VALVE = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
@@ -35,12 +40,36 @@ ELECTRICAL_HEATER_ADJUSTABLE = FixtureDevice(
     "climate.my_home_living_room_heater",
 )
 
+SNAPSHOT_FIXTURES = [
+    VALVE,
+    ELECTRICAL_HEATER_ADJUSTABLE,
+]
+
 
 @pytest.fixture(autouse=True)
 def fixture_platforms() -> Generator[None]:
     """Limit platforms to climate only."""
     with patch("homeassistant.components.overkiz.PLATFORMS", [Platform.CLIMATE]):
         yield
+
+
+@pytest.mark.parametrize(
+    "device",
+    SNAPSHOT_FIXTURES,
+    ids=[Path(device.fixture).name for device in SNAPSHOT_FIXTURES],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_climate_entities_snapshot(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    device: FixtureDevice,
+) -> None:
+    """Test representative real setups via snapshot."""
+    config_entry = await setup_overkiz_integration(fixture=device.fixture)
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_valve_hvac_action_none_state(
