@@ -13,6 +13,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    label_registry as lr,
 )
 from homeassistant.helpers.json import json_dumps
 
@@ -234,8 +235,11 @@ def websocket_update_entity(
                 aliases.append(alias)
 
     if "labels" in msg:
-        # Convert labels to a set
-        changes["labels"] = set(msg["labels"])
+        # Strip labels which are not in the label registry. This also cleans up
+        # any stale labels already stored on the entity (e.g. left behind by a
+        # deleted label) the next time it is saved.
+        labels = set(msg["labels"])
+        changes["labels"] = labels - lr.async_get_missing_label_ids(hass, labels)
 
     if "disabled_by" in msg and msg["disabled_by"] is None:
         # Don't allow enabling an entity of a disabled device

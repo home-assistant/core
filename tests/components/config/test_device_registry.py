@@ -9,7 +9,7 @@ from pytest_unordered import unordered
 from homeassistant.components.config import DOMAIN, device_registry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, label_registry as lr
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -216,9 +216,12 @@ async def test_update_device_labels(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,
     device_registry: dr.DeviceRegistry,
+    label_registry: lr.LabelRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update entry labels."""
+    label_registry.async_create("label1")
+    label_registry.async_create("label2")
     entry = MockConfigEntry(title=None)
     entry.add_to_hass(hass)
     created_at = datetime.fromisoformat("2024-07-16T13:30:00.900075+00:00")
@@ -260,6 +263,53 @@ async def test_update_device_labels(
     ):
         assert msg["result"][key] == value.timestamp()
         assert getattr(device, key) == value
+
+
+@pytest.mark.parametrize(
+    ("labels", "expected_labels"),
+    [
+        pytest.param(["label1", "missing"], {"label1"}, id="strip_unknown"),
+        pytest.param(["label1", "stale_label"], {"label1"}, id="strip_stale_resent"),
+        pytest.param(["stale_label", "missing"], set(), id="strip_all_unknown"),
+        pytest.param([], set(), id="remove_all"),
+    ],
+)
+async def test_update_device_strips_unknown_labels(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    device_registry: dr.DeviceRegistry,
+    label_registry: lr.LabelRegistry,
+    labels: list[str],
+    expected_labels: set[str],
+) -> None:
+    """Test labels not in the label registry are stripped on update.
+
+    A stale label already stored on the device is cleaned up when the device
+    is next saved, even if the client sends it back.
+    """
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+    )
+    # Seed a stale label via the helper layer, bypassing WS stripping
+    device_registry.async_update_device(device.id, labels={"stale_label"})
+    label_registry.async_create("label1")
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/device_registry/update",
+            "device_id": device.id,
+            "labels": labels,
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert set(msg["result"]["labels"]) == expected_labels
+    assert device_registry.async_get(device.id).labels == expected_labels
 
 
 async def test_remove_config_entry_from_device(
