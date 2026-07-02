@@ -206,7 +206,7 @@ aioapcaccess==1.0.0
 aioaquacell==1.0.0
 
 # homeassistant.components.vistapool
-aioaquarite==0.5.1
+aioaquarite==0.6.1
 
 # homeassistant.components.aseko_pool_live
 aioaseko==1.0.0

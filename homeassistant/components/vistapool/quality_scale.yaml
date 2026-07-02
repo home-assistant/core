@@ -57,7 +57,7 @@ rules:
   docs-supported-devices: done
   docs-supported-functions: done
   docs-use-cases: done
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-translations: done
   exception-translations: done
   icon-translations: done
@@ -65,7 +65,7 @@ rules:
   repair-issues:
     status: exempt
     comment: No known repair scenarios
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: done
