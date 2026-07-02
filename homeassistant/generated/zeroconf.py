@@ -716,6 +716,11 @@ ZEROCONF = {
             "domain": "ipp",
         },
     ],
+    "_kii._tcp.local.": [
+        {
+            "domain": "kii_audio",
+        },
+    ],
     "_kiosker._tcp.local.": [
         {
             "domain": "kiosker",
