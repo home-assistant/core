@@ -51,7 +51,7 @@ async def test_setup_exceptions(
     expected_state: ConfigEntryState,
 ) -> None:
     """Test the _async_setup."""
-    mock_portainer_client.get_endpoints.side_effect = exception
+    mock_portainer_client.portainer_system_status.side_effect = exception
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is expected_state
 
