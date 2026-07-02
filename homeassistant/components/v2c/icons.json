@@ -8,6 +8,11 @@
         "default": "mdi:led-on"
       }
     },
+    "number": {
+      "voltage_installation": {
+        "default": "mdi:sine-wave"
+      }
+    },
     "select": {
       "charge_mode": {
         "default": "mdi:ev-plug-type2"

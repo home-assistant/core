@@ -1,7 +1,7 @@
 """Preference management for cloud."""
 
 from collections.abc import Callable, Coroutine
-from typing import Any
+from typing import Any, override
 import uuid
 
 from hass_nabucasa.voice import MAP_VOICE, Gender
@@ -9,7 +9,7 @@ from hass_nabucasa.voice import MAP_VOICE, Gender
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
 from homeassistant.components import webhook
-from homeassistant.components.google_assistant.http import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.google_assistant.http import (  # pylint: disable=home-assistant-component-root-import
     async_get_users as async_get_google_assistant_users,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -58,6 +58,7 @@ GOOGLE_SETTINGS_VERSION = 3
 class CloudPreferencesStore(Store):
     """Store cloud preferences."""
 
+    @override
     async def _async_migrate_func(
         self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
     ) -> dict[str, Any]:
@@ -284,7 +285,8 @@ class CloudPreferences:
     def alexa_default_expose(self) -> list[str] | None:
         """Return array of entity domains that are exposed by default to Alexa.
 
-        Can return None, in which case for backwards should be interpreted as allow all domains.
+        Can return None, in which case for backwards
+        should be interpreted as allow all domains.
         """
         return self._prefs.get(PREF_ALEXA_DEFAULT_EXPOSE)
 
@@ -342,7 +344,8 @@ class CloudPreferences:
     def google_default_expose(self) -> list[str] | None:
         """Return array of entity domains that are exposed by default to Google.
 
-        Can return None, in which case for backwards should be interpreted as allow all domains.
+        Can return None, in which case for backwards
+        should be interpreted as allow all domains.
         """
         return self._prefs.get(PREF_GOOGLE_DEFAULT_EXPOSE)
 

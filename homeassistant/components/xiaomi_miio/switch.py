@@ -4,7 +4,7 @@ import asyncio
 from dataclasses import dataclass
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, override
 
 from miio import (
     AirConditioningCompanionV3,
@@ -25,6 +25,7 @@ from homeassistant.components.switch import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
+    ATTR_MODEL,
     ATTR_TEMPERATURE,
     CONF_DEVICE,
     CONF_HOST,
@@ -149,7 +150,6 @@ ATTR_LED = "led"
 ATTR_IONIZER = "ionizer"
 ATTR_ANION = "anion"
 ATTR_LOAD_POWER = "load_power"
-ATTR_MODEL = "model"
 ATTR_POWER = "power"
 ATTR_POWER_MODE = "power_mode"
 ATTR_POWER_PRICE = "power_price"
@@ -517,6 +517,7 @@ async def async_setup_other_entry(
 
         for plug_service, method in SERVICE_TO_METHOD.items():
             schema = method.schema or SERVICE_SCHEMA
+            # pylint: disable-next=home-assistant-service-registered-in-setup-entry
             hass.services.async_register(
                 DOMAIN, plug_service, async_service_handler, schema=schema
             )
@@ -548,6 +549,7 @@ class XiaomiGenericCoordinatedSwitch(
         self.entity_description = description
 
     @callback
+    @override
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         # On state change the device doesn't provide the new state immediately.
@@ -557,6 +559,7 @@ class XiaomiGenericCoordinatedSwitch(
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return true when state is known."""
         if (
@@ -567,6 +570,7 @@ class XiaomiGenericCoordinatedSwitch(
             return False
         return super().available
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on an option of the miio device."""
         method = getattr(self, self.entity_description.method_on)
@@ -575,6 +579,7 @@ class XiaomiGenericCoordinatedSwitch(
             self._attr_is_on = True
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off an option of the miio device."""
         method = getattr(self, self.entity_description.method_off)
@@ -777,18 +782,22 @@ class XiaomiGatewaySwitch(XiaomiGatewayDevice, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._sub_device.status[self._data_key] == "on"
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.hass.async_add_executor_job(self._sub_device.on, self._channel)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.hass.async_add_executor_job(self._sub_device.off, self._channel)
 
+    @override
     async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the switch."""
         await self.hass.async_add_executor_job(self._sub_device.toggle, self._channel)
@@ -838,6 +847,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
 
         return result == SUCCESS
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the plug on."""
         result = await self._try_command("Turning the plug on failed", self._device.on)
@@ -846,6 +856,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
             self._attr_is_on = True
             self._skip_update = True
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the plug off."""
         result = await self._try_command(
@@ -937,6 +948,7 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
         if self._device_features & FEATURE_SET_POWER_PRICE == 1:
             self._attr_extra_state_attributes[ATTR_POWER_PRICE] = None
 
+    @override
     async def async_update(self) -> None:
         """Fetch state from the device."""
         # On state change the device doesn't provide the new state immediately.
@@ -1011,6 +1023,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
             if self._channel_usb is False:
                 self._attr_extra_state_attributes[ATTR_LOAD_POWER] = None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn a channel on."""
         if self._channel_usb:
@@ -1028,6 +1041,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
             self._attr_is_on = True
             self._skip_update = True
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn a channel off."""
         if self._channel_usb:
@@ -1044,6 +1058,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
             self._attr_is_on = False
             self._skip_update = True
 
+    @override
     async def async_update(self) -> None:
         """Fetch state from the device."""
         # On state change the device doesn't provide the new state immediately.
@@ -1094,6 +1109,7 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
             {ATTR_TEMPERATURE: None, ATTR_LOAD_POWER: None}
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the socket on."""
         result = await self._try_command(
@@ -1105,6 +1121,7 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
             self._attr_is_on = True
             self._skip_update = True
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the socket off."""
         result = await self._try_command(
@@ -1116,6 +1133,7 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
             self._attr_is_on = False
             self._skip_update = True
 
+    @override
     async def async_update(self) -> None:
         """Fetch state from the device."""
         # On state change the device doesn't provide the new state immediately.

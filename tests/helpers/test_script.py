@@ -866,7 +866,10 @@ async def test_delay_template_invalid(
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [
                 {
-                    "error": "offset  should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
+                    "error": (
+                        "offset  should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
+                    ),
+                    "template_errors": ["'invalid_delay' is undefined"],
                 }
             ],
         },
@@ -931,7 +934,12 @@ async def test_delay_template_complex_invalid(
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error": "expected float for dictionary value @ data['seconds']"}],
+            "1": [
+                {
+                    "error": "expected float for dictionary value @ data['seconds']",
+                    "template_errors": ["'invalid_delay' is undefined"],
+                }
+            ],
         },
         expected_script_execution="aborted",
     )
@@ -2644,7 +2652,12 @@ async def test_repeat_for_each_invalid_template(
 
     assert_action_trace(
         {
-            "0": [{"error": "Repeat 'for_each' must be a list of items"}],
+            "0": [
+                {
+                    "error": "Repeat 'for_each' must be a list of items",
+                    "template_errors": ["'Muhaha' is undefined"],
+                }
+            ],
         },
         expected_script_execution="aborted",
     )
@@ -2713,7 +2726,12 @@ async def test_repeat_condition_warning(
     expected_trace[f"0/repeat/{condition}/0"] = [
         {"error": "In 'numeric_state':\n  " + expected_error}
     ]
-    expected_trace[f"0/repeat/{condition}/0/entity_id/0"] = [{"error": expected_error}]
+    expected_trace[f"0/repeat/{condition}/0/entity_id/0"] = [
+        {
+            "error": expected_error,
+            "template_errors": ["'unassigned_variable' is undefined"],
+        }
+    ]
     assert_action_trace(expected_trace)
 
 
@@ -6447,7 +6465,10 @@ async def test_enabled_error_non_limited_template(hass: HomeAssistant) -> None:
     expected_trace = {
         "0": [
             {
-                "error": "TemplateError: Use of 'states' is not supported in limited templates"
+                "error": (
+                    "TemplateError: Use of 'states' is not"
+                    " supported in limited templates"
+                )
             }
         ],
     }
@@ -6740,6 +6761,32 @@ async def test_conversation_response_not_set_subscript_if(
         "1/if/condition/0": [{"result": {"result": var == 1, "entities": []}}],
     }
     assert_action_trace(expected_trace)
+
+
+async def test_conversation_response_nested_with_stop(
+    hass: HomeAssistant,
+) -> None:
+    """Test setting conversation response in a child block with a stop."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "choose": {
+                    "conditions": {
+                        "condition": "template",
+                        "value_template": "{{ true }}",
+                    },
+                    "sequence": [
+                        {"set_conversation_response": "{{ 'conversation response' }}"},
+                        {"stop": "stop response"},
+                    ],
+                },
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    result = await script_obj.async_run(context=Context())
+    assert result.conversation_response == "conversation response"
 
 
 async def test_stopping_run_before_starting(

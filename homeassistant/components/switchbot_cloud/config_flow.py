@@ -1,7 +1,7 @@
 """Config flow for SwitchBot via API integration."""
 
 from logging import getLogger
-from typing import Any
+from typing import Any, override
 
 from switchbot_api import (
     SwitchBotAPI,
@@ -30,6 +30,7 @@ class SwitchBotCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

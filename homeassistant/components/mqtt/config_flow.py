@@ -8,10 +8,9 @@ from dataclasses import dataclass
 from enum import IntEnum
 import json
 import logging
-import queue
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 from uuid import uuid4
 
 from cryptography.hazmat.primitives.serialization import (
@@ -71,13 +70,6 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.const import (
-    ATTR_CONFIGURATION_URL,
-    ATTR_HW_VERSION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_MODEL_ID,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
     CONF_BRIGHTNESS,
     CONF_CLIENT_ID,
     CONF_CODE,
@@ -88,8 +80,11 @@ from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
     CONF_HOST,
     CONF_MODE,
+    CONF_MODEL,
+    CONF_MODEL_ID,
     CONF_NAME,
     CONF_OPTIMISTIC,
+    CONF_OPTIONS,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_PAYLOAD_OFF,
@@ -118,6 +113,8 @@ from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    DurationSelector,
+    DurationSelectorConfig,
     FileSelector,
     FileSelectorConfig,
     NumberSelector,
@@ -139,7 +136,7 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .addon import get_addon_manager
-from .client import MqttClientSetup
+from .client import try_connection
 from .const import (
     ALARM_CONTROL_PANEL_SUPPORTED_FEATURES,
     ATTR_PAYLOAD,
@@ -179,6 +176,7 @@ from .const import (
     CONF_COMMAND_ON_TEMPLATE,
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
+    CONF_CONFIGURATION_URL,
     CONF_CONTENT_TYPE,
     CONF_CURRENT_HUMIDITY_TEMPLATE,
     CONF_CURRENT_HUMIDITY_TOPIC,
@@ -189,6 +187,7 @@ from .const import (
     CONF_DIRECTION_STATE_TOPIC,
     CONF_DIRECTION_VALUE_TEMPLATE,
     CONF_DISCOVERY_PREFIX,
+    CONF_DISCOVERY_QOS,
     CONF_EFFECT_COMMAND_TEMPLATE,
     CONF_EFFECT_COMMAND_TOPIC,
     CONF_EFFECT_LIST,
@@ -218,12 +217,15 @@ from .const import (
     CONF_HUMIDITY_MIN,
     CONF_HUMIDITY_STATE_TEMPLATE,
     CONF_HUMIDITY_STATE_TOPIC,
+    CONF_HW_VERSION,
     CONF_IMAGE_ENCODING,
     CONF_IMAGE_TOPIC,
     CONF_KEEPALIVE,
     CONF_LAST_RESET_VALUE_TEMPLATE,
+    CONF_MANUFACTURER,
     CONF_MAX,
     CONF_MAX_KELVIN,
+    CONF_MESSAGE_EXPIRY_INTERVAL,
     CONF_MIN,
     CONF_MIN_KELVIN,
     CONF_MODE_COMMAND_TEMPLATE,
@@ -233,7 +235,6 @@ from .const import (
     CONF_MODE_STATE_TOPIC,
     CONF_OFF_DELAY,
     CONF_ON_COMMAND_TYPE,
-    CONF_OPTIONS,
     CONF_OSCILLATION_COMMAND_TEMPLATE,
     CONF_OSCILLATION_COMMAND_TOPIC,
     CONF_OSCILLATION_STATE_TOPIC,
@@ -314,6 +315,7 @@ from .const import (
     CONF_SUPPORT_VOLUME_SET,
     CONF_SUPPORTED_COLOR_MODES,
     CONF_SUPPORTED_FEATURES,
+    CONF_SW_VERSION,
     CONF_SWING_HORIZONTAL_MODE_COMMAND_TEMPLATE,
     CONF_SWING_HORIZONTAL_MODE_COMMAND_TOPIC,
     CONF_SWING_HORIZONTAL_MODE_LIST,
@@ -349,6 +351,7 @@ from .const import (
     CONF_TILT_STATE_OPTIMISTIC,
     CONF_TILT_STATUS_TEMPLATE,
     CONF_TILT_STATUS_TOPIC,
+    CONF_TIMEZONE,
     CONF_TLS_INSECURE,
     CONF_TRANSITION,
     CONF_TRANSPORT,
@@ -370,7 +373,6 @@ from .const import (
     DEFAULT_CLIMATE_INITIAL_TEMPERATURE,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
-    DEFAULT_KEEPALIVE,
     DEFAULT_ON_COMMAND_TYPE,
     DEFAULT_PAYLOAD_ARM_AWAY,
     DEFAULT_PAYLOAD_ARM_CUSTOM_BYPASS,
@@ -411,7 +413,6 @@ from .const import (
     DEFAULT_TILT_OPEN_POSITION,
     DEFAULT_TRANSPORT,
     DEFAULT_WILL,
-    DEFAULT_WS_PATH,
     DOMAIN,
     REMOTE_CODE,
     REMOTE_CODE_TEXT,
@@ -438,9 +439,7 @@ ADDON_SETUP_TIMEOUT_ROUNDS = 5
 
 CONF_CLIENT_KEY_PASSWORD = "client_key_password"
 
-MQTT_TIMEOUT = 5
-
-ADVANCED_OPTIONS = "advanced_options"
+OTHER_SETTINGS = "other_settings"
 SET_CA_CERT = "set_ca_cert"
 SET_CLIENT_CERT = "set_client_cert"
 
@@ -456,6 +455,8 @@ SUBENTRY_PLATFORMS = [
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.DATE,
+    Platform.DATETIME,
     Platform.FAN,
     Platform.IMAGE,
     Platform.LIGHT,
@@ -467,6 +468,7 @@ SUBENTRY_PLATFORMS = [
     Platform.SIREN,
     Platform.SWITCH,
     Platform.TEXT,
+    Platform.TIME,
     Platform.VALVE,
     Platform.WATER_HEATER,
 ]
@@ -480,6 +482,10 @@ PWD_NOT_CHANGED = "__**password_not_changed**__"
 
 DEVELOPER_DOCUMENTATION_URL = "https://developers.home-assistant.io/"
 USER_DOCUMENTATION_URL = "https://www.home-assistant.io/"
+TZ_ZONE_ABBR_URL = (
+    "https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"
+    "#Time_zone_abbreviations"
+)
 
 INTEGRATION_URL = f"{USER_DOCUMENTATION_URL}integrations/{DOMAIN}/"
 TEMPLATING_URL = f"{USER_DOCUMENTATION_URL}docs/configuration/templating/"
@@ -499,6 +505,7 @@ TRANSLATION_DESCRIPTION_PLACEHOLDERS = {
     "available_state_classes_url": AVAILABLE_STATE_CLASSES_URL,
     "naming_entities_url": NAMING_ENTITIES_URL,
     "registry_properties_url": REGISTRY_PROPERTIES_URL,
+    "tz_abbr_url": TZ_ZONE_ABBR_URL,
 }
 
 # Common selectors
@@ -1115,7 +1122,7 @@ def validate_light_platform_config(user_data: dict[str, Any]) -> dict[str, str]:
     if user_data.get(CONF_MIN_KELVIN, DEFAULT_MIN_KELVIN) >= user_data.get(
         CONF_MAX_KELVIN, DEFAULT_MAX_KELVIN
     ):
-        errors["advanced_settings"] = "max_below_min_kelvin"
+        errors[OTHER_SETTINGS] = "max_below_min_kelvin"
     return errors
 
 
@@ -1208,7 +1215,7 @@ def validate_text_platform_config(
         and CONF_MAX in config
         and config[CONF_MIN] > config[CONF_MAX]
     ):
-        errors["text_advanced_settings"] = "max_below_min"
+        errors["text_other_settings"] = "max_below_min"
 
     return errors
 
@@ -1232,6 +1239,8 @@ ENTITY_CONFIG_VALIDATOR: dict[
     Platform.BUTTON: None,
     Platform.CLIMATE: validate_climate_platform_config,
     Platform.COVER: validate_cover_platform_config,
+    Platform.DATE: None,
+    Platform.DATETIME: None,
     Platform.FAN: validate_fan_platform_config,
     Platform.IMAGE: None,
     Platform.LIGHT: validate_light_platform_config,
@@ -1243,6 +1252,7 @@ ENTITY_CONFIG_VALIDATOR: dict[
     Platform.SIREN: None,
     Platform.SWITCH: None,
     Platform.TEXT: validate_text_platform_config,
+    Platform.TIME: None,
     Platform.VALVE: None,
     Platform.WATER_HEATER: validate_water_heater_platform_config,
 }
@@ -1408,6 +1418,8 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             required=False,
         ),
     },
+    Platform.DATE: {},
+    Platform.DATETIME: {},
     Platform.FAN: {
         "fan_feature_speed": PlatformField(
             selector=BOOLEAN_SELECTOR,
@@ -1492,7 +1504,7 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             selector=SUGGESTED_DISPLAY_PRECISION_SELECTOR,
             required=False,
             validator=cv.positive_int,
-            section="advanced_settings",
+            section=OTHER_SETTINGS,
         ),
         CONF_OPTIONS: PlatformField(
             selector=OPTIONS_SELECTOR,
@@ -1512,6 +1524,7 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
         ),
     },
     Platform.TEXT: {},
+    Platform.TIME: {},
     Platform.VALVE: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=VALVE_DEVICE_CLASS_SELECTOR, required=False, default=None
@@ -1663,13 +1676,13 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             selector=TIMEOUT_SELECTOR,
             required=False,
             validator=cv.positive_int,
-            section="advanced_settings",
+            section=OTHER_SETTINGS,
         ),
         CONF_OFF_DELAY: PlatformField(
             selector=TIMEOUT_SELECTOR,
             required=False,
             validator=cv.positive_int,
-            section="advanced_settings",
+            section=OTHER_SETTINGS,
         ),
     },
     Platform.BUTTON: {
@@ -2361,7 +2374,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             section="cover_tilt_settings",
         ),
     },
-    Platform.FAN: {
+    Platform.DATE: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -2381,6 +2394,61 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             error="invalid_subscribe_topic",
         ),
         CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+    },
+    Platform.DATETIME: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_TIMEZONE: PlatformField(selector=TEXT_SELECTOR, required=False),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+    },
+    Platform.FAN: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_STATE_VALUE_TEMPLATE: PlatformField(
             selector=TEMPLATE_SELECTOR,
             required=False,
             validator=validate(cv.template),
@@ -3055,7 +3123,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             default=False,
             validator=cv.boolean,
             conditions=({CONF_SCHEMA: "json"},),
-            section="advanced_settings",
+            section=OTHER_SETTINGS,
         ),
         CONF_FLASH_TIME_SHORT: PlatformField(
             selector=FLASH_TIME_SELECTOR,
@@ -3063,7 +3131,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             validator=cv.positive_int,
             default=2,
             conditions=({CONF_SCHEMA: "json"},),
-            section="advanced_settings",
+            section=OTHER_SETTINGS,
         ),
         CONF_FLASH_TIME_LONG: PlatformField(
             selector=FLASH_TIME_SELECTOR,
@@ -3071,7 +3139,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             validator=cv.positive_int,
             default=10,
             conditions=({CONF_SCHEMA: "json"},),
-            section="advanced_settings",
+            section=OTHER_SETTINGS,
         ),
         CONF_TRANSITION: PlatformField(
             selector=BOOLEAN_SELECTOR,
@@ -3079,21 +3147,21 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             default=False,
             validator=cv.boolean,
             conditions=({CONF_SCHEMA: "json"},),
-            section="advanced_settings",
+            section=OTHER_SETTINGS,
         ),
         CONF_MAX_KELVIN: PlatformField(
             selector=KELVIN_SELECTOR,
             required=False,
             validator=cv.positive_int,
             default=DEFAULT_MAX_KELVIN,
-            section="advanced_settings",
+            section=OTHER_SETTINGS,
         ),
         CONF_MIN_KELVIN: PlatformField(
             selector=KELVIN_SELECTOR,
             required=False,
             validator=cv.positive_int,
             default=DEFAULT_MIN_KELVIN,
-            section="advanced_settings",
+            section=OTHER_SETTINGS,
         ),
     },
     Platform.LOCK: {
@@ -3302,7 +3370,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             selector=TIMEOUT_SELECTOR,
             required=False,
             validator=cv.positive_int,
-            section="advanced_settings",
+            section=OTHER_SETTINGS,
         ),
     },
     Platform.SIREN: {
@@ -3324,7 +3392,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             validator=valid_subscribe_topic,
             error="invalid_subscribe_topic",
         ),
-        CONF_VALUE_TEMPLATE: PlatformField(
+        CONF_STATE_VALUE_TEMPLATE: PlatformField(
             selector=TEMPLATE_SELECTOR,
             required=False,
             validator=validate(cv.template),
@@ -3367,7 +3435,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             required=False,
             validator=validate(cv.template),
             error="invalid_template",
-            section="siren_advanced_settings",
+            section="siren_other_settings",
         ),
     },
     Platform.SWITCH: {
@@ -3446,27 +3514,54 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             selector=TEXT_SIZE_SELECTOR,
             required=True,
             default=0,
-            section="text_advanced_settings",
+            section="text_other_settings",
         ),
         CONF_MAX: PlatformField(
             selector=TEXT_SIZE_SELECTOR,
             required=True,
             default=255,
-            section="text_advanced_settings",
+            section="text_other_settings",
         ),
         CONF_MODE: PlatformField(
             selector=TEXT_MODE_SELECTOR,
             required=True,
             default=TextSelectorType.TEXT.value,
-            section="text_advanced_settings",
+            section="text_other_settings",
         ),
         CONF_PATTERN: PlatformField(
             selector=TEXT_SELECTOR,
             required=False,
             validator=validate(cv.is_regex),
             error="invalid_regular_expression",
-            section="text_advanced_settings",
+            section="text_other_settings",
         ),
+    },
+    Platform.TIME: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
     },
     Platform.VALVE: {
         CONF_COMMAND_TOPIC: PlatformField(
@@ -3699,17 +3794,17 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
     },
 }
 MQTT_DEVICE_PLATFORM_FIELDS = {
-    ATTR_NAME: PlatformField(selector=TEXT_SELECTOR, required=True),
-    ATTR_SW_VERSION: PlatformField(
-        selector=TEXT_SELECTOR, required=False, section="advanced_settings"
+    CONF_NAME: PlatformField(selector=TEXT_SELECTOR, required=True),
+    CONF_SW_VERSION: PlatformField(
+        selector=TEXT_SELECTOR, required=False, section=OTHER_SETTINGS
     ),
-    ATTR_HW_VERSION: PlatformField(
-        selector=TEXT_SELECTOR, required=False, section="advanced_settings"
+    CONF_HW_VERSION: PlatformField(
+        selector=TEXT_SELECTOR, required=False, section=OTHER_SETTINGS
     ),
-    ATTR_MODEL: PlatformField(selector=TEXT_SELECTOR, required=False),
-    ATTR_MODEL_ID: PlatformField(selector=TEXT_SELECTOR, required=False),
-    ATTR_MANUFACTURER: PlatformField(selector=TEXT_SELECTOR, required=False),
-    ATTR_CONFIGURATION_URL: PlatformField(
+    CONF_MODEL: PlatformField(selector=TEXT_SELECTOR, required=False),
+    CONF_MODEL_ID: PlatformField(selector=TEXT_SELECTOR, required=False),
+    CONF_MANUFACTURER: PlatformField(selector=TEXT_SELECTOR, required=False),
+    CONF_CONFIGURATION_URL: PlatformField(
         selector=TEXT_SELECTOR, required=False, validator=cv.url, error="invalid_url"
     ),
     CONF_QOS: PlatformField(
@@ -3717,6 +3812,11 @@ MQTT_DEVICE_PLATFORM_FIELDS = {
         required=False,
         validator=int,
         default=DEFAULT_QOS,
+        section="mqtt_settings",
+    ),
+    CONF_MESSAGE_EXPIRY_INTERVAL: PlatformField(
+        selector=DurationSelector(DurationSelectorConfig(enable_day=True)),
+        required=False,
         section="mqtt_settings",
     ),
 }
@@ -3834,7 +3934,7 @@ def data_schema_from_fields(
         if not data_schema_element:
             # Do not show empty sections
             continue
-        # Collapse if values are changed or required fields need to be set
+        # Collapse if no values are changed and no required fields need to be set
         collapsed = (
             not any(
                 (default := data_schema_fields[str(option)].default) is vol.UNDEFINED
@@ -3934,30 +4034,57 @@ def subentry_schema_default_data_from_fields(
 @callback
 def update_password_from_user_input(
     entry_password: str | None, user_input: dict[str, Any]
-) -> dict[str, Any]:
+) -> None:
     """Update the password if the entry has been updated.
 
     As we want to avoid reflecting the stored password in the UI,
     we replace the suggested value in the UI with a sentitel,
     and we change it back here if it was changed.
     """
-    substituted_used_data = dict(user_input)
     # Take out the password submitted
-    user_password: str | None = substituted_used_data.pop(CONF_PASSWORD, None)
+    user_password: str | None = user_input.pop(CONF_PASSWORD, None)
     # Only add the password if it has changed.
     # If the sentinel password is submitted, we replace that with our current
     # password from the config entry data.
     password_changed = user_password is not None and user_password != PWD_NOT_CHANGED
     password = user_password if password_changed else entry_password
     if password is not None:
-        substituted_used_data[CONF_PASSWORD] = password
-    return substituted_used_data
+        user_input[CONF_PASSWORD] = password
 
 
 REAUTH_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): TEXT_SELECTOR,
         vol.Required(CONF_PASSWORD): PASSWORD_SELECTOR,
+    }
+)
+
+OTHER_SETTINGS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_CLIENT_ID): TEXT_SELECTOR,
+        vol.Optional(CONF_KEEPALIVE): KEEPALIVE_SELECTOR,
+        vol.Required(SET_CLIENT_CERT): BOOLEAN_SELECTOR,
+        vol.Optional(CONF_CLIENT_CERT): CERT_UPLOAD_SELECTOR,
+        vol.Optional(CONF_CLIENT_KEY): CERT_KEY_UPLOAD_SELECTOR,
+        vol.Optional(CONF_CLIENT_KEY_PASSWORD): PASSWORD_SELECTOR,
+        vol.Required(SET_CA_CERT): BROKER_VERIFICATION_SELECTOR,
+        vol.Optional(CONF_CERTIFICATE): CA_CERT_UPLOAD_SELECTOR,
+        vol.Optional(CONF_TLS_INSECURE): BOOLEAN_SELECTOR,
+        vol.Required(CONF_TRANSPORT, default=DEFAULT_TRANSPORT): TRANSPORT_SELECTOR,
+        vol.Optional(CONF_WS_PATH): TEXT_SELECTOR,
+        vol.Optional(CONF_WS_HEADERS): WS_HEADERS_SELECTOR,
+    }
+)
+CONFIG_DATAFLOW_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_BROKER): TEXT_SELECTOR,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): PORT_SELECTOR,
+        vol.Required(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): PROTOCOL_SELECTOR,
+        vol.Optional(CONF_USERNAME): TEXT_SELECTOR,
+        vol.Optional(CONF_PASSWORD): PASSWORD_SELECTOR,
+        vol.Required(OTHER_SETTINGS): section(
+            OTHER_SETTINGS_SCHEMA, SectionConfig({"collapsed": True})
+        ),
     }
 )
 
@@ -3970,12 +4097,15 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     _hassio_discovery: dict[str, Any] | None = None
     _addon_manager: AddonManager
+    last_uploaded: dict[str, Any]
 
     def __init__(self) -> None:
         """Set up flow instance."""
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
+        self.last_uploaded = {}
 
+    @override
     @classmethod
     @callback
     def async_get_supported_subentry_types(
@@ -3984,6 +4114,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Return subentries supported by this handler."""
         return {CONF_DEVICE: MQTTSubentryFlowHandler}
 
+    @override
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -4076,7 +4207,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PROTOCOL: DEFAULT_PROTOCOL,
                 CONF_USERNAME: addon_discovery_config.get(CONF_USERNAME),
                 CONF_PASSWORD: addon_discovery_config.get(CONF_PASSWORD),
-                CONF_DISCOVERY: DEFAULT_DISCOVERY,
             }
         except AddonError:
             # We do not have discovery information yet
@@ -4107,6 +4237,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 translation_placeholders={"addon": addon_manager.addon_name},
             )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -4152,11 +4283,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 description_placeholders={"addon": self._addon_manager.addon_name},
             ) from err
 
-        if addon_info.state == AddonState.RUNNING:
+        if addon_info.state is AddonState.RUNNING:
             # Finish setup using discovery info
             return await self.async_step_setup_entry_from_discovery()
 
-        if addon_info.state == AddonState.NOT_RUNNING:
+        if addon_info.state is AddonState.NOT_RUNNING:
             return await self.async_step_start_addon()
 
         # Install the add-on and start it
@@ -4206,8 +4337,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         reauth_entry = self._get_reauth_entry()
         if user_input:
-            substituted_used_data = update_password_from_user_input(
-                reauth_entry.data.get(CONF_PASSWORD), user_input
+            substituted_used_data = deepcopy(user_input)
+            update_password_from_user_input(
+                reauth_entry.data.get(CONF_PASSWORD), substituted_used_data
             )
             new_entry_data = {**reauth_entry.data, **substituted_used_data}
             if await self.hass.async_add_executor_job(
@@ -4231,49 +4363,76 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @callback
+    def async_get_entry_defaults(self) -> dict[str, Any]:
+        """Load the default settings from the entry."""
+        data = self._get_reconfigure_entry().data
+        other_settings: dict[str, Any] = {
+            key.schema: data[key.schema]
+            for key in OTHER_SETTINGS_SCHEMA.schema
+            if key in data
+        }
+        other_settings[SET_CLIENT_CERT] = (CONF_CLIENT_CERT in other_settings) and (
+            CONF_CLIENT_KEY in other_settings
+        )
+        other_settings.pop(CONF_CLIENT_CERT, None)
+        other_settings.pop(CONF_CLIENT_KEY, None)
+        conf_cert = other_settings.pop(CONF_CERTIFICATE, None)
+        other_settings[SET_CA_CERT] = (
+            "auto"
+            if conf_cert == "auto"
+            else "custom"
+            if conf_cert is not None
+            else "off"
+        )
+        if CONF_WS_HEADERS in other_settings:
+            other_settings[CONF_WS_HEADERS] = json_dumps(
+                other_settings.pop(CONF_WS_HEADERS)
+            )
+
+        settings: dict[str, Any] = {
+            key.schema: data[key.schema]
+            for key in CONFIG_DATAFLOW_SCHEMA.schema
+            if key in data
+        }
+        settings[OTHER_SETTINGS] = other_settings
+        if CONF_PASSWORD in settings:
+            # Hide entry password
+            settings[CONF_PASSWORD] = PWD_NOT_CHANGED
+        return settings
+
     async def async_step_broker(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm the setup."""
         errors: dict[str, str] = {}
-        fields: OrderedDict[Any, Any] = OrderedDict()
-        validated_user_input: dict[str, Any] = {}
+        schema = CONFIG_DATAFLOW_SCHEMA
+        entry_config_update: dict[str, Any] = {}
+        entry_defaults: dict[str, Any] | None = None
         if is_reconfigure := (self.source == SOURCE_RECONFIGURE):
             reconfigure_entry = self._get_reconfigure_entry()
-        if await async_get_broker_settings(
+            entry_defaults = self.async_get_entry_defaults()
+        if await async_validate_broker_settings(
             self,
-            fields,
             reconfigure_entry.data if is_reconfigure else None,
             user_input,
-            validated_user_input,
+            entry_config_update,
             errors,
         ):
             if is_reconfigure:
-                validated_user_input = update_password_from_user_input(
-                    reconfigure_entry.data.get(CONF_PASSWORD), validated_user_input
+                return self.async_update_and_abort(
+                    reconfigure_entry,
+                    data=entry_config_update,
                 )
-
-            can_connect = await self.hass.async_add_executor_job(
-                try_connection,
-                validated_user_input,
+            return self.async_create_entry(
+                title=entry_config_update[CONF_BROKER],
+                data=entry_config_update,
             )
 
-            if can_connect:
-                if is_reconfigure:
-                    return self.async_update_and_abort(
-                        reconfigure_entry,
-                        data=validated_user_input,
-                    )
-                return self.async_create_entry(
-                    title=validated_user_input[CONF_BROKER],
-                    data=validated_user_input,
-                )
-
-            errors["base"] = "cannot_connect"
-
-        return self.async_show_form(
-            step_id="broker", data_schema=vol.Schema(fields), errors=errors
+        schema = self.add_suggested_values_to_schema(
+            schema, (entry_defaults or {}) | (user_input or {})
         )
+        return self.async_show_form(step_id="broker", data_schema=schema, errors=errors)
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -4281,6 +4440,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a reconfiguration flow initialized by the user."""
         return await self.async_step_broker()
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -4317,7 +4477,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_PROTOCOL: DEFAULT_PROTOCOL,
                         CONF_USERNAME: data.get(CONF_USERNAME),
                         CONF_PASSWORD: data.get(CONF_PASSWORD),
-                        CONF_DISCOVERY: DEFAULT_DISCOVERY,
                     },
                 )
 
@@ -4381,6 +4540,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
                 "bad_discovery_prefix",
                 valid_publish_topic,
             )
+            options_config[CONF_DISCOVERY_QOS] = int(user_input[CONF_DISCOVERY_QOS])
             if "birth_topic" in user_input:
                 _validate(
                     CONF_BIRTH_MESSAGE,
@@ -4414,6 +4574,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         }
         discovery = options_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY)
         discovery_prefix = options_config.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX)
+        discovery_qos = options_config.get(CONF_DISCOVERY_QOS, DEFAULT_QOS)
 
         # build form
         fields: OrderedDict[vol.Marker, Any] = OrderedDict()
@@ -4421,6 +4582,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         fields[vol.Optional(CONF_DISCOVERY_PREFIX, default=discovery_prefix)] = (
             PUBLISH_TOPIC_SELECTOR
         )
+        fields[vol.Optional("discovery_qos", default=discovery_qos)] = QOS_SELECTOR
 
         # Birth message is disabled if CONF_BIRTH_MESSAGE = {}
         fields[
@@ -4541,7 +4703,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         self, data_schema: vol.Schema
     ) -> dict[str, Any]:
         """Get suggestions from device data based on the data schema."""
-        device_data = self._subentry_data["device"]
+        device_data = deepcopy(self._subentry_data["device"])
+        device_data.update(device_data.get("mqtt_settings", {}))
         return {
             field_key: self.get_suggested_values_from_device_data(value.schema)
             if isinstance(value, section)
@@ -4580,8 +4743,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             new_device_data: dict[str, Any] = user_input.copy()
             _, errors = validate_user_input(user_input, MQTT_DEVICE_PLATFORM_FIELDS)
-            if "advanced_settings" in new_device_data:
-                new_device_data |= new_device_data.pop("advanced_settings")
+            if OTHER_SETTINGS in new_device_data:
+                new_device_data |= new_device_data.pop(OTHER_SETTINGS)
             if not errors:
                 self._subentry_data[CONF_DEVICE] = cast(MqttDeviceData, new_device_data)
                 if self.source == SOURCE_RECONFIGURE:
@@ -4615,7 +4778,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         if reconfig := (self._component_id is not None):
             component_data = self._subentry_data["components"][self._component_id]
             name: str | None = component_data.get(CONF_NAME)
-            platform_label = f"{self._subentry_data['components'][self._component_id][CONF_PLATFORM]} "
+            platform_label = f"{component_data[CONF_PLATFORM]} "
             entity_name_label = f" ({name})" if name is not None else ""
         data_schema = data_schema_from_fields(data_schema_fields, reconfig=reconfig)
         if user_input is not None:
@@ -5142,378 +5305,163 @@ async def _get_uploaded_file(hass: HomeAssistant, id: str) -> bytes:
     return await hass.async_add_executor_job(_proces_uploaded_file)
 
 
-def _validate_pki_file(
-    file_id: str | None, pem_data: str | None, errors: dict[str, str], error: str
-) -> bool:
-    """Return False if uploaded file could not be converted to PEM format."""
-    if file_id and not pem_data:
-        errors["base"] = error
-        return False
-    return True
-
-
-async def async_get_broker_settings(  # noqa: C901
-    flow: ConfigFlow | OptionsFlow,
-    fields: OrderedDict[Any, Any],
+async def async_validate_broker_settings(
+    flow: FlowHandler,
     entry_config: MappingProxyType[str, Any] | None,
     user_input: dict[str, Any] | None,
-    validated_user_input: dict[str, Any],
+    entry_config_update: dict[str, Any],
     errors: dict[str, str],
 ) -> bool:
-    """Build the config flow schema to collect the broker settings.
+    """Validate the broker settings, and return the updated entry dataset."""
 
-    Shows advanced options if one or more are configured
-    or when the advanced_broker_options checkbox was selected.
-    Returns True when settings are collected successfully.
-    """
-    hass = flow.hass
-    advanced_broker_options: bool = False
-    user_input_basic: dict[str, Any] = {}
-    current_config: dict[str, Any] = (
-        entry_config.copy() if entry_config is not None else {}
-    )
-
-    async def _async_validate_broker_settings(
-        config: dict[str, Any],
-        user_input: dict[str, Any],
-        validated_user_input: dict[str, Any],
-        errors: dict[str, str],
+    async def _async_process_file_upload(
+        upload_id: str,
+        field: str,
+        pem_type: PEMType,
+        error_code: str,
+        password: str | None = None,
     ) -> bool:
-        """Additional validation on broker settings for better error messages."""
-
-        if CONF_PROTOCOL not in validated_user_input:
-            validated_user_input[CONF_PROTOCOL] = DEFAULT_PROTOCOL
-        # Get current certificate settings from config entry
-        certificate: str | None = (
-            "auto"
-            if user_input.get(SET_CA_CERT, "off") == "auto"
-            else config.get(CONF_CERTIFICATE)
-            if user_input.get(SET_CA_CERT, "off") == "custom"
-            else None
-        )
-        client_certificate: str | None = (
-            config.get(CONF_CLIENT_CERT) if user_input.get(SET_CLIENT_CERT) else None
-        )
-        client_key: str | None = (
-            config.get(CONF_CLIENT_KEY) if user_input.get(SET_CLIENT_CERT) else None
-        )
-
-        # Prepare entry update with uploaded files
-        validated_user_input.update(user_input)
-        client_certificate_id: str | None = user_input.get(CONF_CLIENT_CERT)
-        client_key_id: str | None = user_input.get(CONF_CLIENT_KEY)
-        # We do not store the private key password in the entry data
-        client_key_password: str | None = validated_user_input.pop(
-            CONF_CLIENT_KEY_PASSWORD, None
-        )
-        if (client_certificate_id and not client_key_id) or (
-            not client_certificate_id and client_key_id
-        ):
-            errors["base"] = "invalid_inclusion"
-            return False
-        certificate_id: str | None = user_input.get(CONF_CERTIFICATE)
-        if certificate_id:
-            certificate_data_raw = await _get_uploaded_file(hass, certificate_id)
-            certificate = async_convert_to_pem(
-                certificate_data_raw, PEMType.CERTIFICATE
-            )
-        if not _validate_pki_file(
-            certificate_id, certificate, errors, "bad_certificate"
-        ):
-            return False
-
-        # Return to form for file upload CA cert or client cert and key
-        if (
-            (
-                not client_certificate
-                and user_input.get(SET_CLIENT_CERT)
-                and not client_certificate_id
-            )
-            or (
-                not certificate
-                and user_input.get(SET_CA_CERT, "off") == "custom"
-                and not certificate_id
-            )
-            or (
-                user_input.get(CONF_TRANSPORT) == TRANSPORT_WEBSOCKETS
-                and CONF_WS_PATH not in user_input
-            )
-        ):
-            return False
-
-        if client_certificate_id:
-            client_certificate_data = await _get_uploaded_file(
-                hass, client_certificate_id
-            )
-            client_certificate = async_convert_to_pem(
-                client_certificate_data, PEMType.CERTIFICATE
-            )
-        if not _validate_pki_file(
-            client_certificate_id, client_certificate, errors, "bad_client_cert"
-        ):
-            return False
-
-        if client_key_id:
-            client_key_data = await _get_uploaded_file(hass, client_key_id)
-            client_key = async_convert_to_pem(
-                client_key_data, PEMType.PRIVATE_KEY, password=client_key_password
-            )
-        if not _validate_pki_file(
-            client_key_id, client_key, errors, "client_key_error"
-        ):
-            return False
-
-        certificate_data: dict[str, Any] = {}
-        if certificate:
-            certificate_data[CONF_CERTIFICATE] = certificate
-        if client_certificate:
-            certificate_data[CONF_CLIENT_CERT] = client_certificate
-            certificate_data[CONF_CLIENT_KEY] = client_key
-
-        validated_user_input.update(certificate_data)
-        await async_create_certificate_temp_files(hass, certificate_data)
-        if error := await hass.async_add_executor_job(
-            check_certicate_chain,
-        ):
-            errors["base"] = error
-            return False
-
-        if SET_CA_CERT in validated_user_input:
-            del validated_user_input[SET_CA_CERT]
-        if SET_CLIENT_CERT in validated_user_input:
-            del validated_user_input[SET_CLIENT_CERT]
-        if validated_user_input.get(CONF_TRANSPORT, TRANSPORT_TCP) == TRANSPORT_TCP:
-            if CONF_WS_PATH in validated_user_input:
-                del validated_user_input[CONF_WS_PATH]
-            if CONF_WS_HEADERS in validated_user_input:
-                del validated_user_input[CONF_WS_HEADERS]
-            return True
+        """Get uploaded file, or a preserved copy, and convert to a PEM file."""
         try:
-            validated_user_input[CONF_WS_HEADERS] = json_loads(
-                validated_user_input.get(CONF_WS_HEADERS, "{}")
+            data_raw = await _get_uploaded_file(hass, upload_id)
+        except ValueError:
+            # Use preserved file if available.
+            # When an uploaded file was read, but an error occurs,
+            # the form will reload but the temporary file from the upload
+            # will not be available any more. If it was processed correctly,
+            # we can use the preserved copy.
+            if upload_id in flow.last_uploaded:
+                data_raw = flow.last_uploaded[upload_id]
+            else:
+                raise
+        else:
+            # Preserve a copy in case the validation fails,
+            # and we need it later
+            flow.last_uploaded[upload_id] = data_raw
+        pem_data = async_convert_to_pem(data_raw, pem_type, password)
+        if upload_id and not pem_data:
+            errors["base"] = error_code
+            return False
+        entry_config_update[field] = pem_data
+        return True
+
+    if user_input is None:
+        return False
+
+    hass = flow.hass
+
+    # Copy basic and other entry fields
+    entry_config_update |= user_input
+    entry_config_update.update(entry_config_update.pop(OTHER_SETTINGS))
+    # Pop incompatible fields for update
+    for key in (
+        SET_CA_CERT,
+        SET_CLIENT_CERT,
+        CONF_CERTIFICATE,
+        CONF_CLIENT_CERT,
+        CONF_CLIENT_KEY,
+        CONF_CLIENT_KEY_PASSWORD,
+    ):
+        entry_config_update.pop(key, None)
+
+    # Get current CA certificate settings from config entry
+    if (set_ca_cert := user_input[OTHER_SETTINGS][SET_CA_CERT]) == "auto":
+        entry_config_update[CONF_CERTIFICATE] = "auto"
+    elif (
+        entry_config is not None
+        and set_ca_cert == "custom"
+        and (current_cert := entry_config.get(CONF_CERTIFICATE))
+    ):
+        entry_config_update[CONF_CERTIFICATE] = current_cert
+
+    # Prepare entry update with uploaded certificate files
+    # converted to PEM format
+    new_client_certificate: str | None = user_input[OTHER_SETTINGS].get(
+        CONF_CLIENT_CERT
+    )
+    new_client_key: str | None = user_input[OTHER_SETTINGS].get(CONF_CLIENT_KEY)
+    set_client_cert = user_input[OTHER_SETTINGS][SET_CLIENT_CERT]
+
+    if (new_client_certificate and not new_client_key) or (
+        not new_client_certificate and new_client_key
+    ):
+        errors["base"] = "invalid_inclusion"
+        return False
+
+    if new_certificate := user_input[OTHER_SETTINGS].get(CONF_CERTIFICATE):
+        if not await _async_process_file_upload(
+            new_certificate, CONF_CERTIFICATE, PEMType.CERTIFICATE, "bad_certificate"
+        ):
+            return False
+
+    if new_client_certificate:
+        if not await _async_process_file_upload(
+            new_client_certificate,
+            CONF_CLIENT_CERT,
+            PEMType.CERTIFICATE,
+            "bad_client_cert",
+        ):
+            return False
+    elif (
+        entry_config is not None
+        and set_client_cert
+        and (client_cert := entry_config.get(CONF_CLIENT_CERT))
+    ):
+        entry_config_update[CONF_CLIENT_CERT] = client_cert
+
+    if new_client_key:
+        if not await _async_process_file_upload(
+            new_client_key,
+            CONF_CLIENT_KEY,
+            PEMType.PRIVATE_KEY,
+            "client_key_error",
+            password=user_input[OTHER_SETTINGS].get(CONF_CLIENT_KEY_PASSWORD),
+        ):
+            return False
+    elif (
+        entry_config is not None
+        and set_client_cert
+        and (client_key := entry_config.get(CONF_CLIENT_KEY))
+    ):
+        entry_config_update[CONF_CLIENT_KEY] = client_key
+
+    # We temporarily create the current and new uploaded certificate files
+    # and we check the certificate chain.
+    await async_create_certificate_temp_files(hass, entry_config_update)
+    if error := await hass.async_add_executor_job(
+        check_certicate_chain,
+    ):
+        errors["base"] = error
+        return False
+
+    if user_input[OTHER_SETTINGS].get(CONF_TRANSPORT, TRANSPORT_TCP) == TRANSPORT_TCP:
+        entry_config_update.pop(CONF_WS_PATH, None)
+        entry_config_update.pop(CONF_WS_HEADERS, None)
+    else:
+        # Web socket transport
+        try:
+            entry_config_update[CONF_WS_HEADERS] = json_loads(
+                user_input[OTHER_SETTINGS].get(CONF_WS_HEADERS, "{}")
             )
-            schema = vol.Schema({cv.string: cv.template})
-            schema(validated_user_input[CONF_WS_HEADERS])
+            schema = vol.Schema({str: str})
+            schema(entry_config_update[CONF_WS_HEADERS])
         except (*JSON_DECODE_EXCEPTIONS, vol.MultipleInvalid):
             errors["base"] = "bad_ws_headers"
             return False
+
+    # Test the configuration
+    if entry_config is not None:
+        update_password_from_user_input(
+            entry_config.get(CONF_PASSWORD), entry_config_update
+        )
+    if await hass.async_add_executor_job(
+        try_connection,
+        entry_config_update,
+    ):
         return True
 
-    if user_input:
-        user_input_basic = user_input.copy()
-        advanced_broker_options = user_input_basic.get(ADVANCED_OPTIONS, False)
-        if ADVANCED_OPTIONS not in user_input or advanced_broker_options is False:
-            if await _async_validate_broker_settings(
-                current_config,
-                user_input_basic,
-                validated_user_input,
-                errors,
-            ):
-                return True
-        # Get defaults settings from previous post
-        current_broker = user_input_basic.get(CONF_BROKER)
-        current_port = user_input_basic.get(CONF_PORT, DEFAULT_PORT)
-        current_user = user_input_basic.get(CONF_USERNAME)
-        current_pass = user_input_basic.get(CONF_PASSWORD)
-    else:
-        # Get default settings from entry (if any)
-        current_broker = current_config.get(CONF_BROKER)
-        current_port = current_config.get(CONF_PORT, DEFAULT_PORT)
-        current_user = current_config.get(CONF_USERNAME)
-        # Return the sentinel password to avoid exposure
-        current_entry_pass = current_config.get(CONF_PASSWORD)
-        current_pass = PWD_NOT_CHANGED if current_entry_pass else None
-
-    # Treat the previous post as an update of the current settings
-    # (if there was a basic broker setup step)
-    current_config.update(user_input_basic)
-
-    # Get default settings for advanced broker options
-    current_client_id = current_config.get(CONF_CLIENT_ID)
-    current_keepalive = current_config.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE)
-    current_ca_certificate = current_config.get(CONF_CERTIFICATE)
-    current_client_certificate = current_config.get(CONF_CLIENT_CERT)
-    current_client_key = current_config.get(CONF_CLIENT_KEY)
-    current_tls_insecure = current_config.get(CONF_TLS_INSECURE, False)
-    current_protocol = current_config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)
-    current_transport = current_config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
-    current_ws_path = current_config.get(CONF_WS_PATH, DEFAULT_WS_PATH)
-    current_ws_headers = (
-        json_dumps(current_config.get(CONF_WS_HEADERS))
-        if CONF_WS_HEADERS in current_config
-        else None
-    )
-    advanced_broker_options |= bool(
-        current_client_id
-        or current_keepalive != DEFAULT_KEEPALIVE
-        or current_ca_certificate
-        or current_client_certificate
-        or current_client_key
-        or current_tls_insecure
-        or current_protocol != DEFAULT_PROTOCOL
-        or current_config.get(SET_CA_CERT, "off") != "off"
-        or current_config.get(SET_CLIENT_CERT)
-        or current_transport == TRANSPORT_WEBSOCKETS
-    )
-
-    # Build form
-    fields[vol.Required(CONF_BROKER, default=current_broker)] = TEXT_SELECTOR
-    fields[vol.Required(CONF_PORT, default=current_port)] = PORT_SELECTOR
-    fields[
-        vol.Optional(
-            CONF_USERNAME,
-            description={"suggested_value": current_user},
-        )
-    ] = TEXT_SELECTOR
-    fields[
-        vol.Optional(
-            CONF_PASSWORD,
-            description={"suggested_value": current_pass},
-        )
-    ] = PASSWORD_SELECTOR
-    # show advanced options checkbox if requested and
-    # advanced options are enabled
-    # or when the defaults of advanced options are overridden
-    if not advanced_broker_options:
-        if not flow.show_advanced_options:
-            return False
-        fields[
-            vol.Optional(
-                ADVANCED_OPTIONS,
-            )
-        ] = BOOLEAN_SELECTOR
-        return False
-    fields[
-        vol.Optional(
-            CONF_CLIENT_ID,
-            description={"suggested_value": current_client_id},
-        )
-    ] = TEXT_SELECTOR
-    fields[
-        vol.Optional(
-            CONF_KEEPALIVE,
-            description={"suggested_value": current_keepalive},
-        )
-    ] = KEEPALIVE_SELECTOR
-    fields[
-        vol.Optional(
-            SET_CLIENT_CERT,
-            default=current_client_certificate is not None
-            or current_config.get(SET_CLIENT_CERT) is True,
-        )
-    ] = BOOLEAN_SELECTOR
-    if (
-        current_client_certificate is not None
-        or current_config.get(SET_CLIENT_CERT) is True
-    ):
-        fields[
-            vol.Optional(
-                CONF_CLIENT_CERT,
-                description={"suggested_value": user_input_basic.get(CONF_CLIENT_CERT)},
-            )
-        ] = CERT_UPLOAD_SELECTOR
-        fields[
-            vol.Optional(
-                CONF_CLIENT_KEY,
-                description={"suggested_value": user_input_basic.get(CONF_CLIENT_KEY)},
-            )
-        ] = CERT_KEY_UPLOAD_SELECTOR
-        fields[
-            vol.Optional(
-                CONF_CLIENT_KEY_PASSWORD,
-                description={
-                    "suggested_value": user_input_basic.get(CONF_CLIENT_KEY_PASSWORD)
-                },
-            )
-        ] = PASSWORD_SELECTOR
-    verification_mode = current_config.get(SET_CA_CERT) or (
-        "off"
-        if current_ca_certificate is None
-        else "auto"
-        if current_ca_certificate == "auto"
-        else "custom"
-    )
-    fields[
-        vol.Optional(
-            SET_CA_CERT,
-            default=verification_mode,
-        )
-    ] = BROKER_VERIFICATION_SELECTOR
-    if current_ca_certificate is not None or verification_mode == "custom":
-        fields[
-            vol.Optional(
-                CONF_CERTIFICATE,
-                user_input_basic.get(CONF_CERTIFICATE),
-            )
-        ] = CA_CERT_UPLOAD_SELECTOR
-    fields[
-        vol.Optional(
-            CONF_TLS_INSECURE,
-            description={"suggested_value": current_tls_insecure},
-        )
-    ] = BOOLEAN_SELECTOR
-    fields[
-        vol.Optional(
-            CONF_PROTOCOL,
-            description={"suggested_value": current_protocol},
-        )
-    ] = PROTOCOL_SELECTOR
-    fields[
-        vol.Optional(
-            CONF_TRANSPORT,
-            description={"suggested_value": current_transport},
-        )
-    ] = TRANSPORT_SELECTOR
-    if current_transport == TRANSPORT_WEBSOCKETS:
-        fields[
-            vol.Optional(CONF_WS_PATH, description={"suggested_value": current_ws_path})
-        ] = TEXT_SELECTOR
-        fields[
-            vol.Optional(
-                CONF_WS_HEADERS, description={"suggested_value": current_ws_headers}
-            )
-        ] = WS_HEADERS_SELECTOR
-
-    # Show form
+    errors["base"] = "cannot_connect"
     return False
-
-
-def try_connection(
-    user_input: dict[str, Any],
-) -> bool:
-    """Test if we can connect to an MQTT broker."""
-    # We don't import on the top because some integrations
-    # should be able to optionally rely on MQTT.
-    import paho.mqtt.client as mqtt  # noqa: PLC0415
-
-    mqtt_client_setup = MqttClientSetup(user_input)
-    mqtt_client_setup.setup()
-    client = mqtt_client_setup.client
-
-    result: queue.Queue[bool] = queue.Queue(maxsize=1)
-
-    def on_connect(
-        _mqttc: mqtt.Client,
-        _userdata: None,
-        _connect_flags: mqtt.ConnectFlags,
-        reason_code: mqtt.ReasonCode,
-        _properties: mqtt.Properties | None = None,
-    ) -> None:
-        """Handle connection result."""
-        result.put(not reason_code.is_failure)
-
-    client.on_connect = on_connect
-
-    client.connect_async(user_input[CONF_BROKER], user_input[CONF_PORT])
-    client.loop_start()
-
-    try:
-        return result.get(timeout=MQTT_TIMEOUT)
-    except queue.Empty:
-        return False
-    finally:
-        client.disconnect()
-        client.loop_stop()
 
 
 def check_certicate_chain() -> str | None:

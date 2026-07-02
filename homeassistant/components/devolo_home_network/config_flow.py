@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from devolo_plc_api.device import Device
 from devolo_plc_api.exceptions.device import DeviceNotFound, DevicePasswordProtected
@@ -40,9 +40,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     await device.async_connect(session_instance=async_client)
 
-    # Try a password protected, non-writing device API call that raises, if the password is wrong.
-    # If only the plcnet API is available, we can continue without trying a password as the plcnet
-    # API does not require a password.
+    # Try a password protected, non-writing device API
+    # call that raises, if the password is wrong.
+    # If only the plcnet API is available, we can continue
+    # without trying a password as the plcnet API does not
+    # require a password.
     if device.device:
         await device.device.async_uptime()
 
@@ -62,6 +64,7 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
     host: str
     _reauth_entry: DevoloHomeNetworkConfigEntry
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -89,6 +92,7 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

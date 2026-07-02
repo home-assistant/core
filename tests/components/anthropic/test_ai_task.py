@@ -101,7 +101,7 @@ async def test_stream_wrong_type(
     mock_create_stream.return_value = Message(
         type="message",
         id="message_id",
-        model="claude-opus-4-6",
+        model="claude-fable-5",
         role="assistant",
         content=[TextBlock(type="text", text="This is not a stream")],
         usage=Usage(input_tokens=42, output_tokens=42),
@@ -134,6 +134,7 @@ async def test_generate_structured_data_legacy(
                 CONF_THINKING_BUDGET: 0,
             },
         )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         create_tool_use_block(
@@ -194,6 +195,7 @@ async def test_generate_structured_data_legacy_tools(
                 "thinking_budget": 0,
             },
         )
+    await hass.async_block_till_done()
 
     result = await ai_task.async_generate_data(
         hass,
@@ -225,7 +227,10 @@ async def test_generate_structured_data_legacy_extended_thinking(
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test AI Task structured data generation with legacy method and extended_thinking."""
+    """Test AI Task structured data generation.
+
+    Uses legacy method with extended_thinking.
+    """
     mock_create_stream.return_value = [
         (
             *create_thinking_block(
@@ -250,6 +255,7 @@ async def test_generate_structured_data_legacy_extended_thinking(
                 "thinking_budget": 1500,
             },
         )
+    await hass.async_block_till_done()
 
     result = await ai_task.async_generate_data(
         hass,
@@ -281,7 +287,10 @@ async def test_generate_structured_data_legacy_extra_text_block(
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test AI Task structured data generation with legacy method and extra text block."""
+    """Test AI Task structured data generation.
+
+    Uses legacy method with extra text block.
+    """
     mock_create_stream.return_value = [
         (
             *create_thinking_block(
@@ -307,6 +316,7 @@ async def test_generate_structured_data_legacy_extra_text_block(
                 "thinking_budget": 1500,
             },
         )
+    await hass.async_block_till_done()
 
     result = await ai_task.async_generate_data(
         hass,
@@ -345,6 +355,7 @@ async def test_generate_invalid_structured_data_legacy(
                 CONF_CHAT_MODEL: "claude-sonnet-4-0",
             },
         )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         create_tool_use_block(
@@ -553,7 +564,9 @@ async def test_generate_data_invalid_attachments(
         pytest.raises(
             HomeAssistantError,
             match=re.escape(
-                "The Claude Haiku 4.5 model does not support text/plain file types (for `doorbell_snapshot.txt`)"
+                "The Claude Haiku 4.5 model does not support"
+                " text/plain file types"
+                " (for `doorbell_snapshot.txt`)"
             ),
         ),
     ):

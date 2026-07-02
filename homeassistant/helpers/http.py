@@ -59,13 +59,14 @@ def request_handler_factory(
             # Import here to avoid circular dependency with network.py
             from .network import NoURLAvailableError, get_url  # noqa: PLC0415
 
+            # Get the current request header to include as resource metadata
+            # endpoint for RFC9728.
             try:
                 url_prefix = get_url(hass, require_current_request=True)
             except NoURLAvailableError:
                 # Omit header to avoid leaking configured URLs
                 raise HTTPUnauthorized from None
             raise HTTPUnauthorized(
-                # Include resource metadata endpoint for RFC9728
                 headers={
                     "WWW-Authenticate": (
                         f'Bearer resource_metadata="{url_prefix}'

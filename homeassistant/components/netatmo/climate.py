@@ -1,8 +1,8 @@
 """Support for Netatmo Smart thermostats."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyatmo.modules import NATherm1
 from pyatmo.modules.device_types import DeviceType
@@ -54,6 +54,7 @@ from .const import (
 )
 from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoRoom
 from .entity import NetatmoRoomEntity
+from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -219,8 +220,11 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         if self.device_type is NA_THERM:
             self._attr_hvac_modes.append(HVACMode.OFF)
 
-        self._attr_unique_id = f"{self.device.entity_id}-{self.device_type}"
+        self._attr_unique_id = (
+            f"{self.device.entity_id}-{device_type_to_str(self.device_type)}"
+        )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
@@ -325,6 +329,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                 return
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation if supported."""
         if self.device_type != NA_VALVE and self._boilerstatus is not None:
@@ -336,6 +341,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             return HVACAction.HEATING
         return HVACAction.IDLE
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
@@ -345,6 +351,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         elif hvac_mode == HVACMode.HEAT:
             await self.async_set_preset_mode(PRESET_BOOST)
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if (
@@ -377,6 +384,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature for 2 hours."""
         await self.device.async_therm_set(
@@ -384,6 +392,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         )
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         if self.device_type == NA_VALVE:
@@ -395,17 +404,20 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             await self.device.async_therm_set(STATE_NETATMO_OFF)
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         await self.device.async_therm_set(STATE_NETATMO_HOME)
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """If the device hasn't been able to connect, mark as unavailable."""
         return bool(self._connected)
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         if not self.device.reachable:

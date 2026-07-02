@@ -1,5 +1,7 @@
 """Support for Homekit motion sensors."""
 
+from typing import override
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.characteristics.const import InputEventValues
 from aiohomekit.model.services import Service, ServicesTypes
@@ -48,17 +50,20 @@ class HomeKitEventEntity(BaseCharacteristicEntity, EventEntity):
 
         self.entity_description = entity_description
 
-        # An INPUT_EVENT may support single_press, long_press and double_press. All are optional. So we have to
-        # clamp InputEventValues for this exact device
+        # An INPUT_EVENT may support single_press, long_press and
+        # double_press. All are optional. So we have to clamp
+        # InputEventValues for this exact device
         self._attr_event_types = [
             INPUT_EVENT_VALUES[v]
             for v in clamp_enum_to_char(InputEventValues, self._char)
         ]
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [CharacteristicsTypes.INPUT_EVENT]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
         await super().async_added_to_hass()

@@ -1,9 +1,9 @@
 """Provide configuration end points for scripts."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
-from homeassistant.components.script.config import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.script.config import (  # pylint: disable=home-assistant-component-root-import
     async_validate_config_item,
 )
 from homeassistant.config import SCRIPT_CONFIG_PATH
@@ -52,6 +52,7 @@ def async_setup(hass: HomeAssistant) -> bool:
 class EditScriptConfigView(EditKeyBasedConfigView):
     """Edit script config."""
 
+    @override
     def _write_value(
         self,
         hass: HomeAssistant,

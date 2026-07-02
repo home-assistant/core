@@ -1,6 +1,6 @@
 """Support for Victron GX device tracker."""
 
-from typing import Any
+from typing import Any, override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
@@ -9,7 +9,7 @@ from victron_mqtt import (
     MetricKind,
 )
 
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -50,7 +50,6 @@ async def async_setup_entry(
 class VictronDeviceTracker(VictronBaseEntity, TrackerEntity):
     """Implementation of a Victron GX device tracker."""
 
-    _attr_source_type = SourceType.GPS
     _altitude: float | None = None
     _course: float | None = None
     _speed: float | None = None
@@ -67,6 +66,7 @@ class VictronDeviceTracker(VictronBaseEntity, TrackerEntity):
         self._update_from_location(metric.value)
 
     @callback
+    @override
     def _on_update_cb(self, value: Any) -> None:
         self._update_from_location(value)
         self.async_write_ha_state()
@@ -88,6 +88,7 @@ class VictronDeviceTracker(VictronBaseEntity, TrackerEntity):
         self._speed = value.speed
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, StateType]:
         """Return extra state attributes for altitude, course, and speed."""
         attrs: dict[str, StateType] = {}

@@ -1,5 +1,7 @@
 """Support for tracking MySensors devices."""
 
+from typing import override
+
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -43,6 +45,7 @@ class MySensorsDeviceTracker(MySensorsChildEntity, TrackerEntity):
     """Represent a MySensors device tracker."""
 
     @callback
+    @override
     def _async_update(self) -> None:
         """Update the controller with the latest value from a device."""
         super()._async_update()

@@ -2,14 +2,20 @@
 
 from datetime import date, datetime, timedelta
 import logging
+from typing import override
 
-from cookidoo_api import CookidooAuthException, CookidooException
+from cookidoo_api import (
+    CookidooAuthException,
+    CookidooException,
+    CookidooRequestException,
+)
 from cookidoo_api.types import CookidooCalendarDayRecipe
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import CookidooConfigEntry, CookidooDataUpdateCoordinator
@@ -53,12 +59,13 @@ class CookidooCalendarEntity(CookidooBaseEntity, CalendarEntity):
         self._attr_unique_id = coordinator.config_entry.unique_id
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         if not self.coordinator.data.week_plan:
             return None
 
-        today = date.today()
+        today = dt_util.now().date()
         for day_data in self.coordinator.data.week_plan:
             day_date = date.fromisoformat(day_data.id)
             if day_date >= today and day_data.recipes:
@@ -73,7 +80,13 @@ class CookidooCalendarEntity(CookidooBaseEntity, CalendarEntity):
                 week_day
             )
         except CookidooAuthException:
-            await self.coordinator.cookidoo.refresh_token()
+            try:
+                await self.coordinator.cookidoo.login()
+            except (CookidooAuthException, CookidooRequestException) as exc:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="calendar_fetch_failed",
+                ) from exc
             return await self.coordinator.cookidoo.get_recipes_in_calendar_week(
                 week_day
             )
@@ -83,6 +96,7 @@ class CookidooCalendarEntity(CookidooBaseEntity, CalendarEntity):
                 translation_key="calendar_fetch_failed",
             ) from e
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:

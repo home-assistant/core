@@ -1,7 +1,7 @@
 """Switch platform for Indevolt integration."""
 
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, override
 
 from indevolt_api import IndevoltConfig
 
@@ -15,6 +15,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IndevoltConfigEntry
+from .const import DOMAIN
 from .coordinator import IndevoltCoordinator
 from .entity import IndevoltEntity
 
@@ -96,6 +97,7 @@ class IndevoltSwitchEntity(IndevoltEntity, SwitchEntity):
         self._attr_unique_id = f"{self.serial_number}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         raw_value = self.coordinator.data.get(self.entity_description.read_key)
@@ -110,10 +112,12 @@ class IndevoltSwitchEntity(IndevoltEntity, SwitchEntity):
 
         return None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_toggle(1)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_toggle(0)
@@ -125,7 +129,18 @@ class IndevoltSwitchEntity(IndevoltEntity, SwitchEntity):
         )
 
         if success:
-            await self.coordinator.async_request_refresh()
+            read_value = (
+                self.entity_description.read_on_value
+                if value
+                else self.entity_description.read_off_value
+            )
+            self.coordinator.async_optimistic_update(
+                self.entity_description.read_key, read_value
+            )
 
         else:
-            raise HomeAssistantError(f"Failed to set value {value} for {self.name}")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="write_error",
+                translation_placeholders={"name": str(self.name)},
+            )

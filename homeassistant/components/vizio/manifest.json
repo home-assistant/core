@@ -7,6 +7,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pyvizio"],
-  "requirements": ["pyvizio==0.1.61"],
+  "requirements": ["pyvizio==0.1.64"],
   "zeroconf": ["_viziocast._tcp.local."]
 }

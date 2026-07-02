@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from typing import override
 
 from satel_integra import AlarmState
 
@@ -33,6 +34,8 @@ ALARM_STATE_MAP = {
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -43,12 +46,7 @@ async def async_setup_entry(
 
     runtime_data = config_entry.runtime_data
 
-    partition_subentries = filter(
-        lambda entry: entry.subentry_type == SUBENTRY_TYPE_PARTITION,
-        config_entry.subentries.values(),
-    )
-
-    for subentry in partition_subentries:
+    for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_PARTITION):
         partition_num: int = subentry.data[CONF_PARTITION_NUMBER]
         arm_home_mode: int = subentry.data[CONF_ARM_HOME_MODE]
 
@@ -76,6 +74,7 @@ class SatelIntegraAlarmPanel(
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+    _attr_name = None
 
     def __init__(
         self,
@@ -98,6 +97,7 @@ class SatelIntegraAlarmPanel(
         self._attr_alarm_state = self._read_alarm_state()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_alarm_state = self._read_alarm_state()
@@ -114,6 +114,7 @@ class SatelIntegraAlarmPanel(
 
         return AlarmControlPanelState.DISARMED
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if not code:
@@ -131,12 +132,14 @@ class SatelIntegraAlarmPanel(
             await asyncio.sleep(1)
             await self._controller.clear_alarm(code, [self._device_number])
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
 
         if code:
             await self._controller.arm(code, [self._device_number])
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
 

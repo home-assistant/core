@@ -1,6 +1,7 @@
 """Base class for a device entity integrated in devolo Home Control."""
 
 import logging
+from typing import override
 from urllib.parse import urlparse
 
 from devolo_home_control_api.devices.zwave import Zwave
@@ -49,6 +50,7 @@ class DevoloDeviceEntity(Entity):
 
         self._value: float
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         assert self.device_info
@@ -60,6 +62,7 @@ class DevoloDeviceEntity(Entity):
             self._device_instance.uid, self.subscriber, self.sync_callback
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity is removed or disabled."""
         self._homecontrol.publisher.unregister(
@@ -115,7 +118,10 @@ class DevoloDeviceEntity(Entity):
 
 
 class DevoloMultiLevelSwitchDeviceEntity(DevoloDeviceEntity):
-    """Representation of a multi level switch device within devolo Home Control. Something like a dimmer or a thermostat."""
+    """Representation of a multi level switch device within devolo Home Control.
+
+    Something like a dimmer or a thermostat.
+    """
 
     _attr_name = None
 
