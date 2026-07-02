@@ -1,6 +1,7 @@
 """Platform providing event entities for UniFi Protect."""
 
 import dataclasses
+import re
 from typing import Any, override
 
 from uiprotect import ProtectEvent
@@ -20,6 +21,7 @@ from homeassistant.helpers.event import async_call_at
 from . import Bootstrap
 from .const import (
     ATTR_EVENT_ID,
+    ATTR_SMART_DETECT_TYPES,
     EVENT_TYPE_FINGERPRINT_IDENTIFIED,
     EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED,
     EVENT_TYPE_NFC_SCANNED,
@@ -41,6 +43,10 @@ from .data import (
 from .entity import EventEntityMixin, ProtectDeviceEntity, ProtectEventMixin
 
 PARALLEL_UPDATES = 0
+
+# Per-entity cap on tracked event ids for fire dedup (far above realistic
+# concurrent/recent events per camera per category).
+_MAX_TRACKED_EVENTS = 16
 
 
 # Select best thumbnail
@@ -75,7 +81,47 @@ class ProtectEventEntityDescription(ProtectEventMixin, EventEntityDescription):
     entity_class: type[ProtectDeviceEntity]
 
 
-class ProtectDeviceRingEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEntity):
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ProtectDetectionEventEntityDescription(ProtectEventEntityDescription):
+    """Describes a category detection event entity driven by the public events WS."""
+
+    ufp_public_event_type: EventType
+
+
+class ProtectDevicePublicEventEntity(
+    EventEntityMixin, ProtectDeviceEntity, EventEntity
+):
+    """Base for entities driven by the public events WS.
+
+    A detection type can surface at the event start, on a later update, or only
+    as the event ends, and every non-eviction change is dispatched — so firing is
+    deduped per ``(event id, event type)``.
+    """
+
+    entity_description: ProtectEventEntityDescription
+    # A camera can run two overlapping events of the same category whose
+    # dispatches interleave, so dedup tracks fired types per recent event id
+    # (bounded), not just the current one.
+    _fired: dict[str, frozenset[str]] | None = None
+
+    @callback
+    def _fire_once(
+        self, event: ProtectEvent, event_type: str, event_data: dict[str, Any]
+    ) -> None:
+        """Fire ``event_type`` once per event, ignoring repeat dispatches."""
+        fired = self._fired
+        if fired is None:
+            fired = self._fired = {}
+        if event_type in (types := fired.get(event.id, frozenset())):
+            return
+        fired[event.id] = types | {event_type}
+        if len(fired) > _MAX_TRACKED_EVENTS:
+            del fired[next(iter(fired))]
+        self._trigger_event(event_type, event_data)
+        self.async_write_ha_state()
+
+
+class ProtectDeviceRingEventEntity(ProtectDevicePublicEventEntity):
     """A UniFi Protect doorbell ring event entity driven by the public events WS."""
 
     entity_description: ProtectEventEntityDescription
@@ -92,8 +138,7 @@ class ProtectDeviceRingEventEntity(EventEntityMixin, ProtectDeviceEntity, EventE
 
     @callback
     def _async_ring_event(self, event: ProtectEvent) -> None:
-        self._trigger_event(DoorbellEventType.RING, {ATTR_EVENT_ID: event.id})
-        self.async_write_ha_state()
+        self._fire_once(event, DoorbellEventType.RING, {ATTR_EVENT_ID: event.id})
 
 
 class ProtectDeviceNFCEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEntity):
@@ -360,9 +405,7 @@ class ProtectDeviceVehicleEventEntity(
                 self._async_set_thumbnail_timer()
 
 
-class ProtectDeviceSmartDetectEventEntity(
-    EventEntityMixin, ProtectDeviceEntity, EventEntity
-):
+class ProtectDeviceSmartDetectEventEntity(ProtectDevicePublicEventEntity):
     """A UniFi Protect smart-detect event entity driven by the public events WS.
 
     Used for object types that Protect models as discrete, point-in-time
@@ -391,8 +434,89 @@ class ProtectDeviceSmartDetectEventEntity(
         description = self.entity_description
         event_types = description.event_types
         if event_types and description.ufp_obj_type in event.smart_detect_types:
-            self._trigger_event(event_types[0], {ATTR_EVENT_ID: event.id})
-            self.async_write_ha_state()
+            self._fire_once(event, event_types[0], {ATTR_EVENT_ID: event.id})
+
+
+_CAMEL_BOUNDARY = re.compile(r"(?<!^)(?=[A-Z])")
+
+# Friendly event-type slugs where the raw enum value is unclear or prefixed;
+# unlisted types fall back to a snake_case slug so new ones still auto-surface.
+_EVENT_TYPE_OVERRIDES = {
+    SmartDetectObjectType.SMOKE: "smoke",
+    SmartDetectObjectType.CMONX: "co",
+    SmartDetectObjectType.SIREN: "siren",
+    SmartDetectObjectType.BABY_CRY: "baby_cry",
+    SmartDetectObjectType.SPEAK: "speaking",
+    SmartDetectObjectType.BARK: "bark",
+    SmartDetectObjectType.BURGLAR: "car_alarm",
+    SmartDetectObjectType.CAR_HORN: "car_horn",
+    SmartDetectObjectType.GLASS_BREAK: "glass_break",
+}
+
+
+def _event_type(detected: SmartDetectObjectType) -> str:
+    """Stable snake_case event type for a detection (HA translation-key rules)."""
+    return (
+        _EVENT_TYPE_OVERRIDES.get(detected)
+        or _CAMEL_BOUNDARY.sub("_", detected.value).lower()
+    )
+
+
+_SMART_OBJECT_EVENT_TYPES = [
+    _event_type(t) for t in SmartDetectObjectType if t.audio_type is None
+]
+_SMART_AUDIO_EVENT_TYPES = [
+    _event_type(t) for t in SmartDetectObjectType if t.audio_type is not None
+]
+
+
+class ProtectDeviceDetectionEventEntity(ProtectDevicePublicEventEntity):
+    """A camera smart-detect category event entity (object or audio), public WS.
+
+    Fires a momentary event for each detected type the entity surfaces. The
+    ``event_types`` are derived from the uiprotect enum, so a new detection type
+    is surfaced automatically without code changes (only a state label is added).
+    The subscribed category comes from ``ufp_public_event_type``; the motion
+    variant overrides the firing.
+    """
+
+    entity_description: ProtectDetectionEventEntityDescription
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to the category's public detection events."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.data.async_subscribe_public_event(
+                self.device.mac,
+                self.entity_description.ufp_public_event_type,
+                self._async_detection_event,
+            )
+        )
+
+    @callback
+    def _async_detection_event(self, event: ProtectEvent) -> None:
+        allowed = self.entity_description.event_types or ()
+        # One fire per detected type so each stays independently automatable
+        # (incl. types with no binary sensor); carries the co-detected set known
+        # at fire time (types can still arrive on a later update).
+        detected = [_event_type(t) for t in event.smart_detect_types]
+        for event_type in detected:
+            if event_type in allowed:
+                self._fire_once(
+                    event,
+                    event_type,
+                    {ATTR_EVENT_ID: event.id, ATTR_SMART_DETECT_TYPES: detected},
+                )
+
+
+class ProtectDeviceMotionEventEntity(ProtectDeviceDetectionEventEntity):
+    """A camera motion-detection event entity (public events WS)."""
+
+    @callback
+    @override
+    def _async_detection_event(self, event: ProtectEvent) -> None:
+        self._fire_once(event, EventType.MOTION.value, {ATTR_EVENT_ID: event.id})
 
 
 EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
@@ -438,6 +562,30 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
         ufp_obj_type=SmartDetectObjectType.PACKAGE,
         event_types=[EVENT_TYPE_PACKAGE_DETECTED],
         entity_class=ProtectDeviceSmartDetectEventEntity,
+    ),
+    ProtectDetectionEventEntityDescription(
+        key="motion_detection",
+        translation_key="motion_detection",
+        device_class=EventDeviceClass.MOTION,
+        event_types=[EventType.MOTION.value],
+        ufp_public_event_type=EventType.MOTION,
+        entity_class=ProtectDeviceMotionEventEntity,
+    ),
+    ProtectDetectionEventEntityDescription(
+        key="smart_detection",
+        translation_key="smart_detection",
+        ufp_required_field="feature_flags.has_smart_detect",
+        event_types=_SMART_OBJECT_EVENT_TYPES,
+        ufp_public_event_type=EventType.SMART_DETECT,
+        entity_class=ProtectDeviceDetectionEventEntity,
+    ),
+    ProtectDetectionEventEntityDescription(
+        key="sound_detection",
+        translation_key="sound_detection",
+        ufp_required_field="feature_flags.has_smart_detect",
+        event_types=_SMART_AUDIO_EVENT_TYPES,
+        ufp_public_event_type=EventType.SMART_AUDIO_DETECT,
+        entity_class=ProtectDeviceDetectionEventEntity,
     ),
 )
 

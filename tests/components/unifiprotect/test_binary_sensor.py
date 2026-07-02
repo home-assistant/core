@@ -1,5 +1,6 @@
 """Test the UniFi Protect binary_sensor platform."""
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 
@@ -13,7 +14,7 @@ from uiprotect.data import (
     ModelType,
     MountType,
     Sensor,
-    SmartDetectObjectType,
+    SmartDetectAudioType,
 )
 from uiprotect.data.nvr import EventMetadata
 from uiprotect.websocket import WebsocketState
@@ -26,10 +27,7 @@ from homeassistant.components.unifiprotect.binary_sensor import (
     MOUNTABLE_SENSE_SENSORS,
     SENSE_SENSORS,
 )
-from homeassistant.components.unifiprotect.const import (
-    ATTR_EVENT_SCORE,
-    DEFAULT_ATTRIBUTION,
-)
+from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
@@ -39,7 +37,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
-from homeassistant.core import Event as HAEvent, EventStateChangedData, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .utils import (
@@ -48,9 +46,11 @@ from .utils import (
     assert_entity_counts,
     ids_from_device_description,
     init_entry,
+    make_public_camera,
     make_public_sensor,
     public_device_ws_message,
     remove_entities,
+    setup_public_camera,
     setup_public_sensor,
 )
 
@@ -140,6 +140,7 @@ async def test_binary_sensor_setup_camera_all(
     """Test binary_sensor entity setup for camera devices (all features)."""
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 6)
 
@@ -172,8 +173,8 @@ async def test_binary_sensor_setup_camera_all(
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    # Motion
-    description = EVENT_SENSORS[1]
+    # Motion (migrated to the public path, available via setup_public_camera)
+    description = next(d for d in CAMERA_SENSORS if d.key == "motion")
     unique_id, entity_id = await ids_from_device_description(
         hass, Platform.BINARY_SENSOR, doorbell, description
     )
@@ -412,49 +413,35 @@ async def test_binary_sensor_update_motion(
     ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
-    fixed_now: datetime,
 ) -> None:
-    """Test binary_sensor motion entity."""
+    """Test the migrated motion binary sensor reads sustained state from the public API."""
 
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 14, 12)
 
+    motion = next(d for d in CAMERA_SENSORS if d.key == "motion")
     _, entity_id = await ids_from_device_description(
-        hass, Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[1]
+        hass, Platform.BINARY_SENSOR, doorbell, motion
     )
-
-    event = Event(
-        model=ModelType.EVENT,
-        id="test_event_id",
-        type=EventType.MOTION,
-        start=fixed_now - timedelta(seconds=1),
-        end=None,
-        score=100,
-        smart_detect_types=[],
-        smart_detect_event_ids=[],
-        camera_id=doorbell.id,
-        api=ufp.api,
-    )
-
-    new_camera = doorbell.model_copy()
-    new_camera.is_motion_detected = True
-    new_camera.last_motion_event_id = event.id
-
-    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
-    ufp.api.bootstrap.events = {event.id: event}
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = event
-    ufp.ws_msg(mock_msg)
-
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ON
+    assert state.state == STATE_OFF
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-    assert state.attributes[ATTR_EVENT_SCORE] == 100
+
+    ufp.devices_ws_subscription(
+        public_device_ws_message(make_public_camera(doorbell, is_motion_detected=True))
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    # Detection ends -> sustained state clears.
+    ufp.devices_ws_subscription(public_device_ws_message(make_public_camera(doorbell)))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_OFF
 
 
 async def test_binary_sensor_update_light_motion(
@@ -573,37 +560,108 @@ async def test_binary_sensor_person_detected(
     ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
-    fixed_now: datetime,
 ) -> None:
-    """Test binary_sensor person detected detection entity."""
+    """Test the migrated person-detection binary sensor over the public API."""
 
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 14, 14)
 
-    doorbell.smart_detect_settings.object_types.append(SmartDetectObjectType.PERSON)
-
+    person = next(d for d in CAMERA_SENSORS if d.key == "smart_obj_person")
     _, entity_id = await ids_from_device_description(
-        hass, Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[3]
+        hass, Platform.BINARY_SENSOR, doorbell, person
     )
 
-    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+    assert hass.states.get(entity_id).state == STATE_OFF
 
+    # Person detection starts (camera update pushed on the public devices WS).
+    ufp.devices_ws_subscription(
+        public_device_ws_message(
+            make_public_camera(
+                doorbell,
+                is_smart_currently_detected=True,
+                is_person_currently_detected=True,
+            )
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    # Detection ends -> sustained state clears.
+    ufp.devices_ws_subscription(public_device_ws_message(make_public_camera(doorbell)))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("key", "make_disabled"),
+    [
+        ("smart_obj_person", lambda c: make_public_camera(c, object_types=[])),
+        ("smart_audio_smoke", lambda c: make_public_camera(c, audio_types=[])),
+    ],
+)
+async def test_binary_sensor_detection_disabled_unavailable(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    key: str,
+    make_disabled: Callable[[Camera], Mock],
+) -> None:
+    """A migrated detection binary is unavailable when its type is disabled in Protect."""
+
+    # Ensure the audio-alarm capability so the smoke binary is created.
+    doorbell.feature_flags.smart_detect_audio_types = [SmartDetectAudioType.SMOKE]
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    description = next(d for d in CAMERA_SENSORS if d.key == key)
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, doorbell, description
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # The detection type is turned off in Protect -> the enabled gate fails.
+    ufp.devices_ws_subscription(public_device_ws_message(make_disabled(doorbell)))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_binary_sensor_doorbell_ring(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """The doorbell occupancy binary stays on the private ring event path."""
+
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    description = next(d for d in EVENT_SENSORS if d.key == "doorbell")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, doorbell, description
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
     event = Event(
         model=ModelType.EVENT,
-        id="test_event_id",
-        type=EventType.SMART_DETECT,
+        id="ring-1",
+        type=EventType.RING,
         start=fixed_now - timedelta(seconds=1),
-        end=None,
-        score=50,
+        end=fixed_now,
         smart_detect_types=[],
         smart_detect_event_ids=[],
         camera_id=doorbell.id,
         api=ufp.api,
     )
-
     new_camera = doorbell.model_copy()
-    new_camera.is_smart_detected = True
-
+    new_camera.last_ring_event_id = event.id
     ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
     ufp.api.bootstrap.events = {event.id: event}
 
@@ -611,106 +669,12 @@ async def test_binary_sensor_person_detected(
     mock_msg.changed_data = {}
     mock_msg.new_obj = event
     ufp.ws_msg(mock_msg)
-
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
-
-    event = Event(
-        model=ModelType.EVENT,
-        id="test_event_id",
-        type=EventType.SMART_DETECT,
-        start=fixed_now - timedelta(seconds=1),
-        end=fixed_now + timedelta(seconds=1),
-        score=65,
-        smart_detect_types=[SmartDetectObjectType.PERSON],
-        smart_detect_event_ids=[],
-        camera_id=doorbell.id,
-        api=ufp.api,
-    )
-
-    new_camera = doorbell.model_copy()
-    new_camera.is_smart_detected = True
-    new_camera.last_smart_detect_event_ids[SmartDetectObjectType.PERSON] = event.id
-
-    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
-    ufp.api.bootstrap.events = {event.id: event}
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = event
-    ufp.ws_msg(mock_msg)
-
-    await hass.async_block_till_done()
-
-    entity_events = [event for event in events if event.data["entity_id"] == entity_id]
-    assert len(entity_events) == 3
-    assert entity_events[0].data["new_state"].state == STATE_OFF
-    assert entity_events[1].data["new_state"].state == STATE_ON
-    assert entity_events[2].data["new_state"].state == STATE_OFF
-
-    # Event is already seen and has end, should now be off
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
-
-    # Now send an event that has an end right away
-    event = Event(
-        model=ModelType.EVENT,
-        id="new_event_id",
-        type=EventType.SMART_DETECT,
-        start=fixed_now - timedelta(seconds=1),
-        end=fixed_now + timedelta(seconds=1),
-        score=80,
-        smart_detect_types=[SmartDetectObjectType.PERSON],
-        smart_detect_event_ids=[],
-        camera_id=doorbell.id,
-        api=ufp.api,
-    )
-
-    new_camera = doorbell.model_copy()
-    new_camera.is_smart_detected = True
-    new_camera.last_smart_detect_event_ids[SmartDetectObjectType.PERSON] = event.id
-
-    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
-    ufp.api.bootstrap.events = {event.id: event}
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = event
-
-    state_changes: list[HAEvent[EventStateChangedData]] = async_capture_events(
-        hass, EVENT_STATE_CHANGED
-    )
-    ufp.ws_msg(mock_msg)
-
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
-
-    assert len(state_changes) == 2
-
-    on_event = state_changes[0]
-    state = on_event.data["new_state"]
-    assert state
-    assert state.state == STATE_ON
-    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-    assert state.attributes[ATTR_EVENT_SCORE] == 80
-
-    off_event = state_changes[1]
-    state = off_event.data["new_state"]
-    assert state
-    assert state.state == STATE_OFF
-    assert ATTR_EVENT_SCORE not in state.attributes
-
-    # replay and ensure ignored
-    ufp.ws_msg(mock_msg)
-    await hass.async_block_till_done()
-    assert len(state_changes) == 2
+    # A momentary ring blips on, then immediately clears.
+    ring_changes = [e for e in state_changes if e.data["entity_id"] == entity_id]
+    assert any(c.data["new_state"].state == STATE_ON for c in ring_changes)
+    assert hass.states.get(entity_id).state == STATE_OFF
 
 
 async def test_aiport_no_binary_sensor_entities(
@@ -739,171 +703,62 @@ async def test_binary_sensor_simultaneous_person_and_vehicle_detection(
     ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
-    fixed_now: datetime,
 ) -> None:
-    """Test that when an event is updated with additional detection types, both trigger.
+    """Person and vehicle detected at once both report ON.
 
-    This is a regression test for https://github.com/home-assistant/core/issues/152133
-    where an event starting with vehicle detection gets updated to also include person
-    detection (e.g., someone getting out of a car). Both sensors should be ON
-    simultaneously, not queued.
+    Regression for https://github.com/home-assistant/core/issues/152133 (a second
+    type added to an ongoing detection): on the public path each type's sustained
+    state is derived independently by the library, so adding person to an ongoing
+    vehicle detection turns both ON without queueing.
     """
 
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 14, 14)
 
-    doorbell.smart_detect_settings.object_types.append(SmartDetectObjectType.PERSON)
-    doorbell.smart_detect_settings.object_types.append(SmartDetectObjectType.VEHICLE)
-
-    # Get entity IDs for both person and vehicle detection
+    person = next(d for d in CAMERA_SENSORS if d.key == "smart_obj_person")
+    vehicle = next(d for d in CAMERA_SENSORS if d.key == "smart_obj_vehicle")
     _, person_entity_id = await ids_from_device_description(
-        hass,
-        Platform.BINARY_SENSOR,
-        doorbell,
-        EVENT_SENSORS[3],  # person detected
+        hass, Platform.BINARY_SENSOR, doorbell, person
     )
     _, vehicle_entity_id = await ids_from_device_description(
-        hass,
-        Platform.BINARY_SENSOR,
-        doorbell,
-        EVENT_SENSORS[4],  # vehicle detected
+        hass, Platform.BINARY_SENSOR, doorbell, vehicle
     )
 
-    # Step 1: Initial event with only VEHICLE detection (car arriving)
-    event = Event(
-        model=ModelType.EVENT,
-        id="combined_event_id",
-        type=EventType.SMART_DETECT,
-        start=fixed_now - timedelta(seconds=5),
-        end=None,  # Event is ongoing
-        score=90,
-        smart_detect_types=[SmartDetectObjectType.VEHICLE],
-        smart_detect_event_ids=[],
-        camera_id=doorbell.id,
-        api=ufp.api,
+    # Vehicle arrives.
+    ufp.devices_ws_subscription(
+        public_device_ws_message(
+            make_public_camera(
+                doorbell,
+                is_smart_currently_detected=True,
+                is_vehicle_currently_detected=True,
+            )
+        )
     )
-
-    new_camera = doorbell.model_copy()
-    new_camera.is_smart_detected = True
-    new_camera.last_smart_detect_event_ids[SmartDetectObjectType.VEHICLE] = event.id
-
-    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
-    ufp.api.bootstrap.events = {event.id: event}
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = event
-    ufp.ws_msg(mock_msg)
-
     await hass.async_block_till_done()
 
-    # Vehicle sensor should be ON
-    vehicle_state = hass.states.get(vehicle_entity_id)
-    assert vehicle_state
-    assert vehicle_state.state == STATE_ON, "Vehicle detection should be ON"
+    assert hass.states.get(vehicle_entity_id).state == STATE_ON
+    assert hass.states.get(person_entity_id).state == STATE_OFF
 
-    # Person sensor should still be OFF (no person detected yet)
-    person_state = hass.states.get(person_entity_id)
-    assert person_state
-    assert person_state.state == STATE_OFF, "Person detection should be OFF initially"
-
-    # Step 2: Same event gets updated to include PERSON detection
-    # (someone gets out of the car - Protect adds PERSON to the same event)
-    #
-    # BUG SCENARIO: UniFi Protect updates the event to include PERSON in
-    # smart_detect_types, BUT does NOT update last_smart_detect_event_ids[PERSON]
-    # until the event ends. This is the core issue reported in #152133.
-    updated_event = Event(
-        model=ModelType.EVENT,
-        id="combined_event_id",  # Same event ID!
-        type=EventType.SMART_DETECT,
-        start=fixed_now - timedelta(seconds=5),
-        end=None,  # Event still ongoing
-        score=90,
-        smart_detect_types=[
-            SmartDetectObjectType.VEHICLE,
-            SmartDetectObjectType.PERSON,
-        ],
-        smart_detect_event_ids=[],
-        camera_id=doorbell.id,
-        api=ufp.api,
+    # Person joins the same scene -> both ON simultaneously.
+    ufp.devices_ws_subscription(
+        public_device_ws_message(
+            make_public_camera(
+                doorbell,
+                is_smart_currently_detected=True,
+                is_vehicle_currently_detected=True,
+                is_person_currently_detected=True,
+            )
+        )
     )
-
-    # IMPORTANT: The camera's last_smart_detect_event_ids is NOT updated for PERSON!
-    # This simulates the real bug where UniFi Protect doesn't immediately update
-    # the camera's last_smart_detect_event_ids when a new detection type is added
-    # to an ongoing event.
-    new_camera = doorbell.model_copy()
-    new_camera.is_smart_detected = True
-    # Only VEHICLE has the event ID - PERSON does not (simulating the bug)
-    new_camera.last_smart_detect_event_ids[SmartDetectObjectType.VEHICLE] = (
-        updated_event.id
-    )
-    # NOTE: We're NOT setting last_smart_detect_event_ids[PERSON] to simulate the bug!
-
-    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
-    ufp.api.bootstrap.events = {updated_event.id: updated_event}
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = updated_event
-    ufp.ws_msg(mock_msg)
-
     await hass.async_block_till_done()
 
-    # CRITICAL: Both sensors should now be ON simultaneously
-    vehicle_state = hass.states.get(vehicle_entity_id)
-    assert vehicle_state
-    assert vehicle_state.state == STATE_ON, (
-        "Vehicle detection should still be ON after event update"
-    )
+    assert hass.states.get(vehicle_entity_id).state == STATE_ON
+    assert hass.states.get(person_entity_id).state == STATE_ON
 
-    person_state = hass.states.get(person_entity_id)
-    assert person_state
-    assert person_state.state == STATE_ON, (
-        "Person detection should be ON immediately when added to event, "
-        "not waiting for vehicle detection to end"
-    )
-
-    # Verify both have correct attributes
-    assert vehicle_state.attributes[ATTR_EVENT_SCORE] == 90
-    assert person_state.attributes[ATTR_EVENT_SCORE] == 90
-
-    # Step 3: Event ends - both sensors should turn OFF
-    ended_event = Event(
-        model=ModelType.EVENT,
-        id="combined_event_id",
-        type=EventType.SMART_DETECT,
-        start=fixed_now - timedelta(seconds=5),
-        end=fixed_now,  # Event ended now
-        score=90,
-        smart_detect_types=[
-            SmartDetectObjectType.VEHICLE,
-            SmartDetectObjectType.PERSON,
-        ],
-        smart_detect_event_ids=[],
-        camera_id=doorbell.id,
-        api=ufp.api,
-    )
-
-    ufp.api.bootstrap.events = {ended_event.id: ended_event}
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = ended_event
-    ufp.ws_msg(mock_msg)
-
+    # Scene clears -> both OFF.
+    ufp.devices_ws_subscription(public_device_ws_message(make_public_camera(doorbell)))
     await hass.async_block_till_done()
 
-    # Both should be OFF now
-    vehicle_state = hass.states.get(vehicle_entity_id)
-    assert vehicle_state
-    assert vehicle_state.state == STATE_OFF, (
-        "Vehicle detection should be OFF after event ends"
-    )
-
-    person_state = hass.states.get(person_entity_id)
-    assert person_state
-    assert person_state.state == STATE_OFF, (
-        "Person detection should be OFF after event ends"
-    )
+    assert hass.states.get(vehicle_entity_id).state == STATE_OFF
+    assert hass.states.get(person_entity_id).state == STATE_OFF

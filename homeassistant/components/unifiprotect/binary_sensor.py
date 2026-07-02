@@ -1,13 +1,11 @@
 """Component providing binary sensors for UniFi Protect."""
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 import dataclasses
 from typing import cast, override
 
 from uiprotect.data import (
     NVR,
-    Camera,
-    Event,
     ModelType,
     MountType,
     ProtectAdoptableDeviceModel,
@@ -15,7 +13,7 @@ from uiprotect.data import (
     SmartDetectObjectType,
 )
 from uiprotect.data.nvr import UOSDisk
-from uiprotect.data.public_devices import PublicDeviceModel, PublicSensor
+from uiprotect.data.public_devices import PublicCamera, PublicDeviceModel, PublicSensor
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -47,6 +45,29 @@ def _async_motion_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
     # Mirrors Sensor.is_motion_sensor_enabled over the public API.
     sensor = cast(PublicSensor, obj)
     return sensor.mount_type is not MountType.LEAK and sensor.motion_settings.is_enabled
+
+
+def _smart_object_enabled_public(
+    object_type: SmartDetectObjectType,
+) -> Callable[[PublicDeviceModel], bool]:
+    """Mirror is_<type>_detection_on over the public camera smart-detect settings."""
+
+    def _enabled(obj: PublicDeviceModel) -> bool:
+        return object_type in cast(PublicCamera, obj).smart_detect_settings.object_types
+
+    return _enabled
+
+
+def _smart_audio_enabled_public(
+    object_type: SmartDetectObjectType,
+) -> Callable[[PublicDeviceModel], bool]:
+    """Mirror is_<type>_detection_on for audio types (object enum -> audio enum)."""
+    audio_type = object_type.audio_type
+
+    def _enabled(obj: PublicDeviceModel) -> bool:
+        return audio_type in cast(PublicCamera, obj).smart_detect_settings.audio_types
+
+    return _enabled
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -271,6 +292,126 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         ufp_value="is_person_tracking_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
+    # Sustained state via the public devices WS (uiprotect pushes a camera
+    # update on each detection transition).
+    ProtectBinaryEntityDescription(
+        key="motion",
+        device_class=BinarySensorDeviceClass.MOTION,
+        ufp_public_value="is_motion_detected",
+    ),
+    ProtectBinaryEntityDescription(
+        key="smart_obj_any",
+        translation_key="object_detected",
+        ufp_required_field="feature_flags.has_smart_detect",
+        ufp_public_value="is_smart_currently_detected",
+        entity_registry_enabled_default=False,
+    ),
+    ProtectBinaryEntityDescription(
+        key="smart_obj_person",
+        translation_key="person_detected",
+        ufp_required_field="can_detect_person",
+        ufp_public_value="is_person_currently_detected",
+        ufp_public_enabled_fn=_smart_object_enabled_public(
+            SmartDetectObjectType.PERSON
+        ),
+    ),
+    ProtectBinaryEntityDescription(
+        key="smart_obj_vehicle",
+        translation_key="vehicle_detected",
+        ufp_required_field="can_detect_vehicle",
+        ufp_public_value="is_vehicle_currently_detected",
+        ufp_public_enabled_fn=_smart_object_enabled_public(
+            SmartDetectObjectType.VEHICLE
+        ),
+    ),
+    ProtectBinaryEntityDescription(
+        key="smart_obj_animal",
+        translation_key="animal_detected",
+        ufp_required_field="can_detect_animal",
+        ufp_public_value="is_animal_currently_detected",
+        ufp_public_enabled_fn=_smart_object_enabled_public(
+            SmartDetectObjectType.ANIMAL
+        ),
+    ),
+    ProtectBinaryEntityDescription(
+        key="smart_audio_any",
+        translation_key="audio_object_detected",
+        ufp_required_field="feature_flags.has_smart_detect",
+        ufp_public_value="is_audio_currently_detected",
+        entity_registry_enabled_default=False,
+    ),
+    ProtectBinaryEntityDescription(
+        key="smart_audio_smoke",
+        translation_key="smoke_alarm_detected",
+        ufp_required_field="can_detect_smoke",
+        ufp_public_value="is_smoke_currently_detected",
+        ufp_public_enabled_fn=_smart_audio_enabled_public(SmartDetectObjectType.SMOKE),
+    ),
+    ProtectBinaryEntityDescription(
+        key="smart_audio_cmonx",
+        translation_key="co_alarm_detected",
+        device_class=BinarySensorDeviceClass.CO,
+        ufp_required_field="can_detect_co",
+        ufp_public_value="is_cmonx_currently_detected",
+        ufp_public_enabled_fn=_smart_audio_enabled_public(SmartDetectObjectType.CMONX),
+    ),
+    ProtectBinaryEntityDescription(
+        key="smart_audio_siren",
+        translation_key="siren_detected",
+        ufp_required_field="can_detect_siren",
+        ufp_public_value="is_siren_currently_detected",
+        ufp_public_enabled_fn=_smart_audio_enabled_public(SmartDetectObjectType.SIREN),
+    ),
+    ProtectBinaryEntityDescription(
+        key="smart_audio_baby_cry",
+        translation_key="baby_cry_detected",
+        ufp_required_field="can_detect_baby_cry",
+        ufp_public_value="is_baby_cry_currently_detected",
+        ufp_public_enabled_fn=_smart_audio_enabled_public(
+            SmartDetectObjectType.BABY_CRY
+        ),
+    ),
+    ProtectBinaryEntityDescription(
+        key="smart_audio_speak",
+        translation_key="speaking_detected",
+        ufp_required_field="can_detect_speaking",
+        ufp_public_value="is_speaking_currently_detected",
+        ufp_public_enabled_fn=_smart_audio_enabled_public(SmartDetectObjectType.SPEAK),
+    ),
+    ProtectBinaryEntityDescription(
+        key="smart_audio_bark",
+        translation_key="barking_detected",
+        ufp_required_field="can_detect_bark",
+        ufp_public_value="is_bark_currently_detected",
+        ufp_public_enabled_fn=_smart_audio_enabled_public(SmartDetectObjectType.BARK),
+    ),
+    ProtectBinaryEntityDescription(
+        key="smart_audio_car_alarm",
+        translation_key="car_alarm_detected",
+        ufp_required_field="can_detect_car_alarm",
+        ufp_public_value="is_car_alarm_currently_detected",
+        ufp_public_enabled_fn=_smart_audio_enabled_public(
+            SmartDetectObjectType.BURGLAR
+        ),
+    ),
+    ProtectBinaryEntityDescription(
+        key="smart_audio_car_horn",
+        translation_key="car_horn_detected",
+        ufp_required_field="can_detect_car_horn",
+        ufp_public_value="is_car_horn_currently_detected",
+        ufp_public_enabled_fn=_smart_audio_enabled_public(
+            SmartDetectObjectType.CAR_HORN
+        ),
+    ),
+    ProtectBinaryEntityDescription(
+        key="smart_audio_glass_break",
+        translation_key="glass_break_detected",
+        ufp_required_field="can_detect_glass_break",
+        ufp_public_value="is_glass_break_currently_detected",
+        ufp_public_enabled_fn=_smart_audio_enabled_public(
+            SmartDetectObjectType.GLASS_BREAK
+        ),
+    ),
 )
 
 LIGHT_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
@@ -388,6 +529,8 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
 )
 
+# Doorbell ring is momentary (no sustained public state), so it stays on the
+# private event path.
 EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ProtectBinaryEventEntityDescription(
         key="doorbell",
@@ -395,125 +538,6 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.OCCUPANCY,
         ufp_required_field="feature_flags.is_doorbell",
         ufp_event_obj="last_ring_event",
-    ),
-    ProtectBinaryEventEntityDescription(
-        key="motion",
-        device_class=BinarySensorDeviceClass.MOTION,
-        ufp_enabled="is_motion_detection_on",
-        ufp_event_obj="last_motion_event",
-    ),
-    ProtectBinaryEventEntityDescription(
-        key="smart_obj_any",
-        translation_key="object_detected",
-        ufp_required_field="feature_flags.has_smart_detect",
-        ufp_event_obj="last_smart_detect_event",
-        entity_registry_enabled_default=False,
-    ),
-    ProtectBinaryEventEntityDescription(
-        key="smart_obj_person",
-        translation_key="person_detected",
-        ufp_obj_type=SmartDetectObjectType.PERSON,
-        ufp_required_field="can_detect_person",
-        ufp_enabled="is_person_detection_on",
-        ufp_event_obj="last_person_detect_event",
-    ),
-    ProtectBinaryEventEntityDescription(
-        key="smart_obj_vehicle",
-        translation_key="vehicle_detected",
-        ufp_obj_type=SmartDetectObjectType.VEHICLE,
-        ufp_required_field="can_detect_vehicle",
-        ufp_enabled="is_vehicle_detection_on",
-        ufp_event_obj="last_vehicle_detect_event",
-    ),
-    ProtectBinaryEventEntityDescription(
-        key="smart_obj_animal",
-        translation_key="animal_detected",
-        ufp_obj_type=SmartDetectObjectType.ANIMAL,
-        ufp_required_field="can_detect_animal",
-        ufp_enabled="is_animal_detection_on",
-        ufp_event_obj="last_animal_detect_event",
-    ),
-    # Package detection is a momentary smart-detect event, not a sustained state:
-    # it is the package event entity (event.py), not a binary sensor.
-    ProtectBinaryEventEntityDescription(
-        key="smart_audio_any",
-        translation_key="audio_object_detected",
-        ufp_required_field="feature_flags.has_smart_detect",
-        ufp_event_obj="last_smart_audio_detect_event",
-        entity_registry_enabled_default=False,
-    ),
-    ProtectBinaryEventEntityDescription(
-        key="smart_audio_smoke",
-        translation_key="smoke_alarm_detected",
-        ufp_obj_type=SmartDetectObjectType.SMOKE,
-        ufp_required_field="can_detect_smoke",
-        ufp_enabled="is_smoke_detection_on",
-        ufp_event_obj="last_smoke_detect_event",
-    ),
-    ProtectBinaryEventEntityDescription(
-        key="smart_audio_cmonx",
-        translation_key="co_alarm_detected",
-        device_class=BinarySensorDeviceClass.CO,
-        ufp_required_field="can_detect_co",
-        ufp_enabled="is_co_detection_on",
-        ufp_event_obj="last_cmonx_detect_event",
-        ufp_obj_type=SmartDetectObjectType.CMONX,
-    ),
-    ProtectBinaryEventEntityDescription(
-        key="smart_audio_siren",
-        translation_key="siren_detected",
-        ufp_obj_type=SmartDetectObjectType.SIREN,
-        ufp_required_field="can_detect_siren",
-        ufp_enabled="is_siren_detection_on",
-        ufp_event_obj="last_siren_detect_event",
-    ),
-    ProtectBinaryEventEntityDescription(
-        key="smart_audio_baby_cry",
-        translation_key="baby_cry_detected",
-        ufp_obj_type=SmartDetectObjectType.BABY_CRY,
-        ufp_required_field="can_detect_baby_cry",
-        ufp_enabled="is_baby_cry_detection_on",
-        ufp_event_obj="last_baby_cry_detect_event",
-    ),
-    ProtectBinaryEventEntityDescription(
-        key="smart_audio_speak",
-        translation_key="speaking_detected",
-        ufp_obj_type=SmartDetectObjectType.SPEAK,
-        ufp_required_field="can_detect_speaking",
-        ufp_enabled="is_speaking_detection_on",
-        ufp_event_obj="last_speaking_detect_event",
-    ),
-    ProtectBinaryEventEntityDescription(
-        key="smart_audio_bark",
-        translation_key="barking_detected",
-        ufp_obj_type=SmartDetectObjectType.BARK,
-        ufp_required_field="can_detect_bark",
-        ufp_enabled="is_bark_detection_on",
-        ufp_event_obj="last_bark_detect_event",
-    ),
-    ProtectBinaryEventEntityDescription(
-        key="smart_audio_car_alarm",
-        translation_key="car_alarm_detected",
-        ufp_obj_type=SmartDetectObjectType.BURGLAR,
-        ufp_required_field="can_detect_car_alarm",
-        ufp_enabled="is_car_alarm_detection_on",
-        ufp_event_obj="last_car_alarm_detect_event",
-    ),
-    ProtectBinaryEventEntityDescription(
-        key="smart_audio_car_horn",
-        translation_key="car_horn_detected",
-        ufp_obj_type=SmartDetectObjectType.CAR_HORN,
-        ufp_required_field="can_detect_car_horn",
-        ufp_enabled="is_car_horn_detection_on",
-        ufp_event_obj="last_car_horn_detect_event",
-    ),
-    ProtectBinaryEventEntityDescription(
-        key="smart_audio_glass_break",
-        translation_key="glass_break_detected",
-        ufp_obj_type=SmartDetectObjectType.GLASS_BREAK,
-        ufp_required_field="can_detect_glass_break",
-        ufp_enabled="is_glass_break_detection_on",
-        ufp_event_obj="last_glass_break_detect_event",
     ),
 )
 
@@ -631,31 +655,6 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
         self._attr_extra_state_attributes = {}
 
     @callback
-    def _find_active_event_with_object_type(
-        self, device: ProtectDeviceType
-    ) -> Event | None:
-        """Find an active event containing this sensor's object type.
-
-        Fallback for issue #152133: last_smart_detect_event_ids may not update
-        immediately when a new detection type is added to an ongoing event.
-        """
-        obj_type = self.entity_description.ufp_obj_type
-        if obj_type is None or not isinstance(device, Camera):
-            return None
-
-        # Check known active event IDs from camera first (fast path)
-        for event_id in device.last_smart_detect_event_ids.values():
-            if (
-                event_id
-                and (event := self.data.api.bootstrap.events.get(event_id))
-                and event.end is None
-                and obj_type in event.smart_detect_types
-            ):
-                return event
-
-        return None
-
-    @callback
     @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         description = self.entity_description
@@ -665,22 +664,11 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
         super()._async_update_device_from_protect(device)
 
         event = description.get_event_obj(device)
-        if event is None:
-            # Fallback for #152133: check active events directly
-            event = self._find_active_event_with_object_type(device)
-
         if event:
             self._event = event
             self._event_end = event.end
 
-        if not (
-            event
-            and (
-                description.ufp_obj_type is None
-                or description.has_matching_smart(event)
-            )
-            and not self._event_already_ended(prev_event, prev_event_end)
-        ):
+        if not (event and not self._event_already_ended(prev_event, prev_event_end)):
             self._set_event_done()
             return
 
