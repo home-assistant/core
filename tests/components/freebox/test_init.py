@@ -10,7 +10,10 @@ from pytest_unordered import unordered
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
-from homeassistant.components.freebox import SCAN_INTERVAL
+from homeassistant.components.freebox import (
+    SCAN_INTERVAL,
+    async_remove_config_entry_device,
+)
 from homeassistant.components.freebox.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -21,7 +24,13 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import setup_platform
-from .const import DATA_HOME_GET_NODES, MOCK_HOST, MOCK_PORT
+from .const import (
+    DATA_HOME_GET_NODES,
+    DATA_LAN_GET_HOSTS_LIST,
+    DATA_SYSTEM_GET_CONFIG,
+    MOCK_HOST,
+    MOCK_PORT,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -116,6 +125,53 @@ async def test_unload_remove(hass: HomeAssistant, router: Mock) -> None:
     assert state_sensor is None
     state_switch = hass.states.get(entity_id_switch)
     assert state_switch is None
+
+
+async def test_remove_config_entry_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    router: Mock,
+) -> None:
+    """Test removal rules for Freebox devices."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+        unique_id=MOCK_HOST,
+        version=2,
+    )
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # The Freebox router itself cannot be removed. Identifiers are stored
+    # verbatim (no auto-normalisation), so look up with the raw API casing.
+    router_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, DATA_SYSTEM_GET_CONFIG["mac"])}
+    )
+    assert router_device is not None
+    assert await async_remove_config_entry_device(hass, entry, router_device) is False
+
+    # A tracked LAN device whose MAC is still on the Freebox cannot be removed.
+    tracked_device = device_registry.async_get_device(
+        connections={
+            (
+                dr.CONNECTION_NETWORK_MAC,
+                DATA_LAN_GET_HOSTS_LIST[0]["l2ident"]["id"],
+            )
+        }
+    )
+    assert tracked_device is not None
+    assert await async_remove_config_entry_device(hass, entry, tracked_device) is False
+
+    # A LAN device whose MAC is gone from the Freebox can be removed.
+    stale_tracked_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")},
+    )
+    assert (
+        await async_remove_config_entry_device(hass, entry, stale_tracked_device)
+        is True
+    )
 
 
 @pytest.mark.parametrize(
