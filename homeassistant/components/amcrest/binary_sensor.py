@@ -171,6 +171,10 @@ class AmcrestBinarySensor(BinarySensorEntity):
 
         self._attr_name = f"{name} {entity_description.name}"
         self._attr_should_poll = entity_description.should_poll
+        if device.serial_number is not None:
+            self._attr_unique_id = (
+                f"{device.serial_number}-{entity_description.key}-{self._channel}"
+            )
 
     @property
     @override
@@ -198,19 +202,12 @@ class AmcrestBinarySensor(BinarySensorEntity):
             # accordingly.
             with suppress(AmcrestError):
                 await self._api.async_current_time
-                await self._async_update_unique_id()
         self._attr_is_on = self._api.available
 
     async def _async_update_others(self) -> None:
         if not self.available:
             return
         _LOGGER.debug(_UPDATE_MSG, self.name)
-
-        try:
-            await self._async_update_unique_id()
-        except AmcrestError as error:
-            log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
-            return
 
         if not (event_codes := self.entity_description.event_codes):
             raise ValueError(f"Binary sensor {self.name} event codes not set")
@@ -225,15 +222,6 @@ class AmcrestBinarySensor(BinarySensorEntity):
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
             return
-
-    async def _async_update_unique_id(self) -> None:
-        """Set the unique id."""
-        if self._attr_unique_id is None and (
-            serial_number := await self._api.async_serial_number
-        ):
-            self._attr_unique_id = (
-                f"{serial_number}-{self.entity_description.key}-{self._channel}"
-            )
 
     @callback
     def async_on_demand_update_online(self) -> None:
