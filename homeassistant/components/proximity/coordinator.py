@@ -143,7 +143,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 },
             )
 
-    def _device_in_zone(self, zone: State, device: State) -> bool:
+    def _tracker_in_zone(self, zone: State, tracker: State) -> bool:
         """Return whether the tracked entity is currently in the proximity zone."""
 
         # Modern entity-based trackers and person entities always report zone
@@ -160,13 +160,13 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         # (deprecated, removed in HA Core 2027.7).
 
         # For both, an empty or absent ``in_zones`` does not imply "in no zone", so we
-        # fall back to matching the device state against the zone's friendly name
+        # fall back to matching the tracker state against the zone's friendly name
         # (what a tracker's state is set to for non-home zones), plus an explicit
         # home-zone check. Once both deprecations are gone, ``in_zones`` is
         # authoritative for every tracker and this method should reduce to the
         # membership check alone; the fallback must be removed, as second-guessing an
         # empty list would then be incorrect.
-        if in_zones := device.attributes.get(ATTR_IN_ZONES):
+        if in_zones := tracker.attributes.get(ATTR_IN_ZONES):
             return zone.entity_id in in_zones
 
         # Remove once legacy device trackers (2027.5) and location_name (2027.7)
@@ -174,21 +174,21 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         zone_friendly_name = zone.attributes.get(ATTR_FRIENDLY_NAME)
         return (
             zone_friendly_name is not None
-            and device.state.lower() == zone_friendly_name.lower()
-        ) or (device.state == STATE_HOME and zone.entity_id == ENTITY_ID_HOME)
+            and tracker.state.lower() == zone_friendly_name.lower()
+        ) or (tracker.state == STATE_HOME and zone.entity_id == ENTITY_ID_HOME)
 
     def _calc_distance_to_zone(
         self,
         zone: State,
-        device: State,
+        tracker: State,
         latitude: float | None,
         longitude: float | None,
     ) -> int | None:
-        if self._device_in_zone(zone, device):
+        if self._tracker_in_zone(zone, tracker):
             _LOGGER.debug(
                 "%s: %s in zone -> distance=0",
                 self.name,
-                device.entity_id,
+                tracker.entity_id,
             )
             return 0
 
@@ -196,7 +196,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             _LOGGER.debug(
                 "%s: %s has no coordinates -> distance=None",
                 self.name,
-                device.entity_id,
+                tracker.entity_id,
             )
             return None
 
@@ -220,17 +220,17 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
     def _calc_direction_of_travel(
         self,
         zone: State,
-        device: State,
+        tracker: State,
         old_latitude: float | None,
         old_longitude: float | None,
         new_latitude: float | None,
         new_longitude: float | None,
     ) -> str | None:
-        if self._device_in_zone(zone, device):
+        if self._tracker_in_zone(zone, tracker):
             _LOGGER.debug(
                 "%s: %s in zone -> direction_of_travel=arrived",
                 self.name,
-                device.entity_id,
+                tracker.entity_id,
             )
             return "arrived"
 
