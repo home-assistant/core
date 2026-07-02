@@ -85,11 +85,18 @@ async def async_setup_entry(
     devices_coordinator = ring_data.devices_coordinator
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
 
+    devices = [*ring_data.devices.video_devices, *ring_data.devices.other]
+
     cams = [
         RingCam(camera, devices_coordinator, description, ffmpeg_manager=ffmpeg_manager)
         for description in CAMERA_DESCRIPTIONS
+<<<<<<< Updated upstream
         for camera in ring_data.devices.all_devices
         if description.exists_fn(camera)
+=======
+        for camera in devices
+        if camera.has_capability("video") and description.exists_fn(camera)
+>>>>>>> Stashed changes
     ]
 
     async_add_entities(cams)
