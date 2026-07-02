@@ -149,7 +149,7 @@ async def test_attribute_availability(
         assert (
             hass.states.get("siren.test_siren").state is not STATE_UNAVAILABLE
             if state < AttributeState.INACTIVE
-            else STATE_UNAVAILABLE
+            else hass.states.get("siren.test_siren").state == STATE_UNAVAILABLE
         )
 
 
