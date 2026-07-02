@@ -1022,6 +1022,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/linux_battery/ @fabaff
 /homeassistant/components/litejet/ @joncar
 /tests/components/litejet/ @joncar
+/homeassistant/components/litellm/ @luismalves
+/tests/components/litellm/ @luismalves
 /homeassistant/components/litterrobot/ @natekspencer @tkdrob
 /tests/components/litterrobot/ @natekspencer @tkdrob
 /homeassistant/components/livisi/ @StefanIacobLivisi @planbnet
