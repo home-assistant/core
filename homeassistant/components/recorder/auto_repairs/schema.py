@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable, Mapping
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import sqlalchemy
 from sqlalchemy import MetaData, Table
@@ -300,7 +300,9 @@ def _validate_table_schema_has_indexes(
     """Check that expected indexes exist on the table."""
     schema_errors: set[str] = set()
     table_name = table_object.__tablename__
-    expected_indexes = {idx.name for idx in table_object.__table__.indexes}
+    expected_indexes = {
+        idx.name for idx in cast(Table, table_object.__table__).indexes if idx.name
+    }
     if not expected_indexes:
         return schema_errors
 
