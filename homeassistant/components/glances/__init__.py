@@ -9,6 +9,7 @@ from glances_api.exceptions import (
     GlancesApiError,
     GlancesApiNoDataAvailable,
 )
+import httpx
 
 from homeassistant.const import (
     CONF_HOST,
@@ -19,16 +20,22 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.httpx_client import create_async_httpx_client
+from homeassistant.util.hass_dict import HassKey
 
+from .const import DEFAULT_TIMEOUT
 from .coordinator import GlancesConfigEntry, GlancesDataUpdateCoordinator
+
+DATA_HTTPX_CLIENT: HassKey[dict[bool, httpx.AsyncClient]] = HassKey(
+    "glances_httpx_client"
+)
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -63,9 +70,25 @@ async def async_unload_entry(hass: HomeAssistant, entry: GlancesConfigEntry) -> 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
+@callback
+def _async_get_httpx_client(hass: HomeAssistant, verify_ssl: bool) -> httpx.AsyncClient:
+    """Return a cached Glances httpx client (one per verify_ssl value).
+
+    The shared httpx client cannot be used because it has a 5-second timeout
+    that is too short for slow Glances hosts. Caching here ensures entry
+    reloads reuse the same client instead of leaking one on every reload.
+    """
+    clients = hass.data.setdefault(DATA_HTTPX_CLIENT, {})
+    if (client := clients.get(verify_ssl)) is None:
+        client = clients[verify_ssl] = create_async_httpx_client(
+            hass, verify_ssl=verify_ssl, timeout=DEFAULT_TIMEOUT
+        )
+    return client
+
+
 async def get_api(hass: HomeAssistant, entry_data: dict[str, Any]) -> Glances:
     """Return the api from glances_api."""
-    httpx_client = get_async_client(hass, verify_ssl=entry_data[CONF_VERIFY_SSL])
+    httpx_client = _async_get_httpx_client(hass, entry_data[CONF_VERIFY_SSL])
     for version in (4, 3):
         api = Glances(
             host=entry_data[CONF_HOST],
