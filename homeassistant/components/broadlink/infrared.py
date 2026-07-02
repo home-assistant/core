@@ -111,7 +111,7 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
         await super().async_will_remove_from_hass()
 
     @callback
-    def _start_receiving(self) -> None:
+    def _async_start_receiving(self) -> None:
         """Start polling for received IR signals."""
         if self._unsub_receive is not None:
             return
@@ -131,8 +131,8 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
         self._unsub_receive()
         self._unsub_receive = None
 
-    @override
     @callback
+    @override
     def async_subscribe_received_signal(
         self,
         signal_callback: Callable[[InfraredReceivedSignal], None],
@@ -142,7 +142,7 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
         self._subscriber_count += 1
 
         if self._subscriber_count == 1:
-            self._start_receiving()
+            self._async_start_receiving()
 
         removed = False
 
