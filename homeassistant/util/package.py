@@ -161,11 +161,11 @@ def install_package(
         "install",
         "--quiet",
         package,
-        # unsafe-best-match is the closest to pip's behavior: consider
-        # candidates from all indexes so PyPI can satisfy requirements
-        # the wheels index does not have a usable version for.
+        # We need to use unsafe-first-match for custom components
+        # which can use a different version of a package than the one
+        # we have built the wheel for.
         "--index-strategy",
-        "unsafe-best-match",
+        "unsafe-first-match",
     ]
     if timeout:
         env["HTTP_TIMEOUT"] = str(timeout)
