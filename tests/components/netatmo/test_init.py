@@ -10,7 +10,7 @@ from pyatmo.const import ALL_SCOPES
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import cloud
+from homeassistant.components import cloud, webhook
 from homeassistant.components.netatmo import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
@@ -201,20 +201,34 @@ async def test_no_deprecation_issue_on_setup(
     )
 
 
-@pytest.mark.parametrize("service", ["register_webhook", "unregister_webhook"])
+@pytest.mark.parametrize(
+    ("service", "expected_registered"),
+    [
+        pytest.param("register_webhook", True, id="register"),
+        pytest.param("unregister_webhook", False, id="unregister"),
+    ],
+)
 async def test_deprecated_webhook_service(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     netatmo_auth: AsyncMock,
     issue_registry: ir.IssueRegistry,
     service: str,
+    expected_registered: bool,
 ) -> None:
-    """Test calling a deprecated webhook action raises a repair issue."""
+    """Test the deprecated webhook actions still work and raise a repair issue."""
     with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    await hass.services.async_call(DOMAIN, service, blocking=True)
+        webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+        assert webhook_id in hass.data[webhook.DOMAIN]
+
+        # register_webhook re-registers the already-active webhook without
+        # raising; unregister_webhook tears it down.
+        await hass.services.async_call(DOMAIN, service, blocking=True)
+
+        assert (webhook_id in hass.data[webhook.DOMAIN]) is expected_registered
 
     assert issue_registry.async_get_issue(DOMAIN, f"deprecated_service_{service}")
 
