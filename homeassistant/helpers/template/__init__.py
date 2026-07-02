@@ -73,6 +73,7 @@ from .states import (
     StateAttrTranslated,
     StateTranslated,
     TemplateState as TemplateState,
+    TemplateStateBase,
     TemplateStateFromEntityId as TemplateStateFromEntityId,
 )
 
@@ -801,7 +802,14 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
         if isinstance(
-            obj, (AllStates, DomainStates, TemplateState, LoopContext, AsyncLoopContext)
+            obj,
+            (
+                AllStates,
+                DomainStates,
+                TemplateStateBase,
+                LoopContext,
+                AsyncLoopContext,
+            ),
         ):
             return attr[0] != "_"
 
