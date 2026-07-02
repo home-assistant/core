@@ -59,13 +59,11 @@ def handle_api_errors() -> Generator[None]:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="auth_error",
-            translation_placeholders={"error": str(err)},
         ) from err
     except GoogleHealthApiError as err:
         raise UpdateFailed(
             translation_domain=DOMAIN,
             translation_key="communication_error",
-            translation_placeholders={"error": str(err)},
         ) from err
 
 

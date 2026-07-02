@@ -49,10 +49,10 @@
   },
   "exceptions": {
     "auth_error": {
-      "message": "Authentication or permission error talking to Google Health API: {error}"
+      "message": "Authentication or permission error talking to Google Health."
     },
     "communication_error": {
-      "message": "Error communicating with Google Health API: {error}"
+      "message": "Error communicating with Google Health."
     },
     "missing_profile_scope": {
       "message": "Missing required Google Health profile read permission."
