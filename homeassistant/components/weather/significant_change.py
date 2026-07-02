@@ -157,6 +157,8 @@ def async_check_significant_change(
                 UnitOfPressure.MMHG,  # 1hPa = 0.75mmHg
             ):
                 absolute_change = 1.0
+            elif unit == UnitOfPressure.KPA:  # 1hPa = 0.1 kPa
+                absolute_change = 0.1
             elif unit == UnitOfPressure.INHG:  # 1hPa = 0.03inHg
                 absolute_change = 0.05
 
