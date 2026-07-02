@@ -16,7 +16,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from . import make_advertisement
+from . import (
+    MISCALE_S400_PACKET2_SERVICE_INFO,
+    MISCALE_S400_SERVICE_INFO,
+    MISCALE_V1_SERVICE_INFO,
+    MISCALE_V2_SERVICE_INFO,
+    make_advertisement,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import (
@@ -465,3 +471,118 @@ async def test_sleepy_device_restore_state(hass: HomeAssistant) -> None:
     assert opening_sensor.state == STATE_ON
 
     assert entry.data[CONF_SLEEPY_DEVICE] is True
+
+
+async def test_miscale_v1_stabilized_binary_sensor(hass: HomeAssistant) -> None:
+    """Test MiScale V1 stabilized binary sensor."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="50:FB:19:1B:B5:DC",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(hass, MISCALE_V1_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    stabilized_sensor = hass.states.get("binary_sensor.mi_smart_scale_b5dc_stabilized")
+    stabilized_sensor_attr = stabilized_sensor.attributes
+    assert stabilized_sensor.state == STATE_ON
+    assert (
+        stabilized_sensor_attr[ATTR_FRIENDLY_NAME] == "Mi Smart Scale (B5DC) Stabilized"
+    )
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_miscale_v2_stabilized_binary_sensor(hass: HomeAssistant) -> None:
+    """Test MiScale V2 stabilized binary sensor."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="50:FB:19:1B:B5:DC",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(hass, MISCALE_V2_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    stabilized_sensor = hass.states.get(
+        "binary_sensor.mi_body_composition_scale_b5dc_stabilized"
+    )
+    stabilized_sensor_attr = stabilized_sensor.attributes
+    assert stabilized_sensor.state == STATE_ON
+    assert (
+        stabilized_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Mi Body Composition Scale (B5DC) Stabilized"
+    )
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_miscale_s400_stabilized_false_binary_sensor(hass: HomeAssistant) -> None:
+    """Test MiScale S400 stabilized=False binary sensor (packet 1)."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="8C:D0:B2:F6:BE:EF",
+        data={"bindkey": "0728974d657a4b60964c1b1677f35f7c"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(hass, MISCALE_S400_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    stabilized_sensor = hass.states.get(
+        "binary_sensor.body_composition_scale_beef_stabilized"
+    )
+    stabilized_sensor_attr = stabilized_sensor.attributes
+    assert stabilized_sensor.state == STATE_OFF
+    assert (
+        stabilized_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Body Composition Scale BEEF Stabilized"
+    )
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_miscale_s400_stabilized_true_binary_sensor(hass: HomeAssistant) -> None:
+    """Test MiScale S400 stabilized=True binary sensor (packet 2)."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="8C:D0:B2:F6:BE:EF",
+        data={"bindkey": "0728974d657a4b60964c1b1677f35f7c"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(hass, MISCALE_S400_PACKET2_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    stabilized_sensor = hass.states.get(
+        "binary_sensor.body_composition_scale_beef_stabilized"
+    )
+    stabilized_sensor_attr = stabilized_sensor.attributes
+    assert stabilized_sensor.state == STATE_ON
+    assert (
+        stabilized_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Body Composition Scale BEEF Stabilized"
+    )
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
