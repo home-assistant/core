@@ -56,12 +56,14 @@ async def test_setup_seeds_shadow_from_discover(
     assert shadow.smoke_alarm_status.value == 0
 
 
-@pytest.mark.usefixtures("aioclient_mock_fixture")
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_provider",
+    "mock_get_iot_credentials",
+)
 async def test_load_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_provider: AsyncMock,
-    mock_get_iot_credentials: MagicMock,
     mock_mqtt_client: MagicMock,
 ) -> None:
     """Test the entry can be loaded and unloaded."""
@@ -76,12 +78,14 @@ async def test_load_unload_entry(
     mock_mqtt_client.disconnect.assert_called_once()
 
 
+@pytest.mark.usefixtures(
+    "mock_provider",
+    "mock_get_iot_credentials",
+    "mock_mqtt_client",
+)
 async def test_setup_auth_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_provider: AsyncMock,
-    mock_get_iot_credentials: MagicMock,
-    mock_mqtt_client: MagicMock,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test that a token refresh failure raises ConfigEntryAuthFailed."""

@@ -15,11 +15,10 @@ from . import INVALID_TEST_ACCESS_JWT, TEST_CREDENTIALS, TEST_UNIQUE_ID
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("aioclient_mock_fixture", "mock_setup_entry")
 async def test_full_flow(
     hass: HomeAssistant,
     mock_login: MagicMock,
-    mock_setup_entry: MagicMock,
-    aioclient_mock_fixture: None,
 ) -> None:
     """Test the full SRP authentication flow."""
     result = await hass.config_entries.flow.async_init(
@@ -41,11 +40,13 @@ async def test_full_flow(
     mock_login.assert_called_once()
 
 
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_login",
+    "mock_setup_entry",
+)
 async def test_unique_configurations(
     hass: HomeAssistant,
-    mock_login: MagicMock,
-    mock_setup_entry: MagicMock,
-    aioclient_mock_fixture: None,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that duplicate configurations are rejected."""
@@ -63,11 +64,13 @@ async def test_unique_configurations(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_setup_entry",
+)
 async def test_login_client_error(
     hass: HomeAssistant,
     mock_login: MagicMock,
-    mock_setup_entry: MagicMock,
-    aioclient_mock_fixture: None,
 ) -> None:
     """Test handling of botocore ClientError during login."""
     mock_login.side_effect = botocore.exceptions.ClientError(
@@ -89,11 +92,13 @@ async def test_login_client_error(
     assert result["errors"] == {"base": "srp_auth_failed"}
 
 
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_setup_entry",
+)
 async def test_login_unknown_error(
     hass: HomeAssistant,
     mock_login: MagicMock,
-    mock_setup_entry: MagicMock,
-    aioclient_mock_fixture: None,
 ) -> None:
     """Test error handling for unexpected login failures."""
     mock_login.side_effect = Exception("unexpected")
@@ -110,11 +115,13 @@ async def test_login_unknown_error(
     assert result["errors"] == {"base": "unknown"}
 
 
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_setup_entry",
+    "mock_login",
+)
 async def test_reauth_successful(
     hass: HomeAssistant,
-    mock_login: MagicMock,
-    mock_setup_entry: MagicMock,
-    aioclient_mock_fixture: None,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test successful reauthentication flow."""
@@ -133,12 +140,14 @@ async def test_reauth_successful(
     assert result["reason"] == "reauth_successful"
 
 
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_setup_entry",
+    "mock_login",
+)
 @pytest.mark.parametrize("mock_srp_access_token", [INVALID_TEST_ACCESS_JWT])
 async def test_reauth_unique_id_mismatch(
     hass: HomeAssistant,
-    mock_login: MagicMock,
-    mock_setup_entry: MagicMock,
-    aioclient_mock_fixture: None,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that reauth fails when the unique ID does not match."""
