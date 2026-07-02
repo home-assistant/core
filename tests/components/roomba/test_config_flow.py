@@ -1,5 +1,6 @@
 """Test the iRobot Roomba config flow."""
 
+from functools import partial
 from ipaddress import ip_address
 from unittest.mock import MagicMock, PropertyMock, patch
 
@@ -106,11 +107,11 @@ def _create_mocked_roomba(
     return mocked_roomba
 
 
-def _mocked_discovery(*_):
+def _mocked_discovery(*_, blid="BLID"):
     roomba_discovery = MagicMock()
 
     roomba = RoombaInfo(
-        hostname="irobot-BLID",
+        hostname=f"irobot-{blid}",
         robot_name="robot_name",
         ip=MOCK_IP,
         mac="mac",
@@ -981,7 +982,8 @@ async def test_dhcp_discovery_not_irobot(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery",
+        _mocked_no_devices_found_discovery,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -1018,8 +1020,10 @@ async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
 
+    blid = "blidthatislonger"
     with patch(
-        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery",
+        partial(_mocked_discovery, blid=blid),
     ):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -1027,7 +1031,7 @@ async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
             data=DhcpServiceInfo(
                 ip=MOCK_IP,
                 macaddress="aabbccddeeff",
-                hostname="irobot-blidthatislonger",
+                hostname=f"irobot-{blid}",
             ),
         )
         await hass.async_block_till_done()
@@ -1039,8 +1043,10 @@ async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
     assert len(current_flows) == 1
     assert current_flows[0]["flow_id"] == result2["flow_id"]
 
+    blid = "bl"
     with patch(
-        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery",
+        partial(_mocked_discovery, blid=blid),
     ):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -1048,7 +1054,7 @@ async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
             data=DhcpServiceInfo(
                 ip=MOCK_IP,
                 macaddress="aabbccddeeff",
-                hostname="irobot-bl",
+                hostname=f"irobot-{blid}",
             ),
         )
         await hass.async_block_till_done()
