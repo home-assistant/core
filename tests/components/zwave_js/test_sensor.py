@@ -749,12 +749,14 @@ async def test_special_meters(
     client.driver.controller.emit("node added", event)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.smart_switch_6_electric_consumed_kvah_10")
+    state = hass.states.get("sensor.smart_switch_6_endpoint_10_electric_consumed_kvah")
     assert state
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
 
-    state = hass.states.get("sensor.smart_switch_6_electric_consumed_kva_reactive_11")
+    state = hass.states.get(
+        "sensor.smart_switch_6_endpoint_11_electric_consumed_kva_reactive"
+    )
     assert state
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT

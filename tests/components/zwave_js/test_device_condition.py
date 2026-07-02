@@ -1,12 +1,13 @@
 """The tests for Z-Wave JS device conditions."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import voluptuous as vol
 import voluptuous_serialize
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
+from zwave_js_server.model.node import Node
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import (
@@ -23,7 +24,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_get_device_automations
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_get_conditions(
@@ -421,6 +422,82 @@ async def test_value_state(
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].data["some"] == "value - event - test_event1"
+
+
+@pytest.mark.parametrize(
+    "device_endpoint",
+    [
+        pytest.param(None, id="node_device"),
+        pytest.param(1, id="sub_device"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("condition_value", "expected_calls"),
+    [
+        pytest.param(False, 1, id="matches"),
+        pytest.param(True, 0, id="no_match"),
+    ],
+)
+async def test_value_state_endpoint_sub_device(
+    hass: HomeAssistant,
+    client: MagicMock,
+    vision_security_zl7432: Node,
+    integration: MockConfigEntry,
+    service_calls: list[ServiceCall],
+    device_registry: dr.DeviceRegistry,
+    device_endpoint: int | None,
+    condition_value: bool,
+    expected_calls: int,
+) -> None:
+    """Test value condition for a value moved to an endpoint sub-device.
+
+    The Binary Switch value on endpoint 1 now lives on an endpoint sub-device. Verify the
+    condition reads the correct endpoint value whether it references the node device_id
+    (backward compatibility) or the endpoint sub-device device_id.
+    """
+    device = device_registry.async_get_device(
+        identifiers={
+            get_device_id(client.driver, vision_security_zl7432, device_endpoint)
+        }
+    )
+    assert device
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": device.id,
+                            "type": "value",
+                            "command_class": CommandClass.SWITCH_BINARY.value,
+                            "property": "currentValue",
+                            "endpoint": 1,
+                            "value": condition_value,
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "value - {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(service_calls) == expected_calls
 
 
 async def test_get_condition_capabilities_node_status(

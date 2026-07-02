@@ -1,6 +1,6 @@
 """The tests for Z-Wave JS device triggers."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from pytest_unordered import unordered
@@ -28,7 +28,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_get_device_automations
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_no_controller_triggers(
@@ -1225,6 +1225,46 @@ async def test_get_value_updated_value_triggers(
     assert expected_trigger in triggers
 
 
+@pytest.mark.parametrize(
+    "device_endpoint",
+    [
+        pytest.param(None, id="node_device"),
+        pytest.param(1, id="sub_device"),
+    ],
+)
+async def test_get_triggers_endpoint_sub_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    vision_security_zl7432: Node,
+    integration: MockConfigEntry,
+    device_endpoint: int | None,
+) -> None:
+    """Test node-level triggers are listed for both the node and its sub-devices.
+
+    Device triggers resolve to the node regardless of which endpoint device they are
+    requested for, so the generic value_updated trigger is available from the node device
+    and from each endpoint sub-device.
+    """
+    device = device_registry.async_get_device(
+        identifiers={
+            get_device_id(client.driver, vision_security_zl7432, device_endpoint)
+        }
+    )
+    assert device
+    expected_trigger = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "type": "zwave_js.value_updated.value",
+        "device_id": device.id,
+        "metadata": {},
+    }
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
+    assert expected_trigger in triggers
+
+
 async def test_if_value_updated_value_fires(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -1319,6 +1359,387 @@ async def test_if_value_updated_value_fires(
         service_calls[0].data["some"]
         == "zwave_js.value_updated.value - zwave_js.value_updated - open"
     )
+
+
+@pytest.mark.parametrize(
+    "device_endpoint",
+    [
+        pytest.param(None, id="node_device"),
+        pytest.param(1, id="sub_device"),
+    ],
+)
+async def test_if_value_updated_value_fires_endpoint_sub_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    vision_security_zl7432: Node,
+    integration: MockConfigEntry,
+    service_calls: list[ServiceCall],
+    device_endpoint: int | None,
+) -> None:
+    """Test value_updated.value trigger for a value moved to an endpoint sub-device.
+
+    The Binary Switch values on endpoints 1 and 2 collide, so their entities now live
+    on endpoint sub-devices instead of the node device. Automations created before this
+    change stored the node device_id. Verify the trigger fires whether it references the
+    node device_id (backward compatibility) or the new endpoint sub-device device_id, and
+    that it stays scoped to its own endpoint.
+    """
+    node = vision_security_zl7432
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, node, device_endpoint)}
+    )
+    assert device
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "type": "zwave_js.value_updated.value",
+                        "command_class": CommandClass.SWITCH_BINARY.value,
+                        "property": "currentValue",
+                        "property_key": None,
+                        "endpoint": 1,
+                        "from": False,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "zwave_js.value_updated.value - "
+                                "{{ trigger.platform }} - "
+                                "{{ trigger.previous_value }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    # A value update on the colliding endpoint 2 value must not fire the endpoint 1
+    # trigger.
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Binary Switch",
+                    "commandClass": 37,
+                    "endpoint": 2,
+                    "property": "currentValue",
+                    "newValue": True,
+                    "prevValue": False,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Binary Switch",
+                    "commandClass": 37,
+                    "endpoint": 1,
+                    "property": "currentValue",
+                    "newValue": True,
+                    "prevValue": False,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert (
+        service_calls[0].data["some"]
+        == "zwave_js.value_updated.value - zwave_js.value_updated - False"
+    )
+
+
+async def test_if_notification_notification_fires_endpoint_sub_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    shelly_qnsh_001P10_shutter: Node,
+    integration: MockConfigEntry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test an event-based device trigger stays backwards compatible with sub-devices.
+
+    This node has colliding endpoint values that are split into endpoint sub-devices.
+    Notification events are always dispatched with the node device_id (not a sub-device
+    id), so an event.notification.notification trigger created before the sub-device change
+    (storing the node device_id) still fires.
+    """
+    node = shelly_qnsh_001P10_shutter
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, node)}
+    )
+    assert device
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "type": "event.notification.notification",
+                        "command_class": CommandClass.NOTIFICATION.value,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "event.notification.notification - "
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.event.data.command_class }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    node.receive_event(
+        Event(
+            type="notification",
+            data={
+                "source": "node",
+                "event": "notification",
+                "nodeId": node.node_id,
+                "endpointIndex": 1,
+                "ccId": 113,
+                "args": {
+                    "type": 6,
+                    "event": 2,
+                    "label": "Power Management",
+                    "eventLabel": "AC mains disconnected",
+                    "parameters": {},
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert (
+        service_calls[0].data["some"]
+        == f"event.notification.notification - device - {CommandClass.NOTIFICATION}"
+    )
+
+
+@pytest.mark.parametrize(
+    ("trigger_extra", "event_type", "event_data"),
+    [
+        pytest.param(
+            {
+                "type": "event.notification.entry_control",
+                "command_class": CommandClass.ENTRY_CONTROL.value,
+                "event_type": 5,
+                "data_type": 2,
+            },
+            "notification",
+            {
+                "endpointIndex": 1,
+                "ccId": 111,
+                "args": {
+                    "eventType": 5,
+                    "eventTypeLabel": "label 1",
+                    "dataType": 2,
+                    "dataTypeLabel": "label 2",
+                    "eventData": "555",
+                },
+            },
+            id="entry_control",
+        ),
+        pytest.param(
+            {
+                "type": "event.value_notification.basic",
+                "command_class": CommandClass.BASIC.value,
+                "property": "event",
+                "property_key": None,
+                "endpoint": 1,
+                "subtype": "Endpoint 1",
+                "value": 0,
+            },
+            "value notification",
+            {
+                "args": {
+                    "commandClassName": "Basic",
+                    "commandClass": 32,
+                    "endpoint": 1,
+                    "property": "event",
+                    "propertyName": "event",
+                    "value": 0,
+                    "metadata": {
+                        "type": "number",
+                        "readable": True,
+                        "writeable": False,
+                        "label": "Event value",
+                        "min": 0,
+                        "max": 255,
+                    },
+                    "ccVersion": 1,
+                },
+            },
+            id="basic",
+        ),
+        pytest.param(
+            {
+                "type": "event.value_notification.central_scene",
+                "command_class": CommandClass.CENTRAL_SCENE.value,
+                "property": "scene",
+                "property_key": "001",
+                "endpoint": 1,
+                "subtype": "Endpoint 1 Scene 001",
+                "value": 0,
+            },
+            "value notification",
+            {
+                "args": {
+                    "commandClassName": "Central Scene",
+                    "commandClass": 91,
+                    "endpoint": 1,
+                    "property": "scene",
+                    "propertyName": "scene",
+                    "propertyKey": "001",
+                    "value": 0,
+                    "metadata": {
+                        "type": "number",
+                        "readable": True,
+                        "writeable": False,
+                        "min": 0,
+                        "max": 255,
+                        "label": "Scene 004",
+                        "states": {
+                            "0": "KeyPressed",
+                            "1": "KeyReleased",
+                            "2": "KeyHeldDown",
+                        },
+                    },
+                    "ccVersion": 1,
+                },
+            },
+            id="central_scene",
+        ),
+        pytest.param(
+            {
+                "type": "event.value_notification.scene_activation",
+                "command_class": CommandClass.SCENE_ACTIVATION.value,
+                "property": "sceneId",
+                "property_key": None,
+                "endpoint": 1,
+                "subtype": "Endpoint 1",
+                "value": 1,
+            },
+            "value notification",
+            {
+                "args": {
+                    "commandClassName": "Scene Activation",
+                    "commandClass": 43,
+                    "endpoint": 1,
+                    "property": "sceneId",
+                    "propertyName": "sceneId",
+                    "value": 1,
+                    "metadata": {
+                        "type": "number",
+                        "readable": True,
+                        "writeable": True,
+                        "min": 1,
+                        "max": 255,
+                        "label": "Scene ID",
+                    },
+                    "ccVersion": 1,
+                },
+            },
+            id="scene_activation",
+        ),
+    ],
+)
+async def test_if_event_device_trigger_fires_endpoint_sub_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    shelly_qnsh_001P10_shutter: Node,
+    integration: MockConfigEntry,
+    service_calls: list[ServiceCall],
+    trigger_extra: dict[str, object],
+    event_type: str,
+    event_data: dict[str, object],
+) -> None:
+    """Test event-based device triggers stay backwards compatible with sub-devices.
+
+    This node has colliding endpoint values that are split into endpoint sub-devices.
+    Notification and value notification events are always dispatched with the node
+    device_id (not a sub-device id), even when they originate from a value on a non-root
+    endpoint. So event-based triggers created before the sub-device change (storing the
+    node device_id) still fire.
+    """
+    node = shelly_qnsh_001P10_shutter
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, node)}
+    )
+    assert device
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        **trigger_extra,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "{{ trigger.event.data.command_class }}"
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    node.receive_event(
+        Event(
+            type=event_type,
+            data={
+                "source": "node",
+                "event": event_type,
+                "nodeId": node.node_id,
+                **event_data,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == trigger_extra["command_class"]
 
 
 async def test_value_updated_value_no_driver(
