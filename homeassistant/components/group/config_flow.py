@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.const import CONF_ENTITIES, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -22,7 +23,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from .binary_sensor import CONF_ALL, async_create_preview_binary_sensor
 from .button import async_create_preview_button
-from .const import CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC, DOMAIN
+from .const import CONF_GROUP_TYPE, CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC, DOMAIN
 from .cover import async_create_preview_cover
 from .entity import GroupEntity
 from .event import async_create_preview_event
@@ -134,6 +135,12 @@ SENSOR_CONFIG_SCHEMA = basic_group_config_schema(
     ["sensor", "number", "input_number"]
 ).extend(SENSOR_CONFIG_EXTENDS)
 
+SENSOR_IMPORT_SCHEMA = vol.Schema(
+    {
+        vol.Required("old_config_entry_id"): selector.TextSelector(),
+    }
+).extend(SENSOR_CONFIG_SCHEMA.schema)
+
 
 async def light_switch_options_schema(
     domain: str, handler: SchemaCommonFlowHandler | None
@@ -178,7 +185,7 @@ GROUP_TYPES = [
 
 async def choose_options_step(options: dict[str, Any]) -> str:
     """Return next step_id for options flow according to group_type."""
-    return cast(str, options["group_type"])
+    return cast(str, options[CONF_GROUP_TYPE])
 
 
 def set_group_type(
@@ -192,13 +199,34 @@ def set_group_type(
         handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
     ) -> dict[str, Any]:
         """Add group type to user input."""
-        return {"group_type": group_type, **user_input}
+        return {CONF_GROUP_TYPE: group_type, **user_input}
 
     return _set_group_type
 
 
+async def validate_import(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate import from Min/Max integration.
+
+    Should be removed when deprecation of Min/Max integration has ended.
+    """
+
+    try:
+        validated_input = SENSOR_IMPORT_SCHEMA(user_input)
+    except vol.Invalid as err:
+        raise AbortFlow(
+            reason="invalid_import", description_placeholders={"error": str(err)}
+        ) from err
+    return {CONF_GROUP_TYPE: "sensor", **validated_input}
+
+
 CONFIG_FLOW = {
     "user": SchemaFlowMenuStep(GROUP_TYPES),
+    "import": SchemaFlowFormStep(
+        None,
+        validate_user_input=validate_import,
+    ),
     "binary_sensor": SchemaFlowFormStep(
         BINARY_SENSOR_CONFIG_SCHEMA,
         preview="group",
@@ -356,7 +384,7 @@ class GroupConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     @override
     def async_config_flow_finished(self, options: Mapping[str, Any]) -> None:
         """Hide the group members if requested."""
-        if options[CONF_HIDE_MEMBERS]:
+        if options.get(CONF_HIDE_MEMBERS):
             _async_hide_members(
                 self.hass, options[CONF_ENTITIES], er.RegistryEntryHider.INTEGRATION
             )
@@ -432,7 +460,7 @@ def ws_start_preview(
         config_entry = hass.config_entries.async_get_entry(config_entry_id)
         if not config_entry:
             raise HomeAssistantError
-        group_type = config_entry.options["group_type"]
+        group_type = config_entry.options[CONF_GROUP_TYPE]
         name = config_entry.options["name"]
         validated = PREVIEW_OPTIONS_SCHEMA[group_type](msg["user_input"])
         entity_registry = er.async_get(hass)

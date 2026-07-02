@@ -1,31 +1,48 @@
 {
   "config": {
+    "abort": {
+      "migrated_to_groups": "The Min/Max helper has been migrated to use Group sensors. Please use the Group helper instead."
+    },
     "step": {
       "user": {
-        "data": {
-          "entity_ids": "Input entities",
-          "name": "[%key:common::config_flow::data::name%]",
-          "round_digits": "Precision",
-          "type": "Statistic characteristic"
-        },
-        "data_description": {
-          "round_digits": "Controls the number of decimal digits in the output when the statistics characteristic is mean, median or sum."
-        },
-        "description": "Create a sensor that calculates a min, max, mean, median or sum from a list of input sensors.",
+        "description": "Min/Max helper has been deprecated, please use the Group helper instead.",
         "title": "[%key:component::min_max::title%]"
       }
+    }
+  },
+  "issues": {
+    "migrate_to_group_sensor": {
+      "fix_flow": {
+        "abort": {
+          "could_not_import": "Failed to import the config entry for the Group helper\n**Error:** {error}\n\nPlease manually remove the Min/Max helper and create your new Group helper.",
+          "entity_not_found": "Entity could not be found as it has been removed, aborting the repair.",
+          "entity_update_failed": "Failed to update the entity to a Group sensor, please manually remove the obsolete entity.",
+          "unload_failed": "Failed to unload the Min/Max helper, please restart repairing the issue."
+        },
+        "step": {
+          "migrate": {
+            "description": "The Min/Max helper has been deprecated and {title} will be migrated to a Group sensor when you click submit to fix this repair.",
+            "title": "[%key:component::min_max::issues::migrate_to_group_sensor::title%]"
+          }
+        }
+      },
+      "title": "Min/Max helper has been deprecated"
+    },
+    "yaml_deprecated": {
+      "description": "The Min/Max helper has been deprecated and you should use Group sensors instead.\n\nReplace your Min/Max YAML configuration with this converted configuration:\n{yaml_config}\n\n**Note:**\n- `precision` is not supported in Group sensor, you need to update your entity options after migrating.\n- Group sensor supports setting `ignore_non_numeric` which defaults to `False` after migrating, change this to `True` to ignore input entities with invalid values.\n\nOnce you have replaced your YAML configuration, restart Home Assistant to use the Group helper instead.\n\nThe Group helper has more configuration possibilities. Refer to the documentation by clicking Learn More.",
+      "title": "[%key:component::min_max::issues::migrate_to_group_sensor::title%]"
     }
   },
   "options": {
     "step": {
       "init": {
         "data": {
-          "entity_ids": "[%key:component::min_max::config::step::user::data::entity_ids%]",
-          "round_digits": "[%key:component::min_max::config::step::user::data::round_digits%]",
-          "type": "[%key:component::min_max::config::step::user::data::type%]"
+          "entity_ids": "Input entities",
+          "round_digits": "Precision",
+          "type": "Statistic characteristic"
         },
         "data_description": {
-          "round_digits": "[%key:component::min_max::config::step::user::data_description::round_digits%]"
+          "round_digits": "Controls the number of decimal digits in the output when the statistics characteristic is mean, median or sum."
         }
       }
     }
