@@ -9,9 +9,14 @@ from mcp.types import CallToolResult, ErrorData, ListToolsResult, TextContent, T
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.mcp.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    OAuth2TokenRequestError,
+)
 from homeassistant.helpers import llm
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -84,7 +89,6 @@ async def test_init(
     [
         (httpx.TimeoutException("Some timeout")),
         (httpx.HTTPStatusError("", request=None, response=httpx.Response(500))),
-        (httpx.HTTPStatusError("", request=None, response=httpx.Response(401))),
         (httpx.HTTPError("Some HTTP error")),
     ],
 )
@@ -102,6 +106,24 @@ async def test_mcp_server_failure(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_mcp_server_setup_auth_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_mcp_client: Mock,
+) -> None:
+    """Test setup auth failure triggers reauth."""
+    mock_mcp_client.side_effect = httpx.HTTPStatusError(
+        "Authentication required", request=None, response=httpx.Response(401)
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
 
 
 async def test_mcp_server_http_transport_failure(
@@ -361,3 +383,139 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert config_entry_with_auth.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_coordinator_update_no_auth_auth_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_mcp_client: Mock,
+) -> None:
+    """Test coordinator update auth failure when no auth was initially required."""
+    mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
+        tools=[SEARCH_MEMORY_TOOL]
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Mock next update encountering a 401 response
+    mock_mcp_client.return_value.list_tools.side_effect = httpx.HTTPStatusError(
+        "Authentication required", request=None, response=httpx.Response(401)
+    )
+
+    coordinator = config_entry.runtime_data
+    await coordinator.async_refresh()
+
+    assert coordinator.last_update_success is False
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+
+async def test_tool_call_no_auth_auth_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_mcp_client: Mock,
+) -> None:
+    """Test tool call auth failure when no auth was initially required."""
+    mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
+        tools=[SEARCH_MEMORY_TOOL]
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    apis = llm.async_get_apis(hass)
+    api = next(iter([api for api in apis if api.name == TEST_API_NAME]))
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    tool = api_instance.tools[0]
+
+    # Mock tool call encountering a 401 response
+    mock_mcp_client.return_value.call_tool.side_effect = httpx.HTTPStatusError(
+        "Authentication required", request=None, response=httpx.Response(401)
+    )
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await tool.async_call(
+            hass,
+            llm.ToolInput(
+                tool_name="search_memory", tool_args={"query": "User's birth month"}
+            ),
+            create_llm_context(),
+        )
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+
+async def test_coordinator_update_expired_oauth_failure(
+    hass: HomeAssistant,
+    credential: None,
+    config_entry_with_auth: MockConfigEntry,
+    mock_mcp_client: Mock,
+) -> None:
+    """Test coordinator update token refresh failure when OAuth is configured."""
+    mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
+        tools=[SEARCH_MEMORY_TOOL]
+    )
+
+    await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
+    assert config_entry_with_auth.state is ConfigEntryState.LOADED
+
+    # Mock token validation failure (e.g. refresh token expired)
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=OAuth2TokenRequestError(
+            request_info=Mock(), history=(), domain=DOMAIN
+        ),
+    ):
+        coordinator = config_entry_with_auth.runtime_data
+        await coordinator.async_refresh()
+
+    assert coordinator.last_update_success is False
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+
+async def test_tool_call_expired_oauth_failure(
+    hass: HomeAssistant,
+    credential: None,
+    config_entry_with_auth: MockConfigEntry,
+    mock_mcp_client: Mock,
+) -> None:
+    """Test tool call token refresh failure when OAuth is configured."""
+    mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
+        tools=[SEARCH_MEMORY_TOOL]
+    )
+
+    await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
+    assert config_entry_with_auth.state is ConfigEntryState.LOADED
+
+    apis = llm.async_get_apis(hass)
+    api = next(iter([api for api in apis if api.name == TEST_API_NAME]))
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    tool = api_instance.tools[0]
+
+    # Mock token validation failure during tool call
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            side_effect=OAuth2TokenRequestError(
+                request_info=Mock(), history=(), domain=DOMAIN
+            ),
+        ),
+        pytest.raises(ConfigEntryAuthFailed),
+    ):
+        await tool.async_call(
+            hass,
+            llm.ToolInput(
+                tool_name="search_memory", tool_args={"query": "User's birth month"}
+            ),
+            create_llm_context(),
+        )
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
