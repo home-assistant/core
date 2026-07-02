@@ -20,6 +20,7 @@ from homeassistant.helpers.event import async_call_at
 from . import Bootstrap
 from .const import (
     ATTR_EVENT_ID,
+    ATTR_EVENT_START,
     EVENT_TYPE_FINGERPRINT_IDENTIFIED,
     EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED,
     EVENT_TYPE_NFC_SCANNED,
@@ -54,8 +55,13 @@ def _thumbnail_sort_key(t: EventDetectedThumbnail) -> tuple[bool, float, float]:
     return (has_lpr, confidence, clock)
 
 
+def _event_start(event: Event | ProtectEvent) -> str | None:
+    """Device-side event start timestamp (ISO) as reported by Protect."""
+    return event.start.isoformat() if event.start else None
+
+
 def _add_ulp_user_infos(
-    bootstrap: Bootstrap, event_data: dict[str, str], ulp_id: str
+    bootstrap: Bootstrap, event_data: dict[str, str | None], ulp_id: str
 ) -> None:
     """Add ULP user information to the event data."""
     if ulp_usr := bootstrap.ulp_users.by_ulp_id(ulp_id):
@@ -92,7 +98,10 @@ class ProtectDeviceRingEventEntity(EventEntityMixin, ProtectDeviceEntity, EventE
 
     @callback
     def _async_ring_event(self, event: ProtectEvent) -> None:
-        self._trigger_event(DoorbellEventType.RING, {ATTR_EVENT_ID: event.id})
+        self._trigger_event(
+            DoorbellEventType.RING,
+            {ATTR_EVENT_ID: event.id, ATTR_EVENT_START: _event_start(event)},
+        )
         self.async_write_ha_state()
 
 
@@ -120,6 +129,7 @@ class ProtectDeviceNFCEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEn
         ):
             event_data = {
                 ATTR_EVENT_ID: event.id,
+                ATTR_EVENT_START: _event_start(event),
                 KEYRINGS_USER_FULL_NAME: "",
                 KEYRINGS_ULP_ID: "",
                 KEYRINGS_USER_STATUS: "",
@@ -165,6 +175,7 @@ class ProtectDeviceFingerprintEventEntity(
         ):
             event_data = {
                 ATTR_EVENT_ID: event.id,
+                ATTR_EVENT_START: _event_start(event),
                 KEYRINGS_USER_FULL_NAME: "",
                 KEYRINGS_ULP_ID: "",
             }
@@ -199,6 +210,7 @@ class ProtectDeviceVehicleEventEntity(
     entity_description: ProtectEventEntityDescription
     _thumbnail_timer_cancel: CALLBACK_TYPE | None = None
     _latest_event_id: str | None = None
+    _latest_event_start: str | None = None
     _latest_thumbnails: list[EventDetectedThumbnail] | None = None
     _thumbnail_timer_due: float = 0.0  # Loop time when timer should fire
     _fired_event_id: str | None = None  # Track last fired event to prevent duplicates
@@ -231,7 +243,11 @@ class ProtectDeviceVehicleEventEntity(
             return
 
         if self._latest_event_id:
-            self._fire_vehicle_event(self._latest_event_id, self._latest_thumbnails)
+            self._fire_vehicle_event(
+                self._latest_event_id,
+                self._latest_thumbnails,
+                self._latest_event_start,
+            )
 
     @staticmethod
     def _get_vehicle_thumbnails(event: Event) -> list[EventDetectedThumbnail]:
@@ -244,11 +260,14 @@ class ProtectDeviceVehicleEventEntity(
 
     @staticmethod
     def _build_event_data(
-        event_id: str, thumbnails: list[EventDetectedThumbnail]
+        event_id: str,
+        thumbnails: list[EventDetectedThumbnail],
+        event_start: str | None,
     ) -> dict[str, Any]:
         """Build event data dictionary from thumbnails."""
         event_data: dict[str, Any] = {
             ATTR_EVENT_ID: event_id,
+            ATTR_EVENT_START: event_start,
             "thumbnail_count": len(thumbnails),
         }
 
@@ -276,7 +295,10 @@ class ProtectDeviceVehicleEventEntity(
 
     @callback
     def _fire_vehicle_event(
-        self, event_id: str, thumbnails: list[EventDetectedThumbnail] | None = None
+        self,
+        event_id: str,
+        thumbnails: list[EventDetectedThumbnail] | None = None,
+        event_start: str | None = None,
     ) -> None:
         """Fire the vehicle detection event with best available thumbnail.
 
@@ -284,6 +306,7 @@ class ProtectDeviceVehicleEventEntity(
             event_id: The event ID to include in the fired event data.
             thumbnails: Pre-stored thumbnails to use. If None, fetches from
                 the current event (used when event is still active).
+            event_start: Device-side event start timestamp (ISO).
         """
         if thumbnails is None:
             # No stored thumbnails; try to get from current event
@@ -295,7 +318,7 @@ class ProtectDeviceVehicleEventEntity(
         if not thumbnails:
             return
 
-        event_data = self._build_event_data(event_id, thumbnails)
+        event_data = self._build_event_data(event_id, thumbnails, event_start)
 
         # Prevent duplicate firing of same event with same data
         if self._fired_event_id == event_id and self._fired_event_data == event_data:
@@ -333,11 +356,12 @@ class ProtectDeviceVehicleEventEntity(
             and event.type is EventType.SMART_DETECT
             and (thumbnails := self._get_vehicle_thumbnails(event))
         ):
+            event_start = _event_start(event)
             # Skip if same event with same data (no changes)
             if (
                 self._fired_event_id == event.id
                 and self._fired_event_data
-                == self._build_event_data(event.id, thumbnails)
+                == self._build_event_data(event.id, thumbnails, event_start)
             ):
                 return
 
@@ -345,13 +369,18 @@ class ProtectDeviceVehicleEventEntity(
             # Fire the old event immediately since it has completed
             if self._latest_event_id and self._latest_event_id != event.id:
                 # Only fire if we haven't already (shouldn't happen, but defensive)
-                self._fire_vehicle_event(self._latest_event_id, self._latest_thumbnails)
+                self._fire_vehicle_event(
+                    self._latest_event_id,
+                    self._latest_thumbnails,
+                    self._latest_event_start,
+                )
                 self._cancel_thumbnail_timer()
 
             # Store event data and extend/start the timer
             # Timer extension allows better thumbnails (with LPR) to arrive
             self._latest_event_id = event.id
             self._latest_thumbnails = thumbnails
+            self._latest_event_start = event_start
             self._thumbnail_timer_due = (
                 self.hass.loop.time() + VEHICLE_EVENT_DELAY_SECONDS
             )
@@ -391,7 +420,10 @@ class ProtectDeviceSmartDetectEventEntity(
         description = self.entity_description
         event_types = description.event_types
         if event_types and description.ufp_obj_type in event.smart_detect_types:
-            self._trigger_event(event_types[0], {ATTR_EVENT_ID: event.id})
+            self._trigger_event(
+                event_types[0],
+                {ATTR_EVENT_ID: event.id, ATTR_EVENT_START: _event_start(event)},
+            )
             self.async_write_ha_state()
 
 

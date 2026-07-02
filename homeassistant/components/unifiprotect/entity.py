@@ -29,6 +29,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from .const import (
     ATTR_EVENT_ID,
     ATTR_EVENT_SCORE,
+    ATTR_EVENT_START,
     DEFAULT_ATTRIBUTION,
     DEFAULT_BRAND,
     DOMAIN,
@@ -379,7 +380,9 @@ class EventEntityMixin(ProtectDeviceEntity):
     """Adds motion event attributes to sensor."""
 
     entity_description: ProtectEventMixin
-    _unrecorded_attributes = frozenset({ATTR_EVENT_ID, ATTR_EVENT_SCORE})
+    _unrecorded_attributes = frozenset(
+        {ATTR_EVENT_ID, ATTR_EVENT_SCORE, ATTR_EVENT_START}
+    )
     _event: Event | None = None
     _event_end: datetime | None = None
 
