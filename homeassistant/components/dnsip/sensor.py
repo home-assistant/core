@@ -167,9 +167,8 @@ class WanIpSensor(SensorEntity):
         """Get the current DNS IP address for hostname."""
         if self._resolver._closed:  # noqa: SLF001
             self.create_dns_resolver()
-        response = await self.async_resolve(self.hostname)
 
-        if response:
+        if response := await self.async_resolve(self.hostname):
             sorted_ips = sort_ips(response, querytype=self.querytype)
             self._attr_native_value = sorted_ips[0]
             self._attr_extra_state_attributes["ip_addresses"] = sorted_ips
