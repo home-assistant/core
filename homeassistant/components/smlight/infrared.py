@@ -48,7 +48,7 @@ class SmInfraredEntity(SmEntity, InfraredEmitterEntity):
     def __init__(self, coordinator: SmDataUpdateCoordinator) -> None:
         """Initialize the SLZB-Ultima infrared."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.unique_id}-infrared-emitter"
+        self._attr_unique_id = f"{coordinator.unique_id}-infrared-emitter"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @override
     async def async_send_command(self, command: InfraredCommand) -> None:
