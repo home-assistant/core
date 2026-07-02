@@ -127,6 +127,37 @@ async def test_mcp_server_setup_auth_failure(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
+async def test_mcp_server_setup_auth_failure_with_www_authenticate_header(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_mcp_client: Mock,
+) -> None:
+    """Test setup auth failure with WWW-Authenticate header parses header and triggers reauth."""
+    headers = {
+        "WWW-Authenticate": 'mcp resource_metadata="https://example.com/custom-discovery", scope="read write"'
+    }
+    mock_mcp_client.side_effect = httpx.HTTPStatusError(
+        "Authentication required",
+        request=None,
+        response=httpx.Response(401, headers=headers),
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+    # Get the flow handler instance and verify it has the correct auth_header
+    flow_handler = hass.config_entries.flow._progress[flows[0]["flow_id"]]
+    assert flow_handler.auth_header is not None
+    assert (
+        flow_handler.auth_header.resource_metadata_url
+        == "https://example.com/custom-discovery"
+    )
+
+
 async def test_mcp_server_http_transport_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

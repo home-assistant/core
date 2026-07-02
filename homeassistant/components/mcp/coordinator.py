@@ -205,6 +205,12 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         except httpx.HTTPStatusError as error:
             _LOGGER.debug("Error communicating with API: %s", error)
             if error.response.status_code == 401:
+                auth_header = AuthenticateHeader.from_header(
+                    self.config_entry.data[CONF_URL], error.response
+                )
+                self.config_entry.async_start_reauth(
+                    self.hass, data={"auth_header": auth_header}
+                )
                 raise ConfigEntryAuthFailed(
                     "The MCP server requires authentication"
                 ) from error
