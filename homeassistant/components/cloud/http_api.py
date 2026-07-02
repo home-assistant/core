@@ -42,7 +42,7 @@ from homeassistant.loader import (
 from homeassistant.util.location import async_detect_location_info
 from homeassistant.util.package import async_get_installed_packages
 
-from .alexa_config import entity_supported as entity_supported_by_alexa
+from .alexa_config import CLOUD_ALEXA, entity_supported as entity_supported_by_alexa
 from .assist_pipeline import async_create_cloud_pipeline
 from .client import CloudClient
 from .const import (
@@ -55,6 +55,7 @@ from .const import (
     PREF_ENABLE_ALEXA,
     PREF_ENABLE_CLOUD_ICE_SERVERS,
     PREF_ENABLE_GOOGLE,
+    PREF_ENTITY_NAME,
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_REMOTE_ALLOW_REMOTE_ENABLE,
@@ -107,6 +108,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, alexa_get)
     websocket_api.async_register_command(hass, alexa_list)
     websocket_api.async_register_command(hass, alexa_sync)
+    websocket_api.async_register_command(hass, alexa_update)
 
     websocket_api.async_register_command(hass, tts_info)
 
@@ -1111,6 +1113,47 @@ async def alexa_get(
         )
         return
 
+    assistant_options: Mapping[str, Any] = {}
+    with suppress(HomeAssistantError, KeyError):
+        settings = exposed_entities.async_get_entity_settings(hass, entity_id)
+        assistant_options = settings[CLOUD_ALEXA]
+
+    connection.send_result(
+        msg["id"],
+        {PREF_ENTITY_NAME: assistant_options.get(PREF_ENTITY_NAME)},
+    )
+
+
+@websocket_api.require_admin
+@_require_cloud_login
+@websocket_api.websocket_command(
+    {
+        "type": "cloud/alexa/entities/update",
+        "entity_id": str,
+        vol.Optional(PREF_ENTITY_NAME): vol.Any(str, None),
+    }
+)
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+async def alexa_update(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Update alexa entity config."""
+    entity_id: str = msg["entity_id"]
+
+    assistant_options: Mapping[str, Any] = {}
+    with suppress(HomeAssistantError, KeyError):
+        settings = exposed_entities.async_get_entity_settings(hass, entity_id)
+        assistant_options = settings[CLOUD_ALEXA]
+
+    if PREF_ENTITY_NAME in msg:
+        value = msg[PREF_ENTITY_NAME]
+        if assistant_options.get(PREF_ENTITY_NAME) != value:
+            exposed_entities.async_set_assistant_option(
+                hass, CLOUD_ALEXA, entity_id, PREF_ENTITY_NAME, value
+            )
     connection.send_result(msg["id"])
 
 

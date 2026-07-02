@@ -13,8 +13,8 @@ from homeassistant.components.http import (
     HomeAssistantRequest,
     HomeAssistantView,
 )
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_NAME
+from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
@@ -124,6 +124,18 @@ class AlexaConfig(AbstractConfig):
         """Accept a grant."""
         assert self._auth is not None
         return await self._auth.async_do_auth(code)
+
+    def get_entity_name(self, entry: er.RegistryEntry | None, state: State) -> str:
+        """Return the friendly name for an entity."""
+        entity_conf = self.entity_config.get(state.entity_id, {})
+        config_name: str | None = entity_conf.get(CONF_NAME)
+        if config_name is not None:
+            return config_name
+        if entry is not None and (
+            full_name := er.async_get_full_entity_name(self.hass, entry)
+        ):
+            return full_name
+        return state.name
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> None:

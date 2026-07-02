@@ -1,7 +1,7 @@
 """Alexa configuration for Home Assistant Cloud."""
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
@@ -28,11 +28,13 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.homeassistant.exposed_entities import (
     async_expose_entity,
     async_get_assistant_settings,
+    async_get_entity_settings,
     async_listen_entity_updates,
     async_should_expose,
 )
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
+from homeassistant.const import CONF_NAME
+from homeassistant.core import Event, HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, start
 from homeassistant.helpers.entity import get_device_class
@@ -47,6 +49,7 @@ from .const import (
     DOMAIN,
     PREF_ALEXA_REPORT_STATE,
     PREF_ENABLE_ALEXA,
+    PREF_ENTITY_NAME,
     PREF_SHOULD_EXPOSE,
 )
 from .prefs import ALEXA_SETTINGS_VERSION, CloudPreferences
@@ -205,6 +208,28 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
     def user_identifier(self) -> str:
         """Return an identifier for the user that represents this config."""
         return self._cloud_user
+
+    def get_entity_name(self, entry: er.RegistryEntry | None, state: State) -> str:
+        """Return the friendly name for an entity."""
+        entity_conf = self.entity_config.get(state.entity_id, {})
+        config_name: str | None = entity_conf.get(CONF_NAME)
+
+        options: Mapping[str, Any] = {}
+        with suppress(HomeAssistantError, KeyError):
+            settings = async_get_entity_settings(self.hass, state.entity_id)
+            options = settings[CLOUD_ALEXA]
+
+        if config_name is not None:
+            name = config_name
+        elif (override := options.get(PREF_ENTITY_NAME)) is not None:
+            name = override
+        elif entry is not None and (
+            full_name := er.async_get_full_entity_name(self.hass, entry)
+        ):
+            name = full_name
+        else:
+            name = state.name
+        return name
 
     def _migrate_alexa_entity_settings_v1(self) -> None:
         """Migrate alexa entity settings to entity registry options."""
