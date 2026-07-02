@@ -329,7 +329,7 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
     @handle_errors_and_zip((IndexError, OSError, ValueError), SENSORS_BYTES)
     async def _get_bytes(self) -> tuple[float | None, float | None]:
         """Fetch byte information from the router."""
-        return await self._api.async_get_bytes_total()
+        return await self._api.async_get_rx(), await self._api.async_get_tx()
 
     @handle_errors_and_zip((IndexError, OSError, ValueError), SENSORS_RATES)
     async def _get_rates(self) -> tuple[float, float]:
