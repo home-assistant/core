@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.integration.const import DOMAIN
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import selector
@@ -35,6 +36,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
                 "name": "My integration",
                 "round": 1,
                 "source": input_sensor_entity_id,
+                "device_class": SensorDeviceClass.VOLUME,
                 "unit_time": "min",
                 "max_sub_interval": {"seconds": 0},
             },
@@ -49,6 +51,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "name": "My integration",
         "round": 1.0,
         "source": "sensor.input",
+        "device_class": SensorDeviceClass.VOLUME,
         "unit_time": "min",
         "max_sub_interval": {"seconds": 0},
     }
@@ -61,6 +64,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "name": "My integration",
         "round": 1.0,
         "source": "sensor.input",
+        "device_class": SensorDeviceClass.VOLUME,
         "unit_time": "min",
         "max_sub_interval": {"seconds": 0},
     }
@@ -112,6 +116,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
             "method": "right",
             "round": 2.0,
             "source": "sensor.input",
+            "device_class": SensorDeviceClass.MONETARY,
             "max_sub_interval": {"minutes": 1},
         },
     )
@@ -121,6 +126,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
         "name": "My integration",
         "round": 2.0,
         "source": "sensor.input",
+        "device_class": SensorDeviceClass.MONETARY,
         "unit_prefix": "k",
         "unit_time": "min",
         "max_sub_interval": {"minutes": 1},
@@ -131,6 +137,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
         "name": "My integration",
         "round": 2.0,
         "source": "sensor.input",
+        "device_class": SensorDeviceClass.MONETARY,
         "unit_prefix": "k",
         "unit_time": "min",
         "max_sub_interval": {"minutes": 1},

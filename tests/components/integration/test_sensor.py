@@ -749,6 +749,91 @@ async def test_units(hass: HomeAssistant) -> None:
     assert new_state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    ("source_sensor", "source_unit", "source_class", "device_class", "expected_class"),
+    [
+        # Water supports the m³ unit, so it will be allowed
+        (
+            "sensor.cubic_meters_per_hour",
+            "m³/h",
+            None,
+            SensorDeviceClass.WATER,
+            SensorDeviceClass.WATER,
+        ),
+        # Energy does not support this unit, so the device class will not be applied
+        ("sensor.cubic_meters_per_hour", "m³/h", None, SensorDeviceClass.ENERGY, None),
+        # With no user-supplied device class, infer it from the source sensor (which has none for this test source)
+        ("sensor.cubic_meters_per_hour", "m³/h", None, None, None),
+        # With no user-supplied device class, infer it from the source sensor (which is energy for this test source)
+        (
+            "sensor.power",
+            UnitOfPower.KILO_WATT,
+            SensorDeviceClass.POWER,
+            None,
+            SensorDeviceClass.ENERGY,
+        ),
+        # Date is not allowed because it has no supported state class
+        ("sensor.cubic_meters_per_hour", "m³/h", None, SensorDeviceClass.DATE, None),
+        # Monetary allows any unit, so the device class will be applied even if the unit is nonsense
+        (
+            "sensor.cubic_meters_per_hour",
+            "m³/h",
+            None,
+            SensorDeviceClass.MONETARY,
+            SensorDeviceClass.MONETARY,
+        ),
+        # Cope with invalid device class in the source sensor. Should result in no inferred device class
+        (
+            "sensor.bad_sensor_class",
+            UnitOfPower.KILO_WATT,
+            "NotADeviceClass",
+            None,
+            None,
+        ),
+    ],
+)
+async def test_device_class_user(
+    hass: HomeAssistant,
+    source_sensor: str,
+    source_unit: str,
+    source_class: SensorDeviceClass | str | None,
+    device_class: SensorDeviceClass | None,
+    expected_class: SensorDeviceClass | None,
+) -> None:
+    """Test the user-supplied device class hint is applied based on unit and state class compatibility."""
+    config = {
+        "sensor": {
+            "platform": "integration",
+            "name": "integration",
+            "source": source_sensor,
+            "round": 2,
+            "method": "trapezoidal",
+            "unit_time": UnitOfTime.HOURS,
+        }
+    }
+    if device_class is not None:
+        config["sensor"]["device_class"] = device_class
+
+    source_config = {ATTR_UNIT_OF_MEASUREMENT: source_unit}
+    if source_class is not None:
+        source_config[ATTR_DEVICE_CLASS] = source_class
+
+    assert await async_setup_component(hass, "sensor", config)
+
+    entity_id = config["sensor"]["source"]
+
+    await _setup_device_class_test(hass, entity_id)
+
+    hass.states.async_set(entity_id, 300, source_config, force_update=True)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert state is not None
+
+    # Ensure user device class matches expected
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == expected_class
+
+
 @pytest.mark.parametrize("method", ["trapezoidal", "left", "right"])
 async def test_device_class(hass: HomeAssistant, method) -> None:
     """Test integration sensor units using a power source."""
@@ -764,23 +849,8 @@ async def test_device_class(hass: HomeAssistant, method) -> None:
     assert await async_setup_component(hass, "sensor", config)
 
     entity_id = config["sensor"]["source"]
-    # This replicates the current sequence when HA starts up in a real runtime
-    # by updating the base sensor state before the base sensor's units
-    # or state have been correctly populated.  Those interim updates
-    # include states of None and Unknown
-    hass.states.async_set(entity_id, STATE_UNKNOWN, {})
-    await hass.async_block_till_done()
-    hass.states.async_set(
-        entity_id, 100, {"device_class": None, "unit_of_measurement": None}
-    )
-    await hass.async_block_till_done()
-    hass.states.async_set(
-        entity_id, 200, {"device_class": None, "unit_of_measurement": None}
-    )
-    await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.integration")
-    assert "device_class" not in state.attributes
+    await _setup_device_class_test(hass, entity_id)
 
     hass.states.async_set(
         entity_id,
@@ -937,6 +1007,26 @@ async def _setup_integral_sensor(
         hass, "sensor", _integral_sensor_config(max_sub_interval=max_sub_interval)
     )
     await hass.async_block_till_done()
+
+
+async def _setup_device_class_test(hass: HomeAssistant, entity_id: str) -> None:
+    # This replicates the current sequence when HA starts up in a real runtime
+    # by updating the base sensor state before the base sensor's units
+    # or state have been correctly populated.  Those interim updates
+    # include states of None and Unknown
+    hass.states.async_set(entity_id, STATE_UNKNOWN, {})
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        entity_id, 100, {"device_class": None, "unit_of_measurement": None}
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        entity_id, 200, {"device_class": None, "unit_of_measurement": None}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert "device_class" not in state.attributes
 
 
 async def _update_source_sensor(hass: HomeAssistant, value: int | str) -> None:

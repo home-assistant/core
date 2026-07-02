@@ -11,7 +11,9 @@ from typing import TYPE_CHECKING, Any, Final, Self, override
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
+    DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
@@ -22,6 +24,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_DEVICE_CLASS,
     CONF_METHOD,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -97,6 +100,7 @@ PLATFORM_SCHEMA = vol.All(
             ),
             vol.Optional(CONF_UNIT_PREFIX): vol.In(UNIT_PREFIXES),
             vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
             vol.Remove(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_MAX_SUB_INTERVAL): cv.positive_time_period,
             vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
@@ -273,6 +277,7 @@ async def async_setup_entry(
         round_digits=round_digits,
         source_entity=source_entity_id,
         unique_id=config_entry.entry_id,
+        device_class=config_entry.options.get(CONF_DEVICE_CLASS),
         unit_prefix=unit_prefix,
         unit_time=config_entry.options[CONF_UNIT_TIME],
         max_sub_interval=max_sub_interval,
@@ -295,6 +300,7 @@ async def async_setup_platform(
         round_digits=config.get(CONF_ROUND_DIGITS),
         source_entity=config[CONF_SOURCE_SENSOR],
         unique_id=config.get(CONF_UNIQUE_ID),
+        device_class=config.get(CONF_DEVICE_CLASS),
         unit_prefix=config.get(CONF_UNIT_PREFIX),
         unit_time=config[CONF_UNIT_TIME],
         max_sub_interval=config.get(CONF_MAX_SUB_INTERVAL),
@@ -318,6 +324,7 @@ class IntegrationSensor(RestoreSensor):
         round_digits: int | None,
         source_entity: str,
         unique_id: str | None,
+        device_class: SensorDeviceClass | None,
         unit_prefix: str | None,
         unit_time: UnitOfTime,
         max_sub_interval: timedelta | None,
@@ -328,6 +335,7 @@ class IntegrationSensor(RestoreSensor):
         self._round_digits = round_digits
         self._state: Decimal | None = None
         self._method = _IntegrationMethod.from_name(integration_method)
+        self._configured_device_class: SensorDeviceClass | None = device_class
 
         self._attr_name = name if name is not None else f"{source_entity} integral"
         self._unit_prefix_string = "" if unit_prefix is None else unit_prefix
@@ -335,9 +343,12 @@ class IntegrationSensor(RestoreSensor):
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
         self._unit_time_str = unit_time
+        self._attr_device_class: SensorDeviceClass | None = None
         self._attr_icon = "mdi:chart-histogram"
         self._source_entity: str = source_entity
+        self._source_device_class: SensorDeviceClass | None = None
         self._last_valid_state: Decimal | None = None
+        self._refresh_device_class: bool = True
         self.device_entry = async_entity_id_to_device(
             hass,
             source_entity,
@@ -377,28 +388,77 @@ class IntegrationSensor(RestoreSensor):
         source_device_class: SensorDeviceClass | None,
         unit_of_measurement: str | None,
     ) -> SensorDeviceClass | None:
-        """Deduce device class if possible from source device class and target unit."""
-        if source_device_class is None:
+        """Deduce device class if possible from source device class and target unit.
+
+        If a device class value has been set in the config, try to use that instead.
+        """
+        # If we don't have a unit of measurement, then we can't have a device class.
+        if unit_of_measurement is None:
             return None
 
-        if (device_class := DEVICE_CLASS_MAP.get(source_device_class)) is None:
+        # Use the user supplied device class if one was supplied, and it supports
+        # the current unit and state class
+        if (device_class := self._configured_device_class) is not None:
+            state_classes = DEVICE_CLASS_STATE_CLASSES.get(device_class)
+            allowed_units = DEVICE_CLASS_UNITS.get(device_class)
+            if (
+                state_classes is not None
+                and self._attr_state_class in state_classes
+                and (allowed_units is None or unit_of_measurement in allowed_units)
+            ):
+                return device_class
+            # User device class is not compatible, issue warning and fall back to
+            # inferred class.
+            _LOGGER.warning(
+                "%s: Specified device class '%s' is not compatible with the derived unit '%s' or the state class '%s' of this sensor",
+                self.entity_id,
+                device_class,
+                unit_of_measurement,
+                self._attr_state_class,
+            )
+
+        # Try to infer device class from source sensor
+        if (
+            source_device_class is None
+            or (device_class := DEVICE_CLASS_MAP.get(source_device_class)) is None
+        ):
             return None
 
-        if unit_of_measurement not in DEVICE_CLASS_UNITS.get(device_class, set()):
+        allowed_units = DEVICE_CLASS_UNITS.get(device_class)
+        if allowed_units is not None and unit_of_measurement not in allowed_units:
             return None
         return device_class
 
     def _derive_and_set_attributes_from_state(self, source_state: State) -> None:
         source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         if source_unit is not None:
-            self._unit_of_measurement = self._calculate_unit(source_unit)
+            unit_of_measurement = self._calculate_unit(source_unit)
         else:
             # If the source has no defined unit we cannot derive a unit for the integral
-            self._unit_of_measurement = None
+            unit_of_measurement = None
+        source_device_class_raw = source_state.attributes.get(ATTR_DEVICE_CLASS)
+        source_device_class: SensorDeviceClass | None = None
+        if isinstance(source_device_class_raw, str):
+            try:
+                source_device_class = SensorDeviceClass(source_device_class_raw)
+            except ValueError:
+                # If the source device class is an invalid string, do not use it.
+                source_device_class = None
 
-        self._attr_device_class = self._calculate_device_class(
-            source_state.attributes.get(ATTR_DEVICE_CLASS), self.unit_of_measurement
-        )
+        # Only update device class if unit of measurement or source device class change,
+        # or if a manual update has been requested (e.g. on sensor being added)
+        if (
+            self._refresh_device_class
+            or unit_of_measurement != self._unit_of_measurement
+            or source_device_class != self._source_device_class
+        ):
+            self._attr_device_class = self._calculate_device_class(
+                source_device_class, unit_of_measurement
+            )
+        self._refresh_device_class = False
+        self._unit_of_measurement = unit_of_measurement
+        self._source_device_class = source_device_class
+
         if self._attr_device_class:
             # Remove this sensors icon default and allow
             # to fallback to the device class default
@@ -448,6 +508,7 @@ class IntegrationSensor(RestoreSensor):
             handle_state_change = self._integrate_on_state_change_callback
             handle_state_report = self._integrate_on_state_report_callback
 
+        self._refresh_device_class = True
         if (
             state := self.hass.states.get(self._source_entity)
         ) and state.state != STATE_UNAVAILABLE:
