@@ -409,6 +409,7 @@ FLOWS = {
         "leaone",
         "led_ble",
         "lektrico",
+        "lepro",
         "letpot",
         "lg_infrared",
         "lg_netcast",

@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Enter your Lepro account email to look up your regional server.",
+        "data": {
+          "account": "Account email"
+        },
+        "data_description": {
+          "account": "The email address associated with your Lepro account."
+        }
+      },
+      "pick_implementation": {
+        "title": "Login Lepro server"
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the Lepro service. Check your account email and try again."
+    },
+    "abort": {
+      "already_configured": "This Lepro account is already configured.",
+      "oauth_error": "An error occurred during OAuth authorization.",
+      "oauth_timeout": "Timed out waiting for OAuth authorization.",
+      "missing_configuration": "The integration is not configured. Please follow the documentation."
+    }
+  },
+  "application_credentials": {
+    "description": "Enter your Lepro OAuth2 client ID and client secret. You can obtain these from your Lepro developer account."
+  }
+}
