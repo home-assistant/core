@@ -1,6 +1,7 @@
 """User-managed HTTP configuration store."""
 
 import asyncio
+from datetime import datetime, timedelta
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
 import os
@@ -9,11 +10,13 @@ from typing import Any, Final, TypedDict, cast, override
 import voluptuous as vol
 
 from homeassistant.const import SERVER_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
@@ -68,6 +71,8 @@ STORAGE_VERSION: Final = 2
 KEY_STABLE: Final = "stable"
 KEY_PENDING: Final = "pending"
 KEY_YAML_MIGRATION_DONE: Final = "yaml_migration_done"
+
+AUTO_REVERT_DELAY: Final = timedelta(minutes=5)
 
 DATA_STORE: HassKey[HTTPConfigStore] = HassKey(STORAGE_KEY)
 
@@ -203,6 +208,7 @@ async def async_load_config(hass: HomeAssistant, config: ConfigType) -> ConfData
 
     if store.pending is not None:
         _LOGGER.info("Using pending HTTP config")
+        store.async_schedule_revert_to_stable()
         return store.pending
 
     _LOGGER.info("Using stable HTTP config")
@@ -243,6 +249,8 @@ class HTTPConfigStore:
         self._yaml_migration_done = False
         self._loaded = False
         self._load_lock = asyncio.Lock()
+        self._revert_unsub: CALLBACK_TYPE | None = None
+        self._revert_deadline: datetime | None = None
 
     @property
     def stable(self) -> ConfData:
@@ -253,6 +261,11 @@ class HTTPConfigStore:
     def pending(self) -> ConfData | None:
         """Return the unconfirmed config awaiting promotion, if any."""
         return self._pending
+
+    @property
+    def revert_deadline(self) -> datetime | None:
+        """Return when the pending config auto-reverts to stable, if scheduled."""
+        return self._revert_deadline
 
     @property
     def yaml_migration_done(self) -> bool:
@@ -294,7 +307,62 @@ class HTTPConfigStore:
             raise HomeAssistantError("No pending HTTP config to promote")
         self._stable = self._pending
         self._pending = None
+        # The config is now confirmed; no need to revert it anymore.
+        self._async_cancel_revert()
         await self._async_persist()
+
+    @callback
+    def async_schedule_revert_to_stable(self) -> None:
+        """Schedule reverting the pending config back to stable.
+
+        Loading a pending config is a trial. If the user does not promote it
+        within ``AUTO_REVERT_DELAY`` (e.g. because the new config made Home
+        Assistant unreachable), automatically clear it and restart so the last
+        known-good stable config is restored.
+        """
+        self._async_cancel_revert()
+        self._revert_deadline = dt_util.utcnow() + AUTO_REVERT_DELAY
+        self._revert_unsub = async_call_later(
+            self._hass,
+            AUTO_REVERT_DELAY,
+            HassJob(
+                self._async_revert_to_stable,
+                "http config auto-revert",
+                cancel_on_shutdown=True,
+            ),
+        )
+
+    @callback
+    def _async_cancel_revert(self) -> None:
+        """Cancel a scheduled revert, if any.
+
+        Also clears the deadline so ``revert_deadline`` no longer reports a
+        revert that will not happen (e.g. after the config is promoted).
+        """
+        if self._revert_unsub is not None:
+            self._revert_unsub()
+            self._revert_unsub = None
+        self._revert_deadline = None
+
+    async def _async_revert_to_stable(self, _now: datetime) -> None:
+        """Clear the unconfirmed pending config and restart to apply stable."""
+        self._async_cancel_revert()
+        if self._pending is None:
+            return
+        _LOGGER.warning(
+            "Pending HTTP config was not confirmed within %s; reverting to the "
+            "stable config and restarting",
+            AUTO_REVERT_DELAY,
+        )
+        self._pending = None
+        await self._async_persist()
+        # Imported here to avoid a circular import at module load time.
+        from homeassistant.components.homeassistant import (  # noqa: PLC0415
+            DOMAIN as HASS_DOMAIN,
+            SERVICE_HOMEASSISTANT_RESTART,
+        )
+
+        await self._hass.services.async_call(HASS_DOMAIN, SERVICE_HOMEASSISTANT_RESTART)
 
     async def async_migrate_yaml(self, config: ConfData) -> None:
         """Migrate YAML config to storage as pending if not the same as the config used for recovery."""
