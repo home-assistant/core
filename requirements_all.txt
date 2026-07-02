@@ -940,7 +940,7 @@ enocean-async==0.4.2
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.15.0
+env-canada==0.16.1
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -1216,7 +1216,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==6.25.1
+habluetooth==6.26.2
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1972,7 +1972,7 @@ pyEmby==1.10
 pyHik==0.4.3
 
 # homeassistant.components.homee
-pyHomee==1.4.0
+pyHomee==1.4.1
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
@@ -1990,7 +1990,7 @@ pyW215==0.8.0
 pyW800rf32==0.4
 
 # homeassistant.components.ccm15
-py_ccm15==0.6.0
+py_ccm15==1.0.0
 
 # homeassistant.components.html5
 py_vapid==1.9.4
@@ -3239,7 +3239,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==15.3.0
+uiprotect==15.4.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
