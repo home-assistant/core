@@ -227,7 +227,7 @@ async def test_migrate_binary_sensor_switch_unique_id(
             f"{CLIMATE_ID}-thermostat",
         )
     ],
- )
+)
 @pytest.mark.usefixtures("mock_smile_adam_jip")
 async def test_migrate_climate_unique_id(
     hass: HomeAssistant,
