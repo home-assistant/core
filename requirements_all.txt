@@ -2519,7 +2519,7 @@ pysaj==0.0.16
 pysaunum==0.6.0
 
 # homeassistant.components.schlage
-pyschlage==2025.9.0
+pyschlage==2026.5.0
 
 # homeassistant.components.sensibo
 pysensibo==1.2.1
