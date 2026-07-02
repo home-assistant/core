@@ -716,7 +716,7 @@ class ConfigEntry[_DataT = Any]:
 
         error_reason: str | None = None
         error_reason_translation_key: str | None = None
-        error_reason_translation_placeholders: dict[str, Any] | None = None
+        error_reason_translation_placeholders: dict[str, str] | None = None
 
         if isinstance(exc, ConfigEntryError):
             error_reason = str(exc) or "Unknown fatal config entry error"
@@ -803,11 +803,11 @@ class ConfigEntry[_DataT = Any]:
                     None,
                     None,
                 )
-
-            # This was not a "real" cancellation, log it and treat as a normal error.
-            logger.exception(
-                "Error setting up entry %s for %s", self.title, integration.domain
-            )
+            else:
+                # This was not a "real" cancellation, log it and treat as a normal error.
+                logger.exception(
+                    "Error setting up entry %s for %s", self.title, integration.domain
+                )
 
         else:
             logger.exception(
@@ -876,7 +876,7 @@ class ConfigEntry[_DataT = Any]:
 
         error_reason: str | None = None
         error_reason_translation_key: str | None = None
-        error_reason_translation_placeholders: dict[str, Any] | None = None
+        error_reason_translation_placeholders: dict[str, str] | None = None
 
         result = False
 
@@ -906,6 +906,7 @@ class ConfigEntry[_DataT = Any]:
             except (
                 ConfigEntryError,
                 ConfigEntryAuthFailed,
+                ConfigEntryNotReady,
                 asyncio.CancelledError,
                 SystemExit,
                 Exception,
@@ -949,6 +950,7 @@ class ConfigEntry[_DataT = Any]:
         except (
             ConfigEntryError,
             ConfigEntryAuthFailed,
+            ConfigEntryNotReady,
             asyncio.CancelledError,
             SystemExit,
             Exception,
