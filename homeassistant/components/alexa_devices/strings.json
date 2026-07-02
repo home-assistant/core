@@ -79,6 +79,9 @@
       }
     },
     "select": {
+      "default_device": {
+        "name": "Default device"
+      },
       "dropin": {
         "name": "Drop In",
         "state": {
