@@ -13,11 +13,7 @@ from google_drive_api.api import AbstractAuth, GoogleDriveApi
 from homeassistant.components.backup import AgentBackup, suggested_filename
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN
@@ -56,27 +52,32 @@ class AsyncConfigEntryAuth(AbstractAuth):
         try:
             await self._oauth_session.async_ensure_token_valid()
         except ClientError as ex:
-            if (
+            is_setup = (
                 self._oauth_session.config_entry.state
                 is ConfigEntryState.SETUP_IN_PROGRESS
-            ):
-                if isinstance(ex, ClientResponseError) and 400 <= ex.status < 500:
+            )
+
+            if isinstance(ex, ClientResponseError):
+                # OAuth2 spec uses 400 for invalid refresh tokens.
+                # During setup, we broaden this to all 4xx to abort cleanly.
+                if ex.status == 400 or (is_setup and 400 <= ex.status < 500):
+                    if not is_setup:
+                        self._oauth_session.config_entry.async_start_reauth(
+                            self._oauth_session.hass
+                        )
                     raise ConfigEntryAuthFailed(
                         translation_domain=DOMAIN,
                         translation_key="authentication_not_valid",
                     ) from ex
+
+            if is_setup:
                 raise ConfigEntryNotReady(
                     translation_domain=DOMAIN,
                     translation_key="authentication_failed",
                 ) from ex
-            if hasattr(ex, "status") and ex.status == 400:
-                self._oauth_session.config_entry.async_start_reauth(
-                    self._oauth_session.hass
-                )
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="authentication_failed",
-            ) from ex
+
+            raise
+
         return str(self._oauth_session.token[CONF_ACCESS_TOKEN])
 
 
