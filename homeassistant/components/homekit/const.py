@@ -35,6 +35,12 @@ ATTR_KEY_NAME = "key_name"
 ATTR_OBSTRUCTION_DETECTED = "obstruction-detected"
 
 # #### Config ####
+# Persists per-entity hidden-input lists written by the TargetVisibilityState
+# setter in type_remotes.py.  The options-update listener skips a bridge reload
+# for changes to this key, so running accessories read it only at construction
+# time.  External writes (e.g. via the options flow) take effect on the next
+# bridge restart rather than immediately.
+CONF_HOMEKIT_HIDDEN_SOURCES = "homekit_hidden_sources"
 CONF_HOMEKIT_MODE = "mode"
 CONF_ADVERTISE_IP = "advertise_ip"
 CONF_AUDIO_CODEC = "audio_codec"
@@ -253,6 +259,7 @@ CHAR_TARGET_HUMIDITY = "TargetRelativeHumidity"
 CHAR_TARGET_SECURITY_STATE = "SecuritySystemTargetState"
 CHAR_TARGET_TEMPERATURE = "TargetTemperature"
 CHAR_TARGET_TILT_ANGLE = "TargetHorizontalTiltAngle"
+CHAR_TARGET_VISIBILITY_STATE = "TargetVisibilityState"
 CHAR_HOLD_POSITION = "HoldPosition"
 CHAR_TEMP_DISPLAY_UNITS = "TemperatureDisplayUnits"
 CHAR_VALVE_TYPE = "ValveType"
