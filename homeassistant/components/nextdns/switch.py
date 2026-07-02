@@ -533,11 +533,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add NextDNS entities from a config_entry."""
-    coordinator = entry.runtime_data.settings
-
-    async_add_entities(
-        NextDnsSwitch(coordinator, description) for description in SWITCHES
-    )
+    for subentry_id, profile_data in entry.runtime_data.profiles.items():
+        coordinator = profile_data.settings
+        async_add_entities(
+            (NextDnsSwitch(coordinator, description) for description in SWITCHES),
+            config_subentry_id=subentry_id,
+        )
 
 
 class NextDnsSwitch(NextDnsEntity, SwitchEntity):

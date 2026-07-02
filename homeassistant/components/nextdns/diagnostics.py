@@ -17,19 +17,19 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: NextDnsConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    dnssec_coordinator = config_entry.runtime_data.dnssec
-    encryption_coordinator = config_entry.runtime_data.encryption
-    ip_versions_coordinator = config_entry.runtime_data.ip_versions
-    protocols_coordinator = config_entry.runtime_data.protocols
-    settings_coordinator = config_entry.runtime_data.settings
-    status_coordinator = config_entry.runtime_data.status
+    profiles_data = {}
+    for subentry_id, profile_data in config_entry.runtime_data.profiles.items():
+        subentry = config_entry.subentries[subentry_id]
+        profiles_data[subentry.title] = {
+            "dnssec_coordinator_data": asdict(profile_data.dnssec.data),
+            "encryption_coordinator_data": asdict(profile_data.encryption.data),
+            "ip_versions_coordinator_data": asdict(profile_data.ip_versions.data),
+            "protocols_coordinator_data": asdict(profile_data.protocols.data),
+            "settings_coordinator_data": asdict(profile_data.settings.data),
+            "status_coordinator_data": asdict(profile_data.status.data),
+        }
 
     return {
         "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
-        "dnssec_coordinator_data": asdict(dnssec_coordinator.data),
-        "encryption_coordinator_data": asdict(encryption_coordinator.data),
-        "ip_versions_coordinator_data": asdict(ip_versions_coordinator.data),
-        "protocols_coordinator_data": asdict(protocols_coordinator.data),
-        "settings_coordinator_data": asdict(settings_coordinator.data),
-        "status_coordinator_data": asdict(status_coordinator.data),
+        "profiles": profiles_data,
     }
