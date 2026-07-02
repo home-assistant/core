@@ -705,6 +705,120 @@ class ConfigEntry[_DataT = Any]:
         finally:
             current_entry.set(None)
 
+    async def __async_handle_config_entry_setup_error(
+        self,
+        hass: HomeAssistant,
+        integration: loader.Integration,
+        exc: BaseException,
+    ) -> tuple[str | None, str | None, dict[str, Any] | None]:
+        """Handle config entry setup error."""
+        logger = self.logger
+
+        error_reason: str | None = None
+        error_reason_translation_key: str | None = None
+        error_reason_translation_placeholders: dict[str, Any] | None = None
+
+        if isinstance(exc, ConfigEntryError):
+            error_reason = str(exc) or "Unknown fatal config entry error"
+            error_reason_translation_key = exc.translation_key
+            error_reason_translation_placeholders = exc.translation_placeholders
+            logger.exception(
+                "Error setting up entry %s for %s: %s",
+                self.title,
+                self.domain,
+                error_reason,
+            )
+        if isinstance(exc, ConfigEntryAuthFailed):
+            message = str(exc)
+            auth_base_message = "could not authenticate"
+            error_reason = message or auth_base_message
+            error_reason_translation_key = exc.translation_key
+            error_reason_translation_placeholders = exc.translation_placeholders
+            auth_message = (
+                f"{auth_base_message}: {message}" if message else auth_base_message
+            )
+            logger.warning(
+                "Config entry '%s' for %s integration %s",
+                self.title,
+                self.domain,
+                auth_message,
+            )
+            logger.debug("Full exception", exc_info=True)  # noqa: LOG014
+            self.async_start_reauth_if_available(hass)
+        if isinstance(exc, ConfigEntryNotReady):
+            message = str(exc)
+            error_reason_translation_key = exc.translation_key
+            error_reason_translation_placeholders = exc.translation_placeholders
+            self._async_set_state(
+                hass,
+                ConfigEntryState.SETUP_RETRY,
+                message or None,
+                error_reason_translation_key,
+                error_reason_translation_placeholders,
+            )
+            wait_time = min(2**self._tries * 5, SETUP_RETRY_MAX_WAIT) + (
+                randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
+            )
+            self._tries += 1
+            ready_message = f"ready yet: {message}" if message else "ready yet"
+            logger.info(
+                "Config entry '%s' for %s integration not %s; Retrying in %d seconds",
+                self.title,
+                self.domain,
+                ready_message,
+                wait_time,
+            )
+            logger.debug("Full exception", exc_info=True)  # noqa: LOG014
+
+            if hass.state is CoreState.running:
+                self._async_cancel_retry_setup = async_call_later(
+                    hass,
+                    wait_time,
+                    HassJob(
+                        functools.partial(self._async_setup_again, hass),
+                        job_type=HassJobType.Callback,
+                        cancel_on_shutdown=True,
+                    ),
+                )
+            else:
+                self._async_cancel_retry_setup = hass.bus.async_listen(
+                    EVENT_HOMEASSISTANT_STARTED,
+                    functools.partial(self._async_setup_again, hass),
+                )
+
+        if isinstance(exc, asyncio.CancelledError):
+            # We want to propagate CancelledError if we are being cancelled.
+            if (task := asyncio.current_task()) and task.cancelling() > 0:
+                logger.exception(
+                    "Setup of config entry '%s' for %s integration cancelled",
+                    self.title,
+                    self.domain,
+                )
+                self._async_set_state(
+                    hass,
+                    ConfigEntryState.SETUP_ERROR,
+                    None,
+                    None,
+                    None,
+                )
+                raise exc
+
+            # This was not a "real" cancellation, log it and treat as a normal error.
+            logger.exception(
+                "Error setting up entry %s for %s", self.title, integration.domain
+            )
+
+        if isinstance(exc, (SystemExit, Exception)):
+            logger.exception(
+                "Error setting up entry %s for %s", self.title, integration.domain
+            )
+
+        return (
+            error_reason,
+            error_reason_translation_key,
+            error_reason_translation_placeholders,
+        )
+
     async def __async_setup_with_context(
         self,
         hass: HomeAssistant,
@@ -759,6 +873,12 @@ class ConfigEntry[_DataT = Any]:
                 )
             return
 
+        error_reason: str | None = None
+        error_reason_translation_key: str | None = None
+        error_reason_translation_placeholders: dict[str, Any] | None = None
+
+        result = False
+
         if domain_is_integration:
             try:
                 await integration.async_get_platform("config_flow")
@@ -778,19 +898,31 @@ class ConfigEntry[_DataT = Any]:
                 return
 
             # Perform migration
-            if not await self.async_migrate(hass):
-                self._async_set_state(hass, ConfigEntryState.MIGRATION_ERROR, None)
-                return
+            try:
+                if not await self.async_migrate(hass):
+                    self._async_set_state(hass, ConfigEntryState.MIGRATION_ERROR, None)
+                    return
+            except (
+                ConfigEntryError,
+                ConfigEntryAuthFailed,
+                asyncio.CancelledError,
+                SystemExit,
+                Exception,  # noqa: BLE001
+            ) as exc:
+                (
+                    error_reason,
+                    error_reason_translation_key,
+                    error_reason_translation_placeholders,
+                ) = await self.__async_handle_config_entry_setup_error(
+                    hass, integration, exc
+                )
+                if isinstance(exc, ConfigEntryNotReady):
+                    return
 
             setup_phase = SetupPhases.CONFIG_ENTRY_SETUP
         else:
             setup_phase = SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP
 
-        error_reason = None
-        error_reason_translation_key = None
-        error_reason_translation_placeholders = None
-
-        result = False
         try:
             with async_start_setup(
                 hass, integration=self.domain, group=self.entry_id, phase=setup_phase
@@ -802,103 +934,22 @@ class ConfigEntry[_DataT = Any]:
                     "%s.async_setup_entry did not return boolean", integration.domain
                 )
                 result = False
-        except ConfigEntryError as exc:
-            error_reason = str(exc) or "Unknown fatal config entry error"
-            error_reason_translation_key = exc.translation_key
-            error_reason_translation_placeholders = exc.translation_placeholders
-            logger.exception(
-                "Error setting up entry %s for %s: %s",
-                self.title,
-                self.domain,
+        except (
+            ConfigEntryError,
+            ConfigEntryAuthFailed,
+            asyncio.CancelledError,
+            SystemExit,
+            Exception,  # noqa: BLE001
+        ) as exc:
+            (
                 error_reason,
-            )
-        except ConfigEntryAuthFailed as exc:
-            message = str(exc)
-            auth_base_message = "could not authenticate"
-            error_reason = message or auth_base_message
-            error_reason_translation_key = exc.translation_key
-            error_reason_translation_placeholders = exc.translation_placeholders
-            auth_message = (
-                f"{auth_base_message}: {message}" if message else auth_base_message
-            )
-            logger.warning(
-                "Config entry '%s' for %s integration %s",
-                self.title,
-                self.domain,
-                auth_message,
-            )
-            logger.debug("Full exception", exc_info=True)
-            self.async_start_reauth_if_available(hass)
-        except ConfigEntryNotReady as exc:
-            message = str(exc)
-            error_reason_translation_key = exc.translation_key
-            error_reason_translation_placeholders = exc.translation_placeholders
-            self._async_set_state(
-                hass,
-                ConfigEntryState.SETUP_RETRY,
-                message or None,
                 error_reason_translation_key,
                 error_reason_translation_placeholders,
+            ) = await self.__async_handle_config_entry_setup_error(
+                hass, integration, exc
             )
-            wait_time = min(2**self._tries * 5, SETUP_RETRY_MAX_WAIT) + (
-                randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
-            )
-            self._tries += 1
-            ready_message = f"ready yet: {message}" if message else "ready yet"
-            logger.info(
-                "Config entry '%s' for %s integration not %s; Retrying in %d seconds",
-                self.title,
-                self.domain,
-                ready_message,
-                wait_time,
-            )
-            logger.debug("Full exception", exc_info=True)
-
-            if hass.state is CoreState.running:
-                self._async_cancel_retry_setup = async_call_later(
-                    hass,
-                    wait_time,
-                    HassJob(
-                        functools.partial(self._async_setup_again, hass),
-                        job_type=HassJobType.Callback,
-                        cancel_on_shutdown=True,
-                    ),
-                )
-            else:
-                self._async_cancel_retry_setup = hass.bus.async_listen(
-                    EVENT_HOMEASSISTANT_STARTED,
-                    functools.partial(self._async_setup_again, hass),
-                )
-
-            return
-
-        except asyncio.CancelledError:
-            # We want to propagate CancelledError if we are being cancelled.
-            if (task := asyncio.current_task()) and task.cancelling() > 0:
-                logger.exception(
-                    "Setup of config entry '%s' for %s integration cancelled",
-                    self.title,
-                    self.domain,
-                )
-                self._async_set_state(
-                    hass,
-                    ConfigEntryState.SETUP_ERROR,
-                    None,
-                    None,
-                    None,
-                )
-                raise
-
-            # This was not a "real" cancellation, log it and treat as a normal error.
-            logger.exception(
-                "Error setting up entry %s for %s", self.title, integration.domain
-            )
-
-        # pylint: disable-next=broad-except
-        except SystemExit, Exception:
-            logger.exception(
-                "Error setting up entry %s for %s", self.title, integration.domain
-            )
+            if isinstance(exc, ConfigEntryNotReady):
+                return
 
         finally:
             if not result and domain_is_integration:
@@ -1187,6 +1238,8 @@ class ConfigEntry[_DataT = Any]:
                 return False
             if result:
                 hass.config_entries._async_schedule_save()  # noqa: SLF001
+        except ConfigEntryError, ConfigEntryAuthFailed, ConfigEntryNotReady:
+            raise
         except Exception:
             self.logger.exception(
                 "Error migrating entry %s for %s", self.title, self.domain
