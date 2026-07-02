@@ -36,3 +36,8 @@ def trigger_shadow_callback(
     """Invoke the MQTT client's on_message callback."""
     on_message = mock_mqtt_client.connect.call_args.kwargs["on_message"]
     on_message(topic, payload)
+
+
+def trigger_mqtt_connect(mock_mqtt_client: MagicMock) -> None:
+    """Invoke the MQTT client's on_connect callback."""
+    mock_mqtt_client.connect.call_args.kwargs["on_connect"]()
