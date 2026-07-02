@@ -348,7 +348,7 @@ class BesenBS20ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_PIN, default=entry.data[CONF_PIN]): _pin_schema(),
+                    vol.Required(CONF_PIN): _pin_schema(),
                     vol.Optional(
                         CONF_SYNC_CLOCK,
                         default=entry.options.get(
