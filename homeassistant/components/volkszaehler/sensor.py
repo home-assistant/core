@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
@@ -23,19 +24,27 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    DEFAULT_HOST,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DOMAIN,
+    SUBENTRY_TYPE_CHANNEL,
+)
 
-DEFAULT_HOST = "localhost"
-DEFAULT_NAME = "Volkszaehler"
-DEFAULT_PORT = 80
+_LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
@@ -91,42 +100,108 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Volkszaehler sensors."""
+    """Import Volkszaehler sensor YAML config into config flow."""
+    validated = PLATFORM_SCHEMA(config)
+    data = {
+        CONF_HOST: validated[CONF_HOST],
+        CONF_NAME: validated[CONF_NAME],
+        CONF_PORT: validated[CONF_PORT],
+        CONF_UUID: validated[CONF_UUID],
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=data,
+    )
+    if result["type"] is FlowResultType.ABORT and result["reason"] not in (
+        "already_configured",
+        "subentry_added",
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result['reason']}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": DEFAULT_NAME,
+            },
+            breaks_in_ha_version="2027.1.0",
+        )
+        return
 
-    host: str = config[CONF_HOST]
-    name: str = config[CONF_NAME]
-    port: int = config[CONF_PORT]
-    uuid: str = config[CONF_UUID]
-    conditions: list[str] = config[CONF_MONITORED_CONDITIONS]
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": DEFAULT_NAME,
+        },
+        breaks_in_ha_version="2027.1.0",
+    )
 
-    session = async_get_clientsession(hass)
-    vz_api = VolkszaehlerData(Volkszaehler(session, uuid, host=host, port=port))
 
-    await vz_api.async_update()
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Volkszaehler sensors from a config entry."""
+    conditions = SENSOR_KEYS
 
-    if vz_api.api.data is None:
-        raise PlatformNotReady
+    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_CHANNEL):
+        vz_api = VolkszaehlerData(
+            Volkszaehler(
+                async_get_clientsession(hass),
+                subentry.data[CONF_UUID],
+                host=entry.data[CONF_HOST],
+                port=entry.data[CONF_PORT],
+            )
+        )
 
-    entities = [
-        VolkszaehlerSensor(vz_api, name, description)
-        for description in SENSOR_TYPES
-        if description.key in conditions
-    ]
+        await vz_api.async_update()
 
-    async_add_entities(entities, True)
+        if vz_api.api.data is None:
+            raise PlatformNotReady
+
+        entities = [
+            VolkszaehlerSensor(
+                vz_api,
+                subentry.title,
+                subentry.data[CONF_UUID],
+                description,
+            )
+            for description in SENSOR_TYPES
+            if description.key in conditions
+        ]
+
+        async_add_entities(entities, True, config_subentry_id=subentry.subentry_id)
 
 
 class VolkszaehlerSensor(SensorEntity):
     """Implementation of a Volkszaehler sensor."""
 
     def __init__(
-        self, vz_api: VolkszaehlerData, name: str, description: SensorEntityDescription
+        self,
+        vz_api: VolkszaehlerData,
+        name: str,
+        uuid: str,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the Volkszaehler sensor."""
         self.entity_description = description
         self.vz_api = vz_api
 
         self._attr_name = f"{name} {description.name}"
+        self._attr_unique_id = f"{uuid}_{description.key}"
 
     @property
     @override

@@ -1,0 +1,54 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_data": "No data available for this channel",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "uuid": "UUID"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the Volkszaehler server.",
+          "port": "Port number of the Volkszaehler server.",
+          "uuid": "UUID of the channel to monitor. In the Volkszaehler Web UI, click the (i) icon next to the channel to find it."
+        },
+        "description": "Enter your Volkszaehler server and first channel details.",
+        "title": "Set up Volkszaehler"
+      }
+    }
+  },
+  "config_subentries": {
+    "channel": {
+      "entry_type": "Channel",
+      "initiate_flow": {
+        "user": "Add Channel"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "uuid": "UUID"
+          },
+          "data_description": {
+            "uuid": "UUID of the channel to monitor. In the Volkszaehler Web UI, click the (i) icon next to the channel to find it."
+          },
+          "description": "Add another Volkszaehler channel.",
+          "title": "Add Volkszaehler channel"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue": {
+      "description": "Importing Volkszaehler sensor configuration from YAML is deprecated or failed. Remove the YAML configuration and set up the integration through the Home Assistant UI.",
+      "title": "YAML import is deprecated"
+    }
+  }
+}
