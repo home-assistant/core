@@ -151,7 +151,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         so fall back to comparing the device state against the zone's friendly
         name, which is what the device state is set to for non-home zones.
         """
-        if (in_zones := device.attributes.get(ATTR_IN_ZONES)) is not None:
+        if in_zones := device.attributes.get(ATTR_IN_ZONES):
             return zone.entity_id in in_zones
 
         # This can be removed when legacy device trackers are removed.
