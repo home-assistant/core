@@ -1,7 +1,7 @@
 """Support for button entities through the SmartThings cloud API."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pysmartthings import Attribute, Capability, Category, Command, SmartThings
 
@@ -175,6 +175,7 @@ class SmartThingsButtonEntity(SmartThingsEntity, ButtonEntity):
         if entity_description.command_identifier is not None:
             self._attr_unique_id += f"_{entity_description.command_identifier}"
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         self._validate_before_execute()

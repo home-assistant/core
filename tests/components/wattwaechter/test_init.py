@@ -12,7 +12,7 @@ from aio_wattwaechter import (
 )
 import pytest
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -53,10 +53,10 @@ async def test_setup_entry_connection_error(
     ("attribute", "value"),
     [
         ("side_effect", WattwaechterNoDataError("No data")),
-        ("side_effect", WattwaechterAuthenticationError("Invalid token")),
+        ("side_effect", WattwaechterConnectionError("Connection refused")),
         ("return_value", None),
     ],
-    ids=["no_data", "auth_error", "returns_none"],
+    ids=["no_data", "connection_error", "returns_none"],
 )
 async def test_setup_entry_retries_on_meter_data_failure(
     hass: HomeAssistant,
@@ -72,3 +72,24 @@ async def test_setup_entry_retries_on_meter_data_failure(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+) -> None:
+    """Test an authentication error during setup starts the reauth flow."""
+    mock_client.meter_data.side_effect = WattwaechterAuthenticationError(
+        "Invalid token"
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id

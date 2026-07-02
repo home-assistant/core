@@ -39,8 +39,8 @@
 # name: test_binary_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][binary_sensor.my_home_patio_water_heating_energy_demand_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Patio Water Heating Energy demand status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Energy demand status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_home_patio_water_heating_energy_demand_status',
@@ -90,8 +90,8 @@
 # name: test_binary_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][binary_sensor.my_home_patio_water_heating_heating_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Patio Water Heating Heating status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Heating status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_home_patio_water_heating_heating_status',
@@ -141,8 +141,8 @@
 # name: test_binary_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][binary_sensor.maple_residence_living_room_smoke_detector_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'smoke',
-      'friendly_name': 'Living Room Smoke Detector Smoke',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Smoke Detector Smoke',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.maple_residence_living_room_smoke_detector_smoke',
@@ -192,8 +192,8 @@
 # name: test_binary_sensor_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][binary_sensor.family_wing_fenetre_garage_contact-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Fenêtre Garage Contact',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fenêtre Garage Contact',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.family_wing_fenetre_garage_contact',
@@ -243,8 +243,8 @@
 # name: test_binary_sensor_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][binary_sensor.family_wing_porte_contact-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Porte Contact',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Porte Contact',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.family_wing_porte_contact',
@@ -294,8 +294,8 @@
 # name: test_binary_sensor_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][binary_sensor.kids_room_kitchen_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Kitchen Occupancy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Occupancy',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kids_room_kitchen_occupancy',
@@ -498,8 +498,8 @@
 # name: test_binary_sensor_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][binary_sensor.living_room_hallway_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Hallway Occupancy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Occupancy',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.living_room_hallway_occupancy',
@@ -549,8 +549,8 @@
 # name: test_binary_sensor_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][binary_sensor.upstairs_detecteur_fumee_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'smoke',
-      'friendly_name': 'Détecteur Fumée Smoke',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Détecteur Fumée Smoke',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.upstairs_detecteur_fumee_smoke',
@@ -600,8 +600,8 @@
 # name: test_binary_sensor_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][binary_sensor.upstairs_entree_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Entrée Occupancy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Entrée Occupancy',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.upstairs_entree_occupancy',

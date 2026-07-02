@@ -1,7 +1,7 @@
 """Update platform for Supervisor."""
 
 import re
-from typing import Any
+from typing import Any, override
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import Job
@@ -31,6 +31,10 @@ from .update_helper import update_addon, update_core, update_os
 ENTITY_DESCRIPTION = UpdateEntityDescription(
     translation_key="update",
     key=ATTR_VERSION_LATEST,
+)
+
+OS_UPDATE_REBOOT_NOTICE = (
+    "A reboot is required after install for the update to take effect."
 )
 
 
@@ -103,26 +107,31 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         return self.coordinator.data.addons[self._addon_slug]
 
     @property
+    @override
     def auto_update(self) -> bool:
         """Return true if auto-update is enabled for the add-on."""
         return self._addon_data.auto_update
 
     @property
+    @override
     def title(self) -> str | None:
         """Return the title of the update."""
         return self._addon_data.addon.name
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         return self._addon_data.addon.version_latest
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Version installed and in use."""
         return self._addon_data.addon.version
 
     @property
+    @override
     def in_progress(self) -> bool | None:
         """Return combined progress from the update job and refresh phase."""
         if self._update_ongoing:
@@ -130,6 +139,7 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         return self._attr_in_progress
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the icon of the add-on if any."""
         if not self.available:
@@ -138,6 +148,7 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
             return f"/api/hassio/addons/{self._addon_slug}/icon"
         return None
 
+    @override
     async def async_release_notes(self) -> str | None:
         """Return the release notes for the update."""
         if (
@@ -156,6 +167,7 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         match = regex_pattern.search(changelog)
         return match.group(0) if match else changelog
 
+    @override
     async def async_install(
         self,
         version: str | None = None,
@@ -181,6 +193,7 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         await self.coordinator.async_refresh()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Clear the ongoing flag once the installed version has changed."""
         if (
@@ -202,6 +215,7 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
             self._attr_update_percentage = None
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to progress updates."""
         await super().async_added_to_hass()
@@ -223,41 +237,52 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
         UpdateEntityFeature.INSTALL
         | UpdateEntityFeature.SPECIFIC_VERSION
         | UpdateEntityFeature.BACKUP
+        | UpdateEntityFeature.RELEASE_NOTES
     )
     _attr_title = "Home Assistant Operating System"
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Return the latest version."""
         assert self.coordinator.data.os is not None
         return self.coordinator.data.os.version_latest
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Return the installed version."""
         assert self.coordinator.data.os is not None
         return self.coordinator.data.os.version
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the icon of the entity."""
         return "/api/brands/integration/homeassistant/icon.png?placeholder=no"
 
     @property
+    @override
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         version = AwesomeVersion(self.latest_version)
-        if version.dev or version.strategy is AwesomeVersionStrategy.UNKNOWN:
+        if version.dev or version.strategy == AwesomeVersionStrategy.UNKNOWN:
             return "https://github.com/home-assistant/operating-system/commits/dev"
         return (
             f"https://github.com/home-assistant/operating-system/releases/tag/{version}"
         )
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
         await update_os(self.hass, version, backup)
+
+    @override
+    async def async_release_notes(self) -> str | None:
+        """Return reboot notice as an ha-alert box."""
+        return f"<ha-alert alert-type='info'>{OS_UPDATE_REBOOT_NOTICE}</ha-alert>\n"
 
 
 class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
@@ -279,6 +304,7 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
     _version_before_update: str | None = None
 
     @property
+    @override
     def in_progress(self) -> bool | None:
         """Return combined progress from the update job and restart phase."""
         if self._update_ongoing:
@@ -286,33 +312,39 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
         return self._attr_in_progress
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Return the latest version."""
         return self.coordinator.data.supervisor.version_latest
 
     @property
+    @override
     def installed_version(self) -> str:
         """Return the installed version."""
         return self.coordinator.data.supervisor.version
 
     @property
+    @override
     def auto_update(self) -> bool:
         """Return true if auto-update is enabled for supervisor."""
         return self.coordinator.data.supervisor.auto_update
 
     @property
+    @override
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         version = AwesomeVersion(self.latest_version)
-        if version.dev or version.strategy is AwesomeVersionStrategy.UNKNOWN:
+        if version.dev or version.strategy == AwesomeVersionStrategy.UNKNOWN:
             return "https://github.com/home-assistant/supervisor/commits/main"
         return f"https://github.com/home-assistant/supervisor/releases/tag/{version}"
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the icon of the entity."""
         return "/api/brands/integration/hassio/icon.png?placeholder=no"
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -333,6 +365,7 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
             ) from err
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Clear the ongoing flag once the installed version has changed."""
         if (
@@ -360,6 +393,7 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
             self._attr_update_percentage = None
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to progress updates."""
         await super().async_added_to_hass()
@@ -382,21 +416,25 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
     _attr_title = "Home Assistant Core"
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Return the latest version."""
         return self.coordinator.data.core.version_latest
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Return the installed version."""
         return self.coordinator.data.core.version
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the icon of the entity."""
         return "/api/brands/integration/homeassistant/icon.png?placeholder=no"
 
     @property
+    @override
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         version = AwesomeVersion(self.latest_version)
@@ -405,6 +443,7 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
         subdomain = "rc" if version.beta else "www"
         return f"https://{subdomain}.home-assistant.io/latest-release-notes/"
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -424,6 +463,7 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
             self._attr_update_percentage = None
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to progress updates."""
         await super().async_added_to_hass()

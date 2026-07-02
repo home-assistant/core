@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pytrydan import Trydan, TrydanData
 
@@ -92,6 +92,7 @@ class V2CLightEntity(V2CBaseEntity, LightEntity):
         self._attr_supported_color_modes = {self._attr_color_mode}
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the light brightness."""
         if not self.entity_description.supports_brightness:
@@ -102,6 +103,7 @@ class V2CLightEntity(V2CBaseEntity, LightEntity):
         return value_to_brightness(BRIGHTNESS_SCALE, value)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the light is on."""
         value = self.entity_description.value_fn(self.data)
@@ -109,6 +111,7 @@ class V2CLightEntity(V2CBaseEntity, LightEntity):
             return None
         return value > 0
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the LED."""
         value = LED_ON_VALUE
@@ -120,6 +123,7 @@ class V2CLightEntity(V2CBaseEntity, LightEntity):
         await self.entity_description.update_fn(self.coordinator.evse, value)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the LED."""
         await self.entity_description.update_fn(self.coordinator.evse, LED_OFF_VALUE)

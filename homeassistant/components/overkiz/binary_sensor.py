@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from pyoverkiz.enums import OverkizCommandParam, OverkizState, UIClass, UIWidget
 from pyoverkiz.types import StateType as OverkizStateType
@@ -203,6 +203,7 @@ class OverkizBinarySensor(OverkizDescriptiveEntity, BinarySensorEntity):
     entity_description: OverkizBinarySensorDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         if state := self.device.states.get(self.entity_description.key):

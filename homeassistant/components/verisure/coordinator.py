@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 from time import sleep
+from typing import override
 
 from verisure import (
     AuthenticationError as VerisureAuthenticationError,
@@ -211,6 +212,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
 
         return True
 
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch data from Verisure."""
         await self._async_refresh_cookie_if_needed()

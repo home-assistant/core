@@ -1,6 +1,6 @@
 """Parent class for every Overkiz device."""
 
-from typing import cast
+from typing import cast, override
 
 from pyoverkiz.enums import APIType, OverkizAttribute, OverkizCommandParam, OverkizState
 from pyoverkiz.models import Device
@@ -38,6 +38,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         self._attr_device_info = self.generate_device_info()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if self.device.available:

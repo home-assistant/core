@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, override
 
 from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
 from async_upnp_client.client import UpnpDevice, UpnpService, UpnpStateVariable
@@ -105,6 +105,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         self._upnp_server: AiohttpNotifyServer | None = None
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         # `turn_on` triggers are not yet registered during initialisation,
@@ -124,6 +125,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         self._update_sources()
         self._app_list_event.set()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -138,12 +140,14 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         else:
             self._attr_state = MediaPlayerState.OFF
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal."""
         self.coordinator.async_extra_update = None
         await self._async_shutdown_dmr()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
         if self.coordinator.is_on:
@@ -299,6 +303,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
             return
         await self._bridge.async_send_keys(keys)
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level on the media player."""
         if (dmr_device := self._dmr_device) is None:
@@ -314,18 +319,22 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
                 translation_placeholders={"error": repr(err), "host": self._host},
             ) from err
 
+    @override
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
         await self._async_send_keys(["KEY_VOLUP"])
 
+    @override
     async def async_volume_down(self) -> None:
         """Volume down media player."""
         await self._async_send_keys(["KEY_VOLDOWN"])
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         await self._async_send_keys(["KEY_MUTE"])
 
+    @override
     async def async_media_play_pause(self) -> None:
         """Simulate play pause media player."""
         if self._playing:
@@ -333,24 +342,29 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         else:
             await self.async_media_play()
 
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         self._playing = True
         await self._async_send_keys(["KEY_PLAY"])
 
+    @override
     async def async_media_pause(self) -> None:
         """Send media pause command to media player."""
         self._playing = False
         await self._async_send_keys(["KEY_PAUSE"])
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._async_send_keys(["KEY_CHUP"])
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send the previous track command."""
         await self._async_send_keys(["KEY_CHDOWN"])
 
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -377,6 +391,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
             keys=[f"KEY_{digit}" for digit in media_id] + ["KEY_ENTER"]
         )
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if self._app_list and source in self._app_list:

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from aioswitcher.device import (
     DeviceCategory,
@@ -134,6 +134,7 @@ class SwitcherSensorEntity(SwitcherEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

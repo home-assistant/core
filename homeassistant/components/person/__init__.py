@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 import voluptuous as vol
 
@@ -186,6 +186,7 @@ UPDATE_FIELDS: VolDictType = {
 class PersonStore(Store):
     """Person storage."""
 
+    @override
     async def _async_migrate_func(
         self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
     ) -> dict[str, Any]:
@@ -212,6 +213,7 @@ class PersonStorageCollection(collection.DictStorageCollection):
         super().__init__(store, id_manager)
         self.yaml_collection = yaml_collection
 
+    @override
     async def _async_load_data(self) -> collection.SerializedStorageCollection | None:
         """Load the data.
 
@@ -229,6 +231,7 @@ class PersonStorageCollection(collection.DictStorageCollection):
 
         return data
 
+    @override
     async def async_load(self) -> None:
         """Load the Storage collection."""
         await super().async_load()
@@ -268,6 +271,7 @@ class PersonStorageCollection(collection.DictStorageCollection):
                 },
             )
 
+    @override
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(data)
@@ -278,10 +282,12 @@ class PersonStorageCollection(collection.DictStorageCollection):
         return data
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict[str, str]) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
+    @override
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
@@ -306,6 +312,7 @@ class PersonStorageCollection(collection.DictStorageCollection):
 class PersonStorageCollectionWebsocket(collection.DictStorageCollectionWebsocket):
     """Class to expose storage collection management over websocket."""
 
+    @override
     def ws_list_item(
         self,
         hass: HomeAssistant,
@@ -445,6 +452,7 @@ class Person(
         self.device_trackers = self._config[CONF_DEVICE_TRACKERS]
 
     @classmethod
+    @override
     def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         person = cls(config)
@@ -452,12 +460,14 @@ class Person(
         return person
 
     @classmethod
+    @override
     def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         person = cls(config)
         person.editable = False
         return person
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register device trackers."""
         await super().async_added_to_hass()
@@ -481,6 +491,7 @@ class Person(
             # as there are attributes that can already be set
             self._update_extra_state_attributes()
 
+    @override
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._async_update_config(config)

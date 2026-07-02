@@ -1,6 +1,6 @@
 """Config flow for Knocki integration."""
 
-from typing import Any
+from typing import Any, override
 
 from knocki import KnockiClient, KnockiConnectionError, KnockiInvalidAuthError
 import voluptuous as vol
@@ -25,6 +25,7 @@ DATA_SCHEMA = vol.Schema(
 class KnockiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Knocki."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -63,6 +64,7 @@ class KnockiConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=DATA_SCHEMA,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

@@ -1,7 +1,7 @@
 """Config flow for the Cert Expiry platform."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -53,6 +53,7 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
             return True
         return False
 
+    @override
     async def async_step_user(
         self,
         user_input: Mapping[str, Any] | None = None,
