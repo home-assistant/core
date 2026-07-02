@@ -423,6 +423,56 @@ async def test_tool_call_no_auth_auth_failure(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
+async def test_tool_call_no_auth_auth_failure_with_www_authenticate_header(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_mcp_client: Mock,
+) -> None:
+    """Test tool call 401 with WWW-Authenticate header triggers reauth and passes header."""
+    mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
+        tools=[SEARCH_MEMORY_TOOL]
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    apis = llm.async_get_apis(hass)
+    api = next(iter([api for api in apis if api.name == TEST_API_NAME]))
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    tool = api_instance.tools[0]
+
+    # Mock tool call encountering a 401 response with WWW-Authenticate header
+    headers = {
+        "WWW-Authenticate": 'mcp resource_metadata="https://example.com/custom-discovery", scope="read write"'
+    }
+    mock_mcp_client.return_value.call_tool.side_effect = httpx.HTTPStatusError(
+        "Authentication required",
+        request=None,
+        response=httpx.Response(401, headers=headers),
+    )
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await tool.async_call(
+            hass,
+            llm.ToolInput(
+                tool_name="search_memory", tool_args={"query": "User's birth month"}
+            ),
+            create_llm_context(),
+        )
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+    # Get the flow handler instance and verify it has the correct auth_header
+    flow_handler = hass.config_entries.flow._progress[flows[0]["flow_id"]]
+    assert flow_handler.auth_header is not None
+    assert (
+        flow_handler.auth_header.resource_metadata_url
+        == "https://example.com/custom-discovery"
+    )
+
+
 async def test_tool_call_expired_oauth_failure(
     hass: HomeAssistant,
     credential: None,

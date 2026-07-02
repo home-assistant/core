@@ -1134,3 +1134,43 @@ async def test_reauth_flow_upgrade_to_oauth_with_passed_auth_header(
     # Flow should proceed directly to credentials choice menu (without validate_input)
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "credentials_choice"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@respx.mock
+async def test_reauth_flow_upgrade_to_oauth_with_passed_auth_failed_flag(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    credential: None,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test reauth flow upgrading a no-auth entry to OAuth when auth_failed flag is passed but auth_header is None."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: MCP_SERVER_URL},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    # Start reauth flow passing auth_failed=True (without header)
+    config_entry.async_start_reauth(hass, data={"auth_failed": True})
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    result = flows[0]
+    assert result["step_id"] == "reauth_confirm"
+
+    # Mock discovery on the default server URL (since there is no auth_header)
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    # Click Submit on reauth_confirm
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Flow should proceed directly to credentials choice menu (without validate_input)
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "credentials_choice"
