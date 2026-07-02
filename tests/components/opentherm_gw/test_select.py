@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from pyotgw.vars import (
+    OTGW_DHW_OVRD,
     OTGW_GPIO_A,
     OTGW_GPIO_B,
     OTGW_LED_A,
@@ -152,8 +153,68 @@ async def test_select_change_value(
 
 
 @pytest.mark.parametrize(
+    ("target_param", "pyotgw_return", "resulting_state"),
+    [
+        (0, 0, "force_off"),
+        (1, 1, "force_on"),
+        ("A", "A", "override_disabled"),
+        (1, None, "force_on"),
+    ],
+)
+async def test_select_dhw_ovrd_change_value(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_pyotgw: MagicMock,
+    target_param: str | int,
+    pyotgw_return: str | int | None,
+    resulting_state: str,
+) -> None:
+    """Test DHW override mode selector."""
+
+    mock_pyotgw.return_value.set_hot_water_ovrd = AsyncMock(return_value=pyotgw_return)
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        select_entity_id := entity_registry.async_get_entity_id(
+            SELECT_DOMAIN,
+            DOMAIN,
+            f"{mock_config_entry.data[CONF_ID]}-{OpenThermDeviceIdentifier.GATEWAY}-{OTGW_DHW_OVRD}",
+        )
+    ) is not None
+    assert hass.states.get(select_entity_id).state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: select_entity_id, ATTR_OPTION: resulting_state},
+        blocking=True,
+    )
+    if pyotgw_return is None:
+        assert hass.states.get(select_entity_id).state == STATE_UNKNOWN
+        mock_pyotgw.return_value.set_hot_water_ovrd.assert_awaited_once_with(
+            target_param
+        )
+    else:
+        assert hass.states.get(select_entity_id).state == resulting_state
+        mock_pyotgw.return_value.set_hot_water_ovrd.assert_awaited_once_with(
+            target_param
+        )
+
+
+@pytest.mark.parametrize(
     ("entity_key", "test_value", "resulting_state"),
     [
+        (
+            OTGW_DHW_OVRD,
+            "A",
+            "override_disabled",
+        ),
+        (OTGW_DHW_OVRD, 1, "force_on"),
+        (OTGW_DHW_OVRD, 0, "force_off"),
         (OTGW_GPIO_A, PyotgwGPIOMode.AWAY, OpenThermSelectGPIOMode.AWAY),
         (OTGW_GPIO_B, PyotgwGPIOMode.LED_F, OpenThermSelectGPIOMode.LED_F),
         (
