@@ -10,5 +10,5 @@
   "iot_class": "local_polling",
   "requirements": [],
   "after_dependencies": ["modbus"],
-  "version": "1.1.1"
+  "version": "1.1.2"
 }
