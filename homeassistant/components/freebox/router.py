@@ -77,6 +77,8 @@ async def get_hosts_list_if_supported(
             fbx_devices.extend(
                 await fbx_api.lan.get_hosts_list(interface["name"]) or []
             )
+    except TimeoutError:
+        _LOGGER.debug("Timed out while updating Freebox host list")
     except HttpRequestError as err:
         if (
             (matcher := re.search(r"Request failed \(APIResponse: (.+)\)", str(err)))
