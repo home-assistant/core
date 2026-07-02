@@ -337,6 +337,12 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             translation_key="sleep_aid",
         ),
     ),
+    DeviceCategory.JS: (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="power",
+        ),
+    ),
     DeviceCategory.JSQ: (
         SwitchEntityDescription(
             key=DPCode.SWITCH_SOUND,
