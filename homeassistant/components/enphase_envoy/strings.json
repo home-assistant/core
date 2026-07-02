@@ -16,10 +16,14 @@
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
+          "token": "[%key:component::enphase_envoy::config::step::user::data::token%]",
+          "use_manual_token": "[%key:component::enphase_envoy::config::step::user::data::use_manual_token%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "password": "[%key:component::enphase_envoy::config::step::user::data_description::password%]",
+          "token": "[%key:component::enphase_envoy::config::step::user::data_description::token%]",
+          "use_manual_token": "[%key:component::enphase_envoy::config::step::user::data_description::use_manual_token%]",
           "username": "[%key:component::enphase_envoy::config::step::user::data_description::username%]"
         },
         "description": "[%key:component::enphase_envoy::config::step::user::description%]"
@@ -28,11 +32,15 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
+          "token": "[%key:component::enphase_envoy::config::step::user::data::token%]",
+          "use_manual_token": "[%key:component::enphase_envoy::config::step::user::data::use_manual_token%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "host": "[%key:component::enphase_envoy::config::step::user::data_description::host%]",
           "password": "[%key:component::enphase_envoy::config::step::user::data_description::password%]",
+          "token": "[%key:component::enphase_envoy::config::step::user::data_description::token%]",
+          "use_manual_token": "[%key:component::enphase_envoy::config::step::user::data_description::use_manual_token%]",
           "username": "[%key:component::enphase_envoy::config::step::user::data_description::username%]"
         },
         "description": "[%key:component::enphase_envoy::config::step::user::description%]"
@@ -41,11 +49,15 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
+          "token": "Envoy access token",
+          "use_manual_token": "Enter the Envoy access token manually",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "host": "The hostname or IP address of your Enphase Envoy gateway.",
           "password": "Blank or Enphase Cloud password",
+          "token": "Go to the [Enphase login]({enphase_url}) to get a new token. Current token lifetime: {token_life} days.",
+          "use_manual_token": "If your Enphase Cloud account has multi-factor authentication enabled, check this option to add or update your token manually.",
           "username": "Installer or Enphase Cloud username"
         },
         "description": "For firmware version 7.0 and later, enter the Enphase cloud credentials, for older models, enter username `installer` without a password."
@@ -723,8 +735,26 @@
     "envoy_error": {
       "message": "Error communicating with Envoy API on {host}: {args}"
     },
+    "envoy_token_lifetime_service_envoy_not_found": {
+      "message": "No Envoy found by token lifetime action for device ID {device_id}."
+    },
+    "envoy_token_lifetime_service_no_device_id": {
+      "message": "No Envoy found by token lifetime action. Configure an Envoy or specify a `device_id` if more than 1 Envoy is configured."
+    },
+    "no_token_auth": {
+      "message": "{service}: Envoy token authorization is only used with firmware version 7.0 and later."
+    },
+    "not_initialized": {
+      "message": "{service}: Enphase Envoy is not yet initialized"
+    },
     "unexpected_device": {
       "message": "Unexpected Envoy serial number found at {host}; expected {expected_serial}, found {actual_serial}"
+    }
+  },
+  "issues": {
+    "token_expiry": {
+      "description": "The {name} access token expires in {token_lifetime} days and is configured for manual token entry. Make sure to enter a new token before the final expiry day. To update the token, go to the Home Assistant Enphase Envoy integration page and use the reconfigure menu option.",
+      "title": "{name} access token expires in {token_lifetime} days."
     }
   },
   "options": {
@@ -740,6 +770,18 @@
         },
         "title": "Envoy {serial} {host} options"
       }
+    }
+  },
+  "services": {
+    "token_lifetime": {
+      "description": "Returns days until Envoy access token expiry.",
+      "fields": {
+        "device_id": {
+          "description": "Envoy to get data for. Not needed if only 1 Envoy is configured. Select an Envoy from the dropdown list.",
+          "name": "Envoy device ID"
+        }
+      },
+      "name": "Envoy token lifetime"
     }
   }
 }

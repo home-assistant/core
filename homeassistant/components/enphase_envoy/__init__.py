@@ -7,11 +7,24 @@ from pyenphase import Envoy
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
+from .services import setup_envoy_service_actions
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set Enphase Envoy integration."""
+
+    # setup the enphase_envoy services
+    setup_envoy_service_actions(hass)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
@@ -52,6 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
         manufacturer="Enphase",
         name=coordinator.name,
         model=envoy.envoy_model,
+        model_id="ENVOY",
         sw_version=str(envoy.firmware),
         hw_version=envoy.part_number,
         serial_number=envoy.serial_number,
