@@ -1,6 +1,7 @@
 """Config Flow for Tesla Fleet integration."""
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 import logging
 import re
 from typing import Any, cast, override
@@ -31,6 +32,33 @@ from .const import DOMAIN, LOGGER
 from .oauth import TeslaUserImplementation
 
 
+@dataclass(slots=True)
+class RegionRegistrationFailure:
+    """Store a normalized regional registration failure."""
+
+    region: str
+    reason: str
+
+
+_REGION_LABELS = {
+    "na": "North America",
+    "eu": "Europe",
+}
+_REGION_REASONS = {
+    "origin_mismatch": (
+        "Verify the entered domain matches the Tesla developer app's allowed origin."
+    ),
+    "reset_private_key": (
+        "Remove `tesla_fleet.key` from your Home Assistant config directory so a "
+        "new key pair is generated, then retry registration."
+    ),
+    "generic": (
+        "Tesla rejected the registration in this region. Verify both the hosted "
+        "public key and the Tesla developer app configuration, then retry."
+    ),
+}
+
+
 class OAuth2FlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
@@ -44,7 +72,10 @@ class OAuth2FlowHandler(
         self.domain: str | None = None
         self.data: dict[str, Any] = {}
         self.uid: str | None = None
-        self.apis: list[TeslaFleetApi] = []
+        self.apis: list[tuple[str, TeslaFleetApi]] = []
+        self._region_failures: list[RegionRegistrationFailure] = []
+        self._successful_regions: list[str] = []
+        self._can_continue_after_region_failures = False
 
     @property
     @override
@@ -109,7 +140,7 @@ class OAuth2FlowHandler(
                 LOGGER.warning("Partner login failed for %s: %s", server_url, err)
                 failed_regions.append(server_url)
                 continue
-            self.apis.append(api)
+            self.apis.append((region, api))
 
         if not self.apis:
             LOGGER.warning(
@@ -144,16 +175,17 @@ class OAuth2FlowHandler(
                 self.domain = domain
                 return await self.async_step_domain_registration()
 
+        data_schema = self.add_suggested_values_to_schema(
+            vol.Schema({vol.Required(CONF_DOMAIN): str}),
+            {CONF_DOMAIN: self.domain} if self.domain else None,
+        )
+
         return self.async_show_form(
             step_id="domain_input",
             description_placeholders={
                 "dashboard": "https://developer.tesla.com/en_AU/dashboard/"
             },
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_DOMAIN): str,
-                }
-            ),
+            data_schema=data_schema,
             errors=errors,
         )
 
@@ -163,37 +195,50 @@ class OAuth2FlowHandler(
         """Handle domain registration for all regions."""
 
         assert self.apis
-        assert self.apis[0].private_key
+        assert self.apis[0][1].private_key
         assert self.domain
+
+        self._region_failures = []
+        self._successful_regions = []
+        self._can_continue_after_region_failures = False
 
         errors: dict[str, str] = {}
         description_placeholders = {
             "public_key_url": f"https://{self.domain}/.well-known/appspecific/com.tesla.3p.public-key.pem",
-            "pem": self.apis[0].public_pem,
+            "pem": self.apis[0][1].public_pem,
         }
 
         successful_response: dict[str, Any] | None = None
-        failed_regions: list[str] = []
 
-        for api in self.apis:
+        for region, api in self.apis:
             try:
                 register_response = await api.partner.register(self.domain)
-            except PreconditionFailed:
-                return await self.async_step_domain_input(
-                    errors={CONF_DOMAIN: "precondition_failed"}
-                )
-            except TeslaFleetError as e:
+            except TeslaFleetError as err:
                 LOGGER.warning(
-                    "Partner registration failed for %s: %s",
+                    "Partner registration failed for %s (%s) with payload %s",
+                    region,
                     api.server,
-                    e.message,
+                    getattr(err, "data", None),
+                    exc_info=err,
                 )
-                failed_regions.append(api.server or "unknown")
+                self._region_failures.append(
+                    RegionRegistrationFailure(
+                        region=region,
+                        reason=self._classify_region_registration_failure(err),
+                    )
+                )
             else:
+                self._successful_regions.append(region)
                 if successful_response is None:
                     successful_response = register_response
 
+        self._can_continue_after_region_failures = bool(
+            self._successful_regions and self._region_failures
+        )
+
         if successful_response is None:
+            if self._region_failures:
+                return await self.async_step_region_failures()
             errors["base"] = "invalid_response"
             return self.async_show_form(
                 step_id="domain_registration",
@@ -201,10 +246,10 @@ class OAuth2FlowHandler(
                 errors=errors,
             )
 
-        if failed_regions:
+        if self._region_failures:
             LOGGER.warning(
                 "Partner registration succeeded on some regions but failed on: %s",
-                ", ".join(failed_regions),
+                ", ".join(failure.region for failure in self._region_failures),
             )
 
         # Verify public key from the successful response
@@ -216,9 +261,11 @@ class OAuth2FlowHandler(
             errors["base"] = "public_key_not_found"
         elif (
             registered_public_key.lower()
-            != self.apis[0].public_uncompressed_point.lower()
+            != self.apis[0][1].public_uncompressed_point.lower()
         ):
             errors["base"] = "public_key_mismatch"
+        elif self._region_failures:
+            return await self.async_step_region_failures()
         else:
             return await self.async_step_registration_complete()
 
@@ -226,6 +273,21 @@ class OAuth2FlowHandler(
             step_id="domain_registration",
             description_placeholders=description_placeholders,
             errors=errors,
+        )
+
+    async def async_step_region_failures(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Warn about regional partner registration failures."""
+        if user_input is not None:
+            if self._can_continue_after_region_failures:
+                return await self.async_step_registration_complete()
+            return await self.async_step_domain_input()
+
+        return self.async_show_form(
+            step_id="region_failures",
+            data_schema=vol.Schema({}),
+            description_placeholders=self._region_failure_placeholders(),
         )
 
     async def async_step_registration_complete(
@@ -284,3 +346,77 @@ class OAuth2FlowHandler(
             r"^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$"
         )
         return bool(domain_pattern.match(domain))
+
+    def _classify_region_registration_failure(self, err: TeslaFleetError) -> str:
+        """Classify a Tesla registration failure for user guidance."""
+        if isinstance(err, PreconditionFailed):
+            return "origin_mismatch"
+
+        error_text = " ".join(
+            str(part).lower()
+            for part in (
+                getattr(err, "message", ""),
+                getattr(err, "data", ""),
+                err,
+            )
+            if part
+        )
+
+        if any(
+            marker in error_text
+            for marker in ("origin", "allowed origin", "allowed_origin", "domain")
+        ):
+            return "origin_mismatch"
+
+        if any(
+            marker in error_text
+            for marker in (
+                "public key",
+                "public_key",
+                "private key",
+                "private_key",
+                "prime256v1",
+                "secp256r1",
+            )
+        ):
+            return "reset_private_key"
+
+        return "generic"
+
+    def _region_failure_placeholders(self) -> dict[str, str]:
+        """Build the placeholders for the regional warning step."""
+        successful_regions = ""
+        if self._successful_regions:
+            regions = ", ".join(
+                _REGION_LABELS[region] for region in self._successful_regions
+            )
+            successful_regions = f"Successful regions: {regions}\n"
+
+        failed_regions = ", ".join(
+            _REGION_LABELS[region]
+            for region in dict.fromkeys(
+                failure.region for failure in self._region_failures
+            )
+        )
+        failure_details = "\n".join(
+            f"{_REGION_LABELS[failure.region]}: {_REGION_REASONS[failure.reason]}"
+            for failure in self._region_failures
+        )
+
+        if self._can_continue_after_region_failures:
+            next_step = (
+                "You can continue setup, but the integration will only be registered "
+                "in the successful regions."
+            )
+        else:
+            next_step = (
+                "Registration did not succeed in any region. After acknowledging this "
+                "warning, you will return to the domain step to retry."
+            )
+
+        return {
+            "successful_regions": successful_regions,
+            "failed_regions": f"Failed regions: {failed_regions}",
+            "failure_details": failure_details,
+            "next_step": next_step,
+        }

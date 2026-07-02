@@ -20,7 +20,6 @@
     "error": {
       "invalid_domain": "Invalid domain format. Please enter a valid domain name.",
       "invalid_response": "The registration was rejected by Tesla",
-      "precondition_failed": "The domain does not match the application's allowed origins.",
       "public_key_mismatch": "The public key hosted at your domain does not match the expected key. Please ensure the correct public key is hosted at the specified location.",
       "public_key_not_found": "Public key not found.",
       "unknown_error": "An unknown error occurred: {error}"
@@ -52,6 +51,10 @@
       "reauth_confirm": {
         "description": "The {name} integration needs to re-authenticate your account. Reauthentication refreshes the Tesla API permissions granted to Home Assistant, including any newly enabled scopes.",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "region_failures": {
+        "description": "{successful_regions}{failed_regions}\n\n{failure_details}\n\n{next_step}",
+        "title": "Regional registration issues"
       },
       "registration_complete": {
         "data": {
