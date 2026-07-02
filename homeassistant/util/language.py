@@ -16,6 +16,9 @@ SAME_LANGUAGES = (
     # he = Hebrew new code
     # iw = Hebrew old code
     ("he", "iw"),
+    # cmd = gemini Chinese putonghua
+    # zh = standard Chinese name
+    ("cmn", "zh"),
 )
 
 
