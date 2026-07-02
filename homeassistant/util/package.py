@@ -161,11 +161,11 @@ def install_package(
         "install",
         "--quiet",
         package,
-        # We need to use unsafe-first-match for custom components
-        # which can use a different version of a package than the one
-        # we have built the wheel for.
+        # unsafe-best-match is the closest to pip's behavior: consider
+        # candidates from all indexes so PyPI can satisfy requirements
+        # the wheels index does not have a usable version for.
         "--index-strategy",
-        "unsafe-first-match",
+        "unsafe-best-match",
     ]
     if timeout:
         env["HTTP_TIMEOUT"] = str(timeout)
@@ -192,11 +192,14 @@ def install_package(
         return True
 
     # uv treats a failing extra index as fatal, unlike pip which skips it.
-    # If the error came from an extra index (e.g. the wheels index being
-    # down), retry with only the healthy indexes so PyPI can serve the
-    # package.
+    # If the error came from an extra index host (e.g. the wheels index
+    # being down), retry with only the healthy indexes so PyPI can serve
+    # the package. Match on the host since wheel files may live outside
+    # the index path.
     extra_urls = env.get("UV_EXTRA_INDEX_URL", "").split()
-    if failing := [url for url in extra_urls if url in stderr]:
+    if failing := [
+        url for url in extra_urls if (host := urlparse(url).hostname) and host in stderr
+    ]:
         _LOGGER.warning(
             "Unable to install package %s using extra index %s: %s; "
             "retrying without it",

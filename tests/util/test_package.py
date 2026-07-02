@@ -26,6 +26,10 @@ TEST_OTHER_INDEX_URL = "https://example.com/simple/"
 TEST_INDEX_FAIL_STDERR = (
     f"error: Failed to fetch: `{TEST_EXTRA_INDEX_URL}pyhelloworld3/`"
 )
+TEST_WHEEL_FAIL_STDERR = (
+    "error: Failed to fetch: `https://wheels.home-assistant.io/"
+    "pyhelloworld3-1.0.0-cp314-cp314-musllinux_1_2_x86_64.whl`"
+)
 
 
 @pytest.fixture
@@ -108,7 +112,7 @@ def test_install(
             "--quiet",
             TEST_NEW_REQ,
             "--index-strategy",
-            "unsafe-first-match",
+            "unsafe-best-match",
         ],
         stdin=PIPE,
         stdout=PIPE,
@@ -138,7 +142,7 @@ def test_install_with_timeout(
             "--quiet",
             TEST_NEW_REQ,
             "--index-strategy",
-            "unsafe-first-match",
+            "unsafe-best-match",
         ],
         stdin=PIPE,
         stdout=PIPE,
@@ -165,7 +169,7 @@ def test_install_upgrade(mock_popen, mock_env_copy, mock_sys) -> None:
             "--quiet",
             TEST_NEW_REQ,
             "--index-strategy",
-            "unsafe-first-match",
+            "unsafe-best-match",
             "--upgrade",
         ],
         stdin=PIPE,
@@ -207,7 +211,7 @@ def test_install_target(
         "--quiet",
         TEST_NEW_REQ,
         "--index-strategy",
-        "unsafe-first-match",
+        "unsafe-best-match",
         "--target",
         abs_target,
     ]
@@ -252,7 +256,7 @@ def test_install_pip_compatibility_no_workaround(
         "--quiet",
         TEST_NEW_REQ,
         "--index-strategy",
-        "unsafe-first-match",
+        "unsafe-best-match",
     ]
 
     assert package.install_package(TEST_NEW_REQ, False)
@@ -285,7 +289,7 @@ def test_install_pip_compatibility_use_workaround(
         "--quiet",
         TEST_NEW_REQ,
         "--index-strategy",
-        "unsafe-first-match",
+        "unsafe-best-match",
         "--python",
         python,
         "--target",
@@ -315,13 +319,22 @@ def test_install_error(caplog: pytest.LogCaptureFixture, mock_popen) -> None:
 
 
 @pytest.mark.parametrize(
-    ("extra_index", "expected_retry_env"),
+    ("extra_index", "install_stderr", "expected_retry_env"),
     [
-        pytest.param(TEST_EXTRA_INDEX_URL, {}, id="single_index_removed"),
+        pytest.param(
+            TEST_EXTRA_INDEX_URL, TEST_INDEX_FAIL_STDERR, {}, id="single_index_removed"
+        ),
         pytest.param(
             f"{TEST_EXTRA_INDEX_URL} {TEST_OTHER_INDEX_URL}",
+            TEST_INDEX_FAIL_STDERR,
             {"UV_EXTRA_INDEX_URL": TEST_OTHER_INDEX_URL},
             id="healthy_index_kept",
+        ),
+        pytest.param(
+            TEST_EXTRA_INDEX_URL,
+            TEST_WHEEL_FAIL_STDERR,
+            {},
+            id="wheel_file_outside_index_path",
         ),
     ],
 )
@@ -330,13 +343,14 @@ def test_install_extra_index_fallback(
     mock_popen: MagicMock,
     mock_env_copy: Mock,
     extra_index: str,
+    install_stderr: str,
     expected_retry_env: dict[str, str],
 ) -> None:
     """Test install retries without a failing extra index."""
     env = mock_env_copy()
     env["UV_EXTRA_INDEX_URL"] = extra_index
     mock_popen.return_value.communicate.side_effect = [
-        (b"", TEST_INDEX_FAIL_STDERR.encode()),
+        (b"", install_stderr.encode()),
         (b"", b""),
     ]
     type(mock_popen.return_value).returncode = PropertyMock(side_effect=[1, 0])
@@ -396,7 +410,7 @@ def test_install_constraint(mock_popen, mock_env_copy, mock_sys) -> None:
             "--quiet",
             TEST_NEW_REQ,
             "--index-strategy",
-            "unsafe-first-match",
+            "unsafe-best-match",
             "--constraint",
             constraints,
         ],
