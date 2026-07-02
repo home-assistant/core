@@ -94,7 +94,9 @@ class GoogleHealthStepsSensor(
     @override
     def native_value(self) -> int:
         """Return the steps count."""
-        return self.coordinator.data
+        if self.coordinator.data is None:
+            return 0
+        return self.coordinator.data.data.count_sum
 
 
 class GoogleHealthWeightSensor(
@@ -125,4 +127,6 @@ class GoogleHealthWeightSensor(
     @override
     def native_value(self) -> float | None:
         """Return the body weight."""
-        return self.coordinator.data
+        if self.coordinator.data is None:
+            return None
+        return self.coordinator.data.weight_grams / 1000.0

@@ -1,5 +1,7 @@
 """Coordinators for Google Health."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from datetime import timedelta
 import logging
 from typing import override
@@ -10,6 +12,7 @@ from google_health_api.exceptions import (
     HealthApiForbiddenException,
     HealthAuthException,
 )
+from google_health_api.model import DailyRollupDataPoint, StepsRollupValue, Weight
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -24,7 +27,28 @@ POLLING_INTERVAL = timedelta(minutes=15)
 BODY_POLLING_INTERVAL = timedelta(hours=1)
 
 
-class GoogleHealthActivityCoordinator(DataUpdateCoordinator[int]):
+@contextmanager
+def handle_api_errors() -> Generator[None]:
+    """Context manager to handle Google Health API errors."""
+    try:
+        yield
+    except (HealthAuthException, HealthApiForbiddenException) as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
+    except GoogleHealthApiError as err:
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="communication_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
+
+
+class GoogleHealthActivityCoordinator(
+    DataUpdateCoordinator[DailyRollupDataPoint[StepsRollupValue] | None]
+):
     """Coordinator to fetch steps data from Google Health API."""
 
     def __init__(
@@ -44,29 +68,13 @@ class GoogleHealthActivityCoordinator(DataUpdateCoordinator[int]):
         )
 
     @override
-    async def _async_update_data(self) -> int:
+    async def _async_update_data(self) -> DailyRollupDataPoint[StepsRollupValue] | None:
         """Fetch steps count rollup for today."""
-        try:
-            rollup = await self.api.steps.today(self.hass.config.time_zone)
-        except (HealthAuthException, HealthApiForbiddenException) as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="auth_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        except GoogleHealthApiError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-
-        if rollup is None:
-            return 0
-        return rollup.data.count_sum
+        with handle_api_errors():
+            return await self.api.steps.today(self.hass.config.time_zone)
 
 
-class GoogleHealthBodyCoordinator(DataUpdateCoordinator[float | None]):
+class GoogleHealthBodyCoordinator(DataUpdateCoordinator[Weight | None]):
     """Coordinator to fetch body measurements from Google Health API."""
 
     def __init__(
@@ -86,24 +94,11 @@ class GoogleHealthBodyCoordinator(DataUpdateCoordinator[float | None]):
         )
 
     @override
-    async def _async_update_data(self) -> float | None:
+    async def _async_update_data(self) -> Weight | None:
         """Fetch latest body weight."""
-        try:
+        with handle_api_errors():
             result = await self.api.weight.list(page_size=100)
-        except (HealthAuthException, HealthApiForbiddenException) as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="auth_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        except GoogleHealthApiError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
 
         if not result.data_points:
             return None
-        # Return weight in kilograms
-        return result.data_points[-1].data.weight_grams / 1000.0
+        return result.data_points[-1].data
