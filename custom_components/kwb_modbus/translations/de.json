@@ -8,13 +8,13 @@
           "host": "IP-Adresse",
           "port": "Port",
           "scan_interval": "Abfrageintervall (Sekunden)",
-          "expert_mode": "Enable expert mode"
+          "expert_mode": "Expertenmodus aktivieren"
         },
         "data_description": {
           "host": "IP-Adresse oder Hostname des KWB-Controllers.",
           "port": "TCP-Port für Modbus (Standard: 502).",
           "scan_interval": "Intervall für die Abfrage von Modbus-Daten in Sekunden.",
-          "expert_mode": "Enable or disable expert select entities (Boiler program, External specification, Ignition settings)."
+          "expert_mode": "Aktiviert oder deaktiviert Experten-Select-Entitäten (Kesselprogramm, Externe Vorgabe, Zündungseinstellungen)."
         }
       },
       "register_profile": {
@@ -56,7 +56,7 @@
           "host": "Host",
           "port": "Port",
           "scan_interval": "Abfrage-Intervall (Sekunden)",
-          "expert_mode": "Enable expert mode",
+          "expert_mode": "Expertenmodus aktivieren",
           "register_profile": "Registerprofil",
           "addon_modules": "Zusatzmodule"
         },
@@ -64,7 +64,7 @@
           "host": "IP-Adresse oder Hostname des KWB-Controllers.",
           "port": "TCP-Port für Modbus (Standard: 502).",
           "scan_interval": "Intervall für die Abfrage von Modbus-Daten in Sekunden.",
-          "expert_mode": "Enable or disable expert select entities (Boiler program, External specification, Ignition settings).",
+          "expert_mode": "Aktiviert oder deaktiviert Experten-Select-Entitäten (Kesselprogramm, Externe Vorgabe, Zündungseinstellungen).",
           "register_profile": "Wähle, welches firmware-spezifische Registerprofil verwendet werden soll.",
           "addon_modules": "Wähle installierte Zusatzmodule aus. Module können hier hinzugefügt oder entfernt werden."
         }

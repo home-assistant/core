@@ -1,7 +1,5 @@
 """Number platform for writable KWB Modbus holding registers."""
 
-from __future__ import annotations
-
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -145,7 +143,7 @@ class KWBNumberEntity(CoordinatorEntity[KWBDataUpdateCoordinator], NumberEntity)
     async def async_set_native_value(self, value: float) -> None:
         """Write numeric value to holding register(s)."""
         scale = self._register.scale or 1.0
-        raw = int(round(value / scale))
+        raw = round(value / scale)
 
         success = False
         if self._register.count == 1:

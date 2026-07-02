@@ -3,8 +3,6 @@
 Auto-generated from ModbusInfo-en-V22_4_0.xlsx.
 """
 
-from __future__ import annotations
-
 from .types import RegisterDef, SelectRegisterDef
 
 REGISTERS: dict[str, list[RegisterDef]] = {

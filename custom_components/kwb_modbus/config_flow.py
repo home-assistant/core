@@ -1,7 +1,5 @@
 """Config flow for the KWB Modbus integration."""
 
-from __future__ import annotations
-
 import logging
 import re
 from typing import Any
@@ -189,7 +187,7 @@ class KwbModbusConfigFlow(ConfigFlow, domain=DOMAIN):
         self._active_instances: dict[str, list[str]] = {}
         # Accumulated friendly names: module_key → {instance_label → friendly_name}
         self._instance_names: dict[str, dict[str, str]] = {}
-        # Discovered (pre-selected) instances per module from Modbus scan
+        # Discovered (preselected) instances per module from Modbus scan
         self._discovered_indices: dict[str, list[str]] = {}
         # Config entry currently being reconfigured (if any)
         self._reconfigure_target_entry_id: str | None = None
@@ -355,7 +353,7 @@ class KwbModbusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle instance selection for the current indexed add-on module.
 
-        Instances discovered via Modbus are pre-selected; the user can adjust.
+        Instances discovered via Modbus are preselected; the user can adjust.
         After confirming the selection, the user is asked to name each instance.
         """
         if user_input is not None:
