@@ -360,6 +360,28 @@ def test_install_extra_index_fallback(
 
 
 @pytest.mark.usefixtures("mock_sys", "mock_venv")
+def test_install_extra_index_fallback_redacts_credentials(
+    mock_popen: MagicMock,
+    mock_env_copy: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the retry warning does not log extra index credentials."""
+    caplog.set_level(logging.WARNING)
+    env = mock_env_copy()
+    env["UV_EXTRA_INDEX_URL"] = (
+        "https://user:secret@wheels.home-assistant.io/musllinux-index/"
+    )
+    mock_popen.return_value.communicate.side_effect = [
+        (b"", TEST_INDEX_FAIL_STDERR.encode()),
+        (b"", b""),
+    ]
+    type(mock_popen.return_value).returncode = PropertyMock(side_effect=[1, 0])
+    assert package.install_package(TEST_NEW_REQ, False)
+    assert "wheels.home-assistant.io" in caplog.text
+    assert "secret" not in caplog.text
+
+
+@pytest.mark.usefixtures("mock_sys", "mock_venv")
 def test_install_extra_index_fallback_fails(
     mock_popen: MagicMock,
     mock_env_copy: Mock,

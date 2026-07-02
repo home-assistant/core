@@ -197,14 +197,18 @@ def install_package(
     # the package. Match on the host since wheel files may live outside
     # the index path.
     extra_urls = env.get("UV_EXTRA_INDEX_URL", "").split()
-    if failing := [
-        url for url in extra_urls if (host := urlparse(url).hostname) and host in stderr
-    ]:
+    # Log only the hosts since the URLs may contain credentials
+    failing = {
+        url: host
+        for url in extra_urls
+        if (host := urlparse(url).hostname) and host in stderr
+    }
+    if failing:
         _LOGGER.warning(
-            "Unable to install package %s using extra index %s: %s; "
+            "Unable to install package %s using extra index host %s: %s; "
             "retrying without it",
             package,
-            ", ".join(failing),
+            ", ".join(failing.values()),
             stderr,
         )
         retry_env = env.copy()
