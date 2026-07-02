@@ -80,7 +80,7 @@ rules:
   icon-translations:
     status: exempt
     comment: Entity names are dynamically provided by the Gatus service.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: Integration does not require user intervention repairs.
