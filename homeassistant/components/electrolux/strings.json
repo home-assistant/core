@@ -3,7 +3,6 @@
     "abort": {
       "already_configured": "This Electrolux account is already configured.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The provided credentials don't belong to the account the configuration entry was set up with originally."
     },
     "error": {
@@ -24,20 +23,6 @@
         },
         "description": "Please go to the [developer portal]({portal_link}) to generate new access and refresh tokens, then paste them below.",
         "title": "Reauthenticate your Electrolux Group account"
-      },
-      "reconfigure": {
-        "data": {
-          "access_token": "[%key:common::config_flow::data::access_token%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "refresh_token": "Refresh token"
-        },
-        "data_description": {
-          "access_token": "The new access token from Electrolux Group for Developer after reconfiguration.",
-          "api_key": "Your Electrolux Group for Developer API key.",
-          "refresh_token": "The refresh token used to renew your access token."
-        },
-        "description": "Please go to the [developer portal]({portal_link}) to generate new access and refresh tokens, then paste them below.",
-        "title": "Reconfigure your Electrolux Group account"
       },
       "user": {
         "data": {
