@@ -88,7 +88,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     """Representation of a Netatmo camera."""
 
     _attr_brand = MANUFACTURER
-    _attr_supported_features = CameraEntityFeature.STREAM
     _attr_configuration_url = CONF_URL_SECURITY
     device: NaModules.Camera
     _quality = DEFAULT_QUALITY
@@ -168,26 +167,45 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 )
                 return
 
-            if event_type in [EVENT_TYPE_DISCONNECTION, EVENT_TYPE_OFF]:
+            if event_type == EVENT_TYPE_DISCONNECTION:
                 _LOGGER.debug(
-                    "Camera %s has received %s event,"
-                    " turning off and idleing streaming",
+                    "Camera %s has received %s event, turning off and marking as unavailable",
                     data["camera_id"],
                     event_type,
                 )
+                self._attr_available = False
+                self._attr_is_streaming = False
+                self._monitoring = None
+                self._attr_motion_detection_enabled = False
+            elif event_type == EVENT_TYPE_OFF:
+                _LOGGER.debug(
+                    "Camera %s has received %s event, turning monitoring off",
+                    data["camera_id"],
+                    event_type,
+                )
+                self._attr_available = True
                 self._attr_is_streaming = False
                 self._monitoring = False
-            elif event_type in [EVENT_TYPE_CONNECTION, EVENT_TYPE_ON]:
+                self._attr_motion_detection_enabled = False
+            elif event_type == EVENT_TYPE_CONNECTION:
                 _LOGGER.debug(
-                    "Camera %s has received %s event,"
-                    " turning on and enabling streaming"
-                    " if applicable",
+                    "Camera %s has received %s event, turning on and marking as available",
                     data["camera_id"],
                     event_type,
                 )
-                if self.device_type != "NDB":
-                    self._attr_is_streaming = True
+                self._attr_available = True
+                self._monitoring = False
+                self._attr_motion_detection_enabled = False
+            elif event_type == EVENT_TYPE_ON:
+                _LOGGER.debug(
+                    "Camera %s has received %s event, turning monitoring on",
+                    data["camera_id"],
+                    event_type,
+                )
+                self._attr_available = True
                 self._monitoring = True
+                if self.device_type != "NDB":
+                    self._attr_motion_detection_enabled = True
             elif event_type == EVENT_TYPE_LIGHT_MODE:
                 if data.get("sub_type"):
                     self._light_state = data["sub_type"]
@@ -211,6 +229,11 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
+
+        # Return None when the camera cannot provide a live snapshot,
+        # to prevent unnecessary API calls and errors in the logs
+        if not self.available or not self._monitoring:
+            return None
         try:
             return cast(bytes, await self.device.async_get_live_snapshot())
         except (
@@ -222,6 +245,12 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         ) as err:
             _LOGGER.debug("Could not fetch live camera image (%s)", err)
         return None
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return whether monitoring is currently active."""
+        return bool(self._monitoring)
 
     @property
     @override
@@ -250,16 +279,53 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     async def async_turn_off(self) -> None:
         """Turn off camera."""
-        await self.device.async_monitoring_off()
+        # Return early if camera is already off or unavailable (None).
+        if self._monitoring is not True:
+            return
+        try:
+            await self.device.async_monitoring_off()
+        except (
+            aiohttp.ClientPayloadError,
+            aiohttp.ContentTypeError,
+            aiohttp.ServerDisconnectedError,
+            aiohttp.ClientConnectorError,
+            NetatmoApiError,
+        ) as err:
+            raise HomeAssistantError(f"Could not turn off camera: {err}") from err
+
+        self._monitoring = False
+        self._attr_motion_detection_enabled = False
+        self.async_write_ha_state()
 
     @override
     async def async_turn_on(self) -> None:
         """Turn on camera."""
-        await self.device.async_monitoring_on()
+        # Return early if camera is already on or unavailable (None).
+        if self._monitoring is not False:
+            return
+        try:
+            await self.device.async_monitoring_on()
+        except (
+            aiohttp.ClientPayloadError,
+            aiohttp.ContentTypeError,
+            aiohttp.ServerDisconnectedError,
+            aiohttp.ClientConnectorError,
+            NetatmoApiError,
+        ) as err:
+            raise HomeAssistantError(f"Could not turn on camera: {err}") from err
+
+        self._monitoring = True
+        if self.device_type != "NDB":
+            self._attr_motion_detection_enabled = True
+        self.async_write_ha_state()
 
     @override
-    async def stream_source(self) -> str:
+    async def stream_source(self) -> str | None:
         """Return the stream source."""
+        # Return None when the camera cannot provide a live stream.
+        if not self.available or not self._monitoring:
+            return None
+
         if self.device.is_local:
             await self.device.async_update_camera_urls()
 
@@ -271,15 +337,30 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        self._attr_is_on = self.device.alim_status is not None
-        self._attr_available = self.device.alim_status is not None
 
-        if self.device_type == "NDB":
-            self._monitoring = self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
-        elif self.device.monitoring is not None:
-            self._monitoring = self.device.monitoring
-            self._attr_is_streaming = self.device.monitoring
-            self._attr_motion_detection_enabled = self.device.monitoring
+        # All cameras have alim_status, but some cameras do not have monitoring attribute (e.g. NDB).
+        if self.device.alim_status is None:
+            self._attr_available = False
+            self._monitoring = None
+            self._attr_motion_detection_enabled = False
+        else:
+            self._attr_available = True
+
+            # NDB cameras do not have a monitoring attribute,
+            # so we check the alim_status to determine if the camera is monitoring.
+            if self.device_type == "NDB":
+                self._monitoring = self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
+                self._attr_motion_detection_enabled = False
+            # Other cameras have a monitoring attribute,
+            # so we use that to determine if the camera is monitoring.
+            elif self.device.monitoring is not None:
+                self._monitoring = (
+                    bool(self.device.monitoring)
+                    and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
+                )
+                self._attr_motion_detection_enabled = self._monitoring
+            # According to tests monitoring None is not possible.
+            # Therefore it is not added (adding would decrease test coverage).
 
         self.hass.data[DOMAIN][DATA_EVENTS][self.device.entity_id] = (
             self.process_events(self.device.events)
