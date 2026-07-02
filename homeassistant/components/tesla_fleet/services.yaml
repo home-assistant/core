@@ -1,0 +1,12 @@
+time_of_use:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            - integration: tesla_fleet
+    tou_settings:
+      required: true
+      selector:
+        object:
