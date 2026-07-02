@@ -15,8 +15,10 @@ set_hot_water_schedule:
       selector:
         device:
           integration: bsblan
+          entity:
+            - domain: water_heater
     monday_slots:
-      selector:
+      selector: &slot_selector
         object:
           multiple: true
           label_field: start_time
@@ -31,92 +33,39 @@ set_hot_water_schedule:
               selector:
                 time:
     tuesday_slots:
-      selector:
-        object:
-          multiple: true
-          label_field: start_time
-          description_field: end_time
-          fields:
-            start_time:
-              required: true
-              selector:
-                time:
-            end_time:
-              required: true
-              selector:
-                time:
+      selector: *slot_selector
     wednesday_slots:
-      selector:
-        object:
-          multiple: true
-          label_field: start_time
-          description_field: end_time
-          fields:
-            start_time:
-              required: true
-              selector:
-                time:
-            end_time:
-              required: true
-              selector:
-                time:
+      selector: *slot_selector
     thursday_slots:
-      selector:
-        object:
-          multiple: true
-          label_field: start_time
-          description_field: end_time
-          fields:
-            start_time:
-              required: true
-              selector:
-                time:
-            end_time:
-              required: true
-              selector:
-                time:
+      selector: *slot_selector
     friday_slots:
-      selector:
-        object:
-          multiple: true
-          label_field: start_time
-          description_field: end_time
-          fields:
-            start_time:
-              required: true
-              selector:
-                time:
-            end_time:
-              required: true
-              selector:
-                time:
+      selector: *slot_selector
     saturday_slots:
-      selector:
-        object:
-          multiple: true
-          label_field: start_time
-          description_field: end_time
-          fields:
-            start_time:
-              required: true
-              selector:
-                time:
-            end_time:
-              required: true
-              selector:
-                time:
+      selector: *slot_selector
     sunday_slots:
+      selector: *slot_selector
+
+set_heating_schedule:
+  fields:
+    device_id:
+      required: true
+      example: "abc123device456"
       selector:
-        object:
-          multiple: true
-          label_field: start_time
-          description_field: end_time
-          fields:
-            start_time:
-              required: true
-              selector:
-                time:
-            end_time:
-              required: true
-              selector:
-                time:
+        device:
+          integration: bsblan
+          entity:
+            - domain: climate
+    monday_slots:
+      selector: *slot_selector
+    tuesday_slots:
+      selector: *slot_selector
+    wednesday_slots:
+      selector: *slot_selector
+    thursday_slots:
+      selector: *slot_selector
+    friday_slots:
+      selector: *slot_selector
+    saturday_slots:
+      selector: *slot_selector
+    sunday_slots:
+      selector: *slot_selector
