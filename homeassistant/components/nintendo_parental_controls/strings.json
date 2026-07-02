@@ -93,6 +93,9 @@
     "invalid_device": {
       "message": "The specified device is not a Nintendo device."
     },
+    "invalid_pin_length": {
+      "message": "The PIN code must be between 4 and 8 characters long."
+    },
     "no_devices_found": {
       "message": "No Nintendo devices found for this account."
     },
@@ -115,6 +118,21 @@
         }
       },
       "name": "Add Bonus Time"
+    },
+    "update_pin_code": {
+      "description": "Update the PIN code for the selected Nintendo Switch.",
+      "fields": {
+        "device_id": {
+          "description": "The ID of the device to update the PIN code for.",
+          "example": "1234567890abcdef",
+          "name": "Device"
+        },
+        "pin": {
+          "description": "The new PIN code. Accepted range: 1000-99999999.",
+          "name": "PIN"
+        }
+      },
+      "name": "Update PIN Code"
     }
   }
 }
