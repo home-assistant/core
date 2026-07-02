@@ -1,6 +1,6 @@
 """Support for moat ble sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from moat_ble import DeviceClass, DeviceKey, SensorUpdate, Units
 
@@ -113,7 +113,9 @@ async def async_setup_entry(
             MoatBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class MoatBluetoothSensorEntity(
@@ -125,6 +127,7 @@ class MoatBluetoothSensorEntity(
     """Representation of a moat ble sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

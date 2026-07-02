@@ -1,7 +1,5 @@
 """Typing helpers for Home Assistant tests."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from contextlib import AbstractAsyncContextManager
 from typing import TYPE_CHECKING, Any

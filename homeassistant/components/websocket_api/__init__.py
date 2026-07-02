@@ -1,13 +1,10 @@
 """WebSocket based API for Home Assistant."""
 
-from __future__ import annotations
-
 from typing import Final, cast
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
-from homeassistant.loader import bind_hass
 
 from . import commands, connection, const, decorators, http, messages  # noqa: F401
 from .connection import ActiveConnection, current_connection  # noqa: F401
@@ -47,7 +44,6 @@ DEPENDENCIES: Final[tuple[str]] = ("http",)
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
-@bind_hass
 @callback
 def async_register_command(
     hass: HomeAssistant,

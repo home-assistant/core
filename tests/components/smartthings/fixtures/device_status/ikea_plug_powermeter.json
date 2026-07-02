@@ -1,0 +1,76 @@
+{
+  "components": {
+    "main": {
+      "powerMeter": {
+        "power": {
+          "value": 0.0,
+          "unit": "W",
+          "timestamp": "2026-03-13T13:31:38.582Z"
+        }
+      },
+      "energyMeter": {
+        "energy": {
+          "value": 0.004,
+          "unit": "kWh",
+          "timestamp": "2026-03-13T12:47:52.080Z"
+        }
+      },
+      "switchLevel": {
+        "levelRange": {
+          "value": null
+        },
+        "level": {
+          "value": 40,
+          "unit": "%",
+          "timestamp": "2026-03-13T12:55:19.975Z"
+        }
+      },
+      "refresh": {},
+      "firmwareUpdate": {
+        "lastUpdateStatusReason": {
+          "value": null
+        },
+        "imageTransferProgress": {
+          "value": null
+        },
+        "availableVersion": {
+          "value": "02040045",
+          "timestamp": "2026-03-12T15:59:40.750Z"
+        },
+        "lastUpdateStatus": {
+          "value": null
+        },
+        "supportedCommands": {
+          "value": null
+        },
+        "state": {
+          "value": "normalOperation",
+          "timestamp": "2026-03-12T15:59:40.752Z"
+        },
+        "estimatedTimeRemaining": {
+          "value": null
+        },
+        "updateAvailable": {
+          "value": false,
+          "timestamp": "2026-03-12T15:59:40.752Z"
+        },
+        "currentVersion": {
+          "value": "02040045",
+          "timestamp": "2026-03-12T15:59:40.693Z"
+        },
+        "lastUpdateTime": {
+          "value": null
+        },
+        "supportsProgressReports": {
+          "value": null
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "on",
+          "timestamp": "2026-03-13T13:02:25.180Z"
+        }
+      }
+    }
+  }
+}

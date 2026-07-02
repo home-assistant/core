@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_state[select.pinecil_animation_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'slow',
         'medium',
@@ -45,8 +46,8 @@
 # name: test_state[select.pinecil_animation_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Animation speed',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Animation speed',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'slow',
         'medium',
@@ -63,11 +64,12 @@
 # ---
 # name: test_state[select.pinecil_boot_logo_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'seconds_1',
         'seconds_2',
@@ -110,8 +112,8 @@
 # name: test_state[select.pinecil_boot_logo_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Boot logo duration',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Boot logo duration',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'seconds_1',
         'seconds_2',
@@ -131,11 +133,12 @@
 # ---
 # name: test_state[select.pinecil_button_locking_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'boost_only',
         'full_locking',
@@ -174,8 +177,8 @@
 # name: test_state[select.pinecil_button_locking_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Button locking mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Button locking mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'boost_only',
         'full_locking',
@@ -191,11 +194,12 @@
 # ---
 # name: test_state[select.pinecil_display_orientation_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'right_handed',
         'left_handed',
         'auto',
@@ -234,8 +238,8 @@
 # name: test_state[select.pinecil_display_orientation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Display orientation mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Display orientation mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'right_handed',
         'left_handed',
         'auto',
@@ -251,11 +255,12 @@
 # ---
 # name: test_state[select.pinecil_power_delivery_3_1_epr-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'on',
         'safe',
@@ -294,8 +299,8 @@
 # name: test_state[select.pinecil_power_delivery_3_1_epr-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Power Delivery 3.1 EPR',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Power Delivery 3.1 EPR',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'on',
         'safe',
@@ -311,11 +316,12 @@
 # ---
 # name: test_state[select.pinecil_power_source-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_battery',
         'battery_3s',
         'battery_4s',
@@ -356,8 +362,8 @@
 # name: test_state[select.pinecil_power_source-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Power source',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Power source',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_battery',
         'battery_3s',
         'battery_4s',
@@ -375,11 +381,12 @@
 # ---
 # name: test_state[select.pinecil_scrolling_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'fast',
       ]),
@@ -417,8 +424,8 @@
 # name: test_state[select.pinecil_scrolling_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Scrolling speed',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Scrolling speed',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'fast',
       ]),
@@ -433,11 +440,12 @@
 # ---
 # name: test_state[select.pinecil_soldering_tip_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'ts100_long',
         'pine_short',
@@ -477,8 +485,8 @@
 # name: test_state[select.pinecil_soldering_tip_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Soldering tip type',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Soldering tip type',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'ts100_long',
         'pine_short',
@@ -495,11 +503,12 @@
 # ---
 # name: test_state[select.pinecil_start_up_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'soldering',
         'sleeping',
@@ -539,8 +548,8 @@
 # name: test_state[select.pinecil_start_up_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Start-up behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Start-up behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'soldering',
         'sleeping',
@@ -557,11 +566,12 @@
 # ---
 # name: test_state[select.pinecil_temperature_display_unit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'celsius',
         'fahrenheit',
       ]),
@@ -599,8 +609,8 @@
 # name: test_state[select.pinecil_temperature_display_unit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Temperature display unit',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Temperature display unit',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'celsius',
         'fahrenheit',
       ]),

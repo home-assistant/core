@@ -1,7 +1,5 @@
 """Entities for SolarLog integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -52,7 +50,8 @@ class SolarLogInverterEntity(CoordinatorEntity[SolarLogDeviceDataCoordinator]):
     ) -> None:
         """Initialize the SolarLogInverter sensor."""
         super().__init__(coordinator)
-        name = f"{coordinator.config_entry.entry_id}_{slugify(coordinator.solarlog.device_name(device_id))}"
+        device_name = coordinator.solarlog.device_name(device_id)
+        name = f"{coordinator.config_entry.entry_id}_{slugify(device_name)}"
         self._attr_unique_id = f"{name}_{description.key}"
         self._attr_device_info = DeviceInfo(
             manufacturer="Solar-Log",

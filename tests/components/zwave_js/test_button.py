@@ -64,7 +64,9 @@ async def test_ping_entity(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert "There is no value to refresh for this entity" in caplog.text
+    assert (
+        "There is no value to refresh for button.z_wave_thermostat_ping" in caplog.text
+    )
 
     # Assert a node ping button entity is not created for the controller
     driver = client.driver

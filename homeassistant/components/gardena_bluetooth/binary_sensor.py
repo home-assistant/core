@@ -1,10 +1,9 @@
 """Support for binary_sensor entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
+from typing import override
 
-from gardena_bluetooth.const import Sensor, Valve
+from gardena_bluetooth.const import AquaContour, Sensor, Valve
 from gardena_bluetooth.parse import CharacteristicBool
 
 from homeassistant.components.binary_sensor import (
@@ -34,18 +33,25 @@ class GardenaBluetoothBinarySensorEntityDescription(BinarySensorEntityDescriptio
 
 DESCRIPTIONS = (
     GardenaBluetoothBinarySensorEntityDescription(
-        key=Valve.connected_state.uuid,
+        key=Valve.connected_state.unique_id,
         translation_key="valve_connected_state",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         char=Valve.connected_state,
     ),
     GardenaBluetoothBinarySensorEntityDescription(
-        key=Sensor.connected_state.uuid,
+        key=Sensor.connected_state.unique_id,
         translation_key="sensor_connected_state",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         char=Sensor.connected_state,
+    ),
+    GardenaBluetoothBinarySensorEntityDescription(
+        key=AquaContour.frost_warning.unique_id,
+        translation_key="frost_warning",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        char=AquaContour.frost_warning,
     ),
 )
 
@@ -60,7 +66,7 @@ async def async_setup_entry(
     entities = [
         GardenaBluetoothBinarySensor(coordinator, description, description.context)
         for description in DESCRIPTIONS
-        if description.key in coordinator.characteristics
+        if description.char.unique_id in coordinator.characteristics
     ]
     async_add_entities(entities)
 
@@ -72,6 +78,7 @@ class GardenaBluetoothBinarySensor(
 
     entity_description: GardenaBluetoothBinarySensorEntityDescription
 
+    @override
     def _handle_coordinator_update(self) -> None:
         char = self.entity_description.char
         self._attr_is_on = self.coordinator.get_cached(char)

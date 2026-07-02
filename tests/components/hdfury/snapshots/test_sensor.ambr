@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_audio_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_audio_output-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Audio output',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 Audio output',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hdfury_vrroom_02_audio_output',
@@ -50,8 +51,9 @@
 # ---
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_audio_tx0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,7 +89,7 @@
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_audio_tx0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Audio TX0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 Audio TX0',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hdfury_vrroom_02_audio_tx0',
@@ -99,8 +101,9 @@
 # ---
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_audio_tx1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -136,7 +139,7 @@
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_audio_tx1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Audio TX1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 Audio TX1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hdfury_vrroom_02_audio_tx1',
@@ -148,8 +151,9 @@
 # ---
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_earc_arc_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -185,7 +189,7 @@
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_earc_arc_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 eARC/ARC status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 eARC/ARC status',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hdfury_vrroom_02_earc_arc_status',
@@ -197,8 +201,9 @@
 # ---
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_aud-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -234,7 +239,7 @@
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_aud-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 EDID AUD',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 EDID AUD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hdfury_vrroom_02_edid_aud',
@@ -246,8 +251,9 @@
 # ---
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_auda-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -283,7 +289,7 @@
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_auda-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 EDID AUDA',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 EDID AUDA',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hdfury_vrroom_02_edid_auda',
@@ -295,8 +301,9 @@
 # ---
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_tx0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -332,7 +339,7 @@
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_tx0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 EDID TX0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 EDID TX0',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hdfury_vrroom_02_edid_tx0',
@@ -344,8 +351,9 @@
 # ---
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_tx1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -381,7 +389,7 @@
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_tx1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 EDID TX1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 EDID TX1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hdfury_vrroom_02_edid_tx1',
@@ -393,8 +401,9 @@
 # ---
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_txa0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -430,7 +439,7 @@
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_txa0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 EDID TXA0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 EDID TXA0',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hdfury_vrroom_02_edid_txa0',
@@ -442,8 +451,9 @@
 # ---
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_txa1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -479,7 +489,7 @@
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_txa1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 EDID TXA1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 EDID TXA1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hdfury_vrroom_02_edid_txa1',
@@ -491,8 +501,9 @@
 # ---
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_input_rx0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -528,7 +539,7 @@
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_input_rx0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Input RX0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 Input RX0',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hdfury_vrroom_02_input_rx0',
@@ -540,8 +551,9 @@
 # ---
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_input_rx1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -577,7 +589,7 @@
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_input_rx1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Input RX1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 Input RX1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hdfury_vrroom_02_input_rx1',
@@ -589,8 +601,9 @@
 # ---
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_output_tx0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -626,7 +639,7 @@
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_output_tx0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Output TX0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 Output TX0',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hdfury_vrroom_02_output_tx0',
@@ -638,8 +651,9 @@
 # ---
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_output_tx1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -675,7 +689,7 @@
 # name: test_sensor_entities[sensor.hdfury_vrroom_02_output_tx1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Output TX1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 Output TX1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hdfury_vrroom_02_output_tx1',

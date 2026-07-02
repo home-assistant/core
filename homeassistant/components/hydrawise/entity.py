@@ -1,6 +1,6 @@
 """Base classes for Hydrawise entities."""
 
-from __future__ import annotations
+from typing import override
 
 from pydrawise.schema import Controller, Sensor, Zone
 
@@ -67,13 +67,19 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
         return  # pragma: no cover
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Get the latest data and updates the state."""
+        # Guard against updates arriving after the controller has been removed
+        # but before the entity has been unsubscribed from the coordinator.
+        if self.controller.id not in self.coordinator.data.controllers:
+            return
         self.controller = self.coordinator.data.controllers[self.controller.id]
         self._update_attrs()
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Set the entity availability."""
         return super().available and self.controller.online

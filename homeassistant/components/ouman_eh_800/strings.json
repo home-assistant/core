@@ -1,0 +1,127 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_url": "Invalid URL",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Password for the Ouman EH-800 web interface",
+          "url": "The URL of the Ouman EH-800 web interface",
+          "username": "Username for the Ouman EH-800 web interface"
+        }
+      }
+    }
+  },
+  "device": {
+    "heating_circuit": { "name": "Heating circuit {circuit_number}" },
+    "heating_circuit_with_name": {
+      "name": "Heating circuit {circuit_number} {circuit_name}"
+    }
+  },
+  "entity": {
+    "climate": {
+      "heating_circuit": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "automatic": "[%key:common::state::auto%]",
+              "big_temperature_drop": "[%key:component::ouman_eh_800::entity::number::big_temperature_drop::name%]",
+              "temperature_drop": "[%key:component::ouman_eh_800::entity::number::temperature_drop::name%]"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "big_temperature_drop": { "name": "Big temperature drop" },
+      "constant_temp_setpoint": { "name": "Constant temperature setpoint" },
+      "curve_0_temperature": { "name": "Curve 0°C temperature" },
+      "curve_10_temperature": { "name": "Curve 10°C temperature" },
+      "curve_20_temperature": { "name": "Curve 20°C temperature" },
+      "curve_minus_10_temperature": { "name": "Curve -10°C temperature" },
+      "curve_minus_20_temperature": { "name": "Curve -20°C temperature" },
+      "room_temperature_fine_tuning": {
+        "name": "Room temperature fine tuning"
+      },
+      "temperature_drop": { "name": "Temperature drop" },
+      "trend_sampling_interval": { "name": "Trend sampling interval" },
+      "water_out_maximum_temperature": {
+        "name": "Water out maximum temperature"
+      },
+      "water_out_minimum_temperature": {
+        "name": "Water out minimum temperature"
+      }
+    },
+    "select": {
+      "home_away_mode": {
+        "name": "Home/Away mode",
+        "state": {
+          "away": "[%key:common::state::not_home%]",
+          "home": "[%key:common::state::home%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "operation_mode": {
+        "name": "Operation mode",
+        "state": {
+          "automatic": "[%key:common::state::auto%]",
+          "big_temperature_drop": "[%key:component::ouman_eh_800::entity::number::big_temperature_drop::name%]",
+          "manual_valve_control": "Manual valve control",
+          "normal_temperature": "Nominal temperature",
+          "shutdown": "[%key:common::state::standby%]",
+          "temperature_drop": "[%key:component::ouman_eh_800::entity::number::temperature_drop::name%]"
+        }
+      },
+      "relay_control": {
+        "name": "Relay control",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "relay_pump_summer_stop_control": {
+        "name": "Pump summer stop",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "run": "Run",
+          "stop": "[%key:common::action::stop%]"
+        }
+      }
+    },
+    "sensor": {
+      "curve_supply_water_temperature": {
+        "name": "Curve supply water temperature"
+      },
+      "delayed_outdoor_temperature_effect": {
+        "name": "Delayed outdoor temperature effect"
+      },
+      "delayed_room_temperature": { "name": "Delayed room temperature" },
+      "fine_adjustment_effect": { "name": "Fine adjustment effect" },
+      "outside_temperature": { "name": "Outside temperature" },
+      "room_sensor_potentiometer": { "name": "Room sensor potentiometer" },
+      "room_temperature": { "name": "Room temperature" },
+      "room_temperature_setpoint": { "name": "Room temperature setpoint" },
+      "supply_water_temperature": { "name": "Supply water temperature" },
+      "supply_water_temperature_setpoint": {
+        "name": "Supply water temperature setpoint"
+      },
+      "valve_position": { "name": "Valve position" }
+    },
+    "valve": {
+      "valve_position_setpoint": { "name": "Valve position setpoint" }
+    }
+  }
+}

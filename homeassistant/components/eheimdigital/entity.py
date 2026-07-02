@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine
-from typing import TYPE_CHECKING, Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate, override
 
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.types import EheimDigitalClientError
@@ -30,7 +30,8 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
         """Initialize a EHEIM Digital entity."""
         super().__init__(coordinator)
         if TYPE_CHECKING:
-            # At this point at least one device is found and so there is always a main device set
+            # At this point at least one device is found
+            # and so there is always a main device set
             assert isinstance(coordinator.hub.main, EheimDigitalDevice)
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
@@ -50,6 +51,7 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
     def _async_update_attrs(self) -> None: ...
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
         self._async_update_attrs()

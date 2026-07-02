@@ -54,10 +54,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
     try:
         await homee.get_access_token()
     except HomeeConnectionFailedException as exc:
-        raise ConfigEntryNotReady(f"Connection to Homee failed: {exc.reason}") from exc
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+        ) from exc
     except HomeeAuthFailedException as exc:
         raise ConfigEntryAuthFailed(
-            f"Authentication to Homee failed: {exc.reason}"
+            translation_domain=DOMAIN,
+            translation_key="auth_failed",
         ) from exc
 
     hass.loop.create_task(homee.run())
@@ -79,9 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={
-            (dr.CONNECTION_NETWORK_MAC, dr.format_mac(homee.settings.mac_address))
-        },
+        connections={(dr.CONNECTION_NETWORK_MAC, homee.settings.mac_address)},
         identifiers={(DOMAIN, homee.settings.uid)},
         manufacturer="homee",
         name=homee.settings.homee_name,

@@ -1,7 +1,5 @@
 """HTTP views and WebSocket commands for media sources."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol

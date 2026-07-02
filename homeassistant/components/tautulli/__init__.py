@@ -1,7 +1,5 @@
 """The Tautulli integration."""
 
-from __future__ import annotations
-
 from pytautulli import PyTautulli, PyTautulliHostConfiguration
 
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform

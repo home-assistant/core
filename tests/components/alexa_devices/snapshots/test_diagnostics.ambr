@@ -97,7 +97,7 @@
       'subentries': list([
       ]),
       'title': '**REDACTED**',
-      'unique_id': 'fake_email@gmail.com',
+      'unique_id': 'amzn1.account.fake_user_id',
       'version': 1,
     }),
   })

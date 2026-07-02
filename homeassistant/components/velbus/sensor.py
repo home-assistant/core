@@ -1,9 +1,8 @@
 """Support for Velbus sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from velbusaio.channels import ButtonCounter, SensorNumber, Temperature
 from velbusaio.properties import LightValue
@@ -119,6 +118,7 @@ class VelbusSensor(VelbusEntity, SensorEntity):
             self._attr_name = f"{self._attr_name}-counter"
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._channel)

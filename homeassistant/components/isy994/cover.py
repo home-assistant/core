@@ -1,8 +1,6 @@
 """Support for ISY covers."""
 
-from __future__ import annotations
-
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
@@ -51,6 +49,7 @@ class ISYCoverEntity(ISYNodeEntity, CoverEntity):
     )
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return the current cover position."""
         if self._node.status == ISY_VALUE_UNKNOWN:
@@ -60,22 +59,26 @@ class ISYCoverEntity(ISYNodeEntity, CoverEntity):
         return int(sorted((0, self._node.status, 100))[1])
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Get whether the ISY cover device is closed."""
         if self._node.status == ISY_VALUE_UNKNOWN:
             return None
         return bool(self._node.status == 0)
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Send the open cover command to the ISY cover device."""
         if not await self._node.turn_on():
             _LOGGER.error("Unable to open the cover")
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Send the close cover command to the ISY cover device."""
         if not await self._node.turn_off():
             _LOGGER.error("Unable to close the cover")
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
@@ -89,15 +92,18 @@ class ISYCoverProgramEntity(ISYProgramEntity, CoverEntity):
     """Representation of an ISY cover program."""
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Get whether the ISY cover program is closed."""
         return bool(self._node.status)
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Send the open cover command to the ISY cover program."""
         if not await self._actions.run_then():
             _LOGGER.error("Unable to open the cover")
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Send the close cover command to the ISY cover program."""
         if not await self._actions.run_else():

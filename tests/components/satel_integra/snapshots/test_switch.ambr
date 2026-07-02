@@ -32,8 +32,9 @@
 # ---
 # name: test_switches[switch.switchable_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,7 +70,7 @@
 # name: test_switches[switch.switchable_output-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Switchable Output',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switchable Output',
     }),
     'context': <ANY>,
     'entity_id': 'switch.switchable_output',

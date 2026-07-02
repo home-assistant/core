@@ -12,6 +12,7 @@ from homeassistant.components.notify import (
     ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
 )
+from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import MediaSelector
@@ -26,7 +27,6 @@ ATTR_CALL = "call"
 ATTR_CLICK = "click"
 ATTR_DELAY = "delay"
 ATTR_EMAIL = "email"
-ATTR_ICON = "icon"
 ATTR_MARKDOWN = "markdown"
 ATTR_PRIORITY = "priority"
 ATTR_TAGS = "tags"

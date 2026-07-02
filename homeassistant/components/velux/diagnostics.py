@@ -1,7 +1,5 @@
 """Diagnostics support for Velux."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -19,7 +17,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry, includes nodes, devices, and entities."""
 
-    pyvlx = entry.runtime_data
+    pyvlx = entry.runtime_data.pyvlx
 
     nodes: list[dict[str, Any]] = [
         {

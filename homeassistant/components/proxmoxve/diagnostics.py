@@ -1,7 +1,5 @@
 """Diagnostics support for Proxmox VE."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from typing import Any
 
@@ -10,8 +8,9 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import ProxmoxConfigEntry
+from .const import CONF_TOKEN_SECRET, CONF_USER
 
-TO_REDACT = [CONF_USERNAME, CONF_PASSWORD, CONF_HOST]
+TO_REDACT = [CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_TOKEN_SECRET, CONF_USER]
 
 
 async def async_get_config_entry_diagnostics(

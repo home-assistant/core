@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from weheat.abstractions.heat_pump import HeatPump
 
@@ -101,6 +102,7 @@ class WeheatHeatPumpBinarySensor(WeheatEntity, BinarySensorEntity):
         self._attr_unique_id = f"{heat_pump_info.heatpump_id}_{entity_description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if the binary sensor is on."""
         value = self.entity_description.value_fn(self.coordinator.data)

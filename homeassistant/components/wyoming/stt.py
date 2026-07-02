@@ -2,31 +2,31 @@
 
 from collections.abc import AsyncIterable
 import logging
+from typing import override
 
 from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient
 
 from homeassistant.components import stt
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, SAMPLE_CHANNELS, SAMPLE_RATE, SAMPLE_WIDTH
+from .const import SAMPLE_CHANNELS, SAMPLE_RATE, SAMPLE_WIDTH
 from .data import WyomingService
 from .error import WyomingError
-from .models import DomainDataItem
+from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WyomingConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Wyoming speech-to-text."""
-    item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
+    item = config_entry.runtime_data
     async_add_entities(
         [
             WyomingSttProvider(config_entry, item.service),
@@ -39,7 +39,7 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: WyomingConfigEntry,
         service: WyomingService,
     ) -> None:
         """Set up provider."""
@@ -53,38 +53,45 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
 
         self._supported_languages = list(model_languages)
         self._attr_name = asr_service.name
-        self._attr_unique_id = f"{config_entry.entry_id}-stt"
+        self._attr_unique_id = f"{config_entry.entry_id}-stt"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
+    @override
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return self._supported_languages
 
     @property
+    @override
     def supported_formats(self) -> list[stt.AudioFormats]:
         """Return a list of supported formats."""
         return [stt.AudioFormats.WAV]
 
     @property
+    @override
     def supported_codecs(self) -> list[stt.AudioCodecs]:
         """Return a list of supported codecs."""
         return [stt.AudioCodecs.PCM]
 
     @property
+    @override
     def supported_bit_rates(self) -> list[stt.AudioBitRates]:
         """Return a list of supported bitrates."""
         return [stt.AudioBitRates.BITRATE_16]
 
     @property
+    @override
     def supported_sample_rates(self) -> list[stt.AudioSampleRates]:
         """Return a list of supported samplerates."""
         return [stt.AudioSampleRates.SAMPLERATE_16000]
 
     @property
+    @override
     def supported_channels(self) -> list[stt.AudioChannels]:
         """Return a list of supported channels."""
         return [stt.AudioChannels.CHANNEL_MONO]
 
+    @override
     async def async_process_audio_stream(
         self, metadata: stt.SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> stt.SpeechResult:

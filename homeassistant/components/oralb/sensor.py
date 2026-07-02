@@ -1,6 +1,6 @@
 """Support for OralB sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from oralb_ble import OralBSensor, SensorUpdate
 from oralb_ble.parser import (
@@ -151,6 +151,7 @@ class OralBBluetoothSensorEntity(
     """Representation of a OralB sensor."""
 
     @property
+    @override
     def native_value(self) -> str | int | None:
         """Return the native value."""
         value = self.processor.entity_data.get(self.entity_key)
@@ -164,6 +165,7 @@ class OralBBluetoothSensorEntity(
         return value
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available.
 
@@ -176,6 +178,7 @@ class OralBBluetoothSensorEntity(
         return True
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Return True if the device is no longer broadcasting."""
         return not self.processor.available

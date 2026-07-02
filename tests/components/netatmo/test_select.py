@@ -100,3 +100,29 @@ async def test_select_schedule_thermostats(
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(select_entity).state == "Default"
+
+
+async def test_select_schedule_unknown_schedule_id(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test webhook with unknown schedule_id is silently ignored."""
+    with selected_platforms(["climate", "select"]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    select_entity = "select.myhome"
+    original_state = hass.states.get(select_entity).state
+
+    response = {
+        "event_type": "schedule",
+        "schedule_id": "unknown000000000000000000",
+        "previous_schedule_id": "591b54a2764ff4d50d8b5795",
+        "push_type": "home_event_changed",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(select_entity).state == original_state

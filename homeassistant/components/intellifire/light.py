@@ -1,10 +1,8 @@
 """The IntelliFire Light."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from intellifire4py.control import IntelliFireController
 from intellifire4py.model import IntelliFirePollData
@@ -56,15 +54,18 @@ class IntellifireLight(IntellifireEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the current brightness 0-255."""
         return 85 * self.entity_description.value_fn(self.coordinator.read_api.data)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self.entity_description.value_fn(self.coordinator.read_api.data) >= 1
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -75,6 +76,7 @@ class IntellifireLight(IntellifireEntity, LightEntity):
         await self.entity_description.set_fn(self.coordinator.control_api, light_level)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self.entity_description.set_fn(self.coordinator.control_api, 0)

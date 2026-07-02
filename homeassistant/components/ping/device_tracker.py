@@ -1,8 +1,7 @@
 """Tracks devices by sending a ICMP echo request (ping)."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
+from typing import override
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
@@ -58,16 +57,19 @@ class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity)
             self.device_entry = device
 
     @property
+    @override
     def ip_address(self) -> str:
         """Return the primary ip address of the device."""
         return self.coordinator.data.ip_address
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self.config_entry.entry_id
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if ping returns is_alive or considered home."""
         if self.coordinator.data.is_alive:
@@ -79,6 +81,7 @@ class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity)
         )
 
     @property
+    @override
     def entity_registry_enabled_default(self) -> bool:
         """Return if entity is enabled by default."""
         if CONF_IMPORTED_BY in self.config_entry.data:

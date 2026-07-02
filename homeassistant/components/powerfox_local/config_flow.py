@@ -1,9 +1,7 @@
 """Config flow for Powerfox Local integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from powerfox import PowerfoxAuthenticationError, PowerfoxConnectionError, PowerfoxLocal
 import voluptuous as vol
@@ -41,6 +39,7 @@ class PowerfoxLocalConfigFlow(ConfigFlow, domain=DOMAIN):
     _api_key: str
     _device_id: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -75,6 +74,7 @@ class PowerfoxLocalConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

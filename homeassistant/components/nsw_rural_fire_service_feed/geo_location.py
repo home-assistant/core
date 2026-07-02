@@ -1,11 +1,9 @@
 """Support for NSW Rural Fire Service Feeds."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aio_geojson_nsw_rfs_incidents import NswRuralFireServiceIncidentsFeedManager
 from aio_geojson_nsw_rfs_incidents.feed_entry import (
@@ -205,6 +203,7 @@ class NswRuralFireServiceLocationEvent(GeolocationEvent):
         self._remove_signal_delete: Callable[[], None]
         self._remove_signal_update: Callable[[], None]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
@@ -218,6 +217,7 @@ class NswRuralFireServiceLocationEvent(GeolocationEvent):
             self._update_callback,
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed from hass."""
         self._remove_signal_delete()
@@ -260,6 +260,7 @@ class NswRuralFireServiceLocationEvent(GeolocationEvent):
         self._responsible_agency = feed_entry.responsible_agency
 
     @property
+    @override
     def icon(self) -> str:
         """Return the icon to use in the frontend."""
         if self._fire:
@@ -267,6 +268,7 @@ class NswRuralFireServiceLocationEvent(GeolocationEvent):
         return "mdi:alarm-light"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {

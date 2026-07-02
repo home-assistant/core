@@ -1,8 +1,6 @@
 """Support for SensorPush Cloud sensors."""
 
-from __future__ import annotations
-
-from typing import Final
+from typing import Final, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -144,6 +142,7 @@ class SensorPushCloudSensor(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if entity is available."""
         if self.device_id in self.coordinator.data:
@@ -153,6 +152,7 @@ class SensorPushCloudSensor(
         return super().available
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.coordinator.data[self.device_id][self.entity_description.key]

@@ -1,6 +1,6 @@
 """Support for Tibber notifications."""
 
-from __future__ import annotations
+from typing import override
 
 import tibber
 
@@ -37,6 +37,7 @@ class TibberNotificationEntity(NotifyEntity):
         self._attr_unique_id = entry.entry_id
         self._entry = entry
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to Tibber devices."""
         tibber_connection: tibber.Tibber = (

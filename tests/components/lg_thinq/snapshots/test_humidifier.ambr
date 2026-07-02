@@ -1,20 +1,21 @@
 # serializer version: 1
 # name: test_humidifier_entities[dehumidifier][humidifier.test_dehumidifier-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'available_modes': list([
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
         'smart_humidity',
         'intensive_dry',
         'rapid_humidity',
         'quiet_humidity',
         'clothes_dry',
       ]),
-      'max_humidity': 70,
-      'min_humidity': 30,
-      'target_humidity_step': 5,
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 70,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+      <HumidifierEntityCapabilityAttribute.TARGET_HUMIDITY_STEP: 'target_humidity_step'>: 5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -49,23 +50,23 @@
 # name: test_humidifier_entities[dehumidifier][humidifier.test_dehumidifier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'action': <HumidifierAction.DRYING: 'drying'>,
-      'available_modes': list([
+      <HumidifierEntityStateAttribute.ACTION: 'action'>: <HumidifierAction.DRYING: 'drying'>,
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
         'smart_humidity',
         'intensive_dry',
         'rapid_humidity',
         'quiet_humidity',
         'clothes_dry',
       ]),
-      'current_humidity': 80,
-      'device_class': 'dehumidifier',
-      'friendly_name': 'Test dehumidifier',
-      'humidity': 55,
-      'max_humidity': 70,
-      'min_humidity': 30,
-      'mode': 'smart_humidity',
-      'supported_features': <HumidifierEntityFeature: 1>,
-      'target_humidity_step': 5,
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 80,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'dehumidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test dehumidifier',
+      <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 55,
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 70,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'smart_humidity',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
+      <HumidifierEntityCapabilityAttribute.TARGET_HUMIDITY_STEP: 'target_humidity_step'>: 5,
     }),
     'context': <ANY>,
     'entity_id': 'humidifier.test_dehumidifier',

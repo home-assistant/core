@@ -94,7 +94,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: EzvizConfigEntry) -> boo
 
         entry.runtime_data = coordinator
 
-    # Check EZVIZ cloud account entity is present, reload cloud account entities for camera entity change to take effect.
+    # Check EZVIZ cloud account entity is present, reload
+    # cloud account entities for camera entity change
+    # to take effect.
     # Cameras are accessed via local RTSP stream with unique credentials per camera.
     # Separate camera entities allow for credential changes per camera.
     if sensor_type == ATTR_TYPE_CAMERA:

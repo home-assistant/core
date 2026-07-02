@@ -1,22 +1,18 @@
 """Support for WiLight switches."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pywilight.const import ITEM_SWITCH, SWITCH_PAUSE_VALVE, SWITCH_VALVE
 from pywilight.wilight_device import PyWiLightDevice
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .entity import WiLightDevice
-from .parent_device import WiLightParent
+from .parent_device import WiLightConfigEntry
 from .support import wilight_to_hass_trigger, wilight_trigger as wl_trigger
 
 # Attr of features supported by the valve switch entities
@@ -76,11 +72,11 @@ def entities_from_discovered_wilight(api_device: PyWiLightDevice) -> tuple[Any]:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WiLightConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WiLight switches from a config entry."""
-    parent: WiLightParent = hass.data[DOMAIN][entry.entry_id]
+    parent = entry.runtime_data
 
     # Handle a discovered WiLight device.
     assert parent.api
@@ -151,6 +147,7 @@ class WiLightValveSwitch(WiLightDevice, SwitchEntity):
     _attr_translation_key = "watering"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._status.get("on", False)
@@ -204,6 +201,7 @@ class WiLightValveSwitch(WiLightDevice, SwitchEntity):
         return wilight_to_hass_trigger(self._status.get("trigger_4"))
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attr: dict[str, Any] = {}
@@ -237,10 +235,12 @@ class WiLightValveSwitch(WiLightDevice, SwitchEntity):
 
         return attr
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._client.turn_on(self._index)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._client.turn_off(self._index)
@@ -267,6 +267,7 @@ class WiLightValvePauseSwitch(WiLightDevice, SwitchEntity):
     _attr_translation_key = "pause"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._status.get("on", False)
@@ -283,6 +284,7 @@ class WiLightValvePauseSwitch(WiLightDevice, SwitchEntity):
         return pause_time
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attr: dict[str, Any] = {}
@@ -292,10 +294,12 @@ class WiLightValvePauseSwitch(WiLightDevice, SwitchEntity):
 
         return attr
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._client.turn_on(self._index)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._client.turn_off(self._index)

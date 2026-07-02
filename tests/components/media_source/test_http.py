@@ -92,7 +92,9 @@ async def test_websocket_resolve_media(
             {
                 "id": 1,
                 "type": "media_source/resolve_media",
-                "media_content_id": f"{const.URI_SCHEME}{media_source.DOMAIN}/local/{filename}",
+                "media_content_id": (
+                    f"{const.URI_SCHEME}{media_source.DOMAIN}/local/{filename}"
+                ),
             }
         )
 

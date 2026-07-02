@@ -1,11 +1,9 @@
 """Switch platform for Habitica integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, override
 
 from habiticalib import Habitica
 
@@ -70,17 +68,20 @@ class HabiticaSwitch(HabiticaBase, SwitchEntity):
     entity_description: HabiticaSwitchEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the device."""
         return self.entity_description.is_on_fn(
             self.coordinator.data,
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
 
         await self.coordinator.execute(self.entity_description.turn_on_fn)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
 

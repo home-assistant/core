@@ -1,7 +1,5 @@
 """Integration for Trane Local thermostats."""
 
-from __future__ import annotations
-
 from steamloop import (
     AuthenticationError,
     SteamloopConnectionError,
@@ -10,7 +8,7 @@ from steamloop import (
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_SECRET_KEY, DOMAIN, MANUFACTURER
@@ -37,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TraneConfigEntry) -> boo
         ) from err
     except AuthenticationError as err:
         await conn.disconnect()
-        raise ConfigEntryAuthFailed(
+        raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="authentication_failed",
         ) from err

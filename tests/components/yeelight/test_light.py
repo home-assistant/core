@@ -577,7 +577,7 @@ async def test_update_errors(
 
 
 async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
-    """Ensure we suppress state changes that will increase the rate limit when there is no change."""
+    """Ensure we suppress no-op state changes to avoid rate limit."""
     mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}
     properties.pop("active_mode")
@@ -1216,7 +1216,7 @@ async def test_effects(hass: HomeAssistant) -> None:
 
 
 async def test_ambilight_with_nightlight_disabled(hass: HomeAssistant) -> None:
-    """Test that main light on ambilights with the nightlight disabled shows the correct brightness."""
+    """Test ambilight main light brightness with nightlight off."""
     mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}
     capabilities = {**CAPABILITIES}
@@ -1251,7 +1251,7 @@ async def test_ambilight_with_nightlight_disabled(hass: HomeAssistant) -> None:
 
 
 async def test_state_fails_to_update_triggers_update(hass: HomeAssistant) -> None:
-    """Ensure we call async_get_properties if the turn on/off fails to update the state."""
+    """Ensure async_get_properties is called on failed state update."""
     mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}
     properties.pop("active_mode")

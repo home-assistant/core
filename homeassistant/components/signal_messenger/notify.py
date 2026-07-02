@@ -1,9 +1,7 @@
 """Signal Messenger for notify component."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pysignalclirestapi import SignalCliRestApi, SignalCliRestApiError
 import requests
@@ -98,8 +96,9 @@ class SignalNotificationService(BaseNotificationService):
         self._recp_nrs = recp_nrs
         self._signal_cli_rest_api = signal_cli_rest_api
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
-        """Send a message to one or more recipients. Additionally a file can be attached."""
+        """Send a message to one or more recipients."""
 
         _LOGGER.debug("Sending signal message")
 

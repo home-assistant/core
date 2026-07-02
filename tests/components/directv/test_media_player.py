@@ -1,7 +1,5 @@
 """The tests for the DirecTV Media player platform."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from unittest.mock import patch
 

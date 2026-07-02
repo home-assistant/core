@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_event_snapshot[20][event.remote_control_kitchen_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -44,14 +45,14 @@
 # name: test_event_snapshot[20][event.remote_control_kitchen_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
       ]),
-      'friendly_name': 'Remote Control Kitchen Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Remote Control Kitchen Light',
     }),
     'context': <ANY>,
     'entity_id': 'event.remote_control_kitchen_light',
@@ -63,11 +64,12 @@
 # ---
 # name: test_event_snapshot[20][event.remote_control_switch_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -106,14 +108,14 @@
 # name: test_event_snapshot[20][event.remote_control_switch_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
       ]),
-      'friendly_name': 'Remote Control Switch 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Remote Control Switch 2',
     }),
     'context': <ANY>,
     'entity_id': 'event.remote_control_switch_2',
@@ -125,11 +127,12 @@
 # ---
 # name: test_event_snapshot[20][event.remote_control_up_down_remote-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',
@@ -175,9 +178,9 @@
 # name: test_event_snapshot[20][event.remote_control_up_down_remote-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',
@@ -189,7 +192,7 @@
         'b_button',
         'a_button',
       ]),
-      'friendly_name': 'Remote Control Up/down remote',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Remote Control Up/down remote',
     }),
     'context': <ANY>,
     'entity_id': 'event.remote_control_up_down_remote',
@@ -201,11 +204,12 @@
 # ---
 # name: test_event_snapshot[24][event.remote_control_kitchen_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -244,14 +248,14 @@
 # name: test_event_snapshot[24][event.remote_control_kitchen_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
       ]),
-      'friendly_name': 'Remote Control Kitchen Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Remote Control Kitchen Light',
     }),
     'context': <ANY>,
     'entity_id': 'event.remote_control_kitchen_light',
@@ -263,11 +267,12 @@
 # ---
 # name: test_event_snapshot[24][event.remote_control_switch_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -306,14 +311,14 @@
 # name: test_event_snapshot[24][event.remote_control_switch_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
       ]),
-      'friendly_name': 'Remote Control Switch 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Remote Control Switch 2',
     }),
     'context': <ANY>,
     'entity_id': 'event.remote_control_switch_2',
@@ -325,11 +330,12 @@
 # ---
 # name: test_event_snapshot[24][event.remote_control_up_down_remote-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',
@@ -375,9 +381,9 @@
 # name: test_event_snapshot[24][event.remote_control_up_down_remote-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',
@@ -389,7 +395,7 @@
         'b_button',
         'a_button',
       ]),
-      'friendly_name': 'Remote Control Up/down remote',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Remote Control Up/down remote',
     }),
     'context': <ANY>,
     'entity_id': 'event.remote_control_up_down_remote',
@@ -401,11 +407,12 @@
 # ---
 # name: test_event_snapshot[25][event.remote_control_kitchen_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -444,14 +451,14 @@
 # name: test_event_snapshot[25][event.remote_control_kitchen_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
       ]),
-      'friendly_name': 'Remote Control Kitchen Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Remote Control Kitchen Light',
     }),
     'context': <ANY>,
     'entity_id': 'event.remote_control_kitchen_light',
@@ -463,11 +470,12 @@
 # ---
 # name: test_event_snapshot[25][event.remote_control_switch_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -506,14 +514,14 @@
 # name: test_event_snapshot[25][event.remote_control_switch_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
       ]),
-      'friendly_name': 'Remote Control Switch 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Remote Control Switch 2',
     }),
     'context': <ANY>,
     'entity_id': 'event.remote_control_switch_2',
@@ -525,11 +533,12 @@
 # ---
 # name: test_event_snapshot[25][event.remote_control_up_down_remote-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',
@@ -575,9 +584,9 @@
 # name: test_event_snapshot[25][event.remote_control_up_down_remote-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',
@@ -589,7 +598,7 @@
         'b_button',
         'a_button',
       ]),
-      'friendly_name': 'Remote Control Up/down remote',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Remote Control Up/down remote',
     }),
     'context': <ANY>,
     'entity_id': 'event.remote_control_up_down_remote',
@@ -601,11 +610,12 @@
 # ---
 # name: test_event_snapshot[26][event.remote_control_kitchen_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -644,14 +654,14 @@
 # name: test_event_snapshot[26][event.remote_control_kitchen_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
       ]),
-      'friendly_name': 'Remote Control Kitchen Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Remote Control Kitchen Light',
     }),
     'context': <ANY>,
     'entity_id': 'event.remote_control_kitchen_light',
@@ -663,11 +673,12 @@
 # ---
 # name: test_event_snapshot[26][event.remote_control_switch_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -706,14 +717,14 @@
 # name: test_event_snapshot[26][event.remote_control_switch_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
       ]),
-      'friendly_name': 'Remote Control Switch 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Remote Control Switch 2',
     }),
     'context': <ANY>,
     'entity_id': 'event.remote_control_switch_2',
@@ -725,11 +736,12 @@
 # ---
 # name: test_event_snapshot[26][event.remote_control_up_down_remote-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',
@@ -775,9 +787,9 @@
 # name: test_event_snapshot[26][event.remote_control_up_down_remote-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',
@@ -789,7 +801,7 @@
         'b_button',
         'a_button',
       ]),
-      'friendly_name': 'Remote Control Up/down remote',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Remote Control Up/down remote',
     }),
     'context': <ANY>,
     'entity_id': 'event.remote_control_up_down_remote',
@@ -801,11 +813,12 @@
 # ---
 # name: test_event_snapshot[41][event.remote_control_kitchen_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -844,14 +857,14 @@
 # name: test_event_snapshot[41][event.remote_control_kitchen_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
       ]),
-      'friendly_name': 'Remote Control Kitchen Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Remote Control Kitchen Light',
     }),
     'context': <ANY>,
     'entity_id': 'event.remote_control_kitchen_light',
@@ -863,11 +876,12 @@
 # ---
 # name: test_event_snapshot[41][event.remote_control_switch_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -906,14 +920,14 @@
 # name: test_event_snapshot[41][event.remote_control_switch_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
       ]),
-      'friendly_name': 'Remote Control Switch 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Remote Control Switch 2',
     }),
     'context': <ANY>,
     'entity_id': 'event.remote_control_switch_2',
@@ -925,11 +939,12 @@
 # ---
 # name: test_event_snapshot[41][event.remote_control_up_down_remote-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',
@@ -975,9 +990,9 @@
 # name: test_event_snapshot[41][event.remote_control_up_down_remote-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',
@@ -989,7 +1004,7 @@
         'b_button',
         'a_button',
       ]),
-      'friendly_name': 'Remote Control Up/down remote',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Remote Control Up/down remote',
     }),
     'context': <ANY>,
     'entity_id': 'event.remote_control_up_down_remote',

@@ -66,6 +66,9 @@
       "init": {
         "data": {
           "server_name": "Select test server"
+        },
+        "data_description": {
+          "server_name": "The Speedtest.net server to use for tests. Select auto detect to automatically choose a server."
         }
       }
     }

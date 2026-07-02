@@ -1,8 +1,7 @@
 """Support for Medcom BLE radiation monitor sensors."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -90,6 +89,7 @@ class MedcomSensor(CoordinatorEntity[MedcomBleUpdateCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the value reported by the sensor."""
         return self.coordinator.data.sensors[self.entity_description.key]

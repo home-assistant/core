@@ -1,7 +1,5 @@
 """Test Home Assistant Hardware beta firmware switch entity."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator
 from unittest.mock import Mock, call, patch
 

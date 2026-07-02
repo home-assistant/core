@@ -1,9 +1,7 @@
 """The IntelliFire integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 import pyflume
 from pyflume import FlumeAuth, FlumeData, FlumeDeviceList
@@ -57,6 +55,7 @@ class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         self.flume_device = flume_device
 
+    @override
     async def _async_update_data(self) -> None:
         """Get the latest data from the Flume."""
         try:
@@ -101,6 +100,7 @@ class FlumeDeviceConnectionUpdateCoordinator(DataUpdateCoordinator[None]):
         }
         _LOGGER.debug("Connectivity %s", self.connected)
 
+    @override
     async def _async_update_data(self) -> None:
         """Update the device list."""
         try:
@@ -154,6 +154,7 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         self.active_notifications_by_device = active_notifications_by_device
 
+    @override
     async def _async_update_data(self) -> None:
         """Update data."""
         _LOGGER.debug("Updating Flume Notification")

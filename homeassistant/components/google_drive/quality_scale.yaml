@@ -12,14 +12,18 @@ rules:
   docs-actions:
     status: exempt
     comment: No actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup: done
   entity-unique-id: done
-  has-entity-name:
-    status: exempt
-    comment: No entities.
+  has-entity-name: done
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
@@ -66,12 +70,8 @@ rules:
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: No entities.
-  reconfiguration-flow:
-    status: exempt
-    comment: No configuration options.
+  icon-translations: done
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No repairs.

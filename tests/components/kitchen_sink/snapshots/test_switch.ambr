@@ -2,7 +2,7 @@
 # name: test_state
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Outlet 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet 1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.outlet_1',
@@ -14,8 +14,9 @@
 # ---
 # name: test_state.1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -113,7 +114,7 @@
 # name: test_state.4
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Outlet 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet 2',
     }),
     'context': <ANY>,
     'entity_id': 'switch.outlet_2',
@@ -125,8 +126,9 @@
 # ---
 # name: test_state.5
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

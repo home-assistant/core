@@ -1,10 +1,9 @@
 """Module for SIA Base Entity."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pysiaalarm import SIAEvent
 
@@ -85,6 +84,7 @@ class SIABaseEntity(RestoreEntity):
         self._attr_extra_state_attributes = {}
         self._attr_should_poll = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass.
 
@@ -109,6 +109,7 @@ class SIABaseEntity(RestoreEntity):
     def handle_last_state(self, last_state: State | None) -> None:
         """Handle the last state."""
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
 
@@ -118,7 +119,7 @@ class SIABaseEntity(RestoreEntity):
 
     @callback
     def async_handle_event(self, sia_event: SIAEvent) -> None:
-        """Listen to dispatcher events for this port and account and update state and attributes.
+        """Listen to dispatcher events for this port and account, update state.
 
         If the event is for either the zone or the 0 zone (hub zone),
         then handle it further.

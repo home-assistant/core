@@ -24,6 +24,7 @@ from homeassistant.components.teslemetry.coordinator import (
     ENERGY_HISTORY_INTERVAL,
     ENERGY_INFO_INTERVAL,
     ENERGY_LIVE_INTERVAL,
+    METADATA_INTERVAL,
     VEHICLE_INTERVAL,
 )
 from homeassistant.components.teslemetry.models import TeslemetryData
@@ -43,11 +44,14 @@ from .const import (
     CONFIG_V1,
     ENERGY_HISTORY,
     LIVE_STATUS,
+    METADATA,
+    METADATA_NOSCOPE,
     PRODUCTS_MODERN,
     SITE_INFO,
     UNIQUE_ID,
     VEHICLE_DATA,
     VEHICLE_DATA_ALT,
+    VEHICLE_DATA_ASLEEP,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -190,6 +194,23 @@ async def test_vehicle_stream(
     assert state.state == STATE_OFF
 
 
+async def test_vehicle_asleep_polling(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Polling an offline/asleep vehicle loads and reports disconnected."""
+
+    mock_vehicle_data.return_value = VEHICLE_DATA_ASLEEP
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("binary_sensor.test_status")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
 async def test_no_live_status(
     hass: HomeAssistant,
     mock_live_status: AsyncMock,
@@ -269,6 +290,37 @@ async def test_stale_device_removal(
             identifiers={(DOMAIN, "stale-vin")}
         )
         assert updated_device is None
+
+
+async def test_skipped_energy_site_is_removed_as_stale_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test skipped energy sites do not block stale device removal."""
+    entry = await setup_platform(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "98765")},
+        manufacturer="Tesla",
+        name="Skipped Energy Site",
+    )
+
+    refreshed_metadata = deepcopy(METADATA)
+    refreshed_metadata["energy_sites"]["98765"] = {
+        "access": True,
+        "name": "Skipped Energy Site",
+    }
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=refreshed_metadata,
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    updated_device = device_registry.async_get_device(identifiers={(DOMAIN, "98765")})
+    assert updated_device is None
 
 
 async def test_device_retention_during_reload(
@@ -747,7 +799,7 @@ async def test_vehicle_polling_version_update(
     mock_legacy: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test vehicle sw_version is updated when polling coordinator receives new version."""
+    """Test vehicle sw_version updates when polling coordinator refreshes."""
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
 
@@ -778,7 +830,7 @@ async def test_energy_site_version_update(
     mock_site_info: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test energy site sw_version is updated when info coordinator receives new version."""
+    """Test energy site sw_version updates when info coordinator refreshes."""
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
 
@@ -864,3 +916,83 @@ async def test_energy_history_coordinator_refresh_errors(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_dynamic_device_discovery_triggers_reload(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that metadata coordinator triggers reload when new vehicle is added."""
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    # Update metadata to include a new vehicle with access
+    new_metadata = deepcopy(METADATA)
+    new_metadata["vehicles"]["5YJ3E1EA1NF000001"] = {
+        "proxy": True,
+        "access": True,
+        "polling": False,
+        "firmware": "2026.0.0",
+    }
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+            return_value=new_metadata,
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+    ):
+        # Advance time to trigger metadata coordinator refresh
+        freezer.tick(METADATA_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    # Verify reload was triggered due to new vehicle
+    mock_reload.assert_called_once_with(entry.entry_id)
+
+
+async def test_dynamic_device_discovery_no_reload_for_scope_only_change(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test metadata refresh does not reload when only scopes change."""
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+            return_value=deepcopy(METADATA_NOSCOPE),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+    ):
+        freezer.tick(METADATA_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_reload.assert_not_called()
+
+
+async def test_dynamic_device_discovery_no_reload_without_changes(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that metadata coordinator refresh without changes does not reload."""
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    # Patch to use the same metadata (no changes)
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+            return_value=deepcopy(METADATA),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+    ):
+        # Advance time to trigger metadata coordinator refresh
+        freezer.tick(METADATA_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    # Verify reload was NOT triggered since no subscription changes
+    mock_reload.assert_not_called()

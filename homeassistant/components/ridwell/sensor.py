@@ -1,10 +1,8 @@
 """Support for Ridwell sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import date
-from typing import Any
+from typing import Any, override
 
 from aioridwell.model import RidwellAccount
 
@@ -13,12 +11,11 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, SENSOR_TYPE_NEXT_PICKUP
-from .coordinator import RidwellDataUpdateCoordinator
+from .const import SENSOR_TYPE_NEXT_PICKUP
+from .coordinator import RidwellConfigEntry, RidwellDataUpdateCoordinator
 from .entity import RidwellEntity
 
 ATTR_CATEGORY = "category"
@@ -35,11 +32,11 @@ SENSOR_DESCRIPTION = SensorEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: RidwellConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ridwell sensors based on a config entry."""
-    coordinator: RidwellDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         RidwellSensor(coordinator, account, SENSOR_DESCRIPTION)
@@ -63,6 +60,7 @@ class RidwellSensor(RidwellEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return entity specific state attributes."""
         attrs: dict[str, Any] = {
@@ -79,12 +77,13 @@ class RidwellSensor(RidwellEntity, SensorEntity):
             else:
                 # Ridwell's API will return distinct objects, even if they have the
                 # same name (e.g. two pickups of Latex Paint will show up as two
-                # objects) – so, we sum the quantities:
+                # objects) - so, we sum the quantities:
                 attrs[ATTR_PICKUP_TYPES][pickup.name][ATTR_QUANTITY] += pickup.quantity
 
         return attrs
 
     @property
+    @override
     def native_value(self) -> date:
         """Return the value reported by the sensor."""
         return self.next_pickup_event.pickup_date

@@ -54,8 +54,8 @@ async def test_media_player_join(
             blocking=False,
         )
         await join_complete_event.wait()
-        # Fire the ZGS event to update the speaker grouping as the join method is waiting
-        # for the speakers to be regrouped.
+        # Fire the ZGS event to update the speaker grouping as
+        # the join method is waiting for the speakers to be regrouped.
         group_speakers(soco_living_room, soco_bedroom)
         await hass.async_block_till_done(wait_background_tasks=True)
 

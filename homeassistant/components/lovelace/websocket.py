@@ -1,7 +1,5 @@
 """Websocket API for Lovelace."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from functools import wraps
 from typing import TYPE_CHECKING, Any
@@ -45,7 +43,8 @@ def _handle_errors[_R](
     ) -> None:
         url_path = msg.get(CONF_URL_PATH)
 
-        # When url_path is None, prefer "lovelace" dashboard if it exists (for YAML mode)
+        # When url_path is None, prefer "lovelace" dashboard
+        # if it exists (for YAML mode)
         # Otherwise fall back to dashboards[None] (storage mode default)
         if url_path is None:
             config = hass.data[LOVELACE_DATA].dashboards.get(DOMAIN) or hass.data[

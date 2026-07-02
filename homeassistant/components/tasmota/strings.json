@@ -10,6 +10,9 @@
       "config": {
         "data": {
           "discovery_prefix": "Discovery topic prefix"
+        },
+        "data_description": {
+          "discovery_prefix": "Only change this if you use a custom Tasmota binary that does not use the default `tasmota/discovery` discovery topic prefix"
         }
       },
       "confirm": {

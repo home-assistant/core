@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_accessory_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,9 +39,9 @@
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_accessory_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by unpublished Intellifire API',
-      'device_class': 'problem',
-      'friendly_name': 'IntelliFire Accessory error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by unpublished Intellifire API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IntelliFire Accessory error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.intellifire_accessory_error',
@@ -52,8 +53,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_cloud_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -89,9 +91,9 @@
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_cloud_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by unpublished Intellifire API',
-      'device_class': 'connectivity',
-      'friendly_name': 'IntelliFire Cloud connectivity',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by unpublished Intellifire API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IntelliFire Cloud connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.intellifire_cloud_connectivity',
@@ -103,8 +105,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_disabled_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -140,9 +143,9 @@
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_disabled_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by unpublished Intellifire API',
-      'device_class': 'problem',
-      'friendly_name': 'IntelliFire Disabled error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by unpublished Intellifire API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IntelliFire Disabled error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.intellifire_disabled_error',
@@ -154,8 +157,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_ecm_offline_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -191,9 +195,9 @@
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_ecm_offline_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by unpublished Intellifire API',
-      'device_class': 'problem',
-      'friendly_name': 'IntelliFire ECM offline error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by unpublished Intellifire API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IntelliFire ECM offline error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.intellifire_ecm_offline_error',
@@ -205,8 +209,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_fan_delay_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -242,9 +247,9 @@
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_fan_delay_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by unpublished Intellifire API',
-      'device_class': 'problem',
-      'friendly_name': 'IntelliFire Fan delay error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by unpublished Intellifire API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IntelliFire Fan delay error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.intellifire_fan_delay_error',
@@ -256,8 +261,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_fan_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -293,9 +299,9 @@
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_fan_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by unpublished Intellifire API',
-      'device_class': 'problem',
-      'friendly_name': 'IntelliFire Fan error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by unpublished Intellifire API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IntelliFire Fan error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.intellifire_fan_error',
@@ -307,8 +313,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_flame-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -344,8 +351,8 @@
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_flame-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by unpublished Intellifire API',
-      'friendly_name': 'IntelliFire Flame',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by unpublished Intellifire API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IntelliFire Flame',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.intellifire_flame',
@@ -357,8 +364,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_flame_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -394,9 +402,9 @@
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_flame_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by unpublished Intellifire API',
-      'device_class': 'problem',
-      'friendly_name': 'IntelliFire Flame error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by unpublished Intellifire API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IntelliFire Flame error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.intellifire_flame_error',
@@ -408,8 +416,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_lights_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -445,9 +454,9 @@
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_lights_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by unpublished Intellifire API',
-      'device_class': 'problem',
-      'friendly_name': 'IntelliFire Lights error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by unpublished Intellifire API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IntelliFire Lights error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.intellifire_lights_error',
@@ -459,8 +468,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_local_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -496,9 +506,9 @@
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_local_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by unpublished Intellifire API',
-      'device_class': 'connectivity',
-      'friendly_name': 'IntelliFire Local connectivity',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by unpublished Intellifire API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IntelliFire Local connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.intellifire_local_connectivity',
@@ -510,8 +520,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_maintenance_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -547,9 +558,9 @@
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_maintenance_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by unpublished Intellifire API',
-      'device_class': 'problem',
-      'friendly_name': 'IntelliFire Maintenance error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by unpublished Intellifire API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IntelliFire Maintenance error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.intellifire_maintenance_error',
@@ -561,8 +572,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_offline_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -598,9 +610,9 @@
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_offline_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by unpublished Intellifire API',
-      'device_class': 'problem',
-      'friendly_name': 'IntelliFire Offline error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by unpublished Intellifire API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IntelliFire Offline error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.intellifire_offline_error',
@@ -612,8 +624,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_pilot_flame_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -649,9 +662,9 @@
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_pilot_flame_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by unpublished Intellifire API',
-      'device_class': 'problem',
-      'friendly_name': 'IntelliFire Pilot flame error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by unpublished Intellifire API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IntelliFire Pilot flame error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.intellifire_pilot_flame_error',
@@ -663,8 +676,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_pilot_light_on-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -700,8 +714,8 @@
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_pilot_light_on-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by unpublished Intellifire API',
-      'friendly_name': 'IntelliFire Pilot light on',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by unpublished Intellifire API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IntelliFire Pilot light on',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.intellifire_pilot_light_on',
@@ -713,8 +727,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_soft_lock_out_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -750,9 +765,9 @@
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_soft_lock_out_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by unpublished Intellifire API',
-      'device_class': 'problem',
-      'friendly_name': 'IntelliFire Soft lock out error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by unpublished Intellifire API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IntelliFire Soft lock out error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.intellifire_soft_lock_out_error',
@@ -764,8 +779,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_thermostat_on-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -801,8 +817,8 @@
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_thermostat_on-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by unpublished Intellifire API',
-      'friendly_name': 'IntelliFire Thermostat on',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by unpublished Intellifire API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IntelliFire Thermostat on',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.intellifire_thermostat_on',
@@ -814,8 +830,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_timer_on-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -851,8 +868,8 @@
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_timer_on-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by unpublished Intellifire API',
-      'friendly_name': 'IntelliFire Timer on',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by unpublished Intellifire API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IntelliFire Timer on',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.intellifire_timer_on',

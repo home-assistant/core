@@ -9,9 +9,13 @@ from openai.types import CompletionUsage
 from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
 import pytest
-from python_open_router import ModelsDataWrapper
+from python_open_router import KeyData, ModelsDataWrapper
 
-from homeassistant.components.open_router.const import CONF_PROMPT, DOMAIN
+from homeassistant.components.open_router.const import (
+    CONF_PROMPT,
+    CONF_WEB_SEARCH,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
 from homeassistant.core import HomeAssistant
@@ -38,11 +42,18 @@ def enable_assist() -> bool:
 
 
 @pytest.fixture
-def conversation_subentry_data(enable_assist: bool) -> dict[str, Any]:
+def web_search() -> bool:
+    """Mock web search setting."""
+    return False
+
+
+@pytest.fixture
+def conversation_subentry_data(enable_assist: bool, web_search: bool) -> dict[str, Any]:
     """Mock conversation subentry data."""
     res: dict[str, Any] = {
         CONF_MODEL: "openai/gpt-3.5-turbo",
         CONF_PROMPT: "You are a helpful assistant.",
+        CONF_WEB_SEARCH: web_search,
     }
     if enable_assist:
         res[CONF_LLM_HASS_API] = [llm.LLM_API_ASSIST]
@@ -137,6 +148,13 @@ async def mock_open_router_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMo
         autospec=True,
     ) as mock_client:
         client = mock_client.return_value
+        client.get_key_data.return_value = KeyData(
+            label="Test account",
+            usage=0,
+            is_provisioning_key=False,
+            limit_remaining=None,
+            is_free_tier=True,
+        )
         models = await async_load_fixture(hass, "models.json", DOMAIN)
         client.get_models.return_value = ModelsDataWrapper.from_json(models).data
         yield client

@@ -346,7 +346,8 @@ async def test_rpc_cover_position_update(
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
     assert state.state == CoverState.CLOSED
 
-    # Ensure update_position does not call update_cover_status when the cover is not moving
+    # Ensure update_position does not call update_cover_status
+    # when the cover is not moving
     await mock_polling_rpc_update(hass, freezer, RPC_COVER_UPDATE_TIME_SEC)
     mock_rpc_device.update_cover_status.assert_not_called()
 

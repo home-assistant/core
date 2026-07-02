@@ -562,7 +562,7 @@ async def test_other_light_update(hass: HomeAssistant, mock_bridge_v1: Mock) -> 
 
     lamp_2 = hass.states.get("light.hue_lamp_2")
     assert lamp_2 is not None
-    assert lamp_2.name == "Hue Lamp 2 new"
+    assert lamp_2.name == "Hue Lamp 2 New"
     assert lamp_2.state == "on"
     assert lamp_2.attributes["brightness"] == 100
 
@@ -973,19 +973,19 @@ async def test_group_features(
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry.area_id is None
 
-    entry = entity_registry.async_get("light.hue_lamp_2")
+    entry = entity_registry.async_get("light.living_room_hue_lamp_2")
     device_entry = device_registry.async_get(entry.device_id)
     assert (
         device_entry.area_id == area_registry.async_get_area_by_name("Living Room").id
     )
 
-    entry = entity_registry.async_get("light.hue_lamp_3")
+    entry = entity_registry.async_get("light.living_room_hue_lamp_3")
     device_entry = device_registry.async_get(entry.device_id)
     assert (
         device_entry.area_id == area_registry.async_get_area_by_name("Living Room").id
     )
 
-    entry = entity_registry.async_get("light.hue_lamp_4")
+    entry = entity_registry.async_get("light.dining_room_hue_lamp_4")
     device_entry = device_registry.async_get(entry.device_id)
     assert (
         device_entry.area_id == area_registry.async_get_area_by_name("Dining Room").id

@@ -19,7 +19,9 @@
     "geofenceIds": [0],
     "attributes": {
       "custom_attr_1": "custom_attr_1_value",
-      "batteryLevel": 15.00000867601
+      "batteryLevel": 15.00000867601,
+      "battery": 4.08,
+      "power": 12.56
     }
   }
 ]

@@ -1,9 +1,8 @@
 """DataUpdateCoordinator for the co2signal integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from aioelectricitymaps import (
     ElectricityMaps,
@@ -51,6 +50,7 @@ class CO2SignalCoordinator(DataUpdateCoordinator[HomeAssistantCarbonIntensityRes
         """Return entry ID."""
         return self.config_entry.entry_id
 
+    @override
     async def _async_update_data(self) -> HomeAssistantCarbonIntensityResponse:
         """Fetch the latest data from the source."""
 

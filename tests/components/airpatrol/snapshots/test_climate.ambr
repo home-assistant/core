@@ -1,23 +1,24 @@
 # serializer version: 1
 # name: test_climate_entities[None][climate.living_room-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'low',
         'high',
         'auto',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 30.0,
-      'min_temp': 16.0,
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'on',
         'off',
       ]),
@@ -55,21 +56,21 @@
 # name: test_climate_entities[None][climate.living_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'low',
         'high',
         'auto',
       ]),
-      'friendly_name': 'living room',
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'living room',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 30.0,
-      'min_temp': 16.0,
-      'supported_features': <ClimateEntityFeature: 425>,
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 425>,
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'on',
         'off',
       ]),
@@ -84,23 +85,24 @@
 # ---
 # name: test_climate_entities[climate_data0][climate.living_room-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'low',
         'high',
         'auto',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 30.0,
-      'min_temp': 16.0,
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'on',
         'off',
       ]),
@@ -138,29 +140,29 @@
 # name: test_climate_entities[climate_data0][climate.living_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_humidity': 45.0,
-      'current_temperature': 22.5,
-      'fan_mode': 'high',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 45.0,
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 22.5,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'high',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'low',
         'high',
         'auto',
       ]),
-      'friendly_name': 'living room',
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'living room',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 30.0,
-      'min_temp': 16.0,
-      'supported_features': <ClimateEntityFeature: 425>,
-      'swing_mode': 'off',
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 425>,
+      <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'off',
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'on',
         'off',
       ]),
-      'temperature': 22.0,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.living_room',

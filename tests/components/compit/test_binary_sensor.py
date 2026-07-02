@@ -22,7 +22,7 @@ async def test_binary_sensor_entities_snapshot(
     mock_connector: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Snapshot test for binary sensor entities creation, unique IDs, and device info."""
+    """Snapshot test for binary sensor entity creation."""
     await setup_integration(hass, mock_config_entry)
 
     snapshot_compit_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)

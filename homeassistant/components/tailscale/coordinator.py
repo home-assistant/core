@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for the Tailscale integration."""
 
-from __future__ import annotations
+from typing import override
 
 from tailscale import Device, Tailscale, TailscaleAuthenticationError
 
@@ -14,13 +14,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_TAILNET, DOMAIN, LOGGER, SCAN_INTERVAL
 
+type TailscaleConfigEntry = ConfigEntry[TailscaleDataUpdateCoordinator]
+
 
 class TailscaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """The Tailscale Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: TailscaleConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: TailscaleConfigEntry) -> None:
         """Initialize the Tailscale coordinator."""
         session = async_get_clientsession(hass)
         self.tailscale = Tailscale(
@@ -38,6 +40,7 @@ class TailscaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch devices from Tailscale and remove stale devices from HA."""
         try:

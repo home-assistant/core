@@ -1,7 +1,5 @@
 """Test Home Assistant language util methods."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.const import MATCH_ALL
@@ -209,7 +207,7 @@ def test_no_nb_same() -> None:
 
 
 def test_no_nb_prefer_exact() -> None:
-    """Test that the exact language is preferred even if an interchangeable language is available."""
+    """Test exact language preferred over interchangeable language."""
     assert language.matches(
         "no",
         ["en-US", "en-GB", "nb", "no"],
@@ -245,7 +243,7 @@ def test_he_iw_same() -> None:
 
 
 def test_he_iw_prefer_exact() -> None:
-    """Test that the exact language is preferred even if an interchangeable language is available."""
+    """Test exact language preferred over interchangeable language."""
     assert language.matches(
         "he",
         ["en-US", "en-GB", "iw", "he"],

@@ -1,7 +1,5 @@
 """The Homevolt integration."""
 
-from __future__ import annotations
-
 from homevolt import Homevolt
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform

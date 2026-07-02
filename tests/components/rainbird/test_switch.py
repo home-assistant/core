@@ -242,9 +242,9 @@ async def test_yaml_imported_config(
 ) -> None:
     """Test a config entry that was previously imported from yaml."""
 
-    assert hass.states.get("switch.garden_sprinkler")
+    assert hass.states.get("switch.rain_bird_sprinkler_1_garden_sprinkler")
     assert not hass.states.get("switch.rain_bird_sprinkler_1")
-    assert hass.states.get("switch.back_yard")
+    assert hass.states.get("switch.rain_bird_sprinkler_2_back_yard")
     assert not hass.states.get("switch.rain_bird_sprinkler_2")
     assert hass.states.get("switch.rain_bird_sprinkler_3")
 

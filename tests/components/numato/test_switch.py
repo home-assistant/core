@@ -3,6 +3,7 @@
 import pytest
 
 from homeassistant.components import switch
+from homeassistant.components.numato import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -26,7 +27,7 @@ async def test_failing_setups_no_entities(
 ) -> None:
     """When port setup fails, no entity shall be created."""
     monkeypatch.setattr(numato_fixture.NumatoDeviceMock, "setup", mockup_raise)
-    assert await async_setup_component(hass, "numato", NUMATO_CFG)
+    assert await async_setup_component(hass, DOMAIN, NUMATO_CFG)
     await hass.async_block_till_done()
     for entity_id in MOCKUP_ENTITY_IDS:
         assert entity_id not in hass.states.async_entity_ids()
@@ -34,7 +35,7 @@ async def test_failing_setups_no_entities(
 
 async def test_regular_hass_operations(hass: HomeAssistant, numato_fixture) -> None:
     """Test regular operations from within Home Assistant."""
-    assert await async_setup_component(hass, "numato", NUMATO_CFG)
+    assert await async_setup_component(hass, DOMAIN, NUMATO_CFG)
     await hass.async_block_till_done()  # wait until services are registered
     await hass.services.async_call(
         switch.DOMAIN,
@@ -42,6 +43,7 @@ async def test_regular_hass_operations(hass: HomeAssistant, numato_fixture) -> N
         {ATTR_ENTITY_ID: "switch.numato_switch_mock_port5"},
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert hass.states.get("switch.numato_switch_mock_port5").state == "on"
     assert numato_fixture.devices[0].values[5] == 1
     await hass.services.async_call(
@@ -50,6 +52,7 @@ async def test_regular_hass_operations(hass: HomeAssistant, numato_fixture) -> N
         {ATTR_ENTITY_ID: "switch.numato_switch_mock_port6"},
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert hass.states.get("switch.numato_switch_mock_port6").state == "on"
     assert numato_fixture.devices[0].values[6] == 1
     await hass.services.async_call(
@@ -58,6 +61,7 @@ async def test_regular_hass_operations(hass: HomeAssistant, numato_fixture) -> N
         {ATTR_ENTITY_ID: "switch.numato_switch_mock_port5"},
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert hass.states.get("switch.numato_switch_mock_port5").state == "off"
     assert numato_fixture.devices[0].values[5] == 0
     await hass.services.async_call(
@@ -66,6 +70,7 @@ async def test_regular_hass_operations(hass: HomeAssistant, numato_fixture) -> N
         {ATTR_ENTITY_ID: "switch.numato_switch_mock_port6"},
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert hass.states.get("switch.numato_switch_mock_port6").state == "off"
     assert numato_fixture.devices[0].values[6] == 0
 
@@ -78,7 +83,7 @@ async def test_failing_hass_operations(
     Switches remain in their initial 'off' state when the device can't
     be written to.
     """
-    assert await async_setup_component(hass, "numato", NUMATO_CFG)
+    assert await async_setup_component(hass, DOMAIN, NUMATO_CFG)
 
     await hass.async_block_till_done()  # wait until services are registered
     monkeypatch.setattr(numato_fixture.devices[0], "write", mockup_raise)

@@ -1,6 +1,6 @@
 """Config flow to configure the Venstar integration."""
 
-from typing import Any
+from typing import Any, override
 
 from venstarcolortouch import VenstarColorTouch
 import voluptuous as vol
@@ -51,6 +51,7 @@ class VenstarConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

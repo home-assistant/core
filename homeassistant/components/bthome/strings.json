@@ -36,13 +36,19 @@
       "long_double_press": "Long Double Press",
       "long_press": "Long Press",
       "long_triple_press": "Long Triple Press",
+      "off": "Off",
+      "on": "On",
       "press": "Press",
       "rotate_left": "Rotate Left",
       "rotate_right": "Rotate Right",
+      "step_down": "Step Down",
+      "step_up": "Step Up",
+      "toggle": "Toggle",
       "triple_press": "Triple Press"
     },
     "trigger_type": {
       "button": "Button \"{subtype}\"",
+      "command": "Command \"{subtype}\"",
       "dimmer": "Dimmer \"{subtype}\""
     }
   },
@@ -64,6 +70,19 @@
               "long_triple_press": "Long triple press",
               "press": "Press",
               "triple_press": "Triple press"
+            }
+          }
+        }
+      },
+      "command": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "off": "Off",
+              "on": "On",
+              "step_down": "Step down",
+              "step_up": "Step up",
+              "toggle": "Toggle"
             }
           }
         }
@@ -98,6 +117,9 @@
       "gyroscope": {
         "name": "Gyroscope"
       },
+      "light_level": {
+        "name": "Light level"
+      },
       "packet_id": {
         "name": "Packet ID"
       },
@@ -109,6 +131,9 @@
       },
       "rotational_speed": {
         "name": "Rotational speed"
+      },
+      "settings_revision": {
+        "name": "Settings revision"
       },
       "text": {
         "name": "Text"

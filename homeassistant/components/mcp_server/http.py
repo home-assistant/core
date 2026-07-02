@@ -24,6 +24,8 @@ See https://modelcontextprotocol.io/docs/concepts/transports
 """
 
 import asyncio
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from http import HTTPStatus
 import logging
@@ -39,7 +41,7 @@ from mcp.shared.message import SessionMessage
 
 from homeassistant.components import conversation
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.const import CONF_LLM_HASS_API, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import llm
 
@@ -53,9 +55,6 @@ _LOGGER = logging.getLogger(__name__)
 # Streamable HTTP endpoint
 STREAMABLE_API = "/api/mcp"
 TIMEOUT = 60  # Seconds
-
-# Content types
-CONTENT_TYPE_JSON = "application/json"
 
 # Legacy SSE endpoint
 SSE_API = f"/{DOMAIN}/sse"
@@ -102,17 +101,29 @@ class Streams:
     write_stream: MemoryObjectSendStream[SessionMessage]
     write_stream_reader: MemoryObjectReceiveStream[SessionMessage]
 
+    async def aclose(self) -> None:
+        """Close open memory streams."""
+        await self.read_stream.aclose()
+        await self.read_stream_writer.aclose()
+        await self.write_stream.aclose()
+        await self.write_stream_reader.aclose()
 
-def create_streams() -> Streams:
+
+@asynccontextmanager
+async def create_streams() -> AsyncGenerator[Streams]:
     """Create a new pair of streams for MCP server communication."""
     read_stream_writer, read_stream = anyio.create_memory_object_stream(0)
     write_stream, write_stream_reader = anyio.create_memory_object_stream(0)
-    return Streams(
+    streams = Streams(
         read_stream=read_stream,
         read_stream_writer=read_stream_writer,
         write_stream=write_stream,
         write_stream_reader=write_stream_reader,
     )
+    try:
+        yield streams
+    finally:
+        await streams.aclose()
 
 
 async def create_mcp_server(
@@ -155,9 +166,9 @@ class ModelContextProtocolSSEView(HomeAssistantView):
         session_manager = entry.runtime_data
 
         server, options = await create_mcp_server(hass, self.context(request), entry)
-        streams = create_streams()
 
         async with (
+            create_streams() as streams,
             sse_response(request) as response,
             session_manager.create(Session(streams.read_stream_writer)) as session_id,
         ):
@@ -261,21 +272,24 @@ class ModelContextProtocolStreamableView(HomeAssistantView):
         # request is sent to the MCP server and we wait for a single response
         # then shut down the server.
         server, options = await create_mcp_server(hass, self.context(request), entry)
-        streams = create_streams()
 
-        async def run_server() -> None:
-            await server.run(
-                streams.read_stream, streams.write_stream, options, stateless=True
+        async with create_streams() as streams:
+
+            async def run_server() -> None:
+                await server.run(
+                    streams.read_stream, streams.write_stream, options, stateless=True
+                )
+
+            async with asyncio.timeout(TIMEOUT), anyio.create_task_group() as tg:
+                tg.start_soon(run_server)
+
+                await streams.read_stream_writer.send(SessionMessage(message))
+                session_message = await anext(streams.write_stream_reader)
+                tg.cancel_scope.cancel()
+
+            _LOGGER.debug("Sending response: %s", session_message)
+            return web.json_response(
+                data=session_message.message.model_dump(
+                    by_alias=True, exclude_none=True
+                ),
             )
-
-        async with asyncio.timeout(TIMEOUT), anyio.create_task_group() as tg:
-            tg.start_soon(run_server)
-
-            await streams.read_stream_writer.send(SessionMessage(message))
-            session_message = await anext(streams.write_stream_reader)
-            tg.cancel_scope.cancel()
-
-        _LOGGER.debug("Sending response: %s", session_message)
-        return web.json_response(
-            data=session_message.message.model_dump(by_alias=True, exclude_none=True),
-        )

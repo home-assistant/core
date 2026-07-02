@@ -1,13 +1,21 @@
 """Test the UniFi Protect sensor platform."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 
 import pytest
-from uiprotect.data import NVR, AiPort, Camera, Event, EventType, ModelType, Sensor
+from uiprotect.data import (
+    NVR,
+    AiPort,
+    Camera,
+    DeviceState,
+    Event,
+    EventType,
+    ModelType,
+    Sensor,
+)
 from uiprotect.data.nvr import EventMetadata
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.sensor import (
@@ -36,8 +44,11 @@ from .utils import (
     enable_entity,
     ids_from_device_description,
     init_entry,
+    make_public_sensor,
+    public_device_ws_message,
     remove_entities,
     reset_objects,
+    setup_public_sensor,
     time_changed,
 )
 
@@ -91,6 +102,7 @@ async def test_sensor_setup_sensor(
 ) -> None:
     """Test sensor entity setup for sensor devices."""
 
+    setup_public_sensor(ufp)
     await init_entry(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.SENSOR, 22, 14)
 
@@ -146,6 +158,7 @@ async def test_sensor_setup_sensor_none(
 ) -> None:
     """Test sensor entity setup for sensor devices with no sensors enabled."""
 
+    setup_public_sensor(ufp)
     await init_entry(hass, ufp, [sensor])
     assert_entity_counts(hass, Platform.SENSOR, 22, 14)
 
@@ -171,6 +184,110 @@ async def test_sensor_setup_sensor_none(
         assert state
         assert state.state == expected_values[index]
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+
+
+async def test_sensor_battery_public_ws_update(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """Battery level refreshes from a public devices WS update."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SENSOR, sensor_all, SENSE_SENSORS_WRITE[0]
+    )
+    assert hass.states.get(entity_id).state == "10"
+
+    public = make_public_sensor(sensor_all, percentage=42)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "42"
+
+
+async def test_sensor_battery_unavailable_on_public_disconnect(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """Battery availability follows the public object's connection state."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SENSOR, sensor_all, SENSE_SENSORS_WRITE[0]
+    )
+    assert hass.states.get(entity_id).state == "10"
+
+    public = make_public_sensor(sensor_all, state=DeviceState.DISCONNECTED)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_sensor_battery_unavailable_without_public_api(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A migrated battery entity is unavailable without a public object."""
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SENSOR, sensor_all, SENSE_SENSORS_WRITE[0]
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_sensor_battery_unavailable_on_public_ws_disconnect(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """Battery follows the public websocket health, not the private one."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SENSOR, sensor_all, SENSE_SENSORS_WRITE[0]
+    )
+    assert hass.states.get(entity_id).state == "10"
+
+    assert ufp.devices_ws_state_subscription is not None
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_sensor_battery_refreshes_on_public_ws_reconnect(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """Battery re-reads the bootstrap on public websocket reconnect."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SENSOR, sensor_all, SENSE_SENSORS_WRITE[0]
+    )
+    assert hass.states.get(entity_id).state == "10"
+
+    assert ufp.devices_ws_state_subscription is not None
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # Value changes while the socket is down; the bootstrap holds the new value.
+    sensor_all.battery_status.percentage = 55
+    ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "55"
 
 
 async def test_sensor_setup_nvr(

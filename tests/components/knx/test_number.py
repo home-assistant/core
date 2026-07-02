@@ -1,5 +1,6 @@
 """Test KNX number."""
 
+import logging
 from typing import Any
 
 import pytest
@@ -109,6 +110,44 @@ async def test_number_restore_and_respond(hass: HomeAssistant, knx: KNXTestKit) 
     await knx.receive_write(test_passive_address, (0x4E, 0xDE))
     state = hass.states.get("number.test")
     assert state.state == "9000.96"
+
+
+@pytest.mark.parametrize(
+    "attribute_config",
+    [
+        {"device_class": "energy"},  # invalid with uom of temperature DPT
+        {"device_class": "energy", "unit_of_measurement": "invalid"},
+        {"device_class": "invalid"},
+    ],
+)
+async def test_number_yaml_attribute_validation(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    knx: KNXTestKit,
+    attribute_config: dict[str, Any],
+) -> None:
+    """Test creating a number with invalid unit or device_class."""
+    with caplog.at_level(logging.ERROR):
+        await knx.setup_integration(
+            {
+                NumberSchema.PLATFORM: {
+                    CONF_NAME: "test",
+                    KNX_ADDRESS: "1/1/1",
+                    CONF_TYPE: "9.001",  # temperature 2 byte float
+                    **attribute_config,
+                }
+            }
+        )
+    assert len(caplog.messages) == 2
+    record = caplog.records[0]
+    assert record.levelname == "ERROR"
+    assert "Invalid config for 'knx': " in record.message
+
+    record = caplog.records[1]
+    assert record.levelname == "ERROR"
+    assert "Setup failed for 'knx': Invalid config." in record.message
+
+    assert hass.states.get("number.test") is None
 
 
 @pytest.mark.parametrize(

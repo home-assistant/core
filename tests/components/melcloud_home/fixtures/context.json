@@ -1,0 +1,214 @@
+{
+  "id": "user-uuid-1",
+  "firstname": "First",
+  "lastname": "Last",
+  "email": "user@example.com",
+  "language": "nl",
+  "country": "NL",
+  "numberOfDevicesAllowed": 10,
+  "numberOfBuildingsAllowed": 2,
+  "numberOfGuestUsersAllowedPerUnit": 5,
+  "numberOfGuestDevicesAllowed": 10,
+  "buildings": [
+    {
+      "id": "building-uuid-1",
+      "name": "My Home",
+      "timezone": "Europe/Amsterdam",
+      "airToAirUnits": [
+        {
+          "unitSettings": null,
+          "schedule": [],
+          "scheduleEnabled": true,
+          "connectedInterfaceIdentifier": "iface-identifier-1",
+          "capabilities": {
+            "isMultiSplitSystem": false,
+            "isLegacyDevice": false,
+            "hasStandby": false,
+            "hasCoolOperationMode": true,
+            "hasHeatOperationMode": true,
+            "hasAutoOperationMode": true,
+            "hasDryOperationMode": true,
+            "hasAutomaticFanSpeed": true,
+            "hasAirDirection": true,
+            "hasSwing": true,
+            "hasExtendedTemperatureRange": true,
+            "hasEnergyConsumedMeter": false,
+            "numberOfFanSpeeds": 5,
+            "minTempCool": 16,
+            "maxTempCool": 31,
+            "minTempHeat": 10,
+            "maxTempHeat": 31,
+            "minTempAutomatic": 16,
+            "maxTempAutomatic": 31,
+            "hasDemandSideControl": false,
+            "hasHalfDegreeIncrements": true,
+            "supportsWideVane": false,
+            "hasOutdoorTemperatureSensor": false,
+            "hasVaneVertical": true,
+            "hasVaneHorizontal": true,
+            "hasStandbyMode": false
+          },
+          "frostProtection": {
+            "active": false,
+            "enabled": true,
+            "min": 10,
+            "max": 12
+          },
+          "overheatProtection": {
+            "active": false,
+            "enabled": true,
+            "min": 35,
+            "max": 37
+          },
+          "holidayMode": null,
+          "connectedInterfaceType": "melCloudWiFi",
+          "systemId": "system-uuid-1",
+          "id": "ata-unit-uuid-1",
+          "givenDisplayName": "Living Room AC",
+          "displayIcon": "Room",
+          "settings": [
+            {
+              "name": "RoomTemperature",
+              "value": "20"
+            },
+            {
+              "name": "Power",
+              "value": "True"
+            },
+            {
+              "name": "OperationMode",
+              "value": "Heat"
+            },
+            {
+              "name": "ActualFanSpeed",
+              "value": "Off"
+            },
+            {
+              "name": "SetFanSpeed",
+              "value": "Auto"
+            },
+            {
+              "name": "VaneHorizontalDirection",
+              "value": "Centre"
+            },
+            {
+              "name": "VaneVerticalDirection",
+              "value": "Auto"
+            },
+            {
+              "name": "InStandbyMode",
+              "value": "False"
+            },
+            {
+              "name": "SetTemperature",
+              "value": "21"
+            },
+            {
+              "name": "IsInError",
+              "value": "False"
+            },
+            {
+              "name": "ErrorCode",
+              "value": ""
+            }
+          ],
+          "timeZone": "Europe/Amsterdam",
+          "rssi": -45,
+          "isConnected": true,
+          "isInError": false,
+          "energyProducedOptIn": null,
+          "isEnergyUsageCompatible": false
+        }
+      ],
+      "airToWaterUnits": [
+        {
+          "id": "atw-unit-uuid-1",
+          "givenDisplayName": "Heat Pump",
+          "settings": [
+            {
+              "name": "Power",
+              "value": "True"
+            },
+            {
+              "name": "OperationMode",
+              "value": "HeatZones"
+            },
+            {
+              "name": "OperationModeZone1",
+              "value": "HeatRoomTemperature"
+            },
+            {
+              "name": "SetTemperatureZone1",
+              "value": "21"
+            },
+            {
+              "name": "RoomTemperatureZone1",
+              "value": "20"
+            },
+            {
+              "name": "SetTankWaterTemperature",
+              "value": "50"
+            },
+            {
+              "name": "TankWaterTemperature",
+              "value": "48"
+            },
+            {
+              "name": "ForcedHotWaterMode",
+              "value": "False"
+            },
+            {
+              "name": "HasZone2",
+              "value": "1"
+            },
+            {
+              "name": "OperationModeZone2",
+              "value": "HeatRoomTemperature"
+            },
+            {
+              "name": "SetTemperatureZone2",
+              "value": "22"
+            },
+            {
+              "name": "RoomTemperatureZone2",
+              "value": "21"
+            },
+            {
+              "name": "InStandbyMode",
+              "value": "False"
+            },
+            {
+              "name": "IsInError",
+              "value": "False"
+            }
+          ],
+          "capabilities": {
+            "hasHotWater": true,
+            "hasZone2": true,
+            "hasHalfDegrees": false,
+            "hasCoolingMode": true,
+            "minSetTankTemperature": 40,
+            "maxSetTankTemperature": 60,
+            "hasStandbyMode": false,
+            "hasEnergyConsumedMeter": true
+          },
+          "rssi": -52,
+          "frostProtection": {
+            "active": false,
+            "enabled": false,
+            "min": 5,
+            "max": 8
+          },
+          "overheatProtection": {
+            "active": false,
+            "enabled": true,
+            "min": 40,
+            "max": 42
+          }
+        }
+      ]
+    }
+  ],
+  "guestBuildings": [],
+  "scenes": []
+}

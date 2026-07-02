@@ -1,22 +1,24 @@
 """Sensor platform for JVC Projector integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from jvcprojector import Command, command as cmd
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import JVCConfigEntry, JvcProjectorDataUpdateCoordinator
 from .entity import JvcProjectorEntity
+from .util import deprecate_entity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -84,12 +86,29 @@ async def async_setup_entry(
 ) -> None:
     """Set up the JVC Projector platform from a config entry."""
     coordinator = entry.runtime_data
+    entity_registry = er.async_get(hass)
 
-    async_add_entities(
-        JvcProjectorSensorEntity(coordinator, description)
-        for description in SENSORS
-        if coordinator.supports(description.command)
-    )
+    entities: list[JvcProjectorSensorEntity] = []
+    for description in SENSORS:
+        if not coordinator.supports(description.command):
+            continue
+        if description.key in (
+            "hdr_processing",
+            "picture_mode",
+        ) and not deprecate_entity(
+            hass,
+            entity_registry,
+            SENSOR_DOMAIN,
+            f"{coordinator.unique_id}_{description.key}",
+            f"deprecated_sensor_{entry.entry_id}_{description.key}",
+            "deprecated_sensor",
+            f"{coordinator.unique_id}_{description.key}",
+            f"select.jvc_projector_{description.key}",
+        ):
+            continue
+        entities.append(JvcProjectorSensorEntity(coordinator, description))
+
+    async_add_entities(entities)
 
 
 class JvcProjectorSensorEntity(JvcProjectorEntity, SensorEntity):
@@ -113,6 +132,7 @@ class JvcProjectorSensorEntity(JvcProjectorEntity, SensorEntity):
             self._options_map = coordinator.get_options_map(self.command.name)
 
     @property
+    @override
     def options(self) -> list[str] | None:
         """Return a set of possible options."""
         if self.device_class == SensorDeviceClass.ENUM:
@@ -120,6 +140,7 @@ class JvcProjectorSensorEntity(JvcProjectorEntity, SensorEntity):
         return None
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the native value."""
         value = self.coordinator.data.get(self.command.name)

@@ -1,10 +1,8 @@
 """Config flow for Flexit Nordic (BACnet) integration."""
 
-from __future__ import annotations
-
 import asyncio.exceptions
 import logging
-from typing import Any
+from typing import Any, override
 
 from flexit_bacnet import FlexitBACnet
 from flexit_bacnet.bacnet import DecodingError
@@ -32,6 +30,7 @@ class FlexitBacnetConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,7 +1,5 @@
 """Test the SensorPush Cloud config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 import pytest
@@ -42,11 +40,9 @@ async def test_user(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_already_configured(
-    hass: HomeAssistant,
-    mock_api: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_api: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test we fail on a duplicate entry in the user flow."""
     mock_config_entry.add_to_hass(hass)

@@ -1,13 +1,12 @@
 """Base entity model."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from music_assistant_models.enums import EventType
 from music_assistant_models.event import MassEvent
-from music_assistant_models.player import Player
+from music_assistant_models.player import Player, PlayerOption
 
+from homeassistant.const import EntityCategory
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -38,6 +37,7 @@ class MusicAssistantEntity(Entity):
             configuration_url=f"{mass.server_url}/#/settings/editplayer/{player_id}",
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await self.async_on_update()
@@ -59,6 +59,7 @@ class MusicAssistantEntity(Entity):
         return self.mass.players[self.player_id]
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return unique id for entity."""
         _base = self.player_id
@@ -67,6 +68,7 @@ class MusicAssistantEntity(Entity):
         return _base
 
     @property
+    @override
     def available(self) -> bool:
         """Return availability of entity."""
         return self.player.available and bool(self.mass.connection.connected)
@@ -84,3 +86,46 @@ class MusicAssistantEntity(Entity):
 
     async def async_on_update(self) -> None:
         """Handle player updates."""
+
+
+class MusicAssistantPlayerOptionEntity(MusicAssistantEntity):
+    """Base entity for Music Assistant Player Options."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(
+        self, mass: MusicAssistantClient, player_id: str, player_option: PlayerOption
+    ) -> None:
+        """Initialize MusicAssistantPlayerOptionEntity."""
+        super().__init__(mass, player_id)
+
+        self.mass_option_key = player_option.key
+        self.mass_type = player_option.type
+
+        self.on_player_option_update(player_option)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        # need callbacks of parent to catch availability
+        await super().async_added_to_hass()
+
+        # main callback for player options
+        self.async_on_remove(
+            self.mass.subscribe(
+                self.__on_mass_player_options_update,
+                EventType.PLAYER_OPTIONS_UPDATED,
+                self.player_id,
+            )
+        )
+
+    def __on_mass_player_options_update(self, event: MassEvent) -> None:
+        """Call when we receive an event from MusicAssistant."""
+        for option in self.player.options:
+            if option.key == self.mass_option_key:
+                self.on_player_option_update(option)
+                self.async_write_ha_state()
+                break
+
+    def on_player_option_update(self, player_option: PlayerOption) -> None:
+        """Callback for player option updates."""

@@ -57,6 +57,11 @@
       }
     }
   },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    }
+  },
   "options": {
     "step": {
       "init": {
@@ -106,7 +111,7 @@
       "name": "Add event"
     },
     "create_event": {
-      "description": "Adds a new calendar event.",
+      "description": "Adds a new event to a Google calendar.",
       "fields": {
         "description": {
           "description": "[%key:component::google::services::add_event::fields::description::description%]",
@@ -141,7 +146,7 @@
           "name": "Summary"
         }
       },
-      "name": "Create event"
+      "name": "Create event in Google Calendar"
     }
   }
 }

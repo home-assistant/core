@@ -44,7 +44,8 @@ async def test_diagnostics(
     """Test diagnostics."""
     await knx.setup_integration()
 
-    # Overwrite the version for this test since we don't want to change this with every library bump
+    # Overwrite the version for this test since we don't want to
+    # change this with every library bump
     knx.xknx.version = "0.0.0"
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
@@ -64,9 +65,11 @@ async def test_diagnostic_config_error(
     """Test diagnostics."""
     await knx.setup_integration()
 
-    # Overwrite the version for this test since we don't want to change this with every library bump
+    # Overwrite the version for this test since we don't want to
+    # change this with every library bump
     knx.xknx.version = "0.0.0"
-    # the snapshot will contain 'configuration_error' key with the voluptuous error message
+    # the snapshot will contain 'configuration_error' key with
+    # the voluptuous error message
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
         == snapshot
@@ -101,7 +104,8 @@ async def test_diagnostic_redact(
     knx: KNXTestKit = KNXTestKit(hass, mock_config_entry, hass_storage)
     await knx.setup_integration()
 
-    # Overwrite the version for this test since we don't want to change this with every library bump
+    # Overwrite the version for this test since we don't want to
+    # change this with every library bump
     knx.xknx.version = "0.0.0"
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)

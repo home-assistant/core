@@ -1,10 +1,8 @@
 """Support for the AccuWeather service."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_CUBIC_METER,
     PERCENTAGE,
     UV_INDEX,
     UnitOfIrradiance,
@@ -49,6 +46,8 @@ from .coordinator import (
 
 PARALLEL_UPDATES = 1
 
+PARTS_PER_CUBIC_METER = "p/m³"
+
 
 @dataclass(frozen=True, kw_only=True)
 class AccuWeatherSensorDescription(SensorEntityDescription):
@@ -83,7 +82,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="Grass",
         entity_registry_enabled_default=False,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        native_unit_of_measurement=PARTS_PER_CUBIC_METER,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
         attr_fn=lambda data: {
             ATTR_LEVEL: POLLEN_CATEGORY_MAP[data[ATTR_CATEGORY_VALUE]]
@@ -109,7 +108,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="Mold",
         entity_registry_enabled_default=False,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        native_unit_of_measurement=PARTS_PER_CUBIC_METER,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
         attr_fn=lambda data: {
             ATTR_LEVEL: POLLEN_CATEGORY_MAP[data[ATTR_CATEGORY_VALUE]]
@@ -118,7 +117,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="Ragweed",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        native_unit_of_measurement=PARTS_PER_CUBIC_METER,
         entity_registry_enabled_default=False,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
         attr_fn=lambda data: {
@@ -186,7 +185,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="Tree",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        native_unit_of_measurement=PARTS_PER_CUBIC_METER,
         entity_registry_enabled_default=False,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
         attr_fn=lambda data: {
@@ -437,16 +436,19 @@ class AccuWeatherSensor(
         self._attr_device_info = coordinator.device_info
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """Return the state."""
         return self.entity_description.value_fn(self._sensor_data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self.entity_description.attr_fn(self.coordinator.data)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
         self._sensor_data = self._get_sensor_data(
@@ -496,16 +498,19 @@ class AccuWeatherForecastSensor(
         self.forecast_day = forecast_day
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """Return the state."""
         return self.entity_description.value_fn(self._sensor_data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self.entity_description.attr_fn(self._sensor_data)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
         self._sensor_data = self._get_sensor_data(

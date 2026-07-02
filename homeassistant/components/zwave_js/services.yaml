@@ -90,6 +90,157 @@ set_lock_configuration:
       selector:
         boolean:
 
+# --- Credential management services (lock entity-scoped) ---
+
+set_user:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+  fields:
+    user_id:
+      selector:
+        number:
+          min: 1
+          max: 65535
+          step: 1
+          mode: box
+    user_name:
+      selector:
+        text:
+    user_type:
+      selector:
+        select:
+          options:
+            - general
+            - programming
+            - non_access
+            - duress
+            - disposable
+            - expiring
+            - remote_only
+    credential_rule:
+      selector:
+        select:
+          options:
+            - single
+            - dual
+            - triple
+    active:
+      selector:
+        boolean:
+
+delete_user:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+  fields:
+    user_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+          step: 1
+          mode: box
+
+delete_all_users:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+
+get_credential_capabilities:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+
+get_users:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+
+set_credential:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+  fields:
+    user_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+          step: 1
+          mode: box
+    credential_type:
+      required: true
+      selector:
+        select:
+          options:
+            - pin_code
+            - password
+    credential_data:
+      required: true
+      selector:
+        text:
+    credential_slot:
+      selector:
+        number:
+          min: 1
+          max: 65535
+          step: 1
+          mode: box
+
+delete_credential:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+  fields:
+    user_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+          step: 1
+          mode: box
+    credential_type:
+      required: true
+      selector:
+        select:
+          options:
+            - pin_code
+            - password
+    credential_slot:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+          step: 1
+          mode: box
+
+delete_all_credentials:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+  fields:
+    user_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+          step: 1
+          mode: box
+
 set_config_parameter:
   fields:
     area_id:
@@ -125,7 +276,6 @@ set_config_parameter:
       selector:
         text:
     bitmask:
-      advanced: true
       selector:
         text:
     value:

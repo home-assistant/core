@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[camera.front_camera-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,10 +39,10 @@
 # name: test_all_entities[camera.front_camera-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1caab5c3b3',
-      'entity_picture': '/api/camera_proxy/camera.front_camera?token=1caab5c3b3',
-      'friendly_name': 'Front Camera',
-      'supported_features': <CameraEntityFeature: 2>,
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.front_camera?token=1caab5c3b3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Camera',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'camera.front_camera',
@@ -53,8 +54,9 @@
 # ---
 # name: test_nvr_entities[2][camera.front_camera_channel_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -90,10 +92,10 @@
 # name: test_nvr_entities[2][camera.front_camera_channel_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1caab5c3b3',
-      'entity_picture': '/api/camera_proxy/camera.front_camera_channel_1?token=1caab5c3b3',
-      'friendly_name': 'Front Camera channel 1',
-      'supported_features': <CameraEntityFeature: 2>,
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.front_camera_channel_1?token=1caab5c3b3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Camera channel 1',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'camera.front_camera_channel_1',
@@ -105,8 +107,9 @@
 # ---
 # name: test_nvr_entities[2][camera.front_camera_channel_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -142,10 +145,10 @@
 # name: test_nvr_entities[2][camera.front_camera_channel_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1caab5c3b3',
-      'entity_picture': '/api/camera_proxy/camera.front_camera_channel_2?token=1caab5c3b3',
-      'friendly_name': 'Front Camera channel 2',
-      'supported_features': <CameraEntityFeature: 2>,
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.front_camera_channel_2?token=1caab5c3b3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Camera channel 2',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'camera.front_camera_channel_2',

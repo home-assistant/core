@@ -1,9 +1,7 @@
 """Demo platform that has two fake remotes."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.config_entries import ConfigEntry
@@ -38,24 +36,28 @@ class DemoRemote(RemoteEntity):
         self._last_command_sent: str | None = None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device state attributes."""
         if self._last_command_sent is not None:
             return {"last_command_sent": self._last_command_sent}
         return None
 
-    def turn_on(self, **kwargs: Any) -> None:
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the remote on."""
         self._attr_is_on = True
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def turn_off(self, **kwargs: Any) -> None:
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the remote off."""
         self._attr_is_on = False
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
+    @override
+    async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to a device."""
         for com in command:
             self._last_command_sent = com
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

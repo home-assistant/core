@@ -1,7 +1,5 @@
 """Support for Bbox Bouygues Modem Router."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 

@@ -1,11 +1,9 @@
 """Config flow for the Deluge integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from ssl import SSLError
-from typing import Any
+from typing import Any, override
 
 from deluge_client.client import DelugeRPCClient
 import voluptuous as vol
@@ -28,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Deluge."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

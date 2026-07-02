@@ -40,7 +40,10 @@ class OmniLogicEntity(CoordinatorEntity[OmniLogicUpdateCoordinator]):
                     f"{entity_friendly_name}{coordinator.data[bow_id]['Name']} "
                 )
             else:
-                entity_friendly_name = f"{entity_friendly_name}{coordinator.data[bow_id]['Operation']['VirtualHeater']['Name']} "
+                heater_name = coordinator.data[bow_id]["Operation"]["VirtualHeater"][
+                    "Name"
+                ]
+                entity_friendly_name = f"{entity_friendly_name}{heater_name} "
 
         unique_id = f"{unique_id}_{coordinator.data[item_id]['systemId']}_{kind}"
 

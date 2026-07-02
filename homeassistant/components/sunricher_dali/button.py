@@ -1,8 +1,7 @@
 """Support for Sunricher DALI device identify button."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from PySrDaliGateway import Device
 from PySrDaliGateway.helper import is_light_device
@@ -57,6 +56,7 @@ class DaliCenterIdentifyButton(DaliDeviceEntity, ButtonEntity):
             via_device=(DOMAIN, device.gw_sn),
         )
 
+    @override
     async def async_press(self) -> None:
         """Handle button press to identify device."""
         _LOGGER.debug("Identifying device %s", self._device.dev_id)

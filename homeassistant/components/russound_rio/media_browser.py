@@ -1,7 +1,7 @@
 """Support for Russound media browsing."""
 
-from aiorussound import RussoundClient, Zone
 from aiorussound.const import FeatureFlag
+from aiorussound.rio import RussoundRIOClient, Zone
 from aiorussound.util import is_feature_supported
 
 from homeassistant.components.media_player import BrowseMedia, MediaClass
@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 
 async def async_browse_media(
     hass: HomeAssistant,
-    client: RussoundClient,
+    client: RussoundRIOClient,
     media_content_id: str | None,
     media_content_type: str | None,
     zone: Zone,
@@ -80,7 +80,7 @@ async def _presets_payload(presets_by_zone: dict[int, dict[int, str]]) -> Browse
 
 
 def _find_presets_by_zone(
-    client: RussoundClient, zone: Zone
+    client: RussoundRIOClient, zone: Zone
 ) -> dict[int, dict[int, str]]:
     """Returns a dict by {source_id: {preset_id: preset_name}}."""
     assert client.rio_version

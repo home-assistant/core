@@ -1,9 +1,7 @@
 """Config flow for igloohome integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from igloohome_api import Auth as IgloohomeAuth, AuthException
@@ -28,6 +26,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class IgloohomeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for igloohome."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -41,13 +41,13 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
     flow.hass = hass
 
     result = await hass.config_entries.flow.async_init(
-        "netatmo", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
     result = await hass.config_entries.flow.async_init(
-        "netatmo",
+        DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.5"),
@@ -72,7 +72,7 @@ async def test_full_flow(
     """Check full flow."""
 
     result = await hass.config_entries.flow.async_init(
-        "netatmo", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -239,7 +239,7 @@ async def test_reauth(
     """Test initialization of the reauth flow."""
 
     result = await hass.config_entries.flow.async_init(
-        "netatmo", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,

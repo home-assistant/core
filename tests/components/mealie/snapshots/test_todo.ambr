@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[todo.mealie_freezer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_entities[todo.mealie_freezer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mealie Freezer',
-      'supported_features': <TodoListEntityFeature: 15>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mealie Freezer',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <TodoListEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'todo.mealie_freezer',
@@ -51,8 +52,9 @@
 # ---
 # name: test_entities[todo.mealie_special_groceries-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_entities[todo.mealie_special_groceries-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mealie Special groceries',
-      'supported_features': <TodoListEntityFeature: 15>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mealie Special groceries',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <TodoListEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'todo.mealie_special_groceries',
@@ -101,8 +103,9 @@
 # ---
 # name: test_entities[todo.mealie_supermarket-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -138,8 +141,8 @@
 # name: test_entities[todo.mealie_supermarket-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mealie Supermarket',
-      'supported_features': <TodoListEntityFeature: 15>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mealie Supermarket',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <TodoListEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'todo.mealie_supermarket',

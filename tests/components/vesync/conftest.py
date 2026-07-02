@@ -1,7 +1,5 @@
 """Configuration for VeSync tests."""
 
-from __future__ import annotations
-
 from collections.abc import Iterator
 from contextlib import ExitStack
 from itertools import chain
@@ -337,7 +335,7 @@ async def fan_config_entry(
 async def switch_old_id_config_entry(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, config
 ) -> MockConfigEntry:
-    """Create a mock VeSync config entry for `switch` with the old unique ID approach."""
+    """Create a mock VeSync config entry for switch with old unique ID."""
     entry = MockConfigEntry(
         title="VeSync",
         domain=DOMAIN,

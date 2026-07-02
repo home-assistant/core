@@ -4,8 +4,6 @@ The stream component does not have config entries itself, and all diagnostics
 information is managed by dependent components (e.g. camera)
 """
 
-from __future__ import annotations
-
 from collections import Counter
 from typing import Any
 

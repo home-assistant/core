@@ -435,7 +435,7 @@ async def test_not_delayed_saving_while_stopping(
 async def test_not_delayed_saving_after_stopping(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """Test delayed saves don't write after stop if issued before stopping Home Assistant."""
+    """Test delayed saves don't write after stop if issued before stopping."""
     store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
     store.async_delay_save(lambda: MOCK_DATA, 10)
     assert store.key not in hass_storage
@@ -1363,7 +1363,7 @@ async def test_storage_concurrent_load(hass: HomeAssistant) -> None:
 async def test_load_empty_returns_none_and_read_only(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """Test store with load_empty returns None, becomes read-only, and skips version checks."""
+    """Test store with load_empty returns None, becomes read-only."""
     # Use a future version to also verify no version error is raised
     hass_storage[MOCK_KEY] = {
         "version": 99,

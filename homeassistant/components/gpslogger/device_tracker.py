@@ -1,5 +1,7 @@
 """Support for the GPSLogger device tracking."""
 
+from typing import override
+
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -86,10 +88,12 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
         )
 
     @property
+    @override
     def battery_level(self) -> int | None:
         """Return battery value of the device."""
         return self._battery
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         await super().async_added_to_hass()
@@ -128,6 +132,7 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
         }
         self._battery = attr.get(ATTR_BATTERY_LEVEL)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up after entity before removal."""
         await super().async_will_remove_from_hass()

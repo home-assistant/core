@@ -1,7 +1,5 @@
 """Base for backup entities."""
 
-from __future__ import annotations
-
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription

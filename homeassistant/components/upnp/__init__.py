@@ -1,7 +1,5 @@
 """UPnP/IGD integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 
@@ -51,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool
     async def device_discovered(
         headers: SsdpServiceInfo, change: ssdp.SsdpChange
     ) -> None:
-        if change == ssdp.SsdpChange.BYEBYE:
+        if change is ssdp.SsdpChange.BYEBYE:
             return
 
         nonlocal discovery_info

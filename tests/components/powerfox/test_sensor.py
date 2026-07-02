@@ -1,7 +1,5 @@
 """Test the sensors provided by the Powerfox integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 

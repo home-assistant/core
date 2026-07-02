@@ -48,6 +48,7 @@ from homeassistant.const import (
     __version__ as hass_version,
 )
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import async_mock_service
 
@@ -71,7 +72,10 @@ async def test_accessory_cancels_track_state_change_on_stop(
 async def test_home_accessory(hass: HomeAssistant, hk_driver) -> None:
     """Test HomeAccessory class."""
     entity_id = "sensor.accessory"
-    entity_id2 = "light.accessory_that_exceeds_the_maximum_maximum_maximum_maximum_maximum_maximum_maximum_allowed_length"
+    entity_id2 = (
+        "light.accessory_that_exceeds_the_maximum_maximum"
+        "_maximum_maximum_maximum_maximum_maximum_allowed_length"
+    )
 
     hass.states.async_set(entity_id, None)
     hass.states.async_set(entity_id2, STATE_UNAVAILABLE)
@@ -107,14 +111,29 @@ async def test_home_accessory(hass: HomeAssistant, hk_driver) -> None:
     acc3 = HomeAccessory(
         hass,
         hk_driver,
-        "Home Accessory that exceeds the maximum maximum maximum maximum maximum maximum length",
+        (
+            "Home Accessory that exceeds the maximum maximum"
+            " maximum maximum maximum maximum length"
+        ),
         entity_id2,
         4,
         {
-            ATTR_MODEL: "Awesome Model that exceeds the maximum maximum maximum maximum maximum maximum length",
-            ATTR_MANUFACTURER: "Lux Brands that exceeds the maximum maximum maximum maximum maximum maximum length",
-            ATTR_SW_VERSION: "0.4.3 that exceeds the maximum maximum maximum maximum maximum maximum length",
-            ATTR_INTEGRATION: "luxe that exceeds the maximum maximum maximum maximum maximum maximum length",
+            ATTR_MODEL: (
+                "Awesome Model that exceeds the maximum maximum"
+                " maximum maximum maximum maximum length"
+            ),
+            ATTR_MANUFACTURER: (
+                "Lux Brands that exceeds the maximum maximum"
+                " maximum maximum maximum maximum length"
+            ),
+            ATTR_SW_VERSION: (
+                "0.4.3 that exceeds the maximum maximum"
+                " maximum maximum maximum maximum length"
+            ),
+            ATTR_INTEGRATION: (
+                "luxe that exceeds the maximum maximum"
+                " maximum maximum maximum maximum length"
+            ),
         },
     )
     assert acc3.available is False
@@ -140,14 +159,26 @@ async def test_home_accessory(hass: HomeAssistant, hk_driver) -> None:
     acc4 = HomeAccessory(
         hass,
         hk_driver,
-        "Home Accessory that exceeds the maximum maximum maximum maximum maximum maximum length",
+        (
+            "Home Accessory that exceeds the maximum maximum"
+            " maximum maximum maximum maximum length"
+        ),
         entity_id2,
         5,
         {
-            ATTR_MODEL: "Awesome Model that exceeds the maximum maximum maximum maximum maximum maximum length",
-            ATTR_MANUFACTURER: "Lux Brands that exceeds the maximum maximum maximum maximum maximum maximum length",
+            ATTR_MODEL: (
+                "Awesome Model that exceeds the maximum maximum"
+                " maximum maximum maximum maximum length"
+            ),
+            ATTR_MANUFACTURER: (
+                "Lux Brands that exceeds the maximum maximum"
+                " maximum maximum maximum maximum length"
+            ),
             ATTR_SW_VERSION: "will_not_match_regex",
-            ATTR_INTEGRATION: "luxe that exceeds the maximum maximum maximum maximum maximum maximum length",
+            ATTR_INTEGRATION: (
+                "luxe that exceeds the maximum maximum"
+                " maximum maximum maximum maximum length"
+            ),
         },
     )
     assert acc4.available is False
@@ -503,7 +534,7 @@ async def test_linked_battery_charging_sensor(
 async def test_linked_battery_sensor_and_linked_battery_charging_sensor(
     hass: HomeAssistant, hk_driver, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test battery service with linked_battery_sensor and a linked_battery_charging_sensor."""
+    """Test battery service with linked battery and charging sensors."""
     entity_id = "homekit.accessory"
     linked_battery = "sensor.battery"
     linked_battery_charging_sensor = "binary_sensor.battery_charging"
@@ -552,7 +583,7 @@ async def test_linked_battery_sensor_and_linked_battery_charging_sensor(
 async def test_missing_linked_battery_charging_sensor(
     hass: HomeAssistant, hk_driver, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test battery service with linked_battery_charging_sensor that is mapping to a missing entity."""
+    """Test battery service with charging sensor mapped to missing entity."""
     entity_id = "homekit.accessory"
     linked_battery_charging_sensor = "binary_sensor.battery_charging"
     hass.states.async_set(entity_id, "open", {ATTR_BATTERY_LEVEL: 100})
@@ -699,6 +730,42 @@ async def test_call_service(
     assert call_service[0].domain == test_domain
     assert call_service[0].service == test_service
     assert call_service[0].data == {ATTR_ENTITY_ID: entity_id}
+
+
+@pytest.mark.parametrize(
+    "raise_exception",
+    [
+        pytest.param(HomeAssistantError("nope"), id="home_assistant_error"),
+        pytest.param(RuntimeError("third-party blew up"), id="unexpected_exception"),
+    ],
+)
+async def test_call_service_resyncs_on_failure(
+    hass: HomeAssistant, hk_driver, raise_exception: Exception
+) -> None:
+    """When the dispatched service raises, re-push the entity's current state.
+
+    pyhap optimistically advances the target characteristic before the setter runs.
+    If the service refuses, the optimistic target strands the accessory out of sync.
+    blocking=True surfaces every exception (HomeAssistantError and unexpected alike);
+    both paths must resync via async_update_state with the current state.
+    """
+    entity_id = "homekit.accessory"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    acc = HomeAccessory(hass, hk_driver, "Home Accessory", entity_id, 2, {})
+    async_mock_service(hass, "cover", "open_cover", raise_exception=raise_exception)
+
+    with patch.object(acc, "async_update_state") as mock_update_state:
+        acc.async_call_service(
+            "cover", "open_cover", {ATTR_ENTITY_ID: entity_id}, "value"
+        )
+        await hass.async_block_till_done()
+
+    mock_update_state.assert_called_once()
+    pushed_state = mock_update_state.call_args.args[0]
+    assert pushed_state.entity_id == entity_id
+    assert pushed_state.state == STATE_OFF
 
 
 def test_home_bridge(hk_driver) -> None:

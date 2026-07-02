@@ -134,7 +134,10 @@ async def test_rest_data_with_incorrect_charset_in_header(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    log_text = "Response charset came back as utf-8 but could not be decoded, continue with configured encoding windows-1250."
+    log_text = (
+        "Response charset came back as utf-8 but could not be decoded,"
+        " continue with configured encoding windows-1250."
+    )
     assert log_text in caplog.text
 
     caplog.clear()

@@ -39,6 +39,7 @@
       "is_precipitation": "Current {entity_name} precipitation",
       "is_precipitation_intensity": "Current {entity_name} precipitation intensity",
       "is_pressure": "Current {entity_name} pressure",
+      "is_radon": "Current {entity_name} radon concentration level",
       "is_reactive_energy": "Current {entity_name} reactive energy",
       "is_reactive_power": "Current {entity_name} reactive power",
       "is_signal_strength": "Current {entity_name} signal strength",
@@ -102,6 +103,7 @@
       "precipitation": "{entity_name} precipitation changes",
       "precipitation_intensity": "{entity_name} precipitation intensity changes",
       "pressure": "{entity_name} pressure changes",
+      "radon": "{entity_name} radon concentration changes",
       "reactive_energy": "{entity_name} reactive energy changes",
       "reactive_power": "{entity_name} reactive power changes",
       "signal_strength": "{entity_name} signal strength changes",
@@ -270,6 +272,9 @@
     "pressure": {
       "name": "Pressure"
     },
+    "radon": {
+      "name": "Radon"
+    },
     "reactive_energy": {
       "name": "Reactive energy"
     },
@@ -296,6 +301,9 @@
     },
     "timestamp": {
       "name": "Timestamp"
+    },
+    "uptime": {
+      "name": "Uptime"
     },
     "volatile_organic_compounds": {
       "name": "Volatile organic compounds"
@@ -330,15 +338,12 @@
   },
   "issues": {
     "mean_type_changed": {
-      "description": "",
       "title": "The mean type of {statistic_id} has changed"
     },
     "state_class_removed": {
-      "description": "",
       "title": "{statistic_id} no longer has a state class"
     },
     "units_changed": {
-      "description": "",
       "title": "The unit of {statistic_id} has changed"
     }
   },

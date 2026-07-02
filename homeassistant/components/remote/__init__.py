@@ -1,13 +1,11 @@
 """Support to interface with universal remote control devices."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
 import logging
-from typing import Any, final
+from typing import Any, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -25,8 +23,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
+
+from .const import RemoteEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,7 +72,6 @@ REMOTE_SERVICE_ACTIVITY_SCHEMA = cv.make_entity_service_schema(
 )
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the remote is on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
@@ -166,6 +164,7 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     _attr_supported_features: RemoteEntityFeature = RemoteEntityFeature(0)
 
     @cached_property
+    @override
     def supported_features(self) -> RemoteEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
@@ -182,14 +181,15 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any] | None:
         """Return optional state attributes."""
         if RemoteEntityFeature.ACTIVITY not in self.supported_features:
             return None
 
         return {
-            ATTR_ACTIVITY_LIST: self.activity_list,
-            ATTR_CURRENT_ACTIVITY: self.current_activity,
+            RemoteEntityStateAttribute.ACTIVITY_LIST: self.activity_list,
+            RemoteEntityStateAttribute.CURRENT_ACTIVITY: self.current_activity,
         }
 
     def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
