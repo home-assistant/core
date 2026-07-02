@@ -377,7 +377,11 @@ async def test_step_login_branches(mock_config_flow: MideaLanConfigFlow) -> None
             return_value=cloud,
         ):
             result = await mock_config_flow.async_step_login(
-                {CONF_SERVER: 1, CONF_ACCOUNT: "user", CONF_PASSWORD: "pw"}
+                {
+                    CONF_SERVER: DEFAULT_CLOUD,
+                    CONF_ACCOUNT: "user",
+                    CONF_PASSWORD: "pw",
+                }
             )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "login_failed"}
@@ -423,7 +427,11 @@ async def test_step_auto_cached_login_failure(
         ),
     ):
         result = await mock_config_flow.async_step_login(
-            {CONF_SERVER: 1, CONF_ACCOUNT: "account", CONF_PASSWORD: "password"}
+            {
+                CONF_SERVER: DEFAULT_CLOUD,
+                CONF_ACCOUNT: "account",
+                CONF_PASSWORD: "password",
+            }
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -566,7 +574,7 @@ async def test_step_auto_v3_key_retrieval_paths(
         ),
     ):
         result = await mock_config_flow.async_step_login(
-            {CONF_SERVER: 1, CONF_ACCOUNT: "user", CONF_PASSWORD: "pw"}
+            {CONF_SERVER: DEFAULT_CLOUD, CONF_ACCOUNT: "user", CONF_PASSWORD: "pw"}
         )
         assert result["step_id"] == "auto"
         result = await mock_config_flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
@@ -596,7 +604,7 @@ async def test_step_auto_v3_key_retrieval_paths(
         ),
     ):
         result = await mock_config_flow.async_step_login(
-            {CONF_SERVER: 1, CONF_ACCOUNT: "user", CONF_PASSWORD: "pw"}
+            {CONF_SERVER: DEFAULT_CLOUD, CONF_ACCOUNT: "user", CONF_PASSWORD: "pw"}
         )
         assert result["step_id"] == "auto"
         result = await mock_config_flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
@@ -626,7 +634,7 @@ async def test_step_auto_v3_key_retrieval_paths(
         ),
     ):
         result = await mock_config_flow.async_step_login(
-            {CONF_SERVER: 1, CONF_ACCOUNT: "user", CONF_PASSWORD: "pw"}
+            {CONF_SERVER: DEFAULT_CLOUD, CONF_ACCOUNT: "user", CONF_PASSWORD: "pw"}
         )
         assert result["step_id"] == "auto"
         result = await mock_config_flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
