@@ -3482,6 +3482,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "karakeep": {
+      "name": "Karakeep",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "keba": {
       "name": "Keba Charging Station",
       "integration_type": "hub",

@@ -308,6 +308,9 @@ aioimmich==0.15.1
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
 
+# homeassistant.components.karakeep
+aiokarakeep==0.3.0
+
 # homeassistant.components.kef
 aiokef==0.2.16
 
