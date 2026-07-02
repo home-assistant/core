@@ -72,7 +72,7 @@ class SupportedModels(StrEnum):
     LOCK_PRO_WIFI = "lock_pro_wifi"
     WEATHER_STATION = "weather_station"
     STANDING_FAN = "standing_fan"
-    CANDLE_WARMER_LAMP = "candle_warmer_lamp"
+CANDLE_WARMER_LAMP = "candle_warmer_lamp"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -123,10 +123,10 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.LOCK_VISION: SupportedModels.LOCK_VISION,
     SwitchbotModel.LOCK_PRO_WIFI: SupportedModels.LOCK_PRO_WIFI,
     SwitchbotModel.STANDING_FAN: SupportedModels.STANDING_FAN,
+<<<<<<< HEAD
     SwitchbotModel.CANDLE_WARMER_LAMP: SupportedModels.CANDLE_WARMER_LAMP,
-}
-
-NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
+=======
+SwitchbotModel.CANDLE_WARMER_LAMP: SupportedModels.CANDLE_WARMER_LAMP,
     SwitchbotModel.METER: SupportedModels.HYGROMETER,
     SwitchbotModel.IO_METER: SupportedModels.HYGROMETER,
     SwitchbotModel.METER_PRO: SupportedModels.HYGROMETER,
