@@ -51,7 +51,13 @@ class GatusEndpointBinarySensor(
         super().__init__(coordinator)
         self._endpoint_key = endpoint_key
 
-        self._attr_name = f"{self.endpoint_data['group']} {self.endpoint_data['name']}"
+        # Check group is defined for this endpoint Note: Group is optional
+        if "group" in self.endpoint_data:
+            group = self.endpoint_data["group"]
+            if group is not None:
+                self._attr_name = f"{group} {self.endpoint_data['name']}"
+        else:
+            self._attr_name = f"{self.endpoint_data['name']}"
 
         self._attr_unique_id = f"{entry.entry_id}_{endpoint_key}"
 

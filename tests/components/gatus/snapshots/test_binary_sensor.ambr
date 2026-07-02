@@ -55,7 +55,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor_setup_and_states[binary_sensor.gatus_server_core_frontend-entry]
+# name: test_binary_sensor_setup_and_states[binary_sensor.gatus_server_frontend-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -69,7 +69,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.gatus_server_core_frontend',
+    'entity_id': 'binary_sensor.gatus_server_frontend',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -77,12 +77,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'core frontend',
+    'object_id_base': 'frontend',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'core frontend',
+    'original_name': 'frontend',
     'platform': 'gatus',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -92,20 +92,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor_setup_and_states[binary_sensor.gatus_server_core_frontend-state]
+# name: test_binary_sensor_setup_and_states[binary_sensor.gatus_server_frontend-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'body': 'custom response payload',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
       'duration_raw': 45000000,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gatus Server core frontend',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gatus Server frontend',
       'hostname': 'frontend.local',
       'status': 200,
       'success': True,
       'timestamp': '2026-06-29T13:00:00Z',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.gatus_server_core_frontend',
+    'entity_id': 'binary_sensor.gatus_server_frontend',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
