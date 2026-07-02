@@ -255,6 +255,16 @@
       },
       "name": "Dial a phone number"
     },
+    "get_mesh_info": {
+      "description": "Returns the last mesh information reported by the FRITZ!Box.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The config entry to use for this action.",
+          "name": "Config entry"
+        }
+      },
+      "name": "Get mesh info"
+    },
     "set_guest_wifi_password": {
       "description": "Sets a new password for the guest Wi-Fi. The password must be between 8 and 63 characters long. If no additional parameter is set, the password will be auto-generated with a length of 12 characters.",
       "fields": {

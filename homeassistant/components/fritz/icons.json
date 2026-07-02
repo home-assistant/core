@@ -73,6 +73,9 @@
     "dial": {
       "service": "mdi:phone-dial"
     },
+    "get_mesh_info": {
+      "service": "mdi:lan"
+    },
     "reboot": {
       "service": "mdi:refresh"
     },
