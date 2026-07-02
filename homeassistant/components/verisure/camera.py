@@ -2,6 +2,7 @@
 
 import errno
 import os
+from typing import override
 
 from verisure import Error as VerisureError
 
@@ -64,6 +65,7 @@ class VerisureSmartcam(CoordinatorEntity[VerisureDataUpdateCoordinator], Camera)
         self._image_id: str | None = None
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         area = self.coordinator.data["cameras"][self.serial_number]["device"]["area"]
@@ -76,6 +78,7 @@ class VerisureSmartcam(CoordinatorEntity[VerisureDataUpdateCoordinator], Camera)
             configuration_url="https://mypages.verisure.com",
         )
 
+    @override
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -134,6 +137,7 @@ class VerisureSmartcam(CoordinatorEntity[VerisureDataUpdateCoordinator], Camera)
         except VerisureError as ex:
             LOGGER.error("Could not capture image, %s", ex)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity added to Home Assistant."""
         await super().async_added_to_hass()

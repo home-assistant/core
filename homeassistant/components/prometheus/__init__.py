@@ -1132,7 +1132,7 @@ class PrometheusMetrics:
             PERCENTAGE: "percent",
         }
         default = unit.replace("/", "_per_")
-        # Unit conversion for CONCENTRATION_MICROGRAMS_PER_CUBIC_METER "μg/m³"
+        # Unit conversion for UnitOfDensity.MICROGRAMS_PER_CUBIC_METER "μg/m³"
         # "μ" == "\u03bc" but the API uses "\u00b5"
         default = default.replace("\u03bc", "\u00b5")
         default = default.lower()

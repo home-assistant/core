@@ -1,5 +1,7 @@
 """Provides triggers for humidifiers."""
 
+from typing import override
+
 import voluptuous as vol
 
 from homeassistant.const import ATTR_MODE, CONF_MODE, CONF_OPTIONS, STATE_OFF, STATE_ON
@@ -46,6 +48,7 @@ class ModeChangedTrigger(EntityTargetStateTriggerBase):
         super().__init__(hass, config)
         self._to_states = set(self._options[CONF_MODE])
 
+    @override
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities of this domain."""
         entities = super().entity_filter(entities)

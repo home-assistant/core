@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 from aiohttp import CookieJar
 from uiprotect import ProtectApiClient
@@ -200,6 +200,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         super().__init__()
         self._discovered_device: dict[str, str] = {}
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
@@ -309,6 +310,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: UFPConfigEntry,
     ) -> OptionsFlowHandler:
@@ -492,6 +494,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -12,7 +12,7 @@ import pathlib
 import re
 import sys
 from types import CodeType
-from typing import TYPE_CHECKING, Any, Literal, Self, overload
+from typing import TYPE_CHECKING, Any, Literal, Self, overload, override
 import weakref
 
 import jinja2
@@ -188,6 +188,7 @@ def gen_result_wrapper(kls: type[dict | list | set]) -> type:
             super().__init__(*args)
             self.render_result = render_result
 
+        @override
         def __str__(self) -> str:
             if self.render_result is None:
                 # Can't get set repr to work
@@ -216,6 +217,7 @@ class TupleWrapper(tuple, ResultWrapper):
         """Initialize a new tuple class."""
         self.render_result = render_result
 
+    @override
     def __str__(self) -> str:
         """Return string representation."""
         if self.render_result is None:
@@ -605,6 +607,7 @@ class Template:
 
         return self._compiled
 
+    @override
     def __eq__(self, other):
         """Compare template with another."""
         return (
@@ -613,10 +616,12 @@ class Template:
             and self.hass == other.hass
         )
 
+    @override
     def __hash__(self) -> int:
         """Hash code for template."""
         return self._hash_cache
 
+    @override
     def __repr__(self) -> str:
         """Representation of Template."""
         return f"Template<template=({self.template}) renders={self._renders}>"
@@ -657,6 +662,7 @@ def make_logging_undefined(
         def _log_message(self) -> None:
             _log_fn(logging.WARNING, self._undefined_message)
 
+        @override
         def _fail_with_undefined_error(self, *args, **kwargs):
             try:
                 return super()._fail_with_undefined_error(*args, **kwargs)
@@ -664,16 +670,19 @@ def make_logging_undefined(
                 _log_fn(logging.ERROR, self._undefined_message)
                 raise
 
+        @override
         def __str__(self) -> str:
             """Log undefined __str___."""
             self._log_message()
             return super().__str__()
 
+        @override
         def __iter__(self):
             """Log undefined __iter___."""
             self._log_message()
             return super().__iter__()
 
+        @override
         def __bool__(self) -> bool:
             """Log undefined __bool___."""
             self._log_message()
@@ -726,6 +735,7 @@ class HassLoader(jinja2.BaseLoader):
         self._sources = value
         self._reload += 1
 
+    @override
     def get_source(
         self, environment: jinja2.Environment, template: str
     ) -> tuple[str, str | None, Callable[[], bool] | None]:
@@ -780,12 +790,14 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             # to enable imports.
             self.loader = _get_hass_loader(hass)
 
+    @override
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
         return isinstance(
             obj, (AllStates, StateAttrTranslated, StateTranslated)
         ) or super().is_safe_callable(obj)
 
+    @override
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
         if isinstance(
@@ -818,6 +830,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         defer_init: bool = False,
     ) -> str: ...
 
+    @override
     def compile(
         self,
         source: str | jinja2.nodes.Template,
