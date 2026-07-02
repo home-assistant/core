@@ -20,7 +20,12 @@ from homeassistant.components.roborock.select import (
     A01_SELECT_DESCRIPTIONS,
     RoborockSelectEntityA01,
 )
-from homeassistant.const import SERVICE_SELECT_OPTION, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    SERVICE_SELECT_OPTION,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -538,3 +543,53 @@ async def test_q10_cleaning_mode_select_invalid_option(
 
     assert fake_q10_vacuum.b01_q10_properties
     fake_q10_vacuum.b01_q10_properties.vacuum.set_clean_mode.assert_not_called()
+
+
+async def test_selects_unavailable(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test selects are still created when the coordinator data is unavailable."""
+    for device in fake_devices:
+        if device.v1_properties is not None:
+            device.v1_properties.status.refresh.side_effect = RoborockException(
+                "Simulated V1 failure"
+            )
+        if device.dyad is not None:
+            device.dyad.query_values.side_effect = RoborockException(
+                "Simulated Dyad failure"
+            )
+        if device.zeo is not None:
+            device.zeo.query_values.side_effect = RoborockException(
+                "Simulated Zeo failure"
+            )
+        if device.b01_q10_properties is not None:
+            device.b01_q10_properties.refresh.side_effect = RoborockException(
+                "Simulated Q10 failure"
+            )
+        if device.b01_q7_properties is not None:
+            device.b01_q7_properties.query_values.side_effect = RoborockException(
+                "Simulated Q7 failure"
+            )
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify that a select from each device type is created but reports STATE_UNAVAILABLE
+
+    state = hass.states.get("select.roborock_s7_maxv_mop_mode")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("select.zeo_one_wash_program")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("select.roborock_q10_s5_cleaning_mode")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("select.roborock_q7_water_flow")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

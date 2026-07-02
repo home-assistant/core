@@ -579,7 +579,7 @@ class RoborockWetDryVacUpdateCoordinator(
             ) from ex
 
 
-class RoborockDataUpdateCoordinatorB01(DataUpdateCoordinator[B01Props]):
+class RoborockDataUpdateCoordinatorB01(DataUpdateCoordinator[B01Props | None]):
     """Class to manage fetching data from the API for B01 devices."""
 
     config_entry: RoborockConfigEntry

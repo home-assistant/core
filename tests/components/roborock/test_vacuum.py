@@ -32,7 +32,7 @@ from homeassistant.components.vacuum import (
     SERVICE_START,
     SERVICE_STOP,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -1070,6 +1070,44 @@ async def test_q10_ha_refresh(
 
     # Verify that refresh was called
     fake_q10_vacuum.b01_q10_properties.refresh.assert_called()
+
+
+async def test_vacuums_unavailable(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test vacuums are still created when the coordinator data is unavailable."""
+    for device in fake_devices:
+        if device.v1_properties is not None:
+            device.v1_properties.status.refresh.side_effect = RoborockException(
+                "Simulated V1 failure"
+            )
+        if device.b01_q10_properties is not None:
+            device.b01_q10_properties.refresh.side_effect = RoborockException(
+                "Simulated Q10 failure"
+            )
+        if device.b01_q7_properties is not None:
+            device.b01_q7_properties.query_values.side_effect = RoborockException(
+                "Simulated Q7 failure"
+            )
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify that a vacuum from each device type is created but reports STATE_UNAVAILABLE
+
+    state = hass.states.get("vacuum.roborock_s7_maxv")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("vacuum.roborock_q10_s5")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("vacuum.roborock_q7")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_q10_get_segments(

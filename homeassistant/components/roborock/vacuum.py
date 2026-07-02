@@ -414,6 +414,8 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
     @override
     def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
+        if self.coordinator.data is None:
+            return None
         if self.coordinator.data.status is not None:
             return Q7_STATE_CODE_TO_STATE.get(self.coordinator.data.status)
         return None
@@ -422,6 +424,8 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
     @override
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
+        if self.coordinator.data is None:
+            return None
         return self.coordinator.data.wind_name
 
     @override

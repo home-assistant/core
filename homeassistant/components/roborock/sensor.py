@@ -570,7 +570,6 @@ async def async_setup_entry(
             entities.extend(
                 RoborockSensorEntityB01Q7(coordinator, description)
                 for description in Q7_B01_SENSOR_DESCRIPTIONS
-                if description.value_fn(coordinator.data) is not None
             )
         elif isinstance(coordinator, RoborockB01Q10UpdateCoordinator):
             entities.extend(
@@ -700,6 +699,8 @@ class RoborockSensorEntityB01Q7(RoborockCoordinatedEntityB01Q7, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
+        if self.coordinator.data is None:
+            return None
         return self.entity_description.value_fn(self.coordinator.data)
 
 
