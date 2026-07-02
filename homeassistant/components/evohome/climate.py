@@ -10,8 +10,6 @@ from evohomeasync2.const import (
     SZ_SYSTEM_MODE,
     SZ_SYSTEM_MODE_STATUS,
     SZ_TEMPERATURE_STATUS,
-)
-from evohomeasync2.schemas.const import (
     SystemMode as EvoSystemMode,
     ZoneMode as EvoZoneMode,
 )
