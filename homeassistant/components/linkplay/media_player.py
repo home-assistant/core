@@ -3,7 +3,7 @@
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, Final, override
 
 from linkplay.bridge import LinkPlayBridge
 from linkplay.consts import EqualizerMode, LoopMode, PlayingMode, PlayingStatus
@@ -106,6 +106,7 @@ SEEKABLE_FEATURES: MediaPlayerEntityFeature = (
 RETRY_POLL_MAXIMUM = 3
 SCAN_INTERVAL = timedelta(seconds=5)
 PARALLEL_UPDATES = 1
+UNKNOWN_ALBUM_ART_VALUES: Final = {"", "none", "null", "unknown"}
 
 
 async def async_setup_entry(
@@ -331,7 +332,15 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
     def media_image_url(self) -> str | None:
         """Image url of playing media."""
         if self._bridge.player.status in [PlayingStatus.PLAYING, PlayingStatus.PAUSED]:
-            return str(self._bridge.player.album_art)
+            album_art = self._bridge.player.album_art
+            if album_art is None:
+                return None
+
+            album_art_url = str(album_art).strip()
+            if album_art_url.casefold() in UNKNOWN_ALBUM_ART_VALUES:
+                return None
+
+            return album_art_url
         return None
 
     @exception_wrap
