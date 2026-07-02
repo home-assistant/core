@@ -906,7 +906,7 @@ async def test_hmip_smoke_detector_dirt_level(
     device_model = "HmIP-SWSD"
 
     # Pre-register the entity as enabled before platform loads
-    entity_registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,

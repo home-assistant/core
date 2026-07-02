@@ -187,8 +187,8 @@ async def test_migration_v1_to_v3(
     entry.add_to_hass(hass)
     assert entry.version == 1
 
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     vm_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,

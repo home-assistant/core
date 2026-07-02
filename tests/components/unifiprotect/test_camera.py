@@ -132,7 +132,7 @@ async def test_first_active_quality_is_default(
         == camera_all.channels[1].rtsps_no_srtp_url
     )
 
-    entity_registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert entity_registry.async_get(_channel_entity_id(camera_all, 0)) is None
     assert entity_registry.async_get(_channel_entity_id(camera_all, 2)) is None
     assert (

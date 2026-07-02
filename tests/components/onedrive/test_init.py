@@ -221,7 +221,7 @@ async def test_data_cap_issues(
 
     await setup_integration(hass, mock_config_entry)
 
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue(DOMAIN, issue_key)
     assert (issue is not None) == issue_exists
 

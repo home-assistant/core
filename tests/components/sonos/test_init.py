@@ -108,7 +108,7 @@ async def test_upnp_disabled_discovery(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (
         issue_registry.async_get_issue(
             sonos.DOMAIN, f"{UPNP_ISSUE_ID}_{soco.ip_address}"
@@ -137,7 +137,7 @@ async def test_upnp_disabled_manual_hosts(
     ):
         await _setup_hass(hass)
 
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue(
         sonos.DOMAIN, f"{UPNP_ISSUE_ID}_{soco.ip_address}"
     )

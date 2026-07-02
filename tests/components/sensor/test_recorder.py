@@ -6743,7 +6743,7 @@ async def test_clean_up_repairs(
 ) -> None:
     """Test cleaning up repairs."""
     await async_setup_component(hass, DOMAIN, {})
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     client = await hass_ws_client()
 
     # Create some issues

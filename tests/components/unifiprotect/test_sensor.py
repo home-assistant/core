@@ -671,7 +671,7 @@ async def test_aiport_no_camera_sensor_entities(
 
     # AI Port should only create base device sensors, not camera-specific sensors
     # The exact count may vary, but camera motion/detection sensors should not exist
-    entity_registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entities = er.async_entries_for_config_entry(entity_registry, ufp.entry.entry_id)
 
     # Check no camera-specific sensors like motion detection exist

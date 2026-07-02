@@ -1228,7 +1228,7 @@ async def test_raise_segments_changed_issue(
     hass.states.async_set(TEST_ATTRIBUTE_ENTITY_ID, "Bathroom")
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) != 0
 
 

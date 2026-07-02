@@ -168,7 +168,7 @@ async def test_uid_migrate_entry(
     mock_async_get_firmware_data: AsyncMock,
 ) -> None:
     """Test migrate entry unique id."""
-    entity_registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     MOCK_MAC = dr.format_mac("01:23:45:67:89:AB")
     MOCK_ID = "device_id_12345"

@@ -266,7 +266,7 @@ async def test_brand_migration_issue(hass: HomeAssistant) -> None:
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    issue_reg = ir.async_get(hass)
+    issue_reg = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     await hass.config_entries.async_remove(config_entry.entry_id)
     assert not issue_reg.async_get_issue(DOMAIN, "yale_brand_migration")

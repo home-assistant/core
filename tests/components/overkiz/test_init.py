@@ -91,7 +91,7 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
+    ent_reg = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     unique_id_map = {
         ENTITY_SENSOR_DISCRETE_RSSI_LEVEL: "io://1234-5678-1234/3541212-core:DiscreteRSSILevelState",

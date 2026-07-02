@@ -71,7 +71,7 @@ async def test_device_diagnostics(
     """Test generating diagnostics for a config entry."""
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
-    device_registry = dr.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     device = device_registry.async_get_device({(DOMAIN, "1")})
     assert device is not None
     diagnostics = await get_diagnostics_for_device(
