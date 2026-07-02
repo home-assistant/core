@@ -15,7 +15,9 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+import homeassistant.helpers.config_validation as cv
 
+from .const import DOMAIN
 from .coordinator import (
     PeblarConfigEntry,
     PeblarDataUpdateCoordinator,
@@ -23,6 +25,9 @@ from .coordinator import (
     PeblarUserConfigurationDataUpdateCoordinator,
     PeblarVersionDataUpdateCoordinator,
 )
+from .services import async_setup_services, async_unload_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -37,6 +42,8 @@ PLATFORMS = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bool:
     """Set up Peblar from a config entry."""
+    if not hass.services.has_service(DOMAIN, "list_rfid_tokens"):
+        async_setup_services(hass)
 
     # Set up connection to the Peblar charger
     peblar = Peblar(
@@ -86,4 +93,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
 
 async def async_unload_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bool:
     """Unload Peblar config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok and not any(
+        e.entry_id != entry.entry_id
+        for e in hass.config_entries.async_loaded_entries(DOMAIN)
+    ):
+        async_unload_services(hass)
+    return unload_ok
