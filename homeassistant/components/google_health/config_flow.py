@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import aiohttp
 from google_health_api import GoogleHealthApi
 from google_health_api.const import HealthApiScope
 from google_health_api.exceptions import GoogleHealthApiError
@@ -94,8 +95,10 @@ class OAuth2FlowHandler(
                 resp.raise_for_status()
                 userinfo = await resp.json()
                 display_name = userinfo.get("given_name") or userinfo.get("name")
-            except Exception as err:  # pylint: disable=broad-except # noqa: BLE001
+            except aiohttp.ClientError as err:
                 _LOGGER.warning("Error fetching user profile name: %s", err)
+            except Exception as err:  # pylint: disable=broad-except # noqa: BLE001
+                _LOGGER.warning("Unexpected error fetching user profile name: %s", err)
 
         title = display_name or "Google Health"
 
