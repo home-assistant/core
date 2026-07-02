@@ -101,30 +101,34 @@ async def test_filt_mode_native_value(
     assert state.state == expected
 
 
+@pytest.mark.parametrize(
+    ("relay", "expected_options"),
+    [
+        pytest.param(1, ["off", "idle", "acid"], id="acid_only"),
+        pytest.param(2, ["off", "idle", "base"], id="base_only"),
+        pytest.param(0, ["off", "idle", "acid", "base", "both"], id="both_relays"),
+    ],
+)
 async def test_ph_pump_status_options_per_relay_config(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
+    relay: int,
+    expected_options: list[str],
 ) -> None:
     """The pH pump status options list shrinks based on the relay configuration."""
     await setup_integration(hass, mock_config_entry)
-
-    for relay, expected_options in (
-        (1, ["off", "idle", "acid"]),
-        (2, ["off", "idle", "base"]),
-        (0, ["off", "idle", "acid", "base", "both"]),
-    ):
-        mock_neopool_client.async_read_all.return_value = {
-            **MOCK_POOL_DATA,
-            "MBF_PAR_RELAY_PH": relay,
-        }
-        freezer.tick(timedelta(seconds=60))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-        state = hass.states.get("sensor.neopool_ph_pump_status")
-        assert state is not None
-        assert state.attributes[ATTR_OPTIONS] == expected_options
+    mock_neopool_client.async_read_all.return_value = {
+        **MOCK_POOL_DATA,
+        "MBF_PAR_RELAY_PH": relay,
+    }
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.neopool_ph_pump_status")
+    assert state is not None
+    assert state.attributes[ATTR_OPTIONS] == expected_options
 
 
 async def test_hidro_current_g_per_hour_mode(
@@ -164,21 +168,22 @@ _CELL_RUNTIME_ENTITY_IDS: dict[str, str] = {
         ("CELL_RUNTIME_PART", 3600),
         ("CELL_RUNTIME_POLA", 1800),
         ("CELL_RUNTIME_POLB", 1800),
-        ("CELL_RUNTIME_POL_CHANGES", 7),
     ],
 )
-async def test_cell_runtime_sensor_reads_combined_register(
+async def test_cell_runtime_duration_sensor_reads_combined_register(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
     key: str,
     expected_seconds: int,
 ) -> None:
-    """Each CELL_RUNTIME_* sensor reads the combined u32 key from coordinator data.
+    """Each duration CELL_RUNTIME_* sensor reads the combined u32 key from coordinator data.
 
-    All five sensors have ``entity_registry_enabled_default=False``; we set up
-    the integration first, enable the specific entity in the registry, and
-    reload the entry so the platform re-creates it as an active entity.
+    Sensors have ``entity_registry_enabled_default=False``; we set up the
+    integration first, enable the specific entity in the registry, and reload
+    the entry so the platform re-creates it as an active entity. The sensors
+    declare seconds but suggest hours, so ``state.state`` is expressed in
+    hours (converted by the frontend layer).
     """
     await setup_integration(hass, mock_config_entry)
 
@@ -190,12 +195,30 @@ async def test_cell_runtime_sensor_reads_combined_register(
 
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} not registered"
-    # POL_CHANGES has no unit; the others declare seconds but suggest hours,
-    # so state.state is expressed in hours (converted by the frontend layer).
-    if key == "CELL_RUNTIME_POL_CHANGES":
-        assert state.state == str(expected_seconds)
-    else:
-        assert float(state.state) == pytest.approx(expected_seconds / 3600, abs=1e-4)
+    assert float(state.state) == pytest.approx(expected_seconds / 3600, abs=1e-4)
+
+
+async def test_cell_runtime_pol_changes_sensor_reads_combined_register(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """CELL_RUNTIME_POL_CHANGES reads the combined u32 key as a raw counter.
+
+    Unlike the duration sensors, this one has no unit and no unit conversion,
+    so ``state.state`` is the raw integer from coordinator data.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = _CELL_RUNTIME_ENTITY_IDS["CELL_RUNTIME_POL_CHANGES"]
+    registry = er.async_get(hass)
+    registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} not registered"
+    assert state.state == "7"
 
 
 async def test_all_entities(
