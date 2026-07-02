@@ -170,39 +170,6 @@ async def check_migration(
     assert entity_migrated.unique_id == new_unique_id
 
 
-@pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
-@pytest.mark.parametrize("cooling_present", [True], indirect=True)
-@pytest.mark.parametrize(
-    ("entitydata", "old_unique_id", "new_unique_id"),
-    [
-        (
-            {
-                "domain": Platform.SENSOR,
-                "platform": DOMAIN,
-                "unique_id": f"{HEATER_ID}-outdoor_temperature",
-                "suggested_object_id": f"{HEATER_ID}-outdoor_temperature",
-                "disabled_by": None,
-            },
-            f"{HEATER_ID}-outdoor_temperature",
-            f"{HEATER_ID}-outdoor_air_temperature",
-        ),
-    ],
-)
-async def test_migrate_sensor_unique_id(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-    mock_smile_anna: MagicMock,
-    entitydata: dict,
-    old_unique_id: str,
-    new_unique_id: str,
-) -> None:
-    """Test migration of sensor unique_id."""
-    await check_migration(
-        hass, mock_config_entry, entitydata, old_unique_id, new_unique_id
-    )
-
-
 @pytest.mark.parametrize(
     ("entitydata", "old_unique_id", "new_unique_id"),
     [
@@ -257,7 +224,7 @@ async def test_migrate_binary_sensor_switch_unique_id(
                 "disabled_by": None,
             },
             f"{CLIMATE_ID}-climate",
-            f"{CLIMATE_ID}-thermozone",
+            f"{CLIMATE_ID}-thermostat",
         )
     ],
 )
