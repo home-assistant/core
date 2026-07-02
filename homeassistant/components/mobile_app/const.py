@@ -8,7 +8,7 @@ DOMAIN = "mobile_app"
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 STORAGE_SAVE_DELAY_SECONDS = 10
 
 CONF_CLOUDHOOK_URL = "cloudhook_url"
@@ -22,6 +22,9 @@ DATA_DEVICES = "devices"
 
 DATA_LIVE_ACTIVITY_TOKENS = "live_activity_tokens"
 DATA_LIVE_ACTIVITY_CLEANUP_CANCEL = "live_activity_cleanup_cancel"
+DATA_PUSH_SUBSCRIPTIONS = "push_subscriptions"
+DATA_PUSH_SUBSCRIPTION_UNSUBS = "push_subscription_unsubs"
+DATA_PUSH_SUBSCRIPTION_DEBOUNCE = "push_subscription_debounce"
 DATA_STORE = "store"
 DATA_NOTIFY = "notify"
 DATA_PUSH_CHANNEL = "push_channel"
@@ -101,6 +104,20 @@ SIGNAL_LOCATION_UPDATE = DOMAIN + "_location_update_{}"
 SIGNAL_RECORD_NOTIFICATION = f"{DOMAIN}_record_notification"
 
 ATTR_CAMERA_ENTITY_ID = "camera_entity_id"
+# Push-subscription payload keys (platform-agnostic widget/surface refresh).
+PUSH_SUBSCRIPTION_ID = "subscription_id"
+PUSH_SUBSCRIPTION_TOKEN = "push_token"
+PUSH_SUBSCRIPTION_ENTITY_IDS = "entity_ids"
+# Opaque, app-defined hint echoed back in the push so the app knows which
+# surface/widget to reload. Core treats it as an opaque string.
+PUSH_SUBSCRIPTION_TARGET = "target"
+# Marker in the outgoing push so the mobile-fcm relay formats this as a silent
+# background push rather than a user-visible notification.
+PUSH_SUBSCRIPTION_TRIGGER = "push_subscription"
+
+# Trailing-edge debounce window: a burst of state changes within this many
+# seconds collapses to a single push.
+PUSH_SUBSCRIPTION_DEBOUNCE_SECONDS = 5.0
 
 SCHEMA_APP_DATA = vol.Schema(
     {
