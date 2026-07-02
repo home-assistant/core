@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for the WattWächter Plus integration."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import override
@@ -10,7 +11,7 @@ from aio_wattwaechter import (
     WattwaechterConnectionError,
     WattwaechterNoDataError,
 )
-from aio_wattwaechter.models import MeterData
+from aio_wattwaechter.models import MeterData, SystemInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MAC, CONF_MODEL
@@ -25,7 +26,15 @@ _LOGGER = logging.getLogger(__name__)
 type WattwaechterConfigEntry = ConfigEntry[WattwaechterCoordinator]
 
 
-class WattwaechterCoordinator(DataUpdateCoordinator[MeterData]):
+@dataclass
+class WattwaechterData:
+    """Runtime data fetched from the WattWächter Plus device."""
+
+    meter: MeterData
+    system: SystemInfo
+
+
+class WattwaechterCoordinator(DataUpdateCoordinator[WattwaechterData]):
     """Coordinator for WattWächter Plus data updates."""
 
     config_entry: WattwaechterConfigEntry
@@ -53,10 +62,11 @@ class WattwaechterCoordinator(DataUpdateCoordinator[MeterData]):
         )
 
     @override
-    async def _async_update_data(self) -> MeterData:
+    async def _async_update_data(self) -> WattwaechterData:
         """Fetch data from the WattWächter device."""
         try:
-            data = await self.client.meter_data()
+            meter = await self.client.meter_data()
+            system = await self.client.system_info()
         except WattwaechterNoDataError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -76,11 +86,11 @@ class WattwaechterCoordinator(DataUpdateCoordinator[MeterData]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        if data is None:
+        if meter is None:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="no_meter_data",
                 translation_placeholders={"host": self.host},
             )
 
-        return data
+        return WattwaechterData(meter=meter, system=system)
