@@ -28,6 +28,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util.json import JsonObjectType
 
 from .const import DOMAIN
+from .types import AuthenticateHeader
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -139,8 +140,6 @@ class ModelContextProtocolTool(llm.Tool):
         except httpx.HTTPStatusError as error:
             _LOGGER.debug("Error when calling tool: %s", error)
             if error.response.status_code == 401:
-                from .config_flow import AuthenticateHeader  # noqa: PLC0415
-
                 auth_header = AuthenticateHeader.from_header(
                     self.server_url, error.response
                 )

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import cast
 
 from homeassistant.components.application_credentials import AuthorizationServer
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -12,7 +13,8 @@ from homeassistant.helpers import config_entry_oauth2_flow, llm
 from .application_credentials import authorization_server_context
 from .const import CONF_AUTHORIZATION_URL, CONF_TOKEN_URL, DOMAIN
 from .coordinator import ModelContextProtocolCoordinator, TokenManager
-from .types import ModelContextProtocolConfigEntry
+
+type ModelContextProtocolConfigEntry = ConfigEntry[ModelContextProtocolCoordinator]
 
 __all__ = [
     "DOMAIN",

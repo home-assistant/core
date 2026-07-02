@@ -4,7 +4,6 @@ import asyncio
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 import logging
-import re
 from typing import Any, cast
 
 import httpx
@@ -26,6 +25,7 @@ from . import async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
 from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_TOKEN_URL, DOMAIN
 from .coordinator import TokenManager, mcp_client
+from .types import AuthenticateHeader
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,35 +35,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-# Headers and regex for WWW-Authenticate parsing for rfc9728
-WWW_AUTHENTICATE_HEADER = "WWW-Authenticate"
-RESOURCE_METADATA_REGEXP = r'resource_metadata="([^"]+)"'
 OAUTH_PROTECTED_RESOURCE_ENDPOINT = "/.well-known/oauth-protected-resource"
-SCOPES_REGEXP = r'scope="([^"]+)"'
-
-
-@dataclass
-class AuthenticateHeader:
-    """Class to hold info from the WWW-Authenticate header for supporting rfc9728."""
-
-    resource_metadata_url: str
-    scopes: list[str] | None = None
-
-    @classmethod
-    def from_header(
-        cls, url: str, error_response: httpx.Response
-    ) -> AuthenticateHeader | None:
-        """Create AuthenticateHeader from WWW-Authenticate header."""
-        if not (header := error_response.headers.get(WWW_AUTHENTICATE_HEADER)) or not (
-            match := re.search(RESOURCE_METADATA_REGEXP, header)
-        ):
-            return None
-        resource_metadata_url = str(URL(url).join(URL(match.group(1))))
-        scope_match = re.search(SCOPES_REGEXP, header)
-        return cls(
-            resource_metadata_url=resource_metadata_url,
-            scopes=scope_match.group(1).split(" ") if scope_match else None,
-        )
 
 
 @dataclass
