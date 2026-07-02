@@ -20,6 +20,14 @@ from .const import DOMAIN, LOCAL_NAMES
 _LOGGER = logging.getLogger(__name__)
 
 
+def _is_casper_glow_discovery(discovery_info: BluetoothServiceInfoBleak) -> bool:
+    """Return whether the Bluetooth discovery looks like a Casper Glow."""
+    return bool(
+        discovery_info.name
+        and any(discovery_info.name.startswith(local_name) for local_name in LOCAL_NAMES)
+    )
+
+
 class CasperGlowConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Casper Glow."""
 
@@ -36,6 +44,9 @@ class CasperGlowConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
+        if not _is_casper_glow_discovery(discovery_info):
+            return self.async_abort(reason="not_supported")
+
         await self.async_set_unique_id(format_mac(discovery_info.address))
         self._abort_if_unique_id_configured()
         self._discovery_info = discovery_info
@@ -118,13 +129,7 @@ class CasperGlowConfigFlow(ConfigFlow, domain=DOMAIN):
                 if (
                     format_mac(discovery.address) in current_addresses
                     or discovery.address in self._discovered_devices
-                    or not (
-                        discovery.name
-                        and any(
-                            discovery.name.startswith(local_name)
-                            for local_name in LOCAL_NAMES
-                        )
-                    )
+                    or not _is_casper_glow_discovery(discovery)
                 ):
                     continue
                 self._discovered_devices[discovery.address] = discovery
