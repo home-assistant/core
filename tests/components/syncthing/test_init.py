@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.components.syncthing.const import (
     DOMAIN,
-    EVENTS,
+    FOLDER_EVENTS,
     RECONNECT_INTERVAL,
     SERVER_AVAILABLE,
     SERVER_UNAVAILABLE,
@@ -119,7 +119,7 @@ async def test_client_dispatches_event(
     mock_syncthing_client.events.last_seen_id = 10
 
     folder = event["data"].get("folder") or event["data"]["id"]
-    signal = f"{EVENTS[event['type']]}-{SERVER_ID}-{folder}"
+    signal = f"{FOLDER_EVENTS[event['type']]}-{SERVER_ID}-{folder}"
 
     received = asyncio.Event()
     captured: list[dict] = []

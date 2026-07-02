@@ -1,4 +1,76 @@
 # serializer version: 1
+# name: test_folder_sensor_updates_on_event[folder_paused_event.json][sensor.syncthing_http_127_0_0_1_8384_yzxabcd_abcdefg_test_device-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.syncthing_http_127_0_0_1_8384_yzxabcd_abcdefg_test_device',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'YZXABCD ABCDEFG Test Device',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'YZXABCD ABCDEFG Test Device',
+    'platform': 'syncthing',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'syncthing_device',
+    'unique_id': 'YZXABCD-ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW-XYZABCD',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_folder_sensor_updates_on_event[folder_paused_event.json][sensor.syncthing_http_127_0_0_1_8384_yzxabcd_abcdefg_test_device-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'addresses': list([
+        'dynamic',
+      ]),
+      'allowedNetworks': list([
+      ]),
+      'autoAcceptFolders': False,
+      'certName': '',
+      'compression': 'metadata',
+      'deviceID': 'ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW-XYZABCD',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Syncthing (http://127.0.0.1:8384) YZXABCD ABCDEFG Test Device',
+      'ignoredFolders': list([
+      ]),
+      'introducedBy': '',
+      'introducer': False,
+      'maxRecvKbps': 0,
+      'maxRequestKiB': 0,
+      'maxSendKbps': 0,
+      'name': 'Test Device',
+      'paused': False,
+      'remoteGUIPort': 0,
+      'skipIntroductionRemovals': False,
+      'state': 'unknown',
+      'untrusted': False,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.syncthing_http_127_0_0_1_8384_yzxabcd_abcdefg_test_device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_folder_sensor_updates_on_event[folder_paused_event.json][sensor.syncthing_http_127_0_0_1_8384_yzxabcd_test_folder_test_folder-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -31,7 +103,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'syncthing',
+    'translation_key': 'syncthing_folder',
     'unique_id': 'YZXABCD-test-folder',
     'unit_of_measurement': None,
   })
@@ -76,6 +148,150 @@
     'state': 'paused',
   })
 # ---
+# name: test_folder_sensor_updates_on_event[folder_paused_event.json][sensor.syncthing_http_127_0_0_1_8384_yzxabcd_yzxabcd_this_device-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.syncthing_http_127_0_0_1_8384_yzxabcd_yzxabcd_this_device',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'YZXABCD YZXABCD This Device',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'YZXABCD YZXABCD This Device',
+    'platform': 'syncthing',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'syncthing_device',
+    'unique_id': 'YZXABCD-YZXABCD-ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_folder_sensor_updates_on_event[folder_paused_event.json][sensor.syncthing_http_127_0_0_1_8384_yzxabcd_yzxabcd_this_device-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'addresses': list([
+        'dynamic',
+      ]),
+      'allowedNetworks': list([
+      ]),
+      'autoAcceptFolders': False,
+      'certName': '',
+      'compression': 'metadata',
+      'deviceID': 'YZXABCD-ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Syncthing (http://127.0.0.1:8384) YZXABCD YZXABCD This Device',
+      'ignoredFolders': list([
+      ]),
+      'introducedBy': '',
+      'introducer': False,
+      'maxRecvKbps': 0,
+      'maxRequestKiB': 0,
+      'maxSendKbps': 0,
+      'name': 'This Device',
+      'paused': False,
+      'remoteGUIPort': 0,
+      'skipIntroductionRemovals': False,
+      'state': 'online',
+      'untrusted': False,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.syncthing_http_127_0_0_1_8384_yzxabcd_yzxabcd_this_device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'online',
+  })
+# ---
+# name: test_folder_sensor_updates_on_event[folder_summary_event.json][sensor.syncthing_http_127_0_0_1_8384_yzxabcd_abcdefg_test_device-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.syncthing_http_127_0_0_1_8384_yzxabcd_abcdefg_test_device',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'YZXABCD ABCDEFG Test Device',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'YZXABCD ABCDEFG Test Device',
+    'platform': 'syncthing',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'syncthing_device',
+    'unique_id': 'YZXABCD-ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW-XYZABCD',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_folder_sensor_updates_on_event[folder_summary_event.json][sensor.syncthing_http_127_0_0_1_8384_yzxabcd_abcdefg_test_device-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'addresses': list([
+        'dynamic',
+      ]),
+      'allowedNetworks': list([
+      ]),
+      'autoAcceptFolders': False,
+      'certName': '',
+      'compression': 'metadata',
+      'deviceID': 'ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW-XYZABCD',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Syncthing (http://127.0.0.1:8384) YZXABCD ABCDEFG Test Device',
+      'ignoredFolders': list([
+      ]),
+      'introducedBy': '',
+      'introducer': False,
+      'maxRecvKbps': 0,
+      'maxRequestKiB': 0,
+      'maxSendKbps': 0,
+      'name': 'Test Device',
+      'paused': False,
+      'remoteGUIPort': 0,
+      'skipIntroductionRemovals': False,
+      'state': 'unknown',
+      'untrusted': False,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.syncthing_http_127_0_0_1_8384_yzxabcd_abcdefg_test_device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_folder_sensor_updates_on_event[folder_summary_event.json][sensor.syncthing_http_127_0_0_1_8384_yzxabcd_test_folder_test_folder-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -108,7 +324,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'syncthing',
+    'translation_key': 'syncthing_folder',
     'unique_id': 'YZXABCD-test-folder',
     'unit_of_measurement': None,
   })
@@ -153,6 +369,150 @@
     'state': 'idle',
   })
 # ---
+# name: test_folder_sensor_updates_on_event[folder_summary_event.json][sensor.syncthing_http_127_0_0_1_8384_yzxabcd_yzxabcd_this_device-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.syncthing_http_127_0_0_1_8384_yzxabcd_yzxabcd_this_device',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'YZXABCD YZXABCD This Device',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'YZXABCD YZXABCD This Device',
+    'platform': 'syncthing',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'syncthing_device',
+    'unique_id': 'YZXABCD-YZXABCD-ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_folder_sensor_updates_on_event[folder_summary_event.json][sensor.syncthing_http_127_0_0_1_8384_yzxabcd_yzxabcd_this_device-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'addresses': list([
+        'dynamic',
+      ]),
+      'allowedNetworks': list([
+      ]),
+      'autoAcceptFolders': False,
+      'certName': '',
+      'compression': 'metadata',
+      'deviceID': 'YZXABCD-ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Syncthing (http://127.0.0.1:8384) YZXABCD YZXABCD This Device',
+      'ignoredFolders': list([
+      ]),
+      'introducedBy': '',
+      'introducer': False,
+      'maxRecvKbps': 0,
+      'maxRequestKiB': 0,
+      'maxSendKbps': 0,
+      'name': 'This Device',
+      'paused': False,
+      'remoteGUIPort': 0,
+      'skipIntroductionRemovals': False,
+      'state': 'online',
+      'untrusted': False,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.syncthing_http_127_0_0_1_8384_yzxabcd_yzxabcd_this_device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'online',
+  })
+# ---
+# name: test_folder_sensor_updates_on_event[state_changed_event.json][sensor.syncthing_http_127_0_0_1_8384_yzxabcd_abcdefg_test_device-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.syncthing_http_127_0_0_1_8384_yzxabcd_abcdefg_test_device',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'YZXABCD ABCDEFG Test Device',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'YZXABCD ABCDEFG Test Device',
+    'platform': 'syncthing',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'syncthing_device',
+    'unique_id': 'YZXABCD-ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW-XYZABCD',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_folder_sensor_updates_on_event[state_changed_event.json][sensor.syncthing_http_127_0_0_1_8384_yzxabcd_abcdefg_test_device-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'addresses': list([
+        'dynamic',
+      ]),
+      'allowedNetworks': list([
+      ]),
+      'autoAcceptFolders': False,
+      'certName': '',
+      'compression': 'metadata',
+      'deviceID': 'ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW-XYZABCD',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Syncthing (http://127.0.0.1:8384) YZXABCD ABCDEFG Test Device',
+      'ignoredFolders': list([
+      ]),
+      'introducedBy': '',
+      'introducer': False,
+      'maxRecvKbps': 0,
+      'maxRequestKiB': 0,
+      'maxSendKbps': 0,
+      'name': 'Test Device',
+      'paused': False,
+      'remoteGUIPort': 0,
+      'skipIntroductionRemovals': False,
+      'state': 'unknown',
+      'untrusted': False,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.syncthing_http_127_0_0_1_8384_yzxabcd_abcdefg_test_device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_folder_sensor_updates_on_event[state_changed_event.json][sensor.syncthing_http_127_0_0_1_8384_yzxabcd_test_folder_test_folder-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -185,7 +545,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'syncthing',
+    'translation_key': 'syncthing_folder',
     'unique_id': 'YZXABCD-test-folder',
     'unit_of_measurement': None,
   })
@@ -230,6 +590,150 @@
     'state': 'syncing',
   })
 # ---
+# name: test_folder_sensor_updates_on_event[state_changed_event.json][sensor.syncthing_http_127_0_0_1_8384_yzxabcd_yzxabcd_this_device-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.syncthing_http_127_0_0_1_8384_yzxabcd_yzxabcd_this_device',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'YZXABCD YZXABCD This Device',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'YZXABCD YZXABCD This Device',
+    'platform': 'syncthing',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'syncthing_device',
+    'unique_id': 'YZXABCD-YZXABCD-ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_folder_sensor_updates_on_event[state_changed_event.json][sensor.syncthing_http_127_0_0_1_8384_yzxabcd_yzxabcd_this_device-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'addresses': list([
+        'dynamic',
+      ]),
+      'allowedNetworks': list([
+      ]),
+      'autoAcceptFolders': False,
+      'certName': '',
+      'compression': 'metadata',
+      'deviceID': 'YZXABCD-ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Syncthing (http://127.0.0.1:8384) YZXABCD YZXABCD This Device',
+      'ignoredFolders': list([
+      ]),
+      'introducedBy': '',
+      'introducer': False,
+      'maxRecvKbps': 0,
+      'maxRequestKiB': 0,
+      'maxSendKbps': 0,
+      'name': 'This Device',
+      'paused': False,
+      'remoteGUIPort': 0,
+      'skipIntroductionRemovals': False,
+      'state': 'online',
+      'untrusted': False,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.syncthing_http_127_0_0_1_8384_yzxabcd_yzxabcd_this_device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'online',
+  })
+# ---
+# name: test_sensor_platform_setup[sensor.syncthing_http_127_0_0_1_8384_yzxabcd_abcdefg_test_device-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.syncthing_http_127_0_0_1_8384_yzxabcd_abcdefg_test_device',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'YZXABCD ABCDEFG Test Device',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'YZXABCD ABCDEFG Test Device',
+    'platform': 'syncthing',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'syncthing_device',
+    'unique_id': 'YZXABCD-ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW-XYZABCD',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_platform_setup[sensor.syncthing_http_127_0_0_1_8384_yzxabcd_abcdefg_test_device-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'addresses': list([
+        'dynamic',
+      ]),
+      'allowedNetworks': list([
+      ]),
+      'autoAcceptFolders': False,
+      'certName': '',
+      'compression': 'metadata',
+      'deviceID': 'ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW-XYZABCD',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Syncthing (http://127.0.0.1:8384) YZXABCD ABCDEFG Test Device',
+      'ignoredFolders': list([
+      ]),
+      'introducedBy': '',
+      'introducer': False,
+      'maxRecvKbps': 0,
+      'maxRequestKiB': 0,
+      'maxSendKbps': 0,
+      'name': 'Test Device',
+      'paused': False,
+      'remoteGUIPort': 0,
+      'skipIntroductionRemovals': False,
+      'state': 'unknown',
+      'untrusted': False,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.syncthing_http_127_0_0_1_8384_yzxabcd_abcdefg_test_device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensor_platform_setup[sensor.syncthing_http_127_0_0_1_8384_yzxabcd_test_folder_test_folder-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -262,7 +766,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'syncthing',
+    'translation_key': 'syncthing_folder',
     'unique_id': 'YZXABCD-test-folder',
     'unit_of_measurement': None,
   })
@@ -305,5 +809,77 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'idle',
+  })
+# ---
+# name: test_sensor_platform_setup[sensor.syncthing_http_127_0_0_1_8384_yzxabcd_yzxabcd_this_device-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.syncthing_http_127_0_0_1_8384_yzxabcd_yzxabcd_this_device',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'YZXABCD YZXABCD This Device',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'YZXABCD YZXABCD This Device',
+    'platform': 'syncthing',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'syncthing_device',
+    'unique_id': 'YZXABCD-YZXABCD-ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_platform_setup[sensor.syncthing_http_127_0_0_1_8384_yzxabcd_yzxabcd_this_device-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'addresses': list([
+        'dynamic',
+      ]),
+      'allowedNetworks': list([
+      ]),
+      'autoAcceptFolders': False,
+      'certName': '',
+      'compression': 'metadata',
+      'deviceID': 'YZXABCD-ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Syncthing (http://127.0.0.1:8384) YZXABCD YZXABCD This Device',
+      'ignoredFolders': list([
+      ]),
+      'introducedBy': '',
+      'introducer': False,
+      'maxRecvKbps': 0,
+      'maxRequestKiB': 0,
+      'maxSendKbps': 0,
+      'name': 'This Device',
+      'paused': False,
+      'remoteGUIPort': 0,
+      'skipIntroductionRemovals': False,
+      'state': 'online',
+      'untrusted': False,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.syncthing_http_127_0_0_1_8384_yzxabcd_yzxabcd_this_device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'online',
   })
 # ---

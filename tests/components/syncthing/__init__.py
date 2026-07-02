@@ -20,6 +20,8 @@ MOCK_ENTRY = {
 
 SERVER_ID = "YZXABCD-ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW"
 SERVER_NAME = "This Device"
+DEVICE_ID = "ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW-XYZABCD"
+DEVICE_NAME = "Test Device"
 FOLDER_ID = "test-folder"
 FOLDER_LABEL = "Test Folder"
 
@@ -30,6 +32,7 @@ URL_HA = URL.lower().replace("://", "_").replace(".", "_").replace(":", "_")
 def create_mock_syncthing_client() -> MagicMock:
     """Create a mocked Syncthing client."""
     mock_client = MagicMock()
+    mock_config = MagicMock()
     mock_system = MagicMock()
     mock_database = MagicMock()
     mock_events = MagicMock()
@@ -50,6 +53,16 @@ def create_mock_syncthing_client() -> MagicMock:
         return_value=load_json_object_fixture("folder_status.json", DOMAIN)
     )
 
+    def devices_side_effect(device_id: str) -> dict[str, object]:
+        """Return device config based on device ID."""
+        if device_id == DEVICE_ID:
+            return load_json_object_fixture("device_config.json", DOMAIN)
+        if device_id == SERVER_ID:
+            return load_json_object_fixture("server_config.json", DOMAIN)
+        raise KeyError(device_id)
+
+    mock_config.devices = AsyncMock(side_effect=devices_side_effect)
+
     async def mock_listen():
         """Mock events.listen that doesn't block."""
         while True:
@@ -60,6 +73,7 @@ def create_mock_syncthing_client() -> MagicMock:
     mock_events.last_seen_id = 0
 
     mock_client.system = mock_system
+    mock_client.config = mock_config
     mock_client.database = mock_database
     mock_client.events = mock_events
 

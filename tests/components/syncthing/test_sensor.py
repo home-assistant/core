@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.syncthing.const import (
     DOMAIN,
-    EVENTS,
+    FOLDER_EVENTS,
     SCAN_INTERVAL,
     SERVER_AVAILABLE,
     SERVER_UNAVAILABLE,
@@ -86,7 +86,7 @@ async def test_folder_sensor_updates_on_event(
     )
 
     folder = event["data"].get("folder") or event["data"]["id"]
-    signal = f"{EVENTS[event['type']]}-{SERVER_ID}-{folder}"
+    signal = f"{FOLDER_EVENTS[event['type']]}-{SERVER_ID}-{folder}"
 
     dispatcher.async_dispatcher_send(hass, signal, event)
     await hass.async_block_till_done()
