@@ -21,8 +21,10 @@ def create_mock_sensor(
     sensor_id: int,
     name: str,
     weight: float = 1.0,
-    temperature: int = 72,
+    temperature: float = 72.5,
     humidity: int = 45,
+    connected: bool | None = None,
+    battery_level: int | None = None,
 ) -> NonCallableMock[NexiaSensor]:
     """Create a mock NexiaSensor."""
     sensor = NonCallableMock(NexiaSensor)
@@ -30,9 +32,14 @@ def create_mock_sensor(
     sensor.name = name
     sensor.weight = weight
     sensor.temperature = temperature
+    sensor.temperature_valid = True
     sensor.humidity = humidity
-    sensor.has_online = False
-    sensor.has_battery = False
+    sensor.humidity_valid = True
+    sensor.has_online = connected is not None
+    sensor.connected = connected
+    sensor.has_battery = battery_level is not None
+    sensor.battery_level = battery_level
+    sensor.battery_valid = battery_level is not None
 
     return sensor
 
@@ -67,7 +74,11 @@ def create_mock_zone(
     zone.get_preset.return_value = preset
     zone.get_presets.return_value = presets or ["None", "Home", "Away", "Sleep"]
     zone.get_requested_mode.return_value = requested_mode
-    zone.get_sensors.return_value = sensors or []
+    _sensors = sensors or []
+    zone.get_sensors.return_value = _sensors
+    zone.get_sensor_by_id.side_effect = lambda sid: next(
+        s for s in _sensors if s.id == sid
+    )
     zone.get_setpoint_status.return_value = setpoint_status
     zone.get_status.return_value = status
     zone.get_temperature.return_value = temperature
@@ -76,6 +87,9 @@ def create_mock_zone(
     zone.is_native_zone.return_value = True
     zone.load_current_sensor_state.return_value = True
     zone.select_room_iq_sensors.return_value = True
+    zone.has_room_iq_monitor.side_effect = lambda: (
+        zone.add_room_iq_monitor.call_count > zone.remove_room_iq_monitor.call_count
+    )
 
     return zone
 
@@ -166,16 +180,13 @@ def create_mock_thermostat(
 
     thermostat = NonCallableMock(NexiaThermostat)
     thermostat.thermostat_id = thermostat_id
+    thermostat.zones = zones or []
     thermostat.get_name.return_value = name
-
-    if zones is not None:
-        zone_ids = [z.zone_id for z in zones]
-        thermostat.get_zone_ids.return_value = zone_ids
-        thermostat.get_zone_by_id.side_effect = lambda zid: next(
-            z for z in zones if z.zone_id == zid
-        )
-    else:
-        thermostat.get_zone_ids.return_value = []
+    zone_ids = [z.zone_id for z in thermostat.zones]
+    thermostat.get_zone_ids.return_value = zone_ids
+    thermostat.get_zone_by_id.side_effect = lambda zid: next(
+        z for z in thermostat.zones if z.zone_id == zid
+    )
     thermostat.get_air_cleaner_mode.side_effect = lambda: state_data.air_cleaner_mode
     thermostat.get_current_compressor_speed.return_value = current_compressor_speed
     thermostat.get_deadband.return_value = deadband
@@ -276,6 +287,9 @@ def create_mock_nexia_home(
     nexia_home.get_thermostat_by_id.side_effect = lambda tid: next(
         t for t in _thermostats if t.thermostat_id == tid
     )
+    nexia_home.any_room_iq_monitors.side_effect = lambda: any(
+        any(zone.has_room_iq_monitor() for zone in t.zones) for t in _thermostats
+    )
 
     _automations = automations or []
     automation_ids = [a.automation_id for a in _automations]
@@ -349,13 +363,14 @@ def mock_nexia_home() -> NonCallableMock[NexiaHome]:
     )
     zone.thermostat = thermostat4
 
-    sensor1 = create_mock_sensor(sensor_id=1, name="Center", weight=0.5)
-    sensor2 = create_mock_sensor(sensor_id=2, name="Upstairs", weight=0.5)
+    sensor1 = create_mock_sensor(1, "Center", 0.5, temperature=77)
+    sensor2 = create_mock_sensor(2, "Upstairs", 0.5, connected=True, battery_level=93)
+    sensor3 = create_mock_sensor(3, "Downstairs", 0.0, connected=True)
+    sensor3.temperature_valid = False
     zone = create_mock_zone(
-        zone_id=500, name="Center NativeZone", sensors=[sensor1, sensor2]
+        zone_id=500, name="Zone3", sensors=[sensor1, sensor2, sensor3]
     )
     zone.get_active_sensor_ids.return_value = {1, 2}
-    zone.get_sensor_by_id.side_effect = lambda sid: {1: sensor1, 2: sensor2}[sid]
     thermostat5 = create_mock_thermostat(
         thermostat_id=2000004,
         name="Center NativeZone",

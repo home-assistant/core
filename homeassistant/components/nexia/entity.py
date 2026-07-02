@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING, override
 
+from nexia.sensor import NexiaSensor
 from nexia.thermostat import NexiaThermostat
 from nexia.zone import NexiaThermostatZone
 
@@ -102,19 +103,23 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
         coordinator: NexiaDataUpdateCoordinator,
         zone: NexiaThermostatZone,
         unique_id: str,
+        dev_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, zone.thermostat, unique_id)
         self._zone = zone
-        zone_name = self._zone.get_name()
         if TYPE_CHECKING:
             assert self._attr_device_info is not None
-        self._attr_device_info |= {
-            ATTR_IDENTIFIERS: {(DOMAIN, zone.zone_id)},  # type: ignore[arg-type] # until fix issue #139773
-            ATTR_NAME: zone_name,
-            ATTR_SUGGESTED_AREA: zone_name,
-            ATTR_VIA_DEVICE: (DOMAIN, zone.thermostat.thermostat_id),  # type: ignore[typeddict-item] # until fix issue #139773
-        }
+        if dev_info is not None:
+            self._attr_device_info |= dev_info
+        else:
+            zone_name = self._zone.get_name()
+            self._attr_device_info |= {
+                ATTR_IDENTIFIERS: {(DOMAIN, zone.zone_id)},  # type: ignore[arg-type] # until fix issue #139773
+                ATTR_NAME: zone_name,
+                ATTR_SUGGESTED_AREA: zone_name,
+                ATTR_VIA_DEVICE: (DOMAIN, zone.thermostat.thermostat_id),  # type: ignore[typeddict-item] # until fix issue #139773
+            }
         self._zone_signal = f"{SIGNAL_ZONE_UPDATE}-{zone.zone_id}"
 
     @override
@@ -138,3 +143,30 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
         Update a single zone.
         """
         async_dispatcher_send(self.hass, self._zone_signal)
+
+
+class NexiaRoomIQEntity(NexiaThermostatZoneEntity):
+    """Base class for RoomIQ sensor entities."""
+
+    def __init__(
+        self,
+        coordinator: NexiaDataUpdateCoordinator,
+        zone: NexiaThermostatZone,
+        sensor: NexiaSensor,
+        key: str,
+    ) -> None:
+        """Initialize the entity."""
+        # online sensors are separate devices
+        dev_info: DeviceInfo | None = None
+        if sensor.has_online:
+            dev_info = DeviceInfo(
+                identifiers={(DOMAIN, str(sensor.id))},
+                model=None,  # not reported
+                name=sensor.name,
+                suggested_area=sensor.name,
+                sw_version=None,  # not reported
+                via_device=(DOMAIN, zone.zone_id),  # type: ignore[typeddict-item] # until fix issue #139773
+            )
+        super().__init__(coordinator, zone, f"{sensor.id}-{key}", dev_info)
+        self._attr_translation_key = key
+        self._sensor_id = sensor.id
