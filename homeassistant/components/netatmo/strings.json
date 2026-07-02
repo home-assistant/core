@@ -156,6 +156,9 @@
     }
   },
   "exceptions": {
+    "entry_not_loaded": {
+      "message": "The Netatmo integration is not loaded. Please set it up before calling this action."
+    },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }

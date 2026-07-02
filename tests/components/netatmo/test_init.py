@@ -15,7 +15,10 @@ from homeassistant.components.netatmo import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.exceptions import OAuth2TokenRequestReauthError
+from homeassistant.exceptions import (
+    OAuth2TokenRequestReauthError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -75,7 +78,9 @@ async def test_setup_component(
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ) as mock_impl,
-        patch("homeassistant.components.netatmo.webhook_generate_url") as mock_webhook,
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_generate_url"
+        ) as mock_webhook,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = partial(
             fake_post_request, hass
@@ -118,7 +123,9 @@ async def test_setup_component_with_config(
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ) as mock_impl,
-        patch("homeassistant.components.netatmo.webhook_generate_url") as mock_webhook,
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_generate_url"
+        ) as mock_webhook,
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
         ) as mock_auth,
@@ -212,6 +219,18 @@ async def test_deprecated_webhook_service(
     assert issue_registry.async_get_issue(DOMAIN, f"deprecated_service_{service}")
 
 
+@pytest.mark.parametrize("service", ["register_webhook", "unregister_webhook"])
+async def test_deprecated_webhook_service_not_loaded(
+    hass: HomeAssistant,
+    service: str,
+) -> None:
+    """Test calling a webhook action without a loaded entry raises."""
+    await async_setup_component(hass, DOMAIN, {})
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(DOMAIN, service, blocking=True)
+
+
 async def test_setup_without_https(
     hass: HomeAssistant, config_entry: MockConfigEntry, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -229,7 +248,7 @@ async def test_setup_without_https(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url"
+            "homeassistant.components.netatmo.webhook.webhook_generate_url"
         ) as mock_async_generate_url,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = partial(
@@ -273,7 +292,7 @@ async def test_setup_with_cloud(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ),
     ):
         mock_auth.return_value.async_post_api_request.side_effect = partial(
@@ -343,7 +362,7 @@ async def test_setup_with_cloudhook(hass: HomeAssistant) -> None:
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ),
     ):
         mock_auth.return_value.async_post_api_request.side_effect = partial(
@@ -387,7 +406,9 @@ async def test_setup_component_with_delay(
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ) as mock_impl,
-        patch("homeassistant.components.netatmo.webhook_generate_url") as mock_webhook,
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_generate_url"
+        ) as mock_webhook,
         patch(
             "pyatmo.AbstractAsyncAuth.async_post_api_request",
             side_effect=partial(fake_post_request, hass),
@@ -457,7 +478,9 @@ async def test_setup_component_invalid_token_scope(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ) as mock_impl,
-        patch("homeassistant.components.netatmo.webhook_generate_url") as mock_webhook,
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_generate_url"
+        ) as mock_webhook,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = partial(
             fake_post_request, hass
@@ -507,7 +530,9 @@ async def test_setup_component_invalid_token(
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ) as mock_impl,
-        patch("homeassistant.components.netatmo.webhook_generate_url") as mock_webhook,
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_generate_url"
+        ) as mock_webhook,
         patch("homeassistant.components.netatmo.OAuth2Session") as mock_session,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = partial(
