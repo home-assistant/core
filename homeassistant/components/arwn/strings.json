@@ -1,0 +1,12 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "step": {
+      "confirm": {
+        "description": "Set up the Ambient Radio Weather Network integration. Make sure your ARWN weather station is publishing to the MQTT broker."
+      }
+    }
+  }
+}
