@@ -5,21 +5,44 @@
       "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]"
     },
     "error": {
+      "infrared_entity_id": "Select an infrared emitter.",
       "missing_infrared_entity": "Select an infrared emitter or receiver."
     },
     "step": {
-      "user": {
+      "ac": {
         "data": {
-          "device_type": "[%key:common::generic::device_type%]",
+          "hvac_modes": "Supported modes",
           "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
           "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
         },
         "data_description": {
-          "device_type": "The type of LG device to control.",
+          "hvac_modes": "Select the operating modes your AC unit supports. Heat is not available on all models.",
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "Optional — allows the integration to update state when the physical remote is used."
+        },
+        "description": "Select an infrared emitter and the modes your LG AC supports.",
+        "title": "Set up LG AC"
+      },
+      "tv": {
+        "data": {
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
+        },
+        "data_description": {
           "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
           "infrared_receiver_entity_id": "The infrared receiver entity to use for receiving signals."
         },
-        "description": "Select the device type and at least one infrared emitter or receiver to use with your LG device.",
+        "description": "Select at least one infrared emitter or receiver to use with your LG TV.",
+        "title": "Set up LG TV"
+      },
+      "user": {
+        "data": {
+          "device_type": "[%key:common::generic::device_type%]"
+        },
+        "data_description": {
+          "device_type": "The type of LG device to control."
+        },
+        "description": "Select the type of LG device to set up.",
         "title": "Set up LG IR Remote"
       }
     }
@@ -114,6 +137,17 @@
         "name": "[%key:common::entity::button::up::name%]"
       }
     },
+    "climate": {
+      "lg_ac": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "Quiet"
+            }
+          }
+        }
+      }
+    },
     "event": {
       "received_command": {
         "name": "Received command",
@@ -181,7 +215,16 @@
   "selector": {
     "device_type": {
       "options": {
+        "ac": "Air conditioner",
         "tv": "[%key:common::generic::tv%]"
+      }
+    },
+    "hvac_modes": {
+      "options": {
+        "cool": "Cool",
+        "dry": "Dry",
+        "fan_only": "Fan only",
+        "heat": "Heat"
       }
     }
   }
