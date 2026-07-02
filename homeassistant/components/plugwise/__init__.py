@@ -6,7 +6,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DEV_CLASS, DOMAIN, LOGGER, PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 
 
@@ -16,7 +16,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> 
 
     coordinator = PlugwiseDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
-    migrate_sensor_entities(hass, coordinator)
 
     entry.runtime_data = coordinator
 
@@ -45,9 +44,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) ->
 def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None:
     """Migrate Plugwise entity entries.
 
-    Migrates old unique ID's from old binary_sensors and
-    switches to the new unique ID's.
+    Migrates to new unique IDs for climate, binary_sensor and switch platforms.
     """
+    if entry.domain == Platform.CLIMATE and entry.unique_id.endswith("-climate"):
+        return {"new_unique_id": entry.unique_id.replace("-climate", "-thermostat")}
     if entry.domain == Platform.BINARY_SENSOR and entry.unique_id.endswith(
         "-slave_boiler_state"
     ):
@@ -67,30 +67,3 @@ def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None
 
     # No migration needed
     return None
-
-
-def migrate_sensor_entities(
-    hass: HomeAssistant,
-    coordinator: PlugwiseDataUpdateCoordinator,
-) -> None:
-    """Migrate Sensors if needed."""
-    ent_reg = er.async_get(hass)
-
-    # Migrating opentherm_outdoor_temperature
-    # to opentherm_outdoor_air_temperature sensor
-    for device_id, device in coordinator.data.items():
-        if device[DEV_CLASS] != "heater_central":
-            continue
-
-        old_unique_id = f"{device_id}-outdoor_temperature"
-        if entity_id := ent_reg.async_get_entity_id(
-            Platform.SENSOR, DOMAIN, old_unique_id
-        ):
-            new_unique_id = f"{device_id}-outdoor_air_temperature"
-            LOGGER.debug(
-                "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
-                entity_id,
-                old_unique_id,
-                new_unique_id,
-            )
-            ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)

@@ -30,6 +30,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 HA_PLUGWISE_SMILE_ASYNC_UPDATE = (
     "homeassistant.components.plugwise.coordinator.Smile.async_update"
 )
+CLIMATE_ID = "06aecb3d00354375924f50c47af36bd2"  # ThermoZone device_id for migration
 HEATER_ID = "1cbf783bb11e4a7c8a6843dee3a86927"  # Opentherm device_id for migration
 PLUG_ID = "cd0ddb54ef694e11ac18ed1cbce5dbbd"  # VCR device_id for migration
 SECONDARY_ID = (
@@ -145,36 +146,17 @@ async def test_device_in_dr(
     assert device_entry.sw_version == "4.4.2"
 
 
-@pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
-@pytest.mark.parametrize("cooling_present", [True], indirect=True)
-@pytest.mark.parametrize(
-    ("entitydata", "old_unique_id", "new_unique_id"),
-    [
-        (
-            {
-                "domain": Platform.SENSOR,
-                "platform": DOMAIN,
-                "unique_id": f"{HEATER_ID}-outdoor_temperature",
-                "suggested_object_id": f"{HEATER_ID}-outdoor_temperature",
-                "disabled_by": None,
-            },
-            f"{HEATER_ID}-outdoor_temperature",
-            f"{HEATER_ID}-outdoor_air_temperature",
-        ),
-    ],
-)
-async def test_migrate_unique_id_temperature(
+async def check_migration(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_smile_anna: MagicMock,
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
 ) -> None:
-    """Test migration of unique_id."""
+    """Helper function for checking a unique_id migration."""
     mock_config_entry.add_to_hass(hass)
 
+    entity_registry = er.async_get(hass)
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
         **entitydata,
         config_entry=mock_config_entry,
@@ -215,29 +197,48 @@ async def test_migrate_unique_id_temperature(
         ),
     ],
 )
-async def test_migrate_unique_id_relay(
+@pytest.mark.usefixtures("mock_smile_adam")
+async def test_migrate_binary_sensor_switch_unique_id(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_smile_adam: MagicMock,
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
 ) -> None:
-    """Test migration of unique_id."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity: er.RegistryEntry = entity_registry.async_get_or_create(
-        **entitydata,
-        config_entry=mock_config_entry,
+    """Test migration of binary_sensor and switch unique_ids."""
+    await check_migration(
+        hass, mock_config_entry, entitydata, old_unique_id, new_unique_id
     )
-    assert entity.unique_id == old_unique_id
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
-    entity_migrated = entity_registry.async_get(entity.entity_id)
-    assert entity_migrated
-    assert entity_migrated.unique_id == new_unique_id
+
+@pytest.mark.parametrize(
+    ("entitydata", "old_unique_id", "new_unique_id"),
+    [
+        (
+            {
+                "domain": Platform.CLIMATE,
+                "platform": DOMAIN,
+                "unique_id": f"{CLIMATE_ID}-climate",
+                "suggested_object_id": f"{CLIMATE_ID}-climate",
+                "disabled_by": None,
+            },
+            f"{CLIMATE_ID}-climate",
+            f"{CLIMATE_ID}-thermostat",
+        )
+    ],
+)
+@pytest.mark.usefixtures("mock_smile_adam_jip")
+async def test_migrate_climate_unique_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entitydata: dict,
+    old_unique_id: str,
+    new_unique_id: str,
+) -> None:
+    """Test migration of climate unique_id."""
+    await check_migration(
+        hass, mock_config_entry, entitydata, old_unique_id, new_unique_id
+    )
 
 
 @pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
