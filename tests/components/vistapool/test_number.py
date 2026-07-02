@@ -232,6 +232,7 @@ async def test_number_set_value(
     mock_vistapool_client.set_value.assert_awaited_once_with(
         "ABCDEF1234567890", expected_path, expected_raw
     )
+    assert hass.states.get(entity_id).state == str(float(user_value))
     value_arg = mock_vistapool_client.set_value.await_args.args[2]
     assert isinstance(value_arg, int)
 

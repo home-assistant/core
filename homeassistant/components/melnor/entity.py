@@ -1,12 +1,13 @@
 """Melnor integration models."""
 
 from collections.abc import Callable
+from typing import override
 
 from melnor_bluetooth.device import Device, Valve
 
 from homeassistant.components.number import EntityDescription
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -30,18 +31,21 @@ class MelnorBluetoothEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device.mac)},
+            connections={(CONNECTION_BLUETOOTH, self._device.mac)},
             manufacturer="Melnor",
             model=self._device.model,
             name=self._device.name,
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._device = self.coordinator.data
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._device.is_connected

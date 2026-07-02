@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from gotailwind import Tailwind, TailwindDeviceStatus, TailwindError
 
@@ -65,10 +65,12 @@ class TailwindNumberEntity(TailwindEntity, NumberEntity):
     entity_description: TailwindNumberEntityDescription
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the number value."""
         return self.entity_description.value_fn(self.coordinator.data)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         try:

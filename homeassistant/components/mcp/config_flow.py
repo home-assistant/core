@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import httpx
 import voluptuous as vol
@@ -154,6 +154,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self.oauth_config: OAuthConfig | None = None
         self.auth_header: AuthenticateHeader | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -256,6 +257,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         )
 
     @property
+    @override
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
         data = {}
@@ -286,6 +288,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Step to take the frontend flow to enter new credentials."""
         return self.async_abort(reason="missing_credentials")
 
+    @override
     async def async_step_pick_implementation(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -297,6 +300,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         with authorization_server_context(self.authorization_server()):
             return await super().async_step_pick_implementation(user_input)
 
+    @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for the flow.
 

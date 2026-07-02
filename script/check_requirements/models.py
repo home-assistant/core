@@ -87,8 +87,10 @@ class CheckRunResult:
     """The full deterministic check result for a PR."""
 
     pr_number: int
+    head_sha: str | None = None
     packages: list[PackageChange] = field(default_factory=list)
     rendered_comment: str = ""
+    skip_aw: bool = False
 
     @property
     def needs_agent(self) -> bool:
@@ -100,6 +102,8 @@ class CheckRunResult:
         return {
             "version": 1,
             "pr_number": self.pr_number,
+            "skip_aw": self.skip_aw,
+            "head_sha": self.head_sha,
             "needs_agent": self.needs_agent,
             "packages": [p.to_dict() for p in self.packages],
             "rendered_comment": self.rendered_comment,

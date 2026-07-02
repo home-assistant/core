@@ -4,7 +4,7 @@ from asyncio import TaskGroup
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from ring_doorbell import (
     AuthenticationError,
@@ -90,6 +90,7 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
                 translation_key="api_error",
             ) from err
 
+    @override
     async def _async_update_data(self) -> RingDevices:
         """Fetch data from API endpoint."""
         update_method: str = (
@@ -201,6 +202,7 @@ class RingListenCoordinator(BaseDataUpdateCoordinatorProtocol):
                 update_callback()
 
     @callback
+    @override
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:

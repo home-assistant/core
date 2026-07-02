@@ -1,7 +1,7 @@
 """Config flow for Wake on lan integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -76,6 +76,7 @@ class WakeonLanConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
 
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         mac: str = options[CONF_MAC]

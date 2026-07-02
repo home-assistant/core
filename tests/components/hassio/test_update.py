@@ -275,7 +275,7 @@ async def test_addon_update_progress_startup(
                 stage=None,
                 done=False,
                 errors=[],
-                created=datetime.now(),
+                created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
                 child_jobs=[],
                 extra={"total": 1234567890},
             )
@@ -834,7 +834,7 @@ async def test_core_update_progress_startup(
                 stage=None,
                 done=False,
                 errors=[],
-                created=datetime.now(),
+                created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
                 child_jobs=[],
                 extra={"total": 1234567890},
             )
@@ -1896,6 +1896,40 @@ async def test_release_notes_full(
     )
     result = await client.receive_json()
     assert result["result"] == full_changelog
+
+
+async def test_os_release_notes(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test release notes for operating system update entity."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            DOMAIN,
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": "update.home_assistant_operating_system_update",
+        }
+    )
+    result = await client.receive_json()
+    assert (
+        result["result"] == "<ha-alert alert-type='info'>"
+        "A reboot is required after install for the update to take effect."
+        "</ha-alert>\n"
+    )
 
 
 async def test_not_release_notes(

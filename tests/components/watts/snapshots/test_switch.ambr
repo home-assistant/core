@@ -39,7 +39,7 @@
 # name: test_entities[switch.living_room_living_room_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Switch',
     }),
     'context': <ANY>,
     'entity_id': 'switch.living_room_living_room_switch',

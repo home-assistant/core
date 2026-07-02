@@ -75,15 +75,33 @@ AFFECTS_TO_ACTIVE_PROGRAM = "active_program"
 AFFECTS_TO_SELECTED_PROGRAM = "selected_program"
 
 
+FAVORITE_PROGRAMS = {
+    ProgramKey.BSH_COMMON_FAVORITE_001,
+    ProgramKey.BSH_COMMON_FAVORITE_002,
+    ProgramKey.BSH_COMMON_FAVORITE_003,
+    ProgramKey.BSH_COMMON_FAVORITE_004,
+    ProgramKey.BSH_COMMON_FAVORITE_005,
+    ProgramKey.BSH_COMMON_FAVORITE_006,
+    ProgramKey.BSH_COMMON_FAVORITE_007,
+    ProgramKey.BSH_COMMON_FAVORITE_008,
+    ProgramKey.BSH_COMMON_FAVORITE_009,
+    ProgramKey.BSH_COMMON_FAVORITE_010,
+    ProgramKey.BSH_COMMON_FAVORITE_011,
+    ProgramKey.BSH_COMMON_FAVORITE_012,
+    ProgramKey.BSH_COMMON_FAVORITE_013,
+    ProgramKey.BSH_COMMON_FAVORITE_014,
+    ProgramKey.BSH_COMMON_FAVORITE_015,
+    ProgramKey.BSH_COMMON_FAVORITE_016,
+    ProgramKey.BSH_COMMON_FAVORITE_017,
+    ProgramKey.BSH_COMMON_FAVORITE_018,
+    ProgramKey.BSH_COMMON_FAVORITE_019,
+    ProgramKey.BSH_COMMON_FAVORITE_020,
+}
+
 TRANSLATION_KEYS_PROGRAMS_MAP = {
     bsh_key_to_translation_key(program.value): program
     for program in ProgramKey
-    if program
-    not in (
-        ProgramKey.UNKNOWN,
-        ProgramKey.BSH_COMMON_FAVORITE_001,
-        ProgramKey.BSH_COMMON_FAVORITE_002,
-    )
+    if program not in (ProgramKey.UNKNOWN, *FAVORITE_PROGRAMS)
 }
 
 PROGRAMS_TRANSLATION_KEYS_MAP = {

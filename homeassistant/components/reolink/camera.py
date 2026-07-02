@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from reolink_aio.api import DUAL_LENS_SINGLE_MOTION_MODELS
 
@@ -145,6 +146,7 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
                 f"{entity_description.translation_key}_lens_{self._channel}"
             )
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         return await self._host.api.get_stream_source(
@@ -152,6 +154,7 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
         )
 
     @raise_translated_error
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyintelliclima.intelliclima_types import IntelliClimaECO
 
@@ -11,11 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
-    UnitOfTemperature,
-)
+from homeassistant.const import UnitOfRatio, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -45,14 +42,14 @@ INTELLICLIMA_SENSORS: tuple[IntelliClimaSensorEntityDescription, ...] = (
         key="humidity",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_fn=lambda device_data: float(device_data.rh),
     ),
     IntelliClimaSensorEntityDescription(
         key="voc",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         value_fn=lambda device_data: float(device_data.voc_state),
     ),
 )
@@ -96,6 +93,7 @@ class IntelliClimaSensor(IntelliClimaECOEntity, SensorEntity):
         self._attr_unique_id = f"{device.id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> int | float | str | None:
         """Use this to get the correct value."""
         return self.entity_description.value_fn(self._device_data)

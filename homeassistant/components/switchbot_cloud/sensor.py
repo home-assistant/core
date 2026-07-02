@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from switchbot_api import Device, Remote, SwitchBotAPI
 
@@ -13,12 +13,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -78,14 +77,14 @@ HUMIDITY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_HUMIDITY,
     device_class=SensorDeviceClass.HUMIDITY,
     state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=PERCENTAGE,
+    native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
 )
 
 BATTERY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_BATTERY,
     device_class=SensorDeviceClass.BATTERY,
     state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=PERCENTAGE,
+    native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
 )
 
 POWER_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
@@ -120,7 +119,7 @@ CO2_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_CO2,
     device_class=SensorDeviceClass.CO2,
     state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+    native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
 )
 
 POWER_CONSUMPTION_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
@@ -332,6 +331,7 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{device.device_id}_{description.key}"
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
@@ -365,6 +365,7 @@ class SwitchBotCloudRelaySwitch2PMSensor(SwitchBotCloudSensor):
             name=f"{device.device_name} Channel {channel}",
         )
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if not self.coordinator.data:

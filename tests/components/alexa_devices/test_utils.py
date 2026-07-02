@@ -11,9 +11,8 @@ from aioamazondevices.exceptions import (
 import pytest
 
 from homeassistant.components.alexa_devices.const import DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TURN_ON
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -107,8 +106,8 @@ async def test_alexa_unique_id_migration(
     )
 
     entity = entity_registry.async_get_or_create(
+        Platform.SWITCH,
         DOMAIN,
-        SWITCH_DOMAIN,
         unique_id=f"{TEST_DEVICE_1_SN}-do_not_disturb",
         device_id=device.id,
         config_entry=mock_config_entry,
@@ -145,8 +144,8 @@ async def test_alexa_dnd_group_removal(
     )
 
     entity = entity_registry.async_get_or_create(
+        Platform.SWITCH,
         DOMAIN,
-        SWITCH_DOMAIN,
         unique_id=f"{TEST_DEVICE_1_SN}-do_not_disturb",
         device_id=device.id,
         config_entry=mock_config_entry,
@@ -184,8 +183,8 @@ async def test_alexa_unsupported_notification_sensor_removal(
     )
 
     entity = entity_registry.async_get_or_create(
+        Platform.SENSOR,
         DOMAIN,
-        SENSOR_DOMAIN,
         unique_id=f"{TEST_DEVICE_1_SN}-Timer",
         device_id=device.id,
         config_entry=mock_config_entry,
