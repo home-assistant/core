@@ -28,7 +28,7 @@ jobs:
       - name: Checkout HACS repo
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          repository: tobim99/kwb-modbus # <-- dein HACS-Repo anpassen
+          repository: Tobim99/homeassistant-kwb-modbus
           ssh-key: ${{ secrets.HACS_REPO_DEPLOY_KEY }}
           path: hacs-repo
           persist-credentials: true
