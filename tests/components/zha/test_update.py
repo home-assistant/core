@@ -37,10 +37,6 @@ from homeassistant.components.zha.helpers import (
     get_zha_gateway,
     get_zha_gateway_proxy,
 )
-from homeassistant.components.zha.update import (
-    OTA_MESSAGE_BATTERY_POWERED,
-    OTA_MESSAGE_RELIABILITY,
-)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_OFF,
@@ -643,11 +639,42 @@ async def test_firmware_update_raises(
         )
 
 
+@pytest.mark.parametrize(
+    ("is_mains_powered", "expected_fragments", "unexpected_fragments"),
+    [
+        (
+            True,
+            [
+                "<ha-alert alert-type='info'>",
+                "common environmental issues",
+                "OTA updates require a reliable network.",
+                "Some lengthy release notes",
+            ],
+            [
+                "Battery powered devices",
+            ],
+        ),
+        (
+            False,
+            [
+                "<ha-alert alert-type='info'>",
+                "Battery powered devices",
+                "common environmental issues",
+                "OTA updates require a reliable network.",
+                "Some lengthy release notes",
+            ],
+            [],
+        ),
+    ],
+)
 async def test_update_release_notes(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
+    is_mains_powered: bool,
+    expected_fragments: list[str],
+    unexpected_fragments: list[str],
 ) -> None:
     """Test ZHA update platform release notes."""
     await setup_zha()
@@ -667,9 +694,9 @@ async def test_update_release_notes(
 
     ws_client = await hass_ws_client(hass)
 
-    # Mains-powered devices
     with patch(
-        "zha.zigbee.device.Device.is_mains_powered", PropertyMock(return_value=True)
+        "zha.zigbee.device.Device.is_mains_powered",
+        PropertyMock(return_value=is_mains_powered),
     ):
         await ws_client.send_json(
             {
@@ -680,28 +707,11 @@ async def test_update_release_notes(
         )
 
         result = await ws_client.receive_json()
-        assert result["success"] is True
-        assert "Some lengthy release notes" in result["result"]
-        assert OTA_MESSAGE_RELIABILITY in result["result"]
-        assert OTA_MESSAGE_BATTERY_POWERED not in result["result"]
 
-    # Battery-powered devices
-    with patch(
-        "zha.zigbee.device.Device.is_mains_powered", PropertyMock(return_value=False)
-    ):
-        await ws_client.send_json(
-            {
-                "id": 2,
-                "type": "update/release_notes",
-                "entity_id": entity_id,
-            }
-        )
-
-        result = await ws_client.receive_json()
-        assert result["success"] is True
-        assert "Some lengthy release notes" in result["result"]
-        assert OTA_MESSAGE_RELIABILITY in result["result"]
-        assert OTA_MESSAGE_BATTERY_POWERED in result["result"]
+    assert result["success"] is True
+    release_notes = result["result"]
+    assert all(fragment in release_notes for fragment in expected_fragments)
+    assert all(fragment not in release_notes for fragment in unexpected_fragments)
 
 
 async def test_update_version_sync_device_registry(
