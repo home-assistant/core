@@ -2,8 +2,10 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from async_upnp_client.exceptions import UpnpActionResponseError
 import pytest
 from wiim.consts import PlayingStatus
+from wiim.exceptions import WiimDeviceException
 from wiim.models import (
     WiimGroupRole,
     WiimGroupSnapshot,
@@ -49,12 +51,26 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import fire_general_update, fire_transport_update, setup_integration
 
 from tests.common import MockConfigEntry
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.test_wiim_device"
+
+
+def _wiim_device_upnp_action_error(
+    error_code: int, error_desc: str
+) -> WiimDeviceException:
+    """Return a WiimDeviceException wrapping a UPnP action response error."""
+    err = WiimDeviceException("UPnP action Pause failed")
+    err.__cause__ = UpnpActionResponseError(
+        status=500,
+        error_code=error_code,
+        error_desc=error_desc,
+    )
+    return err
 
 
 async def test_state_machine_updates_from_device_callbacks(
@@ -354,6 +370,166 @@ async def test_play_pause_and_seek_services_update_state_machine(
 
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state.attributes[ATTR_MEDIA_POSITION] == 60
+
+
+async def test_media_pause_transition_not_available_refreshes_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+) -> None:
+    """Test pause is idempotent when the device rejects it for its current state."""
+    await setup_integration(hass, mock_config_entry)
+    mock_wiim_device.playing_status = PlayingStatus.PLAYING
+    await fire_general_update(hass, mock_wiim_device)
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state.state == MediaPlayerState.PLAYING
+
+    async def async_update_http_status() -> None:
+        mock_wiim_device.playing_status = PlayingStatus.PAUSED
+
+    mock_wiim_device.async_pause.side_effect = _wiim_device_upnp_action_error(
+        701,
+        "Transition not available",
+    )
+    mock_wiim_device.supports_http_api = True
+    mock_wiim_device.async_update_http_status = AsyncMock(
+        side_effect=async_update_http_status
+    )
+    mock_wiim_device.sync_device_duration_and_position.reset_mock()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_PAUSE,
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_wiim_device.async_pause.assert_awaited_once()
+    mock_wiim_device.async_update_http_status.assert_awaited_once()
+    mock_wiim_device.sync_device_duration_and_position.assert_not_awaited()
+    mock_wiim_device.set_available.assert_not_called()
+    mock_wiim_controller.async_update_all_multiroom_status.assert_not_awaited()
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state.state == MediaPlayerState.PAUSED
+
+
+async def test_media_pause_transition_not_available_raises_when_still_playing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+) -> None:
+    """Test pause 701 raises if refreshed device state is still playing."""
+    await setup_integration(hass, mock_config_entry)
+    mock_wiim_device.playing_status = PlayingStatus.PLAYING
+    await fire_general_update(hass, mock_wiim_device)
+
+    async def async_update_http_status() -> None:
+        mock_wiim_device.playing_status = PlayingStatus.PLAYING
+
+    mock_wiim_device.async_pause.side_effect = _wiim_device_upnp_action_error(
+        701,
+        "Transition not available",
+    )
+    mock_wiim_device.supports_http_api = True
+    mock_wiim_device.async_update_http_status = AsyncMock(
+        side_effect=async_update_http_status
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_MEDIA_PAUSE,
+            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+            blocking=True,
+        )
+
+    mock_wiim_device.async_pause.assert_awaited_once()
+    mock_wiim_device.async_update_http_status.assert_awaited_once()
+    mock_wiim_device.set_available.assert_not_called()
+    mock_wiim_controller.async_update_all_multiroom_status.assert_not_awaited()
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state.state == MediaPlayerState.PLAYING
+
+
+async def test_media_pause_transition_not_available_raises_without_http_api(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+) -> None:
+    """Test pause 701 raises if the device state cannot be refreshed."""
+    await setup_integration(hass, mock_config_entry)
+    mock_wiim_device.async_pause.side_effect = _wiim_device_upnp_action_error(
+        701,
+        "Transition not available",
+    )
+    mock_wiim_device.supports_http_api = False
+    mock_wiim_device.async_update_http_status = AsyncMock()
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_MEDIA_PAUSE,
+            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+            blocking=True,
+        )
+
+    mock_wiim_device.async_pause.assert_awaited_once()
+    mock_wiim_device.async_update_http_status.assert_not_awaited()
+    mock_wiim_device.set_available.assert_not_called()
+    mock_wiim_controller.async_update_all_multiroom_status.assert_not_awaited()
+
+
+async def test_media_pause_upnp_action_error_does_not_mark_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+) -> None:
+    """Test UPnP action response errors do not mark the device unavailable."""
+    await setup_integration(hass, mock_config_entry)
+    mock_wiim_device.async_pause.side_effect = _wiim_device_upnp_action_error(
+        718,
+        "Conflict in function arguments",
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_MEDIA_PAUSE,
+            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+            blocking=True,
+        )
+
+    mock_wiim_device.set_available.assert_not_called()
+    mock_wiim_controller.async_update_all_multiroom_status.assert_not_awaited()
+
+
+async def test_media_pause_device_error_marks_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+) -> None:
+    """Test non-action WiiM device errors still mark the device unavailable."""
+    await setup_integration(hass, mock_config_entry)
+    mock_wiim_device.async_pause.side_effect = WiimDeviceException("Connection failed")
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_MEDIA_PAUSE,
+            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+            blocking=True,
+        )
+
+    mock_wiim_device.set_available.assert_called_once_with(False)
+    mock_wiim_controller.async_update_all_multiroom_status.assert_awaited_once()
 
 
 async def test_follower_routes_commands_and_reads_leader_metadata(
