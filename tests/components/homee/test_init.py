@@ -147,7 +147,7 @@ async def test_attribute_availability(
         await hass.async_block_till_done()
 
         assert (
-            hass.states.get("siren.test_siren").state is not STATE_UNAVAILABLE
+            hass.states.get("siren.test_siren").state != STATE_UNAVAILABLE
             if state < AttributeState.INACTIVE
             else hass.states.get("siren.test_siren").state == STATE_UNAVAILABLE
         )
