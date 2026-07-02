@@ -197,11 +197,10 @@ async def check_migration(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_smile_adam")
 async def test_migrate_binary_sensor_switch_unique_id(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_smile_adam: MagicMock,
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
