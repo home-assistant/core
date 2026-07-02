@@ -116,6 +116,16 @@ def mock_mqtt_client() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def mock_place_messages() -> Generator[MagicMock]:
+    """Mock the PlaceMessages wrapper used by the coordinator."""
+    with patch(
+        "homeassistant.components.gentex_place.coordinator.PlaceMessages",
+        autospec=True,
+    ) as mock_cls:
+        yield mock_cls.return_value
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Mock config entry with stored tokens."""
     return MockConfigEntry(

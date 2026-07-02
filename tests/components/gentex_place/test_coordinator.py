@@ -9,7 +9,7 @@ import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from . import setup_integration, trigger_shadow_callback
+from . import setup_integration, trigger_mqtt_connect, trigger_shadow_callback
 
 from tests.common import MockConfigEntry
 
@@ -164,23 +164,17 @@ async def test_mqtt_subscribes_on_connect(
     mock_provider: AsyncMock,
     mock_get_iot_credentials: MagicMock,
     mock_mqtt_client: MagicMock,
+    mock_place_messages: MagicMock,
 ) -> None:
     """Test that shadow subscriptions are set up when MQTT connects."""
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    # Verify on_connect callback was passed to connect()
-    connect_kwargs = mock_mqtt_client.connect.call_args.kwargs
-    assert "on_connect" in connect_kwargs
-    assert "on_message" in connect_kwargs
+    trigger_mqtt_connect(mock_mqtt_client)
 
-    # Invoke the on_connect callback and verify subscriptions
-    coordinator = mock_config_entry.runtime_data
-    coordinator._on_mqtt_connect()
-
-    coordinator.messages._client.subscribe.assert_called()
-    coordinator.messages._client.publish.assert_called()
+    mock_place_messages.subscribe_shadow.assert_called_once_with("thing-001")
+    mock_place_messages.publish_shadow_get.assert_called_once_with("thing-001")
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture")
