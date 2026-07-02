@@ -78,7 +78,7 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
         speed = self.coordinator.data.state.data.mode.speed
         if speed in ORDERED_NAMED_FAN_SPEEDS:
             return ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, speed)
-        return 0
+        return None
 
     @override
     @property
