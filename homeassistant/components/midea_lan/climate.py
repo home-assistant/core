@@ -131,9 +131,7 @@ async def async_setup_entry(
             continue
         if device.device_type == DeviceType.AC:
             # AC entities need the config entry to honor optional humidity exposure.
-            entities.append(
-                MideaACClimate(cast(MideaACDevice, device), description, config_entry)
-            )
+            entities.append(MideaACClimate(cast(MideaACDevice, device), description))
         elif device.device_type == DeviceType.CC:
             entities.append(MideaCCClimate(cast(MideaCCDevice, device), description))
         elif device.device_type == DeviceType.CF:
@@ -326,7 +324,6 @@ class MideaACClimate(MideaClimate):
         self,
         device: MideaACDevice,
         description: MideaClimateEntityDescription,
-        config_entry: MideaLanConfigEntry,
     ) -> None:
         """Midea AC Climate entity init."""
         super().__init__(device, description)
