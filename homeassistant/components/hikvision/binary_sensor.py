@@ -3,6 +3,7 @@
 import logging
 from typing import Any, override
 
+from pyhik.constants import SENSOR_MAP
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -43,114 +44,128 @@ DEFAULT_DELAY = 0
 DEFAULT_IGNORED = False
 
 
-# Entity descriptions for known Hikvision event types
-# The key matches the sensor_type from pyhik (the friendly name from SENSOR_MAP)
+# Entity descriptions keyed by the friendly sensor_type name pyhik emits in
+# `current_event_states`. We resolve each key via SENSOR_MAP at import time so
+# that if pyhik renames a friendly label (the value side of SENSOR_MAP), the
+# entity description stays attached to the right event without us having to
+# update strings here. The raw SENSOR_MAP keys themselves ("vmd",
+# "linedetection", ...) are treated as pyhik's stable public API; if any of
+# them are renamed or removed in pyhik, this module will fail to import,
+# which is intentional — pyhik is pinned in manifest.json, so a key rename
+# only reaches users via a deliberate dependency bump where the KeyError
+# surfaces in CI.
 BINARY_SENSOR_DESCRIPTIONS: dict[str, BinarySensorEntityDescription] = {
-    "Motion": BinarySensorEntityDescription(
+    SENSOR_MAP["vmd"]: BinarySensorEntityDescription(
         key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "Line Crossing": BinarySensorEntityDescription(
+    SENSOR_MAP["linedetection"]: BinarySensorEntityDescription(
         key="line_crossing",
         translation_key="line_crossing",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "Field Detection": BinarySensorEntityDescription(
+    SENSOR_MAP["fielddetection"]: BinarySensorEntityDescription(
         key="field_detection",
         translation_key="field_detection",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "Tamper Detection": BinarySensorEntityDescription(
+    SENSOR_MAP["tamperdetection"]: BinarySensorEntityDescription(
         key="tamper_detection",
         device_class=BinarySensorDeviceClass.TAMPER,
     ),
-    "Disk Full": BinarySensorEntityDescription(
+    SENSOR_MAP["diskfull"]: BinarySensorEntityDescription(
         key="disk_full",
         translation_key="disk_full",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "Disk Error": BinarySensorEntityDescription(
+    SENSOR_MAP["diskerror"]: BinarySensorEntityDescription(
         key="disk_error",
         translation_key="disk_error",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "Net Interface Broken": BinarySensorEntityDescription(
+    SENSOR_MAP["nicbroken"]: BinarySensorEntityDescription(
         key="net_interface_broken",
         translation_key="net_interface_broken",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "IP Conflict": BinarySensorEntityDescription(
+    SENSOR_MAP["ipconflict"]: BinarySensorEntityDescription(
         key="ip_conflict",
         translation_key="ip_conflict",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "Illegal Access": BinarySensorEntityDescription(
+    SENSOR_MAP["illaccess"]: BinarySensorEntityDescription(
         key="illegal_access",
         translation_key="illegal_access",
         device_class=BinarySensorDeviceClass.SAFETY,
     ),
-    "Video Mismatch": BinarySensorEntityDescription(
+    SENSOR_MAP["videomismatch"]: BinarySensorEntityDescription(
         key="video_mismatch",
         translation_key="video_mismatch",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "Bad Video": BinarySensorEntityDescription(
+    SENSOR_MAP["badvideo"]: BinarySensorEntityDescription(
         key="bad_video",
         translation_key="bad_video",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "PIR Alarm": BinarySensorEntityDescription(
+    SENSOR_MAP["pir"]: BinarySensorEntityDescription(
         key="pir_alarm",
         translation_key="pir_alarm",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "Face Detection": BinarySensorEntityDescription(
+    SENSOR_MAP["facedetection"]: BinarySensorEntityDescription(
         key="face_detection",
         translation_key="face_detection",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "Scene Change Detection": BinarySensorEntityDescription(
+    SENSOR_MAP["scenechangedetection"]: BinarySensorEntityDescription(
         key="scene_change_detection",
         translation_key="scene_change_detection",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "I/O": BinarySensorEntityDescription(
+    SENSOR_MAP["io"]: BinarySensorEntityDescription(
         key="io",
         translation_key="io",
     ),
-    "Unattended Baggage": BinarySensorEntityDescription(
+    SENSOR_MAP["unattendedbaggage"]: BinarySensorEntityDescription(
         key="unattended_baggage",
         translation_key="unattended_baggage",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "Attended Baggage": BinarySensorEntityDescription(
+    SENSOR_MAP["attendedbaggage"]: BinarySensorEntityDescription(
         key="attended_baggage",
         translation_key="attended_baggage",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "Recording Failure": BinarySensorEntityDescription(
+    SENSOR_MAP["recordingfailure"]: BinarySensorEntityDescription(
         key="recording_failure",
         translation_key="recording_failure",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "Exiting Region": BinarySensorEntityDescription(
+    SENSOR_MAP["regionexiting"]: BinarySensorEntityDescription(
         key="exiting_region",
         translation_key="exiting_region",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "Entering Region": BinarySensorEntityDescription(
+    SENSOR_MAP["regionentrance"]: BinarySensorEntityDescription(
         key="entering_region",
         translation_key="entering_region",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
 }
+
+# pyhik uses videoloss as a connection watchdog rather than a real sensor event
+# (see homeassistant/components/hikvision/__init__.py and pyhik.hikvision).
+# When it leaks into `current_event_states` (e.g. via ISAPI on some NVR setups),
+# skip it silently instead of warning about an unknown sensor type.
+IGNORED_SENSOR_TYPES: frozenset[str] = frozenset({SENSOR_MAP["videoloss"]})
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -243,9 +258,11 @@ async def async_setup_entry(
         )
         return
 
-    # Log warnings for unknown sensor types and skip them
     for sensor_type in sensors:
-        if sensor_type not in BINARY_SENSOR_DESCRIPTIONS:
+        if (
+            sensor_type not in BINARY_SENSOR_DESCRIPTIONS
+            and sensor_type not in IGNORED_SENSOR_TYPES
+        ):
             _LOGGER.warning(
                 "Unknown Hikvision sensor type '%s', please report this at "
                 "https://github.com/home-assistant/core/issues",
