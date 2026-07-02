@@ -14,14 +14,18 @@ from homeassistant.components.webhook import (
     async_unregister as webhook_unregister,
 )
 from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    issue_registry as ir,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
     OAuth2Session,
@@ -55,6 +59,8 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 MAX_WEBHOOK_RETRIES = 3
+
+WEBHOOK_SERVICES_DEPRECATION_VERSION = "2027.2.0"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -187,10 +193,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
     else:
         entry.async_on_unload(async_at_started(hass, register_webhook))
 
+    def _create_deprecation_issue(service: str) -> None:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_service_{service}",
+            breaks_in_ha_version=WEBHOOK_SERVICES_DEPRECATION_VERSION,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_webhook_service",
+            translation_placeholders={"service": f"{DOMAIN}.{service}"},
+        )
+
+    async def register_webhook_service(call: ServiceCall) -> None:
+        _LOGGER.warning(
+            "The %s.register_webhook action is deprecated and will be removed "
+            "in %s; the webhook is managed automatically",
+            DOMAIN,
+            WEBHOOK_SERVICES_DEPRECATION_VERSION,
+        )
+        _create_deprecation_issue("register_webhook")
+        await register_webhook(None)
+
+    async def unregister_webhook_service(call: ServiceCall) -> None:
+        _LOGGER.warning(
+            "The %s.unregister_webhook action is deprecated and will be removed "
+            "in %s; the webhook is managed automatically",
+            DOMAIN,
+            WEBHOOK_SERVICES_DEPRECATION_VERSION,
+        )
+        _create_deprecation_issue("unregister_webhook")
+        await unregister_webhook(None)
+
     # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(DOMAIN, "register_webhook", register_webhook)
+    hass.services.async_register(DOMAIN, "register_webhook", register_webhook_service)
     # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(DOMAIN, "unregister_webhook", unregister_webhook)
+    hass.services.async_register(
+        DOMAIN, "unregister_webhook", unregister_webhook_service
+    )
 
     entry.async_on_unload(entry.add_update_listener(async_config_entry_updated))
 
