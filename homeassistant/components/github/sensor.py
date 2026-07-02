@@ -29,15 +29,6 @@ from .coordinator import (
 )
 
 
-def _as_datetime(value: str | None) -> datetime | None:
-    """Parse a GitHub ISO-8601 timestamp, tolerating missing values.
-
-    The latest_tag target only carries a date for lightweight tags; an
-    annotated tag's target is a Tag object, so the field is absent there.
-    """
-    return dt_util.parse_datetime(value) if value else None
-
-
 @dataclass(frozen=True, kw_only=True)
 class GitHubSensorEntityDescription(SensorEntityDescription):
     """Describes GitHub issue sensor entity."""
@@ -46,22 +37,6 @@ class GitHubSensorEntityDescription(SensorEntityDescription):
 
     attr_fn: Callable[[dict[str, Any]], Mapping[str, Any] | None] = lambda data: None
     avabl_fn: Callable[[dict[str, Any]], bool] = lambda data: True
-
-
-def _timestamp_description(
-    key: str,
-    value_fn: Callable[[dict[str, Any]], StateType | datetime],
-    avabl_fn: Callable[[dict[str, Any]], bool] = lambda data: True,
-) -> GitHubSensorEntityDescription:
-    """Build a default-disabled timestamp sensor for a latest_* item."""
-    return GitHubSensorEntityDescription(
-        key=key,
-        translation_key=key,
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=False,
-        avabl_fn=avabl_fn,
-        value_fn=value_fn,
-    )
 
 
 SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
@@ -172,50 +147,94 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
             "url": data["refs"]["tags"][0]["target"]["url"],
         },
     ),
-    _timestamp_description(
-        "latest_commit_committed",
-        lambda data: _as_datetime(data["default_branch_ref"]["commit"]["committed"]),
+    GitHubSensorEntityDescription(
+        key="latest_commit_date",
+        translation_key="latest_commit_date",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: dt_util.parse_datetime(
+            data["default_branch_ref"]["commit"]["committed"]
+        ),
     ),
-    _timestamp_description(
-        "latest_discussion_created",
-        lambda data: _as_datetime(data["discussion"]["discussions"][0]["created"]),
+    GitHubSensorEntityDescription(
+        key="latest_discussion_created",
+        translation_key="latest_discussion_created",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
         avabl_fn=lambda data: data["discussion"]["discussions"],
+        value_fn=lambda data: dt_util.parse_datetime(
+            data["discussion"]["discussions"][0]["created"]
+        ),
     ),
-    _timestamp_description(
-        "latest_discussion_updated",
-        lambda data: _as_datetime(data["discussion"]["discussions"][0]["updated"]),
+    GitHubSensorEntityDescription(
+        key="latest_discussion_updated",
+        translation_key="latest_discussion_updated",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
         avabl_fn=lambda data: data["discussion"]["discussions"],
+        value_fn=lambda data: dt_util.parse_datetime(
+            data["discussion"]["discussions"][0]["updated"]
+        ),
     ),
-    _timestamp_description(
-        "latest_issue_created",
-        lambda data: _as_datetime(data["issue"]["issues"][0]["created"]),
+    GitHubSensorEntityDescription(
+        key="latest_issue_created",
+        translation_key="latest_issue_created",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
         avabl_fn=lambda data: data["issue"]["issues"],
+        value_fn=lambda data: dt_util.parse_datetime(
+            data["issue"]["issues"][0]["created"]
+        ),
     ),
-    _timestamp_description(
-        "latest_issue_updated",
-        lambda data: _as_datetime(data["issue"]["issues"][0]["updated"]),
+    GitHubSensorEntityDescription(
+        key="latest_issue_updated",
+        translation_key="latest_issue_updated",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
         avabl_fn=lambda data: data["issue"]["issues"],
+        value_fn=lambda data: dt_util.parse_datetime(
+            data["issue"]["issues"][0]["updated"]
+        ),
     ),
-    _timestamp_description(
-        "latest_pull_request_created",
-        lambda data: _as_datetime(data["pull_request"]["pull_requests"][0]["created"]),
+    GitHubSensorEntityDescription(
+        key="latest_pull_request_created",
+        translation_key="latest_pull_request_created",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
         avabl_fn=lambda data: data["pull_request"]["pull_requests"],
+        value_fn=lambda data: dt_util.parse_datetime(
+            data["pull_request"]["pull_requests"][0]["created"]
+        ),
     ),
-    _timestamp_description(
-        "latest_pull_request_updated",
-        lambda data: _as_datetime(data["pull_request"]["pull_requests"][0]["updated"]),
+    GitHubSensorEntityDescription(
+        key="latest_pull_request_updated",
+        translation_key="latest_pull_request_updated",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
         avabl_fn=lambda data: data["pull_request"]["pull_requests"],
+        value_fn=lambda data: dt_util.parse_datetime(
+            data["pull_request"]["pull_requests"][0]["updated"]
+        ),
     ),
-    _timestamp_description(
-        "latest_release_published",
-        lambda data: _as_datetime(data["release"]["published"]),
+    GitHubSensorEntityDescription(
+        key="latest_release_date",
+        translation_key="latest_release_date",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
         avabl_fn=lambda data: data["release"] is not None,
+        value_fn=lambda data: dt_util.parse_datetime(data["release"]["published"]),
     ),
-    _timestamp_description(
-        "latest_tag_committed",
-        # Null for annotated tags (target is a Tag, not a Commit).
-        lambda data: _as_datetime(data["refs"]["tags"][0]["target"].get("committed")),
+    GitHubSensorEntityDescription(
+        key="latest_tag_date",
+        translation_key="latest_tag_date",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
         avabl_fn=lambda data: data["refs"]["tags"],
+        # Annotated tags have a Tag target instead of a Commit, so `committed`
+        # is absent and the sensor reports as unknown.
+        value_fn=lambda data: dt_util.parse_datetime(
+            data["refs"]["tags"][0]["target"].get("committed") or ""
+        ),
     ),
 )
 

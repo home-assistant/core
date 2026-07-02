@@ -19,7 +19,7 @@
       "latest_commit": {
         "default": "mdi:source-commit"
       },
-      "latest_commit_committed": {
+      "latest_commit_date": {
         "default": "mdi:calendar-clock"
       },
       "latest_discussion": {
@@ -52,13 +52,13 @@
       "latest_release": {
         "default": "mdi:github"
       },
-      "latest_release_published": {
+      "latest_release_date": {
         "default": "mdi:calendar-clock"
       },
       "latest_tag": {
         "default": "mdi:tag"
       },
-      "latest_tag_committed": {
+      "latest_tag_date": {
         "default": "mdi:calendar-clock"
       },
       "merged_pulls_count": {

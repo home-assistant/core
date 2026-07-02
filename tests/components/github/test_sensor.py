@@ -36,7 +36,7 @@ async def test_all_entities(
     ("entity_id", "expected"),
     [
         (
-            "sensor.octocat_hello_world_latest_commit_committed",
+            "sensor.octocat_hello_world_latest_commit_date",
             "2024-01-02T00:00:00+00:00",
         ),
         (
@@ -44,19 +44,18 @@ async def test_all_entities(
             "2024-01-01T00:00:00+00:00",
         ),
         (
-            "sensor.octocat_hello_world_latest_release_published",
+            "sensor.octocat_hello_world_latest_release_date",
             "2024-01-02T00:00:00+00:00",
         ),
         (
-            "sensor.octocat_hello_world_latest_tag_committed",
+            "sensor.octocat_hello_world_latest_tag_date",
             "2024-01-02T00:00:00+00:00",
         ),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "github_client")
 async def test_latest_timestamp_sensors(
     hass: HomeAssistant,
-    github_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_id: str,
     expected: str,
@@ -70,19 +69,18 @@ async def test_latest_timestamp_sensors(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_latest_tag_committed_annotated_tag(
+async def test_latest_tag_date_annotated_tag(
     hass: HomeAssistant,
     github_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Annotated tags have a Tag target, so committedDate is absent -> unknown."""
-    # Drop the Commit-only field the inline GraphQL fragment would omit.
     del github_client.graphql.return_value.data["data"]["repository"]["refs"]["tags"][
         0
     ]["target"]["committed"]
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.octocat_hello_world_latest_tag_committed")
+    state = hass.states.get("sensor.octocat_hello_world_latest_tag_date")
     assert state.state == STATE_UNKNOWN
 
 
