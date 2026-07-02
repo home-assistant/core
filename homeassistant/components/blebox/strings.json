@@ -42,6 +42,12 @@
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
+        "data_description": {
+          "host": "The IP address of your BleBox device.",
+          "password": "The password for your BleBox device.",
+          "port": "The port of your BleBox device.",
+          "username": "The username for your BleBox device."
+        },
         "description": "Update the connection settings for your BleBox device.",
         "title": "Reconfigure BleBox device"
       },
