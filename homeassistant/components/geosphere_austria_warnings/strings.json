@@ -1,0 +1,50 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "municipality_not_found": "No Austrian municipality was found at the selected location.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "location": "[%key:common::config_flow::data::location%]"
+        },
+        "data_description": {
+          "location": "Warnings are provided for the Austrian municipality at this location."
+        },
+        "description": "Select the location to monitor for official GeoSphere Austria weather warnings."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "active_warnings": {
+        "name": "Active warnings"
+      },
+      "warning_level": {
+        "name": "Warning level",
+        "state": {
+          "none": "No warning",
+          "orange": "Orange",
+          "red": "Red",
+          "yellow": "Yellow"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "The GeoSphere Austria Warn API returned an unexpected response: {error}"
+    },
+    "connection_error": {
+      "message": "Error communicating with the GeoSphere Austria Warn API: {error}"
+    },
+    "municipality_not_found": {
+      "message": "No Austrian municipality was found for the configured location"
+    }
+  }
+}

@@ -645,6 +645,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/geonetnz_quakes/ @exxamalte
 /homeassistant/components/geonetnz_volcano/ @exxamalte
 /tests/components/geonetnz_volcano/ @exxamalte
+/homeassistant/components/geosphere_austria_warnings/ @tklecka
+/tests/components/geosphere_austria_warnings/ @tklecka
 /homeassistant/components/ghost/ @johnonolan
 /tests/components/ghost/ @johnonolan
 /homeassistant/components/gios/ @bieniu

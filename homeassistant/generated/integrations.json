@@ -2451,6 +2451,12 @@
         }
       }
     },
+    "geosphere_austria_warnings": {
+      "name": "GeoSphere Austria Warnings",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "ghost": {
       "name": "Ghost",
       "integration_type": "service",
