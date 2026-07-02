@@ -135,6 +135,11 @@ SSDP = {
             "st": "urn:schemas-frontier-silicon-com:undok:fsapi:1",
         },
     ],
+    "habitron": [
+        {
+            "st": "urn:habitron-com:device:SmartHub:1",
+        },
+    ],
     "harmony": [
         {
             "deviceType": "urn:myharmony-com:device:harmony:1",

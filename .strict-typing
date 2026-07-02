@@ -252,6 +252,7 @@ homeassistant.components.group.*
 homeassistant.components.guardian.*
 homeassistant.components.guntamatic.*
 homeassistant.components.habitica.*
+homeassistant.components.habitron.*
 homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
 homeassistant.components.hdfury.*

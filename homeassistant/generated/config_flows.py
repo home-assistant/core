@@ -302,6 +302,7 @@ FLOWS = {
         "guardian",
         "guntamatic",
         "habitica",
+        "habitron",
         "hanna",
         "harmony",
         "hdfury",

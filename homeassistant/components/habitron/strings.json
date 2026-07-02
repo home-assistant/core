@@ -1,0 +1,293 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_host_in_ssdp": "The discovered device did not report a host address.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to SmartHub",
+      "host_not_found": "Host name not found, try with IP",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up the Habitron SmartHub at {name}?",
+        "title": "Discovered Habitron SmartHub"
+      },
+      "reconfigure": {
+        "data": {
+          "habitron_host": "[%key:component::habitron::config::step::user::data::habitron_host%]",
+          "websock_token": "[%key:component::habitron::config::step::user::data::websock_token%]"
+        },
+        "data_description": {
+          "habitron_host": "[%key:component::habitron::config::step::user::data_description::habitron_host%]",
+          "websock_token": "[%key:component::habitron::config::step::user::data_description::websock_token%]"
+        },
+        "title": "Reconfigure SmartHub connection"
+      },
+      "user": {
+        "data": {
+          "habitron_host": "Host name or IP of SmartHub",
+          "websock_token": "Token for websocket authentication"
+        },
+        "data_description": {
+          "habitron_host": "DNS name or IPv4 address of the SmartHub. Use \"local\" if Home Assistant runs on the SmartCenter itself.",
+          "websock_token": "Optional long-lived access token, only required when SC Touch and Assist run on a remote Home Assistant instance."
+        },
+        "title": "Setup communication"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "airquality": {
+        "name": "Air quality"
+      },
+      "analog_sensor": {
+        "name": "Analog"
+      },
+      "ekey_finger": {
+        "name": "Finger value"
+      },
+      "ekey_finger_name": {
+        "name": "Finger name",
+        "state": {
+          "left_index": "Left index finger",
+          "left_middle": "Left middle finger",
+          "left_pinky": "Left little finger",
+          "left_ring": "Left ring finger",
+          "left_thumb": "Left thumb",
+          "right_index": "Right index finger",
+          "right_middle": "Right middle finger",
+          "right_pinky": "Right little finger",
+          "right_ring": "Right ring finger",
+          "right_thumb": "Right thumb"
+        }
+      },
+      "ekey_id": {
+        "name": "Identifier value"
+      },
+      "ekey_user_name": {
+        "name": "Identifier name"
+      },
+      "logic_state": {
+        "name": "Counter"
+      },
+      "time_out": {
+        "name": "Timeout"
+      },
+      "wind": {
+        "name": "Wind"
+      }
+    }
+  },
+  "exceptions": {
+    "connect_error": {
+      "message": "Error connecting to SmartHub: {error}"
+    },
+    "connect_refused": {
+      "message": "Connection refused to SmartHub: {error}"
+    },
+    "connect_timeout": {
+      "message": "Timeout while connecting to SmartHub."
+    },
+    "no_hub_loaded": {
+      "message": "Habitron service called but no SmartHub is loaded."
+    },
+    "update_network_error": {
+      "message": "Network error fetching status from SmartHub: {error}"
+    },
+    "update_timeout": {
+      "message": "Timeout fetching system status from SmartHub."
+    }
+  },
+  "issues": {
+    "router_system_error": {
+      "description": "The Habitron router detected an error, e.g. a module communication error.",
+      "title": "Router system error"
+    }
+  },
+  "options": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to SmartHub",
+      "host_not_found": "Host name not found, try with IP",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "habitron_host": "Host name or IP of SmartHub",
+          "websock_token": "Token for websocket authentication"
+        },
+        "data_description": {
+          "habitron_host": "[%key:component::habitron::config::step::user::data_description::habitron_host%]",
+          "websock_token": "[%key:component::habitron::config::step::user::data_description::websock_token%]"
+        },
+        "title": "Setup communication"
+      }
+    }
+  },
+  "services": {
+    "hub_reboot": {
+      "description": "Reboot the SmartHub host.",
+      "fields": {
+        "device_id": {
+          "description": "A Habitron device on the target SmartHub (hub, router or module).",
+          "name": "Device"
+        }
+      },
+      "name": "Hub reboot"
+    },
+    "hub_restart": {
+      "description": "Soft-restart the SmartHub service.",
+      "fields": {
+        "device_id": {
+          "description": "A Habitron device on the target SmartHub (hub, router or module).",
+          "name": "Device"
+        }
+      },
+      "name": "Hub restart"
+    },
+    "mod_restart": {
+      "description": "Restart one or all Habitron modules.",
+      "fields": {
+        "device_id": {
+          "description": "A Habitron device on the target SmartHub (hub, router or module).",
+          "name": "Device"
+        },
+        "mod_nmbr": {
+          "description": "Habitron's module address (1-64). Leave empty to restart all modules.",
+          "name": "Module number"
+        }
+      },
+      "name": "Module restart"
+    },
+    "rtr_restart": {
+      "description": "Restart the Habitron router.",
+      "fields": {
+        "device_id": {
+          "description": "A Habitron device on the target SmartHub (hub, router or module).",
+          "name": "Device"
+        }
+      },
+      "name": "Router restart"
+    },
+    "save_module_smc": {
+      "description": "Read module rule and name definitions and save them to an .smc text file.",
+      "fields": {
+        "device_id": {
+          "description": "A Habitron device on the target SmartHub (hub, router or module).",
+          "name": "Device"
+        },
+        "mod_nmbr": {
+          "description": "Habitron's module address.",
+          "name": "Module number"
+        }
+      },
+      "name": "Save module .smc file"
+    },
+    "save_module_smg": {
+      "description": "Read module settings and save them to an .smg text file.",
+      "fields": {
+        "device_id": {
+          "description": "A Habitron device on the target SmartHub (hub, router or module).",
+          "name": "Device"
+        },
+        "mod_nmbr": {
+          "description": "Habitron's module address.",
+          "name": "Module number"
+        }
+      },
+      "name": "Save module .smg file"
+    },
+    "save_module_status": {
+      "description": "Read module status and save it to an .mstat text file.",
+      "fields": {
+        "device_id": {
+          "description": "A Habitron device on the target SmartHub (hub, router or module).",
+          "name": "Device"
+        },
+        "mod_nmbr": {
+          "description": "Habitron's module address.",
+          "name": "Module number"
+        }
+      },
+      "name": "Save module status"
+    },
+    "save_router_smr": {
+      "description": "Read router settings and save them to an .smr text file.",
+      "fields": {
+        "device_id": {
+          "description": "A Habitron device on the target SmartHub (hub, router or module).",
+          "name": "Device"
+        }
+      },
+      "name": "Save router .smr file"
+    },
+    "save_router_status": {
+      "description": "Read router status and save it to an .rstat text file.",
+      "fields": {
+        "device_id": {
+          "description": "A Habitron device on the target SmartHub (hub, router or module).",
+          "name": "Device"
+        }
+      },
+      "name": "Save router status"
+    },
+    "update_entity": {
+      "description": "Delivers a bus state-change event into Home Assistant. The SmartHub calls this over the WebSocket API to push updates; the fields carry raw Habitron event codes and are not normally set by hand.",
+      "fields": {
+        "evnt_arg1": {
+          "description": "First event argument.",
+          "name": "Event arg 1"
+        },
+        "evnt_arg2": {
+          "description": "Second event argument.",
+          "name": "Event arg 2"
+        },
+        "evnt_arg3": {
+          "description": "Third event argument (optional).",
+          "name": "Event arg 3"
+        },
+        "evnt_arg4": {
+          "description": "Fourth event argument (optional).",
+          "name": "Event arg 4"
+        },
+        "evnt_arg5": {
+          "description": "Fifth event argument (optional).",
+          "name": "Event arg 5"
+        },
+        "evnt_type": {
+          "description": "Habitron event type code.",
+          "name": "Event type"
+        },
+        "hub_uid": {
+          "description": "Host name or IP of the target SmartHub.",
+          "name": "Hub UID"
+        },
+        "mod_nmbr": {
+          "description": "Habitron module address.",
+          "name": "Module number"
+        },
+        "rtr_nmbr": {
+          "description": "Router address. Defaults to 1.",
+          "name": "Router number"
+        }
+      },
+      "name": "Forward update event to hub"
+    }
+  },
+  "system_health": {
+    "info": {
+      "hbtn_version": "Version",
+      "hub_count": "Number of hubs",
+      "module_count": "Number of modules",
+      "router_status": "Router status"
+    }
+  }
+}
