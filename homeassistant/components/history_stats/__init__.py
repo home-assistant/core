@@ -121,12 +121,11 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         hass.config_entries.async_update_entry(
             config_entry, options=options, minor_version=3
         )
-        if config_entry.minor_version < 4:
-            # The "advanced_settings" section was renamed to "additional_settings"
-            if (additional := options.pop("advanced_settings", None)) is not None:
-                options[SECTION_ADDITIONAL_SETTINGS] = additional
+        # The "advanced_settings" section was renamed to "additional_settings"
+        if (additional := options.pop("advanced_settings", None)) is not None:
+            options[SECTION_ADDITIONAL_SETTINGS] = additional
         hass.config_entries.async_update_entry(
-            config_entry, options=options, minor_version=4
+            config_entry, options=options, version=2, minor_version=1
         )
 
     _LOGGER.debug(
