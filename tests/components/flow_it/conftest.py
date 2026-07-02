@@ -10,7 +10,6 @@ import pytest
 def get_mock_vmc(
     info_hostname: str = "Flow-it Device",
     state_name: str = "00:11:22:33:44:55",
-    exception: Exception | None = None,
 ) -> AsyncMock:
     """Return a mock FlowItVMCMachine."""
     mock_vmc = AsyncMock()
@@ -68,10 +67,6 @@ def get_mock_vmc(
     # Sync methods need MagicMock, not AsyncMock
     mock_vmc.register_websocket_callback = MagicMock()
     mock_vmc.websocket.start = MagicMock()
-
-    if exception:
-        mock_vmc.refresh_state.side_effect = exception
-        mock_vmc.get_info.side_effect = exception
 
     return mock_vmc
 

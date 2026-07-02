@@ -1,6 +1,6 @@
 """Test Flow-it integration setup and unload."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from flow_it_api.exceptions import FlowItAuthError, FlowItConnectionError
 import pytest
@@ -8,8 +8,6 @@ import pytest
 from homeassistant.components.flow_it.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from .conftest import get_mock_vmc
 
 from tests.common import MockConfigEntry
 
@@ -51,7 +49,10 @@ async def test_setup_unload_entry(hass: HomeAssistant, mock_flow_it: AsyncMock) 
     ],
 )
 async def test_setup_exceptions(
-    hass: HomeAssistant, exception: Exception, expected_state: ConfigEntryState
+    hass: HomeAssistant,
+    mock_flow_it: AsyncMock,
+    exception: Exception,
+    expected_state: ConfigEntryState,
 ) -> None:
     """Test setup handles exceptions correctly."""
     entry = MockConfigEntry(
@@ -66,11 +67,10 @@ async def test_setup_exceptions(
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.flow_it.FlowItVMCMachine",
-        return_value=get_mock_vmc(exception=exception),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    mock_flow_it.return_value.refresh_state.side_effect = exception
+    mock_flow_it.return_value.get_info.side_effect = exception
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert entry.state == expected_state
