@@ -1,7 +1,7 @@
 """The tests for the Netatmo climate platform."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -1095,6 +1095,36 @@ async def test_webhook_home_id_mismatch(
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_entrada).state == "auto"
+
+
+async def test_thermostat_update_with_none_therm_setpoint_mode(
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+) -> None:
+    """Test thermostat update when Netatmo returns no therm setpoint mode."""
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    climate_entity_livingroom = "climate.livingroom_livingroom"
+
+    entity = hass.data[CLIMATE_DOMAIN].get_entity(climate_entity_livingroom)
+    assert entity is not None
+
+    with patch.object(
+        type(entity.device),
+        "therm_setpoint_mode",
+        new_callable=PropertyMock,
+        return_value=None,
+        create=True,
+    ):
+        entity.async_update_callback()
+        entity.async_write_ha_state()
+        await hass.async_block_till_done()
+
+    state = hass.states.get(climate_entity_livingroom)
+    assert state is not None
+    assert state.state == HVACMode.AUTO
+    assert state.attributes["preset_mode"] == PRESET_SCHEDULE
 
 
 async def test_webhook_set_point(
