@@ -46,9 +46,6 @@ def create_mock_syncthing_client() -> MagicMock:
     mock_system.ping = AsyncMock(
         return_value=load_json_object_fixture("ping.json", DOMAIN)
     )
-    mock_system.config = AsyncMock(
-        return_value=load_json_object_fixture("config.json", DOMAIN)
-    )
     mock_database.status = AsyncMock(
         return_value=load_json_object_fixture("folder_status.json", DOMAIN)
     )
@@ -62,6 +59,9 @@ def create_mock_syncthing_client() -> MagicMock:
         raise KeyError(device_id)
 
     mock_config.devices = AsyncMock(side_effect=devices_side_effect)
+    mock_config.config = AsyncMock(
+        return_value=load_json_object_fixture("config.json", DOMAIN)
+    )
 
     async def mock_listen():
         """Mock events.listen that doesn't block."""

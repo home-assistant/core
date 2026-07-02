@@ -48,7 +48,7 @@ async def test_sensor_platform_no_sensors_on_config_error(
     mock_syncthing_client: MagicMock,
 ) -> None:
     """Test sensor platform does not create folder sensors when config fetch fails."""
-    mock_syncthing_client.system.config.side_effect = SyncthingError("Connection error")
+    mock_syncthing_client.config.config.side_effect = SyncthingError("Connection error")
 
     with patch(
         "homeassistant.components.syncthing.aiosyncthing.Syncthing",

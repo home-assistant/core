@@ -39,7 +39,7 @@ async def async_setup_entry(
     syncthing = config_entry.runtime_data
 
     try:
-        config = await syncthing.system.config()
+        config = await syncthing.config.config()
         version = await syncthing.system.version()
     except aiosyncthing.exceptions.SyncthingError as exception:
         raise PlatformNotReady from exception
