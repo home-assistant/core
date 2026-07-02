@@ -381,15 +381,9 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             except InvalidAuth as err:
                 self.auth_header = err.metadata
                 return await self.async_step_auth_discovery()
-            except TimeoutConnectError:
-                return self.async_abort(reason="timeout_connect")
-            except CannotConnect:
-                return self.async_abort(reason="cannot_connect")
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                return self.async_abort(reason="unknown")
-            else:
-                return self.async_abort(reason="cannot_connect")
+            except Exception as err:  # pylint: disable=broad-except # noqa: BLE001
+                _LOGGER.error("Reauthentication connection failed: %s", err)
+            return self.async_abort(reason="cannot_connect")
 
         self.flow_impl = await async_get_config_entry_implementation(  # type: ignore[assignment]
             self.hass, config_entry

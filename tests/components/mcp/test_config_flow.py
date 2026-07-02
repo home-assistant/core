@@ -994,3 +994,38 @@ async def test_reauth_flow_upgrade_to_oauth(
     assert token == OAUTH_TOKEN_PAYLOAD
 
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@respx.mock
+async def test_reauth_flow_upgrade_to_oauth_cannot_connect(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    credential: None,
+) -> None:
+    """Test reauth flow upgrading a no-auth entry to OAuth aborts if connection fails."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: MCP_SERVER_URL},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    # Start reauth flow
+    config_entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    result = flows[0]
+    assert result["step_id"] == "reauth_confirm"
+
+    # Mock validate_input raising TimeoutException/HTTPError during reauth_confirm
+    mock_mcp_client.side_effect = httpx.HTTPError("Connection failed")
+
+    # Click Submit on reauth_confirm
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"

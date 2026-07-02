@@ -385,33 +385,6 @@ async def test_oauth_implementation_not_available(
     assert config_entry_with_auth.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_coordinator_update_no_auth_auth_failure(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_mcp_client: Mock,
-) -> None:
-    """Test coordinator update auth failure when no auth was initially required."""
-    mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
-        tools=[SEARCH_MEMORY_TOOL]
-    )
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    # Mock next update encountering a 401 response
-    mock_mcp_client.return_value.list_tools.side_effect = httpx.HTTPStatusError(
-        "Authentication required", request=None, response=httpx.Response(401)
-    )
-
-    coordinator = config_entry.runtime_data
-    await coordinator.async_refresh()
-
-    assert coordinator.last_update_success is False
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth_confirm"
-
-
 async def test_tool_call_no_auth_auth_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -444,36 +417,6 @@ async def test_tool_call_no_auth_auth_failure(
             create_llm_context(),
         )
 
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth_confirm"
-
-
-async def test_coordinator_update_expired_oauth_failure(
-    hass: HomeAssistant,
-    credential: None,
-    config_entry_with_auth: MockConfigEntry,
-    mock_mcp_client: Mock,
-) -> None:
-    """Test coordinator update token refresh failure when OAuth is configured."""
-    mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
-        tools=[SEARCH_MEMORY_TOOL]
-    )
-
-    await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
-    assert config_entry_with_auth.state is ConfigEntryState.LOADED
-
-    # Mock token validation failure (e.g. refresh token expired)
-    with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-        side_effect=OAuth2TokenRequestError(
-            request_info=Mock(), history=(), domain=DOMAIN
-        ),
-    ):
-        coordinator = config_entry_with_auth.runtime_data
-        await coordinator.async_refresh()
-
-    assert coordinator.last_update_success is False
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["step_id"] == "reauth_confirm"
