@@ -12,52 +12,8 @@ import pytest
 from homeassistant.components.besen_bs20 import config_flow
 from homeassistant.components.besen_bs20.config_flow import BesenBS20ConfigFlow
 from homeassistant.components.besen_bs20.const import CONF_SYNC_CLOCK
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_RECONFIGURE
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
 from homeassistant.data_entry_flow import FlowResultType
-
-
-class _FakeConfigEntries:
-    """Fake config entry manager."""
-
-    def __init__(self, entry: SimpleNamespace) -> None:
-        """Initialize the manager."""
-
-        self.entry = entry
-        self.reloads: list[str] = []
-
-    def async_get_entry(self, entry_id: str) -> SimpleNamespace:
-        """Return the configured fake entry."""
-
-        del entry_id
-        return self.entry
-
-    def async_get_known_entry(self, entry_id: str) -> SimpleNamespace:
-        """Return the configured fake entry."""
-
-        return self.async_get_entry(entry_id)
-
-    def async_update_entry(
-        self,
-        *,
-        entry: SimpleNamespace,
-        unique_id: object,
-        title: object,
-        data: dict[str, Any],
-        options: dict[str, Any] | object,
-    ) -> bool:
-        """Update the fake entry."""
-
-        del unique_id, title
-        entry.data = data
-        if isinstance(options, dict):
-            entry.options = options
-        return True
-
-    def async_schedule_reload(self, entry_id: str) -> None:
-        """Record scheduled reloads."""
-
-        self.reloads.append(entry_id)
 
 
 class _FakeValidationClient:
@@ -101,18 +57,6 @@ def _discovery(name: str | None = "ACP#Garage") -> Any:
     """Return fake Bluetooth discovery info."""
 
     return SimpleNamespace(name=name, address="aa:bb")
-
-
-def _entry() -> SimpleNamespace:
-    """Return a fake stored config entry."""
-
-    return SimpleNamespace(
-        entry_id="entry",
-        data={CONF_ADDRESS: "AA:BB", CONF_NAME: "ACP#Garage", CONF_PIN: "123456"},
-        options={CONF_SYNC_CLOCK: True},
-        title="Garage",
-        update_listeners=[],
-    )
 
 
 async def _validate_ok(*args: Any, **kwargs: Any) -> str:
@@ -315,83 +259,3 @@ async def test_user_step_success_and_error(monkeypatch: pytest.MonkeyPatch) -> N
         )
         result = await flow.async_step_user({CONF_ADDRESS: "AA:BB", CONF_PIN: "123456"})
         assert result["errors"] == {"base": error}
-
-
-@pytest.mark.asyncio
-async def test_reauth_and_reconfigure_flows(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Reauth and reconfigure update the entry after validation."""
-
-    entry = _entry()
-    reauth_flow = _flow()
-    reauth_flow.context["entry_id"] = "entry"
-    reauth_flow.context["source"] = SOURCE_REAUTH
-    cast(Any, reauth_flow).hass = SimpleNamespace(
-        config_entries=_FakeConfigEntries(entry)
-    )
-
-    reconfigure_flow = _flow()
-    reconfigure_flow.context["entry_id"] = "entry"
-    reconfigure_flow.context["source"] = SOURCE_RECONFIGURE
-    cast(Any, reconfigure_flow).hass = SimpleNamespace(
-        config_entries=_FakeConfigEntries(entry)
-    )
-    monkeypatch.setattr(config_flow, "_async_validate_input", _validate_ok)
-
-    reauth_form = await reauth_flow.async_step_reauth(
-        {CONF_ADDRESS: "AA:BB", CONF_NAME: "ACP#Garage"}
-    )
-    reauth_result = await reauth_flow.async_step_reauth_confirm({CONF_PIN: "654321"})
-    reconfigure_form = await reconfigure_flow.async_step_reconfigure()
-    reconfigure_result = await reconfigure_flow.async_step_reconfigure(
-        {CONF_PIN: "654321", CONF_SYNC_CLOCK: False}
-    )
-
-    assert reauth_form["type"] is FlowResultType.FORM
-    assert reauth_result["type"] is FlowResultType.ABORT
-    assert reauth_result["reason"] == "reauth_successful"
-    assert reconfigure_form["type"] is FlowResultType.FORM
-    assert reconfigure_result["type"] is FlowResultType.ABORT
-    assert reconfigure_result["reason"] == "reconfigure_successful"
-
-
-@pytest.mark.asyncio
-async def test_reauth_and_reconfigure_error_forms(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Reauth and reconfigure return errors from failed validation."""
-
-    entry = _entry()
-    reauth_flow = _flow()
-    reauth_flow.context["entry_id"] = "entry"
-    reauth_flow.context["source"] = SOURCE_REAUTH
-    cast(Any, reauth_flow).hass = SimpleNamespace(
-        config_entries=_FakeConfigEntries(entry)
-    )
-
-    reconfigure_flow = _flow()
-    reconfigure_flow.context["entry_id"] = "entry"
-    reconfigure_flow.context["source"] = SOURCE_RECONFIGURE
-    cast(Any, reconfigure_flow).hass = SimpleNamespace(
-        config_entries=_FakeConfigEntries(entry)
-    )
-
-    for exception, error in (
-        (InvalidAuth("bad pin"), "invalid_auth"),
-        (NoConnectablePath("no path"), "no_connectable_path"),
-        (CannotConnect("cannot connect"), "cannot_connect"),
-        (RuntimeError("boom"), "unknown"),
-    ):
-        monkeypatch.setattr(
-            config_flow,
-            "_async_validate_input",
-            _validation_raiser(exception),
-        )
-        reauth = await reauth_flow.async_step_reauth_confirm({CONF_PIN: "654321"})
-        reconfigure = await reconfigure_flow.async_step_reconfigure(
-            {CONF_PIN: "654321", CONF_SYNC_CLOCK: True}
-        )
-
-        assert reauth["errors"] == {"base": error}
-        assert reconfigure["errors"] == {"base": error}

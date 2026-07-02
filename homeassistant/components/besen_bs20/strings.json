@@ -23,27 +23,6 @@
         "description": "Enter the 6-digit Bluetooth PIN for this charger.",
         "title": "Set up {name}"
       },
-      "reauth_confirm": {
-        "data": {
-          "pin": "PIN"
-        },
-        "data_description": {
-          "pin": "The 6-digit Bluetooth PIN configured on the charger."
-        },
-        "description": "The charger rejected the configured PIN. Enter the current 6-digit PIN.",
-        "title": "Update Besen BS20 PIN"
-      },
-      "reconfigure": {
-        "data": {
-          "pin": "PIN",
-          "sync_clock": "Sync charger clock"
-        },
-        "data_description": {
-          "pin": "The 6-digit Bluetooth PIN configured on the charger.",
-          "sync_clock": "Update the charger's internal clock during heartbeat handling."
-        },
-        "title": "Reconfigure Besen BS20"
-      },
       "user": {
         "data": {
           "address": "Bluetooth address",
@@ -74,12 +53,6 @@
     },
     "no_connectable_path": {
       "message": "No connectable Bluetooth path is available for this charger: {reason}"
-    }
-  },
-  "issues": {
-    "no_connectable_path": {
-      "description": "The charger is visible, but Home Assistant cannot reach it through an adapter or Bluetooth proxy that supports active GATT connections. Move an active ESPHome Bluetooth proxy closer to the charger or add a supported Bluetooth adapter.",
-      "title": "No connectable Bluetooth path"
     }
   }
 }

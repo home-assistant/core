@@ -11,11 +11,3 @@ PLATFORMS: Final = [Platform.SWITCH]
 
 CONF_SYNC_CLOCK: Final = "sync_clock"
 DEFAULT_SYNC_CLOCK: Final = True
-
-__all__ = [
-    "CONF_SYNC_CLOCK",
-    "DEFAULT_SYNC_CLOCK",
-    "DOMAIN",
-    "NAME",
-    "PLATFORMS",
-]
