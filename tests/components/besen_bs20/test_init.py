@@ -1,77 +1,83 @@
 """Tests for integration setup and unload."""
-# pylint: disable=home-assistant-tests-direct-async-setup-entry,home-assistant-tests-direct-async-unload-entry
 
-from types import SimpleNamespace
-from typing import Any, cast
+from __future__ import annotations
+
+from collections.abc import Callable
+from typing import Any, ClassVar, cast
 
 from besen_bs20.exceptions import CannotConnect, InvalidAuth
-from bleak.backends.device import BLEDevice
+from besen_bs20.models import BesenBS20Data, ChargerConfig, ChargerInfo, ChargeStatus
 import pytest
 
 from homeassistant.components import besen_bs20 as integration_module, bluetooth
-from homeassistant.components.besen_bs20 import (
-    BesenBS20ConfigEntry,
-    async_setup_entry,
-    async_unload_entry,
-)
-from homeassistant.components.besen_bs20.const import CONF_SYNC_CLOCK, PLATFORMS
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN, Platform
+from homeassistant.components.besen_bs20.const import CONF_SYNC_CLOCK, DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
+
+from tests.common import MockConfigEntry
+
+_DEFAULT_BLE_DEVICE = object()
 
 
-class _FakeConfigEntries:
-    """Fake Home Assistant config entries manager."""
+def _state() -> BesenBS20Data:
+    """Return a populated available charger state."""
 
-    def __init__(self, *, unload_ok: bool = True) -> None:
-        """Initialize the manager."""
-
-        self.unload_ok = unload_ok
-        self.forwarded: list[tuple[object, list[Platform]]] = []
-        self.unloaded: list[tuple[object, list[Platform]]] = []
-
-    async def async_forward_entry_setups(
-        self,
-        entry: object,
-        platforms: list[Platform],
-    ) -> None:
-        """Record forwarded platforms."""
-
-        self.forwarded.append((entry, platforms))
-
-    async def async_unload_platforms(
-        self,
-        entry: object,
-        platforms: list[Platform],
-    ) -> bool:
-        """Record unloaded platforms."""
-
-        self.unloaded.append((entry, platforms))
-        return self.unload_ok
+    return BesenBS20Data(
+        info=ChargerInfo(
+            address="AA:BB",
+            serial="SERIAL",
+            phases=1,
+            manufacturer="Besen",
+            model="BS20",
+            hardware_version="HW1",
+            software_version="SW1",
+        ),
+        config=ChargerConfig(device_name="Garage", rssi=-55),
+        charge=ChargeStatus(
+            charger_status=True,
+            current_energy=3500,
+            total_energy=1.2,
+            current_amount=12.3,
+            inner_temp_c=24.5,
+        ),
+        available=True,
+        authenticated=True,
+    )
 
 
 class _FakeClient:
     """Fake Besen client."""
+
+    instances: ClassVar[list[_FakeClient]] = []
+    next_error: ClassVar[Exception | None] = None
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the fake client."""
 
         self.args = args
         self.kwargs = kwargs
-
-
-class _FakeCoordinator:
-    """Fake coordinator."""
-
-    next_error: Exception | None = None
-
-    def __init__(self, hass: HomeAssistant, client: _FakeClient) -> None:
-        """Initialize the fake coordinator."""
-
-        del hass
-        self.client = client
+        self.address = kwargs["address"]
+        self.state = _state()
         self.started = False
-        self.shutdown = False
+        self.stopped = False
+        self.removed = False
+        self.listener: Callable[[BesenBS20Data], None] | None = None
+        self.instances.append(self)
+
+    def add_listener(
+        self,
+        listener: Callable[[BesenBS20Data], None],
+    ) -> Callable[[], None]:
+        """Record a listener."""
+
+        self.listener = listener
+
+        def _remove() -> None:
+            self.removed = True
+
+        return _remove
 
     async def async_start(self) -> None:
         """Start or raise configured error."""
@@ -80,164 +86,164 @@ class _FakeCoordinator:
             raise self.next_error
         self.started = True
 
-    async def async_shutdown(self) -> None:
+    async def async_stop(self) -> None:
         """Record shutdown."""
 
-        self.shutdown = True
+        self.stopped = True
 
 
-def _entry() -> BesenBS20ConfigEntry:
-    """Return a fake config entry."""
+def _entry() -> MockConfigEntry:
+    """Return a config entry."""
 
-    return cast(
-        BesenBS20ConfigEntry,
-        SimpleNamespace(
-            entry_id="entry",
-            data={
-                CONF_ADDRESS: "AA:BB",
-                CONF_NAME: "ACP#Garage",
-                CONF_PIN: "123456",
-            },
-            options={CONF_SYNC_CLOCK: False},
-            runtime_data=None,
-        ),
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "AA:BB",
+            CONF_NAME: "ACP#Garage",
+            CONF_PIN: "123456",
+        },
+        options={CONF_SYNC_CLOCK: False},
+        title="Garage",
+        unique_id="AA:BB",
     )
 
 
-def _hass(*, unload_ok: bool = True) -> SimpleNamespace:
-    """Return a fake hass object."""
+def _assert_entry_state(entry: MockConfigEntry, state: ConfigEntryState) -> None:
+    """Assert a config entry state without narrowing later assertions."""
 
-    return SimpleNamespace(config_entries=_FakeConfigEntries(unload_ok=unload_ok))
-
-
-def _bluetooth_module() -> Any:
-    """Return the runtime Bluetooth module used by setup."""
-
-    return bluetooth
+    assert entry.state is state
 
 
 def _patch_setup_dependencies(
     monkeypatch: pytest.MonkeyPatch,
     *,
-    ble_device: object | None = None,
-) -> list[tuple[str, str]]:
-    """Patch setup dependencies and return repair calls."""
+    ble_device: object | None = _DEFAULT_BLE_DEVICE,
+    start_error: Exception | None = None,
+) -> None:
+    """Patch setup dependencies."""
 
-    repair_calls: list[tuple[str, str]] = []
+    _FakeClient.instances = []
+    _FakeClient.next_error = start_error
     monkeypatch.setattr(integration_module, "BesenBS20Client", _FakeClient)
-    monkeypatch.setattr(integration_module, "BesenBS20Coordinator", _FakeCoordinator)
     monkeypatch.setattr(
-        _bluetooth_module(),
+        bluetooth,
         "async_ble_device_from_address",
-        lambda *args, **kwargs: (
-            cast(BLEDevice, ble_device) if ble_device is not None else None
-        ),
+        lambda *args, **kwargs: ble_device,
     )
     monkeypatch.setattr(
-        _bluetooth_module(),
+        bluetooth,
         "async_address_reachability_diagnostics",
         lambda *args, **kwargs: "diagnostic reason",
-        raising=False,
     )
-    monkeypatch.setattr(
-        _bluetooth_module(),
-        "BluetoothReachabilityIntent",
-        SimpleNamespace(CONNECTION="connection"),
-        raising=False,
-    )
-    monkeypatch.setattr(
-        integration_module,
-        "async_create_no_connectable_path_issue",
-        lambda hass, entry_id: repair_calls.append(("create_path", entry_id)),
-    )
-    monkeypatch.setattr(
-        integration_module,
-        "async_delete_no_connectable_path_issue",
-        lambda hass, entry_id: repair_calls.append(("delete_path", entry_id)),
-    )
-    monkeypatch.setattr(
-        integration_module,
-        "async_create_reauth_issue",
-        lambda hass, entry_id: repair_calls.append(("create_reauth", entry_id)),
-    )
-    monkeypatch.setattr(
-        integration_module,
-        "async_delete_reauth_issue",
-        lambda hass, entry_id: repair_calls.append(("delete_reauth", entry_id)),
-    )
-    return repair_calls
 
 
-@pytest.mark.asyncio
-async def test_setup_entry_success(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Setup creates runtime data and forwards platforms."""
+async def test_setup_entry_success(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Setup creates runtime data and forwards the switch platform."""
 
-    _FakeCoordinator.next_error = None
-    repairs_called = _patch_setup_dependencies(monkeypatch, ble_device=object())
-    hass = _hass()
     entry = _entry()
+    entry.add_to_hass(hass)
+    _patch_setup_dependencies(monkeypatch)
 
-    result = await async_setup_entry(cast(Any, hass), entry)
-    runtime_data = cast(Any, entry).runtime_data
-    client = cast(_FakeClient, runtime_data.client)
-    coordinator = cast(_FakeCoordinator, runtime_data.coordinator)
+    assert await hass.config_entries.async_setup(entry.entry_id) is True
+    await hass.async_block_till_done()
 
-    assert result is True
+    client = _FakeClient.instances[0]
+    _assert_entry_state(entry, ConfigEntryState.LOADED)
+    assert cast(Any, entry.runtime_data).client is client
     assert client.kwargs["address"] == "AA:BB"
     assert client.kwargs["sync_clock"] is False
-    assert coordinator.started is True
-    assert hass.config_entries.forwarded == [(entry, PLATFORMS)]
-    assert repairs_called == [("delete_path", "entry"), ("delete_reauth", "entry")]
+    assert client.started is True
+    assert hass.states.get("switch.garage_charge") is not None
+
+    assert await hass.config_entries.async_unload(entry.entry_id) is True
+    await hass.async_block_till_done()
+
+    _assert_entry_state(entry, ConfigEntryState.NOT_LOADED)
+    assert client.removed is True
+    assert client.stopped is True
 
 
-@pytest.mark.asyncio
 async def test_setup_entry_no_connectable_path(
+    hass: HomeAssistant,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Setup raises not ready when no active Bluetooth path exists."""
-
-    repairs_called = _patch_setup_dependencies(monkeypatch)
-
-    with pytest.raises(ConfigEntryNotReady) as err:
-        await async_setup_entry(cast(Any, _hass()), _entry())
-
-    assert err.value.translation_key == "no_connectable_path"
-    assert err.value.translation_placeholders == {"reason": "diagnostic reason"}
-    assert repairs_called == [("create_path", "entry")]
-
-
-@pytest.mark.asyncio
-async def test_setup_entry_auth_and_connect_errors(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Setup maps coordinator auth/connect errors to config-entry errors."""
-
-    _patch_setup_dependencies(monkeypatch, ble_device=object())
-    _FakeCoordinator.next_error = InvalidAuth("bad pin")
-    with pytest.raises(ConfigEntryAuthFailed):
-        await async_setup_entry(cast(Any, _hass()), _entry())
-
-    _FakeCoordinator.next_error = CannotConnect("offline")
-    with pytest.raises(ConfigEntryNotReady) as err:
-        await async_setup_entry(cast(Any, _hass()), _entry())
-
-    assert err.value.translation_key == "cannot_connect"
-    assert err.value.translation_placeholders == {"error": "offline"}
-
-    _FakeCoordinator.next_error = None
-
-
-@pytest.mark.asyncio
-async def test_unload_entry_shutdowns_only_when_platforms_unload() -> None:
-    """Unload shuts down runtime data only when platforms unload successfully."""
+    """Setup retries and creates a repair issue when no active path exists."""
 
     entry = _entry()
-    coordinator = _FakeCoordinator(cast(HomeAssistant, object()), _FakeClient())
-    cast(Any, entry).runtime_data = SimpleNamespace(coordinator=coordinator)
+    entry.add_to_hass(hass)
+    _patch_setup_dependencies(monkeypatch, ble_device=None)
 
-    assert await async_unload_entry(cast(Any, _hass()), entry) is True
-    assert coordinator.shutdown is True
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-    coordinator.shutdown = False
-    assert await async_unload_entry(cast(Any, _hass(unload_ok=False)), entry) is False
-    assert coordinator.shutdown is False
+    issue_registry = ir.async_get(hass)
+    _assert_entry_state(entry, ConfigEntryState.SETUP_RETRY)
+    assert issue_registry.async_get_issue(
+        DOMAIN,
+        f"{entry.entry_id}_no_connectable_path",
+    )
+
+
+async def test_setup_entry_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Setup maps invalid auth to a config-entry auth failure."""
+
+    entry = _entry()
+    entry.add_to_hass(hass)
+    _patch_setup_dependencies(monkeypatch, start_error=InvalidAuth("bad pin"))
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    _assert_entry_state(entry, ConfigEntryState.SETUP_ERROR)
+
+
+async def test_setup_entry_connect_error_retries(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Setup maps connection errors to a retry."""
+
+    entry = _entry()
+    entry.add_to_hass(hass)
+    _patch_setup_dependencies(monkeypatch, start_error=CannotConnect("offline"))
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    _assert_entry_state(entry, ConfigEntryState.SETUP_RETRY)
+
+
+async def test_unload_skips_shutdown_when_platform_unload_fails(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Unload does not stop the client when platform unload fails."""
+
+    entry = _entry()
+    entry.add_to_hass(hass)
+    _patch_setup_dependencies(monkeypatch)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    client = _FakeClient.instances[0]
+
+    async def _async_unload_platforms(*args: Any, **kwargs: Any) -> bool:
+        """Return a failed platform unload."""
+
+        return False
+
+    monkeypatch.setattr(
+        hass.config_entries,
+        "async_unload_platforms",
+        _async_unload_platforms,
+    )
+
+    assert await hass.config_entries.async_unload(entry.entry_id) is False
+
+    assert client.stopped is False

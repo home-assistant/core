@@ -8,6 +8,7 @@ from besen_bs20.client import BesenBS20Client
 from besen_bs20.exceptions import CommandFailed
 from besen_bs20.models import BesenBS20Data
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -20,12 +21,18 @@ _LOGGER = logging.getLogger(__name__)
 class BesenBS20Coordinator(DataUpdateCoordinator[BesenBS20Data]):
     """Coordinate Besen BS20 state updates."""
 
-    def __init__(self, hass: HomeAssistant, client: BesenBS20Client) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        client: BesenBS20Client,
+    ) -> None:
         """Initialize the coordinator."""
 
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_method=self._async_update_data,
         )
@@ -43,6 +50,7 @@ class BesenBS20Coordinator(DataUpdateCoordinator[BesenBS20Data]):
     async def async_shutdown(self) -> None:
         """Stop listening to charger updates."""
 
+        await super().async_shutdown()
         if self._remove_listener is not None:
             self._remove_listener()
             self._remove_listener = None
@@ -69,31 +77,6 @@ class BesenBS20Coordinator(DataUpdateCoordinator[BesenBS20Data]):
         """Stop charging."""
 
         await self._async_run_command(self.client.async_stop_charging())
-
-    async def async_set_charge_amps(self, amps: int) -> None:
-        """Set charger amps."""
-
-        await self._async_run_command(self.client.async_set_charge_amps(amps))
-
-    async def async_set_lcd_brightness(self, brightness: int) -> None:
-        """Set LCD brightness."""
-
-        await self._async_run_command(self.client.async_set_lcd_brightness(brightness))
-
-    async def async_set_temperature_unit(self, unit: str) -> None:
-        """Set temperature unit."""
-
-        await self._async_run_command(self.client.async_set_temperature_unit(unit))
-
-    async def async_set_language(self, language: str) -> None:
-        """Set language."""
-
-        await self._async_run_command(self.client.async_set_language(language))
-
-    async def async_set_device_name(self, name: str) -> None:
-        """Set charger name."""
-
-        await self._async_run_command(self.client.async_set_device_name(name))
 
     async def _async_run_command(self, command: Awaitable[None]) -> None:
         """Run a charger command and translate command failures."""
