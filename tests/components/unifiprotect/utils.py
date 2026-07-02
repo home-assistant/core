@@ -19,14 +19,21 @@ from uiprotect.data import (
     ProtectModelWithId,
     PublicBootstrap,
     Sensor,
+    SmartDetectAudioType,
+    SmartDetectObjectType,
+    VideoMode,
     WSSubscriptionMessage,
 )
 from uiprotect.data.bootstrap import ProtectDeviceRef
 from uiprotect.data.public_devices import (
+    PublicCamera,
+    PublicCameraLedSettings,
     PublicLight,
     PublicLightDeviceSettings,
+    PublicOsdSettings,
     PublicSensor,
     PublicSensorMotionSettingsRead,
+    PublicSmartDetectSettings,
     PublicWirelessBatteryStatus,
     PublicWirelessConnectionState,
 )
@@ -300,6 +307,45 @@ def make_public_light(
     return public
 
 
+def make_public_camera(
+    camera: Camera,
+    *,
+    state: DeviceState | None = None,
+    status_light: bool = False,
+    osd_name: bool = False,
+    osd_date: bool = False,
+    osd_logo: bool = False,
+    osd_debug: bool = False,
+    video_mode: VideoMode | None = None,
+    object_types: list[SmartDetectObjectType] | None = None,
+    audio_types: list[SmartDetectAudioType] | None = None,
+) -> Mock:
+    """Build a public-API camera for the migrated camera config switches.
+
+    Identifiers come from the private camera fixture; each ``*`` override lets a
+    test set a value the private object would not produce so a wrong
+    ``ufp_public_value``/``ufp_public_value_fn`` fails the test.
+    """
+    public = Mock(spec=PublicCamera)
+    public.id = camera.id
+    public.mac = camera.mac
+    public.model = ModelType.CAMERA
+    public.state = DeviceState[camera.state.name] if state is None else state
+    public.led_settings = PublicCameraLedSettings(is_enabled=status_light)
+    public.osd_settings = PublicOsdSettings(
+        is_name_enabled=osd_name,
+        is_date_enabled=osd_date,
+        is_logo_enabled=osd_logo,
+        is_debug_enabled=osd_debug,
+    )
+    public.video_mode = video_mode
+    public.smart_detect_settings = PublicSmartDetectSettings(
+        object_types=object_types or [],
+        audio_types=audio_types or [],
+    )
+    return public
+
+
 def setup_public_sensor(ufp: MockUFPFixture) -> None:
     """Expose private sensors over the public API via a real ``PublicBootstrap``.
 
@@ -348,6 +394,33 @@ def setup_public_light(ufp: MockUFPFixture) -> None:
             and (private := ufp.api.bootstrap.lights.get(obj_id)) is not None
         ):
             public_bootstrap.lights[obj_id] = make_public_light(private)
+        return public_bootstrap.get(model, obj_id)
+
+    pb.get = _get
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+
+
+def setup_public_camera(ufp: MockUFPFixture) -> None:
+    """Expose private cameras over the public API via a real ``PublicBootstrap``.
+
+    Mirrors ``setup_public_sensor`` for ``ModelType.CAMERA`` so the migrated
+    camera config switches read from the public object.
+    """
+    public_bootstrap = PublicBootstrap()
+    pb = Mock(spec=PublicBootstrap)
+    pb.cameras = public_bootstrap.cameras
+    pb.relays = {}
+    pb.sirens = {}
+    pb.arm_mode = None
+    pb.arm_profiles = {}
+
+    def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
+        if (
+            model is ModelType.CAMERA
+            and (private := ufp.api.bootstrap.cameras.get(obj_id)) is not None
+        ):
+            public_bootstrap.cameras[obj_id] = make_public_camera(private)
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get
