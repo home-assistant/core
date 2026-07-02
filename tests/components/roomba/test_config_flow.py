@@ -1003,8 +1003,10 @@ async def test_dhcp_discovery_not_irobot(hass: HomeAssistant) -> None:
 async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
     """Test we abort flows when we have a partial hostname."""
 
+    blid = "blid"
     with patch(
-        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery",
+        partial(_mocked_discovery, blid=blid),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -1012,7 +1014,7 @@ async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
             data=DhcpServiceInfo(
                 ip=MOCK_IP,
                 macaddress="aabbccddeeff",
-                hostname="irobot-blid",
+                hostname=f"irobot-{blid}",
             ),
         )
         await hass.async_block_till_done()
