@@ -522,8 +522,8 @@
 # name: test_park_and_ride_all_entities[sensor.gorge_de_loup_accessible_parking_spaces-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gorge de Loup Accessible parking spaces',
-      'unit_of_measurement': 'spaces',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gorge de Loup Accessible parking spaces',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'spaces',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gorge_de_loup_accessible_parking_spaces',
@@ -573,8 +573,8 @@
 # name: test_park_and_ride_all_entities[sensor.gorge_de_loup_available_parking_spaces-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gorge de Loup Available parking spaces',
-      'unit_of_measurement': 'spaces',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gorge de Loup Available parking spaces',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'spaces',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gorge_de_loup_available_parking_spaces',
@@ -624,8 +624,8 @@
 # name: test_park_and_ride_all_entities[sensor.gorge_de_loup_capacity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gorge de Loup Capacity',
-      'unit_of_measurement': 'spaces',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gorge de Loup Capacity',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'spaces',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gorge_de_loup_capacity',
@@ -675,7 +675,7 @@
 # name: test_park_and_ride_all_entities[sensor.gorge_de_loup_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gorge de Loup Name',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gorge de Loup Name',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gorge_de_loup_name',
@@ -725,7 +725,7 @@
 # name: test_park_and_ride_all_entities[sensor.gorge_de_loup_opening_hours-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gorge de Loup Opening hours',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gorge de Loup Opening hours',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gorge_de_loup_opening_hours',
