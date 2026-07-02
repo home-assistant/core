@@ -849,6 +849,47 @@ async def test_service_handler_empty_strings(hass: HomeAssistant) -> None:
             )
 
 
+async def test_service_handler_single_item_slot_list(hass: HomeAssistant) -> None:
+    """Test that a single-item list slot value is unwrapped before validation."""
+    hass.states.async_set("light.kitchen", "off")
+
+    calls = async_mock_service(hass, "light", "turn_on")
+    handler = intent.ServiceIntentHandler("TestType", "light", "turn_on")
+    intent.async_register(hass, handler)
+
+    # LLMs sometimes wrap a scalar name in a list; it should still match.
+    result = await intent.async_handle(
+        hass,
+        "test",
+        "TestType",
+        slots={"name": {"value": ["kitchen"]}},
+    )
+    assert result.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": "light.kitchen"}
+
+
+@pytest.mark.parametrize("slot_name", ["name", "area", "floor"])
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(["kitchen", "bedroom"], id="multi-item"),
+        pytest.param([], id="empty"),
+    ],
+)
+async def test_service_handler_invalid_slot_list(
+    hass: HomeAssistant, slot_name: str, value: list[str]
+) -> None:
+    """Test that a list slot value that is not a single item is rejected."""
+    handler = intent.ServiceIntentHandler("TestType", "light", "turn_on")
+    intent.async_register(hass, handler)
+
+    with pytest.raises(intent.InvalidSlotInfo):
+        await intent.async_handle(
+            hass, "test", "TestType", slots={slot_name: {"value": value}}
+        )
+
+
 async def test_service_handler_no_filter(hass: HomeAssistant) -> None:
     """Test that targeting all devices in the house fails."""
     handler = intent.ServiceIntentHandler("TestType", "light", "turn_on")

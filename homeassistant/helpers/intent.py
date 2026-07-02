@@ -871,6 +871,19 @@ def non_empty_string(value: Any) -> str:
     return value_str
 
 
+def _single_value(value: Any) -> Any:
+    """Unwrap a single-item list into its only element.
+
+    Conversation agents backed by an LLM sometimes wrap a scalar slot value in
+    a list, mirroring the shape of the list-valued "domain" slot (for example
+    name: ["Kitchen Light"]). Accept that shape for the name/area/floor slots
+    rather than rejecting an otherwise valid request.
+    """
+    if isinstance(value, list) and len(value) == 1:
+        return value[0]
+    return value
+
+
 @dataclass(kw_only=True)
 class IntentSlotInfo:
     """Details about how intent slots are processed and validated."""
@@ -947,8 +960,8 @@ class DynamicServiceIntentHandler(IntentHandler):
         domain_validator = (
             vol.In(list(self.required_domains)) if self.required_domains else cv.string
         )
-        slot_schema = {
-            vol.Any("name", "area", "floor"): non_empty_string,
+        slot_schema: dict = {
+            vol.Any("name", "area", "floor"): vol.All(_single_value, non_empty_string),
             vol.Optional("domain"): vol.All(cv.ensure_list, [domain_validator]),
         }
         if self.device_classes:
