@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 import os
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple, override
 
 from psutil import Process
 from psutil._ntuples import sbattery, sdiskusage, shwtemp, snetio, snicaddr, sswap
@@ -148,6 +148,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             ("temperatures", ""): set(),
         }
 
+    @override
     async def _async_update_data(self) -> SensorData:
         """Fetch data."""
         _LOGGER.debug("Update list is: %s", self.update_subscribers)

@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aiohttp.client_exceptions import ClientConnectorError
 from gios import Gios
@@ -48,7 +48,8 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):
         if TYPE_CHECKING:
             # Station ID is Optional in the library, but here we know it is set for sure
             # so we can safely assert it is not None for type checking purposes
-            # Gios instance is created only with a valid station ID in the async_setup_entry.
+            # Gios instance is created only with a valid station
+            # ID in the async_setup_entry.
             assert station_id is not None
 
         self.device_info = DeviceInfo(
@@ -59,6 +60,7 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):
             configuration_url=URL.format(station_id=station_id),
         )
 
+    @override
     async def _async_update_data(self) -> GiosSensors:
         """Update data via library."""
         try:

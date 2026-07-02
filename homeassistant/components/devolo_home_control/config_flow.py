@@ -1,7 +1,7 @@
 """Config flow to configure the devolo home control integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -23,6 +23,7 @@ class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -39,6 +40,7 @@ class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -117,7 +119,9 @@ class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         if self.unique_id != uuid:
-            # The old user and the new user are not the same. This could mess-up everything as all unique IDs might change.
+            # The old user and the new user are not the same.
+            # This could mess-up everything as all
+            # unique IDs might change.
             raise UuidChanged
 
         reauth_entry = self._get_reauth_entry()

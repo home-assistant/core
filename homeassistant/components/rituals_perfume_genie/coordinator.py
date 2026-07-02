@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiohttp import ClientError, ClientResponseError
 from pyrituals import Account, AuthenticationException, Diffuser
@@ -19,7 +20,7 @@ type RitualsConfigEntry = ConfigEntry[dict[str, RitualsDataUpdateCoordinator]]
 
 
 class RitualsDataUpdateCoordinator(DataUpdateCoordinator[None]):
-    """Class to manage fetching Rituals Perfume Genie device data from single endpoint."""
+    """Manage fetching Rituals Perfume Genie device data."""
 
     config_entry: RitualsConfigEntry
 
@@ -42,16 +43,19 @@ class RitualsDataUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=update_interval,
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from Rituals, with one silent re-auth on 401.
 
-        If silent re-auth also fails, raise ConfigEntryAuthFailed to trigger reauth flow.
+        If silent re-auth also fails, raise ConfigEntryAuthFailed
+        to trigger reauth flow.
         Other HTTP/network errors are wrapped in UpdateFailed so HA can retry.
         """
         try:
             await self.diffuser.update_data()
         except (AuthenticationException, ClientResponseError) as err:
-            # Treat 401/403 like AuthenticationException → one silent re-auth, single retry
+            # Treat 401/403 like AuthenticationException:
+            # one silent re-auth, single retry
             if isinstance(err, ClientResponseError) and (status := err.status) not in (
                 401,
                 403,

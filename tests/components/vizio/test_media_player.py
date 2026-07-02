@@ -126,7 +126,7 @@ async def test_media_player_entity_setup(
 
 
 def _assert_sources_and_volume(attr: dict[str, Any], vizio_device_class: str) -> None:
-    """Assert source list, source, and volume level based on attr dict and device class."""
+    """Assert source list, source, and volume level based on device class."""
     assert attr[ATTR_INPUT_SOURCE_LIST] == INPUT_LIST
     assert attr[ATTR_INPUT_SOURCE] == CURRENT_INPUT
     assert (
@@ -147,12 +147,26 @@ def _get_attr_and_assert_base_attr(
     return attr
 
 
-async def _setup_tv_on(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
-    """Set up a TV that's powered on and verify base/source/volume/sound-mode."""
-    await setup_integration(hass, config_entry)
-    attr = _get_attr_and_assert_base_attr(hass, MediaPlayerDeviceClass.TV, STATE_ON)
-    _assert_sources_and_volume(attr, VIZIO_DEVICE_CLASS_TV)
-    assert attr[ATTR_SOUND_MODE] == CURRENT_EQ
+@asynccontextmanager
+async def _cm_for_test_setup_without_apps(
+    all_settings: dict[str, Any], vizio_power_state: bool
+) -> AsyncIterator[None]:
+    """Context manager to setup test for Vizio devices without app patches."""
+    with (
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_all_settings",
+            return_value=all_settings,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_setting_options",
+            return_value=EQ_LIST,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_power_state",
+            return_value=vizio_power_state,
+        ),
+    ):
+        yield
 
 
 async def _setup_tv_off(
@@ -379,11 +393,9 @@ async def test_services(
         SERVICE_SELECT_SOUND_MODE,
         {ATTR_SOUND_MODE: "Music"},
     )
-    assert_set_setting(aioclient_mock, name="eq", value="Music")
-
-    # SERVICE_UPDATE_SETTING normalizes name+value via the config-flow schema.
-    await _call_service(
-        aioclient_mock,
+    # Test that the update_setting service does config
+    # validation/transformation correctly
+    await _test_service(
         hass,
         DOMAIN,
         SERVICE_UPDATE_SETTING,
@@ -715,7 +727,8 @@ async def test_apps_update(
                 await hass.async_block_till_done()
                 async_fire_time_changed(hass, dt_util.now() + timedelta(days=2))
                 await hass.async_block_till_done()
-                # Check source list, remove TV inputs, and verify that the integration is
+                # Check source list, remove TV inputs, and verify that
+                # the integration is
                 # now using the APP_LIST list
                 sources = hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
                 apps = list(set(sources) - set(INPUT_LIST))

@@ -1,7 +1,7 @@
 """Config flow for ScreenLogic."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from screenlogicpy import ScreenLogicError, discovery
 from screenlogicpy.const.common import SL_GATEWAY_IP, SL_GATEWAY_NAME, SL_GATEWAY_PORT
@@ -75,12 +75,14 @@ class ScreenlogicConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> ScreenLogicOptionsFlowHandler:
         """Get the options flow for ScreenLogic."""
         return ScreenLogicOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -88,6 +90,7 @@ class ScreenlogicConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovered_gateways = await async_discover_gateways_by_unique_id()
         return await self.async_step_gateway_select()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -205,7 +208,7 @@ class ScreenLogicOptionsFlowHandler(OptionsFlow):
             data_schema=vol.Schema(
                 {
                     # Polling interval is user-configurable, which is no longer allowed
-                    # pylint: disable-next=hass-config-flow-polling-field
+                    # pylint: disable-next=home-assistant-config-flow-polling-field
                     vol.Required(
                         CONF_SCAN_INTERVAL,
                         default=current_interval,

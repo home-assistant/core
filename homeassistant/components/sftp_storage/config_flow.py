@@ -3,7 +3,7 @@
 from contextlib import suppress
 from pathlib import Path
 import shutil
-from typing import Any, cast
+from typing import Any, cast, override
 
 from asyncssh import KeyImportError, SSHClientConnectionOptions, connect
 from asyncssh.misc import PermissionDenied
@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import (
     FileSelector,
@@ -27,11 +28,7 @@ from . import SFTPConfigEntryData
 from .client import get_client_options
 from .const import (
     CONF_BACKUP_LOCATION,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
     CONF_PRIVATE_KEY_FILE,
-    CONF_USERNAME,
     DEFAULT_PKEY_NAME,
     DOMAIN,
     LOGGER,
@@ -58,11 +55,11 @@ class SFTPStorageException(Exception):
 
 
 class SFTPStorageInvalidPrivateKey(SFTPStorageException):
-    """Exception raised during config flow - when user provided invalid private key file."""
+    """Exception raised when user provided invalid private key file."""
 
 
 class SFTPStorageMissingPasswordOrPkey(SFTPStorageException):
-    """Exception raised during config flow - when user did not provide password or private key file."""
+    """Exception raised when user did not provide password or private key file."""
 
 
 class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -85,8 +82,10 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
         Returns: the possibly updated `user_input`.
 
         Raises:
-            - SFTPStorageMissingPasswordOrPkey: Neither password nor private key provided
-            - SFTPStorageInvalidPrivateKey: The provided private key has an invalid format
+            - SFTPStorageMissingPasswordOrPkey: Neither password
+              nor private key provided
+            - SFTPStorageInvalidPrivateKey: The provided private
+              key has an invalid format
         """
 
         # If neither password nor private key is provided, error out;
@@ -102,6 +101,7 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return user_input
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
@@ -153,9 +153,11 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                 # - OSError, if host or port are not correct.
                 # - SFTPStorageInvalidPrivateKey, if private key is not valid format.
                 # - asyncssh.misc.PermissionDenied, if credentials are not correct.
-                # - SFTPStorageMissingPasswordOrPkey, if password and private key are not provided.
+                # - SFTPStorageMissingPasswordOrPkey, if password
+                #   and private key are not provided.
                 # - asyncssh.sftp.SFTPNoSuchFile, if directory does not exist.
-                # - asyncssh.sftp.SFTPPermissionDenied, if we don't have access to said directory
+                # - asyncssh.sftp.SFTPPermissionDenied,
+                #   if we don't have access to said directory
                 async with (
                     connect(
                         host=user_config.host,

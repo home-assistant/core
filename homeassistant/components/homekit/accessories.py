@@ -51,6 +51,7 @@ from homeassistant.core import (
     callback as ha_callback,
     split_entity_id,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.decorator import Registry
@@ -202,7 +203,10 @@ def get_accessory(  # noqa: C901
 
         if device_class == MediaPlayerDeviceClass.RECEIVER:
             a_type = "ReceiverMediaPlayer"
-        elif device_class == MediaPlayerDeviceClass.TV:
+        elif device_class in (
+            MediaPlayerDeviceClass.TV,
+            MediaPlayerDeviceClass.PROJECTOR,
+        ):
             a_type = "TelevisionMediaPlayer"
         elif validate_media_player_features(state, feature_list):
             a_type = "MediaPlayer"
@@ -527,7 +531,8 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             for attr in self._reload_on_change_attrs:
                 if old_attributes.get(attr) != new_attributes.get(attr):
                     _LOGGER.debug(
-                        "%s: Reloading HomeKit accessory since %s has changed from %s -> %s",
+                        "%s: Reloading HomeKit accessory since"
+                        " %s has changed from %s -> %s",
                         self.entity_id,
                         attr,
                         old_attributes.get(attr),
@@ -641,16 +646,44 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         context = Context()
 
         self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data, context=context)
-        self.hass.async_create_task(
-            self.hass.services.async_call(
-                domain, service, service_data, context=context
-            ),
-            eager_start=True,
-        )
+
+        async def _call() -> None:
+            # blocking=True so the handler's exception reaches us (the
+            # non-blocking path swallows it); on failure we resync so pyhap's
+            # optimistic target characteristic doesn't strand the tile on the
+            # requested action.
+            try:
+                await self.hass.services.async_call(
+                    domain, service, service_data, blocking=True, context=context
+                )
+            except HomeAssistantError as err:
+                _LOGGER.warning(
+                    "%s: %s.%s failed (%s); re-syncing HomeKit state",
+                    self.entity_id,
+                    domain,
+                    service,
+                    err,
+                )
+            except Exception:
+                _LOGGER.exception(
+                    "%s: %s.%s raised unexpectedly; re-syncing HomeKit state",
+                    self.entity_id,
+                    domain,
+                    service,
+                )
+            else:
+                return
+            if (state := self.hass.states.get(self.entity_id)) is not None:
+                self.async_update_state(state)
+
+        self.hass.async_create_task(_call(), eager_start=True)
 
     @ha_callback
     def async_reload(self) -> None:
-        """Reload and recreate an accessory and update the c# value in the mDNS record."""
+        """Reload and recreate an accessory.
+
+        Update the c# value in the mDNS record.
+        """
         async_dispatcher_send(
             self.hass,
             SIGNAL_RELOAD_ENTITIES.format(self.driver.entry_id),

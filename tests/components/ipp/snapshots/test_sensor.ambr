@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'idle',
         'printing',
         'stopped',
@@ -46,11 +46,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'command_set': 'ESCPL2,BDC,D4,D4PX,ESCPR7,END4,GENEP,URF',
-      'device_class': 'enum',
-      'friendly_name': 'Test HA-1000 Series',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test HA-1000 Series',
       'info': 'Test HA-1000 Series',
       'location': None,
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'idle',
         'printing',
         'stopped',
@@ -75,7 +75,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -110,12 +110,12 @@
 # name: test_sensors[sensor.test_ha_1000_series_black_ink-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test HA-1000 Series Black ink',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test HA-1000 Series Black ink',
       'marker_high_level': 100,
       'marker_low_level': 10,
       'marker_type': 'ink-cartridge',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ha_1000_series_black_ink',
@@ -132,7 +132,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -167,12 +167,12 @@
 # name: test_sensors[sensor.test_ha_1000_series_cyan_ink-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test HA-1000 Series Cyan ink',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test HA-1000 Series Cyan ink',
       'marker_high_level': 100,
       'marker_low_level': 10,
       'marker_type': 'ink-cartridge',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ha_1000_series_cyan_ink',
@@ -189,7 +189,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -224,12 +224,12 @@
 # name: test_sensors[sensor.test_ha_1000_series_magenta_ink-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test HA-1000 Series Magenta ink',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test HA-1000 Series Magenta ink',
       'marker_high_level': 100,
       'marker_low_level': 10,
       'marker_type': 'ink-cartridge',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ha_1000_series_magenta_ink',
@@ -246,7 +246,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -281,12 +281,12 @@
 # name: test_sensors[sensor.test_ha_1000_series_photo_black_ink-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test HA-1000 Series Photo black ink',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test HA-1000 Series Photo black ink',
       'marker_high_level': 100,
       'marker_low_level': 10,
       'marker_type': 'ink-cartridge',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ha_1000_series_photo_black_ink',
@@ -336,8 +336,8 @@
 # name: test_sensors[sensor.test_ha_1000_series_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Test HA-1000 Series Uptime',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test HA-1000 Series Uptime',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ha_1000_series_uptime',
@@ -354,7 +354,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -389,12 +389,12 @@
 # name: test_sensors[sensor.test_ha_1000_series_yellow_ink-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test HA-1000 Series Yellow ink',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test HA-1000 Series Yellow ink',
       'marker_high_level': 100,
       'marker_low_level': 10,
       'marker_type': 'ink-cartridge',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ha_1000_series_yellow_ink',

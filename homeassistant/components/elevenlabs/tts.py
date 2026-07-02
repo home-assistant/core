@@ -5,7 +5,7 @@ from collections import deque
 from collections.abc import AsyncGenerator, Mapping
 import contextlib
 import logging
-from typing import Any
+from typing import Any, override
 
 from elevenlabs import AsyncElevenLabs
 from elevenlabs.core import ApiError
@@ -20,7 +20,7 @@ from homeassistant.components.tts import (
     TtsAudioType,
     Voice,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import ATTR_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -28,7 +28,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ElevenLabsConfigEntry
 from .const import (
-    ATTR_MODEL,
     CONF_SIMILARITY,
     CONF_STABILITY,
     CONF_STYLE,
@@ -135,10 +134,12 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
             else "en"
         )
 
+    @override
     def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""
         return self._voices
 
+    @override
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
@@ -163,6 +164,7 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
             raise HomeAssistantError(exc) from exc
         return "mp3", bytes_combined
 
+    @override
     async def async_stream_tts_audio(
         self, request: TTSAudioRequest
     ) -> TTSAudioResponse:
@@ -294,7 +296,9 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
                                 previous_request_ids.append(rid)
                             else:
                                 _LOGGER.debug(
-                                    "No request-id returned from server; clearing previous requests"
+                                    "No request-id returned from"
+                                    " server; clearing previous"
+                                    " requests"
                                 )
                                 previous_request_ids.clear()
                 except ApiError as exc:
@@ -306,7 +310,8 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
                         await _add_sentences_task
                     raise HomeAssistantError(exc) from exc
 
-                # Capture and store server request-id for next calls (only when supported)
+                # Capture and store server request-id for
+                # next calls (only when supported)
                 _LOGGER.debug("Completed TTS stream for text: %s", text)
 
         _LOGGER.debug("Completed TTS stream")

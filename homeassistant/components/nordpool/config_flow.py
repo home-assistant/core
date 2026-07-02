@@ -1,6 +1,6 @@
 """Adds config flow for Nord Pool integration."""
 
-from typing import Any
+from typing import Any, override
 
 from pynordpool import (
     Currency,
@@ -54,6 +54,8 @@ DATA_SCHEMA = vol.Schema(
 
 async def test_api(hass: HomeAssistant, user_input: dict[str, Any]) -> dict[str, str]:
     """Test fetch data from Nord Pool."""
+    if not user_input.get(CONF_AREAS):
+        return {CONF_AREAS: "no_areas"}
     client = NordPoolClient(async_get_clientsession(hass))
     try:
         await client.async_get_delivery_period(
@@ -74,6 +76,7 @@ class NordpoolConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

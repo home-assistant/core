@@ -1,6 +1,6 @@
 """Platform for light integration."""
 
-from typing import Any
+from typing import Any, override
 
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
@@ -54,15 +54,18 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
         )
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness value of the light."""
         return round(self._value / 100 * 255)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the light."""
         return bool(self._value)
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         if kwargs.get(ATTR_BRIGHTNESS) is not None:
@@ -70,12 +73,14 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
                 round(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
             )
         elif self._binary_switch_property is not None:
-            # Turn on the light device to the latest known value. The value is known by the device itself.
+            # Turn on the light device to the latest known
+            # value. The value is known by the device itself.
             self._binary_switch_property.set(True)
         else:
             # If there is no binary switch attached to the device, turn it on to 100 %.
             self._multi_level_switch_property.set(100)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         if self._binary_switch_property is not None:

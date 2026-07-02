@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from tololib import ToloClient, ToloStatus
 
@@ -67,14 +67,17 @@ class ToloSwitchEntity(ToloSaunaCoordinatorEntity, SwitchEntity):
         self._attr_unique_id = f"{entry.entry_id}_{entity_description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if the switch is currently on."""
         return self.entity_description.getter(self.coordinator.data.status)
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self.entity_description.setter(self.coordinator.client, True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self.entity_description.setter(self.coordinator.client, False)

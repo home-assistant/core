@@ -2,8 +2,12 @@
 
 import asyncio
 from datetime import datetime, timedelta
+from typing import override
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorEntity,
+)
 from homeassistant.const import (
     CONF_COMMAND,
     CONF_NAME,
@@ -25,6 +29,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import CONF_COMMAND_TIMEOUT, LOGGER, TRIGGER_ENTITY_OPTIONS
 from .sensor import CommandSensorData
+from .utils import create_platform_yaml_not_supported_issue
 
 DEFAULT_NAME = "Binary Command Sensor"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -41,6 +46,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Command line Binary Sensor."""
     if not discovery_info:
+        create_platform_yaml_not_supported_issue(hass, BINARY_SENSOR_DOMAIN)
         return
 
     binary_sensor_config = discovery_info
@@ -100,6 +106,7 @@ class CommandBinarySensor(ManualTriggerEntity, BinarySensorEntity):
         self._scan_interval = scan_interval
         self._process_updates: asyncio.Lock | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -120,7 +127,8 @@ class CommandBinarySensor(ManualTriggerEntity, BinarySensorEntity):
             self._process_updates = asyncio.Lock()
         if self._process_updates.locked():
             LOGGER.warning(
-                "Updating Command Line Binary Sensor %s took longer than the scheduled update interval %s",
+                "Updating Command Line Binary Sensor %s took longer"
+                " than the scheduled update interval %s",
                 self.name,
                 self._scan_interval,
             )

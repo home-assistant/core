@@ -1,7 +1,7 @@
 """Config flow for Minecraft Server integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -21,6 +21,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 3
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -38,7 +39,8 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ADDRESS: address,
             }
 
-            # Some Bedrock Edition servers mimic a Java Edition server, therefore check for a Bedrock Edition server first.
+            # Some Bedrock Edition servers mimic a Java Edition
+            # server, therefore check for Bedrock Edition first.
             for server_type in MinecraftServerType:
                 api = MinecraftServer(self.hass, server_type, address)
 

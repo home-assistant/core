@@ -23,7 +23,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenRouterConfigEntry) -
         http_client=get_async_client(hass),
     )
 
-    # Cache current platform data which gets added to each request (caching done by library)
+    # Cache current platform data which gets added to each request
+    # (caching done by library)
     _ = await hass.async_add_executor_job(client.platform_headers)
 
     try:
@@ -61,9 +62,6 @@ async def async_migrate_entry(
 ) -> bool:
     """Migrate config entry."""
     LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
-
-    if entry.version > 1 or (entry.version == 1 and entry.minor_version > 2):
-        return False
 
     if entry.version == 1 and entry.minor_version < 2:
         for subentry in entry.subentries.values():
