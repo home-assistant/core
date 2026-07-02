@@ -1,6 +1,7 @@
 """Control which entities are exposed to voice assistants."""
 
 from collections.abc import Callable, Mapping
+from datetime import datetime, timedelta
 import dataclasses
 from itertools import chain
 from typing import Any, TypedDict
@@ -10,16 +11,34 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback, split_entity_id
+from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import get_device_class
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.storage import Store
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .const import DATA_EXPOSED_ENTITIES, DOMAIN
 
 KNOWN_ASSISTANTS = ("cloud.alexa", "cloud.google_assistant", "conversation")
+
+# How often to sweep for legacy exposed-entity records whose entity no
+# longer exists. Deliberately not tied to startup: async_track_time_interval
+# only fires after the interval elapses, so the first sweep happens well
+# after boot, giving slow-starting integrations time to re-register their
+# entities before being treated as gone. Repeats forever so it self-heals
+# entries missed by the real-time state-removal listener (e.g. entities
+# removed while Home Assistant wasn't running to observe it).
+LEGACY_ENTITY_PURGE_INTERVAL = timedelta(hours=24)
 
 STORAGE_KEY = f"{DOMAIN}.exposed_entities"
 STORAGE_VERSION = 1
@@ -122,6 +141,21 @@ class ExposedEntities:
         websocket_api.async_register_command(self._hass, ws_expose_new_entities_set)
         websocket_api.async_register_command(self._hass, ws_list_exposed_entities)
         await self._async_load_data()
+        # Entities without a unique_id are never in the entity registry, so
+        # registry removal events can't be used to prune them. Their removal
+        # from the state machine is the only reliable "this entity is gone"
+        # signal we have for the legacy (no unique_id) storage path.
+        self._hass.bus.async_listen(
+            EVENT_STATE_CHANGED, self._async_state_changed_listener
+        )
+        # Periodic sweep to catch entries the listener above missed, e.g.
+        # left behind by an integration that created and later removed many
+        # entities while Home Assistant wasn't running to observe it.
+        async_track_time_interval(
+            self._hass,
+            self._async_purge_stale_legacy_entities,
+            LEGACY_ENTITY_PURGE_INTERVAL,
+        )
 
     @callback
     def async_listen_entity_updates(
@@ -187,6 +221,37 @@ class ExposedEntities:
         self._async_schedule_save()
         for listener in self._listeners.get(assistant, []):
             listener()
+
+    @callback
+    def _async_state_changed_listener(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
+        """Drop a legacy exposed entity once it's removed from the state machine."""
+        if event.data["new_state"] is not None:
+            return
+        entity_id = event.data["entity_id"]
+        if entity_id not in self.entities:
+            return
+        del self.entities[entity_id]
+        self._async_schedule_save()
+
+    @callback
+    def _async_purge_stale_legacy_entities(self, _now: datetime) -> None:
+        """Periodic sweep to drop legacy entries with no entity behind them.
+
+        Catches entries the state-removal listener missed, e.g. because
+        Home Assistant wasn't running to observe the removal.
+        """
+        stale_entity_ids = [
+            entity_id
+            for entity_id in self.entities
+            if self._hass.states.get(entity_id) is None
+        ]
+        if not stale_entity_ids:
+            return
+        for entity_id in stale_entity_ids:
+            del self.entities[entity_id]
+        self._async_schedule_save()
 
     @callback
     def async_get_expose_new_entities(self, assistant: str) -> bool:
