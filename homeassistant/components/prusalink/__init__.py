@@ -1,7 +1,13 @@
 """The PrusaLink integration."""
 
+import asyncio
+from collections.abc import Mapping
+import logging
+from typing import Any
+
+from httpx import ConnectError, HTTPError, InvalidURL
 from pyprusalink import PrusaLink
-from pyprusalink.types import InvalidAuth
+from pyprusalink.types import InvalidAuth, PrusaLinkError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -13,11 +19,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .config_flow import PrusaLinkConfigFlow
-from .const import DOMAIN
+from .const import DOMAIN, REQUEST_TIMEOUT
 from .coordinator import (
     InfoUpdateCoordinator,
     JobUpdateCoordinator,
@@ -34,6 +44,8 @@ PLATFORMS: list[Platform] = [
     Platform.CAMERA,
     Platform.SENSOR,
 ]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PrusaLinkConfigEntry) -> bool:
@@ -76,6 +88,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     new_data = dict(config_entry.data)
     if config_entry.version == 1:
+        serial: str | None = config_entry.unique_id
+        update_data: dict[str, Any] = {}
+
         if config_entry.minor_version < 2:
             # Add username and password
             # "maker" is currently hardcoded in the firmware
@@ -90,7 +105,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 password,
             )
             try:
-                await api.get_info()
+                async with asyncio.timeout(REQUEST_TIMEOUT):
+                    info = await api.get_info()
             except InvalidAuth:
                 # We are unable to reach the new API which usually means
                 # that the user is running an outdated firmware version
@@ -114,13 +130,92 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 # Return True here to workaround that.
                 return True
 
+            serial = info.get("serial")
+
             new_data[CONF_USERNAME] = username
             new_data[CONF_PASSWORD] = password
+            update_data["data"] = new_data
+            update_data["minor_version"] = 2
 
-        ir.async_delete_issue(hass, DOMAIN, "firmware_5_1_required")
-        hass.config_entries.async_update_entry(
-            config_entry, data=new_data, minor_version=2
-        )
+            ir.async_delete_issue(hass, DOMAIN, "firmware_5_1_required")
+
+        if config_entry.minor_version < 3:
+            if not serial and CONF_USERNAME in new_data and CONF_PASSWORD in new_data:
+                api = PrusaLink(
+                    get_async_client(hass),
+                    config_entry.data[CONF_HOST],
+                    new_data[CONF_USERNAME],
+                    new_data[CONF_PASSWORD],
+                )
+                info_data: Mapping[str, Any] | None
+                try:
+                    async with asyncio.timeout(REQUEST_TIMEOUT):
+                        info_data = await api.get_info()
+                except (
+                    InvalidAuth,
+                    PrusaLinkError,
+                    ConnectError,
+                    HTTPError,
+                    InvalidURL,
+                    TimeoutError,
+                ):
+                    info_data = None
+
+                if info_data is not None:
+                    serial = info_data.get("serial")
+
+            if serial:
+                if any(
+                    existing_entry.entry_id != config_entry.entry_id
+                    and existing_entry.unique_id == serial
+                    for existing_entry in hass.config_entries.async_entries(DOMAIN)
+                ):
+                    _LOGGER.warning(
+                        "Skipping PrusaLink unique ID migration for config entry %s because another PrusaLink config entry already uses the target unique ID",
+                        config_entry.entry_id,
+                    )
+                    if update_data:
+                        hass.config_entries.async_update_entry(
+                            config_entry, **update_data
+                        )
+                    return True
+
+                old_prefix = f"{config_entry.entry_id}_"
+                new_prefix = f"{serial}_"
+
+                entity_registry = er.async_get(hass)
+                for entity_entry in er.async_entries_for_config_entry(
+                    entity_registry, config_entry.entry_id
+                ):
+                    if entity_entry.unique_id.startswith(old_prefix):
+                        entity_registry.async_update_entity(
+                            entity_entry.entity_id,
+                            new_unique_id=entity_entry.unique_id.replace(
+                                old_prefix, new_prefix, 1
+                            ),
+                        )
+
+                device_registry = dr.async_get(hass)
+                for device_entry in dr.async_entries_for_config_entry(
+                    device_registry, config_entry.entry_id
+                ):
+                    old_identifier = (DOMAIN, config_entry.entry_id)
+                    identifiers = set(device_entry.identifiers)
+                    if old_identifier not in identifiers:
+                        continue
+
+                    identifiers.discard(old_identifier)
+                    identifiers.add((DOMAIN, serial))
+                    device_registry.async_update_device(
+                        device_id=device_entry.id,
+                        new_identifiers=identifiers,
+                    )
+                update_data["minor_version"] = 3
+                if not config_entry.unique_id:
+                    update_data["unique_id"] = serial
+
+        if update_data:
+            hass.config_entries.async_update_entry(config_entry, **update_data)
 
     return True
 

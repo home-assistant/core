@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import DOMAIN
+from .const import DOMAIN, REQUEST_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,23 +67,32 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
     )
 
     try:
-        async with asyncio.timeout(5):
+        async with asyncio.timeout(REQUEST_TIMEOUT):
             version = await api.get_version()
-
-    except (TimeoutError, HTTPError, InvalidURL) as err:
-        _LOGGER.error("Could not connect to PrusaLink: %s", err)
+            ensure_printer_is_supported(version)
+            info = await api.get_info()
+    except TimeoutError as err:
+        _LOGGER.debug("Could not connect to PrusaLink: timeout during validation")
+        raise CannotConnect from err
+    except (HTTPError, InvalidURL) as err:
+        _LOGGER.debug("Could not connect to PrusaLink during validation: %s", err)
         raise CannotConnect from err
 
-    ensure_printer_is_supported(version)
+    serial = info.get("serial")
+    if not serial:
+        raise CannotConnect
 
-    return {"title": version["hostname"] or version["text"]}
+    return {
+        "serial": serial,
+        "title": version["hostname"] or version["text"],
+    }
 
 
 class PrusaLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for PrusaLink."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @override
     async def async_step_user(
@@ -118,6 +127,8 @@ class PrusaLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            await self.async_set_unique_id(info["serial"])
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(title=info["title"], data=data)
 
         return self.async_show_form(
