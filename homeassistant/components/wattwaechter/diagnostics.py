@@ -3,6 +3,10 @@
 from dataclasses import asdict
 from typing import Any
 
+from aio_wattwaechter import (
+    WattwaechterAuthenticationError,
+    WattwaechterConnectionError,
+)
 from aio_wattwaechter.models import SystemInfo
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -29,11 +33,21 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data
+
+    # System info is only needed on demand here, so it is fetched directly
+    # instead of in the update loop to avoid coupling meter sensor
+    # availability to it. Failure still yields the config and meter data.
+    system: dict[str, dict[str, Any]] | None = None
+    try:
+        system = _flatten_system(await coordinator.client.system_info())
+    except WattwaechterConnectionError, WattwaechterAuthenticationError:
+        system = None
+
     return async_redact_data(
         {
             "config_entry": dict(entry.data),
-            "meter": asdict(coordinator.data.meter),
-            "system": _flatten_system(coordinator.data.system),
+            "meter": asdict(coordinator.data),
+            "system": system,
         },
         TO_REDACT,
     )

@@ -225,7 +225,7 @@ async def async_setup_entry(
             description=KNOWN_OBIS_CODES[obis_code],
             obis_code=obis_code,
         )
-        for obis_code in coordinator.data.meter.values
+        for obis_code in coordinator.data.values
         if obis_code in KNOWN_OBIS_CODES
     )
 
@@ -253,7 +253,7 @@ class WattwaechterObisSensor(WattwaechterEntity, SensorEntity):
     @override
     def native_value(self) -> float | str | None:
         """Return the current sensor value."""
-        obis = self.coordinator.data.meter.values.get(self._obis_code)
+        obis = self.coordinator.data.values.get(self._obis_code)
         if obis is None:
             return None
         return obis.value
