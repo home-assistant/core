@@ -34,13 +34,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from . import repairs
-from .const import (
-    CONF_RADIO_TYPE,
-    CONF_ZIGPY,
-    DEFAULT_DATABASE_NAME,
-    EZSP_OVERWRITE_EUI64,
-)
-from .helpers import get_zha_data
+from .const import CONF_RADIO_TYPE, CONF_ZIGPY, EZSP_OVERWRITE_EUI64
+from .helpers import get_zha_data, get_zigpy_database_path
 
 RECOMMENDED_RADIOS = (
     RadioType.ezsp,
@@ -165,12 +160,7 @@ class ZhaRadioManager:
     @property
     def zigpy_database_path(self) -> str:
         """Path to `zigbee.db`."""
-        config = get_zha_data(self.hass).yaml_config
-
-        return config.get(
-            CONF_DATABASE,
-            self.hass.config.path(DEFAULT_DATABASE_NAME),
-        )
+        return get_zigpy_database_path(self.hass)
 
     @contextlib.asynccontextmanager
     async def create_zigpy_app(

@@ -2,6 +2,7 @@
 
 import contextlib
 import logging
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import voluptuous as vol
@@ -53,6 +54,7 @@ from .helpers import (
     create_zha_config,
     get_config_entry_unique_id,
     get_zha_data,
+    get_zigpy_database_path,
 )
 from .radio_manager import ZhaRadioManager
 from .repairs.network_settings_inconsistent import warn_on_inconsistent_network_settings
@@ -299,6 +301,20 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     websocket_api.async_unload_api(hass)
 
     return True
+
+
+async def async_remove_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    """Remove the ZHA config entry, deleting the zigbee database."""
+    database_path = Path(get_zigpy_database_path(hass))
+
+    # The `-shm` and `-wal` files are SQLite write-ahead log sidecars
+    for path in (
+        database_path,
+        database_path.with_name(f"{database_path.name}-shm"),
+        database_path.with_name(f"{database_path.name}-wal"),
+    ):
+        with contextlib.suppress(OSError):
+            await hass.async_add_executor_job(path.unlink)
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
