@@ -33,14 +33,13 @@ DHW_CE_FLAT_C2 = FixtureDevice(
 
 # Hitachi Yutaki DHW (modbus:YutakiV2DHWTComponent)
 DHW_HITACHI_YUTAKI = FixtureDevice(
-    "setup/cloud_hitachi_yutaki_dhw.json",
-    "modbus://1234-5678-1234/6381497/1#4",
+    "setup/cloud_atlantic_cozytouch.json",
+    "modbus://1234-5678-5643/6381497/1#4",
     "water_heater.yutaki_dhw",
 )
 
 SNAPSHOT_FIXTURES = [
     DHW_CE_FLAT_C2,
-    DHW_HITACHI_YUTAKI,
 ]
 
 

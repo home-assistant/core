@@ -71,7 +71,7 @@
     'state': 'manual',
   })
 # ---
-# name: test_water_heater_entities_snapshot[cloud_hitachi_yutaki_dhw.json][water_heater.yutaki_dhw-entry]
+# name: test_water_heater_entities_snapshot[cloud_atlantic_cozytouch.json][water_heater.yutaki_dhw-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -112,11 +112,11 @@
     'suggested_object_id': None,
     'supported_features': <WaterHeaterEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': 'modbus://1234-5678-1234/6381497/1#4',
+    'unique_id': 'modbus://1234-5678-5643/6381497/1#4',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_water_heater_entities_snapshot[cloud_hitachi_yutaki_dhw.json][water_heater.yutaki_dhw-state]
+# name: test_water_heater_entities_snapshot[cloud_atlantic_cozytouch.json][water_heater.yutaki_dhw-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 46,
