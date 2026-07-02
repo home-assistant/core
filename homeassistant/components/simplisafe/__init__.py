@@ -5,6 +5,7 @@ from collections.abc import Callable, Coroutine
 from typing import Any
 
 from simplipy import API
+from simplipy.device.camera import Camera
 from simplipy.errors import (
     EndpointUnavailableError,
     InvalidCredentialsError,
@@ -110,6 +111,7 @@ PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.EVENT,
     Platform.LOCK,
     Platform.SENSOR,
 ]
@@ -183,6 +185,9 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = vol.Schema(
     }
 )
 
+# These events are fired on the HA bus as SIMPLISAFE_EVENT for backwards
+# compatibility. Do not use SIMPLISAFE_EVENT and do not copy this pattern when
+# making new integrations.
 WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
     EVENT_AUTOMATIC_TEST,
     EVENT_CAMERA_MOTION_DETECTED,
@@ -249,6 +254,7 @@ def _async_register_base_station(
         manufacturer="SimpliSafe",
         model=str(system.version),
         name=system.address,
+        serial_number=system.serial,
     )
 
     # Check for an old system ID format and remove it:
@@ -264,6 +270,32 @@ def _async_register_base_station(
             name_by_user=old_base_station.name_by_user,
         )
         device_registry.async_remove_device(old_base_station.id)
+
+
+@callback
+def _async_register_camera(
+    hass: HomeAssistant, entry: ConfigEntry, system: SystemType, camera: Camera
+) -> None:
+    """Register a camera device."""
+    if not isinstance(system, SystemV3):
+        return
+
+    device_registry = dr.async_get(hass)
+
+    model_name = camera.camera_type.name.capitalize().replace("_", " ")
+    model_id = system.camera_data[camera.serial]["model"]
+    device_name = f"{camera.name.capitalize()} {model_name}"
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, camera.serial)},
+        manufacturer="SimpliSafe",
+        model=model_name,
+        model_id=model_id,
+        name=device_name,
+        serial_number=camera.serial,
+        via_device=(DOMAIN, str(system.system_id)),
+    )
 
 
 @callback
@@ -541,6 +573,9 @@ class SimpliSafe:
             self._hass, DISPATCHER_TOPIC_WEBSOCKET_EVENT.format(event.system_id), event
         )
 
+        # Deprecated: SIMPLISAFE_EVENT bus events are maintained for backwards
+        # compatibility. Use the system event entity and event.received trigger
+        # instead.
         if event.event_type not in WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT:
             return
 
@@ -577,6 +612,11 @@ class SimpliSafe:
             self._system_notifications[system.system_id] = set()
 
             _async_register_base_station(self._hass, self.entry, system)
+
+            # Register each camera as a device:
+            if isinstance(system, SystemV3):
+                for camera in system.cameras.values():
+                    _async_register_camera(self._hass, self.entry, system, camera)
 
             # Future events will come from the websocket, but since subscription to the
             # websocket doesn't provide the most recent event, we grab it from the REST

@@ -25,6 +25,42 @@
       "clear_notifications": {
         "name": "Clear notifications"
       }
+    },
+    "event": {
+      "motion": {
+        "name": "Motion",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "camera_motion_detected": "Motion detected"
+            }
+          }
+        }
+      },
+      "ring": {
+        "name": "Ring",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "ring": "[%key:component::event::entity_component::doorbell::state_attributes::event_type::state::ring%]"
+            }
+          }
+        }
+      },
+      "system_events": {
+        "name": "System events",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "automatic_test": "Automatic test",
+              "device_test": "Device test",
+              "secret_alert_triggered": "Secret alert triggered",
+              "sensor_paired_and_named": "Sensor paired and named",
+              "user_initiated_test": "User initiated test"
+            }
+          }
+        }
+      }
     }
   },
   "options": {
