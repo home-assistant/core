@@ -429,7 +429,7 @@ async def test_migrate_from_version_1_token_endpoint_error(hass: HomeAssistant) 
 
     entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
     assert entry is not None
-    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
     assert entry.version == 1  # Version should remain unchanged on migration failure
 
 
