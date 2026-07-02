@@ -48,6 +48,14 @@ def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None
     Migrates old unique ID's from old binary_sensors and
     switches to the new unique ID's.
     """
+    if entry.domain == Platform.CLIMATE and entry.unique_id.endswith(
+        "-climate"
+    ):
+        return {
+            "new_unique_id": entry.unique_id.replace(
+                "-climate", "-thermostat"
+            )
+        }
     if entry.domain == Platform.BINARY_SENSOR and entry.unique_id.endswith(
         "-slave_boiler_state"
     ):
@@ -67,39 +75,3 @@ def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None
 
     # No migration needed
     return None
-
-
-async def async_migrate_entities(
-    hass: HomeAssistant,
-    coordinator: PlugwiseDataUpdateCoordinator,
-) -> None:
-    """Migrate entities if needed."""
-    ent_reg = er.async_get(hass)
-
-    for device_id, device in coordinator.data.items():
-        if device[DEV_CLASS] not in ("climate", "heater_central"):
-            continue
-
-        # Migrating opentherm_outdoor_temperature
-        # to opentherm_outdoor_air_temperature sensor
-        old_unique_id = f"{device_id}-outdoor_temperature"
-        if entity_id := ent_reg.async_get_entity_id(
-            Platform.SENSOR, DOMAIN, old_unique_id
-        ):
-            new_unique_id = f"{device_id}-outdoor_air_temperature"
-            LOGGER.debug(
-                "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
-                entity_id,
-                old_unique_id,
-                new_unique_id,
-            )
-            ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
-
-        # Migrate id-climate to id-device-name
-        old_unique_id = f"{device_id}-climate"
-        if entity_id := ent_reg.async_get_entity_id(
-            Platform.CLIMATE, DOMAIN, old_unique_id
-        ):
-            model = f"{device[ATTR_MODEL]}".lower()
-            new_unique_id = f"{device_id}-{model}"
-            ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
