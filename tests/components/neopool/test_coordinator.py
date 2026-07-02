@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from neopool_modbus.registers import MAX_RELAY_GPIO
+import pytest
 
 from homeassistant.components.neopool.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -75,3 +76,35 @@ async def test_clean_gpio_does_not_create_issue(
     await setup_integration(hass, mock_config_entry)
     issue_registry = ir.async_get(hass)
     assert issue_registry.async_get_issue(DOMAIN, "corrupted_gpio") is None
+
+
+async def test_corrupt_gpio_logs_error_only_on_state_change(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The ERROR log fires on entering corruption and clears on healing."""
+    bad_data = dict(MOCK_POOL_DATA)
+    bad_data["MBF_PAR_FILT_GPIO"] = MAX_RELAY_GPIO + 1
+    mock_neopool_client.async_read_all = AsyncMock(return_value=bad_data)
+
+    with caplog.at_level("ERROR"):
+        await setup_integration(hass, mock_config_entry)
+        assert sum("Corrupted GPIO register" in r.message for r in caplog.records) == 1
+
+        caplog.clear()
+        freezer.tick(timedelta(seconds=60))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert not any("Corrupted GPIO register" in r.message for r in caplog.records)
+
+        mock_neopool_client.async_read_all = AsyncMock(
+            return_value=dict(MOCK_POOL_DATA)
+        )
+        freezer.tick(timedelta(seconds=60))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        issue_registry = ir.async_get(hass)
+        assert issue_registry.async_get_issue(DOMAIN, "corrupted_gpio") is None

@@ -12,6 +12,7 @@ from neopool_modbus.decoders import (
     HIDRO_POLARITY_LABELS,
     ION_POLARITY_LABELS,
     PH_STATUS_ALARM_LABELS,
+    calculate_next_interval_time,
     decode_hidro_polarity,
     decode_ion_polarity,
     decode_ph_alarm,
@@ -40,7 +41,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import NeoPoolConfigEntry
 from .coordinator import NeoPoolCoordinator
 from .entity import NeoPoolEntity
-from .helpers import calculate_next_interval_time
 
 PARALLEL_UPDATES = 0
 

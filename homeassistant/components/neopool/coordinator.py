@@ -7,7 +7,7 @@ from typing import Any, override
 from neopool_modbus import NeoPoolModbusClient
 from neopool_modbus.decoders import parse_version
 from neopool_modbus.exceptions import NeoPoolError
-from neopool_modbus.registers import GPIO_REGISTERS, MAX_RELAY_GPIO
+from neopool_modbus.registers import MAX_RELAY_GPIO, find_corrupted_gpio_registers
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -41,14 +41,15 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.client = client
         self._firmware = "?"
+        self._corrupted_gpio_keys: frozenset[str] = frozenset()
 
     def _check_gpio_registers(self, data: dict) -> None:
         """Validate GPIO register values and (re-)raise or clear the repair issue."""
-        corrupted = []
-        for key, label in GPIO_REGISTERS.items():
-            value = data.get(key)
-            if value is not None and not (0 <= value <= MAX_RELAY_GPIO):
-                corrupted.append((key, label, value))
+        corrupted = find_corrupted_gpio_registers(data)
+        corrupted_keys = frozenset(key for key, _, _ in corrupted)
+
+        if corrupted_keys != self._corrupted_gpio_keys:
+            for key, label, value in corrupted:
                 _LOGGER.error(
                     "Corrupted GPIO register %s (%s): value %d (0x%04X) is outside "
                     "valid range 0-%d. The pool controller may malfunction",
@@ -58,6 +59,8 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     value & 0xFFFF,
                     MAX_RELAY_GPIO,
                 )
+
+        self._corrupted_gpio_keys = corrupted_keys
 
         if corrupted:
             details = "\n".join(
