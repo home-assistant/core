@@ -1737,3 +1737,60 @@ async def test_delete_all_credentials_single_failure_unwrapped(
         )
 
     assert exc.value.translation_key == "credential_rejected_unknown"
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "returns_response"),
+    [
+        pytest.param("set_user", {}, True, id="set_user"),
+        pytest.param("delete_user", {"user_id": 1}, False, id="delete_user"),
+        pytest.param("delete_all_users", {}, False, id="delete_all_users"),
+        pytest.param("get_users", {}, True, id="get_users"),
+        pytest.param(
+            "set_credential",
+            {"user_id": 1, "credential_type": "pin_code", "credential_data": "1234"},
+            True,
+            id="set_credential",
+        ),
+        pytest.param(
+            "delete_credential",
+            {"user_id": 1, "credential_type": "pin_code", "credential_slot": 1},
+            False,
+            id="delete_credential",
+        ),
+        pytest.param(
+            "delete_all_credentials", {"user_id": 1}, False, id="delete_all_credentials"
+        ),
+    ],
+)
+async def test_service_access_control_not_supported(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    service: str,
+    service_data: dict[str, int | str],
+    returns_response: bool,
+) -> None:
+    """Every user/credential service fails fast when access control is unsupported."""
+    api = _mock_access_control(lock_schlage_be469)
+    api.is_supported.return_value = False
+    entity_id = _lock_entity_id(
+        entity_registry, device_registry, client, lock_schlage_be469
+    )
+
+    with pytest.raises(HomeAssistantError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id, **service_data},
+            blocking=True,
+            return_response=returns_response,
+        )
+
+    assert exc.value.translation_key == "access_control_not_supported"
+    # The guard runs before anything else, so no capability query is issued.
+    api.is_supported.assert_called_once_with()
+    api.get_user_capabilities_cached.assert_not_called()
