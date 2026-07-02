@@ -4,10 +4,13 @@ import asyncio
 
 from weatherflow4py.api import WeatherFlowRestAPI
 from weatherflow4py.ws import WeatherFlowWebsocketAPI
+from websockets.exceptions import WebSocketException
 
 from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.ssl import client_context
 
 from .const import LOGGER
 from .coordinator import (
@@ -67,7 +70,23 @@ async def async_setup_entry(
         stations=stations,
     )
 
-    # Run setup method
+    async def _async_disconnect_websocket() -> None:
+        """Disconnect the WeatherFlow websocket."""
+        await websocket_api.stop_all_listeners()
+        await websocket_api.close()
+
+    # Connect the websocket once before setting up coordinators.
+    # Both coordinators share this single instance; calling connect() inside
+    # each coordinator's async_setup() would open two listen tasks on the same
+    # socket, causing ConnectionClosedOK errors (issue #164441).
+    try:
+        await websocket_api.connect(client_context())
+    except (OSError, WebSocketException) as err:
+        raise ConfigEntryError("Error connecting to WeatherFlow websocket") from err
+
+    entry.async_on_unload(_async_disconnect_websocket)
+
+    # Register callbacks and subscribe each coordinator to its device messages
     await asyncio.gather(
         websocket_wind_coordinator.async_setup(),
         websocket_observation_coordinator.async_setup(),
@@ -79,14 +98,6 @@ async def async_setup_entry(
         websocket_observation_coordinator,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # Websocket disconnect handler
-    async def _async_disconnect_websocket() -> None:
-        await websocket_api.stop_all_listeners()
-        await websocket_api.close()
-
-    # Register a websocket shutdown handler
-    entry.async_on_unload(_async_disconnect_websocket)
 
     return True
 
