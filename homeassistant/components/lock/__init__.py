@@ -11,7 +11,7 @@ from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     ATTR_CODE,
     ATTR_CODE_FORMAT,
     SERVICE_LOCK,
@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN, LockState
+from .const import DOMAIN, LockEntityStateAttribute, LockState
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,10 @@ class LockEntityFeature(IntFlag):
     OPEN = 1
 
 
-PROP_TO_ATTR = {"changed_by": ATTR_CHANGED_BY, "code_format": ATTR_CODE_FORMAT}
+PROP_TO_ATTR = {
+    "changed_by": LockEntityStateAttribute.CHANGED_BY,
+    "code_format": LockEntityStateAttribute.CODE_FORMAT,
+}
 
 # mypy: disallow-any-generics
 
@@ -245,7 +248,7 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @override
     def state_attributes(self) -> dict[str, StateType]:
         """Return the state attributes."""
-        state_attr = {}
+        state_attr: dict[str, StateType] = {}
         for prop, attr in PROP_TO_ATTR.items():
             if (value := getattr(self, prop)) is not None:
                 state_attr[attr] = value

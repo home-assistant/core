@@ -59,6 +59,7 @@ from tests.common import async_capture_events
 LIGHT_SENSOR_WRITE = LIGHT_SENSORS[:2]
 SENSE_SENSORS_WRITE = SENSE_SENSORS[:3]
 BATTERY_LOW = next(d for d in SENSE_SENSORS if d.key == "battery_low")
+SENSE_MOTION = next(d for d in SENSE_SENSORS if d.key == "motion")
 
 
 async def test_binary_sensor_camera_remove(
@@ -313,6 +314,74 @@ async def test_binary_sensor_battery_low_unavailable_without_public_api(
 
     _, entity_id = await ids_from_device_description(
         hass, Platform.BINARY_SENSOR, sensor_all, BATTERY_LOW
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_binary_sensor_sense_motion_public_value(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+) -> None:
+    """The sense motion sensor reads is_motion_detected from a public WS update."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, SENSE_MOTION
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    public = make_public_sensor(sensor_all, is_motion_detected=True)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_binary_sensor_sense_motion_disabled_unavailable(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+) -> None:
+    """ufp_public_enabled_fn marks the motion sensor unavailable when disabled."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, SENSE_MOTION
+    )
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    public = make_public_sensor(sensor_all, motion_enabled=False)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_binary_sensor_sense_motion_leak_mount_unavailable(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+) -> None:
+    """A leak-mounted sensor reports motion unavailable (mirrors the private gate)."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, SENSE_MOTION
+    )
+
+    public = make_public_sensor(sensor_all, mount_type=MountType.LEAK)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_binary_sensor_sense_motion_unavailable_without_public(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+) -> None:
+    """The migrated motion sensor is unavailable without a public object."""
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, SENSE_MOTION
     )
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
