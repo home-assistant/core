@@ -2,9 +2,8 @@
 
 from collections.abc import AsyncGenerator
 from typing import Any
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
-from pyrisco.cloud.event import Event
 import pytest
 
 from homeassistant.components.risco.const import DOMAIN, TYPE_LOCAL
@@ -36,10 +35,15 @@ TEST_LOCAL_CONFIG = {
 
 
 @pytest.fixture
-def two_zone_cloud():
+def cloud_alarm_mock() -> MagicMock:
+    """Fixture to provide the cloud alarm mock for state handler callbacks."""
+    return MagicMock()
+
+
+@pytest.fixture
+def two_zone_cloud(cloud_alarm_mock: MagicMock):
     """Fixture to mock alarm with two zones."""
     zone_mocks = {0: zone_mock(), 1: zone_mock()}
-    alarm_mock = MagicMock()
     with (
         patch.object(zone_mocks[0], "id", new_callable=PropertyMock(return_value=0)),
         patch.object(
@@ -56,13 +60,13 @@ def two_zone_cloud():
             zone_mocks[1], "bypassed", new_callable=PropertyMock(return_value=False)
         ),
         patch.object(
-            alarm_mock,
+            cloud_alarm_mock,
             "zones",
             new_callable=PropertyMock(return_value=zone_mocks),
         ),
         patch(
             "homeassistant.components.risco.RiscoCloud.get_state",
-            return_value=alarm_mock,
+            return_value=cloud_alarm_mock,
         ),
     ):
         yield zone_mocks
@@ -126,12 +130,6 @@ def options() -> dict[str, Any]:
 
 
 @pytest.fixture
-def events() -> list[Event]:
-    """Fixture for default (empty) events."""
-    return []
-
-
-@pytest.fixture
 def cloud_config_entry(hass: HomeAssistant, options: dict[str, Any]) -> MockConfigEntry:
     """Fixture for a cloud config entry."""
     config_entry = MockConfigEntry(
@@ -155,15 +153,41 @@ def login_with_error(exception):
 
 
 @pytest.fixture
+def mock_cloud_login() -> AsyncMock:
+    """Fixture to mock RiscoCloud.login and expose it for call count checks."""
+    with patch(
+        "homeassistant.components.risco.RiscoCloud.login",
+        return_value=True,
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_cloud_state_handler() -> MagicMock:
+    """Fixture to capture state handler callbacks registered with the library."""
+    with patch("homeassistant.components.risco.RiscoCloud.add_state_handler") as mock:
+        mock.return_value = MagicMock()
+        yield mock
+
+
+@pytest.fixture
+def mock_cloud_event_handler() -> MagicMock:
+    """Fixture to capture event handler callbacks registered with the library."""
+    with patch("homeassistant.components.risco.RiscoCloud.add_event_handler") as mock:
+        mock.return_value = MagicMock()
+        yield mock
+
+
+@pytest.fixture
 async def setup_risco_cloud(
-    hass: HomeAssistant, cloud_config_entry: MockConfigEntry, events: list[Event]
+    hass: HomeAssistant,
+    cloud_config_entry: MockConfigEntry,
+    mock_cloud_login: AsyncMock,
+    mock_cloud_state_handler: MagicMock,
+    mock_cloud_event_handler: MagicMock,
 ) -> AsyncGenerator[MockConfigEntry]:
     """Set up a Risco integration for testing."""
     with (
-        patch(
-            "homeassistant.components.risco.RiscoCloud.login",
-            return_value=True,
-        ),
         patch(
             "homeassistant.components.risco.RiscoCloud.site_uuid",
             new_callable=PropertyMock(return_value=TEST_SITE_UUID),
@@ -176,8 +200,8 @@ async def setup_risco_cloud(
             "homeassistant.components.risco.RiscoCloud.close",
         ),
         patch(
-            "homeassistant.components.risco.RiscoCloud.get_events",
-            return_value=events,
+            "homeassistant.components.risco.RiscoCloud.subscribe_states",
+            new_callable=AsyncMock,
         ),
     ):
         await hass.config_entries.async_setup(cloud_config_entry.entry_id)

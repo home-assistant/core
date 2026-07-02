@@ -1,17 +1,13 @@
 """Tests for the Risco event sensors."""
 
-from datetime import timedelta
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
 from homeassistant.components.risco import CannotConnectError, UnauthorizedError
-from homeassistant.components.risco.coordinator import LAST_EVENT_TIMESTAMP_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
 
 ENTITY_IDS = {
     "Alarm": "sensor.risco_test_site_name_alarm_events",
@@ -164,43 +160,20 @@ async def _set_utc_time_zone(hass: HomeAssistant) -> None:
     await hass.config.async_set_time_zone("UTC")
 
 
-@pytest.fixture
-def save_mock():
-    """Create a mock for async_save."""
-    with patch(
-        "homeassistant.components.risco.coordinator.Store.async_save",
-    ) as save_mock:
-        yield save_mock
-
-
-@pytest.mark.parametrize("events", [TEST_EVENTS])
 @pytest.mark.usefixtures("two_zone_cloud", "_set_utc_time_zone")
 async def test_cloud_setup(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    save_mock,
     setup_risco_cloud,
+    mock_cloud_event_handler: MagicMock,
 ) -> None:
-    """Test entity setup."""
+    """Test entity setup and SSE event push."""
     for entity_id in ENTITY_IDS.values():
         assert entity_registry.async_is_registered(entity_id)
 
-    save_mock.assert_awaited_once_with({LAST_EVENT_TIMESTAMP_KEY: TEST_EVENTS[0].time})
-    for category, entity_id in ENTITY_IDS.items():
-        _check_state(hass, category, entity_id)
-
-    with (
-        patch(
-            "homeassistant.components.risco.RiscoCloud.get_events", return_value=[]
-        ) as events_mock,
-        patch(
-            "homeassistant.components.risco.coordinator.Store.async_load",
-            return_value={LAST_EVENT_TIMESTAMP_KEY: TEST_EVENTS[0].time},
-        ),
-    ):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=65))
-        await hass.async_block_till_done()
-        events_mock.assert_awaited_once_with(TEST_EVENTS[0].time, 10)
+    for call in mock_cloud_event_handler.call_args_list:
+        await call.args[0](TEST_EVENTS)
+    await hass.async_block_till_done()
 
     for category, entity_id in ENTITY_IDS.items():
         _check_state(hass, category, entity_id)
