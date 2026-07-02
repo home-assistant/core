@@ -617,6 +617,14 @@
       "siren_on_event": {
         "default": "mdi:alarm-light"
       }
+    },
+    "time": {
+      "floodlight_schedule_end": {
+        "default": "mdi:clock-end"
+      },
+      "floodlight_schedule_start": {
+        "default": "mdi:clock-start"
+      }
     }
   },
   "services": {
