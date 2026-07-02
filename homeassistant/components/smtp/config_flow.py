@@ -311,6 +311,8 @@ def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
         if user_input.get(CONF_USERNAME) and user_input.get(CONF_PASSWORD):
             mail.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
 
+    except TimeoutError:
+        errors["base"] = "timeout_connect"
     except SMTPAuthenticationError:
         errors["base"] = "invalid_auth"
     except SSLCertVerificationError:

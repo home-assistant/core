@@ -104,6 +104,7 @@ async def test_form_already_configured(
     [
         (SMTPAuthenticationError(0, ""), "invalid_auth"),
         (ConnectionRefusedError, "cannot_connect"),
+        (TimeoutError, "timeout_connect"),
         (SMTPServerDisconnected, "cannot_connect"),
         (gaierror, "cannot_connect"),
         (SSLCertVerificationError, "invalid_cert"),
@@ -288,6 +289,7 @@ async def test_form_reconfigure_already_configured(
         (SMTPAuthenticationError(0, ""), "invalid_auth"),
         (ConnectionRefusedError, "cannot_connect"),
         (SMTPServerDisconnected, "cannot_connect"),
+        (TimeoutError, "timeout_connect"),
         (gaierror, "cannot_connect"),
         (SSLCertVerificationError, "invalid_cert"),
         (ValueError, "unknown"),
