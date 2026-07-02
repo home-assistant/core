@@ -1,5 +1,4 @@
 {
-  "title": "Manual Modbus",
   "issues": {
     "duplicate_entity_entry": {
       "description": "An address can only be associated with one entity. Please correct the entry in your configuration.yaml file and restart Home Assistant to fix this issue.",
@@ -91,5 +90,6 @@
       },
       "name": "Write register"
     }
-  }
+  },
+  "title": "Manual Modbus"
 }
