@@ -576,6 +576,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/flipr/ @cnico
 /homeassistant/components/flo/ @dmulcahey
 /tests/components/flo/ @dmulcahey
+/homeassistant/components/flow_it/ @albertogeniola
+/tests/components/flow_it/ @albertogeniola
 /homeassistant/components/flume/ @ChrisMandich @bdraco @jeeftor
 /tests/components/flume/ @ChrisMandich @bdraco @jeeftor
 /homeassistant/components/fluss/ @fluss @Marcello17

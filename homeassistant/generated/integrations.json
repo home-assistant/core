@@ -2165,6 +2165,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "flow_it": {
+      "name": "Flow-it",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "flume": {
       "name": "Flume",
       "integration_type": "hub",
