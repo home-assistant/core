@@ -1169,6 +1169,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/mutesync/ @currentoor
 /homeassistant/components/my/ @home-assistant/core
 /tests/components/my/ @home-assistant/core
+/homeassistant/components/my_pv/ @my-pv @rrooggiieerr
+/tests/components/my_pv/ @my-pv @rrooggiieerr
 /homeassistant/components/myneomitis/ @Epyes
 /tests/components/myneomitis/ @Epyes
 /homeassistant/components/mysensors/ @MartinHjelmare @functionpointer
