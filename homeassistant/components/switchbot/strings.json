@@ -221,6 +221,12 @@
       "air_purifier_light": {
         "name": "[%key:component::light::title%]"
       },
+      "rgbicww_ceiling_main_light": {
+        "name": "Main light"
+      },
+      "rgbicww_ceiling_color_light": {
+        "name": "Color light"
+      },
       "light": {
         "state_attributes": {
           "effect": {
