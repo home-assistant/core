@@ -260,9 +260,14 @@ class FreeboxRouter:
 
         try:
             home_nodes: list[Any] = await self.home.get_home_nodes() or []
-        except HttpRequestError:
-            self.home_granted = False
-            _LOGGER.warning("Home access is not granted")
+        except HttpRequestError as err:
+            if getattr(err, "status", None) == 404:
+                _LOGGER.debug(
+                    "No Freebox Home devices configured (home/nodes returned 404)"
+                )
+            else:
+                self.home_granted = False
+                _LOGGER.warning("Home access is not granted")
             return
 
         new_device = False
