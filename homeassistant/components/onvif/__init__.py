@@ -108,9 +108,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> boo
 
 async def _async_stop_device(hass: HomeAssistant, device: ONVIFDevice) -> None:
     """Stop the ONVIF device."""
-    if device.capabilities.events and device.events.started:
+    if (events := getattr(device, "events", None)) is not None:
         try:
-            await device.events.async_stop()
+            await events.async_stop()
         except TimeoutError, ONVIFError, Fault, aiohttp.ClientError, TransportError:
             LOGGER.warning("Error while stopping events: %s", device.name)
     await device.device.close()

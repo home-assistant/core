@@ -123,14 +123,6 @@ class EventManager:
         self._events: dict[str, Event] = {}
         self._listeners: list[CALLBACK_TYPE] = []
 
-    @property
-    def started(self) -> bool:
-        """Return True if event manager is started."""
-        return (
-            self.webhook_manager.state is WebHookManagerState.STARTED
-            or self.pullpoint_manager.state is PullPointManagerState.STARTED
-        )
-
     @callback
     def async_add_listener(self, update_callback: CALLBACK_TYPE) -> Callable[[], None]:
         """Listen for data updates."""

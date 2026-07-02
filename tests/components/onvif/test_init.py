@@ -23,6 +23,7 @@ from . import (
     USERNAME,
     setup_mock_device,
     setup_mock_onvif_camera,
+    setup_onvif_integration,
 )
 
 from tests.common import MockConfigEntry
@@ -145,3 +146,47 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     mock_onvif_camera_cls.assert_called_once()
     host, port, username, password = mock_onvif_camera_cls.call_args.args[:4]
     assert (host, port, username, password) == (HOST, PORT, USERNAME, PASSWORD)
+
+
+async def test_stop_device_stops_existing_event_manager(
+    hass: HomeAssistant,
+) -> None:
+    """Test that unload stops the event manager even when capabilities.events is False."""
+    entry, _, mock_device = await setup_onvif_integration(hass)
+    assert mock_device.capabilities.events is False
+    mock_device.events.async_stop.assert_not_awaited()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_device.events.async_stop.assert_awaited_once()
+
+
+async def test_stop_device_when_setup_fails_before_events_created(
+    hass: HomeAssistant,
+) -> None:
+    """Test cleanup runs when setup fails before the event manager exists."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=NAME,
+        unique_id=MAC,
+        data={
+            CONF_NAME: NAME,
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.onvif.device.ONVIFCamera"
+    ) as mock_onvif_camera_cls:
+        setup_mock_onvif_camera(mock_onvif_camera_cls, update_xaddrs_fail=True)
+
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    mock_onvif_camera_cls.close.assert_awaited_once()
