@@ -50,6 +50,7 @@ from .extensions import (
     DateTimeExtension,
     DeviceExtension,
     EntityExtension,
+    ExposedEntitiesExtension,
     FloorExtension,
     FunctionalExtension,
     IssuesExtension,
@@ -773,6 +774,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension(DateTimeExtension)
         self.add_extension(DeviceExtension)
         self.add_extension(EntityExtension)
+        self.add_extension(ExposedEntitiesExtension)
         self.add_extension(FloorExtension)
         self.add_extension(FunctionalExtension)
         self.add_extension(IssuesExtension)
