@@ -61,6 +61,8 @@ dependencies = [
   "Pillow==12.2.0",
   "propcache==0.5.2",
   "pyOpenSSL==26.2.0",
+  # We patch pyserial at runtime in `block_shared_serial` and need it to be available
+  "pyserial==3.5",
   "orjson==3.11.9",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
