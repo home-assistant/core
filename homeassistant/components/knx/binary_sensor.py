@@ -8,7 +8,6 @@ from homeassistant import config_entries
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_ENTITY_CATEGORY,
     CONF_NAME,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -129,8 +128,7 @@ class KnxYamlBinarySensor(_KnxBinarySensor, KnxYamlEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=str(self._device.remote_value.group_address_state),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
 
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)

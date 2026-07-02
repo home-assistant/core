@@ -20,7 +20,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_ENTITY_CATEGORY,
     CONF_NAME,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
@@ -213,8 +212,7 @@ class KnxYamlSensor(_KnxSensor, KnxYamlEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=str(self._device.sensor_value.group_address_state),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
         dpt_string = self._device.sensor_value.dpt_class.dpt_number_str()
         dpt_info = get_supported_dpts()[dpt_string]

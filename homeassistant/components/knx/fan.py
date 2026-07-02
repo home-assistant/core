@@ -10,7 +10,7 @@ from xknx.telegram.address import parse_device_group_address
 
 from homeassistant import config_entries
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import (
@@ -238,8 +238,7 @@ class KnxYamlFan(_KnxFan, KnxYamlEntity):
                 if self._device.speed.group_address
                 else str(self._device.switch.group_address)
             ),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
         # FanSpeedMode.STEP if max_step is set
         self._step_range: tuple[int, int] | None = (1, max_step) if max_step else None
