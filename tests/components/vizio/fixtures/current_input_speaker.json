@@ -1,0 +1,16 @@
+{
+  "ITEMS": [
+    {
+      "CNAME": "current_input",
+      "HASHVAL": 2023834057,
+      "NAME": "Current Input",
+      "TYPE": "T_STRING_V1",
+      "VALUE": "HDMI-1"
+    }
+  ],
+  "STATUS": {
+    "DETAIL": "Success",
+    "RESULT": "SUCCESS"
+  },
+  "URI": "/menu_native/dynamic/audio_settings/input/current_input"
+}
