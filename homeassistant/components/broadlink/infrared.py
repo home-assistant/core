@@ -112,7 +112,7 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
 
     @callback
     def _start_receiving(self) -> None:
-        """Start polling and enter learning mode."""
+        """Start polling for received IR signals."""
         if self._unsub_receive is not None:
             return
 
