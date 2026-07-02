@@ -1,7 +1,5 @@
 """Tests for ZHA Infrared receiver entity behavior."""
 
-import pytest
-
 from homeassistant.components.infrared import InfraredReceivedSignal
 from homeassistant.components.zha_infrared import infrared as zha_infrared
 from homeassistant.components.zha_infrared.helpers import (
@@ -63,8 +61,7 @@ def _build_receiver_entity() -> zha_infrared.ZhaInfraredReceiverEntity:
     return zha_infrared.ZhaInfraredReceiverEntity(device)
 
 
-@pytest.mark.asyncio
-async def test_receiver_process_payload_deduplicates(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_receiver_process_payload_deduplicates(monkeypatch) -> None:
     """Receiver should dispatch only once for identical payload."""
     entity = _build_receiver_entity()
     received: list[InfraredReceivedSignal] = []
@@ -78,9 +75,8 @@ async def test_receiver_process_payload_deduplicates(monkeypatch: pytest.MonkeyP
     assert received == [InfraredReceivedSignal(timings=[100, -200])]
 
 
-@pytest.mark.asyncio
 async def test_receiver_process_payload_handles_decode_error(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch,
 ) -> None:
     """Receiver should ignore decode errors without raising."""
     entity = _build_receiver_entity()

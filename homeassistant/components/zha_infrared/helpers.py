@@ -101,11 +101,18 @@ class SupportedDevice:
 
 def get_supported_devices(hass: HomeAssistant) -> list[SupportedDevice]:
     """Resolve supported Zigbee IR endpoints using manifest-driven profiles."""
+    profiles = _load_profiles(hass)
+    return get_supported_devices_for_profiles(hass, profiles)
+
+
+def get_supported_devices_for_profiles(
+    hass: HomeAssistant, profiles: list[DeviceProfile]
+) -> list[SupportedDevice]:
+    """Resolve supported endpoints for a pre-loaded profile list."""
     gateway_proxy = get_zha_data(hass).gateway_proxy
     if gateway_proxy is None:
         return []
 
-    profiles = _load_profiles(hass)
     devices: list[SupportedDevice] = []
     for proxy in gateway_proxy.device_proxies.values():
         device = proxy.device
@@ -148,6 +155,12 @@ def get_supported_devices(hass: HomeAssistant) -> list[SupportedDevice]:
             item.endpoint_id,
         ),
     )
+
+
+async def async_get_supported_devices(hass: HomeAssistant) -> list[SupportedDevice]:
+    """Load profiles off-loop, then match devices on the event loop."""
+    profiles = await hass.async_add_executor_job(_load_profiles, hass)
+    return get_supported_devices_for_profiles(hass, profiles)
 
 
 def get_ir_cluster(hass: HomeAssistant, device: SupportedDevice) -> Any | None:

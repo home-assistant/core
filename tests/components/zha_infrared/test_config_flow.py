@@ -1,6 +1,6 @@
 """Tests for the ZHA Infrared config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.zha_infrared import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -26,8 +26,8 @@ async def test_user_flow_aborts_without_supported_devices(hass: HomeAssistant) -
     MockConfigEntry(domain="zha", data={}).add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.zha_infrared.config_flow.get_supported_devices",
-        return_value=[],
+        "homeassistant.components.zha_infrared.config_flow.async_get_supported_devices",
+        AsyncMock(return_value=[]),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -43,8 +43,8 @@ async def test_user_flow_create_entry(hass: HomeAssistant) -> None:
     MockConfigEntry(domain="zha", data={}).add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.zha_infrared.config_flow.get_supported_devices",
-        return_value=[object()],
+        "homeassistant.components.zha_infrared.config_flow.async_get_supported_devices",
+        AsyncMock(return_value=[object()]),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -66,8 +66,8 @@ async def test_user_flow_aborts_when_already_configured(hass: HomeAssistant) -> 
     ).add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.zha_infrared.config_flow.get_supported_devices",
-        return_value=[object()],
+        "homeassistant.components.zha_infrared.config_flow.async_get_supported_devices",
+        AsyncMock(return_value=[object()]),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

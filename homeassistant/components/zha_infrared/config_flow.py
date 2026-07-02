@@ -6,7 +6,7 @@ from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import DOMAIN
-from .helpers import get_supported_devices
+from .helpers import async_get_supported_devices
 
 
 class ZhaInfraredConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -22,9 +22,7 @@ class ZhaInfraredConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self.hass.config_entries.async_entries(ZHA_DOMAIN):
             return self.async_abort(reason="no_zha")
 
-        supported_devices = await self.hass.async_add_executor_job(
-            get_supported_devices, self.hass
-        )
+        supported_devices = await async_get_supported_devices(self.hass)
         if not supported_devices:
             return self.async_abort(reason="no_supported_devices")
 

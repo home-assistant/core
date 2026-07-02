@@ -9,6 +9,8 @@ from types import SimpleNamespace
 from typing import Any
 from typing import override
 
+from zigpy.exceptions import ZigbeeException
+
 from homeassistant.components.infrared import (
     InfraredCommand,
     InfraredEmitterEntity,
@@ -28,10 +30,10 @@ from .const import DOMAIN
 from .helpers import (
     ReceiveArmCommandSpec,
     SupportedDevice,
+    async_get_supported_devices,
     get_cluster_by_id,
     get_ir_cluster,
     get_receive_spec,
-    get_supported_devices,
 )
 
 PARALLEL_UPDATES = 1
@@ -74,7 +76,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ZHA infrared entities from auto-detected supported endpoints."""
-    supported_devices = await hass.async_add_executor_job(get_supported_devices, hass)
+    supported_devices = await async_get_supported_devices(hass)
     entities: list[InfraredEmitterEntity | InfraredReceiverEntity] = [
         ZhaInfraredEmitterEntity(device)
         for device in supported_devices
@@ -100,7 +102,6 @@ class ZhaInfraredEmitterEntity(InfraredEmitterEntity):
         self._ieee = device.ieee
         self._endpoint_id = device.endpoint_id
         self._attr_unique_id = f"{self._ieee}-{self._endpoint_id}-emitter"
-        self._attr_name = f"{device.name} IR emitter"
 
     @override
     @property
@@ -157,7 +158,7 @@ class ZhaInfraredEmitterEntity(InfraredEmitterEntity):
                 self.entity_id,
                 self._device.profile.transport.command_id,
             )
-        except Exception as err:  # noqa: BLE001
+        except (ZigbeeException, TimeoutError, ValueError) as err:
             _LOGGER.debug(
                 "zha_infrared send step=cluster_command_error entity=%s cluster_cmd_id=%s error=%s",
                 self.entity_id,
@@ -183,7 +184,6 @@ class ZhaInfraredReceiverEntity(InfraredReceiverEntity):
         self._ieee = device.ieee
         self._endpoint_id = device.endpoint_id
         self._attr_unique_id = f"{self._ieee}-{self._endpoint_id}-receiver"
-        self._attr_name = f"{device.name} IR receiver"
         self._last_payload: str | None = None
         self._receive_lock = asyncio.Lock()
         self._unsub_receive: CALLBACK_TYPE | None = None
@@ -510,7 +510,7 @@ class ZhaInfraredReceiverEntity(InfraredReceiverEntity):
                 value,
                 self._last_arm_transport_command_monotonic,
             )
-        except Exception as err:  # noqa: BLE001
+        except (ZigbeeException, TimeoutError, ValueError) as err:
             _LOGGER.debug(
                 "zha_infrared receiver step=send_arm_error entity=%s command_id=%s arg=%s value=%s error=%s",
                 self.entity_id,
@@ -575,7 +575,7 @@ class ZhaInfraredReceiverEntity(InfraredReceiverEntity):
                 allow_cache=False,
                 only_cache=False,
             )
-        except Exception as err:  # noqa: BLE001
+        except (ZigbeeException, TimeoutError, ValueError) as err:
             _LOGGER.debug(
                 "zha_infrared receiver step=read_error entity=%s attrs=%s error=%s",
                 self.entity_id,
@@ -602,7 +602,7 @@ class ZhaInfraredReceiverEntity(InfraredReceiverEntity):
                         allow_cache=False,
                         only_cache=False,
                     )
-                except Exception as err:  # noqa: BLE001
+                except (ZigbeeException, TimeoutError, ValueError) as err:
                     _LOGGER.debug(
                         "zha_infrared receiver step=arm_state_read_error entity=%s attr=%s error=%s",
                         self.entity_id,
@@ -841,7 +841,7 @@ class ZhaInfraredReceiverEntity(InfraredReceiverEntity):
 
         try:
             timings = decode_received_payload(self._device.profile.codec.name, payload)
-        except Exception as err:  # noqa: BLE001
+        except (TypeError, ValueError) as err:
             _LOGGER.debug(
                 "zha_infrared receiver step=process_payload_decode_error entity=%s codec=%s error=%s",
                 self.entity_id,
