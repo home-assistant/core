@@ -1,14 +1,21 @@
 """Support for events."""
 
-from typing import Final
+from typing import Final, override
 
-from homeassistant.components.event import EventEntity, EventEntityDescription
+from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY
+
+from homeassistant.components.event import (
+    DOMAIN as EVENT_DOMAIN,
+    EventEntity,
+    EventEntityDescription,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import _LOGGER
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .entity import AmazonEntity
+from .utils import async_remove_entity_from_virtual_group
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -31,6 +38,11 @@ async def async_setup_entry(
     """Set up Alexa Devices events based on a config entry."""
     coordinator = entry.runtime_data
 
+    # Remove voice event from virtual groups
+    await async_remove_entity_from_virtual_group(
+        hass, coordinator, EVENT_DOMAIN, "voice_event"
+    )
+
     known_devices: set[str] = set()
 
     def _check_device() -> None:
@@ -42,6 +54,7 @@ async def async_setup_entry(
                 AlexaVoiceEvent(coordinator, serial_num, event_desc)
                 for event_desc in EVENTS
                 for serial_num in new_devices
+                if coordinator.data[serial_num].device_family != SPEAKER_GROUP_FAMILY
             )
 
     _check_device()
@@ -53,9 +66,10 @@ class AlexaVoiceEvent(AmazonEntity, EventEntity):
 
     _attr_event_types = [EVENT_TYPE]
     coordinator: AmazonDevicesCoordinator
-    _last_seen_timestamp: int | None = None
+    _last_seen_timestamp: int = 0  #  January 1, 1970 at 12:00:00 AM
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
@@ -71,7 +85,8 @@ class AlexaVoiceEvent(AmazonEntity, EventEntity):
             )
             return
 
-        if vocal_record.timestamp == self._last_seen_timestamp:
+        if vocal_record.timestamp <= self._last_seen_timestamp:
+            # Discard old events that have already been processed
             return
 
         self._last_seen_timestamp = vocal_record.timestamp

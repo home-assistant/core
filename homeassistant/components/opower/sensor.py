@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
+from typing import override
 
 from opower import MeterType, UnitOfMeasure
 
@@ -326,11 +327,13 @@ class OpowerSensor(CoordinatorEntity[OpowerCoordinator], SensorEntity):
         self.utility_account_id = utility_account_id
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.utility_account_id in self.coordinator.data
 
     @property
+    @override
     def native_value(self) -> StateType | date | datetime:
         """Return the state."""
         return self.entity_description.value_fn(

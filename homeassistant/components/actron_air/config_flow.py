@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from actron_neo_api import ActronAirAPI, ActronAirAuthError
 
@@ -30,6 +30,7 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
         self._expires_minutes: str = "30"
         self.login_task: asyncio.Task[None] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

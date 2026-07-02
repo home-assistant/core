@@ -1,7 +1,7 @@
 """Custom uhoo config flow setup."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from uhooapi import Client
 from uhooapi.errors import ForbiddenError, UhooError, UnauthorizedError
@@ -35,6 +35,7 @@ class UhooConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

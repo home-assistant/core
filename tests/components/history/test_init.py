@@ -9,6 +9,7 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import history
+from homeassistant.components.history import DOMAIN
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
@@ -382,7 +383,7 @@ async def test_fetch_period_api(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history."""
-    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, DOMAIN, {})
     client = await hass_client()
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}?filter_entity_id=sensor.power"
@@ -398,7 +399,7 @@ async def test_fetch_period_api_with_use_include_order(
 ) -> None:
     """Test the fetch period view for history with include order."""
     await async_setup_component(
-        hass, "history", {history.DOMAIN: {history.CONF_ORDER: True}}
+        hass, DOMAIN, {history.DOMAIN: {history.CONF_ORDER: True}}
     )
     client = await hass_client()
     response = await client.get(
@@ -415,7 +416,7 @@ async def test_fetch_period_api_with_minimal_response(
 ) -> None:
     """Test the fetch period view for history with minimal_response."""
     now = dt_util.utcnow()
-    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     hass.states.async_set("sensor.power", 0, {"attr": "any"})
     await async_wait_recording_done(hass)
@@ -457,7 +458,7 @@ async def test_fetch_period_api_with_no_timestamp(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history with no timestamp."""
-    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, DOMAIN, {})
     client = await hass_client()
     response = await client.get("/api/history/period?filter_entity_id=sensor.power")
     assert response.status == HTTPStatus.OK
@@ -472,7 +473,7 @@ async def test_fetch_period_api_with_include_order(
     """Test the fetch period view for history."""
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {
             "history": {
                 "use_include_order": True,
@@ -498,7 +499,7 @@ async def test_entity_ids_limit_via_api(
     """Test limiting history to entity_ids."""
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {"history": {}},
     )
     hass.states.async_set("light.kitchen", "on")
@@ -525,7 +526,7 @@ async def test_entity_ids_limit_via_api_with_skip_initial_state(
     """Test limiting history to entity_ids with skip_initial_state."""
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {"history": {}},
     )
     hass.states.async_set("light.kitchen", "on")
@@ -560,7 +561,7 @@ async def test_fetch_period_api_before_history_started(
     """Test the fetch period view for history for the far past."""
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {},
     )
     await async_wait_recording_done(hass)
@@ -582,7 +583,7 @@ async def test_fetch_period_api_far_future(
     """Test the fetch period view for history for the far future."""
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {},
     )
     await async_wait_recording_done(hass)
@@ -604,7 +605,7 @@ async def test_fetch_period_api_with_invalid_datetime(
     """Test the fetch period view for history with an invalid date time."""
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {},
     )
     await async_wait_recording_done(hass)
@@ -624,7 +625,7 @@ async def test_fetch_period_api_invalid_end_time(
     """Test the fetch period view for history with an invalid end time."""
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {},
     )
     await async_wait_recording_done(hass)
@@ -647,7 +648,7 @@ async def test_entity_ids_limit_via_api_with_end_time(
     """Test limiting history to entity_ids with end_time."""
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {"history": {}},
     )
     start = dt_util.utcnow()
@@ -692,7 +693,7 @@ async def test_fetch_period_api_with_no_entity_ids(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history with minimal_response."""
-    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_wait_recording_done(hass)
 
     yesterday = dt_util.utcnow() - timedelta(days=1)
@@ -753,7 +754,7 @@ async def test_history_with_invalid_entity_ids(
     """Test sending valid and invalid entity_ids to the API."""
     await async_setup_component(
         hass,
-        "history",
+        DOMAIN,
         {"history": {}},
     )
     hass.states.async_set("light.kitchen", "on")
@@ -785,7 +786,7 @@ async def test_fetch_period_api_filters_unauthorized_entities(
     hass_read_only_user.mock_policy(
         {"entities": {"entity_ids": {"light.kitchen": True}}}
     )
-    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     hass.states.async_set("light.kitchen", "on")
     hass.states.async_set("light.cow", "on")

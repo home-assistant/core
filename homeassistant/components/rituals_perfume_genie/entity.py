@@ -1,5 +1,7 @@
 """Base class for Rituals Perfume Genie diffuser entity."""
 
+from typing import Any, override
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -10,6 +12,12 @@ from .coordinator import RitualsDataUpdateCoordinator
 MANUFACTURER = "Rituals Cosmetics"
 MODEL = "The Perfume Genie"
 MODEL2 = "The Perfume Genie 2.0"
+
+
+def _version_string(version: Any) -> str:
+    if isinstance(version, dict):
+        return str(version.get("title", version))
+    return str(version)
 
 
 class DiffuserEntity(CoordinatorEntity[RitualsDataUpdateCoordinator]):
@@ -31,10 +39,11 @@ class DiffuserEntity(CoordinatorEntity[RitualsDataUpdateCoordinator]):
             manufacturer=MANUFACTURER,
             model=MODEL if coordinator.diffuser.has_battery else MODEL2,
             name=coordinator.diffuser.name,
-            sw_version=coordinator.diffuser.version,
+            sw_version=_version_string(coordinator.diffuser.version),
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return super().available and self.coordinator.diffuser.is_online

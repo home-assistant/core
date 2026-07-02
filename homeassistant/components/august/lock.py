@@ -1,7 +1,7 @@
 """Support for August lock."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientResponseError
 from yalexs.activity import ActivityType
@@ -45,14 +45,17 @@ class AugustLock(AugustEntity, RestoreEntity, LockEntity):
         if self._detail.unlatch_supported:
             self._attr_supported_features = LockEntityFeature.OPEN
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         await self._perform_lock_operation(LockOperation.LOCK)
 
+    @override
     async def async_open(self, **kwargs: Any) -> None:
         """Open/unlatch the device."""
         await self._perform_lock_operation(LockOperation.OPEN)
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         await self._perform_lock_operation(LockOperation.UNLOCK)
@@ -92,6 +95,7 @@ class AugustLock(AugustEntity, RestoreEntity, LockEntity):
         return False
 
     @callback
+    @override
     def _update_from_data(self) -> None:
         """Get the latest state of the sensor and update activity."""
         detail = self._detail
@@ -128,6 +132,7 @@ class AugustLock(AugustEntity, RestoreEntity, LockEntity):
                 keypad.battery_level
             )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore ATTR_CHANGED_BY on startup.
 

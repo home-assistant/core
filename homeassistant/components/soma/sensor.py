@@ -1,6 +1,7 @@
 """Support for Soma sensors."""
 
 from datetime import timedelta
+from typing import override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import PERCENTAGE
@@ -33,6 +34,7 @@ class SomaSensor(SomaEntity, SensorEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
 
     @property
+    @override
     def native_value(self):
         """Return the state of the entity."""
         return self.battery_state
