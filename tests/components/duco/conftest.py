@@ -10,6 +10,9 @@ from duco_connectivity import (
     ApiEndpointInfo,
     ApiInfo,
     BoardInfo,
+    ConfigNode,
+    ConfigNodeOverview,
+    ConfigValueString,
     DiagComponent,
     KnownActionName,
     LanInfo,
@@ -101,6 +104,19 @@ def _node_from_dict(data: dict[str, Any]) -> Node:
 def load_nodes_fixture(filename: str) -> list[Node]:
     """Load nodes from a JSON fixture file."""
     return [_node_from_dict(node) for node in load_json_array_fixture(filename, DOMAIN)]
+
+
+def node_configs_from_nodes(nodes: list[Node]) -> ConfigNodeOverview:
+    """Build node config names from node fixtures."""
+    return ConfigNodeOverview(
+        nodes=[
+            ConfigNode(
+                node_id=node.node_id,
+                name=ConfigValueString(node.general.name),
+            )
+            for node in nodes
+        ]
+    )
 
 
 @pytest.fixture
@@ -236,6 +252,7 @@ def mock_duco_client(
         client.async_get_board_info.return_value = mock_board_info
         client.async_get_lan_info.return_value = mock_lan_info
         client.async_get_nodes.return_value = mock_nodes
+        client.async_get_node_configs.return_value = node_configs_from_nodes(mock_nodes)
         client.async_get_node_actions.return_value = mock_node_actions
         client.async_get_time_filter_remaining.return_value = 180
         client.async_get_diagnostics.return_value = [

@@ -1,7 +1,8 @@
 """Data update coordinator for the Duco integration."""
 
+from collections.abc import Callable
 from contextlib import suppress
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import logging
 from typing import cast, override
 
@@ -11,10 +12,10 @@ from duco_connectivity.exceptions import (
     DucoError,
     DucoResponseError,
 )
-from duco_connectivity.models import BoardInfo, Node, NodeListActionItemList
+from duco_connectivity.models import BoardInfo, Node, NodeListActionItemList, NodeName
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -24,6 +25,7 @@ from .validation import UnsupportedBoardError, async_get_supported_board_info
 _LOGGER = logging.getLogger(__name__)
 
 type DucoConfigEntry = ConfigEntry[DucoCoordinator]
+type NodeNameUpdateCallback = Callable[[dict[int, str]], None]
 
 
 @dataclass
@@ -41,7 +43,10 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
     config_entry: DucoConfigEntry
     board_info: BoardInfo
+    mac: str
     _supports_time_filter_remain: bool
+    _known_node_names: dict[int, str]
+    _node_name_update_callbacks: list[NodeNameUpdateCallback]
 
     def __init__(
         self,
@@ -58,7 +63,24 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             update_interval=SCAN_INTERVAL,
         )
         self.client = client
+        self.mac = cast(str, config_entry.unique_id)
+        self._known_node_names = {}
+        self._node_name_update_callbacks = []
         self._supports_time_filter_remain = True
+
+    @callback
+    def async_add_node_name_listener(
+        self, update_callback: NodeNameUpdateCallback
+    ) -> CALLBACK_TYPE:
+        """Listen for Duco node name changes."""
+        self._node_name_update_callbacks.append(update_callback)
+
+        @callback
+        def remove_listener() -> None:
+            """Remove the node name listener."""
+            self._node_name_update_callbacks.remove(update_callback)
+
+        return remove_listener
 
     @override
     async def _async_setup(self) -> None:
@@ -102,6 +124,33 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 translation_key="api_error",
             ) from err
 
+        # Configurable node names live on /config/nodes, not /info/nodes.
+        # Overlaying them here keeps HA in sync with names changed in Duco.
+        try:
+            configured_node_names = await self.client.async_get_node_configs(
+                parameter="Name"
+            )
+        except DucoError as err:
+            _LOGGER.debug("Could not fetch Duco node names", exc_info=err)
+        else:
+            configured_names_by_id = {
+                node.node_id: node.name.value
+                for node in configured_node_names.nodes
+                if node.name is not None
+            }
+            nodes = [
+                replace(
+                    node,
+                    general=replace(
+                        node.general,
+                        name=NodeName(
+                            configured_names_by_id.get(node.node_id, node.general.name)
+                        ),
+                    ),
+                )
+                for node in nodes
+            ]
+
         try:
             node_actions = await self.client.async_get_node_actions()
         except DucoError as err:
@@ -139,9 +188,26 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 time_filter_remain = await self.client.async_get_time_filter_remaining()
                 self._supports_time_filter_remain = time_filter_remain is not None
 
-        return DucoData(
+        data = DucoData(
             nodes={node.node_id: node for node in nodes},
             node_actions=node_actions,
             rssi_wifi=rssi_wifi,
             time_filter_remain=time_filter_remain,
         )
+
+        current_node_names = {
+            node_id: node.general.name or f"Node {node_id}"
+            for node_id, node in data.nodes.items()
+        }
+        updated_node_names = {
+            node_id: node_name
+            for node_id, node_name in current_node_names.items()
+            if self._known_node_names.get(node_id) != node_name
+        }
+        self._known_node_names = current_node_names
+
+        if updated_node_names:
+            for update_callback in self._node_name_update_callbacks:
+                update_callback(updated_node_names)
+
+        return data
