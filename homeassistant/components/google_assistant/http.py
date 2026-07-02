@@ -11,6 +11,10 @@ from aiohttp.web import Request, Response
 import jwt
 
 from homeassistant.components import webhook
+from homeassistant.components.homeassistant.exposed_entities import (
+    async_get_entity_settings,
+    async_listen_entity_updates,
+)
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
@@ -98,6 +102,17 @@ class GoogleConfig(AbstractConfig):
         await super().async_initialize()
 
         self.async_enable_local_sdk()
+
+        @callback
+        def _async_exposed_entities_updated() -> None:
+            self.async_schedule_google_sync_all()
+
+        for assistant in ("cloud.google_assistant", "cloud.alexa", "conversation"):
+            self._on_deinitialize.append(
+                async_listen_entity_updates(
+                    self.hass, assistant, _async_exposed_entities_updated
+                )
+            )
 
     @property
     @override
@@ -197,7 +212,16 @@ class GoogleConfig(AbstractConfig):
         # exposed, or if the entity is explicitly exposed
         is_default_exposed = entity_exposed_by_default and explicit_expose is not False
 
-        return is_default_exposed or explicit_expose
+        if is_default_exposed or explicit_expose:
+            return True
+
+        # POC: also expose entities marked exposed to any assistant in the
+        # Voice assistants UI, so users can toggle exposure at runtime.
+        try:
+            settings = async_get_entity_settings(self.hass, entity_id)
+        except HomeAssistantError:
+            return False
+        return any(opts.get("should_expose", False) for opts in settings.values())
 
     @override
     def should_2fa(self, state):
