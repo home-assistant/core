@@ -1,7 +1,7 @@
 """Tests for the Place sensor platform."""
 
 import json
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -12,13 +12,15 @@ from . import setup_integration, trigger_shadow_callback
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("aioclient_mock_fixture")
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_provider",
+    "mock_get_iot_credentials",
+    "mock_mqtt_client",
+)
 async def test_sensor_entities_created(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_provider: AsyncMock,
-    mock_get_iot_credentials: MagicMock,
-    mock_mqtt_client: MagicMock,
 ) -> None:
     """Test that alarm sensor entities are created for each device."""
     await setup_integration(hass, mock_config_entry)
@@ -32,13 +34,15 @@ async def test_sensor_entities_created(
     assert smoke is not None
 
 
-@pytest.mark.usefixtures("aioclient_mock_fixture")
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_provider",
+    "mock_get_iot_credentials",
+    "mock_mqtt_client",
+)
 async def test_sensor_initial_state(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_provider: AsyncMock,
-    mock_get_iot_credentials: MagicMock,
-    mock_mqtt_client: MagicMock,
 ) -> None:
     """Test sensor values reflect initial shadow state from discovery."""
     await setup_integration(hass, mock_config_entry)
@@ -52,12 +56,14 @@ async def test_sensor_initial_state(
     assert smoke.state == "idle"
 
 
-@pytest.mark.usefixtures("aioclient_mock_fixture")
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_provider",
+    "mock_get_iot_credentials",
+)
 async def test_sensor_updates_on_shadow_push(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_provider: AsyncMock,
-    mock_get_iot_credentials: MagicMock,
     mock_mqtt_client: MagicMock,
 ) -> None:
     """Test sensor values update when an MQTT shadow message arrives."""
@@ -81,13 +87,15 @@ async def test_sensor_updates_on_shadow_push(
     assert hass.states.get("sensor.master_bedroom_heat_alarm").state == "idle"
 
 
-@pytest.mark.usefixtures("aioclient_mock_fixture")
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_provider",
+    "mock_get_iot_credentials",
+    "mock_mqtt_client",
+)
 async def test_sensor_unknown_device_returns_unknown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_provider: AsyncMock,
-    mock_get_iot_credentials: MagicMock,
-    mock_mqtt_client: MagicMock,
 ) -> None:
     """Test that a sensor returns unknown when its shadow is missing."""
     await setup_integration(hass, mock_config_entry)
@@ -101,7 +109,11 @@ async def test_sensor_unknown_device_returns_unknown(
     assert state.state == "unknown"
 
 
-@pytest.mark.usefixtures("aioclient_mock_fixture")
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_provider",
+    "mock_get_iot_credentials",
+)
 @pytest.mark.parametrize(
     ("raw_value", "expected_state"),
     [
@@ -119,8 +131,6 @@ async def test_sensor_unknown_device_returns_unknown(
 async def test_sensor_all_alarm_states(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_provider: AsyncMock,
-    mock_get_iot_credentials: MagicMock,
     mock_mqtt_client: MagicMock,
     raw_value: int,
     expected_state: str,
