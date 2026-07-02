@@ -131,6 +131,7 @@ Every check has a code following the
 | `W7413` | [`home-assistant-missing-config-entry-unloading`](#w7413-home-assistant-missing-config-entry-unloading) | Integration should implement `async_unload_entry` |
 | `W7415` | [`home-assistant-sequential-executor-jobs`](#w7415-home-assistant-sequential-executor-jobs) | Sequential `async_add_executor_job` calls should be grouped |
 | `W7416` | [`home-assistant-missing-has-entity-name`](#w7416-home-assistant-missing-has-entity-name) | Entity class should set `_attr_has_entity_name = True` |
+| `W7428` | [`home-assistant-redundant-translation-key`](#w7428-home-assistant-redundant-translation-key) | `translation_key` is redundant when `device_class` provides the same translation |
 | `W7429` | [`home-assistant-unnecessary-format-mac`](#w7429-home-assistant-unnecessary-format-mac) | `format_mac()` is unnecessary with `CONNECTION_NETWORK_MAC` |
 
 
@@ -828,6 +829,25 @@ Entity class should statically guarantee `_attr_has_entity_name = True`:
 either set at class level, set unconditionally at the top of a method, or
 supplied by an `entity_description` whose class sets `has_entity_name = True`.
 Conditional patterns are rejected.
+
+
+## `home_assistant_redundant_translation_key` checker
+
+Detects `EntityDescription` instances where `translation_key` resolves
+to the same translated name that the `device_class` already provides.
+Only fires on platforms that have device class translations: `sensor`,
+`binary_sensor`, `number`, `cover`, `switch`, `button`, `event`,
+`humidifier`, and `media_player`.
+
+### `W7428`: `home-assistant-redundant-translation-key`
+
+`translation_key` is redundant because `device_class` already provides
+the same translation. When an entity has a `device_class`, Home Assistant
+automatically supplies a translated name from the platform's device
+class translations (`entity_component.<device_class>.name` in the
+platform's `strings.json`). Setting a `translation_key` that resolves
+to the same name adds unnecessary indirection; remove the
+`translation_key` and let the device class translation apply directly.
 
 
 ## `home_assistant_unnecessary_format_mac` checker
