@@ -23,6 +23,7 @@ from uiprotect.data import (
 )
 from uiprotect.data.bootstrap import ProtectDeviceRef
 from uiprotect.data.public_devices import (
+    PublicCamera,
     PublicLight,
     PublicLightDeviceSettings,
     PublicSensor,
@@ -300,6 +301,27 @@ def make_public_light(
     return public
 
 
+def make_public_camera(
+    camera: Camera,
+    *,
+    state: DeviceState | None = None,
+    mic_volume: int | None = None,
+) -> Mock:
+    """Build a public-API camera for the migrated microphone volume number.
+
+    ``mic_volume`` defaults to the private fixture's value so the public mirror
+    matches it; pass an override to assert a value the private object would not
+    produce.
+    """
+    public = Mock(spec=PublicCamera)
+    public.id = camera.id
+    public.mac = camera.mac
+    public.model = ModelType.CAMERA
+    public.state = DeviceState[camera.state.name] if state is None else state
+    public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
+    return public
+
+
 def setup_public_sensor(ufp: MockUFPFixture) -> None:
     """Expose private sensors over the public API via a real ``PublicBootstrap``.
 
@@ -348,6 +370,35 @@ def setup_public_light(ufp: MockUFPFixture) -> None:
             and (private := ufp.api.bootstrap.lights.get(obj_id)) is not None
         ):
             public_bootstrap.lights[obj_id] = make_public_light(private)
+        return public_bootstrap.get(model, obj_id)
+
+    pb.get = _get
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+
+
+def setup_public_camera(ufp: MockUFPFixture) -> None:
+    """Expose private cameras over the public API via a real ``PublicBootstrap``.
+
+    Mirrors ``setup_public_sensor`` for ``ModelType.CAMERA`` so the migrated
+    microphone volume number reads from the public object.
+    """
+    public_bootstrap = PublicBootstrap()
+    pb = Mock(spec=PublicBootstrap)
+    pb.cameras = public_bootstrap.cameras
+    pb.relays = {}
+    pb.sirens = {}
+    pb.arm_mode = None
+    pb.arm_profiles = {}
+
+    def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
+        if (
+            model is ModelType.CAMERA
+            and (private := ufp.api.bootstrap.cameras.get(obj_id)) is not None
+        ):
+            public_bootstrap.cameras[obj_id] = make_public_camera(
+                private, mic_volume=private.mic_volume
+            )
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get
