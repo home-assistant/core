@@ -94,7 +94,8 @@ async def test_state(
     assert state is not None
 
     # Testing a energy sensor at 1 kWh for 1hour = 0kW
-    assert round(float(state.state), config["sensor"]["round"]) == 0.0
+    # Verify exact state string to validate precision behavior (round: 2)
+    assert state.state == "0.00"
 
     assert state.attributes.get("unit_of_measurement") == "kW"
 
@@ -157,11 +158,11 @@ async def test_no_change(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     states = [events[0].data["new_state"].state] + [
-        round(float(event.data["new_state"].state), config["sensor"]["round"])
-        for event in events[1:]
+        event.data["new_state"].state for event in events[1:]
     ]
     # Testing a energy sensor at 1 kWh for 1hour = 0kW
-    assert states == ["unavailable", 0.0, 1.0, 0.0]
+    # Verify exact state strings to validate precision (round: 2)
+    assert states == ["unavailable", "0.00", "1.00", "0.00"]
 
     state = events[-1].data["new_state"]
 
@@ -212,7 +213,10 @@ async def setup_tests(
     state = hass.states.get("sensor.power")
     assert state is not None
 
-    assert round(float(state.state), config["sensor"]["round"]) == expected_state
+    # Format expected_state as string based on round configuration for precise validation
+    round_digits = config["sensor"]["round"]
+    expected_state_str = f"{expected_state:.{round_digits}f}"
+    assert state.state == expected_state_str
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
 
     return state
@@ -824,7 +828,8 @@ async def test_prefix(hass: HomeAssistant) -> None:
     assert state is not None
 
     # Testing a power sensor increasing by 1000 Watts per hour = 1kW/h
-    assert round(float(state.state), config["sensor"]["round"]) == 1.0
+    # Verify exact state string to validate precision behavior (round: 2)
+    assert state.state == "1.00"
     assert state.attributes.get("unit_of_measurement") == f"kW/{UnitOfTime.HOURS}"
 
 
@@ -857,7 +862,8 @@ async def test_suffix(hass: HomeAssistant) -> None:
     assert state is not None
 
     # Testing a network speed sensor at 1000 bytes/s over 10s  = 10kbytes/s2
-    assert round(float(state.state), config["sensor"]["round"]) == 0.0
+    # Verify exact state string to validate precision behavior (round: 2)
+    assert state.state == "0.00"
 
 
 async def test_total_increasing_reset(hass: HomeAssistant) -> None:
@@ -947,15 +953,16 @@ async def test_unavailable(
     hass: HomeAssistant,
 ) -> None:
     """Test derivative sensor state when unavailable."""
-    config, entity_id = await _setup_sensor(hass, {"unit_time": "s"})
+    _config, entity_id = await _setup_sensor(hass, {"unit_time": "s"})
 
     times = [0, 1, 2, 3]
     values = [0, 1, bad_state, 2]
+    # With round: 2, expected numeric values are formatted as strings
     expected_state = [
-        0,
-        1,
+        "0.00",
+        "1.00",
         STATE_UNAVAILABLE if bad_state == STATE_UNAVAILABLE else STATE_UNKNOWN,
-        0.5,
+        "0.50",
     ]
 
     # Testing a energy sensor with non-monotonic intervals and values
@@ -968,12 +975,36 @@ async def test_unavailable(
 
             state = hass.states.get("sensor.power")
             assert state is not None
-            rounded_state = (
-                state.state
-                if expect in [STATE_UNKNOWN, STATE_UNAVAILABLE]
-                else round(float(state.state), config["sensor"]["round"])
-            )
-            assert rounded_state == expect
+            # Compare exact state strings to validate precision behavior
+            assert state.state == expect
+
+
+async def test_replace_unavailable_option(hass: HomeAssistant) -> None:
+    """Test replace_unavailable option falls back to zero."""
+    _config, entity_id = await _setup_sensor(
+        hass,
+        {"unit_time": "s", "replace_unavailable": True},
+    )
+
+    base = dt_util.utcnow()
+    with freeze_time(base) as freezer:
+        freezer.move_to(base)
+        hass.states.async_set(entity_id, 0, {})
+        await hass.async_block_till_done()
+
+        freezer.move_to(base + timedelta(seconds=1))
+        hass.states.async_set(entity_id, 1, {})
+        await hass.async_block_till_done()
+
+        freezer.move_to(base + timedelta(seconds=2))
+        hass.states.async_set(entity_id, STATE_UNAVAILABLE, {})
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.power")
+    assert state is not None
+    # Verify exact state string to validate precision behavior (round: 2)
+    assert state.state == "0.00"
+    assert state.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("bad_state", [STATE_UNAVAILABLE, STATE_UNKNOWN, "foo"])
@@ -1012,9 +1043,10 @@ async def test_unavailable_2(
                 )
             else:
                 expect = (time / 10) if time < 10 else 1
-                assert round(float(state.state), config["sensor"]["round"]) == round(
-                    expect, config["sensor"]["round"]
-                )
+                # Format expected value with 2 decimal places for exact string comparison
+                round_digits = config["sensor"]["round"]
+                expected_str = f"{expect:.{round_digits}f}"
+                assert state.state == expected_str
 
 
 @pytest.mark.parametrize("restore_state", ["3.00", STATE_UNKNOWN])
@@ -1238,3 +1270,166 @@ async def test_unique_id(
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "my unique id"
+
+
+async def _setup_derivative_sensor_with_initial_source_state(
+    hass: HomeAssistant,
+    *,
+    source_id: str,
+    source_state: str,
+    replace_unavailable: bool,
+) -> None:
+    """Set an initial source state and set up the derivative sensor."""
+    hass.states.async_set(source_id, source_state, {})
+    await hass.async_block_till_done()
+
+    config = {
+        "sensor": {
+            "platform": "derivative",
+            "name": "power",
+            "source": source_id,
+            "round": 2,
+            "unit_time": "s",
+            "replace_unavailable": replace_unavailable,
+        }
+    }
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("replace_unavailable", "expected_state"),
+    [
+        (True, "0.00"),
+        (False, STATE_UNAVAILABLE),
+    ],
+)
+async def test_replace_unavailable_at_startup(
+    hass: HomeAssistant,
+    replace_unavailable: bool,
+    expected_state: str,
+) -> None:
+    """Test replace_unavailable handling at startup when source is initially unavailable."""
+    source_id = "sensor.energy"
+    await _setup_derivative_sensor_with_initial_source_state(
+        hass,
+        source_id=source_id,
+        source_state=STATE_UNAVAILABLE,
+        replace_unavailable=replace_unavailable,
+    )
+
+    state = hass.states.get("sensor.power")
+    assert state is not None
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize("replace_unavailable", [True, False])
+async def test_replace_unavailable_at_startup_unknown(
+    hass: HomeAssistant,
+    replace_unavailable: bool,
+) -> None:
+    """Test STATE_UNKNOWN handling at startup is independent of replace_unavailable.
+
+    When the source is STATE_UNKNOWN during startup, the derivative sensor should
+    always output STATE_UNKNOWN, regardless of the replace_unavailable setting.
+    The replace_unavailable option only affects STATE_UNAVAILABLE.
+    """
+    source_id = "sensor.energy"
+    await _setup_derivative_sensor_with_initial_source_state(
+        hass,
+        source_id=source_id,
+        source_state=STATE_UNKNOWN,
+        replace_unavailable=replace_unavailable,
+    )
+
+    state = hass.states.get("sensor.power")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_replace_unavailable_recovery(hass: HomeAssistant) -> None:
+    """Test that derivative properly recovers when source returns to available after unavailable."""
+    _config, entity_id = await _setup_sensor(
+        hass,
+        {"unit_time": "s", "replace_unavailable": True},
+    )
+
+    base = dt_util.utcnow()
+    with freeze_time(base) as freezer:
+        # Start with normal values to establish baseline
+        freezer.move_to(base)
+        hass.states.async_set(entity_id, 0, {})
+        await hass.async_block_till_done()
+
+        freezer.move_to(base + timedelta(seconds=1))
+        hass.states.async_set(entity_id, 1, {})
+        await hass.async_block_till_done()
+
+        # Source becomes unavailable
+        freezer.move_to(base + timedelta(seconds=2))
+        hass.states.async_set(entity_id, STATE_UNAVAILABLE, {})
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.power")
+        assert state is not None
+        # Should be 0.00 due to replace_unavailable (round: 2)
+        assert state.state == "0.00"
+
+        # Source becomes available again with a new value
+        freezer.move_to(base + timedelta(seconds=3))
+        hass.states.async_set(entity_id, 5, {})
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.power")
+        assert state is not None
+
+        # Recovery should use the last valid sample before the unavailable gap:
+        # (5 - 1) / 2 sec = 2.00
+        assert state.state != STATE_UNAVAILABLE, (
+            "Sensor should remain available after recovery"
+        )
+        assert state.state == "2.00", f"Expected '2.00', got '{state.state}'"
+
+
+async def test_replace_unavailable_recovery_with_state_list(
+    hass: HomeAssistant,
+) -> None:
+    """Test derivative recovery when source becomes available after unavailable with established baseline."""
+    _config, entity_id = await _setup_sensor(
+        hass,
+        {"unit_time": "s", "replace_unavailable": True},
+    )
+
+    base = dt_util.utcnow()
+    with freeze_time(base) as freezer:
+        # Establish a series of valid measurements
+        freezer.move_to(base)
+        hass.states.async_set(entity_id, 0, {})
+        await hass.async_block_till_done()
+
+        freezer.move_to(base + timedelta(seconds=1))
+        hass.states.async_set(entity_id, 10, {})
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.power")
+        assert state is not None
+        assert state.state == "10.00"  # (10-0)/1 = 10.00 (round: 2)
+
+        # Source becomes unavailable - derivative should go to 0
+        freezer.move_to(base + timedelta(seconds=2))
+        hass.states.async_set(entity_id, STATE_UNAVAILABLE, {})
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.power")
+        assert state is not None
+        assert state.state == "0.00"  # Replaced with 0.00 (round: 2)
+
+        # Source becomes available again - continue from last valid state
+        freezer.move_to(base + timedelta(seconds=3))
+        hass.states.async_set(entity_id, 15, {})
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.power")
+        assert state is not None
+        # Derivative: (15 - 10) / 2 sec = 2.50 (using last valid state before unavailable)
+        assert state.state == "2.50", f"Expected '2.50', got '{state.state}'"

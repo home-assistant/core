@@ -53,6 +53,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_MAX_SUB_INTERVAL,
+    CONF_REPLACE_UNAVAILABLE,
     CONF_ROUND_DIGITS,
     CONF_TIME_WINDOW,
     CONF_UNIT,
@@ -110,6 +111,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIT): cv.string,
         vol.Optional(CONF_TIME_WINDOW, default=DEFAULT_TIME_WINDOW): cv.time_period,
         vol.Optional(CONF_MAX_SUB_INTERVAL): cv.positive_time_period,
+        vol.Optional(CONF_REPLACE_UNAVAILABLE, default=False): cv.boolean,
     }
 )
 
@@ -151,6 +153,7 @@ async def async_setup_entry(
         unit_prefix=config_entry.options.get(CONF_UNIT_PREFIX),
         unit_time=config_entry.options[CONF_UNIT_TIME],
         max_sub_interval=max_sub_interval,
+        replace_unavailable=config_entry.options.get(CONF_REPLACE_UNAVAILABLE, False),
     )
 
     async_add_entities([derivative_sensor])
@@ -176,6 +179,7 @@ async def async_setup_platform(
         unit_time=config[CONF_UNIT_TIME],
         unique_id=config.get(CONF_UNIQUE_ID),
         max_sub_interval=config.get(CONF_MAX_SUB_INTERVAL),
+        replace_unavailable=config.get(CONF_REPLACE_UNAVAILABLE, False),
     )
 
     async_add_entities([derivative])
@@ -200,6 +204,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         unit_prefix: str | None,
         unit_time: UnitOfTime,
         max_sub_interval: timedelta | None,
+        replace_unavailable: bool,
         unique_id: str | None,
     ) -> None:
         """Initialize the derivative sensor."""
@@ -235,6 +240,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             if max_sub_interval is None or max_sub_interval.total_seconds() == 0
             else max_sub_interval
         )
+        self._replace_unavailable = replace_unavailable
         self._cancel_max_sub_interval_exceeded_callback: CALLBACK_TYPE = lambda *args: (
             None
         )
@@ -329,16 +335,47 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         )
 
     def _handle_invalid_source_state(self, state: State | None) -> bool:
-        # Check the source state for unknown/unavailable condition.
-        # If unusable, write unknown/unavailable state and return false.
-        if not state or state.state == STATE_UNAVAILABLE:
+        # Handle source states that cannot be used directly for derivative
+        # calculation.
+        # - Missing source state: mark this entity unavailable and write
+        #   that availability change.
+        # - Unknown source state: keep this entity available and write an unknown
+        #   native value.
+        # - Unavailable source state: when `replace_unavailable` is
+        #   enabled, keep this entity available and write a numeric 0 while
+        #   preserving timing/history for the next valid sample. If disabled,
+        #   mark unavailable.
+        # - Non-numeric source state: keep this entity available and write an
+        #   unknown native value.
+        if not state:
             self._attr_available = False
             self.async_write_ha_state()
             return False
+
+        if state.state == STATE_UNKNOWN:
+            self._attr_available = True
+            self._write_native_value(None)
+            return False
+
+        if state.state == STATE_UNAVAILABLE:
+            if self._replace_unavailable:
+                self._attr_available = True
+                # Preserve the last valid timestamp and time-window history so the
+                # first valid sample after an unavailable gap can still be correlated
+                # to the prior valid sample.
+                self._write_native_value(Decimal(0))
+                return False
+
+            # Fallback for STATE_UNAVAILABLE when replace_unavailable is False
+            self._attr_available = False
+            self.async_write_ha_state()
+            return False
+
         if not _is_decimal_state(state.state):
             self._attr_available = True
             self._write_native_value(None)
             return False
+
         self._attr_available = True
         return True
 
@@ -572,7 +609,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ]:
-            self._attr_available = False
+            self._handle_invalid_source_state(source_state)
 
         if self._max_sub_interval is not None:
             schedule_max_sub_interval_exceeded(source_state)
