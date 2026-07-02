@@ -1,14 +1,10 @@
 """Config flow for Midea LAN."""
 
+from operator import itemgetter
 from typing import Any, override
 
 from aiohttp import ClientSession
-from midealocal.cloud import (
-    PRESET_ACCOUNT_DATA,
-    MideaCloud,
-    get_default_cloud,
-    get_midea_cloud,
-)
+from midealocal.cloud import MideaCloud, get_default_cloud, get_midea_cloud
 from midealocal.const import DeviceType, ProtocolVersion
 from midealocal.device import AuthException, MideaDevice
 from midealocal.discover import discover
@@ -33,6 +29,7 @@ from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import _LOGGER, CONF_ACCOUNT, CONF_KEY, CONF_SERVER, CONF_SUBTYPE, DOMAIN
 from .device_catalog import MIDEA_DEVICE_NAMES
+from .utils import decode_preset_account
 
 DEFAULT_CLOUD: str = get_default_cloud()
 
@@ -64,19 +61,12 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         for device_type, name in MIDEA_DEVICE_NAMES.items():
             self.unsorted[device_type] = name
 
-        sorted_device_names = sorted(self.unsorted.items(), key=lambda x: x[1])
-        for item in sorted_device_names:
-            self.supports[item[0]] = item[1]
+        # sort and assign supports
+        self.supports = dict(sorted(self.unsorted.items(), key=itemgetter(1)))
+
         # preset account
-        _acct_hex = format(PRESET_ACCOUNT_DATA[0] ^ PRESET_ACCOUNT_DATA[1], "x")
-        self.preset_account: str = bytes.fromhex(
-            _acct_hex if len(_acct_hex) % 2 == 0 else "0" + _acct_hex,
-        ).decode("utf-8", errors="ignore")
-        # preset password
-        _pass_hex = format(PRESET_ACCOUNT_DATA[0] ^ PRESET_ACCOUNT_DATA[2], "x")
-        self.preset_password: str = bytes.fromhex(
-            _pass_hex if len(_pass_hex) % 2 == 0 else "0" + _pass_hex,
-        ).decode("utf-8", errors="ignore")
+        self.preset_account = decode_preset_account(1)
+        self.preset_password = decode_preset_account(2)
         self.preset_cloud_name: str = DEFAULT_CLOUD
 
     def _clear_login_state(self) -> None:
