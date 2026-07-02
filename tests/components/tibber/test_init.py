@@ -99,3 +99,20 @@ async def test_setup_requires_data_api_reauth(hass: HomeAssistant) -> None:
 
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_oauth_implementation_not_available(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    recorder_mock: Recorder,
+    setup_credentials: None,
+) -> None:
+    """Test that an unavailable OAuth implementation triggers a setup retry."""
+    with patch(
+        "homeassistant.components.tibber.async_get_config_entry_implementation",
+        side_effect=ValueError("Implementation not available"),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
