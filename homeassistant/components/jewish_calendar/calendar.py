@@ -8,6 +8,7 @@ from typing import override
 
 from hdate import HDateInfo, Zmanim
 from hdate.parasha import Parasha
+from hdate.translator import set_language
 
 from homeassistant.components.calendar import (
     CalendarEntity,
@@ -64,19 +65,18 @@ def _create_daily_event(
             start=target_date,
             end=target_date,
             summary=str(info.hdate),
-            description=f"Hebrew date: {info.hdate}",
+            description=info.hdate.description,
         )
 
-    # Time-based daily events using enum properties
-    daily_event = DailyCalendarEventType(event_type)
-    time_value = zmanim.zmanim.get(daily_event.value)
+    # Time-based daily events, rendered from the hdate Zman object
+    time_value = zmanim.zmanim.get(event_type)
 
     if time_value is not None:
         return CalendarEvent(
             start=time_value.utc,
             end=time_value.utc,
-            summary=daily_event.summary,
-            description=f"{daily_event.description_prefix}: {time_value.local.strftime('%H:%M')}",
+            summary=time_value.label,
+            description=time_value.description,
         )
 
     return None  # Should never happen
@@ -95,9 +95,7 @@ def _create_yearly_event(
                 start=target_date,
                 end=target_date,
                 summary=str(holiday),
-                description=(
-                    f"Jewish Holiday: {holiday}\nHoliday Type: {holiday.type}"
-                ),
+                description=holiday.description,
             )
             for holiday in info.holidays
         ]
@@ -107,37 +105,44 @@ def _create_yearly_event(
         is_simchat_torah = any(
             holiday.name == _SIMCHAT_TORAH for holiday in info.holidays
         )
-        if (is_shabbat or is_simchat_torah) and info.parasha != str(Parasha.NONE):
-            return CalendarEvent(
-                start=target_date,
-                end=target_date,
-                summary=str(info.parasha),
-                description=f"Parshat Hashavua: {info.parasha}",
-            )
-        return None
+        if not (is_shabbat or is_simchat_torah):
+            return None
+        parasha = info.parasha_obj
+        if parasha is Parasha.NONE:
+            return None
+        return CalendarEvent(
+            start=target_date,
+            end=target_date,
+            summary=str(parasha),
+            description=parasha.description,
+        )
 
     if event_type == YearlyCalendarEventType.OMER_COUNT and info.omer.total_days > 0:
         return CalendarEvent(
             start=target_date,
             end=target_date,
             summary=str(info.omer),
-            description=f"Sefirat HaOmer: {info.omer.count_str()}",
+            description=info.omer.description,
         )
 
-    if event_type == YearlyCalendarEventType.CANDLE_LIGHTING and zmanim.candle_lighting:
+    if event_type == YearlyCalendarEventType.CANDLE_LIGHTING and (
+        candle_lighting := zmanim.candle_lighting_obj
+    ):
         return CalendarEvent(
-            start=zmanim.candle_lighting.astimezone(UTC),
-            end=zmanim.candle_lighting.astimezone(UTC),
-            summary="Candle Lighting",
-            description=f"Candle lighting time: {zmanim.candle_lighting.strftime('%H:%M')}",
+            start=candle_lighting.utc,
+            end=candle_lighting.utc,
+            summary=candle_lighting.label,
+            description=candle_lighting.description,
         )
 
-    if event_type == YearlyCalendarEventType.HAVDALAH and zmanim.havdalah:
+    if event_type == YearlyCalendarEventType.HAVDALAH and (
+        havdalah := zmanim.havdalah_obj
+    ):
         return CalendarEvent(
-            start=zmanim.havdalah.astimezone(UTC),
-            end=zmanim.havdalah.astimezone(UTC),
-            summary="Havdalah",
-            description=f"Havdalah time: {zmanim.havdalah.strftime('%H:%M')}",
+            start=havdalah.utc,
+            end=havdalah.utc,
+            summary=havdalah.label,
+            description=havdalah.description,
         )
 
     return None
@@ -150,12 +155,13 @@ def _create_learning_event(
     zmanim: Zmanim,
 ) -> CalendarEvent | None:
     """Create a learning schedule event."""
-    if event_type == LearningScheduleEventType.DAF_YOMI and info.daf_yomi:
+    if event_type == LearningScheduleEventType.DAF_YOMI:
+        daf_yomi = info.daf_yomi_obj
         return CalendarEvent(
             start=target_date,
             end=target_date,
-            summary=str(info.daf_yomi),
-            description=f"Daf Yomi: {info.daf_yomi}",
+            summary=str(daf_yomi),
+            description=daf_yomi.description,
         )
 
     return None
@@ -278,6 +284,11 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
     def _get_events_for_date(self, target_date: date) -> list[CalendarEvent]:
         """Get all configured events for a specific date."""
         events = []
+
+        # The hdate language is stored in a context variable that does not
+        # propagate from the coordinator to the task serving calendar requests,
+        # so it has to be set again here before any hdate object is rendered.
+        set_language(self.coordinator.data.language)
 
         info = HDateInfo(target_date, self.coordinator.data.diaspora)
         zmanim = self.coordinator.make_zmanim(target_date)
