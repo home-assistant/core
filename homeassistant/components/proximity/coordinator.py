@@ -147,9 +147,10 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         """Return whether the tracked entity is currently in the proximity zone.
 
         Trackers report zone membership in the ``in_zones`` attribute, which
-        holds zone entity IDs. Some trackers (e.g. Bluetooth) don't populate it,
-        so fall back to comparing the device state against the zone's friendly
-        name, which is what the device state is set to for non-home zones.
+        holds zone entity IDs. Some trackers (e.g. Bluetooth) don't populate it
+        or report it as an empty list, so fall back to comparing the device
+        state against the zone's friendly name, which is what the device state
+        is set to for non-home zones.
         """
         if in_zones := device.attributes.get(ATTR_IN_ZONES):
             return zone.entity_id in in_zones
