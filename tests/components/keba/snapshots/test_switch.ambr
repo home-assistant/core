@@ -1,0 +1,14 @@
+# serializer version: 1
+# name: test_switch_state
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KC-P30 Charging Enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.kc_p30_charging_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

@@ -7,55 +7,51 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, KebaHandler
+from . import KebaConfigEntry, KebaHandler
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: KebaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the KEBA charging station platform."""
-    if discovery_info is None:
-        return
+    """Set up the KEBA charging station binary sensor platform."""
+    keba = entry.runtime_data
 
-    keba: KebaHandler = hass.data[DOMAIN]
-
-    sensors = [
-        KebaBinarySensor(
-            keba,
-            "Online",
-            "Status",
-            "device_state",
-            BinarySensorDeviceClass.CONNECTIVITY,
-        ),
-        KebaBinarySensor(
-            keba,
-            "Plug",
-            "Plug",
-            "plug_state",
-            BinarySensorDeviceClass.PLUG,
-        ),
-        KebaBinarySensor(
-            keba,
-            "State",
-            "Charging State",
-            "charging_state",
-            BinarySensorDeviceClass.POWER,
-        ),
-        KebaBinarySensor(
-            keba,
-            "Tmo FS",
-            "Failsafe Mode",
-            "failsafe_mode_state",
-            BinarySensorDeviceClass.SAFETY,
-        ),
-    ]
-    async_add_entities(sensors)
+    async_add_entities(
+        [
+            KebaBinarySensor(
+                keba,
+                "Online",
+                "Status",
+                "device_state",
+                BinarySensorDeviceClass.CONNECTIVITY,
+            ),
+            KebaBinarySensor(
+                keba,
+                "Plug",
+                "Plug",
+                "plug_state",
+                BinarySensorDeviceClass.PLUG,
+            ),
+            KebaBinarySensor(
+                keba,
+                "State",
+                "Charging State",
+                "charging_state",
+                BinarySensorDeviceClass.POWER,
+            ),
+            KebaBinarySensor(
+                keba,
+                "Tmo FS",
+                "Failsafe Mode",
+                "failsafe_mode_state",
+                BinarySensorDeviceClass.SAFETY,
+            ),
+        ]
+    )
 
 
 class KebaBinarySensor(BinarySensorEntity):

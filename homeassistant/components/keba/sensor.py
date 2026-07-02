@@ -10,79 +10,75 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfElectricCurrent, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, KebaHandler
+from . import KebaConfigEntry, KebaHandler
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: KebaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the KEBA charging station platform."""
-    if discovery_info is None:
-        return
+    """Set up the KEBA charging station sensor platform."""
+    keba = entry.runtime_data
 
-    keba = hass.data[DOMAIN]
-
-    sensors = [
-        KebaSensor(
-            keba,
-            "max_current",
-            SensorEntityDescription(
-                key="Curr user",
-                name="Max Current",
-                native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-                device_class=SensorDeviceClass.CURRENT,
+    async_add_entities(
+        [
+            KebaSensor(
+                keba,
+                "max_current",
+                SensorEntityDescription(
+                    key="Curr user",
+                    name="Max Current",
+                    native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+                    device_class=SensorDeviceClass.CURRENT,
+                ),
             ),
-        ),
-        KebaSensor(
-            keba,
-            "energy_target",
-            SensorEntityDescription(
-                key="Setenergy",
-                name="Energy Target",
-                native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                device_class=SensorDeviceClass.ENERGY,
+            KebaSensor(
+                keba,
+                "energy_target",
+                SensorEntityDescription(
+                    key="Setenergy",
+                    name="Energy Target",
+                    native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+                    device_class=SensorDeviceClass.ENERGY,
+                ),
             ),
-        ),
-        KebaSensor(
-            keba,
-            "charging_power",
-            SensorEntityDescription(
-                key="P",
-                name="Charging Power",
-                native_unit_of_measurement=UnitOfPower.KILO_WATT,
-                device_class=SensorDeviceClass.POWER,
-                state_class=SensorStateClass.MEASUREMENT,
+            KebaSensor(
+                keba,
+                "charging_power",
+                SensorEntityDescription(
+                    key="P",
+                    name="Charging Power",
+                    native_unit_of_measurement=UnitOfPower.KILO_WATT,
+                    device_class=SensorDeviceClass.POWER,
+                    state_class=SensorStateClass.MEASUREMENT,
+                ),
             ),
-        ),
-        KebaSensor(
-            keba,
-            "session_energy",
-            SensorEntityDescription(
-                key="E pres",  # codespell:ignore pres
-                name="Session Energy",
-                native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                device_class=SensorDeviceClass.ENERGY,
+            KebaSensor(
+                keba,
+                "session_energy",
+                SensorEntityDescription(
+                    key="E pres",  # codespell:ignore pres
+                    name="Session Energy",
+                    native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+                    device_class=SensorDeviceClass.ENERGY,
+                ),
             ),
-        ),
-        KebaSensor(
-            keba,
-            "total_energy",
-            SensorEntityDescription(
-                key="E total",
-                name="Total Energy",
-                native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                device_class=SensorDeviceClass.ENERGY,
-                state_class=SensorStateClass.TOTAL_INCREASING,
+            KebaSensor(
+                keba,
+                "total_energy",
+                SensorEntityDescription(
+                    key="E total",
+                    name="Total Energy",
+                    native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+                    device_class=SensorDeviceClass.ENERGY,
+                    state_class=SensorStateClass.TOTAL_INCREASING,
+                ),
             ),
-        ),
-    ]
-    async_add_entities(sensors)
+        ]
+    )
 
 
 class KebaSensor(SensorEntity):
