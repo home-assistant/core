@@ -39,6 +39,7 @@
 # name: test_weather[weather.meteo_france_forecast_for_city_la_clusaz_la_clusaz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 'apparent_temperature'>: 5.4,
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Météo-France forecast for city La Clusaz La Clusaz',
       <WeatherEntityStateAttribute.HUMIDITY: 'humidity'>: 75,
