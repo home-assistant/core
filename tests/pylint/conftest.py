@@ -3,6 +3,9 @@
 from pylint.checkers import BaseChecker
 from pylint.testutils.unittest_linter import UnittestLinter
 from pylint_home_assistant.checkers.class_module import HassEnforceClassModule
+from pylint_home_assistant.checkers.config_flow.menu_options import (
+    HassConfigFlowMenuOptionsChecker,
+)
 from pylint_home_assistant.checkers.config_flow.no_name import (
     HassEnforceConfigFlowNoNameChecker,
 )
@@ -91,6 +94,17 @@ def enforce_config_entry_unique_id_no_ip_checker_fixture(
     """Fixture to provide a unique_id_no_ip checker."""
     clear_caches()
     checker = HassEnforceConfigEntryUniqueIdNoIpChecker(linter)
+    checker.module = "homeassistant.components.pylint_test"
+    return checker
+
+
+@pytest.fixture(name="config_flow_menu_options_checker")
+def config_flow_menu_options_checker_fixture(
+    linter: UnittestLinter,
+) -> BaseChecker:
+    """Fixture to provide a config_flow menu_options checker."""
+    clear_caches()
+    checker = HassConfigFlowMenuOptionsChecker(linter)
     checker.module = "homeassistant.components.pylint_test"
     return checker
 
