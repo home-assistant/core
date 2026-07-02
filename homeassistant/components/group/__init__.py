@@ -52,6 +52,7 @@ from .const import (  # noqa: F401
 )
 from .entity import Group, async_get_component
 from .registry import async_setup as async_setup_registry
+from .websocket_api import async_setup as async_setup_websocket_api
 
 CONF_ALL = "all"
 
@@ -171,6 +172,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component = async_get_component(hass)
 
     await async_setup_registry(hass)
+
+    async_setup_websocket_api(hass)
 
     await _async_process_config(hass, config)
 
