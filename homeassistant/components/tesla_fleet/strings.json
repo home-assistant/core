@@ -20,9 +20,11 @@
     "error": {
       "invalid_domain": "Invalid domain format. Please enter a valid domain name.",
       "invalid_response": "The registration was rejected by Tesla",
-      "precondition_failed": "The domain does not match the application's allowed origins.",
+      "origin_mismatch": "Tesla rejected the registration because the domain does not match your Tesla developer app's allowed origin. Check that the entered domain matches the allowed origin, then try again.",
       "public_key_mismatch": "The public key hosted at your domain does not match the expected key. Please ensure the correct public key is hosted at the specified location.",
       "public_key_not_found": "Public key not found.",
+      "registration_failed": "Tesla rejected the registration in your account's home region. Check that the hosted public key and your Tesla developer app configuration are correct, then try again.",
+      "reset_private_key": "Tesla rejected the public key. Remove `tesla_fleet.key` from your Home Assistant configuration directory so a new key pair is generated, then try again.",
       "unknown_error": "An unknown error occurred: {error}"
     },
     "step": {
@@ -52,6 +54,10 @@
       "reauth_confirm": {
         "description": "The {name} integration needs to re-authenticate your account. Reauthentication refreshes the Tesla API permissions granted to Home Assistant, including any newly enabled scopes.",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "region_failures": {
+        "description": "Registration succeeded in your account's home region but failed in the following regions: {failed_regions}.\n\nThese regions are not required to use the integration, so you can continue. Command signing will use your home region.",
+        "title": "Regional registration issues"
       },
       "registration_complete": {
         "data": {
