@@ -16,7 +16,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import (
     MISSING_MANUFACTURER_DATA_SERVICE_INFO,
     MISSING_PRODUCT_SERVICE_INFO,
-    MISSING_SERVICE_SERVICE_INFO,
     UNSUPPORTED_GROUP_SERVICE_INFO,
     WATER_TIMER_SERVICE_INFO,
     WATER_TIMER_UNNAMED_SERVICE_INFO,
@@ -122,7 +121,6 @@ async def test_no_valid_devices(
     """Test no valid candidates."""
 
     inject_bluetooth_service_info(hass, MISSING_MANUFACTURER_DATA_SERVICE_INFO)
-    inject_bluetooth_service_info(hass, MISSING_SERVICE_SERVICE_INFO)
     inject_bluetooth_service_info(hass, UNSUPPORTED_GROUP_SERVICE_INFO)
 
     result = await hass.config_entries.flow.async_init(

@@ -56,18 +56,6 @@ MISSING_PRODUCT_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
-MISSING_SERVICE_SERVICE_INFO = BluetoothServiceInfo(
-    name="Missing Service Info",
-    address="00000000-0000-0000-0001-000000000000",
-    rssi=-63,
-    service_data={},
-    manufacturer_data={
-        1062: b"\x02\x07d\x02\x05\x01\x02\x08\x00\x02\t\x01\x04\x06\x12\x00\x01"
-    },
-    service_uuids=[],
-    source="local",
-)
-
 MISSING_MANUFACTURER_DATA_SERVICE_INFO = BluetoothServiceInfo(
     name="Missing Manufacturer Data",
     address="00000000-0000-0000-0001-000000000001",
@@ -87,6 +75,38 @@ UNSUPPORTED_GROUP_SERVICE_INFO = BluetoothServiceInfo(
         1062: b"\x02\x07d\x02\x05\x01\x02\x08\x00\x02\t\x01\x04\x06\x10\x00\x01"
     },
     service_uuids=["98bd0001-0b0e-421a-84e5-ddbf75dc6de4"],
+    source="local",
+)
+
+# Real advertising payload captured from a G-19033-20 ("Smart Water Control",
+# `wc_single`): group=18 (WATER_CONTROL), model=3 (SINGLE_WATER_CONTROL),
+# variant=0. Crucially, no service_uuids in the ad packet — these devices
+# only carry manufacturer data, so the legacy `service_uuid: 98bd0001`
+# bluetooth matcher does not match and a second matcher with manufacturer_id
+# only is required.
+SMART_WATER_CONTROL_SERVICE_INFO = BluetoothServiceInfo(
+    name="G-19033",
+    address="00000000-0000-0000-0002-000000000001",
+    rssi=-42,
+    service_data={},
+    manufacturer_data={
+        1062: b"\x04\x06\x12\x03\x00\x03\x05\x01\x64\x05\x04\x53\x45\x00\x00"
+    },
+    service_uuids=[],
+    source="local",
+)
+
+# G-19034-20 ("Smart Dual Water Control", `wc_dual`): group=18, model=4
+# (DUAL_WATER_CONTROL), variant=0. Same manufacturer-only ad shape.
+SMART_DUAL_WATER_CONTROL_SERVICE_INFO = BluetoothServiceInfo(
+    name="G-19034",
+    address="00000000-0000-0000-0002-000000000002",
+    rssi=-50,
+    service_data={},
+    manufacturer_data={
+        1062: b"\x04\x06\x12\x04\x00\x03\x05\x01\x64\x05\x04\x55\x45\x00\x00"
+    },
+    service_uuids=[],
     source="local",
 )
 

@@ -28,6 +28,12 @@
       "sensor_connected_state": {
         "name": "Sensor connection"
       },
+      "valve_available_valve_1": {
+        "name": "Valve 1 available"
+      },
+      "valve_available_valve_2": {
+        "name": "Valve 2 available"
+      },
       "valve_connected_state": {
         "name": "Valve connection"
       }
@@ -38,6 +44,12 @@
       }
     },
     "number": {
+      "manual_watering_duration_valve_1": {
+        "name": "Valve 1 manual watering time"
+      },
+      "manual_watering_duration_valve_2": {
+        "name": "Valve 2 manual watering time"
+      },
       "manual_watering_time": {
         "name": "Manual watering time"
       },
@@ -104,6 +116,12 @@
       "activation_reason": {
         "name": "Activation reason"
       },
+      "activation_reason_valve_1": {
+        "name": "Valve 1 activation reason"
+      },
+      "activation_reason_valve_2": {
+        "name": "Valve 2 activation reason"
+      },
       "aqua_contour_error": {
         "name": "Error",
         "state": {
@@ -134,6 +152,12 @@
       "remaining_open_timestamp": {
         "name": "Valve closing"
       },
+      "remaining_open_timestamp_valve_1": {
+        "name": "Valve 1 closing"
+      },
+      "remaining_open_timestamp_valve_2": {
+        "name": "Valve 2 closing"
+      },
       "remaining_watering_timestamp": {
         "name": "Watering finished"
       },
@@ -156,6 +180,12 @@
     "switch": {
       "state": {
         "name": "[%key:common::state::open%]"
+      },
+      "state_valve_1": {
+        "name": "Valve 1"
+      },
+      "state_valve_2": {
+        "name": "Valve 2"
       }
     },
     "text": {
@@ -164,6 +194,14 @@
       },
       "position_name": {
         "name": "Position {number}"
+      }
+    },
+    "valve": {
+      "valve_1": {
+        "name": "Valve 1"
+      },
+      "valve_2": {
+        "name": "Valve 2"
       }
     }
   }

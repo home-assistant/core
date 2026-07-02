@@ -1,8 +1,8 @@
-"""Support for switch entities."""
+"""Support for valve entities."""
 
 from typing import Any, override
 
-from gardena_bluetooth.const import Valve
+from gardena_bluetooth.const import Valve, Valve1, Valve2
 
 from homeassistant.components.valve import (
     ValveDeviceClass,
@@ -12,6 +12,7 @@ from homeassistant.components.valve import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import WATERING_COMMAND_SOURCE
 from .coordinator import GardenaBluetoothConfigEntry, GardenaBluetoothCoordinator
 from .entity import GardenaBluetoothEntity
 
@@ -23,17 +24,24 @@ async def async_setup_entry(
     entry: GardenaBluetoothConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up switch based on a config entry."""
+    """Set up valve entities based on a config entry."""
     coordinator = entry.runtime_data
-    entities = []
+    entities: list[ValveEntity] = []
+
     if GardenaBluetoothValve.characteristics.issubset(coordinator.characteristics):
         entities.append(GardenaBluetoothValve(coordinator))
+
+    entities.extend(
+        entity_cls(coordinator)
+        for entity_cls in (GardenaBluetoothValve1, GardenaBluetoothValve2)
+        if entity_cls.characteristics.issubset(coordinator.characteristics)
+    )
 
     async_add_entities(entities)
 
 
 class GardenaBluetoothValve(GardenaBluetoothEntity, ValveEntity):
-    """Representation of a valve switch."""
+    """Old single-valve Bluetooth-only Water Control (e.g. 01889-20)."""
 
     _attr_name = None
     _attr_is_closed: bool | None = None
@@ -51,7 +59,7 @@ class GardenaBluetoothValve(GardenaBluetoothEntity, ValveEntity):
         self,
         coordinator: GardenaBluetoothCoordinator,
     ) -> None:
-        """Initialize the switch."""
+        """Initialize the valve."""
         super().__init__(
             coordinator, {Valve.state.uuid, Valve.manual_watering_time.uuid}
         )
@@ -64,7 +72,7 @@ class GardenaBluetoothValve(GardenaBluetoothEntity, ValveEntity):
 
     @override
     async def async_open_valve(self, **kwargs: Any) -> None:
-        """Turn the entity on."""
+        """Open the valve for the configured manual watering time."""
         value = (
             self.coordinator.get_cached(Valve.manual_watering_time)
             or FALLBACK_WATERING_TIME_IN_SECONDS
@@ -75,7 +83,89 @@ class GardenaBluetoothValve(GardenaBluetoothEntity, ValveEntity):
 
     @override
     async def async_close_valve(self, **kwargs: Any) -> None:
-        """Turn the entity off."""
+        """Close the valve."""
         await self.coordinator.write(Valve.remaining_open_time, 0)
         self._attr_is_closed = True
         self.async_write_ha_state()
+
+
+class GardenaBluetoothValveX(GardenaBluetoothEntity, ValveEntity):
+    """Base for the Smart Water Control family (Valve1/Valve2 GATT services)."""
+
+    # Annotated as the concrete classes: the released library (2.8.1) declares
+    # the ValveX base attributes with `=` instead of `:`, which mypy resolves
+    # to typing special forms when accessed through type[ValveX].
+    _service: type[Valve1 | Valve2]
+    characteristics: set[str]
+
+    _attr_is_closed: bool | None = None
+    _attr_reports_position = False
+    _attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
+    _attr_device_class = ValveDeviceClass.WATER
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Derive the required characteristics from the concrete service."""
+        super().__init_subclass__(**kwargs)
+        cls.characteristics = {
+            cls._service.state.unique_id,
+            cls._service.manual_watering_duration.unique_id,
+            cls._service.remaining_time_open.unique_id,
+            cls._service.available.unique_id,
+            cls._service.start_watering.unique_id,
+            cls._service.stop_watering.unique_id,
+        }
+
+    def __init__(
+        self,
+        coordinator: GardenaBluetoothCoordinator,
+    ) -> None:
+        """Initialize the valve."""
+        super().__init__(
+            coordinator,
+            {
+                self._service.state.uuid,
+                self._service.manual_watering_duration.uuid,
+                self._service.remaining_time_open.uuid,
+                self._service.available.uuid,
+            },
+        )
+        self._attr_unique_id = f"{coordinator.address}-{self._service.state.unique_id}"
+
+    def _handle_coordinator_update(self) -> None:
+        state = self.coordinator.get_cached(self._service.state)
+        self._attr_is_closed = None if state is None else not state
+        super()._handle_coordinator_update()
+
+    async def async_open_valve(self, **kwargs: Any) -> None:
+        """Open the valve for the configured manual watering duration."""
+        cached = self.coordinator.get_cached(self._service.manual_watering_duration)
+        duration = cached if cached is not None else FALLBACK_WATERING_TIME_IN_SECONDS
+        await self.coordinator.write(
+            self._service.start_watering,
+            {0: WATERING_COMMAND_SOURCE, 1: str(duration)},
+        )
+        self._attr_is_closed = False
+        self.async_write_ha_state()
+
+    async def async_close_valve(self, **kwargs: Any) -> None:
+        """Close the valve."""
+        await self.coordinator.write(
+            self._service.stop_watering,
+            {0: WATERING_COMMAND_SOURCE},
+        )
+        self._attr_is_closed = True
+        self.async_write_ha_state()
+
+
+class GardenaBluetoothValve1(GardenaBluetoothValveX):
+    """Valve1 entity (G-19033 wc_single, valve 1 of G-19034 wc_dual)."""
+
+    _service = Valve1
+    _attr_translation_key = "valve_1"
+
+
+class GardenaBluetoothValve2(GardenaBluetoothValveX):
+    """Valve2 entity (G-19034 wc_dual second valve)."""
+
+    _service = Valve2
+    _attr_translation_key = "valve_2"
