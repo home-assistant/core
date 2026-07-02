@@ -199,6 +199,7 @@ class DataGrandLyonParkAndRideCoordinator(
             update_interval=timedelta(minutes=5),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, TclParkAndRide]:
         """Fetch data for all monitored park-and-ride facilities."""
         park_subentries = list(

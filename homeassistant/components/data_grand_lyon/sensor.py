@@ -300,6 +300,7 @@ class DataGrandLyonParkAndRideSensor(DataGrandLyonParkAndRideEntity, SensorEntit
     entity_description: DataGrandLyonParkAndRideSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.value_fn(
