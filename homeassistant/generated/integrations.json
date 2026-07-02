@@ -8250,6 +8250,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "zha_infrared": {
+      "name": "ZHA Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "zhong_hong": {
       "name": "ZhongHong",
       "integration_type": "hub",
