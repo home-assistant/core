@@ -53,14 +53,28 @@
       "dual_roller_shutter_upper": {
         "name": "Upper shutter"
       }
+    },
+    "number": {
+      "closed_position_limitation": {
+        "name": "Closed position limit"
+      },
+      "open_position_limitation": {
+        "name": "Open position limit"
+      }
     }
   },
   "exceptions": {
     "device_communication_error": {
       "message": "Failed to communicate with Velux device: {error}"
     },
+    "limitation_overlap": {
+      "message": "Cannot set limit: the closed position limit must not exceed the open position limit."
+    },
     "reboot_failed": {
       "message": "Failed to reboot gateway. Try again in a few moments or power cycle the device manually"
+    },
+    "set_limitation_before_data": {
+      "message": "Unable to update Velux limitation before the current limits are known"
     }
   }
 }
