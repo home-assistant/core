@@ -417,8 +417,20 @@ async def test_select_set_option_camera_recording(
         mock_method.assert_called_once_with(RecordingMode.NEVER)
 
 
+@pytest.mark.parametrize(
+    ("option", "expected"),
+    [
+        ("on", IRLEDMode.ON),
+        ("custom_filter_only", IRLEDMode.CUSTOM_FILTER_ONLY),
+        ("manual", IRLEDMode.MANUAL),
+    ],
+)
 async def test_select_set_option_camera_ir(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    option: str,
+    expected: IRLEDMode,
 ) -> None:
     """Test Infrared Mode select."""
 
@@ -435,11 +447,11 @@ async def test_select_set_option_camera_ir(
         await hass.services.async_call(
             "select",
             "select_option",
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "on"},
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
             blocking=True,
         )
 
-        mock_method.assert_called_once_with(IRLEDMode.ON)
+        mock_method.assert_called_once_with(expected)
 
 
 async def test_select_set_option_camera_doorbell_custom(

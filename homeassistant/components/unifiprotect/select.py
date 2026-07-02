@@ -62,6 +62,8 @@ INFRARED_MODES = [
     {"id": IRLEDMode.ON.value, "name": "on"},
     {"id": IRLEDMode.AUTO_NO_LED.value, "name": "auto_filter_only"},
     {"id": IRLEDMode.CUSTOM.value, "name": "custom"},
+    {"id": IRLEDMode.CUSTOM_FILTER_ONLY.value, "name": "custom_filter_only"},
+    {"id": IRLEDMode.MANUAL.value, "name": "manual"},
     {"id": IRLEDMode.OFF.value, "name": "off"},
 ]
 
