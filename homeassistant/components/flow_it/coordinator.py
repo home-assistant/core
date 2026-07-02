@@ -23,6 +23,9 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+type FlowItConfigEntry = ConfigEntry[FlowItData]
+
+
 @dataclass(kw_only=True, frozen=True)
 class FlowItCoordinatorData:
     """Data fetched from the Flow-it VMC."""
@@ -84,6 +87,3 @@ class FlowItCoordinator(DataUpdateCoordinator[FlowItCoordinatorData]):
         else:
             assert self.vmc.state is not None
             return FlowItCoordinatorData(state=self.vmc.state)
-
-
-type FlowItConfigEntry = ConfigEntry[FlowItData]
