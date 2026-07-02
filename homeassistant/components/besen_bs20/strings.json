@@ -53,41 +53,8 @@
     }
   },
   "entity": {
-    "number": {
-      "charge_amps": { "name": "Charge Amps" },
-      "lcd_brightness": { "name": "LCD Brightness" }
-    },
-    "select": {
-      "language": { "name": "Language" },
-      "temperature_unit": { "name": "Temperature Unit" }
-    },
-    "sensor": {
-      "charging_message": { "name": "Message" },
-      "charging_status": { "name": "Status" },
-      "current_power": { "name": "Current Energy" },
-      "current_state": { "name": "Current State" },
-      "error_state": { "name": "Error State" },
-      "l1_current": { "name": "L1 Amperage" },
-      "l1_voltage": { "name": "L1 Voltage" },
-      "l2_current": { "name": "L2 Amperage" },
-      "l2_voltage": { "name": "L2 Voltage" },
-      "l3_current": { "name": "L3 Amperage" },
-      "l3_voltage": { "name": "L3 Voltage" },
-      "outer_temperature": { "name": "Outer Temperature" },
-      "output_state": { "name": "Output State" },
-      "plug_state": { "name": "Plug State" },
-      "rssi": { "name": "RSSI" },
-      "session_energy": { "name": "Session Energy" },
-      "software_version": { "name": "Software Version" },
-      "system_time": { "name": "System Time" },
-      "temperature": { "name": "Temperature" },
-      "total_energy": { "name": "Total Energy" }
-    },
     "switch": {
       "charging": { "name": "Charge" }
-    },
-    "text": {
-      "device_name": { "name": "Name" }
     }
   },
   "exceptions": {
@@ -105,10 +72,6 @@
     "no_connectable_path": {
       "description": "The charger is visible, but Home Assistant cannot reach it through an adapter or Bluetooth proxy that supports active GATT connections. Move an active ESPHome Bluetooth proxy closer to the charger or add a supported Bluetooth adapter.",
       "title": "No connectable Bluetooth path"
-    },
-    "reauth_required": {
-      "description": "The charger rejected the configured PIN. Reauthenticate the integration with the current 6-digit PIN.",
-      "title": "Besen BS20 PIN rejected"
     }
   }
 }

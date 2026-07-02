@@ -12,7 +12,7 @@ import pytest
 from homeassistant.components.besen_bs20 import config_flow
 from homeassistant.components.besen_bs20.config_flow import BesenBS20ConfigFlow
 from homeassistant.components.besen_bs20.const import CONF_SYNC_CLOCK
-from homeassistant.config_entries import SOURCE_RECONFIGURE
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_RECONFIGURE
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -31,6 +31,11 @@ class _FakeConfigEntries:
 
         del entry_id
         return self.entry
+
+    def async_get_known_entry(self, entry_id: str) -> SimpleNamespace:
+        """Return the configured fake entry."""
+
+        return self.async_get_entry(entry_id)
 
     def async_update_entry(
         self,
@@ -320,6 +325,7 @@ async def test_reauth_and_reconfigure_flows(
     entry = _entry()
     flow = _flow()
     flow.context["entry_id"] = "entry"
+    flow.context["source"] = SOURCE_REAUTH
     cast(Any, flow).hass = SimpleNamespace(config_entries=_FakeConfigEntries(entry))
     monkeypatch.setattr(config_flow, "_async_validate_input", _validate_ok)
 
@@ -355,6 +361,7 @@ async def test_reauth_and_reconfigure_error_forms(
     entry = _entry()
     flow = _flow()
     flow.context["entry_id"] = "entry"
+    flow.context["source"] = SOURCE_REAUTH
     cast(Any, flow).hass = SimpleNamespace(config_entries=_FakeConfigEntries(entry))
 
     for exception, error in (

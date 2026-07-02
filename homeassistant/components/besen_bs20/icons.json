@@ -1,37 +1,8 @@
 {
   "entity": {
-    "number": {
-      "charge_amps": {
-        "default": "mdi:current-ac"
-      },
-      "lcd_brightness": {
-        "default": "mdi:brightness-percent"
-      }
-    },
-    "select": {
-      "language": {
-        "default": "mdi:translate"
-      },
-      "temperature_unit": {
-        "default": "mdi:thermometer"
-      }
-    },
-    "sensor": {
-      "software_version": {
-        "default": "mdi:code-tags"
-      },
-      "system_time": {
-        "default": "mdi:clock-outline"
-      }
-    },
     "switch": {
       "charging": {
         "default": "mdi:ev-plug-type2"
-      }
-    },
-    "text": {
-      "device_name": {
-        "default": "mdi:rename-outline"
       }
     }
   }

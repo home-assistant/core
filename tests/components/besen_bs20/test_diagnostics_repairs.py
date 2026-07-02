@@ -74,15 +74,11 @@ def test_repair_issue_helpers(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(ir, "async_delete_issue", _delete_issue)
 
     repairs.async_create_no_connectable_path_issue(cast(Any, object()), "entry")
-    repairs.async_create_reauth_issue(cast(Any, object()), "entry")
     repairs.async_delete_no_connectable_path_issue(cast(Any, object()), "entry")
-    repairs.async_delete_reauth_issue(cast(Any, object()), "entry")
 
     assert created == [
         (DOMAIN, "entry_no_connectable_path", "no_connectable_path", False),
-        (DOMAIN, "entry_reauth_required", "reauth_required", True),
     ]
     assert deleted == [
         (DOMAIN, "entry_no_connectable_path"),
-        (DOMAIN, "entry_reauth_required"),
     ]

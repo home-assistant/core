@@ -3,8 +3,10 @@ rules:
   action-setup:
     status: exempt
     comment: |
-      The integration exposes controls through entity platforms and does not define custom actions.
-  appropriate-polling: done
+      The integration does not define custom actions.
+  appropriate-polling:
+    status: exempt
+    comment: No polling.
   brands: done
   common-modules: done
   config-flow-test-coverage: done

@@ -86,9 +86,7 @@ async def _async_validate_input(
         )
 
     if _ble_device_provider() is None:
-        request_active_scan = getattr(bluetooth, "async_request_active_scan", None)
-        if callable(request_active_scan):
-            await request_active_scan(hass)
+        await bluetooth.async_request_active_scan(hass)
 
     if _ble_device_provider() is None:
         raise NoConnectablePath("No connectable Bluetooth path is available")
@@ -266,8 +264,7 @@ class BesenBS20ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Ask the user for a new PIN."""
 
         errors: dict[str, str] = {}
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry is not None
+        entry = self._get_reauth_entry()
         address = entry.data[CONF_ADDRESS]
         if user_input is not None:
             pin = user_input[CONF_PIN]
@@ -308,8 +305,7 @@ class BesenBS20ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle UI reconfiguration."""
 
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry is not None
+        entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
             pin = user_input[CONF_PIN]
