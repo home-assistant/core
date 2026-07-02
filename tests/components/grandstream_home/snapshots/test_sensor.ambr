@@ -1,0 +1,70 @@
+# serializer version: 1
+# name: test_sensors[sensor.entry_gds3710_ec74d79753c5_device_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'available',
+        'no_available_account',
+        'busy',
+        'preview',
+        'ringing',
+        'offline',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.entry_gds3710_ec74d79753c5_device_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Device status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:account-badge',
+    'original_name': 'Device status',
+    'platform': 'grandstream_home',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_status',
+    'unique_id': 'ec:74:d7:97:53:c5_phone_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.entry_gds3710_ec74d79753c5_device_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'GDS3710 EC74D79753C5 Device status',
+      'icon': 'mdi:account-badge',
+      'options': list([
+        'available',
+        'no_available_account',
+        'busy',
+        'preview',
+        'ringing',
+        'offline',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.entry_gds3710_ec74d79753c5_device_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'available',
+  })
+# ---
