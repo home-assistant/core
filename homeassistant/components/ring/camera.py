@@ -1,10 +1,10 @@
 """Component providing support to the Ring Door Bell camera."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any, Generic, Protocol, cast, override
+from typing import TYPE_CHECKING, Any, Generic, cast, override
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
@@ -43,14 +43,15 @@ MOTION_DETECTION_CAPABILITY = "motion_detection"
 _LOGGER = logging.getLogger(__name__)
 
 RingCameraDevice = RingDoorBell | RingOther
+RingSnapshotGetter = Callable[[], Awaitable[bytes | None]]
 
 
-class RingSnapshotDevice(Protocol):
-    """Protocol for Ring devices that can return a snapshot."""
-
-    async def async_get_snapshot(self) -> bytes | None:
-        """Return a fresh snapshot."""
-        ...
+def _snapshot_getter(device: RingOther) -> RingSnapshotGetter | None:
+    """Return the snapshot getter for video-capable Ring other devices."""
+    getter = getattr(device, "async_get_snapshot", None)
+    if not callable(getter):
+        return None
+    return cast(RingSnapshotGetter, getter)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -220,7 +221,8 @@ class RingCam(RingEntity[RingCameraDevice], Camera):
     async def _async_get_fresh_snapshot(self) -> bytes | None:
         """Get a fresh snapshot from the camera."""
         if isinstance(self._device, RingOther):
-            return await cast(RingSnapshotDevice, self._device).async_get_snapshot()
+            if getter := _snapshot_getter(self._device):
+                return await getter()
         return None
 
     @override
@@ -297,9 +299,11 @@ class RingCam(RingEntity[RingCameraDevice], Camera):
     @override
     async def async_update(self) -> None:
         """Update camera entity and refresh attributes."""
+        if isinstance(self._device, RingOther):
+            return
+
         if (
-            not isinstance(self._device, RingOther)
-            and self._device.has_capability(MOTION_DETECTION_CAPABILITY)
+            self._device.has_capability(MOTION_DETECTION_CAPABILITY)
             and self._attr_motion_detection_enabled != self._device.motion_detection
         ):
             self._attr_motion_detection_enabled = self._device.motion_detection
