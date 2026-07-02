@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -70,7 +70,7 @@ class SRPEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 if self.source == SOURCE_USER:
                     return self.async_create_entry(
-                        title=user_input[CONF_NAME],
+                        title=user_input[CONF_ID],
                         data=user_input,
                     )
                 return self.async_update_reload_and_abort(
@@ -87,11 +87,6 @@ class SRPEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
                             if self.source == SOURCE_USER
                             else self._get_reconfigure_entry().data[CONF_ID]
                         ),
-                        # Name field is no longer allowed in config flow schemas
-                        # pylint: disable-next=home-assistant-config-flow-name-field
-                        vol.Required(
-                            CONF_NAME, default=self.hass.config.location_name
-                        ): str,
                         vol.Required(CONF_USERNAME): str,
                         vol.Required(CONF_PASSWORD): str,
                         vol.Optional(CONF_IS_TOU, default=False): bool,

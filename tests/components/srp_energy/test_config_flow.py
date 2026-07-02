@@ -7,13 +7,7 @@ import pytest
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.srp_energy.const import CONF_IS_TOU, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
-from homeassistant.const import (
-    CONF_ID,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_SOURCE,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_SOURCE, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -21,8 +15,6 @@ from . import (
     ACCNT_ID,
     ACCNT_ID_2,
     ACCNT_IS_TOU,
-    ACCNT_NAME,
-    ACCNT_NAME_2,
     ACCNT_PASSWORD,
     ACCNT_USERNAME,
     TEST_CONFIG_CABIN,
@@ -55,7 +47,7 @@ async def test_show_form(
         await hass.async_block_till_done()
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == ACCNT_NAME
+        assert result["title"] == ACCNT_ID
 
         assert "data" in result
         assert result["data"][CONF_ID] == ACCNT_ID
@@ -172,7 +164,7 @@ async def test_flow_multiple_configs(
 
     # Verify created
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == ACCNT_NAME_2
+    assert result["title"] == ACCNT_ID_2
 
     assert "data" in result
     assert result["data"][CONF_ID] == ACCNT_ID_2
@@ -200,7 +192,6 @@ async def test_reconfigure(
         result["flow_id"],
         {
             CONF_ID: ACCNT_ID,
-            CONF_NAME: ACCNT_NAME + "reconf",
             CONF_USERNAME: ACCNT_USERNAME + "reconf",
             CONF_PASSWORD: ACCNT_PASSWORD + "reconf",
             CONF_IS_TOU: not ACCNT_IS_TOU,
@@ -211,7 +202,6 @@ async def test_reconfigure(
     assert result["reason"] == "reconfigure_successful"
     assert init_integration.data == {
         CONF_ID: ACCNT_ID,
-        CONF_NAME: ACCNT_NAME + "reconf",
         CONF_USERNAME: ACCNT_USERNAME + "reconf",
         CONF_PASSWORD: ACCNT_PASSWORD + "reconf",
         CONF_IS_TOU: not ACCNT_IS_TOU,
@@ -238,7 +228,6 @@ async def test_reconfigure_error(
         result["flow_id"],
         {
             CONF_ID: ACCNT_ID,
-            CONF_NAME: ACCNT_NAME + "reconf",
             CONF_USERNAME: ACCNT_USERNAME + "reconf",
             CONF_PASSWORD: ACCNT_PASSWORD + "reconf",
             CONF_IS_TOU: not ACCNT_IS_TOU,
@@ -254,7 +243,6 @@ async def test_reconfigure_error(
         result["flow_id"],
         {
             CONF_ID: ACCNT_ID,
-            CONF_NAME: ACCNT_NAME + "reconf",
             CONF_USERNAME: ACCNT_USERNAME + "reconf",
             CONF_PASSWORD: ACCNT_PASSWORD + "reconf",
             CONF_IS_TOU: not ACCNT_IS_TOU,
@@ -285,7 +273,6 @@ async def test_reconfigure_unknown_error(
         result["flow_id"],
         {
             CONF_ID: ACCNT_ID,
-            CONF_NAME: ACCNT_NAME + "reconf",
             CONF_USERNAME: ACCNT_USERNAME + "reconf",
             CONF_PASSWORD: ACCNT_PASSWORD + "reconf",
             CONF_IS_TOU: not ACCNT_IS_TOU,
