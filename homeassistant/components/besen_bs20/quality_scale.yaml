@@ -45,12 +45,16 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: done
+  reauthentication-flow:
+    status: todo
+    comment: Split into a follow-up PR after the initial integration lands.
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics:
+    status: todo
+    comment: Split into a follow-up PR after the initial integration lands.
   discovery-update-info: done
   discovery: done
   docs-data-update: done
@@ -70,8 +74,12 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: done
-  repair-issues: done
+  reconfiguration-flow:
+    status: todo
+    comment: Split into a follow-up PR after the initial integration lands.
+  repair-issues:
+    status: todo
+    comment: Split into a follow-up PR after the initial integration lands.
   stale-devices:
     status: exempt
     comment: |

@@ -14,7 +14,6 @@ from homeassistant.components.besen_bs20.const import CONF_SYNC_CLOCK, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 
 from tests.common import MockConfigEntry
 
@@ -170,7 +169,7 @@ async def test_setup_entry_no_connectable_path(
     hass: HomeAssistant,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Setup retries and creates a repair issue when no active path exists."""
+    """Setup retries when no active Bluetooth path exists."""
 
     entry = _entry()
     entry.add_to_hass(hass)
@@ -179,15 +178,10 @@ async def test_setup_entry_no_connectable_path(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)
     _assert_entry_state(entry, ConfigEntryState.SETUP_RETRY)
-    assert issue_registry.async_get_issue(
-        DOMAIN,
-        f"{entry.entry_id}_no_connectable_path",
-    )
 
 
-async def test_setup_entry_auth_error_starts_reauth(
+async def test_setup_entry_auth_error_fails_setup(
     hass: HomeAssistant,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
