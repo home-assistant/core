@@ -48,9 +48,15 @@ def mock_tween_light_led_strip_code_to_command() -> Generator[None]:
     This allows tests to assert on the high-level code enum value
     rather than the raw NEC timings.
     """
-    with patch(
-        "infrared_protocols.codes.tween_light.led_strip.TweenLightLEDStripCode.to_command",
-        autospec=True,
-        side_effect=lambda self, **kwargs: self,
+    with (
+        patch(
+            "infrared_protocols.codes.tween_light.led_strip.TweenLightLEDStripCode.to_command",
+            autospec=True,
+            side_effect=lambda self, **kwargs: self,
+        ) as mock_to_command,
+        patch(
+            "homeassistant.components.led_infrared.codes.Generic13KeyCode.to_command",
+            new=mock_to_command,
+        ),
     ):
         yield
