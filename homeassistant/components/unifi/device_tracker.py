@@ -26,7 +26,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import UnifiConfigEntry
-from .entity import UnifiEntity, UnifiEntityDescription, async_device_available_fn
+from .entity import (
+    UnifiEntity,
+    UnifiEntityDescription,
+    async_device_available_fn,
+    is_locally_administered_mac,
+)
 from .hub import UnifiHub
 
 LOGGER = logging.getLogger(__name__)
@@ -85,6 +90,10 @@ def async_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
         return False
 
     client = hub.api.clients[obj_id]
+
+    if hub.config.option_ignore_local_mac and is_locally_administered_mac(client.mac):
+        return False
+
     if client.mac not in hub.entity_loader.wireless_clients:
         if not hub.config.option_track_wired_clients:
             return False

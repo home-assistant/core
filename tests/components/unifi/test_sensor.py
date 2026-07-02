@@ -20,7 +20,9 @@ from homeassistant.components.sensor import (
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
+    CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
+    CONF_IGNORE_LOCAL_MAC,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     DEFAULT_DETECTION_TIME,
@@ -65,6 +67,17 @@ WIRELESS_CLIENT = {
     "rx_bytes-r": 2345000000.0,
     "tx_bytes-r": 6789000000.0,
     "uptime": 60,
+}
+# Wired client with a locally-administered MAC (U/L bit set in first octet)
+LOCAL_MAC_CLIENT = {
+    "hostname": "Local mac client",
+    "is_wired": True,
+    "mac": "02:00:00:00:00:03",
+    "oui": "Producer",
+    "wired-rx_bytes-r": 1234000000,
+    "wired-tx_bytes-r": 5678000000,
+    "uptime": 1600094505,
+    "wired_rate_mbps": 1000,
 }
 
 DEVICE_1 = {
@@ -577,6 +590,53 @@ async def test_wired_client_speed_sensor(
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.wired_client_link_speed").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("config_entry_options", "local_mac_has_sensors"),
+    [
+        (
+            {
+                CONF_ALLOW_BANDWIDTH_SENSORS: True,
+                CONF_ALLOW_UPTIME_SENSORS: True,
+                CONF_IGNORE_LOCAL_MAC: True,
+            },
+            False,
+        ),
+        (
+            {
+                CONF_ALLOW_BANDWIDTH_SENSORS: True,
+                CONF_ALLOW_UPTIME_SENSORS: True,
+                CONF_IGNORE_LOCAL_MAC: True,
+                CONF_CLIENT_SOURCE: [LOCAL_MAC_CLIENT["mac"]],
+            },
+            True,
+        ),
+    ],
+    ids=["ignored", "allowlist_overrides"],
+)
+@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT, LOCAL_MAC_CLIENT]])
+@pytest.mark.usefixtures("config_entry_setup")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_ignore_local_mac_client_sensors(
+    hass: HomeAssistant,
+    local_mac_has_sensors: bool,
+) -> None:
+    """Client sensors are filtered for locally-administered MACs when enabled."""
+    # The universal-MAC wired client always keeps its client sensors
+    assert hass.states.get("sensor.wired_client_link_speed")
+    assert hass.states.get("sensor.wired_client_rx")
+    assert hass.states.get("sensor.wired_client_tx")
+    assert hass.states.get("sensor.wired_client_uptime")
+
+    # The locally-administered MAC client only keeps them via the allowlist
+    for entity_id in (
+        "sensor.local_mac_client_link_speed",
+        "sensor.local_mac_client_rx",
+        "sensor.local_mac_client_tx",
+        "sensor.local_mac_client_uptime",
+    ):
+        assert (hass.states.get(entity_id) is not None) == local_mac_has_sensors
 
 
 @pytest.mark.parametrize(

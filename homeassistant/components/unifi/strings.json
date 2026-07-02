@@ -183,6 +183,7 @@
               "client_source": "Create entities from network clients",
               "detection_time": "Time in seconds from last seen until considered away",
               "dpi_restrictions": "Allow control of DPI restriction groups",
+              "ignore_local_mac": "Ignore clients with randomized (locally-administered) MAC addresses",
               "ignore_wired_bug": "Disable UniFi Network wired bug logic",
               "ssid_filter": "Select SSIDs to track wireless clients on",
               "track_wired_clients": "Include wired network clients"
@@ -193,6 +194,7 @@
               "client_source": "Select which network clients to create entities from.",
               "detection_time": "Number of seconds since last seen before a client is considered away.",
               "dpi_restrictions": "Enable switches to control DPI restriction groups.",
+              "ignore_local_mac": "Don't create entities for clients whose MAC is locally administered (e.g. randomized/private Wi-Fi addresses, virtual/VPN interfaces). Clients in \"Create entities from network clients\" are still included.",
               "ignore_wired_bug": "Disable workaround for a UniFi Network bug that sometimes reports wired clients as wireless.",
               "ssid_filter": "Only track wireless clients connected to selected SSIDs.",
               "track_wired_clients": "Include wired clients in device tracking."
