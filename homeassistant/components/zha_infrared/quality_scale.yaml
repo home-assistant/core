@@ -24,7 +24,11 @@ rules:
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
-  runtime-data: done
+  runtime-data:
+    status: exempt
+    comment: This integration does not store runtime data in the config entry.
   test-before-configure: done
-  test-before-setup: done
+  test-before-setup:
+    status: exempt
+    comment: This integration only discovers existing ZHA devices and does not open a direct connection during setup.
   unique-config-entry: done
