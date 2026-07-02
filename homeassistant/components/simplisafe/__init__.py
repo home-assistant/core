@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
+import re
 from typing import Any
 
 from simplipy import API
@@ -88,10 +89,11 @@ from .typing import SystemType
 
 type SimpliSafeConfigEntry = ConfigEntry[SimpliSafe]
 
+DEFAULT_IMAGE_WIDTH = 720
+
 ATTR_CATEGORY = "category"
 ATTR_LAST_EVENT_CHANGED_BY = "last_event_changed_by"
 ATTR_LAST_EVENT_SENSOR_SERIAL = "last_event_sensor_serial"
-ATTR_LAST_EVENT_TYPE = "last_event_type"
 ATTR_LAST_EVENT_TYPE = "last_event_type"
 ATTR_MESSAGE = "message"
 ATTR_PIN_LABEL = "label"
@@ -110,6 +112,7 @@ PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CAMERA,
     Platform.LOCK,
     Platform.SENSOR,
 ]
@@ -192,6 +195,14 @@ WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
     EVENT_SENSOR_PAIRED_AND_NAMED,
     EVENT_USER_INITIATED_TEST,
 ]
+
+_URI_TEMPLATE_RE = re.compile(r"\{[^}]+\}")
+
+
+def _resolve_image_url(url: str, width: int = DEFAULT_IMAGE_WIDTH) -> str:
+    """Substitute the {&width} URI template parameter and strip any remaining ones."""
+    url = url.replace("{&width}", f"&width={width}")
+    return _URI_TEMPLATE_RE.sub("", url)
 
 
 @callback
@@ -423,6 +434,7 @@ class SimpliSafe:
         self._hass = hass
         self._system_notifications: dict[int, set[SystemNotification]] = {}
         self._websocket_task: asyncio.Task | None = None
+        self.camera_media_urls: dict[str, dict[str, str]] = {}
         self.entry = entry
         self.initial_event_to_use: dict[int, dict[str, Any]] = {}
         self.subscription_data: dict[int, Any] = api.subscription_data
@@ -563,6 +575,10 @@ class SimpliSafe:
                 ATTR_LAST_EVENT_TIMESTAMP: event.timestamp,
             },
         )
+
+    async def async_media(self, url: str) -> bytes | None:
+        """Fetch raw bytes for a media URL from the SimpliSafe API."""
+        return await self._api.async_media(url)
 
     async def async_init(self) -> None:
         """Initialize the SimpliSafe "manager" class."""
