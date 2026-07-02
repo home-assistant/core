@@ -699,6 +699,55 @@ jobs:
           python --version
           mypy --num-workers=4 $(printf "homeassistant/components/%s " ${INTEGRATIONS_GLOB})
 
+  benchmarks:
+    name: Run benchmarks
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write # OIDC token CodSpeed mints (no CODSPEED_TOKEN secret)
+    needs:
+      - info
+      - base
+    # Run only when core code or the benchmark suite itself changed. Skipped on
+    # forks, where the OIDC token CodSpeed needs is unavailable. Pushes to dev
+    # that touch core refresh the CodSpeed baseline.
+    if: >-
+      needs.info.outputs.lint_only != 'true'
+      && (github.event_name != 'pull_request'
+        || !github.event.pull_request.head.repo.fork)
+      && (contains(fromJSON(needs.info.outputs.core), 'core')
+        || contains(fromJSON(needs.info.outputs.core), 'benchmarks'))
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Set up Python ${{ fromJson(needs.info.outputs.python_versions)[0] }}
+        id: python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: ${{ fromJson(needs.info.outputs.python_versions)[0] }}
+          check-latest: true
+      - name: Restore full Python virtual environment
+        id: cache-venv
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: venv
+          fail-on-cache-miss: true
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Run benchmarks
+        uses: CodSpeedHQ/action@a4a36bb07c0638b0b4ca52bf1f3dad1b4289e52f # v4.18.1
+        with:
+          # v4 makes `mode` required; "simulation" is the instrumented
+          # measurement that gives stable, machine-independent results.
+          mode: simulation
+          # No token: auth uses the OIDC id-token minted by the job permissions.
+          run: |
+            . venv/bin/activate
+            pytest benchmarks --codspeed --no-cov -o addopts=""
+
   prepare-pytest-full:
     name: Split tests for full run
     runs-on: ubuntu-24.04
