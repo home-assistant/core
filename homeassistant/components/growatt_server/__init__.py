@@ -28,6 +28,7 @@ from collections.abc import Mapping
 import datetime
 from json import JSONDecodeError
 import logging
+from typing import Any
 
 import growattServer
 from growattServer import GrowattV1ApiErrorCode
@@ -213,7 +214,7 @@ async def async_migrate_entry(
 
 async def _create_api_and_login(
     hass: HomeAssistant, username: str, password: str, url: str
-) -> tuple[growattServer.GrowattApi, dict]:
+) -> tuple[growattServer.GrowattApi, dict[str, Any]]:
     """Create API instance and perform login.
 
     Returns both the API instance (with authenticated session) and the login
@@ -232,10 +233,10 @@ async def _create_api_and_login(
 
 def _login_classic_api(
     api: growattServer.GrowattApi, username: str, password: str
-) -> dict:
+) -> dict[str, Any]:
     """Log in to Classic API and return user info."""
     try:
-        login_response = api.login(username, password)
+        login_response: dict[str, Any] = api.login(username, password)
     except (RequestException, JSONDecodeError) as ex:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
@@ -261,7 +262,7 @@ def _login_classic_api(
 
 
 def get_device_list_v1(
-    api, config: Mapping[str, str]
+    api: growattServer.OpenApiV1, config: Mapping[str, str]
 ) -> tuple[list[dict[str, str]], str]:
     """Device list logic for Open API V1.
 
