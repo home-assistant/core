@@ -324,22 +324,25 @@ async def test_reauth_and_reconfigure_flows(
     """Reauth and reconfigure update the entry after validation."""
 
     entry = _entry()
-    flow = _flow()
-    flow.context["entry_id"] = "entry"
-    flow.context["source"] = SOURCE_REAUTH
-    cast(Any, flow).hass = SimpleNamespace(config_entries=_FakeConfigEntries(entry))
-    monkeypatch.setattr(config_flow, "_async_validate_input", _validate_ok)
-
-    reauth_form = await flow.async_step_reauth(
-        {CONF_ADDRESS: "AA:BB", CONF_NAME: "ACP#Garage"}
+    reauth_flow = _flow()
+    reauth_flow.context["entry_id"] = "entry"
+    reauth_flow.context["source"] = SOURCE_REAUTH
+    cast(Any, reauth_flow).hass = SimpleNamespace(
+        config_entries=_FakeConfigEntries(entry)
     )
-    reauth_result = await flow.async_step_reauth_confirm({CONF_PIN: "654321"})
+
     reconfigure_flow = _flow()
     reconfigure_flow.context["entry_id"] = "entry"
     reconfigure_flow.context["source"] = SOURCE_RECONFIGURE
     cast(Any, reconfigure_flow).hass = SimpleNamespace(
         config_entries=_FakeConfigEntries(entry)
     )
+    monkeypatch.setattr(config_flow, "_async_validate_input", _validate_ok)
+
+    reauth_form = await reauth_flow.async_step_reauth(
+        {CONF_ADDRESS: "AA:BB", CONF_NAME: "ACP#Garage"}
+    )
+    reauth_result = await reauth_flow.async_step_reauth_confirm({CONF_PIN: "654321"})
     reconfigure_form = await reconfigure_flow.async_step_reconfigure()
     reconfigure_result = await reconfigure_flow.async_step_reconfigure(
         {CONF_PIN: "654321", CONF_SYNC_CLOCK: False}
@@ -360,10 +363,19 @@ async def test_reauth_and_reconfigure_error_forms(
     """Reauth and reconfigure return errors from failed validation."""
 
     entry = _entry()
-    flow = _flow()
-    flow.context["entry_id"] = "entry"
-    flow.context["source"] = SOURCE_REAUTH
-    cast(Any, flow).hass = SimpleNamespace(config_entries=_FakeConfigEntries(entry))
+    reauth_flow = _flow()
+    reauth_flow.context["entry_id"] = "entry"
+    reauth_flow.context["source"] = SOURCE_REAUTH
+    cast(Any, reauth_flow).hass = SimpleNamespace(
+        config_entries=_FakeConfigEntries(entry)
+    )
+
+    reconfigure_flow = _flow()
+    reconfigure_flow.context["entry_id"] = "entry"
+    reconfigure_flow.context["source"] = SOURCE_RECONFIGURE
+    cast(Any, reconfigure_flow).hass = SimpleNamespace(
+        config_entries=_FakeConfigEntries(entry)
+    )
 
     for exception, error in (
         (InvalidAuth("bad pin"), "invalid_auth"),
@@ -376,8 +388,8 @@ async def test_reauth_and_reconfigure_error_forms(
             "_async_validate_input",
             _validation_raiser(exception),
         )
-        reauth = await flow.async_step_reauth_confirm({CONF_PIN: "654321"})
-        reconfigure = await flow.async_step_reconfigure(
+        reauth = await reauth_flow.async_step_reauth_confirm({CONF_PIN: "654321"})
+        reconfigure = await reconfigure_flow.async_step_reconfigure(
             {CONF_PIN: "654321", CONF_SYNC_CLOCK: True}
         )
 
