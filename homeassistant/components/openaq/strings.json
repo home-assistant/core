@@ -1,0 +1,81 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "rate_limited": "OpenAQ rate limit exceeded. Try again later.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "API key for OpenAQ"
+        }
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "API key for OpenAQ"
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "location": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+      },
+      "entry_type": "Monitoring location",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "no_locations_found": "No OpenAQ monitoring locations were found nearby.",
+        "rate_limited": "[%key:component::openaq::config::error::rate_limited%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "initiate_flow": {
+        "user": "Add monitoring location"
+      },
+      "step": {
+        "select": {
+          "data": {
+            "location_id": "[%key:component::openaq::config_subentries::location::entry_type%]"
+          }
+        },
+        "user": {
+          "data": {
+            "location": "[%key:common::config_flow::data::location%]"
+          },
+          "description": "Select a monitoring location."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "bc": {
+        "name": "Black carbon"
+      },
+      "nox": {
+        "name": "Nitrogen oxides"
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed while fetching OpenAQ data"
+    },
+    "unable_to_fetch": {
+      "message": "Unable to fetch data from OpenAQ"
+    }
+  }
+}

@@ -1,0 +1,152 @@
+"""Support for OpenAQ sensors."""
+
+from typing import override
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import ATTRIBUTION, DOMAIN
+from .coordinator import OpenAQConfigEntry, OpenAQDataUpdateCoordinator
+
+SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+    "pm1": SensorEntityDescription(
+        key="pm1",
+        device_class=SensorDeviceClass.PM1,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    "pm25": SensorEntityDescription(
+        key="pm25",
+        device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    "pm10": SensorEntityDescription(
+        key="pm10",
+        device_class=SensorDeviceClass.PM10,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    "co": SensorEntityDescription(
+        key="co",
+        device_class=SensorDeviceClass.CO,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+    ),
+    "co2": SensorEntityDescription(
+        key="co2",
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    "no2": SensorEntityDescription(
+        key="no2",
+        device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    "o3": SensorEntityDescription(
+        key="o3",
+        device_class=SensorDeviceClass.OZONE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    "so2": SensorEntityDescription(
+        key="so2",
+        device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    "no": SensorEntityDescription(
+        key="no",
+        device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    "nox": SensorEntityDescription(
+        key="nox",
+        translation_key="nox",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    "bc": SensorEntityDescription(
+        key="bc",
+        translation_key="bc",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+}
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: OpenAQConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up OpenAQ sensors."""
+    for subentry_id, coordinator in entry.runtime_data.coordinators.items():
+        async_add_entities(
+            [
+                OpenAQSensor(coordinator, SENSOR_DESCRIPTIONS[parameter])
+                for parameter in coordinator.data.sensor_metadata
+                if parameter in SENSOR_DESCRIPTIONS
+            ],
+            config_subentry_id=subentry_id,
+        )
+
+
+def _device_info(coordinator: OpenAQDataUpdateCoordinator) -> DeviceInfo:
+    """Return device info for an OpenAQ location."""
+    return DeviceInfo(
+        identifiers={(DOMAIN, str(coordinator.location_id))},
+        name=coordinator.data.name,
+        entry_type=DeviceEntryType.SERVICE,
+    )
+
+
+class OpenAQSensor(CoordinatorEntity[OpenAQDataUpdateCoordinator], SensorEntity):
+    """Representation of an OpenAQ sensor."""
+
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
+    entity_description: SensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: OpenAQDataUpdateCoordinator,
+        entity_description: SensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{coordinator.location_id}_{entity_description.key}"
+        self._attr_device_info = _device_info(coordinator)
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the sensor value."""
+        measurement = self.coordinator.data.measurements.get(
+            self.entity_description.key
+        )
+        return measurement.value if measurement is not None else None
+
+    @property
+    @override
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the native unit of measurement."""
+        metadata = self.coordinator.data.sensor_metadata.get(
+            self.entity_description.key
+        )
+        if metadata is None:
+            return None
+        return metadata.unit
