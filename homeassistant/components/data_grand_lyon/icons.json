@@ -9,6 +9,9 @@
       }
     },
     "sensor": {
+      "accessible_spaces": {
+        "default": "mdi:wheelchair-accessibility"
+      },
       "available_bikes": {
         "default": "mdi:bike"
       },
@@ -17,6 +20,9 @@
       },
       "available_mechanical_bikes": {
         "default": "mdi:bike"
+      },
+      "available_spaces": {
+        "default": "mdi:parking"
       },
       "available_stands": {
         "default": "mdi:parking"
@@ -65,6 +71,15 @@
         "state": {
           "estimated": "mdi:clock-check-outline"
         }
+      },
+      "opening_hours": {
+        "default": "mdi:clock-outline"
+      },
+      "park_and_ride_capacity": {
+        "default": "mdi:counter"
+      },
+      "park_and_ride_name": {
+        "default": "mdi:sign-text"
       }
     }
   }
