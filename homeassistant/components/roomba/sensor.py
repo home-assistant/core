@@ -54,6 +54,14 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         value_fn=lambda self: self.tank_level,
     ),
     RoombaSensorEntityDescription(
+        key="not_ready",
+        translation_key="not_ready",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda self: self.vacuum_state.get("cleanMissionStatus", {}).get(
+            "notReady"
+        ),
+    ),
+    RoombaSensorEntityDescription(
         key="battery_cycles",
         translation_key="battery_cycles",
         state_class=SensorStateClass.MEASUREMENT,
