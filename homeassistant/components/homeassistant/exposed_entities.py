@@ -143,10 +143,8 @@ class ExposedEntities:
         websocket_api.async_register_command(self._hass, ws_list_exposed_entities)
         await self._async_load_data()
         # Entities without a unique_id are never in the entity registry, so
-        # registry removal events can't be used to prune them. Periodic sweep
-        # is the only cleanup: it drops legacy records with no live entity
-        # behind them, e.g. left behind by an integration that created and
-        # later removed many entities across restarts.
+        # registry removal events can't be used to prune them. See
+        # LEGACY_ENTITY_PURGE_INTERVAL for why this is the only cleanup.
         cancel_purge = async_track_time_interval(
             self._hass,
             self._async_purge_stale_legacy_entities,
@@ -231,10 +229,7 @@ class ExposedEntities:
     def _async_purge_stale_legacy_entities(self, _now: datetime) -> None:
         """Periodic sweep to drop legacy entries with no entity behind them.
 
-        A day-long staleness window (rather than an immediate state-removal
-        listener) is intentional: it avoids wiping a user's exposure
-        preference for an entity that briefly disappears during a platform
-        reload and comes right back.
+        See LEGACY_ENTITY_PURGE_INTERVAL for why this is the only cleanup.
         """
         stale_entity_ids = [
             entity_id
