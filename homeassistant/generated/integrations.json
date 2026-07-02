@@ -7614,6 +7614,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "vacmaster_cardio54": {
+      "name": "Vacmaster Cardio54",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "vagner_pool": {
       "name": "V\u00c1GNER POOL",
       "integration_type": "virtual",

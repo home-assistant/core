@@ -1,0 +1,50 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_allocate_device_id": "Could not allocate a unique RF identity on this transmitter. Try a different transmitter or remove some existing Vacmaster Cardio54 entries first.",
+      "no_compatible_transmitters": "[%key:common::config_flow::abort::no_compatible_radio_frequency_transmitters%]",
+      "no_transmitters": "[%key:common::config_flow::abort::no_radio_frequency_transmitters%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "step": {
+      "pair": {
+        "description": "Put the fan into pairing mode now:\n\n1. Set the fan's power switch to **0** (off).\n2. Turn the speed dial to the **remote-control symbol**.\n3. Set the power switch to **I** — a 5-second pairing window starts.\n4. **Immediately** press Submit. Home Assistant sends a pairing burst for a few seconds; the fan's LED should blink red while it learns the code.",
+        "title": "Pair the fan"
+      },
+      "reconfigure": {
+        "data": {
+          "transmitter": "[%key:common::config_flow::data::radio_frequency_transmitter%]"
+        },
+        "data_description": {
+          "transmitter": "[%key:common::config_flow::data_description::radio_frequency_transmitter%]"
+        },
+        "description": "Choose the radio frequency transmitter for this fan. The fan keeps its existing RF identity, so no re-pairing is needed."
+      },
+      "send_failed": {
+        "description": "Home Assistant could not send the RF command. Check that the radio frequency transmitter is online, then press Retry.",
+        "menu_options": {
+          "retry": "Retry"
+        },
+        "title": "RF command failed"
+      },
+      "test": {
+        "description": "Home Assistant sent a speed command. Did the fan start spinning? Press Finish to save, or Retry to pair again.",
+        "menu_options": {
+          "finish": "Finish",
+          "retry": "Retry"
+        },
+        "title": "Confirm the fan responds"
+      },
+      "user": {
+        "data": {
+          "transmitter": "[%key:common::config_flow::data::radio_frequency_transmitter%]"
+        },
+        "data_description": {
+          "transmitter": "[%key:common::config_flow::data_description::radio_frequency_transmitter%]"
+        },
+        "description": "Choose the radio frequency transmitter that will control the fan. Home Assistant assigns the fan a new RF identity that you will pair in the next step."
+      }
+    }
+  }
+}
