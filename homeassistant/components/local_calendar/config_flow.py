@@ -103,6 +103,7 @@ class LocalCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=self.data[CONF_CALENDAR_NAME], data=self.data
                 )
 
+        # pylint: disable-next=home-assistant-config-flow-field-not-translated
         return self.async_show_form(
             step_id="import_ics_file",
             data_schema=STEP_IMPORT_DATA_SCHEMA,

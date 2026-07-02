@@ -137,6 +137,7 @@ class AirVisualFlowHandler(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "unknown"
 
                 if errors:
+                    # pylint: disable-next=home-assistant-config-flow-field-not-translated
                     return self.async_show_form(
                         step_id=error_step, data_schema=error_schema, errors=errors
                     )
@@ -237,6 +238,7 @@ class AirVisualFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         if not user_input:
+            # pylint: disable-next=home-assistant-config-flow-field-not-translated
             return self.async_show_form(
                 step_id="user", data_schema=PICK_INTEGRATION_TYPE_SCHEMA
             )

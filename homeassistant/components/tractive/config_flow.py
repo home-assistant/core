@@ -114,6 +114,7 @@ class TractiveConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="reauth_successful")
                 return self.async_abort(reason="reauth_failed_existing")
 
+        # pylint: disable-next=home-assistant-config-flow-field-not-translated
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=USER_DATA_SCHEMA,

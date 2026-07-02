@@ -4759,6 +4759,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 self.get_suggested_values_from_device_data(data_schema),
             )
 
+        # pylint: disable-next=home-assistant-subentry-flow-field-not-translated
         return self.async_show_form(
             step_id=CONF_DEVICE,
             data_schema=data_schema,
