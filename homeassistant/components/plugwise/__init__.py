@@ -16,7 +16,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> 
 
     coordinator = PlugwiseDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
-    await async_migrate_entities(hass, coordinator)
 
     entry.runtime_data = coordinator
 
