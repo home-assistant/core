@@ -26,6 +26,12 @@
         "description": "The credentials for {username} need to be updated",
         "title": "Re-authenticate Blink"
       },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -54,7 +60,7 @@
   },
   "exceptions": {
     "cant_write": {
-      "message": "Can't write to file."
+      "message": "Can't write to file, check logs for details."
     },
     "failed_arm": {
       "message": "Blink failed to arm camera."
@@ -82,9 +88,6 @@
     },
     "not_loaded": {
       "message": "{target} is not loaded."
-    },
-    "service_removed": {
-      "message": "The service {service_name} has been removed and is no longer needed. Home Assistant will automatically prompt for reauthentication when required."
     }
   },
   "issues": {
@@ -98,10 +101,6 @@
         }
       },
       "title": "Blink update service is being removed"
-    },
-    "service_send_pin_deprecation": {
-      "description": "The service {service_name} has been removed and is no longer needed. When a new two-factor authentication code is required, Home Assistant will automatically prompt you to reauthenticate through the integration configuration. Please remove any automations or scripts that call this service.",
-      "title": "Blink send PIN service has been removed"
     }
   },
   "options": {
@@ -139,20 +138,6 @@
         }
       },
       "name": "Save video"
-    },
-    "send_pin": {
-      "description": "Sends a new PIN to Blink for 2FA.",
-      "fields": {
-        "config_entry_id": {
-          "description": "The Blink integration ID.",
-          "name": "Integration ID"
-        },
-        "pin": {
-          "description": "PIN received from Blink. Leave empty if you only received a verification email.",
-          "name": "PIN"
-        }
-      },
-      "name": "Send PIN"
     },
     "trigger_camera": {
       "description": "Requests camera to take new image.",

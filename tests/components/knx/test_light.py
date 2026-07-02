@@ -1,7 +1,5 @@
 """Test KNX light."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
@@ -460,7 +458,9 @@ async def test_light_xyy_color_with_brightness(
     knx.assert_state(
         "light.test",
         STATE_ON,
-        brightness=255,  # brightness form xyy_color ignored when extra brightness GA is used
+        # brightness from xyy_color ignored when extra brightness
+        # GA is used
+        brightness=255,
         supported_color_modes=[ColorMode.XY],
         color_mode=ColorMode.XY,
         xy_color=(0.8, 0.8),

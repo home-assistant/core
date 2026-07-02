@@ -1,14 +1,12 @@
 """Interface implementation for cloud client."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import datetime
 from http import HTTPStatus
 import logging
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 import aiohttp
 from hass_nabucasa.client import CloudClient as Interface, RemoteActivationNotAllowed
@@ -74,6 +72,7 @@ class CloudClient(Interface):
         self._ice_servers: list[RTCIceServer] = []
 
     @property
+    @override
     def base_path(self) -> Path:
         """Return path to base dir."""
         return Path(self._hass.config.config_dir)
@@ -84,31 +83,37 @@ class CloudClient(Interface):
         return self._prefs
 
     @property
+    @override
     def loop(self) -> asyncio.AbstractEventLoop:
         """Return client loop."""
         return self._hass.loop
 
     @property
+    @override
     def websession(self) -> aiohttp.ClientSession:
         """Return client session for aiohttp."""
         return self._websession
 
     @property
+    @override
     def aiohttp_runner(self) -> aiohttp.web.AppRunner | None:
         """Return client webinterface aiohttp application."""
         return self._hass.http.runner
 
     @property
+    @override
     def cloudhooks(self) -> dict[str, dict[str, str | bool]]:
         """Return list of cloudhooks."""
         return self._prefs.cloudhooks
 
     @property
+    @override
     def remote_autostart(self) -> bool:
         """Return true if we want start a remote connection."""
         return self._prefs.remote_enabled
 
     @property
+    @override
     def client_name(self) -> str:
         """Return the client name that will be used for API calls."""
         return SERVER_SOFTWARE
@@ -167,6 +172,7 @@ class CloudClient(Interface):
 
         return self._google_config
 
+    @override
     async def cloud_connected(self) -> None:
         """When cloud is connected."""
         _LOGGER.debug("cloud_connected")
@@ -222,8 +228,11 @@ class CloudClient(Interface):
                 )
                 if is_cloud_ice_servers_enabled:
                     if self._cloud_ice_servers_listener is None:
-                        self._cloud_ice_servers_listener = await self.cloud.ice_servers.async_register_ice_servers_listener(
-                            register_cloud_ice_server
+                        ice_servers = self.cloud.ice_servers
+                        self._cloud_ice_servers_listener = (
+                            await ice_servers.async_register_ice_servers_listener(
+                                register_cloud_ice_server
+                            )
                         )
                 elif self._cloud_ice_servers_listener:
                     self._cloud_ice_servers_listener()
@@ -257,18 +266,22 @@ class CloudClient(Interface):
         if tasks:
             await asyncio.gather(*(task(None) for task in tasks))
 
+    @override
     async def cloud_disconnected(self) -> None:
         """When cloud disconnected."""
         _LOGGER.debug("cloud_disconnected")
         if self._google_config:
             self._google_config.async_disable_local_sdk()
 
+    @override
     async def cloud_started(self) -> None:
         """When cloud is started."""
 
+    @override
     async def cloud_stopped(self) -> None:
         """When the cloud is stopped."""
 
+    @override
     async def logout_cleanups(self) -> None:
         """Cleanup some stuff after logout."""
         self._ice_servers = []
@@ -287,22 +300,26 @@ class CloudClient(Interface):
             self._cloud_ice_servers_listener = None
 
     @callback
+    @override
     def user_message(self, identifier: str, title: str, message: str) -> None:
         """Create a message for user to UI."""
         persistent_notification.async_create(self._hass, message, title, identifier)
 
     @callback
+    @override
     def dispatcher_message(self, identifier: str, data: Any = None) -> None:
         """Match cloud notification to dispatcher."""
         if identifier.startswith("remote_"):
             async_dispatcher_send(self._hass, DISPATCHER_REMOTE_UPDATE, data)
 
+    @override
     async def async_cloud_connect_update(self, connect: bool) -> None:
         """Process cloud remote message to client."""
         if not self._prefs.remote_allow_remote_enable:
             raise RemoteActivationNotAllowed
         await self._prefs.async_update(remote_enabled=connect)
 
+    @override
     async def async_cloud_connection_info(
         self, payload: dict[str, Any]
     ) -> dict[str, Any]:
@@ -320,6 +337,7 @@ class CloudClient(Interface):
             "name": self._hass.config.location_name,
         }
 
+    @override
     async def async_alexa_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:
         """Process cloud alexa message to client."""
         cloud_user = await self._prefs.get_cloud_user()
@@ -332,6 +350,7 @@ class CloudClient(Interface):
             enabled=self._prefs.alexa_enabled,
         )
 
+    @override
     async def async_google_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:
         """Process cloud google message to client."""
         gconf = await self.get_google_config()
@@ -355,6 +374,7 @@ class CloudClient(Interface):
             google_assistant.SOURCE_CLOUD,
         )
 
+    @override
     async def async_webhook_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:
         """Process cloud webhook message to client."""
         cloudhook_id = payload["cloudhook_id"]
@@ -374,6 +394,11 @@ class CloudClient(Interface):
             method=payload["method"],
             query_string=payload["query"],
             mock_source=DOMAIN,
+            # Remote will be used for the local_only check, but
+            # since this is from the cloud we want it to be None
+            # to mark it as non-local and bypass the ip parsing
+            # and remote checks
+            remote=None,
         )
 
         response = await webhook.async_handle_webhook(
@@ -389,17 +414,20 @@ class CloudClient(Interface):
             "headers": {"Content-Type": response.content_type},
         }
 
+    @override
     async def async_system_message(self, payload: dict[Any, Any] | None) -> None:
         """Handle system messages."""
         if payload and (region := payload.get("region")):
             self._relayer_region = region
 
+    @override
     async def async_cloudhooks_update(
         self, data: dict[str, dict[str, str | bool]]
     ) -> None:
         """Update local list of cloudhooks."""
         await self._prefs.async_update(cloudhooks=data)
 
+    @override
     async def async_create_repair_issue(
         self,
         identifier: str,
@@ -426,6 +454,7 @@ class CloudClient(Interface):
             is_fixable=False,
         )
 
+    @override
     async def async_delete_repair_issue(self, identifier: str) -> None:
         """Delete a repair issue."""
         async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=identifier)

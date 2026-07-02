@@ -1,28 +1,26 @@
 """Support for Netatmo/BTicino/Legrande switches."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyatmo import modules as NaModules
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_URL_CONTROL, NETATMO_CREATE_SWITCH
-from .data_handler import HOME, SIGNAL_NAME, NetatmoDevice
+from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity
+from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NetatmoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Netatmo switch platform."""
@@ -61,20 +59,25 @@ class NetatmoSwitch(NetatmoModuleEntity, SwitchEntity):
                 },
             ]
         )
-        self._attr_unique_id = f"{self.device.entity_id}-{self.device_type}"
+        self._attr_unique_id = (
+            f"{self.device.entity_id}-{device_type_to_str(self.device_type)}"
+        )
         self._attr_is_on = self.device.on
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         self._attr_is_on = self.device.on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the zone on."""
         await self.device.async_on()
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the zone off."""
         await self.device.async_off()

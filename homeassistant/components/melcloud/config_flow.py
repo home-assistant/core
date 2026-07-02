@@ -1,11 +1,9 @@
 """Config flow for the MELCloud platform."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 from http import HTTPStatus
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError, ClientResponseError
 import pymelcloud
@@ -63,6 +61,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self._create_entry(username, acquired_token)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

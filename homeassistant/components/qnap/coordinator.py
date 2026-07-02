@@ -1,11 +1,9 @@
 """Data coordinator for the qnap integration."""
 
-from __future__ import annotations
-
 from contextlib import contextmanager, nullcontext
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 import warnings
 
 from qnapstats import QNAPStats
@@ -25,6 +23,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+
+type QnapConfigEntry = ConfigEntry[QnapCoordinator]
 
 UPDATE_INTERVAL = timedelta(minutes=1)
 
@@ -46,7 +46,9 @@ def suppress_insecure_request_warning():
 class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     """Custom coordinator for the qnap integration."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    config_entry: QnapConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: QnapConfigEntry) -> None:
         """Initialize the qnap coordinator."""
         super().__init__(
             hass,
@@ -83,6 +85,7 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 "bandwidth": self._api.get_bandwidth(),
             }
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Get the latest data from the Qnap API."""
         return await self.hass.async_add_executor_job(self._sync_update)

@@ -1,7 +1,5 @@
 """Common libraries for test setup."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 import copy
 import shutil
@@ -204,6 +202,16 @@ def mock_subscriber() -> YieldFixture[AsyncMock]:
 
 
 @pytest.fixture
+def mock_subscriber_refresh() -> YieldFixture[None]:
+    """Fixture for mocking subscriber refresh."""
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber._async_run_refresh",
+        new=AsyncMock(),
+    ):
+        yield
+
+
+@pytest.fixture
 async def device_id() -> str:
     """Fixture to set default device id used when creating devices."""
     return DEVICE_ID
@@ -247,7 +255,7 @@ def platforms() -> list[str]:
 
 @pytest.fixture
 def subscriber_id() -> str:
-    """Fixture to let tests override subscriber id regardless of configuration type used."""
+    """Fixture to override subscriber id regardless of config type."""
     return SUBSCRIBER_ID
 
 

@@ -118,7 +118,14 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             return False
 
         except (NetworkTimeoutError, OSError) as err:
-            raise ConfigEntryNotReady from err
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="connect_failed",
+                translation_placeholders={
+                    "host": api.host[0],
+                    "error": str(err),
+                },
+            ) from err
 
         except BroadlinkException as err:
             _LOGGER.error(
@@ -133,6 +140,8 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
         await coordinator.async_config_entry_first_refresh()
 
         self.update_manager = update_manager
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=home-assistant-use-runtime-data
         self.hass.data[DOMAIN].devices[config.entry_id] = self
         self.reset_jobs.append(config.add_update_listener(self.async_update))
 

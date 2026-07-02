@@ -136,6 +136,9 @@
     "pressure": {
       "default": "mdi:gauge"
     },
+    "radon": {
+      "default": "mdi:radioactive"
+    },
     "reactive_energy": {
       "default": "mdi:lightning-bolt"
     },
@@ -162,6 +165,9 @@
     },
     "timestamp": {
       "default": "mdi:clock"
+    },
+    "uptime": {
+      "default": "mdi:clock-start"
     },
     "volatile_organic_compounds": {
       "default": "mdi:molecule"

@@ -90,7 +90,7 @@ async def async_setup_entry(
             translation_domain=DOMAIN,
             translation_key="invalid_data",
             translation_placeholders={
-                **PLACEHOLDERS,
+                "stationboard_url": PLACEHOLDERS["stationboard_url"],
                 "config_title": entry.title,
                 "error": str(e),
             },
@@ -119,10 +119,6 @@ async def async_migrate_entry(
     """Migrate config entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    if config_entry.version > 3:
-        # This means the user has downgraded from a future version
-        return False
-
     if config_entry.version == 1 and config_entry.minor_version == 1:
         # Remove wrongly registered devices and entries
         new_unique_id = unique_id_from_config(config_entry.data)
@@ -145,7 +141,8 @@ async def async_migrate_entry(
                 new_unique_id=f"{new_unique_id}_departure",
             )
             _LOGGER.debug(
-                "Faulty entity with unique_id 'None_departure' migrated to new unique_id '%s'",
+                "Faulty entity with unique_id 'None_departure'"
+                " migrated to new unique_id '%s'",
                 f"{new_unique_id}_departure",
             )
 
@@ -155,7 +152,9 @@ async def async_migrate_entry(
         )
 
     if config_entry.version < 3:
-        # Via stations and time/offset settings now available, which are not backwards compatible if used, changes unique id
+        # Via stations and time/offset settings now available,
+        # which are not backwards compatible if used,
+        # changes unique id
         hass.config_entries.async_update_entry(config_entry, version=3, minor_version=1)
 
     _LOGGER.debug(

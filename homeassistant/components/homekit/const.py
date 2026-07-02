@@ -1,7 +1,5 @@
 """Constants used be the HomeKit component."""
 
-from __future__ import annotations
-
 from homeassistant.const import CONF_DEVICES
 from homeassistant.util.signal_type import SignalTypeFormat
 

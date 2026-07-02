@@ -141,7 +141,7 @@ async def test_flow_ssdp_non_igd_device(hass: HomeAssistant) -> None:
             ssdp_location=TEST_LOCATION,
             ssdp_all_locations=[TEST_LOCATION],
             upnp={
-                ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:WFADevice:1",  # Non-IGD
+                ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:WFADevice:1",
             },
         ),
     )
@@ -184,7 +184,7 @@ async def test_flow_ssdp_no_mac_address(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("mock_mac_address_from_host")
 async def test_flow_ssdp_discovery_changed_udn_match_mac(hass: HomeAssistant) -> None:
-    """Test config flow: discovery through ssdp, same device, but new UDN, matched on mac address."""
+    """Test config flow: ssdp discovery, same device, new UDN, matched on MAC."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_USN,
@@ -216,7 +216,7 @@ async def test_flow_ssdp_discovery_changed_udn_match_mac(hass: HomeAssistant) ->
 
 @pytest.mark.usefixtures("mock_mac_address_from_host")
 async def test_flow_ssdp_discovery_changed_udn_match_host(hass: HomeAssistant) -> None:
-    """Test config flow: discovery through ssdp, same device, but new UDN, matched on mac address."""
+    """Test config flow: ssdp discovery, same device, new UDN, matched on host."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_USN,
@@ -253,7 +253,7 @@ async def test_flow_ssdp_discovery_changed_udn_match_host(hass: HomeAssistant) -
 async def test_flow_ssdp_discovery_changed_udn_but_st_differs(
     hass: HomeAssistant,
 ) -> None:
-    """Test config flow: discovery through ssdp, same device, but new UDN, and different ST, so not matched --> new discovery."""
+    """Test config flow: ssdp discovery, same device, new UDN, different ST."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_USN,
@@ -342,7 +342,7 @@ async def test_flow_ssdp_discovery_changed_location(hass: HomeAssistant) -> None
 
 @pytest.mark.usefixtures("mock_mac_address_from_host")
 async def test_flow_ssdp_discovery_ignored_entry(hass: HomeAssistant) -> None:
-    """Test config flow: discovery through ssdp, same device, but new UDN, matched on mac address."""
+    """Test config flow: ssdp, same device, new UDN, matched on MAC."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_USN,
@@ -370,7 +370,7 @@ async def test_flow_ssdp_discovery_ignored_entry(hass: HomeAssistant) -> None:
 async def test_flow_ssdp_discovery_changed_udn_ignored_entry(
     hass: HomeAssistant,
 ) -> None:
-    """Test config flow: discovery through ssdp, same device, but new UDN, matched on mac address, entry ignored."""
+    """Test config flow: ssdp, same device, new UDN, matched on MAC, ignored."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_USN,
@@ -450,7 +450,7 @@ async def test_flow_user_no_discovery(hass: HomeAssistant) -> None:
     "mock_mac_address_from_host",
 )
 async def test_flow_ssdp_with_mismatched_udn(hass: HomeAssistant) -> None:
-    """Test config flow: discovered + configured through ssdp, where the UDN differs in the SSDP-discovery vs device description."""
+    """Test config flow: UDN differs in SSDP-discovery vs device description."""
     # Discovered via step ssdp.
     test_discovery = copy.deepcopy(TEST_DISCOVERY)
     test_discovery.upnp[ATTR_UPNP_UDN] = "uuid:another_udn"

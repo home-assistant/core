@@ -1,11 +1,9 @@
 """DataUpdateCoordinator for the LG ThinQ device."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import time
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from thinqconnect import ThinQAPIException
 from thinqconnect.integration import HABridge
@@ -96,6 +94,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             REVERSE_DEVICE_UNIT_TO_HA.get(self.hass.config.units.temperature_unit)
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Request to the server to update the status from full response data."""
         try:

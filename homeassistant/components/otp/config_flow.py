@@ -1,11 +1,9 @@
 """Config flow for One-Time Password (OTP) integration."""
 
-from __future__ import annotations
-
 import binascii
 import logging
 from re import sub
-from typing import Any
+from typing import Any, override
 
 import pyotp
 import voluptuous as vol
@@ -28,6 +26,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_TOKEN): str,
         vol.Optional(CONF_NEW_TOKEN): BooleanSelector(BooleanSelectorConfig()),
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=home-assistant-config-flow-name-field
         vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
     }
 )
@@ -41,6 +41,7 @@ class TOTPConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     user_input: dict[str, Any]
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

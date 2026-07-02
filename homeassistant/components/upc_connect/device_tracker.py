@@ -1,8 +1,7 @@
 """Support for UPC ConnectBox router."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from connect_box import ConnectBox
 from connect_box.exceptions import ConnectBoxError, ConnectBoxLoginError
@@ -64,6 +63,7 @@ class UPCDeviceScanner(DeviceScanner):
         """Initialize the scanner."""
         self.connect_box: ConnectBox = connect_box
 
+    @override
     async def async_scan_devices(self) -> list[str]:
         """Scan for new devices and return a list with found device IDs."""
         try:
@@ -73,6 +73,7 @@ class UPCDeviceScanner(DeviceScanner):
 
         return [device.mac for device in self.connect_box.devices]
 
+    @override
     async def async_get_device_name(self, device: str) -> str | None:
         """Get the device name (the name of the wireless device not used)."""
         for connected_device in self.connect_box.devices:

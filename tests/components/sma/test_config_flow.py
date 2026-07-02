@@ -77,11 +77,9 @@ async def test_form(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_exceptions(
-    hass: HomeAssistant,
-    mock_setup_entry: MockConfigEntry,
-    exception: Exception,
-    error: str,
+    hass: HomeAssistant, exception: Exception, error: str
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -101,8 +99,9 @@ async def test_form_exceptions(
     assert result["errors"] == {"base": error}
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_already_configured(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_sma_client: AsyncMock
+    hass: HomeAssistant, mock_sma_client: AsyncMock
 ) -> None:
     """Test starting a flow by user when already configured."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT, unique_id="123456789")
@@ -124,9 +123,8 @@ async def test_form_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_dhcp_discovery(
-    hass: HomeAssistant, mock_setup_entry: MockConfigEntry, mock_sma_client: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_dhcp_discovery(hass: HomeAssistant, mock_sma_client: AsyncMock) -> None:
     """Test we can setup from dhcp discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -148,10 +146,9 @@ async def test_dhcp_discovery(
     assert result["result"].unique_id == DHCP_DISCOVERY.hostname.replace("SMA", "")
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_already_configured(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test starting a flow by dhcp when already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -199,12 +196,9 @@ async def test_dhcp_already_configured_duplicate(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_exceptions(
-    hass: HomeAssistant,
-    mock_setup_entry: MockConfigEntry,
-    mock_sma_client: AsyncMock,
-    exception: Exception,
-    error: str,
+    hass: HomeAssistant, mock_sma_client: AsyncMock, exception: Exception, error: str
 ) -> None:
     """Test we handle cannot connect error in DHCP flow."""
     result = await hass.config_entries.flow.async_init(
@@ -281,10 +275,10 @@ async def test_full_flow_reauth(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_exceptions(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -394,10 +388,9 @@ async def test_full_flow_reconfigure_exceptions(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_mismatch_id(
-    hass: HomeAssistant,
-    mock_setup_entry: MockConfigEntry,
-    mock_sma_client: AsyncMock,
+    hass: HomeAssistant, mock_sma_client: AsyncMock
 ) -> None:
     """Test when a mismatch happens during reconfigure."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT, unique_id="123456789")

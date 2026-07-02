@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
@@ -10,6 +11,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def setup_platforms():
+    """Patch PLATFORMS for all tests in this file."""
+    with patch("homeassistant.components.lutron.PLATFORMS", [Platform.SCENE]):
+        yield
 
 
 async def test_scene_setup(
@@ -22,9 +30,8 @@ async def test_scene_setup(
     """Test scene setup."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.lutron.PLATFORMS", [Platform.SCENE]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 

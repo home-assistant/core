@@ -1,13 +1,12 @@
 """Define a base coordinator for Bluesound entities."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 import contextlib
 from dataclasses import dataclass, replace
 from datetime import timedelta
 import logging
+from typing import override
 
 from pyblu import Input, Player, Preset, Status, SyncStatus
 from pyblu.errors import PlayerUnreachableError
@@ -78,6 +77,7 @@ class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
             name=sync_status.name,
         )
 
+    @override
     async def _async_setup(self) -> None:
         preset = await self.player.presets()
         inputs = await self.player.inputs()
@@ -110,6 +110,7 @@ class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
         )
         self.config_entry.async_on_unload(cancel_task(presets_and_inputs_loop_task))
 
+    @override
     async def _async_update_data(self) -> BluesoundData:
         return self.data
 

@@ -1,9 +1,8 @@
 """Support for Twente Milieu sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import date
+from typing import override
 
 from twentemilieu import WasteType
 
@@ -12,11 +11,9 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import TwenteMilieuConfigEntry
 from .entity import TwenteMilieuEntity
 
@@ -36,25 +33,25 @@ SENSORS: tuple[TwenteMilieuSensorDescription, ...] = (
         device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
-        key="Non-recyclable",
+        key="non_recyclable",
         translation_key="non_recyclable_waste_pickup",
         waste_type=WasteType.NON_RECYCLABLE,
         device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
-        key="Organic",
+        key="organic",
         translation_key="organic_waste_pickup",
         waste_type=WasteType.ORGANIC,
         device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
-        key="Paper",
+        key="paper",
         translation_key="paper_waste_pickup",
         waste_type=WasteType.PAPER,
         device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
-        key="Plastic",
+        key="packages",
         translation_key="packages_waste_pickup",
         waste_type=WasteType.PACKAGES,
         device_class=SensorDeviceClass.DATE,
@@ -86,9 +83,10 @@ class TwenteMilieuSensor(TwenteMilieuEntity, SensorEntity):
         """Initialize the Twente Milieu entity."""
         super().__init__(entry)
         self.entity_description = description
-        self._attr_unique_id = f"{DOMAIN}_{entry.data[CONF_ID]}_{description.key}"
+        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> date | None:
         """Return the state of the sensor."""
         if not (dates := self.coordinator.data[self.entity_description.waste_type]):

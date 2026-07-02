@@ -1,12 +1,10 @@
 """The Monzo integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from pprint import pformat
-from typing import Any
+from typing import Any, override
 
 from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 
@@ -52,6 +50,7 @@ class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> MonzoData:
         """Fetch data from Monzo API."""
         try:

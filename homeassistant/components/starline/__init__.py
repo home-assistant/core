@@ -1,7 +1,5 @@
 """The StarLine component."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,8 +20,10 @@ from .const import (
     SERVICE_UPDATE_STATE,
 )
 
+type StarlineConfigEntry = ConfigEntry[StarlineAccount]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: StarlineConfigEntry) -> bool:
     """Set up the StarLine device from a config entry."""
     account = StarlineAccount(hass, entry)
     await account.update()
@@ -31,9 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not account.api.available:
         raise ConfigEntryNotReady
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][entry.entry_id] = account
+    entry.runtime_data = account
 
     device_registry = dr.async_get(hass)
     for device in account.api.devices.values():
@@ -60,7 +58,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await account.update()
         await account.update_obd()
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(DOMAIN, SERVICE_UPDATE_STATE, async_update)
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_SET_SCAN_INTERVAL,
@@ -73,6 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             }
         ),
     )
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_SET_SCAN_OBD_INTERVAL,
@@ -92,20 +93,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: StarlineConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
 
-    account: StarlineAccount = hass.data[DOMAIN][config_entry.entry_id]
-    account.unload()
+    config_entry.runtime_data.unload()
     return unload_ok
 
 
-async def async_options_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_options_updated(
+    hass: HomeAssistant, config_entry: StarlineConfigEntry
+) -> None:
     """Triggered by config entry options updates."""
-    account: StarlineAccount = hass.data[DOMAIN][config_entry.entry_id]
+    account = config_entry.runtime_data
     scan_interval = config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     scan_obd_interval = config_entry.options.get(
         CONF_SCAN_OBD_INTERVAL, DEFAULT_SCAN_OBD_INTERVAL

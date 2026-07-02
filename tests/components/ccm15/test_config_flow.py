@@ -2,11 +2,14 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.ccm15.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.httpx_client import get_async_client
 
 from tests.common import MockConfigEntry
 
@@ -79,9 +82,8 @@ async def test_form_invalid_host(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -113,9 +115,8 @@ async def test_form_cannot_connect(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_form_unexpected_error(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_unexpected_error(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -148,7 +149,8 @@ async def test_form_unexpected_error(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_duplicate_host(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_duplicate_host(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -174,3 +176,29 @@ async def test_duplicate_host(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
+
+
+async def test_form_uses_shared_httpx_client(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """The config flow passes HA's shared httpx client to the library.
+
+    Letting the library build its own client runs blocking certifi/SSL setup on
+    the event loop, which aborts the flow; the shared client avoids that.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.ccm15.config_flow.CCM15Device", autospec=True
+    ) as mock_device:
+        mock_device.return_value.async_test_connection.return_value = True
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.1.1.1"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_device.call_args.kwargs["client"] is get_async_client(hass)

@@ -1,7 +1,5 @@
 """The V2C integration."""
 
-from __future__ import annotations
-
 from pytrydan import Trydan
 
 from homeassistant.const import CONF_HOST, Platform
@@ -12,6 +10,7 @@ from .coordinator import V2CConfigEntry, V2CUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.LIGHT,
     Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,

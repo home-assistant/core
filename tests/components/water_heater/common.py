@@ -29,6 +29,7 @@ async def async_set_away_mode(
         data[ATTR_ENTITY_ID] = entity_id
 
     await hass.services.async_call(DOMAIN, SERVICE_SET_AWAY_MODE, data, blocking=True)
+    await hass.async_block_till_done()
 
 
 async def async_set_temperature(
@@ -51,6 +52,7 @@ async def async_set_temperature(
     await hass.services.async_call(
         DOMAIN, SERVICE_SET_TEMPERATURE, kwargs, blocking=True
     )
+    await hass.async_block_till_done()
 
 
 async def async_set_operation_mode(
@@ -65,6 +67,7 @@ async def async_set_operation_mode(
     await hass.services.async_call(
         DOMAIN, SERVICE_SET_OPERATION_MODE, data, blocking=True
     )
+    await hass.async_block_till_done()
 
 
 async def async_turn_on(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
@@ -75,6 +78,7 @@ async def async_turn_on(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) 
         data[ATTR_ENTITY_ID] = entity_id
 
     await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data, blocking=True)
+    await hass.async_block_till_done()
 
 
 async def async_turn_off(
@@ -87,3 +91,4 @@ async def async_turn_off(
         data[ATTR_ENTITY_ID] = entity_id
 
     await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
+    await hass.async_block_till_done()

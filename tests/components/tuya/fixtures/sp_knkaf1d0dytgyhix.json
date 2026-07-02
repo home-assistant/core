@@ -1,0 +1,289 @@
+{
+  "name": "Security Camera",
+  "category": "sp",
+  "product_id": "knkaf1d0dytgyhix",
+  "product_name": "Security Camera",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2025-09-11T13:22:03+00:00",
+  "create_time": "2025-09-11T13:22:03+00:00",
+  "update_time": "2025-09-11T13:22:03+00:00",
+  "function": {
+    "basic_indicator": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "basic_flip": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "basic_osd": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "basic_private": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "motion_sensitivity": {
+      "type": "Enum",
+      "value": "{\"range\":[\"0\",\"1\",\"2\"]}"
+    },
+    "basic_wdr": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "basic_nightvision": {
+      "type": "Enum",
+      "value": "{\"range\":[\"0\",\"1\",\"2\"]}"
+    },
+    "sd_format": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "motion_record": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "ipc_auto_siren": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "ipc_sharp": {
+      "type": "Integer",
+      "value": "{\"unit\":\"%\",\"min\":0,\"max\":100,\"scale\":0,\"step\":1}"
+    },
+    "motion_switch": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "record_switch1": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "decibel_switch": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "decibel_sensitivity": {
+      "type": "Enum",
+      "value": "{\"range\":[\"0\",\"1\"]}"
+    },
+    "record_switch": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "record_mode": {
+      "type": "Enum",
+      "value": "{\"range\":[\"1\",\"2\"]}"
+    },
+    "siren_switch": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "device_restart": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "motion_area_switch": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "motion_area": {
+      "type": "String",
+      "value": "{\"maxlen\":255}"
+    },
+    "ipc_contrast": {
+      "type": "Integer",
+      "value": "{\"unit\":\"%\",\"min\":0,\"max\":100,\"scale\":0,\"step\":1}"
+    },
+    "ipc_bright": {
+      "type": "Integer",
+      "value": "{\"unit\":\"%\",\"min\":0,\"max\":100,\"scale\":0,\"step\":1}"
+    }
+  },
+  "local_strategy": {},
+  "status_range": {
+    "basic_indicator": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "basic_flip": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "basic_osd": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "basic_private": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "motion_sensitivity": {
+      "type": "Enum",
+      "value": "{\"range\":[\"0\",\"1\",\"2\"]}",
+      "report_type": null
+    },
+    "basic_wdr": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "basic_nightvision": {
+      "type": "Enum",
+      "value": "{\"range\":[\"0\",\"1\",\"2\"]}",
+      "report_type": null
+    },
+    "sd_storge": {
+      "type": "String",
+      "value": "{\"maxlen\":255}",
+      "report_type": null
+    },
+    "sd_status": {
+      "type": "Integer",
+      "value": "{\"min\":1,\"max\":5,\"scale\":0,\"step\":1}",
+      "report_type": null
+    },
+    "sd_format": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "motion_record": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "movement_detect_pic": {
+      "type": "Raw",
+      "value": "{}",
+      "report_type": null
+    },
+    "sd_format_state": {
+      "type": "Integer",
+      "value": "{\"min\":-20000,\"max\":200000,\"scale\":0,\"step\":1}",
+      "report_type": null
+    },
+    "ipc_auto_siren": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "ipc_sharp": {
+      "type": "Integer",
+      "value": "{\"unit\":\"%\",\"min\":0,\"max\":100,\"scale\":0,\"step\":1}",
+      "report_type": null
+    },
+    "motion_switch": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "record_switch1": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "decibel_switch": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "decibel_sensitivity": {
+      "type": "Enum",
+      "value": "{\"range\":[\"0\",\"1\"]}",
+      "report_type": null
+    },
+    "record_switch": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "record_mode": {
+      "type": "Enum",
+      "value": "{\"range\":[\"1\",\"2\"]}",
+      "report_type": null
+    },
+    "siren_switch": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "device_restart": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "motion_area_switch": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "motion_area": {
+      "type": "String",
+      "value": "{\"maxlen\":255}",
+      "report_type": null
+    },
+    "alarm_message": {
+      "type": "String",
+      "value": "{}",
+      "report_type": null
+    },
+    "ipc_contrast": {
+      "type": "Integer",
+      "value": "{\"unit\":\"%\",\"min\":0,\"max\":100,\"scale\":0,\"step\":1}",
+      "report_type": null
+    },
+    "ipc_bright": {
+      "type": "Integer",
+      "value": "{\"unit\":\"%\",\"min\":0,\"max\":100,\"scale\":0,\"step\":1}",
+      "report_type": null
+    },
+    "initiative_message": {
+      "type": "Raw",
+      "value": "{}",
+      "report_type": null
+    }
+  },
+  "status": {
+    "basic_indicator": true,
+    "basic_flip": false,
+    "basic_osd": true,
+    "basic_private": false,
+    "motion_sensitivity": "1",
+    "basic_wdr": false,
+    "basic_nightvision": "1",
+    "sd_storge": "896|896|0",
+    "sd_status": 5,
+    "sd_format": false,
+    "motion_record": false,
+    "movement_detect_pic": "**REDACTED**",
+    "sd_format_state": 0,
+    "ipc_auto_siren": false,
+    "ipc_sharp": 50,
+    "motion_switch": true,
+    "record_switch1": false,
+    "decibel_switch": false,
+    "decibel_sensitivity": "0",
+    "record_switch": true,
+    "record_mode": "1",
+    "siren_switch": false,
+    "device_restart": true,
+    "motion_area_switch": false,
+    "motion_area": "{\"num\":1,\"region0\":{\"x\":0,\"y\":0,\"xlen\":100,\"ylen\":100}}",
+    "alarm_message": "**REDACTED**",
+    "ipc_contrast": 50,
+    "ipc_bright": 50,
+    "initiative_message": ""
+  },
+  "set_up": true,
+  "support_local": false,
+  "quirk": null,
+  "warnings": null
+}

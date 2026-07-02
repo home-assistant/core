@@ -1,7 +1,5 @@
 """Support for showing random states."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from random import getrandbits
 from typing import Any

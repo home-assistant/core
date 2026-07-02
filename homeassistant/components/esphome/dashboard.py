@@ -1,7 +1,5 @@
 """Files to interact with an ESPHome dashboard."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import Any
@@ -65,9 +63,14 @@ class ESPHomeDashboardManager:
         if is_hassio(self._hass):
             from homeassistant.components.hassio import get_addons_info  # noqa: PLC0415
 
-            if (addons := get_addons_info(self._hass)) is not None and info[
-                "addon_slug"
-            ] not in addons:
+            # This may raise HassioNotReadyError if Supervisor was unreachable
+            # during setup of the Supervisor integration. That will fail setup
+            # of this integration. However there is no better option at this time
+            # since we need to know if the addon is installed from Supervisor to
+            # correctly setup this integration and we can't raise ConfigEntryNotReady
+            # to trigger a retry from async_setup.
+            addons = get_addons_info(self._hass)
+            if info["addon_slug"] not in addons:
                 # The addon is not installed anymore, but it make come back
                 # so we don't want to remove the dashboard, but for now
                 # we don't want to use it.
@@ -121,7 +124,8 @@ class ESPHomeDashboardManager:
             hass.config_entries.async_reload(entry.entry_id)
             for entry in hass.config_entries.async_loaded_entries(DOMAIN)
         ]
-        # Re-auth flows will check the dashboard for encryption key when the form is requested
+        # Re-auth flows will check the dashboard for encryption
+        # key when the form is requested
         # but we only trigger reauth if the dashboard is available.
         if dashboard.last_update_success:
             reauths = [

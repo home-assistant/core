@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_scene_snapshot[scene.klf_200_gateway_test_scene-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_scene_snapshot[scene.klf_200_gateway_test_scene-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'KLF 200 Gateway Test Scene',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KLF 200 Gateway Test Scene',
     }),
     'context': <ANY>,
     'entity_id': 'scene.klf_200_gateway_test_scene',

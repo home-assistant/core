@@ -4,7 +4,7 @@
     'area_id': None,
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
-    'configuration_url': 'https://teslemetry.com/console',
+    'configuration_url': 'https://teslemetry.com/console/energy/123456',
     'connections': set({
     }),
     'disabled_by': None,
@@ -35,7 +35,7 @@
     'area_id': None,
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
-    'configuration_url': 'https://teslemetry.com/console',
+    'configuration_url': 'https://teslemetry.com/console/vehicle/LRW3F7EK4NC700000',
     'connections': set({
     }),
     'disabled_by': None,

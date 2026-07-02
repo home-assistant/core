@@ -31,6 +31,7 @@ from aiohasupervisor.models import (
 )
 from aiohasupervisor.models.backups import LOCATION_CLOUD_BACKUP, LOCATION_LOCAL_STORAGE
 from aiohasupervisor.models.mounts import MountsInfo
+from aiohttp import FormData
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -609,22 +610,119 @@ async def test_agent_download_unavailable_backup(
 async def test_agent_upload(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
 ) -> None:
     """Test agent upload backup."""
     client = await hass_client()
-    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
+    ws_client = await hass_ws_client(hass)
+    # First call: reader_writer gets backup details after receiving the file.
+    # Second call: agent's async_get_backup check raises not found so the
+    # agent proceeds with the upload instead of skipping it.
+    supervisor_client.backups.backup_info.side_effect = [
+        TEST_BACKUP_DETAILS,
+        SupervisorNotFoundError(),
+    ]
+
+    upload_call_bytes: list[bytearray] = []
+
+    async def mock_upload(
+        stream: AsyncIterator[bytes], *args: Any, **kwargs: Any
+    ) -> str:
+        """Mock upload that consumes the wrapped stream."""
+        received = bytearray()
+        async for chunk in stream:
+            received.extend(chunk)
+        upload_call_bytes.append(received)
+        return TEST_BACKUP_DETAILS.slug
+
+    supervisor_client.backups.upload_backup.side_effect = mock_upload
+    supervisor_client.backups.download_backup.return_value.__aiter__.return_value = (
+        iter((b"backup data",))
+    )
+
+    await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
+    response = await ws_client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+    response = await ws_client.receive_json()
+    assert response["success"] is True
 
     supervisor_client.backups.reload.assert_not_called()
     resp = await client.post(
         "/api/backup/upload?agent_id=hassio.local",
         data={"file": StringIO("test")},
     )
+    await hass.async_block_till_done()
 
     assert resp.status == 201
+    # First upload call: reader_writer receives the raw upload stream.
+    assert upload_call_bytes[0] == b"test"
+    # Second upload call: agent uploads via stream_with_progress wrapper.
+    assert upload_call_bytes[1] == b"backup data"
     supervisor_client.backups.reload.assert_not_called()
-    supervisor_client.backups.download_backup.assert_not_called()
+    supervisor_client.backups.download_backup.assert_called_once()
     supervisor_client.backups.remove_backup.assert_not_called()
+
+    # Verify upload progress events were emitted
+    upload_progress_events: list[dict[str, Any]] = []
+    while True:
+        response = await ws_client.receive_json()
+        event = response.get("event")
+        if event is None:
+            continue
+        if "uploaded_bytes" in event and event.get("agent_id") == "hassio.local":
+            upload_progress_events.append(event)
+        if event == {"manager_state": "idle"}:
+            break
+
+    assert upload_progress_events
+    # Verify at least one event had uploaded_bytes less than total_bytes
+    assert any(
+        event["uploaded_bytes"] < event["total_bytes"]
+        for event in upload_progress_events
+    )
+    # Verify all events had uploaded_bytes less than or equal to total_bytes
+    assert all(
+        event["uploaded_bytes"] <= event["total_bytes"]
+        for event in upload_progress_events
+    )
+
+
+@pytest.mark.parametrize(
+    "suggested_filename",
+    [
+        "../traversal.tar",
+        "../../etc/passwd",
+        "subdir/backup.tar",
+        ".",
+        "..",
+        "../..",
+        "..\\traversal.tar",
+        "C:\\fakepath\\backup.tar",
+    ],
+)
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
+async def test_agent_upload_path_traversal(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    suggested_filename: str,
+) -> None:
+    """Test agent upload rejects filenames with path traversal."""
+    client = await hass_client()
+
+    data = FormData(quote_fields=False)
+    data.add_field(
+        "file",
+        "test",
+        filename=suggested_filename,
+        content_type="application/octet-stream",
+    )
+    resp = await client.post(
+        "/api/backup/upload?agent_id=hassio.local",
+        data=data,
+    )
+
+    assert resp.status == 400
 
 
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
@@ -836,13 +934,13 @@ async def test_agent_delete_with_error(
 )
 async def test_agents_notify_on_mount_added_removed(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
     event_data: dict[str, Any],
     mount_info_calls: int,
 ) -> None:
     """Test the listener is called when mounts are added or removed."""
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
     assert supervisor_client.mounts.info.call_count == 1
     assert supervisor_client.mounts.info.call_args[0] == ()
     supervisor_client.mounts.info.reset_mock()
@@ -921,14 +1019,14 @@ DEFAULT_BACKUP_OPTIONS = supervisor_backups.PartialBackupOptions(
 )
 async def test_reader_writer_create(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     supervisor_client: AsyncMock,
     extra_generate_options: dict[str, Any],
     expected_supervisor_options: supervisor_backups.PartialBackupOptions,
 ) -> None:
     """Test generating a backup."""
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
     freezer.move_to("2025-01-30 13:42:12.345678")
     supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
@@ -980,6 +1078,17 @@ async def test_reader_writer_create(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
+    response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "cleaning_up",
+        "state": "in_progress",
+    }
+
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
@@ -1003,7 +1112,7 @@ async def test_reader_writer_create(
 )
 async def test_reader_writer_create_addon_folder_error(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     supervisor_client: AsyncMock,
     addon_info_side_effect: list[Any],
@@ -1012,7 +1121,7 @@ async def test_reader_writer_create_addon_folder_error(
     addon_info_side_effect[0].name = "Advanced SSH & Web Terminal"
     assert dt.datetime.__name__ == "HAFakeDatetime"
     assert dt.HAFakeDatetime.__name__ == "HAFakeDatetime"
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
     freezer.move_to("2025-01-30 13:42:12.345678")
     supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
@@ -1094,6 +1203,17 @@ async def test_reader_writer_create_addon_folder_error(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
+    response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "cleaning_up",
+        "state": "in_progress",
+    }
+
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
@@ -1122,12 +1242,12 @@ async def test_reader_writer_create_addon_folder_error(
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_reader_writer_create_report_progress(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     supervisor_client: AsyncMock,
 ) -> None:
     """Test generating a backup."""
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
     freezer.move_to("2025-01-30 13:42:12.345678")
     supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
@@ -1211,6 +1331,17 @@ async def test_reader_writer_create_report_progress(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
+    response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "cleaning_up",
+        "state": "in_progress",
+    }
+
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
@@ -1270,6 +1401,17 @@ async def test_reader_writer_create_job_done(
         "manager_state": "create_backup",
         "reason": None,
         "stage": "upload_to_agents",
+        "state": "in_progress",
+    }
+
+    # Consume any upload progress events before the final state event
+    response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "cleaning_up",
         "state": "in_progress",
     }
 
@@ -1431,7 +1573,7 @@ async def test_reader_writer_create_job_done(
 )
 async def test_reader_writer_create_per_agent_encryption(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     supervisor_client: AsyncMock,
     commands: list[dict[str, Any]],
@@ -1443,7 +1585,7 @@ async def test_reader_writer_create_per_agent_encryption(
     upload_locations: list[str | None],
 ) -> None:
     """Test generating a backup."""
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
     freezer.move_to("2025-01-30 13:42:12.345678")
     mounts = MountsInfo(
         default_backup_mount=None,
@@ -1533,6 +1675,17 @@ async def test_reader_writer_create_per_agent_encryption(
         "manager_state": "create_backup",
         "reason": None,
         "stage": "upload_to_agents",
+        "state": "in_progress",
+    }
+
+    # Consume any upload progress events before the final state event
+    response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "cleaning_up",
         "state": "in_progress",
     }
 
@@ -1656,12 +1809,12 @@ async def test_reader_writer_create_partial_backup_error(
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_reader_writer_create_missing_reference_error(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
     supervisor_event: dict[str, Any],
 ) -> None:
     """Test missing reference error when generating a backup."""
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
     supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.jobs.get_job.return_value = TEST_JOB_NOT_DONE
 
@@ -1713,22 +1866,64 @@ async def test_reader_writer_create_missing_reference_error(
 
 
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
-@pytest.mark.parametrize("exception", [SupervisorError("Boom!"), Exception("Boom!")])
 @pytest.mark.parametrize(
-    ("method", "download_call_count", "remove_call_count"),
-    [("download_backup", 1, 1), ("remove_backup", 1, 1)],
+    (
+        "exception",
+        "method",
+        "download_call_count",
+        "remove_call_count",
+        "expected_events_before_failed",
+    ),
+    [
+        (
+            SupervisorError("Boom!"),
+            "download_backup",
+            1,
+            1,
+            [],
+        ),
+        (
+            Exception("Boom!"),
+            "download_backup",
+            1,
+            1,
+            [
+                {
+                    "manager_state": "create_backup",
+                    "reason": None,
+                    "stage": "cleaning_up",
+                    "state": "in_progress",
+                }
+            ],
+        ),
+        (
+            SupervisorError("Boom!"),
+            "remove_backup",
+            1,
+            1,
+            [],
+        ),
+        (
+            Exception("Boom!"),
+            "remove_backup",
+            1,
+            1,
+            [],
+        ),
+    ],
 )
 async def test_reader_writer_create_download_remove_error(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
     exception: Exception,
     method: str,
     download_call_count: int,
     remove_call_count: int,
+    expected_events_before_failed: list[dict[str, str]],
 ) -> None:
     """Test download and remove error when generating a backup."""
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
     supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS_5
     supervisor_client.jobs.get_job.return_value = TEST_JOB_NOT_DONE
@@ -1788,7 +1983,13 @@ async def test_reader_writer_create_download_remove_error(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
     response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    for expected_event in expected_events_before_failed:
+        assert response["event"] == expected_event
+        response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
         "reason": "upload_failed",
@@ -1810,12 +2011,12 @@ async def test_reader_writer_create_download_remove_error(
 @pytest.mark.parametrize("exception", [SupervisorError("Boom!"), Exception("Boom!")])
 async def test_reader_writer_create_info_error(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
     exception: Exception,
 ) -> None:
     """Test backup info error when generating a backup."""
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
     supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.backup_info.side_effect = exception
     supervisor_client.jobs.get_job.return_value = TEST_JOB_NOT_DONE
@@ -1886,12 +2087,12 @@ async def test_reader_writer_create_info_error(
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_reader_writer_create_remote_backup(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     supervisor_client: AsyncMock,
 ) -> None:
     """Test generating a backup which will be uploaded to a remote agent."""
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
     freezer.move_to("2025-01-30 13:42:12.345678")
     supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS_5
@@ -1952,6 +2153,17 @@ async def test_reader_writer_create_remote_backup(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
+    response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "cleaning_up",
+        "state": "in_progress",
+    }
+
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
@@ -1975,7 +2187,9 @@ async def test_reader_writer_create_remote_backup(
             {"include_homeassistant": False},
             {
                 "code": "home_assistant_error",
-                "message": "Cannot create a backup with database but without Home Assistant",
+                "message": (
+                    "Cannot create a backup with database but without Home Assistant"
+                ),
             },
         ),
         (
@@ -2089,13 +2303,13 @@ async def test_agent_receive_remote_backup(
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_reader_writer_restore(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
     get_job_result: supervisor_jobs.Job,
     supervisor_events: list[dict[str, Any]],
 ) -> None:
     """Test restoring a backup."""
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
     supervisor_client.backups.partial_restore.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
@@ -2156,11 +2370,11 @@ async def test_reader_writer_restore(
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_reader_writer_restore_remote_backup(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
 ) -> None:
     """Test restoring a backup from a remote agent."""
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
     supervisor_client.backups.partial_restore.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.list.return_value = [TEST_BACKUP_5]
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS_5
@@ -2253,11 +2467,11 @@ async def test_reader_writer_restore_remote_backup(
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_reader_writer_restore_report_progress(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
 ) -> None:
     """Test restoring a backup."""
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
     supervisor_client.backups.partial_restore.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
@@ -2434,11 +2648,11 @@ async def test_reader_writer_restore_error(
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_reader_writer_restore_late_error(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
 ) -> None:
     """Test restoring a backup with error."""
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
     supervisor_client.backups.partial_restore.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
@@ -2626,7 +2840,7 @@ async def test_restore_progress_after_restart(
 @pytest.mark.usefixtures("hassio_client")
 async def test_restore_progress_after_restart_report_progress(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
 ) -> None:
     """Test restore backup progress after restart."""
@@ -2636,7 +2850,7 @@ async def test_restore_progress_after_restart_report_progress(
     with patch.dict(os.environ, MOCK_ENVIRON | {RESTORE_JOB_ID_ENV: TEST_JOB_ID}):
         assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
 
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
 
     await client.send_json_auto_id({"type": "backup/subscribe_events"})
     response = await client.receive_json()

@@ -1,7 +1,5 @@
 """Helpers for the data entry flow."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 from typing import Any, Generic, TypeVar
 
@@ -33,7 +31,7 @@ class _BaseFlowManagerView(HomeAssistantView, Generic[_FlowManagerT]):
         self, result: data_entry_flow.FlowResult
     ) -> dict[str, Any]:
         """Convert result to JSON serializable dict."""
-        if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
+        if result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY:
             assert "result" not in result
             return {
                 key: val
@@ -62,7 +60,6 @@ class FlowManagerIndexView(_BaseFlowManagerView[_FlowManagerT]):
         vol.Schema(
             {
                 vol.Required("handler"): str,
-                vol.Optional("show_advanced_options", default=False): cv.boolean,
             },
             extra=vol.ALLOW_EXTRA,
         )
@@ -95,7 +92,7 @@ class FlowManagerIndexView(_BaseFlowManagerView[_FlowManagerT]):
 
     def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return context."""
-        return {"show_advanced_options": data["show_advanced_options"]}
+        return {}
 
 
 class FlowManagerResourceView(_BaseFlowManagerView[_FlowManagerT]):

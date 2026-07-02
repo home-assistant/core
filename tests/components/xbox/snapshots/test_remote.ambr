@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_remotes[remote.xone-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_remotes[remote.xone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'XONE',
-      'supported_features': <RemoteEntityFeature: 0>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XONE',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <RemoteEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'remote.xone',
@@ -51,8 +52,9 @@
 # ---
 # name: test_remotes[remote.xonex-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_remotes[remote.xonex-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'XONEX',
-      'supported_features': <RemoteEntityFeature: 0>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XONEX',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <RemoteEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'remote.xonex',

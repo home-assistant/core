@@ -1,10 +1,8 @@
 """Event for Shelly."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, override
 
 from aioshelly.ble.const import BLE_SCRIPT_NAME
 from aioshelly.block_device import Block
@@ -165,7 +163,8 @@ def _async_setup_rpc_entry(
                 ShellyRpcScriptEvent(coordinator, script, SCRIPT_EVENT, event_types)
             )
 
-    # If a script is removed, from the device configuration, we need to remove orphaned entities
+    # If a script is removed, from the device configuration,
+    # we need to remove orphaned entities
     async_remove_orphaned_entities(
         hass,
         config_entry.entry_id,
@@ -213,6 +212,7 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
         else:
             self._attr_name = get_block_custom_name(coordinator.device, block)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -255,6 +255,7 @@ class ShellyRpcEvent(ShellyRpcEntity, EventEntity):
             }
         self.event_id = int(component_id)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -292,6 +293,7 @@ class ShellyRpcScriptEvent(ShellyRpcEntity, EventEntity):
         self._attr_name = get_rpc_custom_name(coordinator.device, key)
         self.event_id = get_rpc_key_id(key)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()

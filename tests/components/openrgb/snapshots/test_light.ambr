@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_entities[light.ene_dram-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'off',
         'breathing',
         'flashing',
@@ -15,7 +16,7 @@
         'chase',
         'random_flicker',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
     }),
@@ -52,10 +53,10 @@
 # name: test_entities[light.ene_dram-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 255,
-      'color_mode': <ColorMode.RGB: 'rgb'>,
-      'effect': 'off',
-      'effect_list': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 255,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGB: 'rgb'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'off',
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'off',
         'breathing',
         'flashing',
@@ -65,22 +66,22 @@
         'chase',
         'random_flicker',
       ]),
-      'friendly_name': 'ENE DRAM',
-      'hs_color': tuple(
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ENE DRAM',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         0.0,
         100.0,
       ),
-      'icon': 'mdi:memory',
-      'rgb_color': tuple(
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:memory',
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
         0,
         0,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
-      'supported_features': <LightEntityFeature: 4>,
-      'xy_color': tuple(
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 4>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.701,
         0.299,
       ),

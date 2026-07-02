@@ -1,12 +1,10 @@
 """Support for UK public transport data provided by transportapi.com."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 import re
-from typing import Any
+from typing import Any, override
 
 import requests
 import voluptuous as vol
@@ -123,11 +121,13 @@ class UkTransportSensor(SensorEntity):
         self._state = None
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
@@ -197,6 +197,7 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
                 self._state = None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return other details about the sensor state."""
         if self._data is not None:
@@ -269,6 +270,7 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
                     self._state = None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return other details about the sensor state."""
         if self._data is not None:

@@ -1,7 +1,7 @@
 """Typings for the xiaomi_miio integration."""
 
 from dataclasses import dataclass
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from miio import Device as MiioDevice
 from miio.gateway.gateway import Gateway
@@ -9,6 +9,9 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from .coordinator import GatewayDeviceCoordinator
 
 
 class ServiceMethodDetails(NamedTuple):
@@ -30,7 +33,7 @@ class XiaomiMiioRuntimeData:
     device_coordinator: DataUpdateCoordinator[Any] = None  # type: ignore[assignment]
 
     gateway: Gateway = None  # type: ignore[assignment]
-    gateway_coordinators: dict[str, DataUpdateCoordinator[dict[str, bool]]] = None  # type: ignore[assignment]
+    gateway_coordinators: dict[str, GatewayDeviceCoordinator] = None  # type: ignore[assignment]
 
 
 type XiaomiMiioConfigEntry = ConfigEntry[XiaomiMiioRuntimeData]

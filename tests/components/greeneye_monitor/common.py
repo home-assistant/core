@@ -1,7 +1,5 @@
 """Common helpers for greeneye_monitor tests."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
@@ -33,7 +31,7 @@ SINGLE_MONITOR_SERIAL_NUMBER = 110011
 
 
 def make_single_monitor_config_with_sensors(sensors: dict[str, Any]) -> dict[str, Any]:
-    """Wrap the given sensor config in the boilerplate for a single monitor with serial number SINGLE_MONITOR_SERIAL_NUMBER."""
+    """Wrap sensor config in boilerplate for SINGLE_MONITOR_SERIAL_NUMBER."""
     return {
         DOMAIN: {
             CONF_PORT: 7513,
@@ -162,7 +160,7 @@ MULTI_MONITOR_CONFIG = {
 async def setup_greeneye_monitor_component_with_config(
     hass: HomeAssistant, config: ConfigType
 ) -> bool:
-    """Set up the greeneye_monitor component with the given config. Return True if successful, False otherwise."""
+    """Set up the greeneye_monitor component with the given config."""
     result = await async_setup_component(
         hass,
         DOMAIN,
@@ -174,21 +172,21 @@ async def setup_greeneye_monitor_component_with_config(
 
 
 def mock_with_listeners() -> MagicMock:
-    """Create a MagicMock with methods that follow the same pattern for working with listeners in the greeneye_monitor API."""
+    """Create a MagicMock with greeneye_monitor API listener methods."""
     mock = MagicMock()
     add_listeners(mock)
     return mock
 
 
 def async_mock_with_listeners() -> AsyncMock:
-    """Create an AsyncMock with methods that follow the same pattern for working with listeners in the greeneye_monitor API."""
+    """Create an AsyncMock with greeneye_monitor API listener methods."""
     mock = AsyncMock()
     add_listeners(mock)
     return mock
 
 
 def add_listeners(mock: MagicMock | AsyncMock) -> None:
-    """Add add_listener and remove_listener methods to the given mock that behave like their counterparts on objects from the greeneye_monitor API, plus a notify_all_listeners method that calls all registered listeners."""
+    """Add listener methods to the mock matching the greeneye_monitor API."""
     mock.listeners = []
     mock.add_listener = mock.listeners.append
     mock.remove_listener = mock.listeners.remove
@@ -245,7 +243,7 @@ def mock_monitor(serial_number: int) -> MagicMock:
 async def connect_monitor(
     hass: HomeAssistant, monitors: AsyncMock, serial_number: int
 ) -> MagicMock:
-    """Simulate a monitor connecting to Home Assistant. Returns the mock monitor API object."""
+    """Simulate a monitor connecting to Home Assistant."""
     monitor = mock_monitor(serial_number)
     monitors.add_monitor(monitor)
     await hass.async_block_till_done()

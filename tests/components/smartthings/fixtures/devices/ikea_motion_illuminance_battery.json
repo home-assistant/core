@@ -1,0 +1,116 @@
+{
+  "items": [
+    {
+      "deviceId": "6f730725-d8c9-4d06-bac6-7dd96a3c75d8",
+      "name": "motion-illuminance-battery",
+      "label": "Gaderobe Bewegungsmelder",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "4e156032-305c-3f76-9016-9255f572067e",
+      "deviceManufacturerCode": "IKEA of Sweden",
+      "locationId": "a123d440-3337-4e3b-8af2-51427b68052f",
+      "ownerId": "a6f94f18-42d6-28c6-57c8-6c77aaf87439",
+      "roomId": "f8446c7b-55cc-4a39-93be-02573e92bc75",
+      "productId": "4ba2b234-76b2-4a36-af07-bcf33042f0b7",
+      "brandId": "964722e3-7d62-3e0b-a84b-31a134874f20",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "motionSensor",
+              "version": 1
+            },
+            {
+              "id": "illuminanceMeasurement",
+              "version": 1
+            },
+            {
+              "id": "battery",
+              "version": 1
+            },
+            {
+              "id": "firmwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "MotionSensor",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2026-03-02T17:05:12.285Z",
+      "parentDeviceId": "8ea8d2a4-4f93-4b49-94b8-c9cafd4ffedb",
+      "profile": {
+        "id": "138c1c12-2a2e-310c-904d-fee23ec6dd58"
+      },
+      "matter": {
+        "driverId": "fba178cd-203e-4b7c-bfa0-d4f07197b527",
+        "hubId": "8ea8d2a4-4f93-4b49-94b8-c9cafd4ffedb",
+        "provisioningState": "PROVISIONED",
+        "networkId": "F050C5A30C6BE3F6-912EFFB7CB6FE167",
+        "executingLocally": true,
+        "uniqueId": "8F3E199D98D6CD7A",
+        "vendorId": 4476,
+        "productId": 12288,
+        "listeningType": "SLEEPY",
+        "supportedNetworkInterfaces": ["THREAD"],
+        "version": {
+          "hardware": 512,
+          "hardwareLabel": "P2.0",
+          "software": 16777223,
+          "softwareLabel": "1.0.7"
+        },
+        "endpoints": [
+          {
+            "endpointId": 0,
+            "deviceTypes": [
+              {
+                "deviceTypeId": 18
+              },
+              {
+                "deviceTypeId": 17
+              },
+              {
+                "deviceTypeId": 22
+              }
+            ]
+          },
+          {
+            "endpointId": 1,
+            "deviceTypes": [
+              {
+                "deviceTypeId": 262
+              }
+            ]
+          },
+          {
+            "endpointId": 2,
+            "deviceTypes": [
+              {
+                "deviceTypeId": 263
+              }
+            ]
+          }
+        ],
+        "syncDrivers": true,
+        "fingerprintType": "MATTER_MANUFACTURER",
+        "fingerprintId": "4476/12288"
+      },
+      "type": "MATTER",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "LOCAL",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

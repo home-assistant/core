@@ -1,7 +1,5 @@
 """The lookin integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 import logging
@@ -125,7 +123,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> bo
             push_coordinator,
             name=entry.title,
             update_method=lookin_protocol.get_meteo_sensor,
-            update_interval=METEO_UPDATE_INTERVAL,  # Updates are pushed (fallback is polling)
+            # Updates are pushed (fallback is polling)
+            update_interval=METEO_UPDATE_INTERVAL,
         )
         await meteo_coordinator.async_config_entry_first_refresh()
 
@@ -144,7 +143,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> bo
             push_coordinator,
             name=f"{entry.title} {uuid}",
             update_method=updater,
-            update_interval=REMOTE_UPDATE_INTERVAL,  # Updates are pushed (fallback is polling)
+            # Updates are pushed (fallback is polling)
+            update_interval=REMOTE_UPDATE_INTERVAL,
         )
         await coordinator.async_config_entry_first_refresh()
         device_coordinators[uuid] = coordinator

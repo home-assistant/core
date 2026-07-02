@@ -1,7 +1,5 @@
 """Support for functionality to download files."""
 
-from __future__ import annotations
-
 import os
 
 from homeassistant.config_entries import ConfigEntry

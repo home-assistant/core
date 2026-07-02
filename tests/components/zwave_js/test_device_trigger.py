@@ -54,7 +54,7 @@ async def test_get_notification_notification_triggers(
     lock_schlage_be469,
     integration,
 ) -> None:
-    """Test we get the expected triggers from a zwave_js device with the Notification CC."""
+    """Test expected triggers from a device with Notification CC."""
     device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
@@ -164,12 +164,12 @@ async def test_if_notification_notification_fires(
     await hass.async_block_till_done()
     assert len(service_calls) == 2
     assert (
-        service_calls[0].data["some"]
-        == f"event.notification.notification - device - zwave_js_notification - {CommandClass.NOTIFICATION}"
+        service_calls[0].data["some"] == "event.notification.notification - device"
+        f" - zwave_js_notification - {CommandClass.NOTIFICATION}"
     )
     assert (
-        service_calls[1].data["some"]
-        == f"event.notification.notification2 - device - zwave_js_notification - {CommandClass.NOTIFICATION}"
+        service_calls[1].data["some"] == "event.notification.notification2 - device"
+        f" - zwave_js_notification - {CommandClass.NOTIFICATION}"
     )
 
 
@@ -180,7 +180,7 @@ async def test_get_trigger_capabilities_notification_notification(
     lock_schlage_be469,
     integration,
 ) -> None:
-    """Test we get the expected capabilities from a notification.notification trigger."""
+    """Test capabilities from a notification.notification trigger."""
     device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
@@ -304,12 +304,12 @@ async def test_if_entry_control_notification_fires(
     await hass.async_block_till_done()
     assert len(service_calls) == 2
     assert (
-        service_calls[0].data["some"]
-        == f"event.notification.notification - device - zwave_js_notification - {CommandClass.ENTRY_CONTROL}"
+        service_calls[0].data["some"] == "event.notification.notification - device"
+        f" - zwave_js_notification - {CommandClass.ENTRY_CONTROL}"
     )
     assert (
-        service_calls[1].data["some"]
-        == f"event.notification.notification2 - device - zwave_js_notification - {CommandClass.ENTRY_CONTROL}"
+        service_calls[1].data["some"] == "event.notification.notification2 - device"
+        f" - zwave_js_notification - {CommandClass.ENTRY_CONTROL}"
     )
 
 
@@ -320,7 +320,7 @@ async def test_get_trigger_capabilities_entry_control_notification(
     lock_schlage_be469,
     integration,
 ) -> None:
-    """Test we get the expected capabilities from a notification.entry_control trigger."""
+    """Test capabilities from a notification.entry_control trigger."""
     device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
@@ -365,7 +365,7 @@ async def test_get_node_status_triggers(
     lock_schlage_be469,
     integration,
 ) -> None:
-    """Test we get the expected triggers from a device with node status sensor enabled."""
+    """Test expected triggers from device with node status enabled."""
     device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
@@ -760,12 +760,12 @@ async def test_if_basic_value_notification_fires(
     await hass.async_block_till_done()
     assert len(service_calls) == 2
     assert (
-        service_calls[0].data["some"]
-        == f"event.value_notification.basic - device - zwave_js_value_notification - {CommandClass.BASIC}"
+        service_calls[0].data["some"] == "event.value_notification.basic - device"
+        f" - zwave_js_value_notification - {CommandClass.BASIC}"
     )
     assert (
-        service_calls[1].data["some"]
-        == f"event.value_notification.basic2 - device - zwave_js_value_notification - {CommandClass.BASIC}"
+        service_calls[1].data["some"] == "event.value_notification.basic2 - device"
+        f" - zwave_js_value_notification - {CommandClass.BASIC}"
     )
 
 
@@ -818,7 +818,7 @@ async def test_get_central_scene_value_notification_triggers(
     wallmote_central_scene,
     integration,
 ) -> None:
-    """Test we get the expected triggers from a zwave_js device with the Central Scene CC."""
+    """Test expected triggers from a device with Central Scene CC."""
     device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, wallmote_central_scene)}
     )
@@ -953,11 +953,15 @@ async def test_if_central_scene_value_notification_fires(
     assert len(service_calls) == 2
     assert (
         service_calls[0].data["some"]
-        == f"event.value_notification.central_scene - device - zwave_js_value_notification - {CommandClass.CENTRAL_SCENE}"
+        == "event.value_notification.central_scene - device"
+        " - zwave_js_value_notification"
+        f" - {CommandClass.CENTRAL_SCENE}"
     )
     assert (
         service_calls[1].data["some"]
-        == f"event.value_notification.central_scene2 - device - zwave_js_value_notification - {CommandClass.CENTRAL_SCENE}"
+        == "event.value_notification.central_scene2 - device"
+        " - zwave_js_value_notification"
+        f" - {CommandClass.CENTRAL_SCENE}"
     )
 
 
@@ -968,7 +972,7 @@ async def test_get_trigger_capabilities_central_scene_value_notification(
     wallmote_central_scene,
     integration,
 ) -> None:
-    """Test we get the expected capabilities from a value_notification.central_scene trigger."""
+    """Test capabilities from value_notification.central_scene."""
     device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, wallmote_central_scene)}
     )
@@ -997,7 +1001,11 @@ async def test_get_trigger_capabilities_central_scene_value_notification(
             "optional": True,
             "required": False,
             "type": "select",
-            "options": [(0, "KeyPressed"), (1, "KeyReleased"), (2, "KeyHeldDown")],
+            "options": [
+                ("0", "KeyPressed"),
+                ("1", "KeyReleased"),
+                ("2", "KeyHeldDown"),
+            ],
         },
     ]
 
@@ -1009,7 +1017,7 @@ async def test_get_scene_activation_value_notification_triggers(
     hank_binary_switch,
     integration,
 ) -> None:
-    """Test we get the expected triggers from a zwave_js device with the SceneActivation CC."""
+    """Test expected triggers from device with SceneActivation CC."""
     device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, hank_binary_switch)}
     )
@@ -1138,11 +1146,15 @@ async def test_if_scene_activation_value_notification_fires(
     assert len(service_calls) == 2
     assert (
         service_calls[0].data["some"]
-        == f"event.value_notification.scene_activation - device - zwave_js_value_notification - {CommandClass.SCENE_ACTIVATION}"
+        == "event.value_notification.scene_activation - device"
+        " - zwave_js_value_notification"
+        f" - {CommandClass.SCENE_ACTIVATION}"
     )
     assert (
         service_calls[1].data["some"]
-        == f"event.value_notification.scene_activation2 - device - zwave_js_value_notification - {CommandClass.SCENE_ACTIVATION}"
+        == "event.value_notification.scene_activation2 - device"
+        " - zwave_js_value_notification"
+        f" - {CommandClass.SCENE_ACTIVATION}"
     )
 
 
@@ -1153,7 +1165,7 @@ async def test_get_trigger_capabilities_scene_activation_value_notification(
     hank_binary_switch,
     integration,
 ) -> None:
-    """Test we get the expected capabilities from a value_notification.scene_activation trigger."""
+    """Test capabilities from value_notification.scene_activation."""
     device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, hank_binary_switch)}
     )
@@ -1391,7 +1403,7 @@ async def test_get_trigger_capabilities_value_updated_value(
     lock_schlage_be469,
     integration,
 ) -> None:
-    """Test we get the expected capabilities from a zwave_js.value_updated.value trigger."""
+    """Test capabilities from zwave_js.value_updated.value trigger."""
     device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
@@ -1419,15 +1431,15 @@ async def test_get_trigger_capabilities_value_updated_value(
             "required": True,
             "type": "select",
             "options": [
-                (133, "Association"),
-                (128, "Battery"),
-                (98, "Door Lock"),
-                (122, "Firmware Update Meta Data"),
-                (114, "Manufacturer Specific"),
-                (113, "Notification"),
-                (152, "Security"),
-                (99, "User Code"),
-                (134, "Version"),
+                ("133", "Association"),
+                ("128", "Battery"),
+                ("98", "Door Lock"),
+                ("122", "Firmware Update Meta Data"),
+                ("114", "Manufacturer Specific"),
+                ("113", "Notification"),
+                ("152", "Security"),
+                ("99", "User Code"),
+                ("134", "Version"),
             ],
         },
         {"name": "property", "required": True, "type": "string"},
@@ -1445,7 +1457,7 @@ async def test_get_value_updated_config_parameter_triggers(
     lock_schlage_be469,
     integration,
 ) -> None:
-    """Test we get the zwave_js.value_updated.config_parameter trigger from a zwave_js device."""
+    """Test value_updated.config_parameter trigger from a device."""
     device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
@@ -1550,7 +1562,7 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_range(
     lock_schlage_be469,
     integration,
 ) -> None:
-    """Test we get the expected capabilities from a range zwave_js.value_updated.config_parameter trigger."""
+    """Test capabilities from a range config_parameter trigger."""
     device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
@@ -1600,7 +1612,7 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_enumerate
     lock_schlage_be469,
     integration,
 ) -> None:
-    """Test we get the expected capabilities from an enumerated zwave_js.value_updated.config_parameter trigger."""
+    """Test capabilities from an enumerated config_parameter trigger."""
     device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
@@ -1628,14 +1640,14 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_enumerate
             "name": "from",
             "optional": True,
             "required": False,
-            "options": [(0, "Disable Beeper"), (255, "Enable Beeper")],
+            "options": [("0", "Disable Beeper"), ("255", "Enable Beeper")],
             "type": "select",
         },
         {
             "name": "to",
             "optional": True,
             "required": False,
-            "options": [(0, "Disable Beeper"), (255, "Enable Beeper")],
+            "options": [("0", "Disable Beeper"), ("255", "Enable Beeper")],
             "type": "select",
         },
     ]
@@ -1746,3 +1758,44 @@ async def test_failure_scenarios(
                 "endpoint": 9999,
             },
         )
+
+
+def test_trigger_schema_coerces_string_values() -> None:
+    """Test trigger schemas accept int and string for numeric fields."""
+    for command_class_value in (
+        CommandClass.CENTRAL_SCENE.value,
+        str(CommandClass.CENTRAL_SCENE.value),
+    ):
+        for value in (2, "2"):
+            config = device_trigger.TRIGGER_SCHEMA(
+                {
+                    "platform": "device",
+                    "domain": DOMAIN,
+                    "device_id": "device123",
+                    "type": "event.value_notification.central_scene",
+                    "command_class": command_class_value,
+                    "property": "scene",
+                    "property_key": "001",
+                    "endpoint": 0,
+                    "subtype": "Endpoint 0 Scene 001",
+                    "value": value,
+                }
+            )
+            assert config["command_class"] == CommandClass.CENTRAL_SCENE.value
+            assert config["value"] == 2
+
+    for command_class_value in (
+        CommandClass.DOOR_LOCK.value,
+        str(CommandClass.DOOR_LOCK.value),
+    ):
+        config = device_trigger.TRIGGER_SCHEMA(
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": "device123",
+                "type": "zwave_js.value_updated.value",
+                "command_class": command_class_value,
+                "property": "latchStatus",
+            }
+        )
+        assert config["command_class"] == CommandClass.DOOR_LOCK.value

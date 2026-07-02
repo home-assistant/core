@@ -1,11 +1,9 @@
 """Models for the Netgear integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -72,6 +70,7 @@ class NetgearTrackerCoordinator(NetgearDataCoordinator[bool]):
             hass, router, entry, name="Devices", update_interval=SCAN_INTERVAL
         )
 
+    @override
     async def _async_update_data(self) -> bool:
         """Fetch data from the router."""
         if self.router.track_devices:
@@ -90,6 +89,7 @@ class NetgearTrafficMeterCoordinator(NetgearDataCoordinator[dict[str, Any] | Non
             hass, router, entry, name="Traffic meter", update_interval=SCAN_INTERVAL
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any] | None:
         """Fetch data from the router."""
         return await self.router.async_get_traffic_meter()
@@ -106,6 +106,7 @@ class NetgearSpeedTestCoordinator(NetgearDataCoordinator[dict[str, Any] | None])
             hass, router, entry, name="Speed test", update_interval=SPEED_TEST_INTERVAL
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any] | None:
         """Fetch data from the router."""
         return await self.router.async_get_speed_test()
@@ -122,6 +123,7 @@ class NetgearFirmwareCoordinator(NetgearDataCoordinator[dict[str, Any] | None]):
             hass, router, entry, name="Firmware", update_interval=SCAN_INTERVAL_FIRMWARE
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any] | None:
         """Check for new firmware of the router."""
         return await self.router.async_check_new_firmware()
@@ -138,6 +140,7 @@ class NetgearUtilizationCoordinator(NetgearDataCoordinator[dict[str, Any] | None
             hass, router, entry, name="Utilization", update_interval=SCAN_INTERVAL
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any] | None:
         """Fetch data from the router."""
         return await self.router.async_get_utilization()
@@ -158,6 +161,7 @@ class NetgearLinkCoordinator(NetgearDataCoordinator[dict[str, Any] | None]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any] | None:
         """Fetch data from the router."""
         return await self.router.async_get_link_status()

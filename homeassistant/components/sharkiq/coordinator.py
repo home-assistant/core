@@ -1,9 +1,8 @@
 """Data update coordinator for shark iq vacuums."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import datetime, timedelta
+from typing import override
 
 from sharkiq import (
     AylaApi,
@@ -20,16 +19,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import API_TIMEOUT, DOMAIN, LOGGER, UPDATE_INTERVAL
 
+type SharkIqConfigEntry = ConfigEntry[SharkIqUpdateCoordinator]
+
 
 class SharkIqUpdateCoordinator(DataUpdateCoordinator[bool]):
     """Define a wrapper class to update Shark IQ data."""
 
-    config_entry: ConfigEntry
+    config_entry: SharkIqConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SharkIqConfigEntry,
         ayla_api: AylaApi,
         shark_vacs: list[SharkIqVacuum],
     ) -> None:
@@ -65,12 +66,13 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator[bool]):
         async with asyncio.timeout(API_TIMEOUT):
             await sharkiq.async_update()
 
+    @override
     async def _async_update_data(self) -> bool:
         """Update data device by device."""
         try:
             if (
                 self.ayla_api.token_expiring_soon
-                or datetime.now()
+                or datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
                 > self.ayla_api.auth_expiration - timedelta(seconds=600)
             ):
                 await self.ayla_api.async_refresh_auth()

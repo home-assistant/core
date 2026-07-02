@@ -1,7 +1,7 @@
 """Support for the Switchbot Bot as a Button."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from switchbot_api import (
     Commands as SwitchBotCloudBaseCommands,
@@ -12,12 +12,10 @@ from switchbot_api import (
 from switchbot_api.commands import ArtFrameCommands, BotCommands, CommonCommands
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData, SwitchBotCoordinator
-from .const import DOMAIN
+from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
 
@@ -58,13 +56,15 @@ BUTTON_DESCRIPTIONS_BY_DEVICE_TYPES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
-    data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
+    data = config.runtime_data
     entities: list[SwitchBotCloudBot] = []
     for device, coordinator in data.devices.buttons:
+        if not BUTTON_DESCRIPTIONS_BY_DEVICE_TYPES.get(device.device_type):
+            continue
         description_set = BUTTON_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]
         for description in description_set:
             entities.extend(
@@ -93,6 +93,7 @@ class SwitchBotCloudBot(SwitchBotCloudEntity, ButtonEntity):
             self._attr_unique_id = f"{device.device_id}-{description.key}"
         self._device_id = device.device_id
 
+    @override
     async def async_press(self, **kwargs: Any) -> None:
         """Button press command."""
         await self._api.send_command(

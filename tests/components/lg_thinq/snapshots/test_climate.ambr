@@ -1,35 +1,36 @@
 # serializer version: 1
 # name: test_climate_entities[air_conditioner][climate.test_air_conditioner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'low',
         'high',
         'medium',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.DRY: 'dry'>,
       ]),
-      'max_temp': 86,
-      'min_temp': 64,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 86,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 64,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'air_clean',
       ]),
-      'swing_horizontal_modes': list([
+      <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
         'on',
         'off',
       ]),
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'on',
         'off',
       ]),
-      'target_temp_step': 2,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 2,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -64,40 +65,40 @@
 # name: test_climate_entities[air_conditioner][climate.test_air_conditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_humidity': 40,
-      'current_temperature': 77,
-      'fan_mode': 'medium',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 40,
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 77,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'medium',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'low',
         'high',
         'medium',
       ]),
-      'friendly_name': 'Test air conditioner',
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test air conditioner',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.DRY: 'dry'>,
       ]),
-      'max_temp': 86,
-      'min_temp': 64,
-      'preset_mode': 'none',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 86,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 64,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'air_clean',
       ]),
-      'supported_features': <ClimateEntityFeature: 953>,
-      'swing_horizontal_mode': 'off',
-      'swing_horizontal_modes': list([
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 953>,
+      <ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: 'swing_horizontal_mode'>: 'off',
+      <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
         'on',
         'off',
       ]),
-      'swing_mode': 'off',
-      'swing_modes': list([
+      <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'off',
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'on',
         'off',
       ]),
-      'target_temp_step': 2,
-      'temperature': 66,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 2,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 66,
     }),
     'context': <ANY>,
     'entity_id': 'climate.test_air_conditioner',

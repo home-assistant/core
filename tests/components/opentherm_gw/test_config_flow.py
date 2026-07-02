@@ -1,7 +1,8 @@
 """Test the Opentherm Gateway config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
+import pytest
 from serial import SerialException
 
 from homeassistant import config_entries
@@ -12,24 +13,15 @@ from homeassistant.components.opentherm_gw.const import (
     CONF_TEMPORARY_OVRD_MODE,
     DOMAIN,
 )
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_ID,
-    CONF_NAME,
-    PRECISION_HALVES,
-    PRECISION_TENTHS,
-)
+from homeassistant.const import CONF_DEVICE, CONF_ID, PRECISION_HALVES, PRECISION_TENTHS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 
-async def test_form_user(
-    hass: HomeAssistant,
-    mock_pyotgw: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_user(hass: HomeAssistant, mock_pyotgw: MagicMock) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -39,14 +31,13 @@ async def test_form_user(
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB0"}
+        result["flow_id"], {CONF_DEVICE: "/dev/ttyUSB0", CONF_ID: "test_entry_1"}
     )
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Test Entry 1"
+    assert result2["title"] == "OpenTherm Gateway"
     assert result2["data"] == {
-        CONF_NAME: "Test Entry 1",
         CONF_DEVICE: "/dev/ttyUSB0",
         CONF_ID: "test_entry_1",
     }
@@ -54,10 +45,9 @@ async def test_form_user(
     assert mock_pyotgw.return_value.disconnect.await_count == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_duplicate_entries(
-    hass: HomeAssistant,
-    mock_pyotgw: MagicMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_pyotgw: MagicMock
 ) -> None:
     """Test duplicate device or id errors."""
     flow1 = await hass.config_entries.flow.async_init(
@@ -71,18 +61,18 @@ async def test_form_duplicate_entries(
     )
 
     result1 = await hass.config_entries.flow.async_configure(
-        flow1["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB0"}
+        flow1["flow_id"], {CONF_DEVICE: "/dev/ttyUSB0", CONF_ID: "test_entry_1"}
     )
     assert result1["type"] is FlowResultType.CREATE_ENTRY
 
     result2 = await hass.config_entries.flow.async_configure(
-        flow2["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB1"}
+        flow2["flow_id"], {CONF_DEVICE: "/dev/ttyUSB1", CONF_ID: "test_entry_1"}
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "id_exists"}
 
     result3 = await hass.config_entries.flow.async_configure(
-        flow3["flow_id"], {CONF_NAME: "Test Entry 2", CONF_DEVICE: "/dev/ttyUSB0"}
+        flow3["flow_id"], {CONF_DEVICE: "/dev/ttyUSB0", CONF_ID: "test_entry_2"}
     )
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "already_configured"}
@@ -91,10 +81,9 @@ async def test_form_duplicate_entries(
     assert mock_pyotgw.return_value.disconnect.await_count == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_connection_timeout(
-    hass: HomeAssistant,
-    mock_pyotgw: MagicMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_pyotgw: MagicMock
 ) -> None:
     """Test we handle connection timeout."""
     flow = await hass.config_entries.flow.async_init(
@@ -105,7 +94,7 @@ async def test_form_connection_timeout(
 
     result = await hass.config_entries.flow.async_configure(
         flow["flow_id"],
-        {CONF_NAME: "Test Entry 1", CONF_DEVICE: "socket://192.0.2.254:1234"},
+        {CONF_DEVICE: "socket://192.0.2.254:1234", CONF_ID: "test_entry_1"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -114,10 +103,9 @@ async def test_form_connection_timeout(
     assert mock_pyotgw.return_value.connect.await_count == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_connection_error(
-    hass: HomeAssistant,
-    mock_pyotgw: MagicMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_pyotgw: MagicMock
 ) -> None:
     """Test we handle serial connection error."""
     flow = await hass.config_entries.flow.async_init(
@@ -127,7 +115,7 @@ async def test_form_connection_error(
     mock_pyotgw.return_value.connect.side_effect = SerialException
 
     result = await hass.config_entries.flow.async_configure(
-        flow["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB0"}
+        flow["flow_id"], {CONF_DEVICE: "/dev/ttyUSB0", CONF_ID: "test_entry_1"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -135,17 +123,13 @@ async def test_form_connection_error(
     assert mock_pyotgw.return_value.connect.await_count == 1
 
 
-async def test_options_form(
-    hass: HomeAssistant,
-    mock_pyotgw: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options_form(hass: HomeAssistant, mock_pyotgw: MagicMock) -> None:
     """Test the options form."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Mock Gateway",
         data={
-            CONF_NAME: "Mock Gateway",
             CONF_DEVICE: "/dev/null",
             CONF_ID: "mock_gateway",
         },

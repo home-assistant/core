@@ -1,16 +1,19 @@
 """Config flow for SMLIGHT Zigbee integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from pysmlight import Api2
 from pysmlight.const import Devices
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -40,6 +43,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
     _device_name: str
     client: Api2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -83,6 +87,17 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
                     if info.model not in Devices:
                         return self.async_abort(reason="unsupported_device")
 
+                    if self.source == SOURCE_RECONFIGURE:
+                        await self.async_set_unique_id(format_mac(info.MAC))
+                        self._abort_if_unique_id_mismatch()
+                        return self.async_update_reload_and_abort(
+                            self._get_reconfigure_entry(),
+                            data_updates={
+                                CONF_HOST: self._host,
+                                **user_input,
+                            },
+                        )
+
                     return await self._async_complete_entry(user_input)
             except SmlightConnectionError:
                 return self.async_abort(reason="cannot_connect")
@@ -93,6 +108,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="auth", data_schema=STEP_AUTH_DATA_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -184,6 +200,46 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of SMLIGHT device."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            self._host = user_input[CONF_HOST]
+            self.client = Api2(self._host, session=async_get_clientsession(self.hass))
+
+            check_input = {**entry.data, **user_input}
+            try:
+                await self._async_check_auth_required(check_input)
+                info = await self.client.get_info()
+            except SmlightConnectionError:
+                errors["base"] = "cannot_connect"
+            except SmlightAuthError:
+                return await self.async_step_auth()
+            else:
+                if info.model not in Devices:
+                    return self.async_abort(reason="unsupported_device")
+
+                await self.async_set_unique_id(format_mac(info.MAC))
+                self._abort_if_unique_id_mismatch()
+
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input or entry.data
+            ),
+            errors=errors,
+        )
+
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

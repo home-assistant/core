@@ -1,11 +1,9 @@
 """The Thread integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import dataclasses
 import logging
-from typing import cast
+from typing import cast, override
 
 from python_otbr_api.mdns import StateBitmap
 from zeroconf import (
@@ -24,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 KNOWN_BRANDS: dict[str | None, str] = {
     "Amazon": "amazon",
+    "amazon": "amazon",
     "Apple": "apple",
     "Apple Inc.": "apple",
     "Aqara": "aqara_gateway",
@@ -36,6 +35,8 @@ KNOWN_BRANDS: dict[str | None, str] = {
     "Nanoleaf": "nanoleaf",
     "OpenThread": "openthread",
     "Samsung": "samsung",
+    "SmartThings": "smartthings",
+    "Yeelight": "yeelight",
 }
 THREAD_TYPE = "_meshcop._udp.local."
 CLASS_IN = 1
@@ -168,11 +169,13 @@ class ThreadRouterDiscovery:
             self._router_discovered = router_discovered
             self._router_removed = router_removed
 
+        @override
         def add_service(self, zc: Zeroconf, type_: str, name: str) -> None:
             """Handle service added."""
             _LOGGER.debug("add_service %s", name)
             self._hass.async_create_task(self._add_update_service(type_, name))
 
+        @override
         def remove_service(self, zc: Zeroconf, type_: str, name: str) -> None:
             """Handle service removed."""
             _LOGGER.debug("remove_service %s", name)
@@ -181,6 +184,7 @@ class ThreadRouterDiscovery:
             extended_mac_address, _ = self._known_routers.pop(name)
             self._router_removed(extended_mac_address)
 
+        @override
         def update_service(self, zc: Zeroconf, type_: str, name: str) -> None:
             """Handle service updated."""
             _LOGGER.debug("update_service %s", name)

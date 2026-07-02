@@ -264,7 +264,8 @@ async def test_block_set_state_connection_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Device communication error occurred while calling action for switch.test_name_channel_1 of Test name",
+        match="Device communication error occurred while calling"
+        " action for switch.test_name_channel_1 of Test name",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -497,11 +498,13 @@ async def test_rpc_device_switch_type_lights_mode(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling action for switch.test_name_test_switch_0 of Test name",
+            "Device communication error occurred while calling action"
+            " for switch.test_name_test_switch_0 of Test name",
         ),
         (
             RpcCallError(-1, "error"),
-            "RPC call error occurred while calling action for switch.test_name_test_switch_0 of Test name",
+            "RPC call error occurred while calling action"
+            " for switch.test_name_test_switch_0 of Test name",
         ),
     ],
 )
@@ -687,7 +690,7 @@ async def test_rpc_remove_virtual_switch_when_mode_label(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test if the virtual switch will be removed if the mode has been changed to a label."""
+    """Test virtual switch removal when mode changes to label."""
     config = deepcopy(mock_rpc_device.config)
     config["boolean:200"] = {"name": None, "meta": {"ui": {"view": "label"}}}
     monkeypatch.setattr(mock_rpc_device, "config", config)
@@ -719,7 +722,7 @@ async def test_rpc_remove_virtual_switch_when_orphaned(
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
-    """Check whether the virtual switch will be removed if it has been removed from the device configuration."""
+    """Test virtual switch removal from device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
 
     # create orphaned entity on main device

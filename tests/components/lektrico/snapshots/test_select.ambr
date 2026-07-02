@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_all_entities[select.1p7k_500006_load_balancing_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'power',
         'hybrid',
@@ -45,8 +46,8 @@
 # name: test_all_entities[select.1p7k_500006_load_balancing_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1p7k_500006 Load balancing mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1p7k_500006 Load balancing mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'power',
         'hybrid',

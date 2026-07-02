@@ -1,0 +1,26 @@
+.condition_common_fields: &condition_common_fields
+  behavior:
+    required: true
+    default: any
+    selector:
+      automation_behavior:
+        mode: condition
+  for:
+    required: true
+    default: 00:00:00
+    selector:
+      duration:
+
+is_closed:
+  fields: *condition_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: gate
+
+is_open:
+  fields: *condition_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: gate

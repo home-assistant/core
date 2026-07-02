@@ -1,0 +1,231 @@
+{
+  "components": {
+    "speaker": {
+      "audioVolume": {
+        "volume": {
+          "value": 66,
+          "unit": "%",
+          "timestamp": "2026-03-16T18:03:46.181Z"
+        }
+      },
+      "audioMute": {
+        "mute": {
+          "value": "unmuted",
+          "timestamp": "2026-03-16T16:05:21.486Z"
+        }
+      }
+    },
+    "main": {
+      "cameraViewportSettings": {
+        "defaultViewport": {
+          "value": {
+            "lowerRightVertex": {
+              "x": 0,
+              "y": 0
+            },
+            "upperLeftVertex": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "timestamp": "2026-03-16T16:05:21.420Z"
+        },
+        "minViewportResolution": {
+          "value": {
+            "height": 480,
+            "width": 640
+          },
+          "timestamp": "2026-03-16T16:05:21.142Z"
+        },
+        "videoSensorParameters": {
+          "value": {
+            "height": 1080,
+            "maxFPS": 120,
+            "width": 1920
+          },
+          "timestamp": "2026-03-16T16:05:21.084Z"
+        }
+      },
+      "webrtc": {
+        "sdpAnswer": {
+          "value": {
+            "id": "93fb608e-30cc-4df5-a633-ee64e4d4177e",
+            "sdp": "v=0\r\no=- 1312940304 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=group:BUNDLE 0 1\r\na=msid-semantic: WMS AqaraVideoStream\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\nc=IN IP4 127.0.0.1\r\na=candidate:4 1 udp 1694498815 27.38.1.59 3187 typ srflx raddr 0.0.0.0 rport 0 generation 0 network-cost 999\r\na=candidate:3 1 udp 2130706431 FDFF:25E7:3428:4AFC:56EF:44FF:FE9B:5633 52485 typ host raddr ::/0 rport 0 generation 0 network-cost 999\r\na=candidate:2 1 udp 2130706431 DD73:3630:55B7:0000:56EF:44FF:FE9B:5633 59765 typ host raddr ::/0 rport 0 generation 0 network-cost 999\r\na=candidate:1 1 udp 2130706431 2408:8256:3515:7122:56EF:44FF:FE9B:5633 54114 typ host raddr ::/0 rport 0 generation 0 network-cost 999\r\na=candidate:0 1 udp 2130706431 10.0.0.109 44379 typ host raddr 0.0.0.0 rport 0 generation 0 network-cost 999\r\na=msid:AqaraAudioStream AqaraAudioTrack\r\na=ssrc:1291970958 cname:DukbfujjNLWLZdex\r\na=ssrc:1291970958 msid:AqaraAudioStream AqaraAudioTrack\r\na=ssrc:1291970958 mslabel:AqaraAudioStream\r\na=ssrc:1291970958 label:AqaraAudioTrack\r\na=rtcp:9 IN IP4 0.0.0.0\r\na=ice-ufrag:OnA8\r\na=ice-pwd:4VepzE7JN2UFQDcsBOreWG6K\r\na=fingerprint:sha-256 7E:12:46:83:45:79:A2:F7:A0:23:2B:21:AC:DD:F6:AD:C9:DC:C3:07:47:20:F7:57:9A:7B:95:FA:9C:0E:88:0B\r\na=setup:active\r\na=mid:0\r\na=sendrecv\r\na=rtcp-mux\r\na=rtpmap:111 opus/48000/2\r\na=fmtp:111 minptime=10;useinbandfec=1\r\na=ssrc:1291970958 cname:DukbfujjNLWLZdex\r\na=ssrc:1291970958 msid:AqaraAudioStream AqaraAudioTrack\r\na=rtcp-fb:111 goog-remb\r\na=rtcp-fb:111 transport-cc\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\nc=IN IP4 127.0.0.1\r\na=candidate:4 1 udp 1694498815 27.38.1.59 3187 typ srflx raddr 0.0.0.0 rport 0 generation 0 network-cost 999\r\na=candidate:3 1 udp 2130706431 FDFF:25E7:3428:4AFC:56EF:44FF:FE9B:5633 52485 typ host raddr ::/0 rport 0 generation 0 network-cost 999\r\na=candidate:2 1 udp 2130706431 DD73:3630:55B7:0000:56EF:44FF:FE9B:5633 59765 typ host raddr ::/0 rport 0 generation 0 network-cost 999\r\na=candidate:1 1 udp 2130706431 2408:8256:3515:7122:56EF:44FF:FE9B:5633 54114 typ host raddr ::/0 rport 0 generation 0 network-cost 999\r\na=candidate:0 1 udp 2130706431 10.0.0.109 44379 typ host raddr 0.0.0.0 rport 0 generation 0 network-cost 999\r\na=msid:AqaraVideoStream AqaraVideoTrack\r\na=ssrc:1949840077 cname:DukbfujjNLWLZdex\r\na=ssrc:1949840077 msid:AqaraVideoStream AqaraVideoTrack\r\na=ssrc:1949840077 mslabel:AqaraVideoStream\r\na=ssrc:1949840077 label:AqaraVideoTrack\r\na=rtcp:9 IN IP4 0.0.0.0\r\na=ice-ufrag:OnA8\r\na=ice-pwd:4VepzE7JN2UFQDcsBOreWG6K\r\na=fingerprint:sha-256 7E:12:46:83:45:79:A2:F7:A0:23:2B:21:AC:DD:F6:AD:C9:DC:C3:07:47:20:F7:57:9A:7B:95:FA:9C:0E:88:0B\r\na=setup:active\r\na=mid:1\r\na=sendonly\r\na=rtcp-mux\r\na=rtcp-rsize\r\na=rtpmap:96 H264/90000\r\na=rtcp-fb:96 nack\r\na=rtcp-fb:96 nack pli\r\na=fmtp:96 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f\r\na=ssrc:1949840077 cname:DukbfujjNLWLZdex\r\na=ssrc:1949840077 msid:AqaraVideoStream AqaraVideoTrack\r\na=rtcp-fb:96 goog-remb\r\na=rtcp-fb:96 transport-cc\r\n"
+          },
+          "timestamp": "2026-03-16T18:12:33.248Z"
+        },
+        "talkback": {
+          "value": true,
+          "timestamp": "2026-03-16T16:05:21.229Z"
+        },
+        "turnInfo": {
+          "value": null
+        },
+        "supportedFeatures": {
+          "value": {
+            "audio": "sendrecv",
+            "bundle": true,
+            "order": "audio/video",
+            "supportTrickleICE": true,
+            "turnSource": "player",
+            "video": "recvonly"
+          },
+          "timestamp": "2026-03-16T09:56:46.840Z"
+        },
+        "sdpOffer": {
+          "value": null
+        },
+        "deviceIce": {
+          "value": null
+        },
+        "talkbackDuplex": {
+          "value": "fullDuplex",
+          "timestamp": "2026-03-16T16:05:21.244Z"
+        },
+        "audioOnly": {
+          "value": null
+        },
+        "stunUrl": {
+          "value": null
+        },
+        "standbyMode": {
+          "value": null
+        }
+      },
+      "imageCapture": {
+        "image": {
+          "value": null
+        },
+        "encrypted": {
+          "value": null
+        },
+        "captureTime": {
+          "value": null
+        }
+      },
+      "videoStreamSettings": {
+        "supportedFeatures": {
+          "value": [
+            "liveStreaming",
+            "clipRecording",
+            "perStreamViewports",
+            "watermark",
+            "onScreenDisplay"
+          ],
+          "timestamp": "2026-03-16T09:56:46.862Z"
+        },
+        "videoStreams": {
+          "value": [
+            {
+              "data": {
+                "label": "Stream 1",
+                "onScreenDisplay": "disabled",
+                "resolution": {
+                  "fps": 30,
+                  "height": 1080,
+                  "width": 1920
+                },
+                "type": "liveStream",
+                "viewport": {
+                  "lowerRightVertex": {
+                    "x": 1920,
+                    "y": 1080
+                  },
+                  "upperLeftVertex": {
+                    "x": 0,
+                    "y": 0
+                  }
+                },
+                "watermark": "disabled"
+              },
+              "streamId": 3
+            }
+          ],
+          "timestamp": "2026-03-16T18:04:03.932Z"
+        },
+        "supportedResolutions": {
+          "value": [
+            {
+              "fps": 120,
+              "height": 480,
+              "width": 640
+            },
+            {
+              "fps": 120,
+              "height": 1080,
+              "width": 1920
+            }
+          ],
+          "timestamp": "2026-03-16T16:05:21.049Z"
+        }
+      },
+      "nightVision": {
+        "illumination": {
+          "value": null
+        },
+        "nightVision": {
+          "value": "auto",
+          "timestamp": "2026-03-16T18:03:31.702Z"
+        },
+        "supportedAttributes": {
+          "value": null
+        }
+      },
+      "refresh": {},
+      "firmwareUpdate": {
+        "lastUpdateStatusReason": {
+          "value": null
+        },
+        "imageTransferProgress": {
+          "value": null
+        },
+        "availableVersion": {
+          "value": "4.5.20 (4005020)",
+          "timestamp": "2026-03-16T09:56:40.548Z"
+        },
+        "lastUpdateStatus": {
+          "value": null
+        },
+        "supportedCommands": {
+          "value": null
+        },
+        "state": {
+          "value": "normalOperation",
+          "timestamp": "2026-03-16T09:56:40.550Z"
+        },
+        "estimatedTimeRemaining": {
+          "value": null
+        },
+        "updateAvailable": {
+          "value": false,
+          "timestamp": "2026-03-16T09:56:40.548Z"
+        },
+        "currentVersion": {
+          "value": "4.5.20 (4005020)",
+          "timestamp": "2026-03-16T09:56:40.550Z"
+        },
+        "lastUpdateTime": {
+          "value": null
+        },
+        "supportsProgressReports": {
+          "value": null
+        }
+      }
+    },
+    "microphone": {
+      "audioVolume": {
+        "volume": {
+          "value": 42,
+          "unit": "%",
+          "timestamp": "2026-03-16T17:32:02.996Z"
+        }
+      },
+      "audioMute": {
+        "mute": {
+          "value": "unmuted",
+          "timestamp": "2026-03-16T16:05:21.480Z"
+        }
+      }
+    }
+  }
+}

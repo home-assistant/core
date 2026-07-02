@@ -1,10 +1,8 @@
 """Climate platform for Saunum Leil Sauna Control Unit."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from pysaunum import (
     DEFAULT_DURATION,
@@ -99,6 +97,7 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
         }
         self._attr_preset_modes = list(self._preset_name_map.values())
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -116,16 +115,19 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature in Celsius."""
         return self.coordinator.data.current_temperature
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the target temperature in Celsius."""
         return self.coordinator.data.target_temperature
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
         fan_speed = self.coordinator.data.fan_speed
@@ -134,12 +136,14 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return current HVAC mode."""
         session_active = self.coordinator.data.session_active
         return HVACMode.HEAT if session_active else HVACMode.OFF
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return current HVAC action."""
         if not self.coordinator.data.session_active:
@@ -153,6 +157,7 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
         )
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         sauna_type = self.coordinator.data.sauna_type
@@ -160,6 +165,7 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
             return self._preset_name_map[sauna_type]
         return self._preset_name_map[0]
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new HVAC mode."""
         if hvac_mode == HVACMode.HEAT and self.coordinator.data.door_open:
@@ -186,6 +192,7 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
         await asyncio.sleep(DELAYED_REFRESH_SECONDS.total_seconds())
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         try:
@@ -201,6 +208,7 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
 
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         if not self.coordinator.data.session_active:
@@ -221,6 +229,7 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
 
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode (sauna type)."""
         if self.coordinator.data.session_active:

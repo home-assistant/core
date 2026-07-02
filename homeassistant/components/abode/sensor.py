@@ -1,10 +1,8 @@
 """Support for Abode Security System sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from jaraco.abode.devices.sensor import Sensor
 
@@ -12,14 +10,13 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AbodeSystem
-from .const import DOMAIN_DATA
+from . import AbodeConfigEntry, AbodeSystem
 from .entity import AbodeDevice
 
 ABODE_TEMPERATURE_UNIT_HA_UNIT = {
@@ -40,6 +37,7 @@ SENSOR_TYPES: tuple[AbodeSensorDescription, ...] = (
     AbodeSensorDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement_fn=lambda device: ABODE_TEMPERATURE_UNIT_HA_UNIT[
             device.temp_unit
         ],
@@ -48,12 +46,14 @@ SENSOR_TYPES: tuple[AbodeSensorDescription, ...] = (
     AbodeSensorDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement_fn=lambda _: PERCENTAGE,
         value_fn=lambda device: cast(float, device.humidity),
     ),
     AbodeSensorDescription(
         key="lux",
         device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement_fn=lambda _: LIGHT_LUX,
         value_fn=lambda device: cast(float, device.lux),
     ),
@@ -62,11 +62,11 @@ SENSOR_TYPES: tuple[AbodeSensorDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AbodeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Abode sensor devices."""
-    data = hass.data[DOMAIN_DATA]
+    data = entry.runtime_data
 
     async_add_entities(
         AbodeSensor(data, device, description)
@@ -94,11 +94,13 @@ class AbodeSensor(AbodeDevice, SensorEntity):
         self._attr_unique_id = f"{device.uuid}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._device)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str:
         """Return the native unit of measurement."""
         return self.entity_description.native_unit_of_measurement_fn(self._device)

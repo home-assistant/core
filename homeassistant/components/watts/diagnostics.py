@@ -1,7 +1,5 @@
 """Diagnostics support for Watts Vision +."""
 
-from __future__ import annotations
-
 import dataclasses
 from datetime import datetime
 from typing import Any
@@ -23,7 +21,7 @@ async def async_get_config_entry_diagnostics(
     runtime_data = entry.runtime_data
     hub_coordinator = runtime_data.hub_coordinator
     device_coordinators = runtime_data.device_coordinators
-    now = datetime.now()
+    now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
 
     return async_redact_data(
         {

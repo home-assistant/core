@@ -10,7 +10,8 @@
     "step": {
       "reauth_confirm": {
         "data": {
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "description": "The Honeywell integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
@@ -77,7 +78,7 @@
       "message": "Honeywell could not stop hold mode"
     },
     "switch_failed_off": {
-      "message": "Honeywell could turn off emergency heat mode."
+      "message": "Honeywell could not turn off emergency heat mode."
     },
     "switch_failed_on": {
       "message": "Honeywell could not set system mode to emergency heat mode."

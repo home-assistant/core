@@ -1,10 +1,8 @@
 """Platform to control a Salda Smarty XP/XV ventilation unit."""
 
-from __future__ import annotations
-
 import logging
 import math
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
@@ -57,22 +55,26 @@ class SmartyFan(SmartyEntity, FanEntity):
         self._attr_unique_id = coordinator.config_entry.entry_id
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return state of the fan."""
         return bool(self._smarty_fan_speed)
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(SPEED_RANGE)
 
     @property
+    @override
     def percentage(self) -> int:
         """Return speed percentage of the fan."""
         if self._smarty_fan_speed == 0:
             return 0
         return ranged_value_to_percentage(SPEED_RANGE, self._smarty_fan_speed)
 
+    @override
     def set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         _LOGGER.debug("Set the fan percentage to %s", percentage)
@@ -89,6 +91,7 @@ class SmartyFan(SmartyEntity, FanEntity):
         self._smarty_fan_speed = fan_speed
         self.schedule_update_ha_state()
 
+    @override
     def turn_on(
         self,
         percentage: int | None = None,
@@ -99,6 +102,7 @@ class SmartyFan(SmartyEntity, FanEntity):
         _LOGGER.debug("Turning on fan. percentage is %s", percentage)
         self.set_percentage(percentage or DEFAULT_ON_PERCENTAGE)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         _LOGGER.debug("Turning off fan")
@@ -109,6 +113,7 @@ class SmartyFan(SmartyEntity, FanEntity):
         self.schedule_update_ha_state()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
         self._smarty_fan_speed = self._smarty.fan_speed

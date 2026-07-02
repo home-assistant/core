@@ -1,10 +1,8 @@
 """Thermopro button platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from thermopro_ble import SensorUpdate, ThermoProBluetoothDeviceData, ThermoProDevice
 
@@ -127,6 +125,7 @@ class ThermoProButtonEntity(ButtonEntity):
             connections={(dr.CONNECTION_BLUETOOTH, address)},
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Connect availability dispatcher."""
         await super().async_added_to_hass()
@@ -152,6 +151,7 @@ class ThermoProButtonEntity(ButtonEntity):
         self._attr_available = available
         self.async_write_ha_state()
 
+    @override
     async def async_press(self) -> None:
         """Execute the press action for the entity."""
         await self.entity_description.press_action_fn(self.hass, self._address)

@@ -1,9 +1,8 @@
 """Support for LG TV running on NetCast 3 or 4."""
 
-from __future__ import annotations
-
+from collections import Counter
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pylgnetcast import LG_COMMAND, LgNetCastError
 from requests import RequestException
@@ -87,6 +86,7 @@ class LgTVDevice(MediaPlayerEntity):
             model=model,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Connect and subscribe to dispatcher signals and state updates."""
         await super().async_added_to_hass()
@@ -135,13 +135,22 @@ class LgTVDevice(MediaPlayerEntity):
 
                 channel_list = client.query_data("channel_list")
                 if channel_list:
-                    channel_names = []
+                    channel_pairs = []
                     for channel in channel_list:
                         channel_name = channel.find("chname")
                         if channel_name is not None:
-                            channel_names.append(str(channel_name.text))
-                    self._sources = dict(zip(channel_names, channel_list, strict=False))
-                    # sort source names by the major channel number
+                            channel_pairs.append((str(channel_name.text), channel))
+
+                    name_count = Counter(name for name, _ in channel_pairs)
+
+                    self._sources = {}
+                    for name, channel in channel_pairs:
+                        if name_count[name] > 1:
+                            major = channel.find("major")
+                            if major is not None:
+                                name = f"{name} ({major.text})"
+                        self._sources[name] = channel
+
                     source_tuples = [
                         (k, source.find("major").text)
                         for k, source in self._sources.items()
@@ -161,41 +170,49 @@ class LgTVDevice(MediaPlayerEntity):
             self._muted = muted
 
     @property
+    @override
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._muted
 
     @property
+    @override
     def volume_level(self):
         """Volume level of the media player (0..1)."""
         return self._volume / 100.0
 
     @property
+    @override
     def source(self):
         """Return the current input source."""
         return self._channel_name
 
     @property
+    @override
     def source_list(self):
         """List of available input sources."""
         return self._source_names
 
     @property
+    @override
     def media_content_id(self):
         """Content id of current playing media."""
         return self._channel_id
 
     @property
+    @override
     def media_channel(self):
         """Channel currently playing."""
         return self._channel_name
 
     @property
+    @override
     def media_title(self):
         """Title of current playing media."""
         return self._program_name
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self._turn_on:
@@ -203,16 +220,19 @@ class LgTVDevice(MediaPlayerEntity):
         return SUPPORT_LGTV
 
     @property
+    @override
     def media_image_url(self):
         """URL for obtaining a screen capture."""
         return (
-            f"{self._client.url}data?target=screen_image&_={datetime.now().timestamp()}"
+            f"{self._client.url}data?target=screen_image&_={datetime.now().timestamp()}"  # pylint: disable=home-assistant-enforce-naive-now
         )
 
+    @override
     def turn_off(self) -> None:
         """Turn off media player."""
         self.send_command(LG_COMMAND.POWER)
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn on the media player."""
         await self._turn_on.async_run(self.hass, self._context)
@@ -225,38 +245,47 @@ class LgTVDevice(MediaPlayerEntity):
         """Volume down media player."""
         self.send_command(LG_COMMAND.VOLUME_DOWN)
 
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._client.set_volume(float(volume * 100))
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         self.send_command(LG_COMMAND.MUTE_TOGGLE)
 
+    @override
     def select_source(self, source: str) -> None:
         """Select input source."""
         self._client.change_channel(self._sources[source])
 
+    @override
     def media_play(self) -> None:
         """Send play command."""
         self.send_command(LG_COMMAND.PLAY)
 
+    @override
     def media_pause(self) -> None:
         """Send media pause command to media player."""
         self.send_command(LG_COMMAND.PAUSE)
 
+    @override
     def media_stop(self) -> None:
         """Send media stop command to media player."""
         self.send_command(LG_COMMAND.STOP)
 
+    @override
     def media_next_track(self) -> None:
         """Send next track command."""
         self.send_command(LG_COMMAND.FAST_FORWARD)
 
+    @override
     def media_previous_track(self) -> None:
         """Send the previous track command."""
         self.send_command(LG_COMMAND.REWIND)
 
+    @override
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:

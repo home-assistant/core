@@ -1,11 +1,9 @@
 """Base class for Qbus entities."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 import re
-from typing import cast
+from typing import cast, override
 
 from qbusmqttapi.discovery import QbusMqttDevice, QbusMqttOutput
 from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
@@ -124,6 +122,7 @@ class QbusEntity[StateT: QbusMqttState](Entity, ABC):
                 via_device=create_device_identifier(mqtt_output.device),
             )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self.async_on_remove(

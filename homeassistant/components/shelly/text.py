@@ -1,9 +1,7 @@
 """Text for Shelly."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from aioshelly.const import RPC_GENERATIONS
 
@@ -109,11 +107,13 @@ class RpcText(ShellyRpcAttributeEntity, TextEntity):
         self._attr_name = get_rpc_channel_name(coordinator.device, key)
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return value of sensor."""
         return self.attribute_value
 
     @rpc_call
+    @override
     async def async_set_value(self, value: str) -> None:
         """Change the value."""
         await self.coordinator.device.text_set(self._id, value)

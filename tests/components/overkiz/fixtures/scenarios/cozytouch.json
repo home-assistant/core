@@ -1,0 +1,46 @@
+[
+  {
+    "creationTime": 1763489130000,
+    "lastUpdateTime": 1763489130000,
+    "label": "Label 1",
+    "metadata": "a56b34aa-2f6f-4e24-b73a-c2ed23f0ac91",
+    "shortcut": false,
+    "notificationTypeMask": 0,
+    "notificationCondition": "NEVER",
+    "actions": [
+      {
+        "deviceURL": "io://1234-5678-1234/13880042",
+        "commands": [
+          {
+            "type": 1,
+            "name": "setHeatingLevel",
+            "parameters": ["eco"]
+          }
+        ]
+      }
+    ],
+    "oid": "0a0589bb-9471-4667-a2a9-4602beb2a2e8"
+  },
+  {
+    "creationTime": 1763214463000,
+    "lastUpdateTime": 1763214463000,
+    "label": "Label 2",
+    "metadata": "f6206578-b730-4f66-b322-e8d0a5625407",
+    "shortcut": false,
+    "notificationTypeMask": 0,
+    "notificationCondition": "NEVER",
+    "actions": [
+      {
+        "deviceURL": "io://1234-5678-1234/15581081",
+        "commands": [
+          {
+            "type": 1,
+            "name": "setHeatingLevel",
+            "parameters": ["comfort"]
+          }
+        ]
+      }
+    ],
+    "oid": "50d39fc3-9368-49c9-bcbf-c74f3ce1678a"
+  }
+]

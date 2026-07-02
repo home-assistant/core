@@ -1,9 +1,8 @@
 """Camera that loads a picture from a local file."""
 
-from __future__ import annotations
-
 import logging
 import mimetypes
+from typing import override
 
 import voluptuous as vol
 
@@ -62,6 +61,7 @@ class LocalFile(Camera):
         if content is not None:
             self.content_type = content
 
+    @override
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -69,6 +69,7 @@ class LocalFile(Camera):
         try:
             with open(self._file_path, "rb") as file:
                 return file.read()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except FileNotFoundError:
             _LOGGER.warning(
                 "Could not read camera %s image from file: %s",
@@ -87,6 +88,7 @@ class LocalFile(Camera):
         self.schedule_update_ha_state()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the camera state attributes."""
         return {"file_path": self._file_path}

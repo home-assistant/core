@@ -1,9 +1,7 @@
 """Config flow for Tesla Wall Connector integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from tesla_wall_connector import WallConnector
 from tesla_wall_connector.exceptions import WallConnectorError
@@ -47,6 +45,7 @@ class TeslaWallConnectorConfigFlow(ConfigFlow, domain=DOMAIN):
         super().__init__()
         self.ip_address: str | None = None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -86,6 +85,7 @@ class TeslaWallConnectorConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

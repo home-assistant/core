@@ -1,7 +1,5 @@
 """Provides device automations for RFXCOM RFXtrx."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 
 import voluptuous as vol
@@ -96,6 +94,8 @@ async def async_call_action_from_config(
     """Execute a device action."""
     config = ACTION_SCHEMA(config)
 
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     rfx = hass.data[DOMAIN][DATA_RFXOBJECT]
     commands, send_fun = _get_commands(hass, config[CONF_DEVICE_ID], config[CONF_TYPE])
     sub_type = config[CONF_SUBTYPE]

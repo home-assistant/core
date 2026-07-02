@@ -1,8 +1,6 @@
 """Base Entity for Jellyfin."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -66,6 +64,7 @@ class JellyfinClientEntity(JellyfinEntity):
         return self.coordinator.data[self.session_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.session_id in self.coordinator.data

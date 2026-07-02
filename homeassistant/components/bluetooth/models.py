@@ -1,7 +1,5 @@
 """Models for bluetooth."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from enum import Enum
 

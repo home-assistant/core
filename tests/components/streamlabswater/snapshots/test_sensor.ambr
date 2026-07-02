@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[sensor.water_monitor_daily_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -41,9 +42,9 @@
 # name: test_all_entities[sensor.water_monitor_daily_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Water Monitor Daily usage',
-      'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Monitor Daily usage',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.GALLONS: 'gal'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.water_monitor_daily_usage',
@@ -55,8 +56,9 @@
 # ---
 # name: test_all_entities[sensor.water_monitor_monthly_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -95,9 +97,9 @@
 # name: test_all_entities[sensor.water_monitor_monthly_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Water Monitor Monthly usage',
-      'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Monitor Monthly usage',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.GALLONS: 'gal'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.water_monitor_monthly_usage',
@@ -109,8 +111,9 @@
 # ---
 # name: test_all_entities[sensor.water_monitor_yearly_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -149,9 +152,9 @@
 # name: test_all_entities[sensor.water_monitor_yearly_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Water Monitor Yearly usage',
-      'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Monitor Yearly usage',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.GALLONS: 'gal'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.water_monitor_yearly_usage',

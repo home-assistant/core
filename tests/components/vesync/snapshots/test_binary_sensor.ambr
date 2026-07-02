@@ -298,8 +298,8 @@
 # name: test_sensor_state[Humidifier 200s][binary_sensor.humidifier_200s_low_water]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Humidifier 200s Low water',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 200s Low water',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.humidifier_200s_low_water',
@@ -312,8 +312,8 @@
 # name: test_sensor_state[Humidifier 200s][binary_sensor.humidifier_200s_water_tank_lifted]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Humidifier 200s Water tank lifted',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 200s Water tank lifted',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.humidifier_200s_water_tank_lifted',
@@ -359,8 +359,9 @@
 # name: test_sensor_state[Humidifier 200s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -393,8 +394,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -431,8 +433,8 @@
 # name: test_sensor_state[Humidifier 6000s][binary_sensor.humidifier_6000s_low_water]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Humidifier 6000s Low water',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 6000s Low water',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.humidifier_6000s_low_water',
@@ -445,8 +447,8 @@
 # name: test_sensor_state[Humidifier 6000s][binary_sensor.humidifier_6000s_water_tank_lifted]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Humidifier 6000s Water tank lifted',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 6000s Water tank lifted',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.humidifier_6000s_water_tank_lifted',
@@ -492,8 +494,9 @@
 # name: test_sensor_state[Humidifier 6000s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -526,8 +529,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -564,8 +568,8 @@
 # name: test_sensor_state[Humidifier 600S][binary_sensor.humidifier_600s_low_water]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Humidifier 600S Low water',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 600S Low water',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.humidifier_600s_low_water',
@@ -578,8 +582,8 @@
 # name: test_sensor_state[Humidifier 600S][binary_sensor.humidifier_600s_water_tank_lifted]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Humidifier 600S Water tank lifted',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 600S Water tank lifted',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.humidifier_600s_water_tank_lifted',
@@ -625,8 +629,9 @@
 # name: test_sensor_state[Humidifier 600S][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -659,8 +664,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,

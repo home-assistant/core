@@ -1,7 +1,5 @@
 """Calculates mold growth indication from temperature and humidity."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 
@@ -100,10 +98,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.version,
         config_entry.minor_version,
     )
-
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
 
     if config_entry.version == 1:
         if config_entry.minor_version < 2:

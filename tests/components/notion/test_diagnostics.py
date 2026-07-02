@@ -1,7 +1,7 @@
 """Test Notion diagnostics."""
 
 from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.notion import DOMAIN
+from homeassistant.components.notion.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import ANY

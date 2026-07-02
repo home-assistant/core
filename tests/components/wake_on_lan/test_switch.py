@@ -1,10 +1,9 @@
 """The tests for the wake on lan switch platform."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import switch
+from homeassistant.components.wake_on_lan.switch import WolSwitch
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -13,7 +12,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -46,6 +45,7 @@ async def test_valid_hostname(
             {ATTR_ENTITY_ID: "switch.wake_on_lan"},
             blocking=True,
         )
+        await hass.async_block_till_done()
 
         state = hass.states.get("switch.wake_on_lan")
         assert state.state == STATE_ON
@@ -56,6 +56,7 @@ async def test_valid_hostname(
             {ATTR_ENTITY_ID: "switch.wake_on_lan"},
             blocking=True,
         )
+        await hass.async_block_till_done()
 
         state = hass.states.get("switch.wake_on_lan")
         assert state.state == STATE_ON
@@ -193,6 +194,7 @@ async def test_off_script(
             {ATTR_ENTITY_ID: "switch.wake_on_lan"},
             blocking=True,
         )
+        await hass.async_block_till_done()
 
         state = hass.states.get("switch.wake_on_lan")
         assert state.state == STATE_ON
@@ -205,6 +207,7 @@ async def test_off_script(
             {ATTR_ENTITY_ID: "switch.wake_on_lan"},
             blocking=True,
         )
+        await hass.async_block_till_done()
 
         state = hass.states.get("switch.wake_on_lan")
         assert state.state == STATE_OFF
@@ -237,6 +240,7 @@ async def test_no_hostname_state(
         {ATTR_ENTITY_ID: "switch.wake_on_lan"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("switch.wake_on_lan")
     assert state.state == STATE_ON
@@ -247,6 +251,103 @@ async def test_no_hostname_state(
         {ATTR_ENTITY_ID: "switch.wake_on_lan"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("switch.wake_on_lan")
     assert state.state == STATE_OFF
+
+
+async def test_remove_unloads_off_script(
+    hass: HomeAssistant, mock_send_magic_packet: AsyncMock
+) -> None:
+    """Test that removing the WOL switch unloads the off script."""
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            "switch": {
+                "platform": "wake_on_lan",
+                "mac": "00-01-02-03-04-05",
+                "host": "validhostname",
+                "turn_off": {"service": "shell_command.turn_off_target"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity = hass.data[switch.DOMAIN].get_entity("switch.wake_on_lan")
+    assert isinstance(entity, WolSwitch)
+    assert entity._off_script is not None
+
+    with (
+        patch.object(
+            entity._off_script,
+            "async_stop",
+            wraps=entity._off_script.async_stop,
+        ) as stop_mock,
+        patch.object(
+            entity._off_script,
+            "async_unload",
+            wraps=entity._off_script.async_unload,
+        ) as unload_mock,
+    ):
+        await entity.async_remove()
+        await hass.async_block_till_done()
+
+    stop_mock.assert_called_once()
+    unload_mock.assert_called_once()
+
+
+async def test_changed_entity_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_send_magic_packet: AsyncMock,
+) -> None:
+    """Test that the WOL switch still works after its entity_id is changed."""
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            "switch": {
+                "platform": "wake_on_lan",
+                "mac": "00-01-02-03-04-05",
+                "host": "validhostname",
+                "turn_off": {"service": "shell_command.turn_off_target"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    calls = async_mock_service(hass, "shell_command", "turn_off_target")
+
+    state = hass.states.get("switch.wake_on_lan")
+    assert state is not None
+
+    # Turn off should work
+    with patch("homeassistant.components.wake_on_lan.switch.sp.call", return_value=1):
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Change entity_id while loaded
+    entry = entity_registry.async_get("switch.wake_on_lan")
+    assert entry is not None
+    entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="switch.custom_wol"
+    )
+    await hass.async_block_till_done()
+
+    # Turn off should still work after entity_id change
+    with patch("homeassistant.components.wake_on_lan.switch.sp.call", return_value=1):
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.custom_wol"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+    assert len(calls) == 2

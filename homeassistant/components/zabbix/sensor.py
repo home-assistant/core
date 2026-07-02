@@ -1,10 +1,8 @@
 """Support for Zabbix sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from zabbix_utils import ZabbixAPI
@@ -102,16 +100,19 @@ class ZabbixTriggerCountSensor(SensorEntity):
         self._attributes: dict[str, Any] = {}
 
     @property
+    @override
     def name(self) -> str | None:
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str:
         """Return the units of measurement."""
         return "issues"
@@ -128,6 +129,7 @@ class ZabbixTriggerCountSensor(SensorEntity):
         self._state = len(triggers)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes of the device."""
         return self._attributes
@@ -149,6 +151,7 @@ class ZabbixSingleHostTriggerCountSensor(ZabbixTriggerCountSensor):
 
         self._attributes["Host ID"] = self._hostid
 
+    @override
     def _call_zabbix_api(self):
         return self._zapi.trigger.get(
             hostids=self._hostid,
@@ -173,6 +176,7 @@ class ZabbixMultipleHostTriggerCountSensor(ZabbixTriggerCountSensor):
             self._name = " ".join(name["name"] for name in host_names)
         self._attributes["Host IDs"] = self._hostids
 
+    @override
     def _call_zabbix_api(self):
         return self._zapi.trigger.get(
             hostids=self._hostids,

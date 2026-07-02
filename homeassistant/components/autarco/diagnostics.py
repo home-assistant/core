@@ -1,7 +1,5 @@
 """Support for the Autarco diagnostics."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.core import HomeAssistant
@@ -22,10 +20,16 @@ async def async_get_config_entry_diagnostics(
                 "name": coordinator.account_site.system_name,
                 "health": coordinator.account_site.health,
                 "solar": {
-                    "power_production": coordinator.data.solar.power_production,
-                    "energy_production_today": coordinator.data.solar.energy_production_today,
-                    "energy_production_month": coordinator.data.solar.energy_production_month,
-                    "energy_production_total": coordinator.data.solar.energy_production_total,
+                    "power_production": (coordinator.data.solar.power_production),
+                    "energy_production_today": (
+                        coordinator.data.solar.energy_production_today
+                    ),
+                    "energy_production_month": (
+                        coordinator.data.solar.energy_production_month
+                    ),
+                    "energy_production_total": (
+                        coordinator.data.solar.energy_production_total
+                    ),
                 },
                 "inverters": [
                     {
@@ -43,9 +47,15 @@ async def async_get_config_entry_diagnostics(
                             "flow_now": coordinator.data.battery.flow_now,
                             "net_charged_now": coordinator.data.battery.net_charged_now,
                             "state_of_charge": coordinator.data.battery.state_of_charge,
-                            "discharged_today": coordinator.data.battery.discharged_today,
-                            "discharged_month": coordinator.data.battery.discharged_month,
-                            "discharged_total": coordinator.data.battery.discharged_total,
+                            "discharged_today": (
+                                coordinator.data.battery.discharged_today
+                            ),
+                            "discharged_month": (
+                                coordinator.data.battery.discharged_month
+                            ),
+                            "discharged_total": (
+                                coordinator.data.battery.discharged_total
+                            ),
                             "charged_today": coordinator.data.battery.charged_today,
                             "charged_month": coordinator.data.battery.charged_month,
                             "charged_total": coordinator.data.battery.charged_total,

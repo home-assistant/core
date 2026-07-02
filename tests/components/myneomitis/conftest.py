@@ -30,6 +30,9 @@ def mock_pyaxenco_client() -> Generator[AsyncMock]:
         client.get_devices = AsyncMock(return_value=[])
         client.disconnect_websocket = AsyncMock()
         client.set_device_mode = AsyncMock()
+        client.set_device_temperature = AsyncMock()
+        client.set_sub_device_mode = AsyncMock()
+        client.set_sub_device_temperature = AsyncMock()
         client.register_listener = Mock(return_value=Mock())
         client.user_id = "user-123"
         client.token = "tok"

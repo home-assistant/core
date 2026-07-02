@@ -1,13 +1,11 @@
 """Support for Ridwell calendars."""
 
-from __future__ import annotations
-
 import datetime
+from typing import override
 
 from aioridwell.model import PickupCategory, RidwellAccount, RidwellPickupEvent
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -16,15 +14,14 @@ from .const import (
     CALENDAR_TITLE_ROTATING,
     CALENDAR_TITLE_STATUS,
     CONF_CALENDAR_TITLE,
-    DOMAIN,
 )
-from .coordinator import RidwellDataUpdateCoordinator
+from .coordinator import RidwellConfigEntry, RidwellDataUpdateCoordinator
 from .entity import RidwellEntity
 
 
 @callback
 def async_get_calendar_event_from_pickup_event(
-    pickup_event: RidwellPickupEvent, config_entry: ConfigEntry
+    pickup_event: RidwellPickupEvent, config_entry: RidwellConfigEntry
 ) -> CalendarEvent:
     """Get a HASS CalendarEvent from an aioridwell PickupEvent."""
     pickup_items = []
@@ -32,7 +29,7 @@ def async_get_calendar_event_from_pickup_event(
     calendar_preference = config_entry.options.get(CONF_CALENDAR_TITLE, False)
     for pickup in pickup_event.pickups:
         pickup_items.append(f"{pickup.name} (quantity: {pickup.quantity})")
-        if pickup.category == PickupCategory.ROTATING:
+        if pickup.category is PickupCategory.ROTATING:
             rotating_category = pickup.name
             break
 
@@ -53,7 +50,8 @@ def async_get_calendar_event_from_pickup_event(
         # Include only a basic title for the event.
         summary = summary_base
     else:
-        # Default to pickup status if no selection is made (e.g., scheduled, skipped, etc).
+        # Default to pickup status if no selection is made
+        # (e.g., scheduled, skipped, etc).
         summary = f"{summary_base} ({pickup_event_state})"
 
     return CalendarEvent(
@@ -66,11 +64,11 @@ def async_get_calendar_event_from_pickup_event(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: RidwellConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ridwell calendars based on a config entry."""
-    coordinator: RidwellDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         RidwellCalendar(coordinator, account)
@@ -94,12 +92,14 @@ class RidwellCalendar(RidwellEntity, CalendarEntity):
         self._event: CalendarEvent | None = None
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return async_get_calendar_event_from_pickup_event(
             self.next_pickup_event, self.coordinator.config_entry
         )
 
+    @override
     async def async_get_events(
         self,
         hass: HomeAssistant,

@@ -1,9 +1,8 @@
 """Coordinator to interact with an ESPHome dashboard."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from awesomeversion import AwesomeVersion
 from esphome_dashboard_api import ConfiguredDevice, ESPHomeDashboardAPI
@@ -36,6 +35,7 @@ class ESPHomeDashboardCoordinator(DataUpdateCoordinator[dict[str, ConfiguredDevi
         self.api = ESPHomeDashboardAPI(url, async_get_clientsession(hass))
         self.supports_update: bool | None = None
 
+    @override
     async def _async_update_data(self) -> dict[str, ConfiguredDevice]:
         """Fetch device data."""
         devices = await self.api.get_devices()

@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_button_snapshot[button.test_mower_1_confirm_error-entry]
+# name: test_button_snapshot[button.garden_test_mower_1_confirm_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12,7 +13,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.test_mower_1_confirm_error',
+    'entity_id': 'button.garden_test_mower_1_confirm_error',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -35,23 +36,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_snapshot[button.test_mower_1_confirm_error-state]
+# name: test_button_snapshot[button.garden_test_mower_1_confirm_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Confirm error',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Confirm error',
     }),
     'context': <ANY>,
-    'entity_id': 'button.test_mower_1_confirm_error',
+    'entity_id': 'button.garden_test_mower_1_confirm_error',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_button_snapshot[button.test_mower_1_reset_cutting_blade_usage_time-entry]
+# name: test_button_snapshot[button.garden_test_mower_1_reset_cutting_blade_usage_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -61,7 +63,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.test_mower_1_reset_cutting_blade_usage_time',
+    'entity_id': 'button.garden_test_mower_1_reset_cutting_blade_usage_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -84,23 +86,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_snapshot[button.test_mower_1_reset_cutting_blade_usage_time-state]
+# name: test_button_snapshot[button.garden_test_mower_1_reset_cutting_blade_usage_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Reset cutting blade usage time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Reset cutting blade usage time',
     }),
     'context': <ANY>,
-    'entity_id': 'button.test_mower_1_reset_cutting_blade_usage_time',
+    'entity_id': 'button.garden_test_mower_1_reset_cutting_blade_usage_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_snapshot[button.test_mower_1_sync_clock-entry]
+# name: test_button_snapshot[button.garden_test_mower_1_sync_clock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -110,7 +113,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.test_mower_1_sync_clock',
+    'entity_id': 'button.garden_test_mower_1_sync_clock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -133,23 +136,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_snapshot[button.test_mower_1_sync_clock-state]
+# name: test_button_snapshot[button.garden_test_mower_1_sync_clock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Sync clock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Sync clock',
     }),
     'context': <ANY>,
-    'entity_id': 'button.test_mower_1_sync_clock',
+    'entity_id': 'button.garden_test_mower_1_sync_clock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_snapshot[button.test_mower_2_sync_clock-entry]
+# name: test_button_snapshot[button.garden_test_mower_2_sync_clock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -159,7 +163,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.test_mower_2_sync_clock',
+    'entity_id': 'button.garden_test_mower_2_sync_clock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -182,13 +186,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_snapshot[button.test_mower_2_sync_clock-state]
+# name: test_button_snapshot[button.garden_test_mower_2_sync_clock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 2 Sync clock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 2 Sync clock',
     }),
     'context': <ANY>,
-    'entity_id': 'button.test_mower_2_sync_clock',
+    'entity_id': 'button.garden_test_mower_2_sync_clock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

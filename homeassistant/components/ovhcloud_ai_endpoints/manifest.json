@@ -1,0 +1,13 @@
+{
+  "domain": "ovhcloud_ai_endpoints",
+  "name": "OVHcloud AI Endpoints",
+  "after_dependencies": ["assist_pipeline", "intent"],
+  "codeowners": ["@Crocmagnon"],
+  "config_flow": true,
+  "dependencies": ["conversation"],
+  "documentation": "https://www.home-assistant.io/integrations/ovhcloud_ai_endpoints",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "silver",
+  "requirements": ["openai==2.21.0"]
+}

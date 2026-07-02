@@ -61,6 +61,18 @@ def create_char_switch_service(accessory: Accessory) -> None:
     on_char.value = False
 
 
+def create_airplay_enable_switch_service(accessory: Accessory) -> None:
+    """Define AirPlay enable switch characteristics."""
+    service = accessory.add_service(ServicesTypes.OUTLET)
+
+    outlet_on_char = service.add_char(CharacteristicsTypes.ON)
+    outlet_on_char.value = False
+
+    on_char = service.add_char(CharacteristicsTypes.AIRPLAY_ENABLE)
+    on_char.perms.append("ev")
+    on_char.value = 0
+
+
 async def test_switch_change_outlet_state(
     hass: HomeAssistant, get_next_aid: Callable[[], int]
 ) -> None:
@@ -291,6 +303,70 @@ async def test_char_switch_read_state(
     switch_1 = await helper.async_update(
         ServicesTypes.OUTLET,
         {CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE: False},
+    )
+    assert switch_1.state == "off"
+
+
+async def test_airplay_enable_switch_change_state(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
+    """Test that we can turn AirPlay Enable on and off again."""
+    helper = await setup_test_component(
+        hass,
+        get_next_aid(),
+        create_airplay_enable_switch_service,
+        suffix="airplay_enable",
+    )
+
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": "switch.testdevice_airplay_enable"},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.OUTLET,
+        {
+            CharacteristicsTypes.AIRPLAY_ENABLE: 1,
+        },
+    )
+
+    await hass.services.async_call(
+        "switch",
+        "turn_off",
+        {"entity_id": "switch.testdevice_airplay_enable"},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.OUTLET,
+        {
+            CharacteristicsTypes.AIRPLAY_ENABLE: 0,
+        },
+    )
+
+
+async def test_airplay_enable_switch_read_state(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
+    """Test that we can read the state of a HomeKit AirPlay switch."""
+    helper = await setup_test_component(
+        hass,
+        get_next_aid(),
+        create_airplay_enable_switch_service,
+        suffix="airplay_enable",
+    )
+
+    # Simulate that someone switched on the device in the real world not via HA
+    switch_1 = await helper.async_update(
+        ServicesTypes.OUTLET,
+        {CharacteristicsTypes.AIRPLAY_ENABLE: 1},
+    )
+    assert switch_1.state == "on"
+
+    # Simulate that device switched off in the real world not via HA
+    switch_1 = await helper.async_update(
+        ServicesTypes.OUTLET,
+        {CharacteristicsTypes.AIRPLAY_ENABLE: 0},
     )
     assert switch_1.state == "off"
 

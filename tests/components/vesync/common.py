@@ -56,7 +56,7 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
         ("post", "/cloud/v2/deviceManaged/bypassV2", "air-purifier-detail.json")
     ],
     "Dimmable Light": [
-        ("post", "/cloud/v1/deviceManaged/deviceDetail", "device-detail.json")
+        ("post", "/cloud/v1/deviceManaged/deviceDetail", "dimmable-light-detail.json")
     ],
     "Temperature Light": [
         ("post", "/cloud/v1/deviceManaged/bypass", "light-detail.json")

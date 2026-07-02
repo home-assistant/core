@@ -2,7 +2,7 @@
 
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aioautomower.model import make_name_string
 
@@ -68,6 +68,7 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
         return device_entry.name_by_user or device_entry.name
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the current or next upcoming event."""
         if not self.available:
@@ -82,13 +83,15 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
             work_area_name = self.mower_attributes.work_area_dict[
                 program_event.work_area_id
             ]
+        name_str = make_name_string(work_area_name, program_event.schedule_no)
         return CalendarEvent(
-            summary=f"{self.device_name} {make_name_string(work_area_name, program_event.schedule_no)}",
+            summary=f"{self.device_name} {name_str}",
             start=program_event.start,
             end=program_event.end,
             rrule=program_event.rrule_str,
         )
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
@@ -110,9 +113,10 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
                 work_area_name = self.mower_attributes.work_area_dict[
                     program_event.work_area_id
                 ]
+            name_str = make_name_string(work_area_name, program_event.schedule_no)
             calendar_events.append(
                 CalendarEvent(
-                    summary=f"{self.device_name} {make_name_string(work_area_name, program_event.schedule_no)}",
+                    summary=f"{self.device_name} {name_str}",
                     start=program_event.start.replace(tzinfo=start_date.tzinfo),
                     end=program_event.end.replace(tzinfo=start_date.tzinfo),
                     rrule=program_event.rrule_str,

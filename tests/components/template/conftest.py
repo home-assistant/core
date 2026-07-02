@@ -7,20 +7,24 @@ import pytest
 
 from homeassistant.components import template
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, async_mock_service
+from tests.common import (
+    assert_setup_component,
+    async_mock_service,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
 from tests.conftest import WebSocketGenerator
 
 
 class ConfigurationStyle(Enum):
     """Configuration Styles for template testing."""
 
-    LEGACY = "Legacy"
     MODERN = "Modern"
     TRIGGER = "Trigger"
 
@@ -67,14 +71,15 @@ def assert_action(
     calls: list[ServiceCall],
     expected_calls: int,
     expected_action: str,
+    index: int = -1,
     **kwargs,
 ) -> None:
     """Validate the action was properly called."""
     assert len(calls) == expected_calls
-    assert calls[-1].data["action"] == expected_action
-    assert calls[-1].data["caller"] == platform_setup.entity_id
+    assert calls[index].data["action"] == expected_action
+    assert calls[index].data["caller"] == platform_setup.entity_id
     for key, value in kwargs.items():
-        assert calls[-1].data[key] == value
+        assert calls[index].data[key] == value
 
 
 async def async_trigger(
@@ -85,36 +90,6 @@ async def async_trigger(
 ) -> None:
     """Trigger a state change."""
     hass.states.async_set(entity_id, state, attributes)
-    await hass.async_block_till_done()
-
-
-async def async_setup_legacy_platforms(
-    hass: HomeAssistant,
-    domain: str,
-    slug: str | None,
-    count: int,
-    config: ConfigType | list[ConfigType],
-) -> None:
-    """Do setup of any legacy platform that supports a keyed dictionary of template entities."""
-    if slug is None:
-        # Lock and Weather platforms do not use a slug
-        if isinstance(config, list):
-            config = {domain: [{"platform": "template", **item} for item in config]}
-        else:
-            config = {domain: {"platform": "template", **config}}
-    else:
-        assert isinstance(config, dict)
-        config = {domain: {"platform": "template", slug: config}}
-
-    with assert_setup_component(count, domain):
-        assert await async_setup_component(
-            hass,
-            domain,
-            config,
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
     await hass.async_block_till_done()
 
 
@@ -166,7 +141,6 @@ class TemplatePlatformSetup:
     """Template Platform Setup Information."""
 
     domain: str
-    legacy_slug: str | None
     object_id: str
     trigger: ConfigType
 
@@ -188,24 +162,6 @@ async def setup_entity(
     extra_section_config: ConfigType | None = None,
 ) -> None:
     """Do setup of a template entity based on the configuration style."""
-    if style == ConfigurationStyle.LEGACY:
-        entity_config = {
-            **({"value_template": state_template} if state_template else {}),
-            **config,
-            **(extra_config or {}),
-            **({"attribute_templates": attributes} if attributes else {}),
-        }
-        # Lock and weather platforms do not use a slug.
-        if platform_setup.legacy_slug is None:
-            config = {"name": platform_setup.object_id, **entity_config}
-        else:
-            config = {platform_setup.object_id: entity_config}
-
-        await async_setup_legacy_platforms(
-            hass, platform_setup.domain, platform_setup.legacy_slug, count, config
-        )
-        return
-
     entity_config = {
         "name": platform_setup.object_id,
         **({"state": state_template} if state_template else {}),
@@ -213,11 +169,11 @@ async def setup_entity(
         **({"attributes": attributes} if attributes else {}),
         **(extra_config or {}),
     }
-    if style == ConfigurationStyle.MODERN:
+    if style is ConfigurationStyle.MODERN:
         await async_setup_modern_state_format(
             hass, platform_setup.domain, count, entity_config, extra_section_config
         )
-    elif style == ConfigurationStyle.TRIGGER:
+    elif style is ConfigurationStyle.TRIGGER:
         await async_setup_modern_trigger_format(
             hass,
             platform_setup.domain,
@@ -239,54 +195,21 @@ async def setup_and_test_unique_id(
 
     The entity_config not provide name or unique_id, those are added automatically.
     """
-    if style == ConfigurationStyle.LEGACY:
-        state_config = {"value_template": state_template} if state_template else {}
-        entity_config = {
-            "unique_id": "not-so_-unique-anymore",
-            **(entity_config or {}),
-            **state_config,
-        }
-        if platform_setup.legacy_slug is None:
-            config = [
-                {"name": "template_entity_1", **entity_config},
-                {"name": "template_entity_2", **entity_config},
-            ]
-        else:
-            config = {
-                "template_entity_1": entity_config,
-                "template_entity_2": entity_config,
-            }
-        await async_setup_legacy_platforms(
-            hass, platform_setup.domain, platform_setup.legacy_slug, 1, config
-        )
-        return
-
     state_config = {"state": state_template} if state_template else {}
     entity_config = {
         "unique_id": "not-so_-unique-anymore",
         **(entity_config or {}),
         **state_config,
     }
-    if style == ConfigurationStyle.MODERN:
-        await async_setup_modern_state_format(
-            hass,
-            platform_setup.domain,
-            1,
-            [
-                {"name": "template_entity_1", **entity_config},
-                {"name": "template_entity_2", **entity_config},
-            ],
-        )
-    elif style == ConfigurationStyle.TRIGGER:
+    entities = [
+        {"name": "template_entity_1", **entity_config},
+        {"name": "template_entity_2", **entity_config},
+    ]
+    if style is ConfigurationStyle.MODERN:
+        await async_setup_modern_state_format(hass, platform_setup.domain, 1, entities)
+    elif style is ConfigurationStyle.TRIGGER:
         await async_setup_modern_trigger_format(
-            hass,
-            platform_setup.domain,
-            platform_setup.trigger,
-            1,
-            [
-                {"name": "template_entity_1", **entity_config},
-                {"name": "template_entity_2", **entity_config},
-            ],
+            hass, platform_setup.domain, platform_setup.trigger, 1, entities
         )
 
     assert len(hass.states.async_all(platform_setup.domain)) == 1
@@ -300,12 +223,13 @@ async def setup_and_test_nested_unique_id(
     entity_config: ConfigType | None,
     state_template: str | None = None,
 ) -> None:
-    """Setup 2 entities with unique unique_ids in a template section that contains a unique_id.
+    """Setup 2 entities with unique_ids in a template section with a unique_id.
 
-    The test will verify that 2 entities are created where the unique_id appends the
-    section unique_id to each entity unique_id.
+    The test will verify that 2 entities are created where the unique_id
+    appends the section unique_id to each entity unique_id.
 
-    The entity_config should not provide name or unique_id, those are added automatically.
+    The entity_config should not provide name or unique_id, those are
+    added automatically.
     """
     state_config = {"state": state_template} if state_template else {}
     entities = [
@@ -313,11 +237,11 @@ async def setup_and_test_nested_unique_id(
         {"name": "test_b", "unique_id": "b", **(entity_config or {}), **state_config},
     ]
     extra_section_config = {"unique_id": "x"}
-    if style == ConfigurationStyle.MODERN:
+    if style is ConfigurationStyle.MODERN:
         await async_setup_modern_state_format(
             hass, platform_setup.domain, 1, entities, extra_section_config
         )
-    elif style == ConfigurationStyle.TRIGGER:
+    elif style is ConfigurationStyle.TRIGGER:
         await async_setup_modern_trigger_format(
             hass,
             platform_setup.domain,
@@ -403,3 +327,89 @@ async def async_get_flow_preview_state(
 
     msg = await client.receive_json()
     return msg["event"]
+
+
+def assert_state_and_attributes(
+    hass: HomeAssistant,
+    platform_setup: TemplatePlatformSetup,
+    expected_state: str | None = None,
+    expected_attributes: ConfigType | None = None,
+) -> State:
+    """Assert expected state and attributes."""
+
+    state = hass.states.get(platform_setup.entity_id)
+    assert state is not None
+    assert state.state == expected_state or expected_state is None
+
+    expected_attributes = expected_attributes or {}
+    for attribute, value in expected_attributes.items():
+        assert state.attributes.get(attribute) == value
+    return state
+
+
+RESTORE_STATE_SAVED_ATTRIBUTES = {
+    "friendly_name": "Restored Name",
+    "icon": "mdi:restored",
+    "entity_picture": "local/restored.png",
+}
+RESTORE_STATE_UPDATED_ATTRIBUTES = {
+    "friendly_name": "Updated Name",
+    "icon": "mdi:updated",
+    "entity_picture": "local/updated.png",
+}
+
+
+def make_restore_state_built_in_attribute_templates(jinja_test: str) -> dict:
+    """Make built in attribute templates for restore state testing."""
+    return {
+        "name": f"{{% if {jinja_test} %}}Updated Name{{% endif %}}",
+        "picture": f"{{% if {jinja_test} %}}local/updated.png{{% endif %}}",
+        "icon": f"{{% if {jinja_test} %}}mdi:updated{{% endif %}}",
+    }
+
+
+def setup_mock_template_entity_restore_state(
+    hass: HomeAssistant,
+    platform_setup: TemplatePlatformSetup,
+    saved_state: str,
+    saved_extra_data: ConfigType | None = None,
+    saved_attributes: ConfigType | None = None,
+) -> None:
+    """Setup an entity and verify state is restored."""
+    saved_attributes = {
+        **RESTORE_STATE_SAVED_ATTRIBUTES,
+        **(saved_attributes or {}),
+    }
+
+    fake_state = State(
+        platform_setup.entity_id,
+        saved_state,
+        saved_attributes,
+    )
+    if saved_extra_data is not None:
+        mock_restore_cache_with_extra_data(hass, ((fake_state, saved_extra_data),))
+    else:
+        mock_restore_cache(hass, (fake_state,))
+
+
+async def setup_restore_template_entity(
+    hass: HomeAssistant,
+    platform_setup: TemplatePlatformSetup,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    jinja_test: str = "is_state('sensor.test_restore', 'on')",
+) -> None:
+    """Test that state and attributes are restored from the last state."""
+    default_entity_id = platform_setup.entity_id
+
+    await setup_entity(
+        hass,
+        platform_setup,
+        style,
+        1,
+        config={
+            "default_entity_id": default_entity_id,
+            **make_restore_state_built_in_attribute_templates(jinja_test),
+            **config,
+        },
+    )

@@ -1,16 +1,17 @@
 # serializer version: 1
 # name: test_climate_snapshot[climate.test_thermostat_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 28,
-      'min_temp': 12,
-      'target_temp_step': 0.1,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 28,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 12,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -45,17 +46,17 @@
 # name: test_climate_snapshot[climate.test_thermostat_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': None,
-      'friendly_name': 'Test Thermostat 1',
-      'hvac_action': <HVACAction.HEATING: 'heating'>,
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Thermostat 1',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 28,
-      'min_temp': 12,
-      'supported_features': <ClimateEntityFeature: 1>,
-      'target_temp_step': 0.1,
-      'temperature': 20.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 28,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 12,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 20.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.test_thermostat_1',
@@ -67,16 +68,17 @@
 # ---
 # name: test_climate_snapshot[climate.test_thermostat_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 30,
-      'min_temp': 15,
-      'target_temp_step': 0.1,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 15,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -111,17 +113,17 @@
 # name: test_climate_snapshot[climate.test_thermostat_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 19.6,
-      'friendly_name': 'Test Thermostat 2',
-      'hvac_action': <HVACAction.HEATING: 'heating'>,
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.6,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Thermostat 2',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 30,
-      'min_temp': 15,
-      'supported_features': <ClimateEntityFeature: 1>,
-      'target_temp_step': 0.1,
-      'temperature': 22.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 15,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.test_thermostat_2',
@@ -133,17 +135,18 @@
 # ---
 # name: test_climate_snapshot[climate.test_thermostat_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 25,
-      'min_temp': 14,
-      'target_temp_step': 0.1,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 25,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 14,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -178,18 +181,18 @@
 # name: test_climate_snapshot[climate.test_thermostat_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 19.6,
-      'friendly_name': 'Test Thermostat 3',
-      'hvac_action': <HVACAction.HEATING: 'heating'>,
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.6,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Thermostat 3',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 25,
-      'min_temp': 14,
-      'supported_features': <ClimateEntityFeature: 385>,
-      'target_temp_step': 0.1,
-      'temperature': 24.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 25,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 14,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 24.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.test_thermostat_3',
@@ -201,23 +204,24 @@
 # ---
 # name: test_climate_snapshot[climate.test_thermostat_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 32,
-      'min_temp': 10,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 32,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'eco',
         'boost',
         'manual',
       ]),
-      'target_temp_step': 0.5,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -252,25 +256,25 @@
 # name: test_climate_snapshot[climate.test_thermostat_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 19.6,
-      'friendly_name': 'Test Thermostat 4',
-      'hvac_action': <HVACAction.IDLE: 'idle'>,
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.6,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Thermostat 4',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 32,
-      'min_temp': 10,
-      'preset_mode': 'none',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 32,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'eco',
         'boost',
         'manual',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
-      'target_temp_step': 0.5,
-      'temperature': 12.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 12.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.test_thermostat_4',
@@ -282,21 +286,22 @@
 # ---
 # name: test_climate_snapshot[climate.test_thermostat_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 32,
-      'min_temp': 10,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 32,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'eco',
       ]),
-      'target_temp_step': 0.5,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -331,23 +336,23 @@
 # name: test_climate_snapshot[climate.test_thermostat_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 19.6,
-      'friendly_name': 'Test Thermostat 5',
-      'hvac_action': <HVACAction.IDLE: 'idle'>,
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.6,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Thermostat 5',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 32,
-      'min_temp': 10,
-      'preset_mode': 'none',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 32,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'eco',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
-      'target_temp_step': 0.5,
-      'temperature': 12.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 12.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.test_thermostat_5',

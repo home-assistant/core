@@ -1,7 +1,5 @@
 """The dhcp integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
@@ -11,7 +9,7 @@ from ipaddress import IPv4Address
 import itertools
 import logging
 import re
-from typing import Any, Final
+from typing import Any, Final, override
 
 import aiodhcpwatcher
 from aiodiscover import DiscoverHosts
@@ -300,6 +298,7 @@ class NetworkWatcher(WatcherBase):
         self._discover_task: asyncio.Task | None = None
 
     @callback
+    @override
     def async_stop(self) -> None:
         """Stop scanning for new devices on the network."""
         super().async_stop()

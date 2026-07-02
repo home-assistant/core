@@ -1,10 +1,13 @@
 # serializer version: 1
 # name: test_device_tracker[ex30_2024][device_tracker.volvo_ex30_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -38,11 +41,14 @@
 # name: test_device_tracker[ex30_2024][device_tracker.volvo_ex30_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo EX30 Location',
-      'gps_accuracy': 0,
-      'latitude': 57.72537482589284,
-      'longitude': 11.849843629550225,
-      'source_type': <SourceType.GPS: 'gps'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Location',
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
+      ]),
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 57.72537482589284,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 11.849843629550225,
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.volvo_ex30_location',
@@ -54,10 +60,13 @@
 # ---
 # name: test_device_tracker[s90_diesel_2018][device_tracker.volvo_s90_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -91,11 +100,14 @@
 # name: test_device_tracker[s90_diesel_2018][device_tracker.volvo_s90_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo S90 Location',
-      'gps_accuracy': 0,
-      'latitude': 57.72537482589284,
-      'longitude': 11.849843629550225,
-      'source_type': <SourceType.GPS: 'gps'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Location',
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
+      ]),
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 57.72537482589284,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 11.849843629550225,
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.volvo_s90_location',
@@ -107,10 +119,13 @@
 # ---
 # name: test_device_tracker[xc40_electric_2024][device_tracker.volvo_xc40_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -144,11 +159,14 @@
 # name: test_device_tracker[xc40_electric_2024][device_tracker.volvo_xc40_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC40 Location',
-      'gps_accuracy': 0,
-      'latitude': 57.72537482589284,
-      'longitude': 11.849843629550225,
-      'source_type': <SourceType.GPS: 'gps'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Location',
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
+      ]),
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 57.72537482589284,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 11.849843629550225,
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.volvo_xc40_location',
@@ -160,10 +178,13 @@
 # ---
 # name: test_device_tracker[xc90_petrol_2019][device_tracker.volvo_xc90_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -197,11 +218,14 @@
 # name: test_device_tracker[xc90_petrol_2019][device_tracker.volvo_xc90_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC90 Location',
-      'gps_accuracy': 0,
-      'latitude': 57.72537482589284,
-      'longitude': 11.849843629550225,
-      'source_type': <SourceType.GPS: 'gps'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Location',
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
+      ]),
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 57.72537482589284,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 11.849843629550225,
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.volvo_xc90_location',

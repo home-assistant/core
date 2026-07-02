@@ -1,7 +1,5 @@
 """Test the Home Knocki init module."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from knocki import KnockiConnectionError

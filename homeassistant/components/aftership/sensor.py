@@ -1,36 +1,24 @@
 """Support for non-delivered packages recorded in AfterShip."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from pyaftership import AfterShip, AfterShipException
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import Throttle
 
 from . import AfterShipConfigEntry
 from .const import (
-    ADD_TRACKING_SERVICE_SCHEMA,
     ATTR_TRACKINGS,
     ATTRIBUTION,
     BASE,
-    CONF_SLUG,
-    CONF_TITLE,
-    CONF_TRACKING_NUMBER,
     DOMAIN,
     MIN_TIME_BETWEEN_UPDATES,
-    REMOVE_TRACKING_SERVICE_SCHEMA,
-    SERVICE_ADD_TRACKING,
-    SERVICE_REMOVE_TRACKING,
     UPDATE_TOPIC,
 )
 
@@ -49,37 +37,6 @@ async def async_setup_entry(
 
     async_add_entities([AfterShipSensor(aftership, config_entry.title)], True)
 
-    async def handle_add_tracking(call: ServiceCall) -> None:
-        """Call when a user adds a new Aftership tracking from Home Assistant."""
-        await aftership.trackings.add(
-            tracking_number=call.data[CONF_TRACKING_NUMBER],
-            title=call.data.get(CONF_TITLE),
-            slug=call.data.get(CONF_SLUG),
-        )
-        async_dispatcher_send(hass, UPDATE_TOPIC)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_ADD_TRACKING,
-        handle_add_tracking,
-        schema=ADD_TRACKING_SERVICE_SCHEMA,
-    )
-
-    async def handle_remove_tracking(call: ServiceCall) -> None:
-        """Call when a user removes an Aftership tracking from Home Assistant."""
-        await aftership.trackings.remove(
-            tracking_number=call.data[CONF_TRACKING_NUMBER],
-            slug=call.data[CONF_SLUG],
-        )
-        async_dispatcher_send(hass, UPDATE_TOPIC)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_REMOVE_TRACKING,
-        handle_remove_tracking,
-        schema=REMOVE_TRACKING_SERVICE_SCHEMA,
-    )
-
 
 class AfterShipSensor(SensorEntity):
     """Representation of a AfterShip sensor."""
@@ -96,15 +53,18 @@ class AfterShipSensor(SensorEntity):
         self._attr_name = name
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return attributes for the sensor."""
         return self._attributes
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(

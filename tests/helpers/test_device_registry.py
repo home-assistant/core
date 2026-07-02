@@ -304,6 +304,23 @@ async def test_multiple_config_subentries(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+async def test_async_get_before_setup_raises(hass: HomeAssistant) -> None:
+    """Test async_get raises when the registry has not been set up."""
+    with pytest.raises(RuntimeError, match="Device registry not set up"):
+        dr.async_get(hass)
+
+    dr.async_setup(hass)
+    assert isinstance(dr.async_get(hass), dr.DeviceRegistry)
+
+
+async def test_async_load_twice_raises(hass: HomeAssistant) -> None:
+    """Test loading the device registry twice raises."""
+    registry = dr.async_get(hass)
+    with pytest.raises(RuntimeError, match="Device registry is already loaded"):
+        await registry.async_load()
+
+
+@pytest.mark.parametrize("load_registries", [False])
 @pytest.mark.usefixtures("freezer")
 async def test_loading_from_storage(
     hass: HomeAssistant,
@@ -363,6 +380,7 @@ async def test_loading_from_storage(
         },
     }
 
+    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
     assert len(registry.devices) == 1
@@ -500,6 +518,7 @@ async def test_migration_from_1_1(
         },
     }
 
+    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
@@ -654,6 +673,7 @@ async def test_migration_from_1_2(
         },
     }
 
+    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
@@ -790,6 +810,7 @@ async def test_migration_fom_1_3(
         },
     }
 
+    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
@@ -928,6 +949,7 @@ async def test_migration_from_1_4(
         },
     }
 
+    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
@@ -1068,6 +1090,7 @@ async def test_migration_from_1_5(
         },
     }
 
+    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
@@ -1210,6 +1233,7 @@ async def test_migration_from_1_6(
         },
     }
 
+    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
@@ -1354,6 +1378,7 @@ async def test_migration_from_1_7(
         },
     }
 
+    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
@@ -1496,6 +1521,7 @@ async def test_migration_from_1_10(
         },
     }
 
+    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
@@ -1632,6 +1658,7 @@ async def test_migration_from_1_11(
         },
     }
 
+    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
@@ -3782,6 +3809,7 @@ async def test_cleanup_entity_registry_change(
     Don't pre-load the registries as the debouncer will then not be waiting for
     EVENT_ENTITY_REGISTRY_UPDATED events.
     """
+    dr.async_setup(hass)
     await dr.async_load(hass)
     await er.async_load(hass)
     dev_reg = dr.async_get(hass)
@@ -4902,6 +4930,61 @@ async def test_device_info_configuration_url_validation(
         )
 
 
+@pytest.mark.parametrize(
+    "field",
+    [
+        "hw_version",
+        "manufacturer",
+        "model",
+        "model_id",
+        "serial_number",
+        "sw_version",
+    ],
+)
+@pytest.mark.parametrize(
+    ("value", "stored_value", "expected_log"),
+    [
+        (1.0, "1.0", "passes a non-string value of type float as {field}"),
+        ((1, 2), "(1, 2)", "passes a non-string value of type tuple as {field}"),
+        ("hw-1", "hw-1", ""),
+        (None, None, ""),
+    ],
+)
+async def test_device_info_string_field_validation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    field: str,
+    value: Any,
+    stored_value: str | None,
+    expected_log: str,
+) -> None:
+    """Test string device info fields are validated and coerced."""
+    config_entry_1 = MockConfigEntry()
+    config_entry_1.add_to_hass(hass)
+    config_entry_2 = MockConfigEntry()
+    config_entry_2.add_to_hass(hass)
+
+    entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        identifiers={("something", "1234")},
+        name="name",
+        **{field: value},
+    )
+    assert getattr(entry, field) == stored_value
+
+    update_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry_2.entry_id,
+        identifiers={("something", "5678")},
+        name="name",
+    )
+    updated = device_registry.async_update_device(update_device.id, **{field: value})
+    assert updated is not None
+    assert getattr(updated, field) == stored_value
+
+    assert expected_log.format(field=field) in caplog.text
+
+
 @pytest.mark.parametrize("load_registries", [False])
 async def test_loading_invalid_configuration_url_from_storage(
     hass: HomeAssistant,
@@ -4943,6 +5026,7 @@ async def test_loading_invalid_configuration_url_from_storage(
         },
     }
 
+    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
     assert len(registry.devices) == 1
@@ -5117,7 +5201,9 @@ async def test_entries_for_label(
             "test_device",
             {
                 "en": {
-                    "component.test.device.test_device.name": "{placeholder} English dev"
+                    "component.test.device.test_device.name": (
+                        "{placeholder} English dev"
+                    )
                 },
             },
             {"placeholder": "special"},
@@ -5127,7 +5213,9 @@ async def test_entries_for_label(
             "test_device",
             {
                 "en": {
-                    "component.test.device.test_device.name": "English dev {placeholder}"
+                    "component.test.device.test_device.name": (
+                        "English dev {placeholder}"
+                    )
                 },
             },
             {"placeholder": "special"},
@@ -5185,7 +5273,9 @@ async def test_device_name_translation_placeholders(
             "test_device",
             {
                 "en": {
-                    "component.test.device.test_device.name": "{placeholder} English dev {2ndplaceholder}"
+                    "component.test.device.test_device.name": (
+                        "{placeholder} English dev {2ndplaceholder}"
+                    )
                 },
             },
             {"placeholder": "special"},
@@ -5200,7 +5290,9 @@ async def test_device_name_translation_placeholders(
             "test_device",
             {
                 "en": {
-                    "component.test.device.test_device.name": "{placeholder} English ent {2ndplaceholder}"
+                    "component.test.device.test_device.name": (
+                        "{placeholder} English ent {2ndplaceholder}"
+                    )
                 },
             },
             {"placeholder": "special"},
@@ -5214,7 +5306,9 @@ async def test_device_name_translation_placeholders(
             "test_device",
             {
                 "en": {
-                    "component.test.device.test_device.name": "{placeholder} English dev"
+                    "component.test.device.test_device.name": (
+                        "{placeholder} English dev"
+                    )
                 },
             },
             None,
@@ -5283,7 +5377,11 @@ async def test_async_get_or_create_thread_safety(
 
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls device_registry._async_update_device from a thread.",
+        match=(
+            "Detected code that calls"
+            " device_registry._async_update_device"
+            " from a thread."
+        ),
     ):
         await hass.async_add_executor_job(
             partial(
@@ -5313,7 +5411,11 @@ async def test_async_remove_device_thread_safety(
 
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls device_registry.async_remove_device from a thread.",
+        match=(
+            "Detected code that calls"
+            " device_registry.async_remove_device"
+            " from a thread."
+        ),
     ):
         await hass.async_add_executor_job(
             device_registry.async_remove_device, device.id

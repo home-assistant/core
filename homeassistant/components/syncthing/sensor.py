@@ -1,12 +1,11 @@
 """Support for Syncthing sensors."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 import aiosyncthing
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -14,7 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
-from . import SyncthingClient
+from . import SyncthingClient, SyncthingConfigEntry
 from .const import (
     DOMAIN,
     FOLDER_PAUSED_RECEIVED,
@@ -28,11 +27,11 @@ from .const import (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SyncthingConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Syncthing sensors."""
-    syncthing = hass.data[DOMAIN][config_entry.entry_id]
+    syncthing = config_entry.runtime_data
 
     try:
         config = await syncthing.system.config()
@@ -118,16 +117,19 @@ class FolderSensor(SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self._state["state"] if self._state else None
 
     @property
+    @override
     def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self._state is not None
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return self._state
@@ -161,6 +163,7 @@ class FolderSensor(SensorEntity):
             self._unsub_timer()
             self._unsub_timer = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
 

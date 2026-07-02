@@ -1,9 +1,8 @@
 """DataUpdateCoordinator for Liebherr integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 import logging
+from typing import override
 
 from pyliebherrhomeapi import (
     DeviceState,
@@ -55,28 +54,35 @@ class LiebherrCoordinator(DataUpdateCoordinator[DeviceState]):
         self.client = client
         self.device_id = device_id
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator by validating device access."""
         try:
             await self.client.get_device(self.device_id)
         except LiebherrAuthenticationError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise ConfigEntryAuthFailed("Invalid API key") from err
         except LiebherrConnectionError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise ConfigEntryNotReady(
                 f"Failed to connect to device {self.device_id}: {err}"
             ) from err
 
+    @override
     async def _async_update_data(self) -> DeviceState:
         """Fetch data from API for this device."""
         try:
             return await self.client.get_device_state(self.device_id)
         except LiebherrAuthenticationError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise ConfigEntryAuthFailed("API key is no longer valid") from err
         except LiebherrTimeoutError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed(
                 f"Timeout communicating with device {self.device_id}"
             ) from err
         except LiebherrConnectionError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed(
                 f"Error communicating with device {self.device_id}"
             ) from err

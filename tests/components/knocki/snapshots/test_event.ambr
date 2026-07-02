@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_entities[event.knc1_w_00000214_aaaa-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
     }),
@@ -42,11 +43,11 @@
 # name: test_entities[event.knc1_w_00000214_aaaa-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
-      'friendly_name': 'KNC1-W-00000214 Aaaa',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KNC1-W-00000214 Aaaa',
     }),
     'context': <ANY>,
     'entity_id': 'event.knc1_w_00000214_aaaa',

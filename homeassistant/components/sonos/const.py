@@ -1,7 +1,5 @@
 """Const for Sonos."""
 
-from __future__ import annotations
-
 import datetime
 
 from homeassistant.components.media_player import MediaClass, MediaType

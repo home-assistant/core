@@ -1,30 +1,31 @@
 # serializer version: 1
 # name: test_all_entities[climate.aircon_said1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'off',
         'auto',
         'low',
         'medium',
         'high',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,
       ]),
-      'max_temp': 30,
-      'min_temp': 16,
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'horizontal',
         'off',
       ]),
-      'target_temp_step': 1,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -59,33 +60,33 @@
 # name: test_all_entities[climate.aircon_said1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_humidity': 80,
-      'current_temperature': 15,
-      'fan_mode': 'auto',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 80,
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 15,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'off',
         'auto',
         'low',
         'medium',
         'high',
       ]),
-      'friendly_name': 'Aircon said1',
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aircon said1',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,
       ]),
-      'max_temp': 30,
-      'min_temp': 16,
-      'supported_features': <ClimateEntityFeature: 425>,
-      'swing_mode': 'horizontal',
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 425>,
+      <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'horizontal',
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'horizontal',
         'off',
       ]),
-      'target_temp_step': 1,
-      'temperature': 20,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 20,
     }),
     'context': <ANY>,
     'entity_id': 'climate.aircon_said1',
@@ -97,30 +98,31 @@
 # ---
 # name: test_all_entities[climate.aircon_said2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'off',
         'auto',
         'low',
         'medium',
         'high',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,
       ]),
-      'max_temp': 30,
-      'min_temp': 16,
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'horizontal',
         'off',
       ]),
-      'target_temp_step': 1,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -155,33 +157,33 @@
 # name: test_all_entities[climate.aircon_said2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_humidity': 80,
-      'current_temperature': 15,
-      'fan_mode': 'auto',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 80,
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 15,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'off',
         'auto',
         'low',
         'medium',
         'high',
       ]),
-      'friendly_name': 'Aircon said2',
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aircon said2',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,
       ]),
-      'max_temp': 30,
-      'min_temp': 16,
-      'supported_features': <ClimateEntityFeature: 425>,
-      'swing_mode': 'horizontal',
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 425>,
+      <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'horizontal',
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'horizontal',
         'off',
       ]),
-      'target_temp_step': 1,
-      'temperature': 20,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 20,
     }),
     'context': <ANY>,
     'entity_id': 'climate.aircon_said2',

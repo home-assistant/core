@@ -1,7 +1,5 @@
 """Integration for SFTP Storage."""
 
-from __future__ import annotations
-
 import contextlib
 from dataclasses import dataclass, field
 import errno
@@ -10,17 +8,14 @@ from pathlib import Path
 
 from homeassistant.components.backup import BackupAgentError
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
 from .client import BackupAgentClient
 from .const import (
     CONF_BACKUP_LOCATION,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
     CONF_PRIVATE_KEY_FILE,
-    CONF_USERNAME,
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
     LOGGER,
@@ -91,7 +86,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> Non
                 pkey.unlink()
             except OSError as e:
                 LOGGER.warning(
-                    "Failed to remove private key %s for %s integration for host %s@%s. %s",
+                    "Failed to remove private key %s for %s"
+                    " integration for host %s@%s. %s",
                     pkey.name,
                     DOMAIN,
                     entry.data[CONF_USERNAME],
@@ -105,7 +101,9 @@ async def async_remove_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> Non
             if e.errno == errno.ENOTEMPTY:  # Directory not empty
                 if LOGGER.isEnabledFor(logging.DEBUG):
                     leftover_files = []
-                    # If we get an exception while gathering leftover files, make sure to log plain message.
+                    # If we get an exception while gathering
+                    # leftover files, make sure to log plain
+                    # message.
                     with contextlib.suppress(OSError):
                         leftover_files = [f.name for f in pkey.parent.iterdir()]
 
@@ -119,7 +117,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> Non
                     )
             else:
                 LOGGER.warning(
-                    "Error occurred while removing directory %s for integration %s: %s at host %s@%s",
+                    "Error occurred while removing directory %s"
+                    " for integration %s: %s at host %s@%s",
                     str(pkey.parent),
                     DOMAIN,
                     str(e),

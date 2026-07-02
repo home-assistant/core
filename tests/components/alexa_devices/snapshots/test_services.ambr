@@ -8,6 +8,11 @@
           'AUDIO_PLAYER',
           'MICROPHONE',
         ]),
+        'communication_settings': dict({
+          'announcements': 'ON',
+          'communications': 'ON',
+          'dropin': 'All',
+        }),
         'device_cluster_members': dict({
           'echo_test_serial_number': 'echo_test_device_id',
         }),
@@ -19,6 +24,7 @@
         'hardware_version': '1.0',
         'household_device': False,
         'manufacturer': 'Test manufacturer',
+        'media_player_supported': True,
         'model': 'Test model',
         'notifications': dict({
           'Alarm': dict({
@@ -78,6 +84,11 @@
           'AUDIO_PLAYER',
           'MICROPHONE',
         ]),
+        'communication_settings': dict({
+          'announcements': 'ON',
+          'communications': 'ON',
+          'dropin': 'All',
+        }),
         'device_cluster_members': dict({
           'echo_test_serial_number': 'echo_test_device_id',
         }),
@@ -89,6 +100,7 @@
         'hardware_version': '1.0',
         'household_device': False,
         'manufacturer': 'Test manufacturer',
+        'media_player_supported': True,
         'model': 'Test model',
         'notifications': dict({
           'Alarm': dict({
@@ -148,6 +160,11 @@
           'AUDIO_PLAYER',
           'MICROPHONE',
         ]),
+        'communication_settings': dict({
+          'announcements': 'ON',
+          'communications': 'ON',
+          'dropin': 'All',
+        }),
         'device_cluster_members': dict({
           'echo_test_serial_number': 'echo_test_device_id',
         }),
@@ -159,6 +176,7 @@
         'hardware_version': '1.0',
         'household_device': False,
         'manufacturer': 'Test manufacturer',
+        'media_player_supported': True,
         'model': 'Test model',
         'notifications': dict({
           'Alarm': dict({

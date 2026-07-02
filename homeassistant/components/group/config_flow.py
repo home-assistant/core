@@ -1,10 +1,8 @@
 """Config flow for Group integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Mapping
 from functools import partial
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -345,6 +343,7 @@ class GroupConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow_reloads = True
 
     @callback
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title.
 
@@ -354,6 +353,7 @@ class GroupConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         return cast(str, options["name"]) if "name" in options else ""
 
     @callback
+    @override
     def async_config_flow_finished(self, options: Mapping[str, Any]) -> None:
         """Hide the group members if requested."""
         if options[CONF_HIDE_MEMBERS]:
@@ -363,6 +363,7 @@ class GroupConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     @callback
     @staticmethod
+    @override
     def async_options_flow_finished(
         hass: HomeAssistant, options: Mapping[str, Any]
     ) -> None:
@@ -373,6 +374,7 @@ class GroupConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         _async_hide_members(hass, options[CONF_ENTITIES], hidden_by)
 
     @staticmethod
+    @override
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview WS API."""
         for group_type, form_step in OPTIONS_FLOW.items():

@@ -1,0 +1,135 @@
+{
+  "name": "C30",
+  "category": "wg2",
+  "product_id": "pkhw2vbphv4csrir",
+  "product_name": "C30",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2024-12-02T20:08:56+00:00",
+  "create_time": "2024-12-02T20:08:56+00:00",
+  "update_time": "2024-12-02T20:08:56+00:00",
+  "function": {
+    "master_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["disarmed", "arm", "home", "sos"]
+      }
+    },
+    "delay_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 256,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "alarm_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 1,
+        "max": 21,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "switch_kb_sound": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_alarm_propel": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "alarm_delay_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 256,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "master_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["disarmed", "arm", "home", "sos"]
+      }
+    },
+    "delay_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 256,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "alarm_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 1,
+        "max": 21,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "switch_kb_sound": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "charge_state": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "alarm_msg": {
+      "type": "Raw",
+      "value": {}
+    },
+    "switch_alarm_propel": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "alarm_delay_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 256,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "master_mode": "disarmed",
+    "delay_set": 15,
+    "alarm_time": 3,
+    "switch_kb_sound": true,
+    "charge_state": false,
+    "battery_percentage": 85,
+    "alarm_msg": "**REDACTED**",
+    "switch_alarm_propel": true,
+    "alarm_delay_time": 20
+  },
+  "set_up": true,
+  "support_local": true
+}

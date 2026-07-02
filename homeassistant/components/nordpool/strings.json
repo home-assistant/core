@@ -5,6 +5,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_areas": "No area(s) selected",
       "no_data": "API connected but the response was empty"
     },
     "step": {
@@ -31,6 +32,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "tomorrow_price_available": {
+        "name": "Tomorrow price available"
+      }
+    },
     "sensor": {
       "block_average": {
         "name": "{block} average"

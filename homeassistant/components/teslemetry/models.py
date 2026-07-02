@@ -1,7 +1,5 @@
 """The Teslemetry integration models."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass, field
 
@@ -16,6 +14,7 @@ from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
+    TeslemetryMetadataCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
 
@@ -28,6 +27,7 @@ class TeslemetryData:
     energysites: list[TeslemetryEnergyData]
     scopes: list[Scope]
     stream: TeslemetryStream | None
+    metadata_coordinator: TeslemetryMetadataCoordinator
 
 
 @dataclass

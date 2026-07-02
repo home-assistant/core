@@ -2,6 +2,7 @@
 
 from homeassistant import config_entries
 from homeassistant.components import ifttt
+from homeassistant.components.ifttt import DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
@@ -19,7 +20,7 @@ async def test_config_flow_registers_webhook(
     )
 
     result = await hass.config_entries.flow.async_init(
-        "ifttt", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM, result
 

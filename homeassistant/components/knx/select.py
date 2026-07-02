@@ -1,6 +1,6 @@
 """Support for KNX select entities."""
 
-from __future__ import annotations
+from typing import override
 
 from xknx import XKNX
 from xknx.devices import Device as XknxDevice, RawValue
@@ -65,9 +65,12 @@ class KNXSelect(KnxYamlEntity, SelectEntity, RestoreEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX select."""
+        self._device = _create_raw_value(knx_module.xknx, config)
         super().__init__(
             knx_module=knx_module,
-            device=_create_raw_value(knx_module.xknx, config),
+            unique_id=str(self._device.remote_value.group_address),
+            name=config[CONF_NAME],
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         self._option_payloads: dict[str, int] = {
             option[SelectSchema.CONF_OPTION]: option[CONF_PAYLOAD]
@@ -75,9 +78,8 @@ class KNXSelect(KnxYamlEntity, SelectEntity, RestoreEntity):
         }
         self._attr_options = list(self._option_payloads)
         self._attr_current_option = None
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = str(self._device.remote_value.group_address)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
@@ -90,6 +92,7 @@ class KNXSelect(KnxYamlEntity, SelectEntity, RestoreEntity):
             ):
                 self._device.remote_value.update_value(option)
 
+    @override
     def after_update_callback(self, device: XknxDevice) -> None:
         """Call after device was updated."""
         self._attr_current_option = self.option_from_payload(
@@ -106,6 +109,7 @@ class KNXSelect(KnxYamlEntity, SelectEntity, RestoreEntity):
         except StopIteration:
             return None
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         payload = self._option_payloads[option]

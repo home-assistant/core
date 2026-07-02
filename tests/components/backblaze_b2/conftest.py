@@ -172,7 +172,9 @@ def b2_fixture():
                         return MockDownloadedFile(metadata_json_content_bytes)
                     return MockDownloadedFile(test_backup_data)
             raise ValueError(
-                f"Mocked download_file_by_id: File with id {file_id} or name {file_name} not found."
+                "Mocked download_file_by_id: "
+                f"File with id {file_id} or name "
+                f"{file_name} not found."
             )
 
         def ls(

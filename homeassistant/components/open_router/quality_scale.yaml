@@ -16,9 +16,15 @@ rules:
   docs-actions:
     status: exempt
     comment: No actions are implemented
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: the integration does not subscribe to events
@@ -45,7 +51,7 @@ rules:
     comment: the integration only integrates state-less entities
   parallel-updates: todo
   reauthentication-flow: todo
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices: done
@@ -63,8 +69,12 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: todo
-  entity-category: todo
+  dynamic-devices:
+    status: exempt
+    comment: devices are created via subentries, not discovered dynamically
+  entity-category:
+    status: exempt
+    comment: conversation and AI task entities do not use entity categories
   entity-device-class:
     status: exempt
     comment: no suitable device class for the conversation entity

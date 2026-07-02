@@ -1,13 +1,17 @@
 """Define tests for the Vodafone Station coordinator."""
 
+from json import JSONDecodeError
 import logging
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, create_autospec, patch
 
+from aiohttp import ClientSession
 from aiovodafone.api import VodafoneStationDevice
+from aiovodafone.exceptions import VodafoneError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.vodafone_station.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -65,3 +69,47 @@ async def test_coordinator_device_cleanup(
         device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_1_MAC)}) is None
     )
     assert f"Removing device: {DEVICE_1_HOST}" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_init_calls", "expected_session_calls"),
+    [
+        (VodafoneError("Generic error"), 1, 1),
+        (
+            JSONDecodeError("Invalid JSON", "<html>stale session</html>", 0),
+            2,
+            2,
+        ),
+    ],
+)
+async def test_coordinator_exceptions(
+    hass: HomeAssistant,
+    mock_vodafone_station_router: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    error: Exception,
+    expected_init_calls: int,
+    expected_session_calls: int,
+) -> None:
+    """Test exception handling during update: setup retry, plus session reinit for stale sessions."""
+    mock_vodafone_station_router.get_devices_data.side_effect = error
+
+    new_session = create_autospec(ClientSession, instance=True)
+    with (
+        patch(
+            "homeassistant.components.vodafone_station.coordinator.init_device_class",
+            return_value=mock_vodafone_station_router,
+        ) as mock_init_device_class,
+        patch(
+            "homeassistant.components.vodafone_station.coordinator.async_client_session",
+            AsyncMock(return_value=new_session),
+        ) as mock_async_client_session,
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+        assert mock_init_device_class.call_count == expected_init_calls
+        assert mock_async_client_session.await_count == expected_session_calls
+        assert mock_init_device_class.call_args.args[2] == mock_config_entry.data
+        assert mock_init_device_class.call_args.args[3] == new_session

@@ -1,6 +1,6 @@
 """Support for Flo Water Monitor sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -64,6 +64,7 @@ class FloDailyUsageSensor(FloEntity, SensorEntity):
         super().__init__("daily_consumption", device)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current daily usage."""
         if self._device.consumption_today is None:
@@ -81,6 +82,7 @@ class FloSystemModeSensor(FloEntity, SensorEntity):
         super().__init__("current_system_mode", device)
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the current system mode."""
         if not self._device.current_system_mode:
@@ -101,6 +103,7 @@ class FloCurrentFlowRateSensor(FloEntity, SensorEntity):
         super().__init__("current_flow_rate", device)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current flow rate."""
         if self._device.current_flow_rate is None:
@@ -122,6 +125,7 @@ class FloTemperatureSensor(FloEntity, SensorEntity):
             self._attr_translation_key = "water_temperature"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current temperature."""
         if self._device.temperature is None:
@@ -141,6 +145,7 @@ class FloHumiditySensor(FloEntity, SensorEntity):
         super().__init__("humidity", device)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current humidity."""
         if self._device.humidity is None:
@@ -161,6 +166,7 @@ class FloPressureSensor(FloEntity, SensorEntity):
         super().__init__("water_pressure", device)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current water pressure."""
         if self._device.current_psi is None:
@@ -180,6 +186,7 @@ class FloBatterySensor(FloEntity, SensorEntity):
         super().__init__("battery", device)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current battery level."""
         return self._device.battery_level

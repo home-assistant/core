@@ -119,7 +119,7 @@ async def test_target_temperature_feature_zone_without_sensor(
     mock_discovery: AsyncMock,
     mock_controller: AsyncMock,
 ) -> None:
-    """Test TARGET_TEMPERATURE feature enabled when any zone lacks temperature sensor."""
+    """Test TARGET_TEMPERATURE enabled when zone lacks temp sensor."""
     await setup_integration(hass, mock_config_entry)
     await setup_controller(hass, mock_discovery, mock_controller)
 
@@ -190,7 +190,7 @@ async def test_target_temperature_feature_multiple_zones_one_without_sensor(
     mock_discovery: AsyncMock,
     mock_controller: AsyncMock,
 ) -> None:
-    """Test TARGET_TEMPERATURE feature enabled with multiple zones when one lacks sensor."""
+    """Test TARGET_TEMPERATURE enabled with multiple zones, one no sensor."""
     await setup_integration(hass, mock_config_entry)
     await setup_controller(hass, mock_discovery, mock_controller)
 

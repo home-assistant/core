@@ -35,8 +35,9 @@
 # name: test_switch_state[Air Purifier 131s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -73,7 +74,7 @@
 # name: test_switch_state[Air Purifier 131s][switch.air_purifier_131s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 131s Display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 131s Display',
     }),
     'context': <ANY>,
     'entity_id': 'switch.air_purifier_131s_display',
@@ -119,8 +120,9 @@
 # name: test_switch_state[Air Purifier 200s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -153,8 +155,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -191,7 +194,7 @@
 # name: test_switch_state[Air Purifier 200s][switch.air_purifier_200s_child_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 200s Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 200s Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.air_purifier_200s_child_lock',
@@ -204,7 +207,7 @@
 # name: test_switch_state[Air Purifier 200s][switch.air_purifier_200s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 200s Display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 200s Display',
     }),
     'context': <ANY>,
     'entity_id': 'switch.air_purifier_200s_display',
@@ -250,8 +253,9 @@
 # name: test_switch_state[Air Purifier 400s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -284,8 +288,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -322,7 +327,7 @@
 # name: test_switch_state[Air Purifier 400s][switch.air_purifier_400s_child_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 400s Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 400s Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.air_purifier_400s_child_lock',
@@ -335,7 +340,7 @@
 # name: test_switch_state[Air Purifier 400s][switch.air_purifier_400s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 400s Display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 400s Display',
     }),
     'context': <ANY>,
     'entity_id': 'switch.air_purifier_400s_display',
@@ -381,8 +386,9 @@
 # name: test_switch_state[Air Purifier 600s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -415,8 +421,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -453,7 +460,7 @@
 # name: test_switch_state[Air Purifier 600s][switch.air_purifier_600s_child_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 600s Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 600s Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.air_purifier_600s_child_lock',
@@ -466,7 +473,7 @@
 # name: test_switch_state[Air Purifier 600s][switch.air_purifier_600s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 600s Display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 600s Display',
     }),
     'context': <ANY>,
     'entity_id': 'switch.air_purifier_600s_display',
@@ -660,8 +667,9 @@
 # name: test_switch_state[Humidifier 200s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -694,8 +702,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -732,7 +741,7 @@
 # name: test_switch_state[Humidifier 200s][switch.humidifier_200s_auto_off]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Humidifier 200s Auto Off',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 200s Auto Off',
     }),
     'context': <ANY>,
     'entity_id': 'switch.humidifier_200s_auto_off',
@@ -745,7 +754,7 @@
 # name: test_switch_state[Humidifier 200s][switch.humidifier_200s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Humidifier 200s Display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 200s Display',
     }),
     'context': <ANY>,
     'entity_id': 'switch.humidifier_200s_display',
@@ -791,8 +800,9 @@
 # name: test_switch_state[Humidifier 6000s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -825,8 +835,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -859,8 +870,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -893,8 +905,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -931,7 +944,7 @@
 # name: test_switch_state[Humidifier 6000s][switch.humidifier_6000s_auto_off]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Humidifier 6000s Auto Off',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 6000s Auto Off',
     }),
     'context': <ANY>,
     'entity_id': 'switch.humidifier_6000s_auto_off',
@@ -944,7 +957,7 @@
 # name: test_switch_state[Humidifier 6000s][switch.humidifier_6000s_child_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Humidifier 6000s Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 6000s Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.humidifier_6000s_child_lock',
@@ -957,7 +970,7 @@
 # name: test_switch_state[Humidifier 6000s][switch.humidifier_6000s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Humidifier 6000s Display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 6000s Display',
     }),
     'context': <ANY>,
     'entity_id': 'switch.humidifier_6000s_display',
@@ -970,7 +983,7 @@
 # name: test_switch_state[Humidifier 6000s][switch.humidifier_6000s_enable_drying_mode_while_power_is_off]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Humidifier 6000s Enable drying mode while power is off',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 6000s Enable drying mode while power is off',
     }),
     'context': <ANY>,
     'entity_id': 'switch.humidifier_6000s_enable_drying_mode_while_power_is_off',
@@ -1016,8 +1029,9 @@
 # name: test_switch_state[Humidifier 600S][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -1050,8 +1064,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -1088,7 +1103,7 @@
 # name: test_switch_state[Humidifier 600S][switch.humidifier_600s_auto_off]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Humidifier 600S Auto Off',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 600S Auto Off',
     }),
     'context': <ANY>,
     'entity_id': 'switch.humidifier_600s_auto_off',
@@ -1101,7 +1116,7 @@
 # name: test_switch_state[Humidifier 600S][switch.humidifier_600s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Humidifier 600S Display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 600S Display',
     }),
     'context': <ANY>,
     'entity_id': 'switch.humidifier_600s_display',
@@ -1147,8 +1162,9 @@
 # name: test_switch_state[Outlet][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -1185,8 +1201,8 @@
 # name: test_switch_state[Outlet][switch.outlet]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Outlet',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet',
     }),
     'context': <ANY>,
     'entity_id': 'switch.outlet',
@@ -1232,8 +1248,9 @@
 # name: test_switch_state[SmartTowerFan][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -1270,7 +1287,7 @@
 # name: test_switch_state[SmartTowerFan][switch.smarttowerfan_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SmartTowerFan Display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartTowerFan Display',
     }),
     'context': <ANY>,
     'entity_id': 'switch.smarttowerfan_display',
@@ -1353,8 +1370,9 @@
 # name: test_switch_state[Wall Switch][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -1391,8 +1409,8 @@
 # name: test_switch_state[Wall Switch][switch.wall_switch]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Wall Switch',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wall Switch',
     }),
     'context': <ANY>,
     'entity_id': 'switch.wall_switch',
