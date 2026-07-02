@@ -1,24 +1,25 @@
 """Support for Gatus binary sensors."""
 
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import GatusDataUpdateCoordinator
+from .coordinator import GatusConfigEntry, GatusDataUpdateCoordinator
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GatusConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Gatus binary sensor platform."""
@@ -41,7 +42,7 @@ class GatusEndpointBinarySensor(
     def __init__(
         self,
         coordinator: GatusDataUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: GatusConfigEntry,
         endpoint_key: str,
     ) -> None:
         """Initialize the sensor."""
@@ -72,7 +73,7 @@ class GatusEndpointBinarySensor(
         if TYPE_CHECKING:
             assert latest_result is not None
 
-        return latest_result["success"]
+        return bool(latest_result["success"])
 
     @property
     def endpoint_data(self) -> dict[str, Any]:
@@ -83,4 +84,4 @@ class GatusEndpointBinarySensor(
     def latest_result(self) -> dict[str, Any]:
         """Return the most recent monitoring result (Gatus appends newest last)."""
         results = self.endpoint_data["results"]
-        return results[-1]
+        return cast(dict[str, Any], results[-1])

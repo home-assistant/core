@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["gatus-api==1.0.0"]
+  "requirements": ["gatus-api==1.0.1"]
 }
