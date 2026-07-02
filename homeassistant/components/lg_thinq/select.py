@@ -85,6 +85,8 @@ OPERATION_SELECT_DESC: dict[ThinQProperty, SelectEntityDescription] = {
 DEVICE_TYPE_SELECT_MAP: dict[DeviceType, tuple[SelectEntityDescription, ...]] = {
     DeviceType.AIR_CONDITIONER: (
         SELECT_DESC[ThinQProperty.MONITORING_ENABLED],
+        AIR_FLOW_SELECT_DESC[ThinQProperty.WIND_STRENGTH],
+        SELECT_DESC[ThinQProperty.CURRENT_JOB_MODE],
         OPERATION_SELECT_DESC[ThinQProperty.AIR_CLEAN_OPERATION_MODE],
     ),
     DeviceType.AIR_PURIFIER_FAN: (
