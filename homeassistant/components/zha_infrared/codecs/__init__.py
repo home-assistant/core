@@ -51,7 +51,7 @@ def decode_received_payload(codec_name: str, payload: Any) -> list[int] | None:
         return None
     try:
         timings = decoder(payload)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         _LOGGER.debug(
             "Failed decoding payload with codec %s", codec_name, exc_info=True
         )

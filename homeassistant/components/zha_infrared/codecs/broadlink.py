@@ -27,13 +27,13 @@ def decode_broadlink_base64_to_raw_timings(payload: Any) -> list[int] | None:
         return None
     try:
         packet = b64decode(payload)
-    except (BinasciiError, TypeError, ValueError):
+    except BinasciiError, TypeError, ValueError:
         return None
 
     try:
         module = import_module("broadlink.remote")
         broadlink_data_to_pulses = module.data_to_pulses
-    except (ImportError, AttributeError):
+    except ImportError, AttributeError:
         return None
 
     pulses = broadlink_data_to_pulses(packet)

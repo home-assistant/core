@@ -54,7 +54,7 @@ def _resolve_cluster_availability(cluster: object | None) -> bool:
     if callable(available_value):
         try:
             return bool(available_value())
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return True
 
     is_available_value = getattr(device, "is_available", None)
@@ -63,7 +63,7 @@ def _resolve_cluster_availability(cluster: object | None) -> bool:
     if callable(is_available_value):
         try:
             return bool(is_available_value())
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return True
 
     return True

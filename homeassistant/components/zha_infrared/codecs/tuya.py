@@ -28,7 +28,7 @@ def decode_tuya_payload_to_raw_timings(payload: Any) -> list[int] | None:
 
     try:
         raw = _b64decode_loose(payload)
-    except (BinasciiError, TypeError, ValueError):
+    except BinasciiError, TypeError, ValueError:
         return None
     if not raw or len(raw) % 2 != 0:
         return None

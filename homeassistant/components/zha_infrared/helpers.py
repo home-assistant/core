@@ -236,7 +236,7 @@ def _load_yaml_list_file(path: Path) -> list[dict[str, Any]]:
         return []
     try:
         data = load_yaml(path)
-    except (HomeAssistantError, OSError):
+    except HomeAssistantError, OSError:
         return []
     if data is None:
         return []
