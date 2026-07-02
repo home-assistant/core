@@ -108,7 +108,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
 
-            # Ensure host has protocol
             if not URL(host).scheme:
                 host = str(URL.build(scheme="http", host=host))
 
