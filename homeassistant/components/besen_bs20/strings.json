@@ -11,6 +11,7 @@
       "no_connectable_path": "No connectable Bluetooth path is available for this charger.",
       "unknown": "Unexpected error"
     },
+    "flow_title": "{name}",
     "step": {
       "bluetooth_confirm": {
         "data": {
@@ -22,7 +23,7 @@
           "sync_clock": "Update the charger's internal clock during heartbeat handling."
         },
         "description": "Enter the 6-digit Bluetooth PIN for this charger.",
-        "title": "Set up {name}"
+        "title": "Set up Besen BS20"
       },
       "user": {
         "data": {
