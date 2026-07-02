@@ -387,6 +387,95 @@ async def test_device_tracker_in_non_home_zone(
     assert state.state == "arrived"
 
 
+async def test_overlapping_zones_in_zones_reports_arrived(
+    hass: HomeAssistant,
+) -> None:
+    """Test overlapping proximity zones both report arrived via in_zones.
+
+    Regression test for trackers that report membership in multiple overlapping
+    zones via the in_zones attribute while their state only reflects one zone.
+    """
+    hass.states.async_set(
+        "zone.backyard",
+        "zoning",
+        {
+            "friendly_name": "Backyard",
+            "latitude": 2.1,
+            "longitude": 1.1,
+            "radius": 10,
+        },
+    )
+
+    home_config = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        data={
+            CONF_ZONE: "zone.home",
+            CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
+            CONF_IGNORED_ZONES: [],
+            CONF_TOLERANCE: 1,
+        },
+    )
+    backyard_config = MockConfigEntry(
+        domain=DOMAIN,
+        title="Backyard",
+        data={
+            CONF_ZONE: "zone.backyard",
+            CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
+            CONF_IGNORED_ZONES: [],
+            CONF_TOLERANCE: 1,
+        },
+    )
+    home_config.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(home_config.entry_id)
+    backyard_config.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(backyard_config.entry_id)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(
+        "device_tracker.test1",
+        "home",
+        {
+            "friendly_name": "test1",
+            "latitude": 20.1,
+            "longitude": 10.1,
+            "in_zones": ["zone.home", "zone.backyard"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.home_test1_direction_of_travel")
+    assert state.state == "arrived"
+    state = hass.states.get("sensor.backyard_test1_direction_of_travel")
+    assert state.state == "arrived"
+
+
+async def test_legacy_device_tracker_home_with_empty_in_zones(
+    hass: HomeAssistant,
+) -> None:
+    """Test legacy tracker with empty in_zones and home state reports arrived.
+
+    Regression test for legacy device trackers that do not populate in_zones
+    but still report their state as home when inside the home zone.
+    """
+    await async_setup_single_entry(hass, "zone.home", ["device_tracker.test1"], [], 1)
+
+    hass.states.async_set(
+        "device_tracker.test1",
+        "home",
+        {
+            "friendly_name": "test1",
+            "latitude": 20.1,
+            "longitude": 10.1,
+            "in_zones": [],
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.home_test1_direction_of_travel")
+    assert state.state == "arrived"
+
+
 async def test_device_tracker_test1_awayfurther_than_test2_first_test1(
     hass: HomeAssistant, config_zones
 ) -> None:
