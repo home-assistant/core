@@ -58,6 +58,25 @@ PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def _get_intent_response_text(intent_output: dict[str, Any]) -> str:
+    """Return the plain response text from an intent output."""
+    response = intent_output.get("response")
+    if not isinstance(response, dict):
+        return ""
+
+    speech = response.get("speech")
+    if not isinstance(speech, dict):
+        return ""
+
+    plain_speech = speech.get("plain")
+    if not isinstance(plain_speech, dict):
+        return ""
+
+    text = plain_speech.get("speech")
+    return text if isinstance(text, str) else ""
+
+
 _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
     VoiceAssistantEventType, PipelineEventType
 ] = EsphomeEnumMapper(
@@ -308,10 +327,10 @@ class EsphomeAssistSatellite(
                 assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
             )
 
-            # Block until config is retrieved.
-            # If the device supports announcements, it will return a config.
-            _LOGGER.debug("Waiting for satellite configuration")
-            await self._update_satellite_config()
+        # Block until config is retrieved.
+        # Headless satellites can still provide wake word configuration.
+        _LOGGER.debug("Waiting for satellite configuration")
+        await self._update_satellite_config()
 
         if not (feature_flags & VoiceAssistantFeature.SPEAKER):
             # Will use media player for TTS/announcements
@@ -350,6 +369,7 @@ class EsphomeAssistSatellite(
             return
 
         data_to_send: dict[str, Any] = {}
+        headless_response_text = ""
         if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_START:
             if (
                 self._has_multi_channel_audio
@@ -389,6 +409,15 @@ class EsphomeAssistSatellite(
                 .get("plain", {})
                 .get("speech", ""),
             }
+
+            assert self._entry_data.device_info is not None
+            feature_flags = (
+                self._entry_data.device_info.voice_assistant_feature_flags_compat(
+                    self._entry_data.api_version
+                )
+            )
+            if not self._has_tts_output(feature_flags):
+                headless_response_text = _get_intent_response_text(intent_output)
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
             assert event.data is not None
             data_to_send = {"text": event.data["tts_input"]}
@@ -441,6 +470,11 @@ class EsphomeAssistSatellite(
                 self._entry_data.async_set_assist_pipeline_state(False)
 
         self.cli.send_voice_assistant_event(event_type, data_to_send)
+        if headless_response_text:
+            self.cli.send_voice_assistant_event(
+                VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START,
+                {"text": headless_response_text},
+            )
 
     @convert_api_error_ha_error
     @override
@@ -558,7 +592,8 @@ class EsphomeAssistSatellite(
         else:
             start_stage = PipelineStage.STT
 
-        end_stage = PipelineStage.TTS
+        has_tts_output = self._has_tts_output(feature_flags)
+        end_stage = PipelineStage.TTS if has_tts_output else PipelineStage.INTENT
 
         if feature_flags & VoiceAssistantFeature.SPEAKER:
             # Stream WAV audio
@@ -568,7 +603,7 @@ class EsphomeAssistSatellite(
                 tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
                 tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
             }
-        else:
+        elif has_tts_output:
             # ANNOUNCEMENT format from media player
             self._update_tts_format()
 
@@ -612,6 +647,20 @@ class EsphomeAssistSatellite(
         )
 
         return port
+
+    def _has_tts_output(self, feature_flags: int) -> bool:
+        """Return true if the satellite has a way to play TTS responses."""
+        if feature_flags & (
+            VoiceAssistantFeature.SPEAKER | VoiceAssistantFeature.ANNOUNCE
+        ):
+            return True
+
+        return any(
+            supported_format.purpose == MediaPlayerFormatPurpose.ANNOUNCEMENT
+            for supported_format in chain(
+                *self._entry_data.media_player_formats.values()
+            )
+        )
 
     async def handle_audio(self, data: bytes, data2: bytes | None = None) -> None:
         """Handle incoming audio chunk from API."""

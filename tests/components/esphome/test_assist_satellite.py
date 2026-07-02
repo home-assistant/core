@@ -28,7 +28,11 @@ from homeassistant.components import (
     conversation,
     tts,
 )
-from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
+from homeassistant.components.assist_pipeline import (
+    PipelineEvent,
+    PipelineEventType,
+    PipelineStage,
+)
 from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=home-assistant-component-root-import
     KEY_ASSIST_PIPELINE,
 )
@@ -629,6 +633,22 @@ async def test_pipeline_media_player(
 
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
+        entity_info=[
+            MediaPlayerInfo(
+                object_id="mymedia_player",
+                key=1,
+                name="my media_player",
+                supported_formats=[
+                    MediaPlayerSupportedFormat(
+                        format="mp3",
+                        sample_rate=22050,
+                        num_channels=1,
+                        purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
+                        sample_bytes=2,
+                    ),
+                ],
+            )
+        ],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
             | VoiceAssistantFeature.API_AUDIO
@@ -760,6 +780,95 @@ async def test_pipeline_media_player(
             await tts_finished.wait()
 
             assert satellite.state == AssistSatelliteState.IDLE
+
+
+async def test_pipeline_headless(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a headless pipeline run stops after intent handling."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.API_AUDIO
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        assert kwargs["end_stage"] is PipelineStage.INTENT
+
+        event_callback = kwargs["event_callback"]
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.INTENT_START,
+                data={
+                    "engine": "test-intent-engine",
+                    "language": hass.config.language,
+                    "intent_input": "test-intent-text",
+                    "conversation_id": None,
+                    "device_id": kwargs["device_id"],
+                },
+            )
+        )
+        assert satellite.state == AssistSatelliteState.PROCESSING
+
+        response = intent_helper.IntentResponse("en")
+        response.async_set_speech("test-headless-response")
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.INTENT_END,
+                data={
+                    "intent_output": conversation.ConversationResult(
+                        response=response,
+                        conversation_id="test-conversation-id",
+                    ).as_dict()
+                },
+            )
+        )
+        assert mock_client.send_voice_assistant_event.call_args_list[-2].args == (
+            VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END,
+            {
+                "conversation_id": "test-conversation-id",
+                "continue_conversation": "0",
+            },
+        )
+        assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
+            VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START,
+            {"text": "test-headless-response"},
+        )
+
+        event_callback(PipelineEvent(type=PipelineEventType.RUN_END))
+
+    pipeline_finished = asyncio.Event()
+    original_handle_pipeline_finished = satellite.handle_pipeline_finished
+
+    def handle_pipeline_finished():
+        original_handle_pipeline_finished()
+        pipeline_finished.set()
+
+    with (
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+        patch.object(satellite, "handle_pipeline_finished", handle_pipeline_finished),
+    ):
+        async with asyncio.timeout(1):
+            await satellite.handle_pipeline_start(
+                conversation_id="",
+                flags=VoiceAssistantCommandFlag(0),  # stt
+                audio_settings=VoiceAssistantAudioSettings(),
+                wake_word_phrase="",
+            )
+            await pipeline_finished.wait()
+
+    assert satellite.state == AssistSatelliteState.IDLE
 
 
 async def test_timer_events(
