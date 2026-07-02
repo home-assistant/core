@@ -5,6 +5,7 @@
   "enabledManagers": [
     "pep621",
     "pip_requirements",
+    "pip-compile",
     "pre-commit",
     "dockerfile",
     "custom.regex",
@@ -20,6 +21,10 @@
       "/(^|/)requirements[\\w_-]*\\.txt$/",
       "/(^|/)homeassistant/package_constraints\\.txt$/"
     ]
+  },
+
+  "pip-compile": {
+    "managerFilePatterns": ["/(^|/)requirements[\\w_-]*\\.lock$/"]
   },
 
   "dockerfile": {
@@ -62,6 +67,11 @@
   "commitMessageExtra": "to {{newVersion}}",
 
   "automerge": false,
+
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on monday"]
+  },
 
   "vulnerabilityAlerts": {
     "enabled": false

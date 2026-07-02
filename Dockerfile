@@ -29,24 +29,18 @@ COPY rootfs /
 COPY --from=ghcr.io/alexxit/go2rtc:1.9.14@sha256:675c318b23c06fd862a61d262240c9a63436b4050d177ffc68a32710d9e05bae /usr/local/bin/go2rtc /bin/go2rtc
 
 ## Setup Home Assistant Core dependencies
-COPY --parents requirements.txt homeassistant/package_constraints.txt homeassistant/
+COPY --parents requirements_all.lock home_assistant_frontend-* home_assistant_intents-* homeassistant/
 RUN \
     # Verify go2rtc can be executed
     go2rtc --version \
-    # Install uv at the version pinned in the requirements file
-    && pip3 install --no-cache-dir "uv==$(awk -F'==' '/^uv==/{print $2}' homeassistant/requirements.txt)" \
-    && uv pip install \
-        --no-build \
-        -r homeassistant/requirements.txt
-
-COPY requirements_all.txt home_assistant_frontend-* home_assistant_intents-* homeassistant/
-RUN \
-    if ls homeassistant/home_assistant_*.whl 1> /dev/null 2>&1; then \
+    # Install uv at the version pinned in the lock file
+    && pip3 install --no-cache-dir "uv==$(awk -F'[= ;]+' '/^uv==/{print $2}' homeassistant/requirements_all.lock)" \
+    && if ls homeassistant/home_assistant_*.whl 1> /dev/null 2>&1; then \
         uv pip install homeassistant/home_assistant_*.whl; \
     fi \
     && uv pip install \
         --no-build \
-        -r homeassistant/requirements_all.txt
+        -r homeassistant/requirements_all.lock
 
 ## Setup Home Assistant Core
 COPY --parents LICENSE* README* homeassistant/ pyproject.toml homeassistant/

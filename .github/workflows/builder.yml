@@ -157,6 +157,8 @@ jobs:
               homeassistant/package_constraints.txt
 
             sed -i "s|home-assistant-frontend==.*||" requirements_all.txt
+            # Drop the released pin from the lock file; the nightly wheel is installed separately
+            sed -i "/^home-assistant-frontend==/,/^[^[:space:]#]/ { /^home-assistant-frontend==/d; /^[[:space:]#]/d }" requirements_all.lock
           fi
 
           if [[ "$(ls home_assistant_intents*.whl)" =~ ^home_assistant_intents-(.*)-py3-none-any.whl$ ]]; then
@@ -175,6 +177,8 @@ jobs:
               homeassistant/package_constraints.txt
 
             sed -i "s|home-assistant-intents==.*||" requirements_all.txt requirements.txt
+            # Drop the released pin from the lock file; the nightly wheel is installed separately
+            sed -i "/^home-assistant-intents==/,/^[^[:space:]#]/ { /^home-assistant-intents==/d; /^[[:space:]#]/d }" requirements_all.lock
           fi
 
       - name: Download translations

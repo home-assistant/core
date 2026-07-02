@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """Generate updated constraint and requirements files."""
 
+from collections.abc import Sequence
 import difflib
 import importlib
 from operator import itemgetter
 from pathlib import Path
 import pkgutil
 import re
+import subprocess
 import sys
+import tempfile
 import tomllib
 from typing import Any
 
@@ -259,6 +262,11 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
 )
 
 PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")
+
+PIP_COMPILE_LOCK_FILES = {
+    "requirements_all.lock": ("requirements_all.txt",),
+    "requirements_ci.lock": ("requirements_all.txt", "requirements_test.txt"),
+}
 
 
 def explore_module(package: str, explore_children: bool) -> list[str]:
@@ -541,15 +549,53 @@ def gather_constraints() -> str:
     )
 
 
-def diff_file(filename: str, content: str) -> list[str]:
-    """Diff a file."""
+def diff_content(
+    content_a: Sequence[str], filename_a: str, content_b: Sequence[str], filename_b: str
+) -> list[str]:
+    """Diff two strings as if they were files."""
     return list(
         difflib.context_diff(
-            [f"{line}\n" for line in Path(filename).read_text().split("\n")],
-            [f"{line}\n" for line in content.split("\n")],
-            filename,
-            "generated",
+            content_a,
+            content_b,
+            filename_a,
+            filename_b,
         )
+    )
+
+
+def diff_file(filename: str, content: str) -> list[str]:
+    """Diff a file."""
+    return diff_content(
+        [f"{line}\n" for line in Path(filename).read_text().split("\n")],
+        filename,
+        [f"{line}\n" for line in content.split("\n")],
+        "generated",
+    )
+
+
+def generate_lock_file(output_path: str, source_files: tuple[str, ...]) -> None:
+    """Resolve requirements_all.txt into a pinned lock file.
+
+    This shells out to `uv pip compile`, which performs a full networked
+    dependency resolution, so callers should only invoke it when
+    requirements/dependencies have changed.
+
+    uv records its invocation in the lock file header, which lets Renovate's
+    pip-compile manager parse and re-run it to refresh the lock file when it
+    bumps a dependency.
+    """
+    subprocess.run(
+        [
+            "uv",
+            "pip",
+            "compile",
+            "--quiet",
+            "--universal",
+            "--output-file",
+            output_path,
+            *source_files,
+        ],
+        check=True,
     )
 
 
@@ -595,6 +641,29 @@ def main(validate: bool, ci: bool) -> int:
             if diff:
                 errors.append("".join(diff))
 
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            for lock_file, source_files in PIP_COMPILE_LOCK_FILES.items():
+                tmp_lock = str(Path(tmp_dir) / lock_file)
+                # The header contains the generated command, which we need to ignore when comparing the existing lock file with the generated one due to the temporary folder used for generation.
+                lock_content = [
+                    f"{line}\n"
+                    for line in Path(lock_file).read_text(encoding="utf-8").split("\n")
+                ][2:]
+
+                generate_lock_file(tmp_lock, source_files)
+                generated_lock_content = [
+                    f"{line}\n"
+                    for line in Path(tmp_lock).read_text(encoding="utf-8").split("\n")
+                ][2:]
+                lock_diff = diff_content(
+                    lock_content,
+                    lock_file,
+                    generated_lock_content,
+                    "generated",
+                )
+                if lock_diff:
+                    errors.append("".join(lock_diff))
+
         if errors:
             print("ERROR - FOUND THE FOLLOWING DIFFERENCES")
             print()
@@ -608,6 +677,9 @@ def main(validate: bool, ci: bool) -> int:
 
     for filename, content in files:
         Path(filename).write_text(content)
+
+    for lock_file, source_files in PIP_COMPILE_LOCK_FILES.items():
+        generate_lock_file(lock_file, source_files)
 
     return 0
 
