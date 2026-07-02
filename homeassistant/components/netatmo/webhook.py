@@ -1,4 +1,5 @@
 """The Netatmo integration."""
+
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
@@ -190,6 +191,7 @@ async def async_register_webhook(
         _LOGGER.debug("Register Netatmo webhook: %s", webhook_url)
     # pylint: disable-next=home-assistant-action-swallowed-exception
     except pyatmo.ApiError as err:
+        webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
         _LOGGER.error("Error during webhook registration - %s", err)
     else:
         entry.async_on_unload(
