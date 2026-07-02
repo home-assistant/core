@@ -32,16 +32,18 @@ async def test_load_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_setup_failed(
+async def test_setup_device_info_unavailable(
     hass: HomeAssistant,
     mock_apsystems: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test update failed."""
+    """Test setup continues when device info is unavailable (e.g. nighttime)."""
     mock_apsystems.get_device_info.side_effect = TimeoutError
+    mock_apsystems.get_output_data.side_effect = TimeoutError
+    mock_apsystems.get_alarm_info.side_effect = TimeoutError
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_update(

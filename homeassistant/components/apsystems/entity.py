@@ -17,15 +17,12 @@ class ApSystemsEntity(Entity):
         data: ApSystemsData,
     ) -> None:
         """Initialize the APsystems entity."""
-
-        # Handle device version safely
         sw_version = None
         if data.coordinator.device_version:
             version_parts = data.coordinator.device_version.split(" ")
-            if len(version_parts) > 1:
-                sw_version = version_parts[1]
-            else:
-                sw_version = version_parts[0]
+            sw_version = (
+                version_parts[1] if len(version_parts) > 1 else version_parts[0]
+            )
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, data.device_id)},
