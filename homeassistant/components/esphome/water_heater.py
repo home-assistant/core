@@ -19,6 +19,7 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import callback
 
+from .const import TEMPERATURE_UNIT_MAP
 from .entity import (
     EsphomeEntity,
     convert_api_error_ha_error,
@@ -49,7 +50,6 @@ class EsphomeWaterHeater(
 ):
     """A water heater implementation for ESPHome."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_precision = PRECISION_TENTHS
 
     @callback
@@ -58,6 +58,9 @@ class EsphomeWaterHeater(
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
         static_info = self._static_info
+        self._attr_temperature_unit = TEMPERATURE_UNIT_MAP.get(
+            static_info.temperature_unit, UnitOfTemperature.CELSIUS
+        )
         self._attr_min_temp = static_info.min_temperature
         self._attr_max_temp = static_info.max_temperature
         self._attr_target_temperature_step = static_info.target_temperature_step
