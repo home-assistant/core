@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, override
 
+from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY
 from aioamazondevices.structures import AmazonDevice
 
 from homeassistant.components.switch import (
@@ -17,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AmazonConfigEntry, alexa_api_call
 from .entity import AmazonEntity
-from .utils import async_remove_entity_from_virtual_group, async_update_unique_id
+from .utils import async_remove_entities, async_update_unique_id
 
 PARALLEL_UPDATES = 1
 
@@ -90,8 +91,12 @@ async def async_setup_entry(
     new_key = "dnd"
 
     # Remove old DND switch from virtual groups
-    await async_remove_entity_from_virtual_group(
-        hass, coordinator, SWITCH_DOMAIN, old_key
+    await async_remove_entities(
+        hass,
+        coordinator,
+        SWITCH_DOMAIN,
+        old_key,
+        remove_fn=lambda d: d.device_family == SPEAKER_GROUP_FAMILY,
     )
 
     # Replace unique id for DND switch
