@@ -311,7 +311,6 @@ _MEASURE_KEYS_REQUIRING_FILTRATION = frozenset(
         "MBF_MEASURE_RX",
         "MBF_MEASURE_CL",
         "MBF_MEASURE_CONDUCTIVITY",
-        "FILTRATION_SPEED",
     }
 )
 
