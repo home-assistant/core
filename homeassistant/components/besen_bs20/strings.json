@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "This charger is already configured.",
-      "no_connectable_path": "No connectable Bluetooth path is available for this charger."
+      "no_connectable_path": "No connectable Bluetooth path is available for this charger.",
+      "not_supported": "This Bluetooth device is not a supported Besen BS20 charger."
     },
     "error": {
       "cannot_connect": "Cannot connect to the charger. Check Bluetooth proxy range and active connection support.",
@@ -26,6 +27,9 @@
         "data": {
           "pin": "PIN"
         },
+        "data_description": {
+          "pin": "The 6-digit Bluetooth PIN configured on the charger."
+        },
         "description": "The charger rejected the configured PIN. Enter the current 6-digit PIN.",
         "title": "Update Besen BS20 PIN"
       },
@@ -33,6 +37,10 @@
         "data": {
           "pin": "PIN",
           "sync_clock": "Sync charger clock"
+        },
+        "data_description": {
+          "pin": "The 6-digit Bluetooth PIN configured on the charger.",
+          "sync_clock": "Update the charger's internal clock during heartbeat handling."
         },
         "title": "Reconfigure Besen BS20"
       },

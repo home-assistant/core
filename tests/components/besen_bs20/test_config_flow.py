@@ -110,6 +110,7 @@ def _entry() -> SimpleNamespace:
         entry_id="entry",
         data={CONF_ADDRESS: "AA:BB", CONF_NAME: "ACP#Garage", CONF_PIN: "123456"},
         options={CONF_SYNC_CLOCK: True},
+        title="Garage",
         update_listeners=[],
     )
 

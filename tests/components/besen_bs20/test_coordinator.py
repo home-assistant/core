@@ -29,6 +29,7 @@ class _FakeClient:
         self.listener: Callable[[BesenBS20Data], None] | None = None
         self.removed = False
         self.fail_next_command = False
+        self.fail_start = False
 
     def add_listener(
         self,
@@ -46,6 +47,8 @@ class _FakeClient:
     async def async_start(self) -> None:
         """Record start."""
 
+        if self.fail_start:
+            raise RuntimeError("failed start")
         self.calls.append("start")
 
     async def async_stop(self) -> None:
@@ -97,6 +100,22 @@ async def test_coordinator_lifecycle_and_updates(hass: HomeAssistant) -> None:
 
     assert coordinator.config_entry is entry
     assert coordinator.data == client.state
+
+
+async def test_coordinator_start_failure_cleans_up(hass: HomeAssistant) -> None:
+    """Coordinator cleans up the listener and client when start fails."""
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    client = _FakeClient()
+    client.fail_start = True
+    coordinator = BesenBS20Coordinator(hass, entry, cast(Any, client))
+
+    with pytest.raises(RuntimeError):
+        await coordinator.async_start()
+
+    assert client.removed is True
+    assert client.calls == ["stop"]
     assert client.removed is True
     assert client.calls == ["start", "stop"]
 

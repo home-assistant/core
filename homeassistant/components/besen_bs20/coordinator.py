@@ -1,6 +1,7 @@
 """Coordinator for Besen BS20 push updates."""
 
 from collections.abc import Awaitable, Callable
+from contextlib import suppress
 import logging
 from typing import override
 
@@ -43,7 +44,15 @@ class BesenBS20Coordinator(DataUpdateCoordinator[BesenBS20Data]):
         """Start listening to charger updates."""
 
         self._remove_listener = self.client.add_listener(self._handle_client_update)
-        await self.client.async_start()
+        try:
+            await self.client.async_start()
+        except Exception:
+            if self._remove_listener is not None:
+                self._remove_listener()
+                self._remove_listener = None
+            with suppress(Exception):
+                await self.client.async_stop()
+            raise
         self.async_set_updated_data(self.client.state)
 
     @override

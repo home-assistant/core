@@ -81,6 +81,7 @@ async def async_setup_entry(
     try:
         await coordinator.async_start()
     except InvalidAuth as err:
+        async_delete_no_connectable_path_issue(hass, entry.entry_id)
         raise ConfigEntryAuthFailed from err
     except CannotConnect as err:
         async_create_no_connectable_path_issue(hass, entry.entry_id)
