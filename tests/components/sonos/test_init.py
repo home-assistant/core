@@ -26,7 +26,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .conftest import MockSoCo, SoCoMockFactory
+from .conftest import MockSoCo, SoCoMockFactory, SonosMockEvent
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -556,3 +556,44 @@ async def test_ipv6_not_supported(
         await hass.async_block_till_done()
     assert "invalid ip_address received" in caplog.text
     assert "2001:db8:3333:4444:5555:6666:7777:8888" in caplog.text
+
+
+async def test_no_exception_when_entry_unloaded_during_speaker_discovery(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    soco: MockSoCo,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no exception when a discovery event arrives after entry unload.
+
+    Exercises the scenario where async_add_speakers is called after the entry
+    has been unloaded. The _stop_event guard in _add_speaker must detect that
+    the entry is inactive and skip speaker creation without raising an exception.
+    """
+    new_soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.99", "New Room")
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+
+    # Fire a ZGS discovery event for the new speaker after the entry is
+    # unloaded. This simulates a late-arriving network event.
+    subscription = soco.zoneGroupTopology.subscribe.return_value
+    sub_callback = await subscription.wait_for_callback_to_be_set()
+    with (
+        patch.object(
+            MockSoCo,
+            "visible_zones",
+            new_callable=PropertyMock,
+            return_value={soco, new_soco},
+        ),
+        caplog.at_level(logging.DEBUG),
+    ):
+        caplog.clear()
+        sub_callback(SonosMockEvent(soco, soco.zoneGroupTopology, {}))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert any(
+        "Config entry unloaded while adding speaker" in message
+        for message in caplog.messages
+    )

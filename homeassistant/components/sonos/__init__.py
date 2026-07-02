@@ -8,6 +8,7 @@ from http import HTTPStatus
 from ipaddress import AddressValueError, IPv4Address
 import logging
 import socket
+import threading
 from typing import Any, cast
 from urllib.parse import urlparse
 
@@ -70,6 +71,7 @@ CONF_ADVERTISE_ADDR = "advertise_addr"
 CONF_INTERFACE_ADDR = "interface_addr"
 DISCOVERY_IGNORED_MODELS = ["Sonos Boost"]
 ZGS_SUBSCRIPTION_TIMEOUT = 2
+SHUTDOWN_TIMEOUT = 10
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -176,10 +178,28 @@ class SonosDiscoveryManager:
         self.creation_lock = asyncio.Lock()
         self._known_invisible: set[SoCo] = set()
         self._manual_config_required = bool(hosts)
+        self._stop_event = threading.Event()
 
     async def async_shutdown(self) -> None:
         """Stop all running tasks."""
+        self._stop_event.set()
+        # Stop the event listener first so new topology events cannot schedule
+        # additional async_add_speakers runs while shutdown is waiting for
+        # creation_lock to drain existing work.
         await self._async_stop_event_listener()
+        # Wait for any in-flight _add_speakers executor job to finish before
+        # tearing down speakers and the event listener. Every async_add_speakers
+        # call holds creation_lock for its entire duration (including blocking
+        # network IO), so acquiring it here serializes cleanup after creation.
+        # Bound the wait so shutdown stays responsive under poor network conditions.
+        try:
+            async with asyncio.timeout(SHUTDOWN_TIMEOUT):
+                async with self.creation_lock:
+                    pass
+        except TimeoutError:
+            _LOGGER.warning(
+                "Timed out waiting for in-flight speaker discovery to complete"
+            )
         self._stop_manual_heartbeat()
 
     def is_device_invisible(self, ip_address: str) -> bool:
@@ -389,6 +409,13 @@ class SonosDiscoveryManager:
                 sub = None
                 if soco.uid == zgs_subscription_uid and zgs_subscription:
                     sub = zgs_subscription
+                if self._stop_event.is_set():
+                    # Entry was unloaded during IO; skip adding this speaker.
+                    _LOGGER.debug(
+                        "Config entry unloaded while adding speakers speaker %s, skipping",
+                        soco.uid,
+                    )
+                    return
                 self._add_speaker(soco, sub)
 
         async with self.creation_lock:
@@ -400,6 +427,12 @@ class SonosDiscoveryManager:
         """Create and set up a new SonosSpeaker instance."""
         try:
             speaker_info = soco.get_speaker_info(True, timeout=7)
+            if self._stop_event.is_set():
+                # Entry was unloaded during IO; skip adding this speaker.
+                _LOGGER.debug(
+                    "Config entry unloaded while adding speaker %s, skipping", soco.uid
+                )
+                return
             if soco.uid not in self.data.boot_counts:
                 self.data.boot_counts[soco.uid] = soco.boot_seqnum
             _LOGGER.debug("Adding new speaker: %s", speaker_info)
