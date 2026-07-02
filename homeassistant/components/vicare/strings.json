@@ -1,4 +1,7 @@
 {
+  "application_credentials": {
+    "description": "The **Client Secret** is ignored, enter any value. [Setup instructions]({more_info_url})."
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
