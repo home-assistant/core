@@ -10,7 +10,7 @@ from besen_bs20.models import BesenBS20Data, ChargerConfig, ChargerInfo, ChargeS
 import pytest
 
 from homeassistant.components import besen_bs20 as integration_module, bluetooth
-from homeassistant.components.besen_bs20.const import CONF_SYNC_CLOCK, DOMAIN
+from homeassistant.components.besen_bs20.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
@@ -101,7 +101,6 @@ def _entry() -> MockConfigEntry:
             CONF_NAME: "ACP#Garage",
             CONF_PIN: "123456",
         },
-        options={CONF_SYNC_CLOCK: False},
         title="Garage",
         unique_id="AA:BB",
     )
@@ -153,7 +152,6 @@ async def test_setup_entry_success(
     _assert_entry_state(entry, ConfigEntryState.LOADED)
     assert cast(Any, entry.runtime_data).client is client
     assert client.kwargs["address"] == "AA:BB"
-    assert client.kwargs["sync_clock"] is False
     assert client.started is True
     assert hass.states.get("switch.garage_charge") is not None
 

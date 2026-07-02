@@ -15,7 +15,7 @@ from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import selector
 
-from .const import CONF_SYNC_CLOCK, DEFAULT_SYNC_CLOCK, DOMAIN
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
@@ -31,37 +31,27 @@ def _normalize_address(address: str) -> str:
     return address.strip().upper()
 
 
-def _pin_schema() -> selector.TextSelector:
-    """Return a password text selector for PIN fields."""
-
-    return selector.TextSelector(
+PIN_SCHEMA = vol.All(
+    selector.TextSelector(
         selector.TextSelectorConfig(
             type=selector.TextSelectorType.PASSWORD,
         )
-    )
+    ),
+    vol.Match(r"^\d{6}$"),
+)
 
+MANUAL_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ADDRESS): selector.TextSelector(),
+        vol.Required(CONF_PIN, default=DEFAULT_PIN): PIN_SCHEMA,
+    }
+)
 
-def _manual_schema() -> vol.Schema:
-    """Return manual setup schema."""
-
-    return vol.Schema(
-        {
-            vol.Required(CONF_ADDRESS): selector.TextSelector(),
-            vol.Required(CONF_PIN, default=DEFAULT_PIN): _pin_schema(),
-            vol.Optional(CONF_SYNC_CLOCK, default=DEFAULT_SYNC_CLOCK): bool,
-        }
-    )
-
-
-def _pin_only_schema() -> vol.Schema:
-    """Return PIN-only setup schema."""
-
-    return vol.Schema(
-        {
-            vol.Required(CONF_PIN, default=DEFAULT_PIN): _pin_schema(),
-            vol.Optional(CONF_SYNC_CLOCK, default=DEFAULT_SYNC_CLOCK): bool,
-        }
-    )
+PIN_ONLY_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PIN, default=DEFAULT_PIN): PIN_SCHEMA,
+    }
+)
 
 
 async def _async_validate_input(
@@ -70,12 +60,8 @@ async def _async_validate_input(
     address: str,
     pin: str,
     name: str | None,
-    sync_clock: bool,
 ) -> str:
     """Validate setup by logging into the charger."""
-
-    if len(pin) != 6 or not pin.isdigit():
-        raise InvalidAuth("PIN must be exactly 6 digits")
 
     def _ble_device_provider() -> BLEDevice | None:
         return bluetooth.async_ble_device_from_address(
@@ -96,7 +82,6 @@ async def _async_validate_input(
         ble_device_provider=_ble_device_provider,
         logger=_LOGGER,
         advertised_name=name,
-        sync_clock=sync_clock,
     )
     try:
         await client.async_start()
@@ -152,30 +137,18 @@ class BesenBS20ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             pin = user_input[CONF_PIN]
-            sync_clock = user_input.get(CONF_SYNC_CLOCK, DEFAULT_SYNC_CLOCK)
             try:
                 title = await _async_validate_input(
                     self.hass,
                     address=self._discovered_address,
                     pin=pin,
                     name=self._discovered_name,
-                    sync_clock=sync_clock,
                 )
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except NoConnectablePath as err:
-                _LOGGER.warning(
-                    "Besen BS20 setup failed for %s: %s",
-                    self._discovered_address,
-                    err,
-                )
+            except NoConnectablePath:
                 errors["base"] = "no_connectable_path"
-            except CannotConnect as err:
-                _LOGGER.warning(
-                    "Besen BS20 setup failed for %s: %s",
-                    self._discovered_address,
-                    err,
-                )
+            except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected Besen BS20 setup error")
@@ -188,12 +161,11 @@ class BesenBS20ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_NAME: self._discovered_name,
                         CONF_PIN: pin,
                     },
-                    options={CONF_SYNC_CLOCK: sync_clock},
                 )
 
         return self.async_show_form(
             step_id="bluetooth_confirm",
-            data_schema=_pin_only_schema(),
+            data_schema=PIN_ONLY_SCHEMA,
             errors=errors,
         )
 
@@ -208,7 +180,6 @@ class BesenBS20ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             address = _normalize_address(user_input[CONF_ADDRESS])
             pin = user_input[CONF_PIN]
-            sync_clock = user_input.get(CONF_SYNC_CLOCK, DEFAULT_SYNC_CLOCK)
             await self.async_set_unique_id(address)
             self._abort_if_unique_id_configured()
             try:
@@ -217,15 +188,12 @@ class BesenBS20ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     address=address,
                     pin=pin,
                     name=None,
-                    sync_clock=sync_clock,
                 )
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except NoConnectablePath as err:
-                _LOGGER.warning("Besen BS20 setup failed for %s: %s", address, err)
+            except NoConnectablePath:
                 errors["base"] = "no_connectable_path"
-            except CannotConnect as err:
-                _LOGGER.warning("Besen BS20 setup failed for %s: %s", address, err)
+            except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected Besen BS20 setup error")
@@ -237,11 +205,10 @@ class BesenBS20ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_ADDRESS: address,
                         CONF_PIN: pin,
                     },
-                    options={CONF_SYNC_CLOCK: sync_clock},
                 )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=_manual_schema(),
+            data_schema=MANUAL_SCHEMA,
             errors=errors,
         )

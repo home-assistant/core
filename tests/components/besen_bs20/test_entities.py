@@ -8,7 +8,7 @@ from besen_bs20.models import BesenBS20Data, ChargerConfig, ChargerInfo, ChargeS
 import pytest
 
 from homeassistant.components import besen_bs20 as integration_module, bluetooth
-from homeassistant.components.besen_bs20.const import CONF_SYNC_CLOCK, DOMAIN
+from homeassistant.components.besen_bs20.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -109,7 +109,6 @@ def _entry() -> MockConfigEntry:
             CONF_NAME: "ACP#Garage",
             CONF_PIN: "123456",
         },
-        options={CONF_SYNC_CLOCK: False},
         title="Garage",
         unique_id="AA:BB",
     )

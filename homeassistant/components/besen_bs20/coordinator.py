@@ -3,18 +3,20 @@
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from besen_bs20.client import BesenBS20Client
 from besen_bs20.exceptions import CommandFailed
 from besen_bs20.models import BesenBS20Data
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import BesenBS20ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +27,7 @@ class BesenBS20Coordinator(DataUpdateCoordinator[BesenBS20Data]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: BesenBS20ConfigEntry,
         client: BesenBS20Client,
     ) -> None:
         """Initialize the coordinator."""

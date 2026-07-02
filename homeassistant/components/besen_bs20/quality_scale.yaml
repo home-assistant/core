@@ -37,7 +37,9 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: todo
+    comment: Expand switch command exception handling in a follow-up PR.
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -55,7 +57,10 @@ rules:
   diagnostics:
     status: todo
     comment: Split into a follow-up PR after the initial integration lands.
-  discovery-update-info: done
+  discovery-update-info:
+    status: exempt
+    comment: |
+      The integration does not update discovery information after setup.
   discovery: done
   docs-data-update: done
   docs-examples: done

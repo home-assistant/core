@@ -20,7 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Besen BS20 switches."""
 
-    async_add_entities([BesenBS20ChargeSwitch(entry.runtime_data.coordinator)])
+    async_add_entities([BesenBS20ChargeSwitch(entry.runtime_data)])
 
 
 class BesenBS20ChargeSwitch(BesenBS20Entity, SwitchEntity):
