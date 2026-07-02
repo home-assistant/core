@@ -335,6 +335,7 @@ async def test_device_trackers_in_zone(hass: HomeAssistant) -> None:
     "tracker_attributes",
     [
         pytest.param({"in_zones": ["zone.work_office"]}, id="in_zones_attribute"),
+        pytest.param({"in_zones": []}, id="empty_in_zones_fallback"),
         pytest.param({}, id="friendly_name_fallback"),
     ],
 )
