@@ -3,7 +3,7 @@
 import logging
 from typing import cast, override
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -80,7 +80,7 @@ async def async_setup_entry(
         return features
 
     async def _async_create_entities(speaker: SonosSpeaker) -> None:
-        entities = []
+        entities: list[NumberEntity] = []
 
         available_features = await hass.async_add_executor_job(
             available_soco_attributes, speaker
@@ -93,6 +93,10 @@ async def async_setup_entry(
             entities.append(
                 SonosLevelEntity(speaker, config_entry, level_type, valid_range)
             )
+
+        # Native Sonos group volume (0–100); when ungrouped, mirrors player volume
+        entities.append(SonosGroupVolumeEntity(speaker, config_entry))
+
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -143,3 +147,47 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
         """Return the current value."""
         to_number = LEVEL_TO_NUMBER.get(self.level_type, int)
         return cast(float, to_number(getattr(self.speaker, self.level_type)))
+
+
+class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
+    """Group volume (0–100) for the player’s current group.
+
+    - Grouped: uses GroupRenderingControl to read/write group volume.
+    - Ungrouped: mirrors the player’s RenderingControl Master volume.
+    """
+
+    _attr_translation_key = "group_volume"
+    _attr_native_min_value = 0
+    _attr_native_max_value = 100
+    _attr_native_step = 1
+    _attr_mode = NumberMode.SLIDER
+
+    def __init__(self, speaker: SonosSpeaker, config_entry: SonosConfigEntry) -> None:
+        """Initialize the Sonos group volume number entity."""
+        super().__init__(speaker, config_entry)
+        self._attr_unique_id = f"{self.soco.uid}-group_volume"
+
+    async def _async_fallback_poll(self) -> None:
+        """Poll the value if subscriptions are not working."""
+        await self.hass.async_add_executor_job(self.poll_state)
+        self.async_write_ha_state()
+
+    def poll_state(self) -> None:
+        """Poll the device for the current state."""
+        self.speaker.update_group_volume()
+
+    @property
+    def available(self) -> bool:
+        """Return whether this entity is available."""
+        return self.speaker.is_coordinator and self.speaker.available
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the current group volume (0–100) or None if unknown."""
+        value = self.speaker.group_volume
+        return None if value is None else float(value)
+
+    @soco_error()
+    def set_native_value(self, value: float) -> None:
+        """Set the group volume (0–100), or player volume when ungrouped."""
+        self.speaker.set_group_volume(int(value + 0.5))

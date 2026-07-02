@@ -30,6 +30,8 @@ async def test_diagnostics_config_entry(
     assert result == snapshot(
         exclude=paths(
             "current_timestamp",
+            "discovered.RINCON_test._last_activity",
+            "discovered.RINCON_test.activity_stats",
             "discovered.RINCON_test.event_stats.soco:from_didl_string",
             "discovered.RINCON_test.sonos_group_entities",
         )
@@ -57,6 +59,8 @@ async def test_diagnostics_device(
 
     assert result == snapshot(
         exclude=paths(
+            "_last_activity",
+            "activity_stats",
             "event_stats.soco:from_didl_string",
             "sonos_group_entities",
         )

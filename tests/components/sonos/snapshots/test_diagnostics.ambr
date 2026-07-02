@@ -5,10 +5,7 @@
       'RINCON_test': dict({
         '_group_members_missing': list([
         ]),
-        '_last_activity': -1200.0,
         '_last_event_cache': dict({
-        }),
-        'activity_stats': dict({
         }),
         'available': True,
         'battery_info': dict({
@@ -24,6 +21,7 @@
           'number.zone_a_audio_delay',
           'number.zone_a_balance',
           'number.zone_a_bass',
+          'number.zone_a_group_volume',
           'number.zone_a_music_surround_level',
           'number.zone_a_sub_gain',
           'number.zone_a_surround_level',
@@ -97,10 +95,7 @@
   dict({
     '_group_members_missing': list([
     ]),
-    '_last_activity': -1200.0,
     '_last_event_cache': dict({
-    }),
-    'activity_stats': dict({
     }),
     'available': True,
     'battery_info': dict({
@@ -116,6 +111,7 @@
       'number.zone_a_audio_delay',
       'number.zone_a_balance',
       'number.zone_a_bass',
+      'number.zone_a_group_volume',
       'number.zone_a_music_surround_level',
       'number.zone_a_sub_gain',
       'number.zone_a_surround_level',
