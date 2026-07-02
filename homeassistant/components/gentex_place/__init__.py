@@ -26,9 +26,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlaceConfigEntry) -> boo
     """Set up Place from a config entry."""
     auth_implementation = oauth2.SRPAuthImplementation(hass, DOMAIN)
     try:
-        await auth_implementation.async_refresh_token(entry.data["token"])
+        token = await auth_implementation.async_refresh_token(entry.data["token"])
     except ClientResponseError as err:
         raise ConfigEntryAuthFailed(err) from err
+
+    hass.config_entries.async_update_entry(entry, data={**entry.data, "token": token})
 
     config_entry_oauth2_flow.async_register_implementation(
         hass, DOMAIN, auth_implementation
