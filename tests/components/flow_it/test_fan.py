@@ -38,10 +38,21 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-async def test_fan_turn_on(
-    hass: HomeAssistant, mock_flow_it: AsyncMock, mock_config_entry: MockConfigEntry
+@pytest.mark.parametrize(
+    ("service", "speed"),
+    [
+        (SERVICE_TURN_ON, Speed.LEVEL_1),
+        (SERVICE_TURN_OFF, Speed.OFF),
+    ],
+)
+async def test_fan_turn_on_off(
+    hass: HomeAssistant,
+    mock_flow_it: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    speed: Speed,
 ) -> None:
-    """Test turning on the fan."""
+    """Test turning on and off the fan."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -52,32 +63,12 @@ async def test_fan_turn_on(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
+        service,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_flow_it.return_value.send_command.assert_awaited_once_with(
-        Speed.LEVEL_1, flow_in=True, flow_out=True
-    )
-
-
-async def test_fan_turn_off(
-    hass: HomeAssistant, mock_flow_it: AsyncMock, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test turning off the fan."""
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_id = "fan.00_11_22_33_44_55"
-
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-    mock_flow_it.return_value.send_command.assert_awaited_once_with(
-        Speed.OFF, flow_in=True, flow_out=True
+        speed, flow_in=True, flow_out=True
     )
 
 
