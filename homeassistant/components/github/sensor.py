@@ -2,11 +2,13 @@
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, override
 
 from aiogithubapi import GitHubAuthenticatedUserModel
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -17,6 +19,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import (
@@ -30,7 +33,7 @@ from .coordinator import (
 class GitHubSensorEntityDescription(SensorEntityDescription):
     """Describes GitHub issue sensor entity."""
 
-    value_fn: Callable[[dict[str, Any]], StateType]
+    value_fn: Callable[[dict[str, Any]], StateType | datetime]
 
     attr_fn: Callable[[dict[str, Any]], Mapping[str, Any] | None] = lambda data: None
     avabl_fn: Callable[[dict[str, Any]], bool] = lambda data: True
@@ -144,6 +147,95 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
             "url": data["refs"]["tags"][0]["target"]["url"],
         },
     ),
+    GitHubSensorEntityDescription(
+        key="latest_commit_date",
+        translation_key="latest_commit_date",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: dt_util.parse_datetime(
+            data["default_branch_ref"]["commit"]["committed"]
+        ),
+    ),
+    GitHubSensorEntityDescription(
+        key="latest_discussion_created",
+        translation_key="latest_discussion_created",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        avabl_fn=lambda data: data["discussion"]["discussions"],
+        value_fn=lambda data: dt_util.parse_datetime(
+            data["discussion"]["discussions"][0]["created"]
+        ),
+    ),
+    GitHubSensorEntityDescription(
+        key="latest_discussion_updated",
+        translation_key="latest_discussion_updated",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        avabl_fn=lambda data: data["discussion"]["discussions"],
+        value_fn=lambda data: dt_util.parse_datetime(
+            data["discussion"]["discussions"][0]["updated"]
+        ),
+    ),
+    GitHubSensorEntityDescription(
+        key="latest_issue_created",
+        translation_key="latest_issue_created",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        avabl_fn=lambda data: data["issue"]["issues"],
+        value_fn=lambda data: dt_util.parse_datetime(
+            data["issue"]["issues"][0]["created"]
+        ),
+    ),
+    GitHubSensorEntityDescription(
+        key="latest_issue_updated",
+        translation_key="latest_issue_updated",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        avabl_fn=lambda data: data["issue"]["issues"],
+        value_fn=lambda data: dt_util.parse_datetime(
+            data["issue"]["issues"][0]["updated"]
+        ),
+    ),
+    GitHubSensorEntityDescription(
+        key="latest_pull_request_created",
+        translation_key="latest_pull_request_created",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        avabl_fn=lambda data: data["pull_request"]["pull_requests"],
+        value_fn=lambda data: dt_util.parse_datetime(
+            data["pull_request"]["pull_requests"][0]["created"]
+        ),
+    ),
+    GitHubSensorEntityDescription(
+        key="latest_pull_request_updated",
+        translation_key="latest_pull_request_updated",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        avabl_fn=lambda data: data["pull_request"]["pull_requests"],
+        value_fn=lambda data: dt_util.parse_datetime(
+            data["pull_request"]["pull_requests"][0]["updated"]
+        ),
+    ),
+    GitHubSensorEntityDescription(
+        key="latest_release_date",
+        translation_key="latest_release_date",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        avabl_fn=lambda data: data["release"] is not None,
+        value_fn=lambda data: dt_util.parse_datetime(data["release"]["published"]),
+    ),
+    GitHubSensorEntityDescription(
+        key="latest_tag_date",
+        translation_key="latest_tag_date",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        avabl_fn=lambda data: data["refs"]["tags"],
+        # Annotated tags have a Tag target instead of a Commit, so `committed`
+        # is absent and the sensor reports as unknown.
+        value_fn=lambda data: dt_util.parse_datetime(
+            data["refs"]["tags"][0]["target"].get("committed") or ""
+        ),
+    ),
 )
 
 
@@ -247,7 +339,7 @@ class GitHubSensorEntity(CoordinatorEntity[GitHubDataUpdateCoordinator], SensorE
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
 
