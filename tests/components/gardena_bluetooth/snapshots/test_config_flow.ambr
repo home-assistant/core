@@ -10,6 +10,7 @@
       }),
       'source': 'bluetooth',
       'title_placeholders': dict({
+        'identifier': 'Timer, 00000000-0000-0000-0000-000000000001',
         'name': 'Gardena Water Computer',
       }),
       'unique_id': '00000000-0000-0000-0000-000000000001',
@@ -31,6 +32,7 @@
       'dismiss_protected': True,
       'source': 'bluetooth',
       'title_placeholders': dict({
+        'identifier': 'Timer, 00000000-0000-0000-0000-000000000001',
         'name': 'Gardena Water Computer',
       }),
       'unique_id': '00000000-0000-0000-0000-000000000001',
@@ -120,6 +122,7 @@
   FlowResultSnapshot({
     'data_schema': None,
     'description_placeholders': dict({
+      'identifier': '00000000-0000-0000-0000-000000000001',
       'name': 'Gardena Water Computer',
     }),
     'errors': None,
@@ -175,6 +178,7 @@
   FlowResultSnapshot({
     'data_schema': None,
     'description_placeholders': dict({
+      'identifier': '00000000-0000-0000-0000-000000000001',
       'name': 'Gardena Water Computer',
     }),
     'errors': None,
@@ -192,6 +196,7 @@
       'confirm_only': True,
       'source': 'user',
       'title_placeholders': dict({
+        'identifier': '00000000-0000-0000-0000-000000000001',
         'name': 'Gardena Water Computer',
       }),
       'unique_id': '00000000-0000-0000-0000-000000000001',

@@ -76,6 +76,10 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
 
         self.address = discovery_info.address
+        self.context["title_placeholders"] = {
+            "name": PRODUCT_NAMES[mfg.product_type],
+            "identifier": f"{discovery_info.name}, {discovery_info.address}",
+        }
         return await self.async_step_confirm()
 
     async def async_step_confirm(
@@ -83,15 +87,11 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm discovery."""
         assert self.address
-        title = PRODUCT_NAMES[self.devices[self.address].product_type]
+        title = self.context["title_placeholders"]["name"]
 
         if user_input is not None:
             data = await self.async_read_data()
             return self.async_create_entry(title=title, data=data)
-
-        self.context["title_placeholders"] = {
-            "name": title,
-        }
 
         self._set_confirm_only()
         return self.async_show_form(
@@ -106,6 +106,12 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is not None:
             self.address = user_input[CONF_ADDRESS]
+            self.context["title_placeholders"] = {
+                "name": PRODUCT_NAMES[
+                    self.devices[user_input[CONF_ADDRESS]].product_type
+                ],
+                "identifier": user_input[CONF_ADDRESS],
+            }
             await self.async_set_unique_id(self.address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             return await self.async_step_confirm()
