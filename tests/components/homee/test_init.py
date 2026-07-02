@@ -134,7 +134,7 @@ async def test_attribute_availability(
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the availability of of entities according state from homee."""
+    """Test the availability of entities according state from homee."""
     mock_homee.nodes = [build_mock_node("siren.json")]
     mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
