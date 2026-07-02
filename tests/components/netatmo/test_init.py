@@ -16,7 +16,11 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import OAuth2TokenRequestReauthError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -169,6 +173,43 @@ async def test_setup_component_with_webhook(
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+
+async def test_no_deprecation_issue_on_setup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the automatic webhook lifecycle does not raise the deprecation issue."""
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "deprecated_service_register_webhook"
+    )
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "deprecated_service_unregister_webhook"
+    )
+
+
+@pytest.mark.parametrize("service", ["register_webhook", "unregister_webhook"])
+async def test_deprecated_webhook_service(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+    service: str,
+) -> None:
+    """Test calling a deprecated webhook action raises a repair issue."""
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await hass.services.async_call(DOMAIN, service, blocking=True)
+
+    assert issue_registry.async_get_issue(DOMAIN, f"deprecated_service_{service}")
 
 
 async def test_setup_without_https(
