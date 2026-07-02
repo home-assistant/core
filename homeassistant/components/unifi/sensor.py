@@ -26,6 +26,7 @@ from aiounifi.models.device import (
 )
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
+from aiounifi.models.speedtest import SpeedtestStatus
 from aiounifi.models.wlan import Wlan
 
 from homeassistant.components.sensor import (
@@ -46,10 +47,12 @@ from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util, slugify
 
 from . import UnifiConfigEntry
 from .const import DEVICE_STATES
+from .coordinator import UnifiSpeedtestCoordinator
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
@@ -700,6 +703,19 @@ async def async_setup_entry(
         async_add_entities, UnifiSensorEntity, ENTITY_DESCRIPTIONS
     )
 
+    if config_entry.runtime_data.speedtest_coordinator.data is not None:
+        async_add_entities(
+            [
+                UnifiSpeedtestSensor(
+                    config_entry.runtime_data.speedtest_coordinator,
+                    description,
+                    interface_name,
+                )
+                for interface_name in config_entry.runtime_data.speedtest_coordinator.data
+                for description in SPEEDTEST_SENSORS
+            ]
+        )
+
 
 class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
     UnifiEntity[HandlerT, ApiItemT], SensorEntity
@@ -765,3 +781,96 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         if self.entity_description.is_connected_fn is not None:
             # Remove heartbeat registration
             self.hub.remove_heartbeat(self._attr_unique_id)
+
+
+@dataclass(frozen=True, kw_only=True)
+class UnifiSpeedtestSensorEntityDescription(SensorEntityDescription):
+    """Class describing UniFi speedtest sensor entity."""
+
+    value_fn: Callable[[SpeedtestStatus], StateType | datetime]
+
+
+SPEEDTEST_SENSORS: tuple[UnifiSpeedtestSensorEntityDescription, ...] = (
+    UnifiSpeedtestSensorEntityDescription(
+        key="download",
+        name="Speedtest Download",
+        device_class=SensorDeviceClass.DATA_RATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        value_fn=lambda status: status.download,
+    ),
+    UnifiSpeedtestSensorEntityDescription(
+        key="upload",
+        name="Speedtest Upload",
+        device_class=SensorDeviceClass.DATA_RATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        value_fn=lambda status: status.upload,
+    ),
+    UnifiSpeedtestSensorEntityDescription(
+        key="ping",
+        name="Speedtest Ping",
+        device_class=SensorDeviceClass.DURATION,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        value_fn=lambda status: status.ping,
+    ),
+    UnifiSpeedtestSensorEntityDescription(
+        key="last_run",
+        name="Speedtest Last Run",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda status: (
+            dt_util.utc_from_timestamp(status.timestamp / 1000)
+            if status.timestamp > 0
+            else None
+        ),
+    ),
+)
+
+
+class UnifiSpeedtestSensor(CoordinatorEntity[UnifiSpeedtestCoordinator], SensorEntity):
+    """Representation of a UniFi speedtest sensor."""
+
+    entity_description: UnifiSpeedtestSensorEntityDescription
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: UnifiSpeedtestCoordinator,
+        description: UnifiSpeedtestSensorEntityDescription,
+        interface_name: str,
+    ) -> None:
+        """Initialize the speedtest sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self.interface_name = interface_name
+        self.hub = coordinator.hub
+        self._attr_device_info = self.hub.device_info
+        self._attr_unique_id = f"speedtest_{interface_name}_{description.key}-{self.hub.config.entry.unique_id}"
+        # Append the interface to the entity name
+        self._attr_name = (
+            f"{description.name} ({interface_name})" if description.name else None
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if not self.coordinator.last_update_success:
+            return False
+        if self.coordinator.data is None:
+            return False
+        return self.interface_name in self.coordinator.data
+
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the sensor."""
+        if self.coordinator.data is None:
+            return None
+        status = self.coordinator.data.get(self.interface_name)
+        if status is None:
+            return None
+        return self.entity_description.value_fn(status)

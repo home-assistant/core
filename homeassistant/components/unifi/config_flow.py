@@ -47,6 +47,7 @@ from .const import (
     CONF_IGNORE_WIRED_BUG,
     CONF_MORE_OPTIONS,
     CONF_SITE_ID,
+    CONF_SPEEDTEST_INTERVAL,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
@@ -379,6 +380,38 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                         ),
                         SectionConfig(collapsed=True),
                     ),
+                }
+            ),
+            last_step=False,
+        )
+
+    async def async_step_statistics_sensors(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the statistics sensors options."""
+        if user_input is not None:
+            self.options.update(user_input)
+            return await self._update_options()
+
+        return self.async_show_form(
+            step_id="statistics_sensors",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_ALLOW_BANDWIDTH_SENSORS,
+                        default=self.hub.config.option_allow_bandwidth_sensors,
+                    ): bool,
+                    vol.Optional(
+                        CONF_ALLOW_UPTIME_SENSORS,
+                        default=self.hub.config.option_allow_uptime_sensors,
+                    ): bool,
+                    vol.Optional(
+                        CONF_SPEEDTEST_INTERVAL,
+                        default=int(
+                            self.hub.config.option_speedtest_interval.total_seconds()
+                            / 60
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=30, max=180)),
                 }
             ),
             last_step=True,

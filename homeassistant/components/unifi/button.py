@@ -34,6 +34,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
 from .const import DOMAIN
+from .coordinator import UnifiSpeedtestCoordinator
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
@@ -142,6 +143,10 @@ async def async_setup_entry(
         async_add_entities, UnifiButtonEntity, ENTITY_DESCRIPTIONS, requires_admin=True
     )
 
+    async_add_entities(
+        [UnifiSpeedtestButton(config_entry.runtime_data.speedtest_coordinator)]
+    )
+
 
 class UnifiButtonEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
     UnifiEntity[HandlerT, ApiItemT], ButtonEntity
@@ -165,3 +170,22 @@ class UnifiButtonEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
     @override
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
         """Update entity state."""
+
+
+class UnifiSpeedtestButton(ButtonEntity):
+    """Button to trigger a UniFi speedtest."""
+
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_name = "Speedtest"
+
+    def __init__(self, coordinator: UnifiSpeedtestCoordinator) -> None:
+        """Initialize the speedtest button."""
+        self.coordinator = coordinator
+        self.hub = coordinator.hub
+        self._attr_device_info = self.hub.device_info
+        self._attr_unique_id = f"speedtest_trigger-{self.hub.config.entry.unique_id}"
+
+    async def async_press(self) -> None:
+        """Press the button to trigger speedtest."""
+        await self.coordinator.async_request_refresh()

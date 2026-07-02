@@ -17,6 +17,7 @@ from homeassistant.components.unifi.const import (
     CONF_IGNORE_WIRED_BUG,
     CONF_MORE_OPTIONS,
     CONF_SITE_ID,
+    CONF_SPEEDTEST_INTERVAL,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
@@ -431,6 +432,7 @@ async def test_option_flow(
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
         CONF_ALLOW_BANDWIDTH_SENSORS: True,
         CONF_ALLOW_UPTIME_SENSORS: True,
+        CONF_SPEEDTEST_INTERVAL: 90,
     }
 
 
