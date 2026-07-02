@@ -1,0 +1,47 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "divert_active": {
+        "default": "mdi:call-split"
+      },
+      "has_limit": {
+        "default": "mdi:car-speed-limiter"
+      },
+      "shaper_active": {
+        "default": "mdi:tune-variant"
+      }
+    },
+    "sensor": {
+      "gfi_trip_count": {
+        "default": "mdi:counter"
+      },
+      "no_gnd_trip_count": {
+        "default": "mdi:counter"
+      },
+      "service_level": {
+        "default": "mdi:home-lightning-bolt-outline"
+      },
+      "status": {
+        "default": "mdi:ev-station",
+        "state": {
+          "charging": "mdi:battery-charging",
+          "connected": "mdi:power-plug",
+          "diode_check_failed": "mdi:alert-circle",
+          "disabled": "mdi:stop-circle-outline",
+          "gfci_fault": "mdi:alert-circle",
+          "gfci_self_test_failure": "mdi:alert-circle",
+          "no_ground": "mdi:alert",
+          "not_connected": "mdi:power-plug-off",
+          "over_temperature": "mdi:thermometer-alert",
+          "sleeping": "mdi:sleep",
+          "stuck_relay": "mdi:alert",
+          "unknown": "mdi:help-circle",
+          "vent_required": "mdi:fan-alert"
+        }
+      },
+      "stuck_relay_trip_count": {
+        "default": "mdi:counter"
+      }
+    }
+  }
+}
