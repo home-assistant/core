@@ -163,6 +163,9 @@ class RingCam(RingEntity[RingGeneric], Camera):
     ) -> bytes | None:
         """Return a still image response from the camera."""
         if self._video_url is None:
+            if image := await self._async_get_fresh_snapshot():
+                return image
+
             if not cast(Any, self._device).has_subscription:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,

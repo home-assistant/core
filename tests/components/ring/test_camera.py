@@ -15,7 +15,6 @@ from homeassistant.components.camera import (
     StreamType,
     async_get_image,
     async_get_mjpeg_stream,
-    get_camera_from_entity_id,
 )
 from homeassistant.components.ring.camera import FORCE_REFRESH_INTERVAL
 from homeassistant.components.ring.const import SCAN_INTERVAL
@@ -383,8 +382,8 @@ async def test_camera_live_view_for_video_intercom(
     assert state is not None
     assert state.attributes["supported_features"] is CameraEntityFeature.STREAM
     assert hass.states.get("camera.ingress_last_recording") is None
-    camera = get_camera_from_entity_id(hass, "camera.ingress_live_view")
-    assert await camera._async_get_fresh_snapshot() == SMALLEST_VALID_JPEG_BYTES
+    image = await async_get_image(hass, "camera.ingress_live_view")
+    assert image.content == SMALLEST_VALID_JPEG_BYTES
     intercom_mock.async_get_snapshot.assert_called_once()
 
 
