@@ -90,7 +90,13 @@ class GoogleHealthActivityCoordinator(DataUpdateCoordinator[GoogleHealthActivity
 
     @override
     async def _async_update_data(self) -> GoogleHealthActivityData:
-        """Fetch steps and distance rollup for today."""
+        """Fetch steps and distance rollup for today.
+
+        Queries the daily rollup endpoints using Home Assistant's local time zone
+        to aggregate step and distance counts over the current civil day. If no
+        data points exist for today yet, the API returns None, which the sensors
+        default to 0.
+        """
         with handle_api_errors():
             steps_rollup = await self.api.steps.today(self.hass.config.time_zone)
             distance_rollup = await self.api.distance.today(self.hass.config.time_zone)
