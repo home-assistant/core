@@ -31,7 +31,9 @@ DISCOVERY_INTEGRATIONS: dict[str, Iterable[str]] = {
 }
 DEPRECATED_PACKAGES: dict[str, tuple[str, str]] = {
     # old_package_name: (reason, breaks_in_ha_version)
-    "pyserial-asyncio": ("should be replaced by pyserial-asyncio-fast", "2026.7"),
+    "pyserial": ("should be replaced by serialx", "2026.12"),
+    "pyserial-asyncio": ("should be replaced by serialx", "2026.12"),
+    "pyserial-asyncio-fast": ("should be replaced by serialx", "2026.12"),
 }
 _LOGGER = logging.getLogger(__name__)
 
