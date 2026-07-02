@@ -21,7 +21,11 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.xbox.const import DOMAIN
+from homeassistant.components.xbox.const import (
+    DOMAIN,
+    SUBENTRY_TYPE_FRIEND,
+    SUBENTRY_TYPE_GAME,
+)
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -64,21 +68,27 @@ def mock_config_entry() -> MockConfigEntry:
         subentries_data=[
             ConfigSubentryData(
                 data={},
-                subentry_type="friend",
+                subentry_type=SUBENTRY_TYPE_FRIEND,
                 title="erics273",
                 unique_id="2533274913657542",
             ),
             ConfigSubentryData(
                 data={},
-                subentry_type="friend",
+                subentry_type=SUBENTRY_TYPE_FRIEND,
                 title="Ikken Hissatsuu",
                 unique_id="2533274838782903",
             ),
             ConfigSubentryData(
                 data={},
-                subentry_type="friend",
+                subentry_type=SUBENTRY_TYPE_FRIEND,
                 title="test",
                 unique_id="2533274838782904",
+            ),
+            ConfigSubentryData(
+                data={},
+                subentry_type=SUBENTRY_TYPE_GAME,
+                title="Blue Dragon",
+                unique_id="1297287135",
             ),
         ],
         minor_version=3,
