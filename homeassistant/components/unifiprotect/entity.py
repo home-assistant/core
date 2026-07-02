@@ -179,6 +179,7 @@ class BaseProtectEntity(Entity):
     _state_attrs: tuple[str, ...] = ("_attr_available",)
     _attr_has_entity_name = True
     _async_get_ufp_enabled: Callable[[ProtectAdoptableDeviceModel], bool] | None = None
+    _async_get_ufp_public_enabled: Callable[[PublicDeviceModel], bool] | None = None
     # Cached public-API object for descriptions migrated to the public path
     # (set ``ufp_public_value``); ``None`` until primed/refreshed.
     _ufp_public_obj: PublicDeviceModel | None = None
@@ -203,6 +204,7 @@ class BaseProtectEntity(Entity):
             self._attr_unique_id = f"{self.device.mac}_{description.key}"
             if isinstance(description, ProtectEntityDescription):
                 self._async_get_ufp_enabled = description.get_ufp_enabled
+                self._async_get_ufp_public_enabled = description.ufp_public_enabled_fn
 
         self._async_set_device_info()
         self._state_getters = tuple(
@@ -231,12 +233,19 @@ class BaseProtectEntity(Entity):
             # Migrated entities are fully public: availability tracks the public
             # websocket health and the public object's state (CONNECTED only;
             # CONNECTING/DISCONNECTED/UNKNOWN and a missing object read as
-            # unavailable), independent of the private connection.
-            available = (
+            # unavailable), independent of the private connection. An optional
+            # ``ufp_public_enabled_fn`` gate then mirrors ``ufp_enabled`` against
+            # the public object (e.g. a sensor feature toggled off).
+            public_obj = self._ufp_public_obj
+            if (
                 self.data.last_public_update_success
-                and self._ufp_public_obj is not None
-                and self._ufp_public_obj.state is DeviceState.CONNECTED
-            )
+                and public_obj is not None
+                and public_obj.state is DeviceState.CONNECTED
+            ):
+                get_public_enabled = self._async_get_ufp_public_enabled
+                available = get_public_enabled is None or get_public_enabled(public_obj)
+            else:
+                available = False
         elif device.model is ModelType.NVR:
             available = last_updated_success
         else:
@@ -277,10 +286,12 @@ class BaseProtectEntity(Entity):
     def _async_public_updated(self, obj: PublicDeviceModel | None) -> None:
         """Handle a public devices WS update for a migrated value.
 
-        ``obj`` is the refreshed public object from a WS message; ``None`` on a
-        public websocket state change (e.g. reconnect), where the cached object
-        is re-read from the bootstrap so a value that changed during the outage
-        is picked up — mirroring the relay/siren re-signal.
+        ``obj`` is the refreshed public object from a WS message; ``None`` when
+        there is no object to pass (a websocket state change, a delete event,
+        or a frame the library could not merge). The object is then re-read
+        from the bootstrap: a deleted device reads as missing (the entity goes
+        unavailable), and after a reconnect a value that changed during the
+        outage is picked up.
         """
         self._ufp_public_obj = (
             obj if obj is not None else self.data.async_get_public_device(self.device)
@@ -296,9 +307,9 @@ class BaseProtectEntity(Entity):
         )
         # Not every entity carries an entity_description (e.g. cameras), so getattr.
         description = getattr(self, "entity_description", None)
-        if (
-            isinstance(description, ProtectEntityDescription)
-            and description.ufp_public_value is not None
+        if isinstance(description, ProtectEntityDescription) and (
+            description.ufp_public_value is not None
+            or description.ufp_public_value_fn is not None
         ):
             self._ufp_uses_public = True
             self._ufp_public_obj = self.data.async_get_public_device(self.device)
@@ -423,7 +434,12 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):  # noqa: UP046
     ufp_value: str | None = None
     ufp_value_fn: Callable[[T], Any] | None = None
     ufp_public_value: str | None = None
+    # Callable variant of ``ufp_public_value`` for public values needing a transform.
+    ufp_public_value_fn: Callable[[PublicDeviceModel], Any] | None = None
     ufp_enabled: str | None = None
+    # Public counterpart of ``ufp_enabled``; a callable because public enablement
+    # is often compound (e.g. mount type plus a settings flag).
+    ufp_public_enabled_fn: Callable[[PublicDeviceModel], bool] | None = None
     ufp_perm: PermRequired | None = None
 
     # The below are set in __post_init__
@@ -443,10 +459,13 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):  # noqa: UP046
     def get_value(self, obj: T, public_obj: PublicDeviceModel | None = None) -> Any:
         """Return the value, reading from the public object when migrated.
 
-        A migrated description sets ``ufp_public_value`` and drops the private
-        ``ufp_value``: the value comes only from the public object, or ``None``
-        when it is absent (the entity is then marked unavailable).
+        A migrated description sets ``ufp_public_value`` (or ``ufp_public_value_fn``)
+        and drops the private ``ufp_value``: the value comes only from the public
+        object, or ``None`` when it is absent (the entity is then marked
+        unavailable).
         """
+        if (fn := self.ufp_public_value_fn) is not None:
+            return None if public_obj is None else fn(public_obj)
         if (getter := self.get_ufp_public_value) is not None:
             return None if public_obj is None else getter(public_obj)
         return self.get_ufp_value(obj)

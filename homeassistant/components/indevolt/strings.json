@@ -365,6 +365,12 @@
       "realtime_target_soc": {
         "name": "Real-time target SOC"
       },
+      "remaining_charging_time": {
+        "name": "Remaining charging time"
+      },
+      "remaining_discharging_time": {
+        "name": "Remaining discharging time"
+      },
       "serial_number": {
         "name": "Serial number"
       },

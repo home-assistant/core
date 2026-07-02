@@ -39,7 +39,7 @@
 # name: test_all_entities[switch.1p7k_500006_authentication-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1p7k_500006 Authentication',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1p7k_500006 Authentication',
     }),
     'context': <ANY>,
     'entity_id': 'switch.1p7k_500006_authentication',
@@ -89,7 +89,7 @@
 # name: test_all_entities[switch.1p7k_500006_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1p7k_500006 Lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1p7k_500006 Lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.1p7k_500006_lock',

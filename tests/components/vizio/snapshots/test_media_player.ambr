@@ -6,11 +6,11 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'sound_mode_list': list([
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Music',
         'Movie',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'HDMI',
         'USB',
         'Bluetooth',
@@ -50,23 +50,23 @@
 # name: test_media_player_entity_setup[speaker][media_player.vizio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'speaker',
-      'friendly_name': 'Vizio',
-      'is_volume_muted': False,
-      'sound_mode': 'Music',
-      'sound_mode_list': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vizio',
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Music',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Music',
         'Movie',
       ]),
-      'source': 'HDMI',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'HDMI',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'HDMI',
         'USB',
         'Bluetooth',
         'AUX',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 85389>,
-      'volume_level': 0.4838709677419355,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 85389>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.4838709677419355,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.vizio',
@@ -83,11 +83,11 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'sound_mode_list': list([
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Music',
         'Movie',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'HDMI',
         'USB',
         'Bluetooth',
@@ -127,23 +127,23 @@
 # name: test_media_player_entity_setup[tv][media_player.vizio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'tv',
-      'friendly_name': 'Vizio',
-      'is_volume_muted': False,
-      'sound_mode': 'Music',
-      'sound_mode_list': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tv',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vizio',
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Music',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Music',
         'Movie',
       ]),
-      'source': 'HDMI',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'HDMI',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'HDMI',
         'USB',
         'Bluetooth',
         'AUX',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 85437>,
-      'volume_level': 0.15,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 85437>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.15,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.vizio',
