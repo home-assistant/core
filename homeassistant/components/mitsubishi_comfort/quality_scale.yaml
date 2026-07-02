@@ -41,9 +41,7 @@ rules:
   test-coverage: todo
   integration-owner: done
   docs-installation-parameters: done
-  docs-configuration-parameters:
-    status: exempt
-    comment: No options flow.
+  docs-configuration-parameters: done
 
   # Gold
   entity-translations: todo
@@ -63,7 +61,7 @@ rules:
   reconfiguration-flow: todo
   dynamic-devices: todo
   discovery-update-info: done
-  repair-issues: todo
+  repair-issues: done
   docs-use-cases: done
   docs-supported-devices: done
   docs-supported-functions: done
