@@ -216,6 +216,7 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "slimproto": {"aioslimproto": {"async-timeout"}},
     "surepetcare": {"surepy": {"async-timeout"}},
     "tailwind": {"gotailwind": {"backoff"}},
+    "tasmota": {"aiogithubapi": {"backoff"}},
     "technove": {"python-technove": {"backoff"}},
     "tesla_wall_connector": {"tesla-wall-connector": {"backoff"}},
     "tibber": {"gql": {"backoff"}},
