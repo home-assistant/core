@@ -441,6 +441,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/dwd_weather_warnings/ @runningman84 @stephan192
 /homeassistant/components/dynalite/ @ziv1234
 /tests/components/dynalite/ @ziv1234
+/homeassistant/components/dyson_infrared/ @elax46
+/tests/components/dyson_infrared/ @elax46
 /homeassistant/components/eafm/ @Jc2k
 /tests/components/eafm/ @Jc2k
 /homeassistant/components/earn_e_p1/ @Miggets7

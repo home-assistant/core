@@ -180,6 +180,7 @@ FLOWS = {
         "duotecno",
         "dwd_weather_warnings",
         "dynalite",
+        "dyson_infrared",
         "eafm",
         "earn_e_p1",
         "easyenergy",
