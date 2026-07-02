@@ -5,7 +5,22 @@
       "MasterWCModel": "Test Model",
       "MasterSerial": "123456",
       "MasterWCFirmwareVersion": "1.0.0",
-      "SystemName": "Test System"
+      "SystemName": "Test System",
+      "Peripherals": [
+        {
+          "LogicalAddress": 1,
+          "DeviceType": "Sensor",
+          "ZoneAssignment": [1],
+          "SerialNumber": "PERIPH001",
+          "RemainingBatteryCapacity_pc": 85.0,
+          "SensorInputs": {
+            "SHTC1": {
+              "Temperature_oC": 23.5,
+              "RelativeHumidity_pc": 55.0
+            }
+          }
+        }
+      ]
     },
     "NV_SystemSettings": {
       "SystemName": "Test System"
@@ -34,7 +49,27 @@
     "MasterInfo": {
       "LiveTemp_oC": 22.0,
       "LiveHumidity_pc": 50.0,
-      "LiveOutdoorTemp_oC": 0.0
+      "LiveOutdoorTemp_oC": 28.5
+    },
+    "LiveAircon": {
+      "SystemOn": true,
+      "CompressorMode": "COOL",
+      "CompressorCapacity": 75,
+      "FanRPM": 850,
+      "Defrost": false,
+      "CompressorChasingTemperature": 24.0,
+      "CompressorLiveTemperature": 22.5,
+      "OutdoorUnit": {
+        "ModelNumber": "OU-100",
+        "SerialNumber": "OU123456",
+        "SoftwareVersion": "2.0.0",
+        "CompSpeed": 1200.0,
+        "CompPower": 1500,
+        "CompRunningPWM": 80,
+        "CompressorOn": true,
+        "AmbTemp": 28.5,
+        "Family": "Neo"
+      }
     },
     "NV_Limits": {
       "UserSetpoint_oC": {
