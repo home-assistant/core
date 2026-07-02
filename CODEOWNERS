@@ -1071,6 +1071,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/matrix/ @PaarthShah
 /homeassistant/components/matter/ @home-assistant/matter
 /tests/components/matter/ @home-assistant/matter
+/homeassistant/components/mawaqit/ @MAWAQIT @moha-tah @Yeyvo
+/tests/components/mawaqit/ @MAWAQIT @moha-tah @Yeyvo
 /homeassistant/components/mcp/ @allenporter
 /tests/components/mcp/ @allenporter
 /homeassistant/components/mcp_server/ @allenporter
