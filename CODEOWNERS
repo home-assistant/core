@@ -923,6 +923,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/ista_ecotrend/ @tr4nt0r
 /homeassistant/components/isy994/ @bdraco @shbatm
 /tests/components/isy994/ @bdraco @shbatm
+/homeassistant/components/itachip2ir/ @orandasoft
+/tests/components/itachip2ir/ @orandasoft
 /homeassistant/components/ituran/ @shmuelzon
 /tests/components/ituran/ @shmuelzon
 /homeassistant/components/izone/ @Swamp-Ig

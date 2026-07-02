@@ -1,0 +1,117 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This device is already configured.",
+      "cannot_connect": "Failed to connect.",
+      "cannot_identify": "Could not identify the device. Enter the MAC address manually.",
+      "invalid_discovery": "The discovered device information is invalid.",
+      "no_changes": "No changes were made.",
+      "no_ir_ports": "No infrared-capable ports were found.",
+      "not_ip2ir": "The discovered Global Cach\u00e9 device does not expose infrared-capable ports.",
+      "reconfigure_successful": "Reconfiguration successful.",
+      "unknown": "Unexpected error."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect.",
+      "cannot_identify": "Could not identify the device. Enter the MAC address manually.",
+      "invalid_device_id": "Enter a valid MAC address.",
+      "no_ir_ports": "No infrared-capable ports were found.",
+      "unknown": "Unexpected error."
+    },
+    "step": {
+      "confirm_discovery": {
+        "description": "Do you want to set up the discovered iTach IP2IR at {host}?",
+        "title": "Set up discovered iTach IP2IR"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the iTach IP2IR device.",
+          "port": "TCP port used by the iTach device."
+        },
+        "description": "Update the connection details for this iTach IP2IR device.",
+        "title": "Reconfigure iTach IP2IR"
+      },
+      "user": {
+        "data": {
+          "device_id": "MAC address",
+          "host": "Host",
+          "port": "Port"
+        },
+        "data_description": {
+          "device_id": "MAC address or Global Cach\u00e9 device identifier used to uniquely identify this device.",
+          "host": "IP address or hostname of the iTach IP2IR device.",
+          "port": "TCP port used by the iTach device."
+        },
+        "description": "Connect to your Global Cach\u00e9 iTach IP2IR device.",
+        "title": "Set up iTach IP2IR"
+      }
+    }
+  },
+  "entity": {
+    "infrared": {
+      "ir_blaster_port": {
+        "name": "IR Blaster Port {port}"
+      },
+      "ir_port": {
+        "name": "IR Port {port}"
+      }
+    }
+  },
+  "exceptions": {
+    "itach_busy": {
+      "message": "The iTach infrared port is busy."
+    },
+    "itach_connection_failed": {
+      "message": "Failed to communicate with the iTach device: {error}"
+    },
+    "itach_invalid_command": {
+      "message": "The infrared command is invalid: {error}"
+    },
+    "itach_rejected_command": {
+      "message": "The iTach device rejected the command: {error}"
+    }
+  },
+  "issues": {
+    "cannot_connect": {
+      "description": "Home Assistant cannot connect to **{entry_title}**. Check that the iTach device is powered on, reachable from Home Assistant, and using the configured network address. After fixing the network or device issue, reload the integration.",
+      "title": "iTach IP2IR cannot be reached"
+    },
+    "invalid_config": {
+      "description": "Home Assistant could not set up **{entry_title}** because the stored configuration or device response is invalid. Reconfigure the integration or reload it after fixing the device or network configuration. Error: {error}",
+      "title": "iTach IP2IR configuration problem"
+    },
+    "no_ir_ports": {
+      "description": "**{entry_title}** does not currently expose any infrared-capable ports. Check the iTach port configuration and make sure at least one port is configured as `IR Out` or `IR Blaster Out`, then reload the integration.",
+      "title": "No infrared-capable iTach ports are available"
+    }
+  },
+  "options": {
+    "abort": {
+      "refresh_successful": "Infrared entities refreshed."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect.",
+      "no_ir_ports": "No infrared-capable ports were found.",
+      "unknown": "Unexpected error."
+    },
+    "progress": {
+      "refresh_infrared_ports": "Refreshing infrared entities..."
+    },
+    "step": {
+      "init": {
+        "menu_options": {
+          "refresh_infrared_ports": "Refresh infrared entities"
+        },
+        "title": "Manage iTach IP2IR"
+      },
+      "refresh_infrared_ports": {
+        "description": "Query the iTach device and reconcile Home Assistant infrared entities with the current port configuration.",
+        "title": "Refresh infrared entities"
+      }
+    }
+  }
+}
