@@ -4364,7 +4364,7 @@
       "iot_class": "local_polling"
     },
     "modbus": {
-      "name": "Modbus",
+      "name": "Manual Modbus",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
