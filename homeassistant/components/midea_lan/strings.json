@@ -1,9 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "device_auth_failed": "Could not connect with the provided configuration",
@@ -71,14 +69,7 @@
         "title": "Search devices"
       },
       "user": {
-        "data": {
-          "action": "Action"
-        },
-        "data_description": {
-          "action": "Choose how you want to add your Midea appliance"
-        },
         "menu_options": {
-          "cache": "Remove login cache",
           "list": "List all appliances only",
           "manually": "Configure manually",
           "search": "Search automatically"
