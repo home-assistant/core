@@ -113,6 +113,34 @@
         }
       },
       "name": "Reconnect wireless client"
+    },
+    "block_client": {
+      "description": "Block client from Omada network.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The instance of the Omada integration to which the client is connected.",
+          "name": "Omada controller"
+        },
+        "mac": {
+          "description": "MAC address of the device.",
+          "name": "MAC address"
+        }
+      },
+      "name": "Block wireless client"
+    },
+    "unblock_client": {
+      "description": "Unblock client from Omada network.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The instance of the Omada integration to which the client is connected.",
+          "name": "Omada controller"
+        },
+        "mac": {
+          "description": "MAC address of the device.",
+          "name": "MAC address"
+        }
+      },
+      "name": "Unblock wireless client"
     }
   }
 }

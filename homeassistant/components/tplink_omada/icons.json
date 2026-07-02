@@ -31,6 +31,12 @@
   "services": {
     "reconnect_client": {
       "service": "mdi:sync"
+    },
+    "block_client": {
+      "service": "mdi:link-off"
+    },
+    "unblock_client": {
+      "service": "mdi:link"
     }
   }
 }
