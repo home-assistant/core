@@ -728,7 +728,8 @@ class ConfigEntry[_DataT = Any]:
                 self.domain,
                 error_reason,
             )
-        if isinstance(exc, ConfigEntryAuthFailed):
+
+        elif isinstance(exc, ConfigEntryAuthFailed):
             message = str(exc)
             auth_base_message = "could not authenticate"
             error_reason = message or auth_base_message
@@ -745,7 +746,8 @@ class ConfigEntry[_DataT = Any]:
             )
             logger.debug("Full exception", exc_info=True)  # noqa: LOG014
             self.async_start_reauth_if_available(hass)
-        if isinstance(exc, ConfigEntryNotReady):
+
+        elif isinstance(exc, ConfigEntryNotReady):
             message = str(exc)
             error_reason_translation_key = exc.translation_key
             error_reason_translation_placeholders = exc.translation_placeholders
@@ -786,7 +788,7 @@ class ConfigEntry[_DataT = Any]:
                     functools.partial(self._async_setup_again, hass),
                 )
 
-        if isinstance(exc, asyncio.CancelledError):
+        elif isinstance(exc, asyncio.CancelledError):
             # We want to propagate CancelledError if we are being cancelled.
             if (task := asyncio.current_task()) and task.cancelling() > 0:
                 logger.exception(
@@ -801,14 +803,13 @@ class ConfigEntry[_DataT = Any]:
                     None,
                     None,
                 )
-                raise exc
 
             # This was not a "real" cancellation, log it and treat as a normal error.
             logger.exception(
                 "Error setting up entry %s for %s", self.title, integration.domain
             )
 
-        if isinstance(exc, (SystemExit, Exception)):
+        else:
             logger.exception(
                 "Error setting up entry %s for %s", self.title, integration.domain
             )
@@ -907,7 +908,7 @@ class ConfigEntry[_DataT = Any]:
                 ConfigEntryAuthFailed,
                 asyncio.CancelledError,
                 SystemExit,
-                Exception,  # noqa: BLE001
+                Exception,
             ) as exc:
                 (
                     error_reason,
@@ -916,6 +917,8 @@ class ConfigEntry[_DataT = Any]:
                 ) = await self.__async_handle_config_entry_setup_error(
                     hass, integration, exc
                 )
+                if isinstance(exc, asyncio.CancelledError):
+                    raise
                 if isinstance(exc, ConfigEntryNotReady):
                     return
 
@@ -939,7 +942,7 @@ class ConfigEntry[_DataT = Any]:
             ConfigEntryAuthFailed,
             asyncio.CancelledError,
             SystemExit,
-            Exception,  # noqa: BLE001
+            Exception,
         ) as exc:
             (
                 error_reason,
@@ -948,6 +951,8 @@ class ConfigEntry[_DataT = Any]:
             ) = await self.__async_handle_config_entry_setup_error(
                 hass, integration, exc
             )
+            if isinstance(exc, asyncio.CancelledError):
+                raise
             if isinstance(exc, ConfigEntryNotReady):
                 return
 
