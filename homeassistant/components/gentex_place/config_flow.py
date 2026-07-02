@@ -25,11 +25,6 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     DOMAIN = DOMAIN
 
-    def __init__(self) -> None:
-        """Set up the flow handler."""
-        super().__init__()
-        self.flow_impl = SRPAuthImplementation(self.hass, DOMAIN)
-
     @property
     @override
     def logger(self):
