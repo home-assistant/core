@@ -1134,6 +1134,9 @@
     "command_reason": {
       "message": "Command was rejected: {reason}"
     },
+    "insufficient_credits": {
+      "message": "Teslemetry credits exhausted. Purchase more credits to continue controlling your vehicles."
+    },
     "invalid_cop_temp": {
       "message": "Cabin overheat protection does not support that temperature"
     },
@@ -1190,6 +1193,10 @@
     }
   },
   "issues": {
+    "insufficient_credits": {
+      "description": "A command could not be sent because your Teslemetry account has run out of command credits.\n\nSending commands to your Tesla vehicles and energy sites consumes credits. To continue controlling your devices, purchase more credits from the [Teslemetry console]({credits_url}).\n\nThis issue will be removed automatically once your account has credits available again.",
+      "title": "Insufficient Teslemetry credits"
+    },
     "key": {
       "fix_flow": {
         "error": {

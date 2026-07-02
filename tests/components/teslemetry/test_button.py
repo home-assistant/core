@@ -4,11 +4,14 @@ from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tesla_fleet_api.exceptions import InsufficientCredits
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.teslemetry.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from . import assert_entities, setup_platform
 from .const import COMMAND_OK
@@ -52,3 +55,38 @@ async def test_press(hass: HomeAssistant, name: str, func: str) -> None:
             blocking=True,
         )
         command.assert_called_once()
+
+
+async def test_insufficient_credits(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a repair issue is raised when the account is out of command credits."""
+    entry = await setup_platform(hass, [Platform.BUTTON])
+    issue_id = f"insufficient_credits_{entry.entry_id}"
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.wake_up",
+            side_effect=InsufficientCredits,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: ["button.test_wake"]},
+            blocking=True,
+        )
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    # A subsequent successful command resolves the repair issue
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: ["button.test_wake"]},
+        blocking=True,
+    )
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
