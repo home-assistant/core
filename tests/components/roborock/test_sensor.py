@@ -49,7 +49,7 @@ async def test_sensors_unavailable(
                 "Simulated Zeo failure"
             )
         if device.b01_q10_properties is not None:
-            device.b01_q10_properties.query_values.side_effect = RoborockException(
+            device.b01_q10_properties.refresh.side_effect = RoborockException(
                 "Simulated Q10 failure"
             )
         if device.b01_q7_properties is not None:
@@ -61,13 +61,22 @@ async def test_sensors_unavailable(
     await hass.async_block_till_done()
 
     # Verify that a sensor from each device type is created but reports STATE_UNAVAILABLE
-    for entity_id in (
-        "sensor.roborock_s7_maxv_battery",
-        "sensor.dyad_pro_battery",
-        "sensor.zeo_one_washing_left",
-        "sensor.roborock_q10_s5_battery",
-        "sensor.roborock_q7_battery",
-    ):
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get("sensor.roborock_s7_maxv_battery")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("sensor.dyad_pro_battery")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("sensor.zeo_one_washing_left")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("sensor.roborock_q10_s5_battery")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("sensor.roborock_q7_battery")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
