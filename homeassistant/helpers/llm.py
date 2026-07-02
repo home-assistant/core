@@ -64,7 +64,7 @@ DATE_TIME_PROMPT = (
 
 DEFAULT_INSTRUCTIONS_PROMPT = """You are a voice assistant for Home Assistant.
 Answer questions about the world truthfully.
-Answer in plain text. Keep it simple and to the point.
+Respond simply and to the point in plain text.
 """
 
 NO_ENTITIES_PROMPT = (
