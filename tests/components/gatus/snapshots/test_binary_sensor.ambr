@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensor_setup_and_states[binary_sensor.gatus_server_core_backend-entry]
+# name: test_binary_sensor_setup_and_states[binary_sensor.mock_title_core_backend-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.gatus_server_core_backend',
+    'entity_id': 'binary_sensor.mock_title_core_backend',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,26 +36,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor_setup_and_states[binary_sensor.gatus_server_core_backend-state]
+# name: test_binary_sensor_setup_and_states[binary_sensor.mock_title_core_backend-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
-      'duration_raw': 95000000,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gatus Server core backend',
-      'hostname': 'backend.local',
-      'status': 500,
-      'success': False,
-      'timestamp': '2026-06-29T13:00:01Z',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title core backend',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.gatus_server_core_backend',
+    'entity_id': 'binary_sensor.mock_title_core_backend',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor_setup_and_states[binary_sensor.gatus_server_frontend-entry]
+# name: test_binary_sensor_setup_and_states[binary_sensor.mock_title_frontend-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -69,7 +64,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.gatus_server_frontend',
+    'entity_id': 'binary_sensor.mock_title_frontend',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -92,20 +87,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor_setup_and_states[binary_sensor.gatus_server_frontend-state]
+# name: test_binary_sensor_setup_and_states[binary_sensor.mock_title_frontend-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'body': 'custom response payload',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
-      'duration_raw': 45000000,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gatus Server frontend',
-      'hostname': 'frontend.local',
-      'status': 200,
-      'success': True,
-      'timestamp': '2026-06-29T13:00:00Z',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title frontend',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.gatus_server_frontend',
+    'entity_id': 'binary_sensor.mock_title_frontend',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

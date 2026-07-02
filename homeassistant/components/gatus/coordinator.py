@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 type GatusConfigEntry = ConfigEntry[GatusDataUpdateCoordinator]
 
 
-class GatusDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
+class GatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     """Class to manage fetching Gatus data from the API via third-party library."""
 
     def __init__(self, hass: HomeAssistant, entry: GatusConfigEntry, url: str) -> None:
@@ -35,12 +35,14 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         )
 
     @override
-    async def _async_update_data(self) -> list[dict[str, Any]]:
+    async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch endpoint statuses from the Gatus API."""
         try:
-            return await self.client.get_endpoints_statuses()
+            raw_endpoints = await self.client.get_endpoints_statuses()
         except GatusClientError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from err
+
+        return {ep["key"]: ep for ep in raw_endpoints}

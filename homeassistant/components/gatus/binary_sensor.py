@@ -1,6 +1,5 @@
 """Support for Gatus binary sensors."""
 
-from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.binary_sensor import (
@@ -9,27 +8,25 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import GatusConfigEntry, GatusDataUpdateCoordinator
+from .coordinator import GatusDataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: GatusConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Gatus binary sensors based on a config entry."""
-    coordinator = entry.runtime_data
+    """Set up the Gatus binary sensor platform."""
+    coordinator: GatusDataUpdateCoordinator = entry.runtime_data
 
     async_add_entities(
-        [
-            GatusEndpointBinarySensor(coordinator, entry, endpoint["key"])
-            for endpoint in coordinator.data
-        ]
+        GatusEndpointBinarySensor(coordinator, entry, endpoint_key)
+        for endpoint_key in coordinator.data
     )
 
 
@@ -63,7 +60,8 @@ class GatusEndpointBinarySensor(
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            name="Gatus Server",
+            manufacturer="Gatus",
+            entry_type=DeviceEntryType.SERVICE,
         )
 
     @property
@@ -77,34 +75,9 @@ class GatusEndpointBinarySensor(
         return latest_result["success"]
 
     @property
-    @override
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return extra operational attributes for the endpoint."""
-        latest_result = self.latest_result
-
-        attributes: dict[str, Any] = {
-            "hostname": latest_result["hostname"],
-            "duration_raw": latest_result["duration"],
-            "timestamp": latest_result["timestamp"],
-            "success": latest_result["success"],
-        }
-
-        # Optional keys that are not in every monitoring endpoint
-        for key in ("status", "body"):
-            if key in latest_result:
-                val = latest_result[key]
-                if val is not None:
-                    attributes[key] = val
-
-        return attributes
-
-    @property
     def endpoint_data(self) -> dict[str, Any]:
         """Return this specific endpoint's data from the coordinator."""
-        return next(
-            (ep for ep in self.coordinator.data if ep["key"] == self._endpoint_key),
-            {},
-        )
+        return self.coordinator.data[self._endpoint_key]
 
     @property
     def latest_result(self) -> dict[str, Any]:

@@ -5,6 +5,7 @@ from typing import Any, override
 
 from gatus_api.client import GatusClient, GatusClientError
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
@@ -47,7 +48,7 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            normalized_url = user_input[CONF_URL].rstrip("/")
+            normalized_url = str(URL(user_input[CONF_URL]).origin())
             user_input[CONF_URL] = normalized_url
 
             self._async_abort_entries_match({CONF_URL: normalized_url})

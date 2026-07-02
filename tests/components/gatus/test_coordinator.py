@@ -25,8 +25,8 @@ async def test_coordinator_successful_update(
     assert coordinator.url == "http://gatus.local:80"
 
     assert coordinator.last_update_success is True
-    assert isinstance(coordinator.data, list)
-    assert coordinator.data[0]["key"] == "endpoint_1"
+    assert isinstance(coordinator.data, dict)
+    assert coordinator.data["endpoint_1"]["key"] == "endpoint_1"
 
 
 async def test_coordinator_client_error(
