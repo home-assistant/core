@@ -190,10 +190,6 @@
       "description": "Clears any temperature setting for a Netatmo climate device reverting it to the current preset or schedule.",
       "name": "Clear temperature setting"
     },
-    "register_webhook": {
-      "description": "Registers the webhook to the Netatmo backend.",
-      "name": "Register webhook"
-    },
     "set_camera_light": {
       "description": "Sets the light mode for a Netatmo Outdoor camera light.",
       "fields": {
@@ -275,10 +271,6 @@
         }
       },
       "name": "Set temperature with time period"
-    },
-    "unregister_webhook": {
-      "description": "Unregisters the webhook from the Netatmo backend.",
-      "name": "Unregister webhook"
     }
   }
 }

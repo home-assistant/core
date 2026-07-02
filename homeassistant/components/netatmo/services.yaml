@@ -118,6 +118,3 @@ set_person_away:
       example: Bob
       selector:
         text:
-
-register_webhook:
-unregister_webhook:

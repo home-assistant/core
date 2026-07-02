@@ -187,11 +187,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
     else:
         entry.async_on_unload(async_at_started(hass, register_webhook))
 
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(DOMAIN, "register_webhook", register_webhook)
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(DOMAIN, "unregister_webhook", unregister_webhook)
-
     entry.async_on_unload(entry.add_update_listener(async_config_entry_updated))
 
     return True
