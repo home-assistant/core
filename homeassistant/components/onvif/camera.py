@@ -17,7 +17,7 @@ from homeassistant.components.stream import (
     RTSP_TRANSPORTS,
 )
 from homeassistant.const import HTTP_BASIC_AUTHENTICATION
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -116,6 +116,30 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         )
         self._attr_unique_id = f"{self.mac_or_serial}#{profile.token}"
         self._attr_name = f"{device.name} {profile.name}"
+        self._was_unavailable: bool = False
+
+    @callback
+    def _async_event_callback(self) -> None:
+        """Handle device availability changes and clear stale stream URI."""
+        if not self.device.available:
+            self._was_unavailable = True
+            self.async_write_ha_state()
+        elif self._was_unavailable:
+            self._was_unavailable = False
+            self._stream_uri = None
+            self._stream_uri_future = None
+            LOGGER.debug(
+                "%s: Cleared cached stream URI after reconnection",
+                self.device.name,
+            )
+            self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Register event listener when entity is added."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.device.events.async_add_listener(self._async_event_callback)
+        )
 
     @property
     @override
