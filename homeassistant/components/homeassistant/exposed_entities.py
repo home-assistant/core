@@ -11,11 +11,10 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
-    EventStateChangedData,
     HomeAssistant,
     callback,
     split_entity_id,
@@ -32,12 +31,14 @@ from .const import DATA_EXPOSED_ENTITIES, DOMAIN
 KNOWN_ASSISTANTS = ("cloud.alexa", "cloud.google_assistant", "conversation")
 
 # How often to sweep for legacy exposed-entity records whose entity no
-# longer exists. Deliberately not tied to startup: async_track_time_interval
-# only fires after the interval elapses, so the first sweep happens well
-# after boot, giving slow-starting integrations time to re-register their
-# entities before being treated as gone. Repeats forever so it self-heals
-# entries missed by the real-time state-removal listener (e.g. entities
-# removed while Home Assistant wasn't running to observe it).
+# longer exists. Deliberately the only cleanup mechanism (no real-time
+# state-removal listener): a transient removal, e.g. a platform reload,
+# would otherwise wipe the user's exposure preference for an entity that
+# comes right back. A day-long staleness window is an acceptable trade-off
+# for records that only ever grow, never contain live data, and previously
+# weren't cleaned up at all. async_track_time_interval only fires after the
+# interval elapses, so the first sweep happens well after boot, giving
+# slow-starting integrations time to re-register their entities too.
 LEGACY_ENTITY_PURGE_INTERVAL = timedelta(hours=24)
 
 STORAGE_KEY = f"{DOMAIN}.exposed_entities"
@@ -142,19 +143,23 @@ class ExposedEntities:
         websocket_api.async_register_command(self._hass, ws_list_exposed_entities)
         await self._async_load_data()
         # Entities without a unique_id are never in the entity registry, so
-        # registry removal events can't be used to prune them. Their removal
-        # from the state machine is the only reliable "this entity is gone"
-        # signal we have for the legacy (no unique_id) storage path.
-        self._hass.bus.async_listen(
-            EVENT_STATE_CHANGED, self._async_state_changed_listener
-        )
-        # Periodic sweep to catch entries the listener above missed, e.g.
-        # left behind by an integration that created and later removed many
-        # entities while Home Assistant wasn't running to observe it.
-        async_track_time_interval(
+        # registry removal events can't be used to prune them. Periodic sweep
+        # is the only cleanup: it drops legacy records with no live entity
+        # behind them, e.g. left behind by an integration that created and
+        # later removed many entities across restarts.
+        cancel_purge = async_track_time_interval(
             self._hass,
             self._async_purge_stale_legacy_entities,
             LEGACY_ENTITY_PURGE_INTERVAL,
+        )
+
+        @callback
+        def _on_homeassistant_stop(_event: Event) -> None:
+            """Cancel the periodic purge."""
+            cancel_purge()
+
+        self._hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop
         )
 
     @callback
@@ -223,24 +228,13 @@ class ExposedEntities:
             listener()
 
     @callback
-    def _async_state_changed_listener(
-        self, event: Event[EventStateChangedData]
-    ) -> None:
-        """Drop a legacy exposed entity once it's removed from the state machine."""
-        if event.data["new_state"] is not None:
-            return
-        entity_id = event.data["entity_id"]
-        if entity_id not in self.entities:
-            return
-        del self.entities[entity_id]
-        self._async_schedule_save()
-
-    @callback
     def _async_purge_stale_legacy_entities(self, _now: datetime) -> None:
         """Periodic sweep to drop legacy entries with no entity behind them.
 
-        Catches entries the state-removal listener missed, e.g. because
-        Home Assistant wasn't running to observe the removal.
+        A day-long staleness window (rather than an immediate state-removal
+        listener) is intentional: it avoids wiping a user's exposure
+        preference for an entity that briefly disappears during a platform
+        reload and comes right back.
         """
         stale_entity_ids = [
             entity_id
