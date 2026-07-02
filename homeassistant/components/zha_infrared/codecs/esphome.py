@@ -3,7 +3,9 @@
 from typing import Any
 
 
-def encode_raw_passthrough(timings: list[int], modulation: int | None = None) -> list[int]:
+def encode_raw_passthrough(
+    timings: list[int], modulation: int | None = None
+) -> list[int]:
     """Return timings unchanged for transports expecting raw arrays."""
     del modulation
     return timings

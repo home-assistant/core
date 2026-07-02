@@ -258,9 +258,7 @@ def _parse_profile(raw: dict[str, Any]) -> DeviceProfile:
         name=str(raw.get("name", "Unnamed profile")),
         match=DeviceMatchRule(
             models={str(item) for item in match_raw.get("models", [])},
-            manufacturers={
-                str(item) for item in match_raw.get("manufacturers", [])
-            },
+            manufacturers={str(item) for item in match_raw.get("manufacturers", [])},
             device_types={
                 _parse_int_value(item) for item in match_raw.get("device_types", [])
             },
@@ -345,12 +343,8 @@ def _parse_receive_arm_command_spec(
         state_attribute=str(state_attribute_raw),
         state_armed_value=state_raw.get("armed", True),
         state_disarmed_value=state_raw.get("disarmed"),
-        min_command_interval_seconds=max(
-            1, int(arm_raw.get("min_cmd_interval", 2))
-        ),
-        repeat_interval_seconds=max(
-            1, int(arm_raw.get("repeat", 30))
-        ),
+        min_command_interval_seconds=max(1, int(arm_raw.get("min_cmd_interval", 2))),
+        repeat_interval_seconds=max(1, int(arm_raw.get("repeat", 30))),
         reset_interval_on_update=bool(reset_raw.get("on_receive", True)),
         reset_on_arm_value=bool(reset_raw.get("on_not_armed", False)),
     )

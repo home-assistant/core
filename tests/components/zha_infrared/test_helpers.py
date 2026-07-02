@@ -35,7 +35,8 @@ def test_decode_pronto_hex_roundtrip_shape() -> None:
     decoded = decode_pronto_hex_to_raw_timings(pronto)
     assert decoded is not None
     assert len(decoded) == len(source)
-    assert decoded[0] > 0 and decoded[1] < 0 and decoded[2] > 0 and decoded[3] < 0
+    assert [value > 0 for value in decoded[::2]] == [True, True]
+    assert [value < 0 for value in decoded[1::2]] == [True, True]
 
 
 def test_parse_profile_receive_arm_command_fields() -> None:

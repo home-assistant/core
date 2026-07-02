@@ -1,7 +1,7 @@
 """Codec registry for zha_infrared payload translations."""
 
-import logging
 from collections.abc import Callable
+import logging
 from typing import Any
 
 from .broadlink import (
@@ -52,7 +52,9 @@ def decode_received_payload(codec_name: str, payload: Any) -> list[int] | None:
     try:
         timings = decoder(payload)
     except (TypeError, ValueError):
-        _LOGGER.debug("Failed decoding payload with codec %s", codec_name, exc_info=True)
+        _LOGGER.debug(
+            "Failed decoding payload with codec %s", codec_name, exc_info=True
+        )
         return None
     if not isinstance(timings, list):
         return None

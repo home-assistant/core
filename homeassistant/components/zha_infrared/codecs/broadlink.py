@@ -1,7 +1,7 @@
 """Broadlink-compatible codec helpers."""
 
-from binascii import Error as BinasciiError
 from base64 import b64decode, b64encode
+from binascii import Error as BinasciiError
 from importlib import import_module
 from typing import Any
 
@@ -13,7 +13,7 @@ def encode_raw_to_broadlink_base64(
     del modulation
     try:
         module = import_module("broadlink.remote")
-        broadlink_pulses_to_data = getattr(module, "pulses_to_data")
+        broadlink_pulses_to_data = module.pulses_to_data
     except (ImportError, AttributeError) as err:
         raise ValueError("Broadlink codec unavailable in current environment") from err
 
@@ -32,7 +32,7 @@ def decode_broadlink_base64_to_raw_timings(payload: Any) -> list[int] | None:
 
     try:
         module = import_module("broadlink.remote")
-        broadlink_data_to_pulses = getattr(module, "data_to_pulses")
+        broadlink_data_to_pulses = module.data_to_pulses
     except (ImportError, AttributeError):
         return None
 

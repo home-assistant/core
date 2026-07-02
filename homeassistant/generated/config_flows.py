@@ -887,6 +887,7 @@ FLOWS = {
         "zerproc",
         "zeversolar",
         "zha",
+        "zha_infrared",
         "zimi",
         "zinvolt",
         "zodiac",

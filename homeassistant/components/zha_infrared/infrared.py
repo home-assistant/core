@@ -6,8 +6,7 @@ from datetime import datetime, timedelta
 import logging
 import time
 from types import SimpleNamespace
-from typing import Any
-from typing import override
+from typing import Any, override
 
 from zigpy.exceptions import ZigbeeException
 
@@ -257,7 +256,9 @@ class ZhaInfraredReceiverEntity(InfraredReceiverEntity):
                     timedelta(seconds=receive_spec.poll_interval_seconds),
                 )
             else:
-                self._receive_listener_ref = cluster.add_listener(self._receive_listener)
+                self._receive_listener_ref = cluster.add_listener(
+                    self._receive_listener
+                )
                 _LOGGER.debug(
                     "zha_infrared receiver step=start_report_listener_attached entity=%s listener_ref=%s",
                     self.entity_id,
@@ -643,7 +644,9 @@ class ZhaInfraredReceiverEntity(InfraredReceiverEntity):
                     arm_state_attribute,
                 )
 
-        payload = self._get_attribute_value(attrs, receive_cluster, receive_spec.attribute)
+        payload = self._get_attribute_value(
+            attrs, receive_cluster, receive_spec.attribute
+        )
         if isinstance(payload, str):
             _LOGGER.debug(
                 "zha_infrared receiver step=payload_from_read entity=%s attr=%s payload_len=%s",
@@ -680,7 +683,10 @@ class ZhaInfraredReceiverEntity(InfraredReceiverEntity):
         arm_command = receive_spec.arm_command
         if arm_command is not None and arm_command.reset_on_arm_value:
             arm_state_attr = arm_command.state_attribute
-            if arm_command.state_cluster_id != self._device.profile.transport.cluster_id:
+            if (
+                arm_command.state_cluster_id
+                != self._device.profile.transport.cluster_id
+            ):
                 _LOGGER.debug(
                     "zha_infrared receiver step=report_arm_attr_skip entity=%s reason=state_cluster_not_listened cluster_id=0x%04X",
                     self.entity_id,
@@ -688,7 +694,9 @@ class ZhaInfraredReceiverEntity(InfraredReceiverEntity):
                 )
                 arm_attr_id = None
             else:
-                arm_attr_id = self._resolve_receive_attribute_id(cluster, arm_state_attr)
+                arm_attr_id = self._resolve_receive_attribute_id(
+                    cluster, arm_state_attr
+                )
             if arm_attr_id is not None and arm_attr_id == attr_id:
                 _LOGGER.debug(
                     "zha_infrared receiver step=report_arm_attr entity=%s attr_id=%s value=%s",
