@@ -35,6 +35,11 @@ class SmSensorEntityDescription(SensorEntityDescription):
 
 
 @dataclass(frozen=True, kw_only=True)
+class SmRadioUptimeSensorEntityDescription(SensorEntityDescription):
+    """Class describing SMLIGHT radio uptime sensor entities."""
+
+
+@dataclass(frozen=True, kw_only=True)
 class SmInfoEntityDescription(SensorEntityDescription):
     """Class describing SMLIGHT information entities."""
 
@@ -58,12 +63,22 @@ INFO: list[SmInfoEntityDescription] = [
     ),
 ]
 
+RADIO_TYPE_OPTIONS = ["coordinator", "router", "thread", "thread_border_router"]
+RADIO_TYPE_MAP = {
+    0: "coordinator",
+    1: "router",
+    2: "thread",
+    8: "thread_border_router",
+}
+THREAD_BORDER_ROUTER = 8
+SOCKET_UPTIME_FIELDS = ("socket_uptime", "socket2_uptime", "socket3_uptime")
+
 RADIO_INFO = SmInfoEntityDescription(
     key="zigbee_type",
     translation_key="zigbee_type",
     device_class=SensorDeviceClass.ENUM,
-    options=["coordinator", "router", "thread"],
-    value_fn=lambda x, idx: x.radios[idx].zb_type,
+    options=RADIO_TYPE_OPTIONS,
+    value_fn=lambda x, idx: RADIO_TYPE_MAP.get(x.radios[idx].zb_type),
 )
 
 
@@ -124,22 +139,38 @@ PSRAM_SENSOR = SmSensorEntityDescription(
     value_fn=lambda x: x.psram_usage,
 )
 
-UPTIME: list[SmSensorEntityDescription] = [
-    SmSensorEntityDescription(
-        key="core_uptime",
-        translation_key="core_uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=False,
-        value_fn=lambda x: x.uptime,
-    ),
-    SmSensorEntityDescription(
-        key="socket_uptime",
-        translation_key="socket_uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=False,
-        value_fn=lambda x: x.socket_uptime,
-    ),
-]
+CORE_UPTIME = SmSensorEntityDescription(
+    key="core_uptime",
+    translation_key="core_uptime",
+    device_class=SensorDeviceClass.TIMESTAMP,
+    entity_registry_enabled_default=False,
+    value_fn=lambda x: x.uptime,
+)
+
+RADIO_UPTIME = SmRadioUptimeSensorEntityDescription(
+    key="socket_uptime",
+    translation_key="socket_uptime",
+    device_class=SensorDeviceClass.TIMESTAMP,
+    entity_registry_enabled_default=False,
+)
+
+
+def _positive_uptime(uptime: float | None) -> float | None:
+    """Return uptime if it represents a running radio socket."""
+    if uptime is None or uptime <= 0:
+        return None
+    return uptime
+
+
+def _radio_uptime(sensors: Sensors, info: Info, idx: int) -> float | None:
+    """Return the uptime value for a radio index."""
+    if info.radios[idx].zb_type == THREAD_BORDER_ROUTER:
+        return _positive_uptime(sensors.otbr_uptime)
+
+    if idx >= len(SOCKET_UPTIME_FIELDS):
+        return None
+
+    return _positive_uptime(getattr(sensors, SOCKET_UPTIME_FIELDS[idx]))
 
 
 async def async_setup_entry(
@@ -153,12 +184,16 @@ async def async_setup_entry(
         chain(
             (SmInfoSensorEntity(coordinator, description) for description in INFO),
             (SmSensorEntity(coordinator, description) for description in SENSORS),
-            (SmUptimeSensorEntity(coordinator, description) for description in UPTIME),
+            (SmUptimeSensorEntity(coordinator, CORE_UPTIME),),
         )
     )
 
     entities.extend(
         SmInfoSensorEntity(coordinator, RADIO_INFO, idx)
+        for idx, _ in enumerate(coordinator.data.info.radios)
+    )
+    entities.extend(
+        SmRadioUptimeSensorEntity(coordinator, RADIO_UPTIME, idx)
         for idx, _ in enumerate(coordinator.data.info.radios)
     )
 
@@ -230,16 +265,18 @@ class SmInfoSensorEntity(SmEntity, SensorEntity):
         return value
 
 
-class SmUptimeSensorEntity(SmSensorEntity):
-    """Representation of a slzb uptime sensor."""
+class SmBaseUptimeSensorEntity(SmEntity, SensorEntity):
+    """Base representation of an SMLIGHT uptime sensor."""
+
+    coordinator: SmDataUpdateCoordinator
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,
         coordinator: SmDataUpdateCoordinator,
-        description: SmSensorEntityDescription,
     ) -> None:
         "Initialize uptime sensor instance."
-        super().__init__(coordinator, description)
+        super().__init__(coordinator)
         self._last_uptime: datetime | None = None
 
     def get_uptime(self, uptime: float | None) -> datetime | None:
@@ -264,10 +301,55 @@ class SmUptimeSensorEntity(SmSensorEntity):
 
         return self._last_uptime
 
+
+class SmUptimeSensorEntity(SmBaseUptimeSensorEntity):
+    """Representation of a slzb uptime sensor."""
+
+    entity_description: SmSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: SmDataUpdateCoordinator,
+        description: SmSensorEntityDescription,
+    ) -> None:
+        """Initialize uptime sensor instance."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
+
     @property
     @override
     def native_value(self) -> datetime | None:
         """Return the sensor value."""
         value = self.entity_description.value_fn(self.coordinator.data.sensors)
+
+        return self.get_uptime(value)
+
+
+class SmRadioUptimeSensorEntity(SmBaseUptimeSensorEntity):
+    """Representation of a radio uptime sensor."""
+
+    entity_description: SmRadioUptimeSensorEntityDescription
+    idx: int
+
+    def __init__(
+        self,
+        coordinator: SmDataUpdateCoordinator,
+        description: SmRadioUptimeSensorEntityDescription,
+        idx: int = 0,
+    ) -> None:
+        """Initialize radio uptime sensor instance."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self.idx = idx
+        sensor = f"_{idx}" if idx else ""
+        self._attr_unique_id = f"{coordinator.unique_id}_{description.key}{sensor}"
+
+    @property
+    def native_value(self) -> datetime | None:
+        """Return the radio uptime value."""
+        value = _radio_uptime(
+            self.coordinator.data.sensors, self.coordinator.data.info, self.idx
+        )
 
         return self.get_uptime(value)
