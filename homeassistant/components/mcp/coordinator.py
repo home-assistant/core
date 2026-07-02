@@ -146,7 +146,7 @@ class ModelContextProtocolTool(llm.Tool):
                     self.server_url, error.response
                 )
                 self.config_entry.async_start_reauth(
-                    hass, data={"auth_header": auth_header, "auth_failed": True}
+                    hass, data={"auth_header": auth_header}
                 )
                 raise ConfigEntryAuthFailed(
                     "The MCP server requires authentication"

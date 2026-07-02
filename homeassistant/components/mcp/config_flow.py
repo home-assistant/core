@@ -153,7 +153,6 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self.data: dict[str, Any] = {}
         self.oauth_config: OAuthConfig | None = None
         self.auth_header: AuthenticateHeader | None = None
-        self.auth_failed: bool = False
 
     @override
     async def async_step_user(
@@ -342,11 +341,8 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        if entry_data:
-            if "auth_header" in entry_data:
-                self.auth_header = entry_data["auth_header"]
-            if entry_data.get("auth_failed"):
-                self.auth_failed = True
+        if entry_data and "auth_header" in entry_data:
+            self.auth_header = entry_data["auth_header"]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -358,26 +354,11 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         config_entry = self._get_reauth_entry()
         self.data = {**config_entry.data}
         if "auth_implementation" not in self.data:
-            # If the reauth flow was triggered by an authentication failure (e.g., a tool call returning 401),
-            # we skip validating input via initialize (which might succeed without authentication
-            # if the server only restricts specific tools) and proceed directly to discovery.
-            if self.auth_header or self.auth_failed:
-                return await self.async_step_auth_discovery()
-            try:
-                await validate_input(self.hass, self.data)
-            except InvalidAuth as err:
-                self.auth_header = err.metadata
-                return await self.async_step_auth_discovery()
-            except TimeoutConnectError:
-                return self.async_abort(reason="timeout_connect")
-            except CannotConnect:
-                return self.async_abort(reason="cannot_connect")
-            except MissingCapabilities:
-                return self.async_abort(reason="missing_capabilities")
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception during reauth")
-                return self.async_abort(reason="unknown")
-            return self.async_abort(reason="reauth_successful")
+            # For entries configured without authentication (no-auth), any authentication
+            # failure (from a tool call or coordinator update) requires upgrading to OAuth.
+            # We bypass validate_input connection handshake (which might succeed if the server
+            # doesn't restrict the connection handshake itself) and proceed directly to OAuth discovery.
+            return await self.async_step_auth_discovery()
 
         self.flow_impl = await async_get_config_entry_implementation(  # type: ignore[assignment]
             self.hass, config_entry

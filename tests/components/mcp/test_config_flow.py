@@ -10,7 +10,6 @@ import respx
 
 from homeassistant import config_entries
 from homeassistant.components.mcp.auth import AuthenticateHeader
-from homeassistant.components.mcp.config_flow import MissingCapabilities
 from homeassistant.components.mcp.const import (
     CONF_AUTHORIZATION_URL,
     CONF_SCOPE,
@@ -923,25 +922,8 @@ async def test_reauth_flow_upgrade_to_oauth(
     result = flows[0]
     assert result["step_id"] == "reauth_confirm"
 
-    # Mock validate_input raising InvalidAuth during reauth_confirm
-    authenticate_header = 'Bearer error="invalid_token", resource_metadata="https://example.com/custom-discovery"'
-    resource_metadata_url = "https://example.com/custom-discovery"
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
-        "Authentication required",
-        request=None,
-        response=httpx.Response(
-            401,
-            headers={
-                "WWW-Authenticate": authenticate_header,
-            },
-        ),
-    )
-
-    # Mock discovery URLs
-    respx.get(resource_metadata_url).mock(
-        return_value=OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE
-    )
-    respx.get(OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT).mock(
+    # Mock discovery on the default server URL (since there is no auth_header)
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
         return_value=OAUTH_SERVER_METADATA_RESPONSE
     )
 
@@ -966,14 +948,13 @@ async def test_reauth_flow_upgrade_to_oauth(
         result,
         authorize_url=OAUTH_AUTHORIZE_URL,
         token_url=OAUTH_TOKEN_URL,
-        scopes=SCOPES_SUPPORTED,
+        scopes=["read", "write"],
     )
 
     # Verify we can connect to the server now with the token
     response = Mock()
     response.serverInfo.name = TEST_API_NAME
-    # Clear the side effect and return success for validation in async_oauth_create_entry
-    mock_mcp_client.side_effect = None
+    # Return success for validation in async_oauth_create_entry
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -989,103 +970,13 @@ async def test_reauth_flow_upgrade_to_oauth(
         CONF_URL: MCP_SERVER_URL,
         CONF_AUTHORIZATION_URL: OAUTH_AUTHORIZE_URL,
         CONF_TOKEN_URL: OAUTH_TOKEN_URL,
-        CONF_SCOPE: SCOPES_SUPPORTED,
+        CONF_SCOPE: ["read", "write"],
     }
     assert token
     token.pop("expires_at")
     assert token == OAUTH_TOKEN_PAYLOAD
 
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "expected_reason"),
-    [
-        (httpx.HTTPError("Connection failed"), "cannot_connect"),
-        (httpx.TimeoutException("Timeout"), "timeout_connect"),
-        (MissingCapabilities("Missing tools"), "missing_capabilities"),
-        (ValueError("Unexpected error"), "unknown"),
-    ],
-)
-@pytest.mark.usefixtures("current_request_with_host")
-@respx.mock
-async def test_reauth_flow_upgrade_to_oauth_failures(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_mcp_client: Mock,
-    credential: None,
-    side_effect: Exception,
-    expected_reason: str,
-) -> None:
-    """Test reauth flow upgrading a no-auth entry to OAuth aborts if connection/validation fails."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_URL: MCP_SERVER_URL},
-        title=TEST_API_NAME,
-    )
-    config_entry.add_to_hass(hass)
-
-    # Start reauth flow
-    config_entry.async_start_reauth(hass)
-    await hass.async_block_till_done()
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    result = flows[0]
-    assert result["step_id"] == "reauth_confirm"
-
-    if isinstance(side_effect, httpx.HTTPError | httpx.TimeoutException):
-        mock_mcp_client.side_effect = side_effect
-    # Mock initialize to raise other errors or return capability missing response
-    elif isinstance(side_effect, MissingCapabilities):
-        response = Mock()
-        response.capabilities.tools = False
-        mock_mcp_client.return_value.initialize.return_value = response
-    else:
-        mock_mcp_client.return_value.initialize.side_effect = side_effect
-
-    # Click Submit on reauth_confirm
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == expected_reason
-
-
-@pytest.mark.usefixtures("current_request_with_host")
-@respx.mock
-async def test_reauth_flow_upgrade_to_oauth_success_no_auth_needed(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_mcp_client: Mock,
-    credential: None,
-) -> None:
-    """Test reauth flow upgrading a no-auth entry to OAuth aborts with reauth_successful if no auth is needed."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_URL: MCP_SERVER_URL},
-        title=TEST_API_NAME,
-    )
-    config_entry.add_to_hass(hass)
-
-    # Start reauth flow
-    config_entry.async_start_reauth(hass)
-    await hass.async_block_till_done()
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    result = flows[0]
-    assert result["step_id"] == "reauth_confirm"
-
-    # Mock validate_input succeeding (meaning no authentication is required by the server)
-    response = Mock()
-    response.serverInfo.name = TEST_API_NAME
-    mock_mcp_client.return_value.initialize.return_value = response
-
-    # Click Submit on reauth_confirm
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -1125,46 +1016,6 @@ async def test_reauth_flow_upgrade_to_oauth_with_passed_auth_header(
         return_value=OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE
     )
     respx.get(OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT).mock(
-        return_value=OAUTH_SERVER_METADATA_RESPONSE
-    )
-
-    # Click Submit on reauth_confirm
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    # Flow should proceed directly to credentials choice menu (without validate_input)
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "credentials_choice"
-
-
-@pytest.mark.usefixtures("current_request_with_host")
-@respx.mock
-async def test_reauth_flow_upgrade_to_oauth_with_passed_auth_failed_flag(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_mcp_client: Mock,
-    credential: None,
-    aioclient_mock: AiohttpClientMocker,
-    hass_client_no_auth: ClientSessionGenerator,
-) -> None:
-    """Test reauth flow upgrading a no-auth entry to OAuth when auth_failed flag is passed but auth_header is None."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_URL: MCP_SERVER_URL},
-        title=TEST_API_NAME,
-    )
-    config_entry.add_to_hass(hass)
-
-    # Start reauth flow passing auth_failed=True (without header)
-    config_entry.async_start_reauth(hass, data={"auth_failed": True})
-    await hass.async_block_till_done()
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    result = flows[0]
-    assert result["step_id"] == "reauth_confirm"
-
-    # Mock discovery on the default server URL (since there is no auth_header)
-    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
         return_value=OAUTH_SERVER_METADATA_RESPONSE
     )
 
