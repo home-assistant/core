@@ -4991,6 +4991,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "open_responses": {
+      "name": "Open Responses",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "open_router": {
       "name": "OpenRouter",
       "integration_type": "service",
