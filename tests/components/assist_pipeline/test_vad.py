@@ -2,8 +2,11 @@
 
 import itertools as it
 
+import pytest
+
 from homeassistant.components.assist_pipeline.vad import (
     AudioBuffer,
+    VadSensitivity,
     VoiceCommandSegmenter,
     chunk_samples,
 )
@@ -234,9 +237,11 @@ def test_speech_thresholds() -> None:
     segmenter = VoiceCommandSegmenter(
         before_command_speech_threshold=0.2,
         in_command_speech_threshold=0.5,
+        in_command_silence_threshold=0.2,
         command_seconds=2,
         speech_seconds=1,
         silence_seconds=1,
+        min_command_speech_seconds=0.0,
     )
 
     # Not high enough probability to trigger command
@@ -247,6 +252,171 @@ def test_speech_thresholds() -> None:
     assert segmenter.process(_ONE_SECOND, 0.3)
     assert segmenter.in_command
 
-    # Now that same probability is considered silence.
-    # Finishes command.
+    # Dead-band probability is neither speech nor silence: command stays open
+    assert segmenter.process(_ONE_SECOND, 0.3)
+    assert segmenter.in_command
+
+    # Clear silence finishes the command
+    assert not segmenter.process(_ONE_SECOND, 0.05)
+
+
+def test_dead_band_preserves_pause() -> None:
+    """Test dead-band activity during a pause does not end the command early."""
+
+    segmenter = VoiceCommandSegmenter(
+        in_command_speech_threshold=0.5,
+        in_command_silence_threshold=0.2,
+        speech_seconds=0.5,
+        command_seconds=1.0,
+        silence_seconds=1.0,
+        reset_seconds=0.5,
+    )
+
+    # Start the command
+    assert segmenter.process(_ONE_SECOND * 0.5, 1.0)
+    assert segmenter.in_command
+
+    # 1.5s of dead-band activity (> silence_seconds) keeps the command open.
+    # The original single-threshold logic would have ended it during this pause.
+    for _ in range(3):
+        assert segmenter.process(_ONE_SECOND * 0.5, 0.3)
+        assert segmenter.in_command
+
+    # Speech resumes, then genuine silence ends the command
+    assert segmenter.process(_ONE_SECOND * 0.5, 1.0)
+    assert segmenter.process(_ONE_SECOND * 0.5, 0.0)
+    assert not segmenter.process(_ONE_SECOND * 0.5, 0.0)
+    assert not segmenter.in_command
+
+
+def test_dead_band_times_out() -> None:
+    """Test sustained dead-band audio ends via timeout, never a premature finish."""
+
+    segmenter = VoiceCommandSegmenter(
+        in_command_speech_threshold=0.5,
+        in_command_silence_threshold=0.2,
+        speech_seconds=0.5,
+        timeout_seconds=2.0,
+    )
+
+    # Start the command
+    assert segmenter.process(_ONE_SECOND * 0.5, 1.0)
+    assert segmenter.in_command
+
+    # Dead-band audio holds the command open (never finishes) until the timeout
+    assert segmenter.process(_ONE_SECOND, 0.3)
+    assert not segmenter.timed_out
+
     assert not segmenter.process(_ONE_SECOND, 0.3)
+    assert segmenter.timed_out
+
+
+def test_false_start_aborts_and_resumes() -> None:
+    """Test a trigger without confident speech aborts instead of finishing."""
+
+    segmenter = VoiceCommandSegmenter(
+        before_command_speech_threshold=0.2,
+        in_command_speech_threshold=0.5,
+        in_command_silence_threshold=0.2,
+        min_command_speech_seconds=0.1,
+        speech_seconds=0.3,
+        command_seconds=1.0,
+        silence_seconds=0.5,
+    )
+
+    # A sub-0.5 transient (above entry, below speech) triggers a command...
+    assert segmenter.process(_ONE_SECOND * 0.3, 0.35)
+    assert segmenter.in_command
+
+    # ...but with no confident speech, the silence end aborts back to listening
+    # instead of finishing into near-empty audio.
+    assert segmenter.process(_ONE_SECOND, 0.0)
+    assert not segmenter.in_command
+
+    # The real command then arrives and finishes normally
+    assert segmenter.process(_ONE_SECOND, 1.0)
+    assert segmenter.in_command
+    assert not segmenter.process(_ONE_SECOND, 0.0)
+    assert not segmenter.in_command
+
+
+def test_false_start_timeout() -> None:
+    """Test a false activation gives up at false_start_timeout, not timeout_seconds."""
+
+    segmenter = VoiceCommandSegmenter(
+        before_command_speech_threshold=0.2,
+        in_command_speech_threshold=0.5,
+        in_command_silence_threshold=0.2,
+        min_command_speech_seconds=0.05,
+        false_start_timeout_seconds=3.0,
+        timeout_seconds=15.0,
+    )
+
+    # A trigger with no confident speech, followed by silence: gives up at 3s,
+    # well before the 15s command timeout.
+    assert segmenter.process(_ONE_SECOND, 0.35)
+    assert segmenter.process(_ONE_SECOND, 0.0)
+    assert not segmenter.timed_out
+
+    # Crosses false_start_timeout (3s elapsed) without confident speech
+    assert not segmenter.process(_ONE_SECOND, 0.0)
+    assert segmenter.timed_out
+
+
+def test_false_start_timeout_not_applied_after_speech() -> None:
+    """Test confident speech lifts the false-start timeout to the full command timeout."""
+
+    segmenter = VoiceCommandSegmenter(
+        in_command_speech_threshold=0.5,
+        min_command_speech_seconds=0.05,
+        false_start_timeout_seconds=3.0,
+        timeout_seconds=15.0,
+        speech_seconds=0.3,
+    )
+
+    # Confident speech early confirms the command...
+    assert segmenter.process(_ONE_SECOND * 0.5, 1.0)
+    assert segmenter.in_command
+
+    # ...so a long pause past false_start_timeout does NOT give up early
+    assert segmenter.process(_ONE_SECOND * 4, 0.3)
+    assert not segmenter.timed_out
+    assert segmenter.in_command
+
+
+def test_min_command_speech_disabled() -> None:
+    """Test min_command_speech_seconds=0 keeps the original finish behavior."""
+
+    segmenter = VoiceCommandSegmenter(
+        in_command_speech_threshold=0.5,
+        in_command_silence_threshold=0.2,
+        min_command_speech_seconds=0.0,
+        speech_seconds=0.3,
+        command_seconds=1.0,
+        silence_seconds=0.5,
+    )
+
+    # Trigger on a sub-0.5 transient and finish on silence (no abort)
+    assert segmenter.process(_ONE_SECOND * 0.3, 0.35)
+    assert segmenter.in_command
+    assert not segmenter.process(_ONE_SECOND, 0.0)
+    assert not segmenter.in_command
+
+
+@pytest.mark.parametrize(
+    ("sensitivity", "expected_threshold"),
+    [
+        pytest.param(VadSensitivity.AGGRESSIVE, 0.5, id="aggressive"),
+        pytest.param(VadSensitivity.DEFAULT, 0.2, id="default"),
+        pytest.param(VadSensitivity.RELAXED, 0.1, id="relaxed"),
+    ],
+)
+def test_vad_sensitivity_in_command_silence_threshold(
+    sensitivity: VadSensitivity, expected_threshold: float
+) -> None:
+    """Test sensitivity maps to an in-command silence threshold."""
+
+    assert (
+        VadSensitivity.to_in_command_silence_threshold(sensitivity)
+        == expected_threshold
+    )
