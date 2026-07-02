@@ -50,9 +50,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) ->
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
     )
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     _LOGGER.debug("async_setup_entry completed for entry: %s", entry.entry_id)
     return True
+
+
+async def _async_update_listener(
+    hass: HomeAssistant, entry: VictronGxConfigEntry
+) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) -> bool:
