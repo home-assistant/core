@@ -1,0 +1,18 @@
+{
+  "domain": "airtouch3",
+  "name": "AirTouch 3 Air Conditioner",
+  "codeowners": ["@L0rdCha0s"],
+  "config_flow": true,
+  "dependencies": ["network"],
+  "dhcp": [
+    {
+      "hostname": "*aritouch3*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/airtouch3",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["pyairtouch3"],
+  "quality_scale": "silver",
+  "requirements": ["pyairtouch3==0.1.3"]
+}

@@ -1,0 +1,69 @@
+"""Test AirTouch 3 integration setup."""
+
+from unittest.mock import AsyncMock, patch
+
+from pyairtouch3.airtouch_aircon import Aircon
+
+from homeassistant.components.airtouch3 import PLATFORMS, async_unload_entry
+from homeassistant.components.airtouch3.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
+
+SYSTEM_ID = "35901813"
+
+
+async def test_async_setup_starts_discovery(hass: HomeAssistant) -> None:
+    """Test setting up the integration starts discovery."""
+    with (
+        patch(
+            "homeassistant.components.airtouch3.async_discover_devices",
+            AsyncMock(return_value=[]),
+        ) as discover_devices,
+        patch("homeassistant.components.airtouch3.async_trigger_discovery") as trigger,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    discover_devices.assert_awaited_once()
+    trigger.assert_called_once_with(hass, [])
+
+
+async def test_async_setup_entry(hass: HomeAssistant) -> None:
+    """Test setting up the integration from a config entry."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "1.1.1.1"})
+    entry.add_to_hass(hass)
+    aircon = Aircon(1)
+    aircon.system_id = SYSTEM_ID
+
+    with (
+        patch(
+            "homeassistant.components.airtouch3.coordinator.async_fetch_airtouch_data",
+            AsyncMock(return_value=aircon),
+        ),
+        patch.object(
+            hass.config_entries, "async_forward_entry_setups", AsyncMock()
+        ) as forward_entry_setups,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.runtime_data.data.aircon is aircon
+    assert entry.unique_id == SYSTEM_ID
+    assert entry.state is ConfigEntryState.LOADED
+    forward_entry_setups.assert_awaited_once_with(entry, PLATFORMS)
+
+
+async def test_async_unload_entry(hass: HomeAssistant) -> None:
+    """Test unloading the integration."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "1.1.1.1"})
+
+    with patch.object(
+        hass.config_entries, "async_unload_platforms", AsyncMock(return_value=True)
+    ) as unload_platforms:
+        assert await async_unload_entry(hass, entry)
+
+    unload_platforms.assert_awaited_once_with(entry, PLATFORMS)

@@ -1,0 +1,52 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "AirTouch 3 ({host})",
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up AirTouch 3 controller {system_id} at {host}?"
+      },
+      "pick_device": {
+        "data": {
+          "device": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "device": "The discovered AirTouch 3 controller to set up."
+        }
+      },
+      "user": {
+        "data": {
+          "host": "Host"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of the AirTouch 3 controller."
+        },
+        "description": "If you leave the host empty, discovery will be used to find controllers."
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "air_conditioner": {
+        "name": "Air conditioner"
+      },
+      "zone": {
+        "name": "Zone"
+      }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "Error communicating with the AirTouch 3 controller: {error}"
+    }
+  }
+}
