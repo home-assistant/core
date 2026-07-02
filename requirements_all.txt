@@ -180,6 +180,9 @@ aio-ownet==0.0.5
 # homeassistant.components.wattwaechter
 aio-wattwaechter==1.0.0
 
+# homeassistant.components.abetterrouteplanner
+aioabrp==0.5.0
+
 # homeassistant.components.acaia
 aioacaia==0.1.18
 

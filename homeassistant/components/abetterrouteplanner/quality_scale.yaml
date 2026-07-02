@@ -1,0 +1,98 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: No custom actions.
+  appropriate-polling:
+    status: exempt
+    comment: >-
+      No polling. Telemetry is push-only over the SSE stream
+      (``update_interval=None``); the garage is fetched once at setup
+      (``async_fetch_garage``) to anchor devices and filter the streamable set.
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: No custom actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: No custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: No options flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: todo
+    comment: Deferred to a follow-up PR.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics:
+    status: todo
+    comment: >-
+      Deferred to a follow-up PR per the core review of #173433; the in-memory
+      connection-triage fields on the telemetry coordinator already retain the
+      data a diagnostics dump will surface.
+  discovery:
+    status: exempt
+    comment: Cloud service, no local discovery possible.
+  discovery-update-info:
+    status: exempt
+    comment: Cloud service, no local discovery possible.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: todo
+    comment: Deferred to a follow-up PR.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: todo
+    comment: Deferred to a follow-up PR.
+  repair-issues:
+    status: exempt
+    comment: No actionable repair scenarios.
+  stale-devices:
+    status: todo
+    comment: Deferred to a follow-up PR.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
