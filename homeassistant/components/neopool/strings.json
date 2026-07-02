@@ -1,0 +1,153 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_read_modbus": "Connected, but cannot read from the Modbus device. Check unit ID and framer settings."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "modbus_framer": "Modbus framer",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "Unit ID"
+        },
+        "data_description": {
+          "host": "Enter the IP address of the Modbus TCP gateway connected to your pool controller.",
+          "modbus_framer": "Wire protocol used by the gateway. Select TCP for MBAP framing (default for Ethernet-native gateways). Select RTU for RTU framing tunnelled through a TCP socket, used by passthrough serial-to-TCP bridges like ESPHome's stream_server.",
+          "port": "Standard Modbus TCP port (default: 502). Change only if your gateway uses a non-standard port.",
+          "unit_id": "Modbus device address (1-247). Identifies the specific device on a shared bus. Most direct-connected devices use 1. Gateways may route requests to different addresses."
+        },
+        "description": "Configure the connection to your NeoPool controller.",
+        "title": "NeoPool Connection"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "cell_runtime_part": {
+        "name": "Cell runtime since reset"
+      },
+      "cell_runtime_pol_changes": {
+        "name": "Cell polarity changes"
+      },
+      "cell_runtime_pola": {
+        "name": "Cell runtime in polarity 1"
+      },
+      "cell_runtime_polb": {
+        "name": "Cell runtime in polarity 2"
+      },
+      "cell_runtime_total": {
+        "name": "Cell runtime total"
+      },
+      "filt_mode": {
+        "name": "Filtration mode",
+        "state": {
+          "auto": "Automatic",
+          "backwash": "Backwash",
+          "heating": "Heating",
+          "intelligent": "Intelligent",
+          "manual": "[%key:common::state::manual%]",
+          "smart": "Smart"
+        }
+      },
+      "filtration_speed": {
+        "name": "Current filtration speed",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "mid": "Medium",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "filtvalve_remaining": {
+        "name": "Backwash time remaining"
+      },
+      "hidro_current": {
+        "name": "Hydrolysis intensity"
+      },
+      "hidro_polarity": {
+        "name": "Hydrolysis polarity",
+        "state": {
+          "dead_time": "Dead time",
+          "no_flow": "No flow",
+          "off": "[%key:common::state::off%]",
+          "pol1": "Polarity 1",
+          "pol2": "Polarity 2"
+        }
+      },
+      "hidro_voltage": {
+        "name": "Hydrolysis voltage"
+      },
+      "intelligent_intervals": {
+        "name": "Intelligent mode intervals"
+      },
+      "intelligent_tt_next_interval": {
+        "name": "Intelligent mode next interval start"
+      },
+      "ion_current": {
+        "name": "Ionization level"
+      },
+      "ion_polarity": {
+        "name": "Ionizer polarity",
+        "state": {
+          "dead_time": "Dead time",
+          "off": "[%key:common::state::off%]",
+          "pol1": "Polarity 1",
+          "pol2": "Polarity 2"
+        }
+      },
+      "measure_cl": {
+        "name": "Salt level"
+      },
+      "measure_conductivity": {
+        "name": "Conductivity level"
+      },
+      "measure_ph": {
+        "name": "pH level"
+      },
+      "measure_rx": {
+        "name": "Redox potential"
+      },
+      "measure_temperature": {
+        "name": "Water temperature"
+      },
+      "ph_pump_status": {
+        "name": "pH pump status",
+        "state": {
+          "acid": "Acid pump",
+          "base": "Base pump",
+          "both": "Both pumps",
+          "idle": "[%key:common::state::idle%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "ph_status_alarm": {
+        "name": "pH alarm",
+        "state": {
+          "ok": "OK",
+          "ph_high": "pH too high",
+          "ph_low": "pH too low",
+          "ph_over": "pH higher than the set point",
+          "ph_under": "pH lower than the set point",
+          "pump_stopped": "Pump stopped (exceeded working time)",
+          "tank_level": "Tank level alarm"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "modbus_communication_error": {
+      "message": "An error occurred while communicating with the NeoPool controller: {error}"
+    }
+  },
+  "issues": {
+    "corrupted_gpio": {
+      "description": "The following GPIO register(s) on your pool controller contain invalid values:\n\n{details}\n\nThis typically happens when the Modbus gateway framing mode does not match the integration's framer setting. The affected function(s) will not work correctly until the register(s) are restored to valid values.\n\nSee the integration documentation for repair instructions.",
+      "title": "Corrupted GPIO register(s) detected"
+    }
+  }
+}
