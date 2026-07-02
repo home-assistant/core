@@ -2,18 +2,36 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_account": "Invalid Steam ID",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "reauth_confirm": {
-        "description": "The Steam integration needs to be manually re-authenticated\n\nYou can find your Steam Web API key [**here**]({api_key_url}).",
+        "data": {
+          "api_key": "[%key:component::steam_online::config::step::user::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::steam_online::config::step::user::data_description::api_key%]"
+        },
+        "description": "The Steam integration requires re-authentication.\n\nYou can find your Steam Web API key [**here**]({api_key_url}).",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:component::steam_online::config::step::user::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::steam_online::config::step::user::data_description::api_key%]"
+        },
+        "description": "You can find your Steam Web API key [**here**]({api_key_url}).",
+        "title": "Reconfigure {name}"
       },
       "user": {
         "data": {
@@ -50,6 +68,17 @@
           "level": { "name": "Level" }
         }
       }
+    }
+  },
+  "exceptions": {
+    "auth_exception": {
+      "message": "Failed to connect to Steam due to an authentication error"
+    },
+    "request_exception": {
+      "message": "Failed to connect to Steam due to a request error"
+    },
+    "timeout_exception": {
+      "message": "Failed to connect to Steam due to a request timeout"
     }
   },
   "options": {

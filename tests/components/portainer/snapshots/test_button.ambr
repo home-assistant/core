@@ -39,7 +39,7 @@
 # name: test_all_button_entities_snapshot[button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_kill_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Kill container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Kill container',
     }),
     'context': <ANY>,
     'entity_id': 'button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_kill_container',
@@ -89,7 +89,7 @@
 # name: test_all_button_entities_snapshot[button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_pause_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Pause container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Pause container',
     }),
     'context': <ANY>,
     'entity_id': 'button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_pause_container',
@@ -139,7 +139,7 @@
 # name: test_all_button_entities_snapshot[button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_recreate_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Recreate container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Recreate container',
     }),
     'context': <ANY>,
     'entity_id': 'button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_recreate_container',
@@ -189,8 +189,8 @@
 # name: test_all_button_entities_snapshot[button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_restart_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Restart container',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Restart container',
     }),
     'context': <ANY>,
     'entity_id': 'button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_restart_container',
@@ -240,7 +240,7 @@
 # name: test_all_button_entities_snapshot[button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_resume_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Resume container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Resume container',
     }),
     'context': <ANY>,
     'entity_id': 'button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_resume_container',
@@ -290,7 +290,7 @@
 # name: test_all_button_entities_snapshot[button.focused_einstein_kill_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'focused_einstein Kill container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'focused_einstein Kill container',
     }),
     'context': <ANY>,
     'entity_id': 'button.focused_einstein_kill_container',
@@ -340,7 +340,7 @@
 # name: test_all_button_entities_snapshot[button.focused_einstein_pause_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'focused_einstein Pause container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'focused_einstein Pause container',
     }),
     'context': <ANY>,
     'entity_id': 'button.focused_einstein_pause_container',
@@ -390,7 +390,7 @@
 # name: test_all_button_entities_snapshot[button.focused_einstein_recreate_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'focused_einstein Recreate container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'focused_einstein Recreate container',
     }),
     'context': <ANY>,
     'entity_id': 'button.focused_einstein_recreate_container',
@@ -440,8 +440,8 @@
 # name: test_all_button_entities_snapshot[button.focused_einstein_restart_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'focused_einstein Restart container',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'focused_einstein Restart container',
     }),
     'context': <ANY>,
     'entity_id': 'button.focused_einstein_restart_container',
@@ -491,7 +491,7 @@
 # name: test_all_button_entities_snapshot[button.focused_einstein_resume_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'focused_einstein Resume container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'focused_einstein Resume container',
     }),
     'context': <ANY>,
     'entity_id': 'button.focused_einstein_resume_container',
@@ -541,7 +541,7 @@
 # name: test_all_button_entities_snapshot[button.funny_chatelet_kill_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'funny_chatelet Kill container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'funny_chatelet Kill container',
     }),
     'context': <ANY>,
     'entity_id': 'button.funny_chatelet_kill_container',
@@ -591,7 +591,7 @@
 # name: test_all_button_entities_snapshot[button.funny_chatelet_pause_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'funny_chatelet Pause container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'funny_chatelet Pause container',
     }),
     'context': <ANY>,
     'entity_id': 'button.funny_chatelet_pause_container',
@@ -641,7 +641,7 @@
 # name: test_all_button_entities_snapshot[button.funny_chatelet_recreate_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'funny_chatelet Recreate container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'funny_chatelet Recreate container',
     }),
     'context': <ANY>,
     'entity_id': 'button.funny_chatelet_recreate_container',
@@ -691,8 +691,8 @@
 # name: test_all_button_entities_snapshot[button.funny_chatelet_restart_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'funny_chatelet Restart container',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'funny_chatelet Restart container',
     }),
     'context': <ANY>,
     'entity_id': 'button.funny_chatelet_restart_container',
@@ -742,7 +742,7 @@
 # name: test_all_button_entities_snapshot[button.funny_chatelet_resume_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'funny_chatelet Resume container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'funny_chatelet Resume container',
     }),
     'context': <ANY>,
     'entity_id': 'button.funny_chatelet_resume_container',
@@ -792,8 +792,8 @@
 # name: test_all_button_entities_snapshot[button.my_environment_prune_unused_images-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'my-environment Prune unused images',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my-environment Prune unused images',
     }),
     'context': <ANY>,
     'entity_id': 'button.my_environment_prune_unused_images',
@@ -843,7 +843,7 @@
 # name: test_all_button_entities_snapshot[button.my_environment_prune_unused_volumes-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my-environment Prune unused volumes',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my-environment Prune unused volumes',
     }),
     'context': <ANY>,
     'entity_id': 'button.my_environment_prune_unused_volumes',
@@ -893,7 +893,7 @@
 # name: test_all_button_entities_snapshot[button.practical_morse_kill_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'practical_morse Kill container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'practical_morse Kill container',
     }),
     'context': <ANY>,
     'entity_id': 'button.practical_morse_kill_container',
@@ -943,7 +943,7 @@
 # name: test_all_button_entities_snapshot[button.practical_morse_pause_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'practical_morse Pause container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'practical_morse Pause container',
     }),
     'context': <ANY>,
     'entity_id': 'button.practical_morse_pause_container',
@@ -993,7 +993,7 @@
 # name: test_all_button_entities_snapshot[button.practical_morse_recreate_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'practical_morse Recreate container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'practical_morse Recreate container',
     }),
     'context': <ANY>,
     'entity_id': 'button.practical_morse_recreate_container',
@@ -1043,8 +1043,8 @@
 # name: test_all_button_entities_snapshot[button.practical_morse_restart_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'practical_morse Restart container',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'practical_morse Restart container',
     }),
     'context': <ANY>,
     'entity_id': 'button.practical_morse_restart_container',
@@ -1094,7 +1094,7 @@
 # name: test_all_button_entities_snapshot[button.practical_morse_resume_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'practical_morse Resume container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'practical_morse Resume container',
     }),
     'context': <ANY>,
     'entity_id': 'button.practical_morse_resume_container',
@@ -1144,7 +1144,7 @@
 # name: test_all_button_entities_snapshot[button.serene_banach_kill_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'serene_banach Kill container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach Kill container',
     }),
     'context': <ANY>,
     'entity_id': 'button.serene_banach_kill_container',
@@ -1194,7 +1194,7 @@
 # name: test_all_button_entities_snapshot[button.serene_banach_pause_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'serene_banach Pause container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach Pause container',
     }),
     'context': <ANY>,
     'entity_id': 'button.serene_banach_pause_container',
@@ -1244,7 +1244,7 @@
 # name: test_all_button_entities_snapshot[button.serene_banach_recreate_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'serene_banach Recreate container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach Recreate container',
     }),
     'context': <ANY>,
     'entity_id': 'button.serene_banach_recreate_container',
@@ -1294,8 +1294,8 @@
 # name: test_all_button_entities_snapshot[button.serene_banach_restart_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'serene_banach Restart container',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach Restart container',
     }),
     'context': <ANY>,
     'entity_id': 'button.serene_banach_restart_container',
@@ -1345,7 +1345,7 @@
 # name: test_all_button_entities_snapshot[button.serene_banach_resume_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'serene_banach Resume container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach Resume container',
     }),
     'context': <ANY>,
     'entity_id': 'button.serene_banach_resume_container',
@@ -1395,7 +1395,7 @@
 # name: test_all_button_entities_snapshot[button.stoic_turing_kill_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'stoic_turing Kill container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing Kill container',
     }),
     'context': <ANY>,
     'entity_id': 'button.stoic_turing_kill_container',
@@ -1445,7 +1445,7 @@
 # name: test_all_button_entities_snapshot[button.stoic_turing_pause_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'stoic_turing Pause container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing Pause container',
     }),
     'context': <ANY>,
     'entity_id': 'button.stoic_turing_pause_container',
@@ -1495,7 +1495,7 @@
 # name: test_all_button_entities_snapshot[button.stoic_turing_recreate_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'stoic_turing Recreate container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing Recreate container',
     }),
     'context': <ANY>,
     'entity_id': 'button.stoic_turing_recreate_container',
@@ -1545,8 +1545,8 @@
 # name: test_all_button_entities_snapshot[button.stoic_turing_restart_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'stoic_turing Restart container',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing Restart container',
     }),
     'context': <ANY>,
     'entity_id': 'button.stoic_turing_restart_container',
@@ -1596,7 +1596,7 @@
 # name: test_all_button_entities_snapshot[button.stoic_turing_resume_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'stoic_turing Resume container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing Resume container',
     }),
     'context': <ANY>,
     'entity_id': 'button.stoic_turing_resume_container',

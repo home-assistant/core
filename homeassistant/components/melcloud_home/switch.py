@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from aiomelcloudhome import ATAUnit, ATWUnit, MELCloudHome
 from aiomelcloudhome.exceptions import (
@@ -215,15 +215,18 @@ class ATASwitch(MelCloudHomeATAUnitEntity, SwitchEntity):
         self._attr_unique_id = f"{unit.id}_{entity_description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return super().available and self.entity_description.available_fn(self.unit)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the switch."""
         return self.entity_description.is_on_fn(self.unit)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable the protection."""
         await _perform_action(
@@ -231,6 +234,7 @@ class ATASwitch(MelCloudHomeATAUnitEntity, SwitchEntity):
             self.entity_description.turn_on_fn(self.coordinator.client, self.unit),
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable the protection."""
         await _perform_action(
@@ -256,15 +260,18 @@ class ATWSwitch(MelCloudHomeATWUnitEntity, SwitchEntity):
         self._attr_unique_id = f"{unit.id}_{entity_description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return super().available and self.entity_description.available_fn(self.unit)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the switch."""
         return self.entity_description.is_on_fn(self.unit)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable the protection."""
         await _perform_action(
@@ -272,6 +279,7 @@ class ATWSwitch(MelCloudHomeATWUnitEntity, SwitchEntity):
             self.entity_description.turn_on_fn(self.coordinator.client, self.unit),
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable the protection."""
         await _perform_action(

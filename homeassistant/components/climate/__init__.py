@@ -84,7 +84,9 @@ from .const import (  # noqa: F401
     SWING_OFF,
     SWING_ON,
     SWING_VERTICAL,
+    ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     HVACAction,
     HVACMode,
 )
@@ -242,16 +244,16 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     _entity_component_unrecorded_attributes = frozenset(
         {
-            ATTR_HVAC_MODES,
-            ATTR_FAN_MODES,
-            ATTR_SWING_MODES,
-            ATTR_MIN_TEMP,
-            ATTR_MAX_TEMP,
-            ATTR_MIN_HUMIDITY,
-            ATTR_MAX_HUMIDITY,
-            ATTR_TARGET_HUMIDITY_STEP,
-            ATTR_TARGET_TEMP_STEP,
-            ATTR_PRESET_MODES,
+            ClimateEntityCapabilityAttribute.HVAC_MODES,
+            ClimateEntityCapabilityAttribute.FAN_MODES,
+            ClimateEntityCapabilityAttribute.SWING_MODES,
+            ClimateEntityCapabilityAttribute.MIN_TEMP,
+            ClimateEntityCapabilityAttribute.MAX_TEMP,
+            ClimateEntityCapabilityAttribute.MIN_HUMIDITY,
+            ClimateEntityCapabilityAttribute.MAX_HUMIDITY,
+            ClimateEntityCapabilityAttribute.TARGET_HUMIDITY_STEP,
+            ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP,
+            ClimateEntityCapabilityAttribute.PRESET_MODES,
         }
     )
 
@@ -315,32 +317,42 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         hass = self.hass
 
         data: dict[str, Any] = {
-            ATTR_HVAC_MODES: self.hvac_modes,
-            ATTR_MIN_TEMP: show_temp(hass, self.min_temp, temperature_unit, precision),
-            ATTR_MAX_TEMP: show_temp(hass, self.max_temp, temperature_unit, precision),
+            ClimateEntityCapabilityAttribute.HVAC_MODES: self.hvac_modes,
+            ClimateEntityCapabilityAttribute.MIN_TEMP: show_temp(
+                hass, self.min_temp, temperature_unit, precision
+            ),
+            ClimateEntityCapabilityAttribute.MAX_TEMP: show_temp(
+                hass, self.max_temp, temperature_unit, precision
+            ),
         }
 
         if target_temperature_step := self.target_temperature_step:
-            data[ATTR_TARGET_TEMP_STEP] = target_temperature_step
+            data[ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP] = (
+                target_temperature_step
+            )
 
         if ClimateEntityFeature.TARGET_HUMIDITY in supported_features:
-            data[ATTR_MIN_HUMIDITY] = self.min_humidity
-            data[ATTR_MAX_HUMIDITY] = self.max_humidity
+            data[ClimateEntityCapabilityAttribute.MIN_HUMIDITY] = self.min_humidity
+            data[ClimateEntityCapabilityAttribute.MAX_HUMIDITY] = self.max_humidity
 
             if self.target_humidity_step is not None:
-                data[ATTR_TARGET_HUMIDITY_STEP] = self.target_humidity_step
+                data[ClimateEntityCapabilityAttribute.TARGET_HUMIDITY_STEP] = (
+                    self.target_humidity_step
+                )
 
         if ClimateEntityFeature.FAN_MODE in supported_features:
-            data[ATTR_FAN_MODES] = self.fan_modes
+            data[ClimateEntityCapabilityAttribute.FAN_MODES] = self.fan_modes
 
         if ClimateEntityFeature.PRESET_MODE in supported_features:
-            data[ATTR_PRESET_MODES] = self.preset_modes
+            data[ClimateEntityCapabilityAttribute.PRESET_MODES] = self.preset_modes
 
         if ClimateEntityFeature.SWING_MODE in supported_features:
-            data[ATTR_SWING_MODES] = self.swing_modes
+            data[ClimateEntityCapabilityAttribute.SWING_MODES] = self.swing_modes
 
         if ClimateEntityFeature.SWING_HORIZONTAL_MODE in supported_features:
-            data[ATTR_SWING_HORIZONTAL_MODES] = self.swing_horizontal_modes
+            data[ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES] = (
+                self.swing_horizontal_modes
+            )
 
         return data
 
@@ -355,13 +367,13 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         hass = self.hass
 
         data: dict[str, str | float | None] = {
-            ATTR_CURRENT_TEMPERATURE: show_temp(
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE: show_temp(
                 hass, self.current_temperature, temperature_unit, precision
             ),
         }
 
         if ClimateEntityFeature.TARGET_TEMPERATURE in supported_features:
-            data[ATTR_TEMPERATURE] = show_temp(
+            data[ClimateEntityStateAttribute.TEMPERATURE] = show_temp(
                 hass,
                 self.target_temperature,
                 temperature_unit,
@@ -369,33 +381,35 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
 
         if ClimateEntityFeature.TARGET_TEMPERATURE_RANGE in supported_features:
-            data[ATTR_TARGET_TEMP_HIGH] = show_temp(
+            data[ClimateEntityStateAttribute.TARGET_TEMP_HIGH] = show_temp(
                 hass, self.target_temperature_high, temperature_unit, precision
             )
-            data[ATTR_TARGET_TEMP_LOW] = show_temp(
+            data[ClimateEntityStateAttribute.TARGET_TEMP_LOW] = show_temp(
                 hass, self.target_temperature_low, temperature_unit, precision
             )
 
         if (current_humidity := self.current_humidity) is not None:
-            data[ATTR_CURRENT_HUMIDITY] = current_humidity
+            data[ClimateEntityStateAttribute.CURRENT_HUMIDITY] = current_humidity
 
         if ClimateEntityFeature.TARGET_HUMIDITY in supported_features:
-            data[ATTR_HUMIDITY] = self.target_humidity
+            data[ClimateEntityStateAttribute.HUMIDITY] = self.target_humidity
 
         if ClimateEntityFeature.FAN_MODE in supported_features:
-            data[ATTR_FAN_MODE] = self.fan_mode
+            data[ClimateEntityStateAttribute.FAN_MODE] = self.fan_mode
 
         if hvac_action := self.hvac_action:
-            data[ATTR_HVAC_ACTION] = hvac_action
+            data[ClimateEntityStateAttribute.HVAC_ACTION] = hvac_action
 
         if ClimateEntityFeature.PRESET_MODE in supported_features:
-            data[ATTR_PRESET_MODE] = self.preset_mode
+            data[ClimateEntityStateAttribute.PRESET_MODE] = self.preset_mode
 
         if ClimateEntityFeature.SWING_MODE in supported_features:
-            data[ATTR_SWING_MODE] = self.swing_mode
+            data[ClimateEntityStateAttribute.SWING_MODE] = self.swing_mode
 
         if ClimateEntityFeature.SWING_HORIZONTAL_MODE in supported_features:
-            data[ATTR_SWING_HORIZONTAL_MODE] = self.swing_horizontal_mode
+            data[ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE] = (
+                self.swing_horizontal_mode
+            )
 
         return data
 

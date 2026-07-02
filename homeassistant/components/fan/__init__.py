@@ -29,6 +29,8 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
+from .const import FanEntityCapabilityAttribute, FanEntityStateAttribute
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "fan"
@@ -202,7 +204,9 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
 class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for fan entities."""
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_PRESET_MODES})
+    _entity_component_unrecorded_attributes = frozenset(
+        {FanEntityCapabilityAttribute.PRESET_MODES}
+    )
 
     entity_description: FanEntityDescription
     _attr_current_direction: str | None = None
@@ -372,14 +376,14 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @override
     def capability_attributes(self) -> dict[str, list[str] | None]:
         """Return capability attributes."""
-        attrs = {}
+        attrs: dict[str, list[str] | None] = {}
         supported_features = self.supported_features
 
         if (
             FanEntityFeature.SET_SPEED in supported_features
             or FanEntityFeature.PRESET_MODE in supported_features
         ):
-            attrs[ATTR_PRESET_MODES] = self.preset_modes
+            attrs[FanEntityCapabilityAttribute.PRESET_MODES] = self.preset_modes
 
         return attrs
 
@@ -392,19 +396,19 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         supported_features = self.supported_features
 
         if FanEntityFeature.DIRECTION in supported_features:
-            data[ATTR_DIRECTION] = self.current_direction
+            data[FanEntityStateAttribute.DIRECTION] = self.current_direction
 
         if FanEntityFeature.OSCILLATE in supported_features:
-            data[ATTR_OSCILLATING] = self.oscillating
+            data[FanEntityStateAttribute.OSCILLATING] = self.oscillating
 
         has_set_speed = FanEntityFeature.SET_SPEED in supported_features
 
         if has_set_speed:
-            data[ATTR_PERCENTAGE] = self.percentage
-            data[ATTR_PERCENTAGE_STEP] = self.percentage_step
+            data[FanEntityStateAttribute.PERCENTAGE] = self.percentage
+            data[FanEntityStateAttribute.PERCENTAGE_STEP] = self.percentage_step
 
         if has_set_speed or FanEntityFeature.PRESET_MODE in supported_features:
-            data[ATTR_PRESET_MODE] = self.preset_mode
+            data[FanEntityStateAttribute.PRESET_MODE] = self.preset_mode
 
         return data
 
