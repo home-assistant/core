@@ -1,0 +1,194 @@
+"""Config flow for the Elke27 integration."""
+
+import asyncio
+from dataclasses import asdict, is_dataclass
+from typing import Any, override
+
+from elke27_lib import ClientConfig, LinkKeys
+from elke27_lib.client import Elke27Client
+from elke27_lib.errors import (
+    Elke27AuthError,
+    Elke27ConnectionError,
+    Elke27DisconnectedError,
+    Elke27Error,
+    Elke27LinkRequiredError,
+    Elke27TimeoutError,
+    InvalidCredentials,
+)
+import voluptuous as vol
+
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_PORT
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import selector
+
+from .const import CONF_LINK_KEYS_JSON, DEFAULT_PORT, DOMAIN, READY_TIMEOUT
+from .identity import build_client_identity, derive_client_id, normalize_identifier
+
+CONF_ACCESS_CODE = "access_code"
+CONF_PASSPHRASE = "passphrase"
+
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_ACCESS_CODE): selector({"text": {"type": "password"}}),
+        vol.Required(CONF_PASSPHRASE): selector({"text": {"type": "password"}}),
+    }
+)
+
+
+class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Elke27."""
+
+    VERSION = 1
+    MINOR_VERSION = 1
+
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle manual setup."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            port = DEFAULT_PORT
+            self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
+            return await self._async_link_and_create_entry(
+                host=host,
+                port=port,
+                access_code=user_input[CONF_ACCESS_CODE],
+                passphrase=user_input[CONF_PASSPHRASE],
+                errors=errors,
+            )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def _async_link_and_create_entry(
+        self,
+        host: str,
+        port: int,
+        access_code: str,
+        passphrase: str,
+        errors: dict[str, str],
+    ) -> ConfigFlowResult:
+        """Link, connect, fetch snapshots, and create the entry."""
+        client_id = derive_client_id(self.flow_id)
+        client_identity = build_client_identity(client_id)
+        client = _create_client()
+        link_keys: LinkKeys | None = None
+        panel_info: dict[str, Any] = {}
+        try:
+            link_keys = await client.async_link(
+                host=host,
+                port=port,
+                access_code=access_code,
+                passphrase=passphrase,
+                client_identity=client_identity,
+            )
+            await client.async_connect(host=host, port=port, link_keys=link_keys)
+            ready = await client.wait_ready(timeout_s=READY_TIMEOUT)
+            if not ready:
+                errors["base"] = "cannot_connect"
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=STEP_USER_DATA_SCHEMA,
+                    errors=errors,
+                )
+
+            snapshot = client.snapshot
+            panel_info = _snapshot_to_dict(snapshot.panel)
+        except InvalidCredentials:
+            errors["base"] = "invalid_auth"
+        except Elke27AuthError:
+            errors["base"] = "cannot_connect"
+        except (
+            Elke27ConnectionError,
+            Elke27TimeoutError,
+            Elke27DisconnectedError,
+            OSError,
+        ):
+            errors["base"] = "cannot_connect"
+        except Elke27LinkRequiredError:
+            errors["base"] = "link_required"
+        except Elke27Error:
+            errors["base"] = "unknown"
+        finally:
+            await _async_disconnect_client(client)
+
+        if errors or link_keys is None:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=STEP_USER_DATA_SCHEMA,
+                errors=errors,
+            )
+
+        link_keys_json = link_keys.to_json()
+        try:
+            panel_unique_id = _panel_unique_id(panel_info)
+        except ValueError:
+            errors["base"] = "unknown"
+            return self.async_show_form(
+                step_id="user",
+                data_schema=STEP_USER_DATA_SCHEMA,
+                errors=errors,
+            )
+        data: dict[str, Any] = {
+            CONF_HOST: host,
+            CONF_PORT: port,
+            CONF_LINK_KEYS_JSON: link_keys_json,
+            CONF_CLIENT_ID: client_id,
+        }
+        await self.async_set_unique_id(panel_unique_id)
+        self._abort_if_unique_id_configured(updates=data)
+
+        title = _panel_name(panel_info) or host
+        return self.async_create_entry(title=title, data=data)
+
+
+def _create_client() -> Elke27Client:
+    """Create a configured client instance."""
+    return Elke27Client(ClientConfig())
+
+
+async def _async_disconnect_client(client: Elke27Client) -> None:
+    """Disconnect a config-flow client while preserving cancellation."""
+    try:
+        await client.async_disconnect()
+    except asyncio.CancelledError:
+        raise
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _panel_name(panel_info: dict[str, Any]) -> str | None:
+    return (
+        panel_info.get("panel_name")
+        or panel_info.get("name")
+        or panel_info.get("serial")
+        or panel_info.get("panel_serial")
+    )
+
+
+def _panel_unique_id(panel_info: dict[str, Any]) -> str:
+    """Return the stable panel identifier from panel info."""
+    unique_id = (
+        panel_info.get("serial")
+        or panel_info.get("panel_serial")
+        or panel_info.get("mac")
+        or panel_info.get("panel_mac")
+    )
+    if not unique_id:
+        msg = "Panel info did not include a stable identifier"
+        raise ValueError(msg)
+    return normalize_identifier(str(unique_id))
+
+
+def _snapshot_to_dict(snapshot: Any) -> dict[str, Any]:
+    """Serialize a snapshot to a dict."""
+    if is_dataclass(snapshot) and not isinstance(snapshot, type):
+        return asdict(snapshot)
+    return dict(snapshot)
