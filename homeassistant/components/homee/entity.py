@@ -2,7 +2,7 @@
 
 from typing import override
 
-from pyHomee.const import AttributeState, AttributeType, NodeProfile, NodeState
+from pyHomee.const import AttributeType, NodeProfile, NodeState
 from pyHomee.model import HomeeAttribute, HomeeNode
 from websockets.exceptions import ConnectionClosed
 
@@ -65,7 +65,7 @@ class HomeeEntity(Entity):
     @override
     def available(self) -> bool:
         """Return the availability of the underlying node."""
-        return (self._attribute.state == AttributeState.NORMAL) and self._host_connected
+        return (self._attribute.state < 5) and self._host_connected
 
     async def async_set_homee_value(self, value: float) -> None:
         """Set an attribute value on the homee node."""
