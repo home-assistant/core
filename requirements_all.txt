@@ -1352,6 +1352,9 @@ incomfort-client==0.7.0
 # homeassistant.components.indevolt
 indevolt-api==1.8.6
 
+# homeassistant.components.inepro_metering
+inepro-metering==0.1.3
+
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
 

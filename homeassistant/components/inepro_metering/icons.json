@@ -1,0 +1,7 @@
+{
+  "services": {
+    "set_wifi_credentials": {
+      "service": "mdi:wifi-cog"
+    }
+  }
+}
