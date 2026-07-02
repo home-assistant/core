@@ -1,7 +1,8 @@
 """Tests for the Sonos Media Browser."""
 
 from functools import partial
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
+from urllib.parse import quote
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -400,3 +401,154 @@ async def test_search_media_invalid_media_content_type(
     assert response["error"]["translation_placeholders"] == {
         "media_content_type": "movie"
     }
+
+
+def test_get_thumbnail_url_full_caches_track_art() -> None:
+    """Test a non-internal browse caches the item's art URI without decoding the URL.
+
+    The proxy URL must not be unquoted: get_browse_image_url percent-encodes the
+    content id into the path, and a track URI's "?sid=...&..." query string would
+    otherwise collapse into the proxy URL and truncate the id.
+    """
+    media = Mock()
+    media.browse_image_uris = {}
+    track_uri = "x-sonos-spotify:spotify%3atrack%3a5bcTCx?sid=12&flags=8224&sn=3"
+    item = MockMusicServiceItem(
+        "Come Together",
+        track_uri,
+        "playlist",
+        "object.item.audioItem.musicTrack",
+        album_art_uri="http://192.168.42.2:1400/getaa?u=track&v=1",
+    )
+    proxy_url = (
+        "/api/media_player_proxy/media_player.zone_a/browse_media/track/"
+        + quote(track_uri)
+        + "?token=abc"
+    )
+    get_browse_image_url = Mock(return_value=proxy_url)
+
+    result = get_thumbnail_url_full(
+        media,
+        False,
+        get_browse_image_url,
+        MediaType.TRACK,
+        track_uri,
+        None,
+        item,
+    )
+
+    assert media.browse_image_uris[track_uri] == item.album_art_uri
+    assert result == proxy_url
+
+
+def test_get_thumbnail_url_full_skips_non_track_cache() -> None:
+    """Test only track art is cached; albums and artists resolve via get_media."""
+    media = Mock()
+    media.browse_image_uris = {}
+    content_id = "A:ALBUM/Abbey%20Road"
+    item = MockMusicServiceItem(
+        "Abbey Road",
+        content_id,
+        "A:ALBUM",
+        "object.container.album.musicAlbum",
+        album_art_uri="http://192.168.42.2:1400/getaa?u=album&v=1",
+    )
+    get_browse_image_url = Mock(return_value="/proxy/album")
+
+    get_thumbnail_url_full(
+        media,
+        False,
+        get_browse_image_url,
+        MediaType.ALBUM,
+        content_id,
+        None,
+        item,
+    )
+
+    assert media.browse_image_uris == {}
+
+
+def test_get_thumbnail_url_full_evicts_oldest_track_art() -> None:
+    """Test the browse-image cache is bounded and evicts the oldest entry first."""
+    media = Mock()
+    media.browse_image_uris = {}
+    get_browse_image_url = Mock(return_value="/proxy")
+
+    with patch(
+        "homeassistant.components.sonos.media_browser.BROWSE_IMAGE_CACHE_SIZE", 2
+    ):
+        for i in range(3):
+            track_uri = f"x-sonos-spotify:track{i}?sid=1"
+            item = MockMusicServiceItem(
+                f"Track {i}",
+                track_uri,
+                "playlist",
+                "object.item.audioItem.musicTrack",
+                album_art_uri=f"http://192.168.42.2:1400/getaa?u=track{i}",
+            )
+            get_thumbnail_url_full(
+                media,
+                False,
+                get_browse_image_url,
+                MediaType.TRACK,
+                track_uri,
+                None,
+                item,
+            )
+
+    assert list(media.browse_image_uris) == [
+        "x-sonos-spotify:track1?sid=1",
+        "x-sonos-spotify:track2?sid=1",
+    ]
+
+
+async def test_browse_image_for_track_uses_cached_art(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+) -> None:
+    """Test a track's browse image is served from the art URI captured at browse time."""
+    entity_comp = hass.data["entity_components"]["media_player"]
+    player = entity_comp.get_entity("media_player.zone_a")
+    track_uri = "x-sonos-spotify:spotify%3atrack%3a5bcTCx?sid=12&flags=8224&sn=3"
+    art_url = "http://192.168.42.2:1400/getaa?u=track&v=1"
+    player.media.browse_image_uris[track_uri] = art_url
+
+    with patch.object(
+        player, "_async_fetch_image", return_value=(b"image", "image/jpeg")
+    ) as mock_fetch:
+        result = await player.async_get_browse_image(MediaType.TRACK, track_uri)
+
+    assert result == (b"image", "image/jpeg")
+    mock_fetch.assert_awaited_once_with(art_url)
+
+
+async def test_browse_image_for_track_falls_back_to_library(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+) -> None:
+    """Test a track with no cached art falls back to a library lookup."""
+    entity_comp = hass.data["entity_components"]["media_player"]
+    player = entity_comp.get_entity("media_player.zone_a")
+    track_uri = "A:TRACKS/Some%20Track"
+    art_url = "http://192.168.42.2:1400/getaa?u=local&v=1"
+    item = MockMusicServiceItem(
+        "Some Track",
+        track_uri,
+        "A:TRACKS",
+        "object.item.audioItem.musicTrack",
+        album_art_uri=art_url,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.sonos.media_browser.get_media", return_value=item
+        ) as mock_get_media,
+        patch.object(
+            player, "_async_fetch_image", return_value=(b"image", "image/jpeg")
+        ) as mock_fetch,
+    ):
+        result = await player.async_get_browse_image(MediaType.TRACK, track_uri)
+
+    assert result == (b"image", "image/jpeg")
+    mock_get_media.assert_called_once()
+    mock_fetch.assert_awaited_once_with(art_url)
