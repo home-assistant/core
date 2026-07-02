@@ -6,9 +6,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max_temp': 69,
-      'min_temp': 38,
-      'operation_list': list([
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 69,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 38,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
         'off',
         'eco',
         'heat_pump',
@@ -49,23 +49,23 @@
 # name: test_all_entities[da_ac_ehs_01001][water_heater.heat_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'away_mode': 'off',
-      'current_temperature': 57,
-      'friendly_name': 'Heat pump',
-      'max_temp': 69,
-      'min_temp': 38,
-      'operation_list': list([
+      <WaterHeaterStateAttribute.AWAY_MODE: 'away_mode'>: 'off',
+      <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 57,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat pump',
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 69,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 38,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
         'off',
         'eco',
         'heat_pump',
         'performance',
         'high_demand',
       ]),
-      'operation_mode': 'off',
-      'supported_features': <WaterHeaterEntityFeature: 14>,
-      'target_temp_high': 69,
-      'target_temp_low': 38,
-      'temperature': 56,
+      <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'off',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 14>,
+      <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 69,
+      <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 38,
+      <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 56,
     }),
     'context': <ANY>,
     'entity_id': 'water_heater.heat_pump',
@@ -82,9 +82,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max_temp': 60.0,
-      'min_temp': 40,
-      'operation_list': list([
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 40,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
         'off',
         'eco',
         'heat_pump',
@@ -124,22 +124,22 @@
 # name: test_all_entities[da_sac_ehs_000001_sub][water_heater.eco_heating_system-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'away_mode': 'off',
-      'current_temperature': 40.8,
-      'friendly_name': 'Eco Heating System',
-      'max_temp': 60.0,
-      'min_temp': 40,
-      'operation_list': list([
+      <WaterHeaterStateAttribute.AWAY_MODE: 'away_mode'>: 'off',
+      <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 40.8,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eco Heating System',
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 40,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
         'off',
         'eco',
         'heat_pump',
         'high_demand',
       ]),
-      'operation_mode': 'off',
-      'supported_features': <WaterHeaterEntityFeature: 14>,
-      'target_temp_high': 55,
-      'target_temp_low': 40,
-      'temperature': 48,
+      <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'off',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 14>,
+      <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 55,
+      <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 40,
+      <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 48,
     }),
     'context': <ANY>,
     'entity_id': 'water_heater.eco_heating_system',
@@ -156,9 +156,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max_temp': 60.0,
-      'min_temp': 40,
-      'operation_list': list([
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 40,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
         'off',
         'eco',
         'heat_pump',
@@ -199,23 +199,23 @@
 # name: test_all_entities[da_sac_ehs_000002_sub][water_heater.warmepumpe-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'away_mode': 'off',
-      'current_temperature': 49.6,
-      'friendly_name': 'Wärmepumpe',
-      'max_temp': 60.0,
-      'min_temp': 40,
-      'operation_list': list([
+      <WaterHeaterStateAttribute.AWAY_MODE: 'away_mode'>: 'off',
+      <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 49.6,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wärmepumpe',
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 40,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
         'off',
         'eco',
         'heat_pump',
         'performance',
         'high_demand',
       ]),
-      'operation_mode': 'heat_pump',
-      'supported_features': <WaterHeaterEntityFeature: 15>,
-      'target_temp_high': 57,
-      'target_temp_low': 40,
-      'temperature': 52,
+      <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'heat_pump',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 15>,
+      <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 57,
+      <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 40,
+      <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 52,
     }),
     'context': <ANY>,
     'entity_id': 'water_heater.warmepumpe',

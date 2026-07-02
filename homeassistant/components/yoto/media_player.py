@@ -16,7 +16,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -47,10 +47,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Yoto media player platform."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        YotoMediaPlayer(coordinator, player)
-        for player in coordinator.client.players.values()
-    )
+    known_players: set[str] = set()
+
+    @callback
+    def _add_players() -> None:
+        current = set(coordinator.data)
+        new_players = current - known_players
+        known_players.clear()
+        known_players.update(current)
+        if new_players:
+            async_add_entities(
+                YotoMediaPlayer(coordinator, coordinator.data[player_id])
+                for player_id in new_players
+            )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_players))
+    _add_players()
 
 
 class YotoMediaPlayer(YotoPlayerEntity, MediaPlayerEntity):

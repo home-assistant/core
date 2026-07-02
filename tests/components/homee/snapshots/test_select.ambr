@@ -44,7 +44,7 @@
 # name: test_select_snapshot[select.test_select_displayed_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Select Displayed temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Select Displayed temperature',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'target',
         'current',
@@ -104,7 +104,7 @@
 # name: test_select_snapshot[select.test_select_repeater_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Select Repeater mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Select Repeater mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'level1',
