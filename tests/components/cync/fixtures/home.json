@@ -9,6 +9,19 @@
       "groups": [],
       "devices": [
         {
+          "name": "Bedroom Plug",
+          "is_online": true,
+          "wifi_connected": true,
+          "device_id": 1201,
+          "mesh_device_id": 10004,
+          "home_id": 1000,
+          "device_type_id": 64,
+          "device_type": "PLUG",
+          "mac_address": "AABBCC112233",
+          "product_id": "product456",
+          "authorize_code": "efgh_code"
+        },
+        {
           "name": "Bedroom Lamp",
           "is_online": true,
           "wifi_connected": true,

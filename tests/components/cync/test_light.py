@@ -1,16 +1,24 @@
 """Tests for the Cync integration light platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def light_platform_only():
+    """Limit platform setup to light only."""
+    with patch("homeassistant.components.cync._PLATFORMS", [Platform.LIGHT]):
+        yield
 
 
 async def test_entities(

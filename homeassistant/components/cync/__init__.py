@@ -17,7 +17,7 @@ from .const import (
 )
 from .coordinator import CyncConfigEntry, CyncCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.LIGHT]
+_PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool:
