@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant import loader
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import require_admin
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -116,6 +117,9 @@ async def websocket_remove_config_entry_from_device(
 
     if not config_entry.supports_remove_device:
         raise HomeAssistantError("Config entry does not support device removal")
+
+    if config_entry.state is not ConfigEntryState.LOADED:
+        raise HomeAssistantError("Config entry is not loaded")
 
     if (device_entry := registry.async_get(device_id)) is None:
         raise HomeAssistantError("Unknown device")
