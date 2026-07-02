@@ -65,7 +65,10 @@ class HomeeEntity(Entity):
     @override
     def available(self) -> bool:
         """Return the availability of the underlying node."""
-        return (self._attribute.state < 5) and self._host_connected
+        first_unavailable_attribute_state = 5
+        return (
+            self._attribute.state < first_unavailable_attribute_state
+        ) and self._host_connected
 
     async def async_set_homee_value(self, value: float) -> None:
         """Set an attribute value on the homee node."""
