@@ -134,8 +134,8 @@ class RingCam(RingEntity[RingGeneric], Camera):
             self._device.device_api_id
         )
 
-        history_data = self._device.last_history
-        if history_data and cast(Any, self._device).has_subscription:
+        history_data = getattr(self._device, "last_history", None)
+        if history_data and bool(getattr(self._device, "has_subscription", False)):
             self._last_event = history_data[0]
             # will call async_update to update the attributes and get the
             # video url from the api
@@ -166,7 +166,7 @@ class RingCam(RingEntity[RingGeneric], Camera):
             if isinstance(self._device, RingOther):
                 return await self._async_get_fresh_snapshot()
 
-            if not cast(Any, self._device).has_subscription:
+            if not bool(getattr(self._device, "has_subscription", False)):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="no_subscription",
