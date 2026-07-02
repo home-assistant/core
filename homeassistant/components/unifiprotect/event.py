@@ -76,29 +76,24 @@ class ProtectEventEntityDescription(ProtectEventMixin, EventEntityDescription):
 
 
 class ProtectDeviceRingEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEntity):
-    """A UniFi Protect event entity."""
+    """A UniFi Protect doorbell ring event entity driven by the public events WS."""
 
     entity_description: ProtectEventEntityDescription
 
-    @callback
     @override
-    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
-        description = self.entity_description
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to public ring events for this doorbell."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.data.async_subscribe_public_event(
+                self.device.mac, EventType.RING, self._async_ring_event
+            )
+        )
 
-        prev_event = self._event
-        prev_event_end = self._event_end
-        super()._async_update_device_from_protect(device)
-        if event := description.get_event_obj(device):
-            self._event = event
-            self._event_end = event.end if event else None
-
-        if (
-            event
-            and not self._event_already_ended(prev_event, prev_event_end)
-            and event.type is EventType.RING
-        ):
-            self._trigger_event(DoorbellEventType.RING, {ATTR_EVENT_ID: event.id})
-            self.async_write_ha_state()
+    @callback
+    def _async_ring_event(self, event: ProtectEvent) -> None:
+        self._trigger_event(DoorbellEventType.RING, {ATTR_EVENT_ID: event.id})
+        self.async_write_ha_state()
 
 
 class ProtectDeviceNFCEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEntity):
@@ -381,12 +376,13 @@ class ProtectDeviceSmartDetectEventEntity(
 
     entity_description: ProtectEventEntityDescription
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to public smart-detect events for this camera."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.data.async_subscribe_smart_detect(
-                self.device.mac, self._async_smart_detect_event
+            self.data.async_subscribe_public_event(
+                self.device.mac, EventType.SMART_DETECT, self._async_smart_detect_event
             )
         )
 
@@ -405,7 +401,6 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
         translation_key="doorbell",
         device_class=EventDeviceClass.DOORBELL,
         ufp_required_field="feature_flags.is_doorbell",
-        ufp_event_obj="last_ring_event",
         event_types=[DoorbellEventType.RING],
         entity_class=ProtectDeviceRingEventEntity,
     ),

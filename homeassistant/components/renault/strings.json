@@ -157,6 +157,7 @@
         "state": {
           "always": "Always",
           "delayed": "Delayed",
+          "delegated": "Delegated",
           "scheduled": "Scheduled"
         }
       },

@@ -17,7 +17,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import DEFAULT_HOST, DOMAIN, SECTION_ADVANCED_SETTINGS
+from .const import DEFAULT_HOST, DOMAIN, SECTION_ADDITIONAL_SETTINGS
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -25,7 +25,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        vol.Required(SECTION_ADVANCED_SETTINGS): section(
+        vol.Required(SECTION_ADDITIONAL_SETTINGS): section(
             vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=DEFAULT_HOST): TextSelector(
@@ -79,7 +79,7 @@ class AutoskopeConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             username = user_input[CONF_USERNAME].lower()
-            host = user_input[SECTION_ADVANCED_SETTINGS][CONF_HOST].lower()
+            host = user_input[SECTION_ADDITIONAL_SETTINGS][CONF_HOST].lower()
 
             try:
                 cv.url(host)

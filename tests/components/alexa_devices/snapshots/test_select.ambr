@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'all',
         'home',
         'off',
@@ -45,8 +45,8 @@
 # name: test_all_entities[select.echo_test_drop_in-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Echo Test Drop In',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Echo Test Drop In',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'all',
         'home',
         'off',

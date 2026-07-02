@@ -112,7 +112,9 @@ from .const import (  # noqa: F401
     SERVICE_SELECT_SOURCE,
     SERVICE_UNJOIN,
     MediaClass,
+    MediaPlayerEntityCapabilityAttribute,
     MediaPlayerEntityFeature,
+    MediaPlayerEntityStateAttribute,
     MediaPlayerState,
     MediaType,
     RepeatMode,
@@ -200,31 +202,31 @@ MEDIA_PLAYER_BROWSE_MEDIA_SCHEMA = {
 }
 
 
-ATTR_TO_PROPERTY = [
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_DURATION,
-    ATTR_MEDIA_POSITION,
-    ATTR_MEDIA_POSITION_UPDATED_AT,
-    ATTR_MEDIA_TITLE,
-    ATTR_MEDIA_ARTIST,
-    ATTR_MEDIA_ALBUM_NAME,
-    ATTR_MEDIA_ALBUM_ARTIST,
-    ATTR_MEDIA_TRACK,
-    ATTR_MEDIA_SERIES_TITLE,
-    ATTR_MEDIA_SEASON,
-    ATTR_MEDIA_EPISODE,
-    ATTR_MEDIA_CHANNEL,
-    ATTR_MEDIA_PLAYLIST,
-    ATTR_APP_ID,
-    ATTR_APP_NAME,
-    ATTR_INPUT_SOURCE,
-    ATTR_SOUND_MODE,
-    ATTR_MEDIA_SHUFFLE,
-    ATTR_MEDIA_REPEAT,
-]
+PROP_TO_ATTR = {
+    "volume_level": MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL,
+    "is_volume_muted": MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED,
+    "media_content_id": MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID,
+    "media_content_type": MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE,
+    "media_duration": MediaPlayerEntityStateAttribute.MEDIA_DURATION,
+    "media_position": MediaPlayerEntityStateAttribute.MEDIA_POSITION,
+    "media_position_updated_at": MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT,
+    "media_title": MediaPlayerEntityStateAttribute.MEDIA_TITLE,
+    "media_artist": MediaPlayerEntityStateAttribute.MEDIA_ARTIST,
+    "media_album_name": MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME,
+    "media_album_artist": MediaPlayerEntityStateAttribute.MEDIA_ALBUM_ARTIST,
+    "media_track": MediaPlayerEntityStateAttribute.MEDIA_TRACK,
+    "media_series_title": MediaPlayerEntityStateAttribute.MEDIA_SERIES_TITLE,
+    "media_season": MediaPlayerEntityStateAttribute.MEDIA_SEASON,
+    "media_episode": MediaPlayerEntityStateAttribute.MEDIA_EPISODE,
+    "media_channel": MediaPlayerEntityStateAttribute.MEDIA_CHANNEL,
+    "media_playlist": MediaPlayerEntityStateAttribute.MEDIA_PLAYLIST,
+    "app_id": MediaPlayerEntityStateAttribute.APP_ID,
+    "app_name": MediaPlayerEntityStateAttribute.APP_NAME,
+    "source": MediaPlayerEntityStateAttribute.INPUT_SOURCE,
+    "sound_mode": MediaPlayerEntityStateAttribute.SOUND_MODE,
+    "shuffle": MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE,
+    "repeat": MediaPlayerEntityStateAttribute.MEDIA_REPEAT,
+}
 
 # mypy: disallow-any-generics
 
@@ -540,12 +542,12 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     _entity_component_unrecorded_attributes = frozenset(
         {
-            ATTR_ENTITY_PICTURE_LOCAL,
+            MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL,
             ATTR_ENTITY_PICTURE,
-            ATTR_INPUT_SOURCE_LIST,
-            ATTR_MEDIA_POSITION_UPDATED_AT,
-            ATTR_MEDIA_POSITION,
-            ATTR_SOUND_MODE_LIST,
+            MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST,
+            MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT,
+            MediaPlayerEntityStateAttribute.MEDIA_POSITION,
+            MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST,
         }
     )
 
@@ -1115,12 +1117,12 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if (
             source_list := self.source_list
         ) and MediaPlayerEntityFeature.SELECT_SOURCE in supported_features:
-            data[ATTR_INPUT_SOURCE_LIST] = source_list
+            data[MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST] = source_list
 
         if (
             sound_mode_list := self.sound_mode_list
         ) and MediaPlayerEntityFeature.SELECT_SOUND_MODE in supported_features:
-            data[ATTR_SOUND_MODE_LIST] = sound_mode_list
+            data[MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST] = sound_mode_list
 
         return data
 
@@ -1132,17 +1134,21 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         state_attr: dict[str, Any] = {}
 
         if self.support_grouping:
-            state_attr[ATTR_GROUP_MEMBERS] = self.group_members
+            state_attr[MediaPlayerEntityStateAttribute.GROUP_MEMBERS] = (
+                self.group_members
+            )
 
         if self.state == MediaPlayerState.OFF:
             return state_attr
 
-        for attr in ATTR_TO_PROPERTY:
-            if (value := getattr(self, attr)) is not None:
+        for prop, attr in PROP_TO_ATTR.items():
+            if (value := getattr(self, prop)) is not None:
                 state_attr[attr] = value
 
         if self.media_image_remotely_accessible:
-            state_attr[ATTR_ENTITY_PICTURE_LOCAL] = self.media_image_local
+            state_attr[MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL] = (
+                self.media_image_local
+            )
 
         return state_attr
 

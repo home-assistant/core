@@ -67,7 +67,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         self._device_control = self._device.light_control
         self._device_data = self._device_control.lights[0]
 
-        self._attr_unique_id = f"light-{gateway_id}-{self._device_id}"
+        self._attr_unique_id = f"light-{gateway_id}-{self._device_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._hs_color = None
 
         # Calculate supported color modes
