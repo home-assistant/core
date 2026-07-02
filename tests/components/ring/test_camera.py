@@ -27,7 +27,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.aiohttp import MockStreamReader
 
 from .common import MockConfigEntry, setup_platform
-from .device_mocks import FRONT_DEVICE_ID
+from .device_mocks import FRONT_DEVICE_ID, INGRESS_DEVICE_ID
 
 from tests.common import async_fire_time_changed, snapshot_platform
 from tests.typing import WebSocketGenerator
@@ -355,6 +355,99 @@ async def test_camera_live_view_no_subscription(
     # Requesting an image without subscription should raise an error
     with pytest.raises(HomeAssistantError):
         await async_get_image(hass, "camera.front_live_view")
+
+
+async def test_camera_live_view_for_video_intercom(
+    hass: HomeAssistant,
+    mock_ring_client,
+    mock_ring_devices,
+) -> None:
+    """Test live view camera is added for video capable intercoms."""
+    intercom_mock = mock_ring_devices.get_device(INGRESS_DEVICE_ID)
+    has_capability = intercom_mock.has_capability.side_effect
+
+    def _has_capability(capability):
+        if capability == ring_doorbell.RingCapability.VIDEO:
+            return True
+        return has_capability(capability)
+
+    intercom_mock.has_capability.side_effect = _has_capability
+    intercom_mock.async_get_snapshot = AsyncMock(return_value=SMALLEST_VALID_JPEG_BYTES)
+    intercom_mock.generate_async_webrtc_stream = AsyncMock()
+    intercom_mock.on_webrtc_candidate = AsyncMock()
+    intercom_mock.sync_close_webrtc_stream = Mock()
+
+    await setup_platform(hass, Platform.CAMERA)
+
+    state = hass.states.get("camera.ingress_live_view")
+    assert state is not None
+    assert state.attributes["supported_features"] is CameraEntityFeature.STREAM
+    assert hass.states.get("camera.ingress_last_recording") is None
+    image = await async_get_image(hass, "camera.ingress_live_view")
+    assert image.content == SMALLEST_VALID_JPEG_BYTES
+    intercom_mock.async_get_snapshot.assert_called_once()
+
+
+async def test_camera_live_view_for_video_intercom_without_snapshot_method(
+    hass: HomeAssistant,
+    mock_ring_client,
+    mock_ring_devices,
+) -> None:
+    """Test video capable intercoms without snapshot support return no image."""
+    intercom_mock = mock_ring_devices.get_device(INGRESS_DEVICE_ID)
+    has_capability = intercom_mock.has_capability.side_effect
+
+    def _has_capability(capability):
+        if capability == ring_doorbell.RingCapability.VIDEO:
+            return True
+        return has_capability(capability)
+
+    intercom_mock.has_capability.side_effect = _has_capability
+    intercom_mock.async_get_snapshot = None
+
+    await setup_platform(hass, Platform.CAMERA)
+
+    camera = get_camera_from_entity_id(hass, "camera.ingress_live_view")
+    assert camera is not None
+    assert await camera.async_camera_image() is None
+
+
+async def test_camera_live_view_for_video_intercom_update_keeps_snapshot_path(
+    hass: HomeAssistant,
+    mock_ring_client,
+    mock_ring_devices,
+) -> None:
+    """Test intercom camera updates do not use doorbell recording state."""
+    intercom_mock = mock_ring_devices.get_device(INGRESS_DEVICE_ID)
+    has_capability = intercom_mock.has_capability.side_effect
+
+    def _has_capability(capability):
+        if capability == ring_doorbell.RingCapability.VIDEO:
+            return True
+        return has_capability(capability)
+
+    intercom_mock.has_capability.side_effect = _has_capability
+    intercom_mock.async_get_snapshot = AsyncMock(return_value=SMALLEST_VALID_JPEG_BYTES)
+
+    await setup_platform(hass, Platform.CAMERA)
+
+    camera = get_camera_from_entity_id(hass, "camera.ingress_live_view")
+    assert camera is not None
+    camera._last_event = {"id": 1, "recording": {"status": "ready"}}
+    camera._last_video_id = 1
+    camera._video_url = "http://dummy.url"
+    camera._images[(None, None)] = b"old image"
+
+    camera._handle_coordinator_update()
+    await camera.async_update()
+
+    assert camera._last_event is None
+    assert camera._last_video_id is None
+    assert camera._video_url is None
+    assert camera._images == {}
+    image = await async_get_image(hass, "camera.ingress_live_view")
+    assert image.content == SMALLEST_VALID_JPEG_BYTES
+    intercom_mock.async_get_snapshot.assert_called_once()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
