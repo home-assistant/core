@@ -16,6 +16,7 @@ from .const import CONF_SSL_CERTIFICATE, CONF_SSL_KEY, DOMAIN
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.COVER,
     Platform.SENSOR,
     Platform.SWITCH,
