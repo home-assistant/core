@@ -346,6 +346,8 @@ class RoborockB01SelectEntity(RoborockCoordinatedEntityB01Q7, SelectEntity):
     @override
     def current_option(self) -> str | None:
         """Return the current option."""
+        if self.coordinator.data is None:
+            return None
         return self.entity_description.value_fn(self.coordinator.data)
 
 
