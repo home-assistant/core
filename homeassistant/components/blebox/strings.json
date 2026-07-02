@@ -29,8 +29,8 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "password": "The password for your BleBox device.",
-          "username": "The username for your BleBox device."
+          "password": "[%key:component::blebox::config::step::user::data_description::password%]",
+          "username": "[%key:component::blebox::config::step::user::data_description::username%]"
         },
         "description": "Enter credentials for the BleBox device at {address}.",
         "title": "Reauthenticate your BleBox device"
@@ -43,10 +43,10 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "host": "The IP address of your BleBox device.",
-          "password": "The password for your BleBox device.",
-          "port": "The port of your BleBox device.",
-          "username": "The username for your BleBox device."
+          "host": "[%key:component::blebox::config::step::user::data_description::host%]",
+          "password": "[%key:component::blebox::config::step::user::data_description::password%]",
+          "port": "[%key:component::blebox::config::step::user::data_description::port%]",
+          "username": "[%key:component::blebox::config::step::user::data_description::username%]"
         },
         "description": "Update the connection settings for your BleBox device.",
         "title": "Reconfigure BleBox device"
