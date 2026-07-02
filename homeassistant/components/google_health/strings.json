@@ -33,6 +33,12 @@
   },
   "entity": {
     "sensor": {
+      "distance": {
+        "name": "Distance"
+      },
+      "resting_heart_rate": {
+        "name": "Resting heart rate"
+      },
       "steps": {
         "name": "Steps"
       },

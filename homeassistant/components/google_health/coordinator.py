@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import override
@@ -12,7 +13,13 @@ from google_health_api.exceptions import (
     HealthApiForbiddenException,
     HealthAuthException,
 )
-from google_health_api.model import DailyRollupDataPoint, StepsRollupValue, Weight
+from google_health_api.model import (
+    DailyRestingHeartRate,
+    DailyRollupDataPoint,
+    DistanceRollupValue,
+    StepsRollupValue,
+    Weight,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -25,6 +32,22 @@ _LOGGER = logging.getLogger(__name__)
 
 POLLING_INTERVAL = timedelta(minutes=15)
 BODY_POLLING_INTERVAL = timedelta(hours=1)
+
+
+@dataclass
+class GoogleHealthActivityData:
+    """Class to hold activity data."""
+
+    steps: DailyRollupDataPoint[StepsRollupValue] | None = None
+    distance: DailyRollupDataPoint[DistanceRollupValue] | None = None
+
+
+@dataclass
+class GoogleHealthBodyData:
+    """Class to hold body measurements."""
+
+    weight: Weight | None = None
+    resting_heart_rate: DailyRestingHeartRate | None = None
 
 
 @contextmanager
@@ -46,10 +69,8 @@ def handle_api_errors() -> Generator[None]:
         ) from err
 
 
-class GoogleHealthActivityCoordinator(
-    DataUpdateCoordinator[DailyRollupDataPoint[StepsRollupValue] | None]
-):
-    """Coordinator to fetch steps data from Google Health API."""
+class GoogleHealthActivityCoordinator(DataUpdateCoordinator[GoogleHealthActivityData]):
+    """Coordinator to fetch activity data from Google Health API."""
 
     def __init__(
         self,
@@ -68,13 +89,15 @@ class GoogleHealthActivityCoordinator(
         )
 
     @override
-    async def _async_update_data(self) -> DailyRollupDataPoint[StepsRollupValue] | None:
-        """Fetch steps count rollup for today."""
+    async def _async_update_data(self) -> GoogleHealthActivityData:
+        """Fetch steps and distance rollup for today."""
         with handle_api_errors():
-            return await self.api.steps.today(self.hass.config.time_zone)
+            steps = await self.api.steps.today(self.hass.config.time_zone)
+            distance = await self.api.distance.today(self.hass.config.time_zone)
+            return GoogleHealthActivityData(steps=steps, distance=distance)
 
 
-class GoogleHealthBodyCoordinator(DataUpdateCoordinator[Weight | None]):
+class GoogleHealthBodyCoordinator(DataUpdateCoordinator[GoogleHealthBodyData]):
     """Coordinator to fetch body measurements from Google Health API."""
 
     def __init__(
@@ -94,11 +117,19 @@ class GoogleHealthBodyCoordinator(DataUpdateCoordinator[Weight | None]):
         )
 
     @override
-    async def _async_update_data(self) -> Weight | None:
-        """Fetch latest body weight."""
+    async def _async_update_data(self) -> GoogleHealthBodyData:
+        """Fetch latest body weight and resting heart rate."""
         with handle_api_errors():
-            result = await self.api.weight.list(page_size=100)
+            weight_result = await self.api.weight.list(page_size=100)
+            hr_result = await self.api.daily_resting_heart_rate.list(page_size=100)
 
-        if not result.data_points:
-            return None
-        return result.data_points[-1].data
+        weight = (
+            weight_result.data_points[-1].data if weight_result.data_points else None
+        )
+        resting_heart_rate = (
+            hr_result.data_points[-1].data if hr_result.data_points else None
+        )
+
+        return GoogleHealthBodyData(
+            weight=weight, resting_heart_rate=resting_heart_rate
+        )

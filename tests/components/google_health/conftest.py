@@ -25,7 +25,9 @@ FAKE_REFRESH_TOKEN = "some-refresh-token"
 API_BASE_URL = "https://health.googleapis.com/v4/users/me"
 IDENTITY_URL = f"{API_BASE_URL}/identity"
 STEPS_ROLLUP_URL = f"{API_BASE_URL}/dataTypes/steps/dataPoints:dailyRollUp"
+DISTANCE_ROLLUP_URL = f"{API_BASE_URL}/dataTypes/distance/dataPoints:dailyRollUp"
 WEIGHT_URL = f"{API_BASE_URL}/dataTypes/weight/dataPoints"
+RESTING_HEART_RATE_URL = f"{API_BASE_URL}/dataTypes/daily-resting-heart-rate/dataPoints"
 USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
 
 

@@ -5,7 +5,12 @@ from collections.abc import Awaitable, Callable
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 
-from .conftest import STEPS_ROLLUP_URL, WEIGHT_URL
+from .conftest import (
+    DISTANCE_ROLLUP_URL,
+    RESTING_HEART_RATE_URL,
+    STEPS_ROLLUP_URL,
+    WEIGHT_URL,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -32,6 +37,20 @@ async def test_setup_and_unload(
             ]
         },
     )
+    aioclient_mock.post(
+        DISTANCE_ROLLUP_URL,
+        json={
+            "rollupDataPoints": [
+                {
+                    "distance": {
+                        "millimetersSum": 5000000,
+                    },
+                    "civilStartTime": {"date": {"year": 2026, "month": 6, "day": 28}},
+                    "civilEndTime": {"date": {"year": 2026, "month": 6, "day": 29}},
+                }
+            ]
+        },
+    )
     aioclient_mock.get(
         WEIGHT_URL,
         json={
@@ -47,14 +66,29 @@ async def test_setup_and_unload(
             ]
         },
     )
+    aioclient_mock.get(
+        RESTING_HEART_RATE_URL,
+        json={
+            "dataPoints": [
+                {
+                    "dailyRestingHeartRate": {
+                        "beatsPerMinute": 65,
+                        "date": {"year": 2026, "month": 6, "day": 29},
+                    }
+                }
+            ]
+        },
+    )
 
     # Setup the integration
     assert await integration_setup()
     assert config_entry.state is config_entries.ConfigEntryState.LOADED
 
-    # Verify both entities exist
+    # Verify entities exist
     assert hass.states.get("sensor.google_health_steps") is not None
+    assert hass.states.get("sensor.google_health_distance") is not None
     assert hass.states.get("sensor.google_health_weight") is not None
+    assert hass.states.get("sensor.google_health_resting_heart_rate") is not None
 
     # Unload integration
     assert await hass.config_entries.async_unload(config_entry.entry_id)
@@ -147,6 +181,11 @@ async def test_setup_missing_activity_scope(
         },
     )
 
+    aioclient_mock.get(
+        RESTING_HEART_RATE_URL,
+        json={"dataPoints": []},
+    )
+
     # Modify token to exclude activity scope
     hass.config_entries.async_update_entry(
         config_entry,
@@ -166,12 +205,13 @@ async def test_setup_missing_activity_scope(
     assert await integration_setup()
     assert config_entry.state is config_entries.ConfigEntryState.LOADED
 
-    # Steps sensor entity should not exist
-    state = hass.states.get("sensor.google_health_steps")
-    assert state is None
+    # Activity sensor entities should not exist
+    assert hass.states.get("sensor.google_health_steps") is None
+    assert hass.states.get("sensor.google_health_distance") is None
 
-    # Weight sensor entity should exist
+    # Body sensor entities should exist
     assert hass.states.get("sensor.google_health_weight") is not None
+    assert hass.states.get("sensor.google_health_resting_heart_rate") is not None
 
 
 async def test_setup_missing_measurements_scope(
@@ -196,6 +236,11 @@ async def test_setup_missing_measurements_scope(
         },
     )
 
+    aioclient_mock.post(
+        DISTANCE_ROLLUP_URL,
+        json={"rollupDataPoints": []},
+    )
+
     # Modify token to exclude measurements scope
     hass.config_entries.async_update_entry(
         config_entry,
@@ -215,9 +260,10 @@ async def test_setup_missing_measurements_scope(
     assert await integration_setup()
     assert config_entry.state is config_entries.ConfigEntryState.LOADED
 
-    # Weight sensor entity should not exist
-    state = hass.states.get("sensor.google_health_weight")
-    assert state is None
+    # Body sensor entities should not exist
+    assert hass.states.get("sensor.google_health_weight") is None
+    assert hass.states.get("sensor.google_health_resting_heart_rate") is None
 
-    # Steps sensor entity should exist
+    # Activity sensor entities should exist
     assert hass.states.get("sensor.google_health_steps") is not None
+    assert hass.states.get("sensor.google_health_distance") is not None
