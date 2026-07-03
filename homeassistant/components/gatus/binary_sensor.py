@@ -102,12 +102,7 @@ class GatusEndpointBinarySensor(
     def available(self) -> bool:
         """Return True if entity is available."""
         data = self.coordinator.data
-        return (
-            super().available
-            and data is not None
-            and self._endpoint_key in data
-            and bool(data[self._endpoint_key].get("results"))
-        )
+        return super().available and data is not None and self._endpoint_key in data
 
     @property
     def endpoint_data(self) -> dict[str, Any] | None:
@@ -118,11 +113,7 @@ class GatusEndpointBinarySensor(
     def latest_result(self) -> dict[str, Any] | None:
         """Return the most recent monitoring result (Gatus appends newest last)."""
         data = self.endpoint_data
-        if data is None:
+        if data is None or not data["results"]:
             return None
 
-        results = data["results"]
-        if not results:
-            return None
-
-        return cast(dict[str, Any], results[-1])
+        return cast(dict[str, Any], data["results"][-1])

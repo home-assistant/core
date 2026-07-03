@@ -94,6 +94,7 @@ async def test_dynamic_endpoint_discovery(
 async def test_binary_sensor_missing_data(
     hass: HomeAssistant,
     mock_gatus_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test binary sensor behavior when endpoint data or results are missing."""
     missing_data = [{"key": "service_one", "name": "Service One", "results": []}]
@@ -104,21 +105,20 @@ async def test_binary_sensor_missing_data(
 
     state = hass.states.get("binary_sensor.service_one")
     assert state is not None
+    assert state.state == "unknown"
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator: GatusDataUpdateCoordinator = config_entry.runtime_data
+
+    with patch.object(
+        mock_gatus_client,
+        "get_endpoints_statuses",
+        AsyncMock(return_value=[]),
+    ):
+        freezer.tick(coordinator.update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.service_one")
+    assert state is not None
     assert state.state == "unavailable"
-
-    entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get("binary_sensor.service_one")
-    assert entry is not None
-
-    component = hass.data["binary_sensor"]
-    entity = next(
-        ent
-        for ent in component.entities
-        if ent.entity_id == "binary_sensor.service_one"
-    )
-
-    assert entity.latest_result is None
-    assert entity.is_on is None
-
-    entity.coordinator.data = {}
-    assert entity.latest_result is None

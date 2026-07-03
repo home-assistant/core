@@ -80,9 +80,7 @@ rules:
   repair-issues:
     status: exempt
     comment: Integration does not require user intervention repairs.
-  stale-devices:
-    status: exempt
-    comment: Integration only has a single service device.
+  stale-devices: todo
 
   # Platinum
   async-dependency: done
