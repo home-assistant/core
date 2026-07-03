@@ -1,8 +1,9 @@
 """Tests for Modbus Connection setup, teardown and the async_get_unit accessor."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from modbus_connection import ModbusConnectionError
+from modbus_connection import ModbusConnectionError, ModbusError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 
@@ -10,7 +11,17 @@ from homeassistant.components.modbus_connection import (
     ConnectionNotReady,
     async_get_unit,
 )
+from homeassistant.components.modbus_connection.const import (
+    CONF_BAUDRATE,
+    CONF_BYTESIZE,
+    CONF_PARITY,
+    CONF_STOPBITS,
+    CONNECTION_SERIAL,
+    CONNECTION_TCP,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -32,17 +43,46 @@ async def test_setup_and_unload(
     assert mock_modbus_connection.connected is False
 
 
+@pytest.mark.parametrize(
+    ("data", "error"),
+    [
+        pytest.param(
+            {CONF_TYPE: CONNECTION_TCP, CONF_HOST: "1.2.3.4", CONF_PORT: 502},
+            ModbusConnectionError("boom"),
+            id="tcp",
+        ),
+        pytest.param(
+            {
+                CONF_TYPE: CONNECTION_SERIAL,
+                CONF_DEVICE: "/dev/ttyUSB0",
+                CONF_BAUDRATE: 9600,
+                CONF_PARITY: "N",
+                CONF_STOPBITS: 1,
+                CONF_BYTESIZE: 8,
+            },
+            ModbusError("port busy"),
+            id="serial",
+        ),
+    ],
+)
 async def test_setup_retry_when_connect_fails(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_connect: AsyncMock,
+    data: dict[str, Any],
+    error: ModbusError,
 ) -> None:
-    """A failed connect raises ConfigEntryNotReady (setup retry)."""
-    mock_connect.side_effect = ModbusConnectionError("boom")
+    """A failed open raises ConfigEntryNotReady (setup retry).
 
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    The serial case uses a generic ``ModbusError`` (not a ``ModbusConnectionError``)
+    to confirm setup retries on any library error, matching the config flow.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, data=data)
+    entry.add_to_hass(hass)
+    mock_connect.side_effect = error
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_connection_lost_schedules_reload(

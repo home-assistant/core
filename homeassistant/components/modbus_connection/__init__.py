@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, cast
 
-from modbus_connection import ModbusConnection, ModbusConnectionError, ModbusUnit
+from modbus_connection import ModbusConnection, ModbusError, ModbusUnit
 from modbus_connection.tmodbus import connect_serial, connect_tcp
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -48,7 +48,7 @@ async def async_setup_entry(
     """Set up a Modbus connection from a config entry."""
     try:
         connection = await _async_open(entry.data)
-    except ModbusConnectionError as err:
+    except ModbusError as err:
         raise ConfigEntryNotReady(f"Could not open Modbus connection: {err}") from err
 
     entry.runtime_data = connection
