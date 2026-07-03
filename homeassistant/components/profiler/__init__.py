@@ -25,6 +25,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -53,19 +54,6 @@ _KNOWN_LRU_CLASSES = (
     "StatisticsMetaManager",
 )
 
-SERVICES = (
-    SERVICE_START,
-    SERVICE_MEMORY,
-    SERVICE_START_LOG_OBJECTS,
-    SERVICE_STOP_LOG_OBJECTS,
-    SERVICE_DUMP_LOG_OBJECTS,
-    SERVICE_LRU_STATS,
-    SERVICE_LOG_THREAD_FRAMES,
-    SERVICE_LOG_EVENT_LOOP_SCHEDULED,
-    SERVICE_SET_ASYNCIO_DEBUG,
-    SERVICE_LOG_CURRENT_TASKS,
-)
-
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 DEFAULT_MAX_OBJECTS = 5
@@ -79,10 +67,8 @@ LOG_INTERVAL_SUB = "log_interval_subscription"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(  # noqa: C901
-    hass: HomeAssistant, entry: ConfigEntry
-) -> bool:
-    """Set up Profiler from a config entry."""
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
+    """Set up Profiler."""
     lock = asyncio.Lock()
     # Uses legacy hass.data[DOMAIN] pattern
     # pylint: disable-next=home-assistant-use-runtime-data
@@ -416,13 +402,19 @@ async def async_setup_entry(  # noqa: C901
     return True
 
 
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
+    """Set up Profiler from a config entry."""
+    return True
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    for service in SERVICES:
-        hass.services.async_remove(domain=DOMAIN, service=service)
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     if LOG_INTERVAL_SUB in hass.data[DOMAIN]:
         hass.data[DOMAIN][LOG_INTERVAL_SUB]()
-    hass.data.pop(DOMAIN)
     return True
 
 
