@@ -7,9 +7,10 @@ from homeassistant.helpers import intent
 from homeassistant.helpers.llm import IntentTool, LLMContext, Tool
 
 from . import DOMAIN
+from .intent import INTENT_FAN_SET_SPEED
 
 # Intents owned by this integration that are exposed as LLM tools.
-LLM_INTENTS = ("HassFanSetSpeed",)
+LLM_INTENTS = (INTENT_FAN_SET_SPEED,)
 
 
 @callback
