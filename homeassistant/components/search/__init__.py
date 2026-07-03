@@ -420,7 +420,7 @@ class Searcher:
     @callback
     def _async_search_person(self, person_entity_id: str) -> None:
         """Find results for a person."""
-        # Up resolve the scene entity itself
+        # Up resolve the person entity itself
         if entity_entry := self._async_resolve_up_entity(person_entity_id):
             # Add labels of this person entity
             self._add(ItemType.LABEL, entity_entry.labels)
@@ -437,9 +437,9 @@ class Searcher:
         )
 
         # Add all member entities of this person
-        self._add(
-            ItemType.ENTITY, person.entities_in_person(self.hass, person_entity_id)
-        )
+        for entity_id in person.entities_in_person(self.hass, person_entity_id):
+            self._add(ItemType.ENTITY, entity_id)
+            self._async_resolve_up_entity(entity_id)
 
     @callback
     def _async_search_scene(self, scene_entity_id: str) -> None:

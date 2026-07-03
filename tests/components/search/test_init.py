@@ -136,6 +136,23 @@ async def test_search(
         labels={label_other.label_id},
     )
 
+    # Device tracker of the person, provided by a config entry with a device
+    mobile_app_config_entry = MockConfigEntry(domain="mobile_app")
+    mobile_app_config_entry.add_to_hass(hass)
+    mobile_app_device = device_registry.async_get_or_create(
+        config_entry_id=mobile_app_config_entry.entry_id,
+        name="Paulus iPhone",
+        identifiers={("mobile_app", "phone-1")},
+    )
+    entity_registry.async_get_or_create(
+        "device_tracker",
+        "mobile_app",
+        "phone-1-tracker",
+        suggested_object_id="paulus_iphone",
+        config_entry=mobile_app_config_entry,
+        device_id=mobile_app_device.id,
+    )
+
     script_scene_entity = entity_registry.async_get_or_create(
         "script",
         "script",
@@ -725,6 +742,9 @@ async def test_search(
         ItemType.SCRIPT: {script_scene_entity.entity_id},
     }
     assert search(ItemType.ENTITY, "device_tracker.paulus_iphone") == {
+        ItemType.CONFIG_ENTRY: {mobile_app_config_entry.entry_id},
+        ItemType.DEVICE: {mobile_app_device.id},
+        ItemType.INTEGRATION: {"mobile_app"},
         ItemType.PERSON: {person_paulus_entity.entity_id},
     }
     assert search(ItemType.ENTITY, "light.wled_config_entry_source") == {
@@ -840,8 +860,11 @@ async def test_search(
     assert not search(ItemType.PERSON, "person.unknown")
     assert search(ItemType.PERSON, person_paulus_entity.entity_id) == {
         ItemType.AREA: {bedroom_area.id},
+        ItemType.CONFIG_ENTRY: {mobile_app_config_entry.entry_id},
+        ItemType.DEVICE: {mobile_app_device.id},
         ItemType.ENTITY: {"device_tracker.paulus_iphone"},
         ItemType.FLOOR: {second_floor.floor_id},
+        ItemType.INTEGRATION: {"mobile_app"},
         ItemType.LABEL: {label_other.label_id},
     }
 
