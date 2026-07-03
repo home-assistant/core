@@ -221,7 +221,7 @@ class ProfileSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Handle the profile step."""
         entry = self._get_entry()
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         errors: dict[str, str] = {}
