@@ -366,13 +366,10 @@ class DeviceSensor(SensorEntity):
         except aiosyncthing.exceptions.SyncthingError:
             self._state = None
         else:
-            state["state"] = (
-                "online"
-                if state["deviceID"] == self._server_id
-                else self._state.get("state", "unknown")
-                if self._state
-                else "unknown"
-            )
+            if state["deviceID"] == self._server_id:
+                state["state"] = "online"
+            else:
+                state["state"] = (self._state or {}).get("state", "unknown")
 
             self._state = self._filter_state(state)
 
