@@ -132,7 +132,9 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
         speed = percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
         mode = self.coordinator.data.state.data.mode
         await self._async_send_command(
-            speed, flow_in=mode.flowIn, flow_out=mode.flowOut
+            speed,
+            flow_in=mode.flowIn,  # codespell:ignore flowin
+            flow_out=mode.flowOut,
         )
 
     @override
@@ -140,7 +142,9 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
         """Set the preset mode of the fan."""
         mode = self.coordinator.data.state.data.mode
         await self._async_send_command(
-            Speed(preset_mode), flow_in=mode.flowIn, flow_out=mode.flowOut
+            Speed(preset_mode),
+            flow_in=mode.flowIn,  # codespell:ignore flowin
+            flow_out=mode.flowOut,
         )
 
     @override
@@ -158,7 +162,9 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
             await self.async_set_preset_mode(preset_mode)
         else:
             await self._async_send_command(
-                Speed.LEVEL_1, flow_in=mode.flowIn, flow_out=mode.flowOut
+                Speed.LEVEL_1,
+                flow_in=mode.flowIn,  # codespell:ignore flowin
+                flow_out=mode.flowOut,
             )
 
     @override
@@ -166,5 +172,7 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
         """Turn off the fan."""
         mode = self.coordinator.data.state.data.mode
         await self._async_send_command(
-            Speed.OFF, flow_in=mode.flowIn, flow_out=mode.flowOut
+            Speed.OFF,
+            flow_in=mode.flowIn,  # codespell:ignore flowin
+            flow_out=mode.flowOut,
         )
