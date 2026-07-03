@@ -9,6 +9,7 @@ from midealocal.devices.cc import DeviceAttributes as CCAttributes
 from midealocal.devices.cf import DeviceAttributes as CFAttributes
 from midealocal.devices.fb import DeviceAttributes as FBAttributes
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
@@ -46,7 +47,7 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import DummyDevice
 from .const import BASE_DATA
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def _async_setup_entry(
@@ -204,6 +205,26 @@ async def test_midea_ac_climate_setup_and_services(hass: HomeAssistant) -> None:
         SERVICE_SET_PRESET_MODE,
         {ATTR_PRESET_MODE: PRESET_COMFORT},
         [("set_attribute", ACAttributes.comfort_mode, True)],
+        device,
+    )
+    device.attributes.update(
+        {
+            ACAttributes.comfort_mode: True,
+            ACAttributes.eco_mode: False,
+            ACAttributes.boost_mode: False,
+            ACAttributes.sleep_mode: False,
+            ACAttributes.frost_protect: False,
+        }
+    )
+    await _assert_service_calls(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_PRESET_MODE: PRESET_ECO},
+        [
+            ("set_attribute", ACAttributes.comfort_mode, False),
+            ("set_attribute", ACAttributes.eco_mode, True),
+        ],
         device,
     )
     device.attributes.update(
@@ -439,6 +460,221 @@ async def test_midea_fb_climate_setup_and_services(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
+    ("fan_speed", "expected_fan_mode"),
+    [
+        pytest.param(103, "auto", id="auto"),
+        pytest.param(0, "silent", id="silent_fallback"),
+    ],
+)
+async def test_ac_fan_mode_thresholds(
+    hass: HomeAssistant,
+    fan_speed: int,
+    expected_fan_mode: str,
+) -> None:
+    """Test AC fan mode mapping including silent fallback."""
+    device = DummyDevice(
+        DeviceType.AC,
+        attributes={
+            ACAttributes.power: True,
+            ACAttributes.mode: 1,
+            ACAttributes.target_temperature: 22.0,
+            ACAttributes.indoor_temperature: 21.0,
+            ACAttributes.fan_speed: fan_speed,
+            ACAttributes.swing_vertical: True,
+            ACAttributes.swing_horizontal: True,
+            ACAttributes.indoor_humidity: 50,
+        },
+    )
+    entry = await _async_setup_entry(hass, device)
+    entity_entry = _entity_entries(hass, entry)["123_climate"]
+
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.attributes[ATTR_FAN_MODE] == expected_fan_mode
+
+
+@pytest.mark.parametrize(
+    ("humidity", "expected_humidity"),
+    [
+        pytest.param(50, 50.0, id="normal"),
+        pytest.param(0, None, id="invalid_zero"),
+        pytest.param(0xFF, None, id="invalid_ff"),
+    ],
+)
+async def test_ac_humidity_filtering(
+    hass: HomeAssistant,
+    humidity: int,
+    expected_humidity: float | None,
+) -> None:
+    """Test AC humidity filtering for invalid sensor values."""
+    device = DummyDevice(
+        DeviceType.AC,
+        attributes={
+            ACAttributes.power: True,
+            ACAttributes.mode: 1,
+            ACAttributes.target_temperature: 22.0,
+            ACAttributes.indoor_temperature: 21.0,
+            ACAttributes.fan_speed: 103,
+            ACAttributes.swing_vertical: True,
+            ACAttributes.swing_horizontal: True,
+            ACAttributes.indoor_humidity: humidity,
+        },
+    )
+    entry = await _async_setup_entry(hass, device)
+    entity_entry = _entity_entries(hass, entry)["123_climate"]
+
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == expected_humidity
+
+
+async def test_base_set_temperature_without_target_noop(hass: HomeAssistant) -> None:
+    """Test set_temperature without ATTR_TEMPERATURE is ignored."""
+    device = DummyDevice(
+        DeviceType.AC,
+        attributes={
+            ACAttributes.power: True,
+            ACAttributes.mode: 1,
+            ACAttributes.target_temperature: 22.0,
+            ACAttributes.indoor_temperature: 21.0,
+            ACAttributes.fan_speed: 103,
+            ACAttributes.swing_vertical: True,
+            ACAttributes.swing_horizontal: True,
+        },
+    )
+    entry = await _async_setup_entry(hass, device)
+    entity_entry = _entity_entries(hass, entry)["123_climate"]
+    entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_entry.entity_id)
+
+    device.calls.clear()
+    assert entity is not None
+    entity.set_temperature()
+    assert device.calls == []
+
+
+async def test_ac_set_hvac_mode_off_calls_power_off(hass: HomeAssistant) -> None:
+    """Test AC HVAC off delegates to turn_off."""
+    device = DummyDevice(
+        DeviceType.AC,
+        attributes={
+            ACAttributes.power: True,
+            ACAttributes.mode: 1,
+            ACAttributes.target_temperature: 22.0,
+            ACAttributes.indoor_temperature: 21.0,
+            ACAttributes.fan_speed: 103,
+            ACAttributes.swing_vertical: True,
+            ACAttributes.swing_horizontal: True,
+        },
+    )
+    entry = await _async_setup_entry(hass, device)
+    entity_entry = _entity_entries(hass, entry)["123_climate"]
+
+    await _assert_service_calls(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_SET_HVAC_MODE,
+        {"hvac_mode": HVACMode.OFF},
+        [("set_attribute", ACAttributes.power, False)],
+        device,
+    )
+
+
+async def test_ac_invalid_mode_maps_to_off_state(hass: HomeAssistant) -> None:
+    """Test AC invalid protocol mode yields off state."""
+    device = DummyDevice(
+        DeviceType.AC,
+        attributes={
+            ACAttributes.power: True,
+            ACAttributes.mode: 999,
+            ACAttributes.target_temperature: 22.0,
+            ACAttributes.indoor_temperature: 21.0,
+            ACAttributes.fan_speed: 103,
+            ACAttributes.swing_vertical: True,
+            ACAttributes.swing_horizontal: True,
+        },
+    )
+    entry = await _async_setup_entry(hass, device)
+    entity_entry = _entity_entries(hass, entry)["123_climate"]
+
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.state == "unknown"
+
+
+async def test_cf_temperature_range_attributes(hass: HomeAssistant) -> None:
+    """Test CF min/max range attributes are exposed for low/high targets."""
+    device = DummyDevice(
+        DeviceType.CF,
+        attributes={
+            "power": True,
+            "mode": 2,
+            CFAttributes.min_temperature: 16,
+            CFAttributes.max_temperature: 30,
+            CFAttributes.current_temperature: 22,
+        },
+    )
+    entry = await _async_setup_entry(hass, device)
+    entity_entry = _entity_entries(hass, entry)["123_climate"]
+    entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_entry.entity_id)
+
+    assert entity is not None
+    assert entity.target_temperature_low == 16.0
+    assert entity.target_temperature_high == 30.0
+
+
+async def test_c3_temperature_fallback_and_turn_on(hass: HomeAssistant) -> None:
+    """Test C3 fallback temperatures and turn_on path for zone power."""
+    device = DummyDevice(
+        DeviceType.C3,
+        attributes={
+            C3Attributes.zone_temp_type: [True],
+            C3Attributes.temperature_min: [16],
+            C3Attributes.temperature_max: [30],
+            C3Attributes.mode: 1,
+            C3Attributes.zone1_power: True,
+            C3Attributes.target_temperature: [22],
+            C3Attributes.temp_tw_in: [21.5],
+        },
+    )
+    entry = await _async_setup_entry(hass, device)
+    zone1 = _entity_entries(hass, entry)["123_climate_zone1"]
+    entity = hass.data[CLIMATE_DOMAIN].get_entity(zone1.entity_id)
+
+    assert entity is not None
+    assert entity.target_temperature_low == 16.0
+    assert entity.target_temperature_high == 30.0
+
+    await _assert_service_calls(
+        hass,
+        zone1.entity_id,
+        SERVICE_TURN_ON,
+        {},
+        [("set_attribute", C3Attributes.zone1_power, True)],
+        device,
+    )
+
+
+async def test_fb_set_hvac_off_calls_turn_off(hass: HomeAssistant) -> None:
+    """Test FB HVAC off delegates to turn_off."""
+    device = DummyDevice(
+        DeviceType.FB,
+        attributes={
+            FBAttributes.mode: "comfort",
+            FBAttributes.power: True,
+            FBAttributes.current_temperature: 20,
+        },
+    )
+    entry = await _async_setup_entry(hass, device)
+    entity_entry = _entity_entries(hass, entry)["123_climate"]
+
+    await _assert_service_calls(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_SET_HVAC_MODE,
+        {"hvac_mode": HVACMode.OFF},
+        [("set_attribute", FBAttributes.power, False)],
+        device,
+    )
+
+
+@pytest.mark.parametrize(
     ("device_type", "expected_count"),
     [
         pytest.param(DeviceType.AC, 1, id="ac"),
@@ -472,26 +708,38 @@ async def test_climate_async_setup_entry(
     )
 
 
-async def test_climate_async_setup_entry_no_device(hass: HomeAssistant) -> None:
-    """Test climate setup creates no entities when runtime_data is missing."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={**BASE_DATA, CONF_TYPE: DeviceType.AC},
-    )
-    entry.add_to_hass(hass)
-
-    async def _init_with_none_runtime(
-        hass_: HomeAssistant, entry_: MockConfigEntry
-    ) -> bool:
-        entry_.runtime_data = None
-        await hass_.config_entries.async_forward_entry_setups(entry_, ["climate"])
-        return True
-
-    with patch(
-        "homeassistant.components.midea_lan.async_setup_entry",
-        side_effect=_init_with_none_runtime,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-
-    entity_registry = er.async_get(hass)
-    assert not er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+@pytest.mark.parametrize(
+    "device",
+    [
+        pytest.param(
+            DummyDevice(
+                DeviceType.AC,
+                attributes={
+                    ACAttributes.power: True,
+                    ACAttributes.mode: 1,
+                    ACAttributes.target_temperature: 22.0,
+                    ACAttributes.indoor_temperature: 21.0,
+                    ACAttributes.comfort_mode: False,
+                    ACAttributes.eco_mode: False,
+                    ACAttributes.boost_mode: False,
+                    ACAttributes.sleep_mode: False,
+                    ACAttributes.frost_protect: False,
+                    ACAttributes.fan_speed: 103,
+                    ACAttributes.swing_vertical: True,
+                    ACAttributes.swing_horizontal: True,
+                    ACAttributes.indoor_humidity: 50,
+                },
+            ),
+            id="ac",
+        ),
+    ],
+)
+async def test_climate_state_snapshot(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    device: DummyDevice,
+) -> None:
+    """Snapshot climate entities for representative device types."""
+    entry = await _async_setup_entry(hass, device)
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)

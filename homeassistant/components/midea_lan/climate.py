@@ -48,6 +48,8 @@ from .entity import MideaEntity, MideaLanConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 TEMPERATURE_MAX = 30
 TEMPERATURE_MIN = 16
@@ -151,7 +153,6 @@ class MideaClimate(MideaEntity, ClimateEntity):
 
     _device: MideaClimateDevice
 
-    _attr_icon = "mdi:air-conditioner"
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -190,9 +191,19 @@ class MideaClimate(MideaEntity, ClimateEntity):
         """Midea Climate hvac mode."""
         if self._device.get_attribute("power"):
             mode = self._device.get_attribute("mode")
-            if isinstance(mode, int) and 0 <= mode < len(self.hvac_modes):
-                return self.hvac_modes[mode]
+            if isinstance(mode, int):
+                return self._protocol_mode_to_hvac(mode)
         return None
+
+    def _protocol_mode_to_hvac(self, mode: int) -> HVACMode | None:
+        """Convert protocol mode value to Home Assistant HVAC mode."""
+        if 0 <= mode < len(self.hvac_modes):
+            return self.hvac_modes[mode]
+        return None
+
+    def _hvac_to_protocol_mode(self, hvac_mode: HVACMode) -> int:
+        """Convert Home Assistant HVAC mode to protocol mode value."""
+        return self.hvac_modes.index(hvac_mode)
 
     @property
     @override
@@ -251,7 +262,7 @@ class MideaClimate(MideaEntity, ClimateEntity):
         else:
             self._device.set_attribute(
                 attr="mode",
-                value=self.hvac_modes.index(hvac_mode),
+                value=self._hvac_to_protocol_mode(hvac_mode),
             )
 
     @override
@@ -260,6 +271,8 @@ class MideaClimate(MideaEntity, ClimateEntity):
         old_mode = self.preset_mode
         old_attr = _PRESET_TO_ATTR.get(old_mode) if isinstance(old_mode, str) else None
         if new_attr := _PRESET_TO_ATTR.get(preset_mode):
+            if old_attr and old_attr != new_attr:
+                self._device.set_attribute(attr=old_attr, value=False)
             self._device.set_attribute(attr=new_attr, value=True)
         elif old_attr:
             # preset_mode is PRESET_NONE or unknown; clear the current active preset
@@ -423,9 +436,7 @@ class MideaCCClimate(MideaClimate):
         swing = self._device.get_attribute(CCAttributes.swing)
         if not isinstance(swing, bool):
             return None
-        return str(
-            SWING_ON if swing else SWING_OFF,
-        )
+        return SWING_ON if swing else SWING_OFF
 
     @override
     def set_fan_mode(self, fan_mode: str) -> None:
@@ -625,7 +636,7 @@ class MideaC3Climate(MideaClimate):
         if hvac_mode == HVACMode.OFF:
             self.turn_off()
         else:
-            self._device.set_mode(self._zone, self.hvac_modes.index(hvac_mode))
+            self._device.set_mode(self._zone, self._hvac_to_protocol_mode(hvac_mode))
 
 
 class MideaFBClimate(MideaClimate):

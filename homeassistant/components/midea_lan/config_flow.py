@@ -3,7 +3,6 @@
 from operator import itemgetter
 from typing import Any, override
 
-from aiohttp import ClientSession
 from midealocal.cloud import MideaCloud, get_default_cloud, get_midea_cloud
 from midealocal.const import DeviceType, ProtocolVersion
 from midealocal.device import AuthException, MideaDevice
@@ -24,7 +23,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_TYPE,
 )
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import _LOGGER, CONF_ACCOUNT, CONF_KEY, CONF_SERVER, CONF_SUBTYPE, DOMAIN
@@ -52,17 +51,13 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         self.devices: dict = {}
         self.found_device: dict[str, Any] = {}
         self.supports: dict = {}
-        self.unsorted: dict[int, Any] = {}
-        self.account: dict = {}
         self.cloud: MideaCloud | None = None
-        self.session: ClientSession | None = None
         self._login_mode: str | None = None
         self._login_data: dict[str, str] | None = None
-        for device_type, name in MIDEA_DEVICE_NAMES.items():
-            self.unsorted[device_type] = name
+        unsorted = dict(MIDEA_DEVICE_NAMES)
 
         # sort and assign supports
-        self.supports = dict(sorted(self.unsorted.items(), key=itemgetter(1)))
+        self.supports = dict(sorted(unsorted.items(), key=itemgetter(1)))
 
         # preset account
         self.preset_account = decode_preset_account(1)
@@ -106,6 +101,8 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         # get cloud servers configs
         cloud_servers = await MideaCloud.get_cloud_servers()
         cloud_server_options = list(cloud_servers.values())
+        if not cloud_server_options:
+            cloud_server_options = [DEFAULT_CLOUD]
         default_server = next(
             (server for server in cloud_server_options if server == DEFAULT_CLOUD),
             cloud_server_options[0],
@@ -262,14 +259,13 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
             account = self.preset_account
             password = self.preset_password
 
-        if self.session is None:
-            self.session = async_create_clientsession(self.hass)
+        session = async_get_clientsession(self.hass)
 
         # init cloud object or force reinit with new one
         if self.cloud is None or force_login:
             self.cloud = get_midea_cloud(
                 cloud_name,
-                self.session,
+                session,
                 account,
                 password,
             )
@@ -300,10 +296,15 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         # get device token/key from cloud
         keys = await self.cloud.get_cloud_keys(appliance_id)
         default_keys = await MideaCloud.get_default_keys()
+        default_key_name = next(iter(default_keys), None)
         # use token/key to connect device and confirm token result
         for k, value in keys.items():
             # skip default_key
-            if not default_key and k == next(iter(default_keys)):
+            if (
+                not default_key
+                and default_key_name is not None
+                and k == default_key_name
+            ):
                 continue
             dm = MideaDevice(
                 name="",
@@ -355,6 +356,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
             # then get subtype from cloud, get v3 device token/key from cloud
             self.found_device = {
                 CONF_DEVICE_ID: device_id,
+                CONF_NAME: self.supports.get(device.get(CONF_TYPE), str(device_id)),
                 CONF_TYPE: device.get(CONF_TYPE),
                 CONF_PROTOCOL: device.get(CONF_PROTOCOL),
                 CONF_IP_ADDRESS: device.get(CONF_IP_ADDRESS),
@@ -385,7 +387,8 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 device_info := await self.cloud.get_device_info(device_id)
             ):
                 # set subtype with model_number
-                self.found_device[CONF_NAME] = device_info.get("name")
+                if cloud_name := device_info.get("name"):
+                    self.found_device[CONF_NAME] = cloud_name
                 self.found_device[CONF_SUBTYPE] = device_info.get("model_number")
 
             # MUST get a auth passed token/key for v3 device, disable add before pass
@@ -436,6 +439,9 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
             self._clear_login_state()
             return await self.async_step_manually()
         # show available device list in UI
+        if not self.available_device:
+            return await self.async_step_auto(error="no_devices")
+
         return self.async_show_form(
             step_id="auto",
             data_schema=vol.Schema(
@@ -482,6 +488,9 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                         error="invalid_device_id_for_ip",
                     )
 
+            if device_id not in self.devices:
+                return await self.async_step_manually(error="invalid_device_id")
+
             device = self.devices[device_id]
             if user_input[CONF_IP_ADDRESS] != device.get(CONF_IP_ADDRESS):
                 return await self.async_step_manually(
@@ -521,6 +530,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self.found_device = {
                 CONF_DEVICE_ID: user_input[CONF_DEVICE_ID],
+                CONF_NAME: self.found_device.get(CONF_NAME),
                 CONF_TYPE: user_input[CONF_TYPE],
                 CONF_PROTOCOL: user_input[CONF_PROTOCOL],
                 CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
@@ -561,7 +571,11 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 if authenticated:
                     device_id = user_input[CONF_DEVICE_ID]
                     device_type = user_input[CONF_TYPE]
-                    name = self.supports.get(device_type, str(device_id))
+                    found_name = self.found_device.get(CONF_NAME)
+                    if isinstance(found_name, str) and found_name:
+                        name = found_name
+                    else:
+                        name = self.supports.get(device_type, str(device_id))
                     data = {
                         CONF_NAME: name,
                         CONF_DEVICE_ID: device_id,

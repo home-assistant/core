@@ -5,6 +5,7 @@
     },
     "error": {
       "device_auth_failed": "Could not connect with the provided configuration",
+      "invalid_device_id": "The selected device ID is no longer available",
       "invalid_device_id_for_ip": "The device ID does not match the selected IP address",
       "invalid_device_ip": "Could not find a supported device at this IP address",
       "invalid_token": "Token and key must be valid hexadecimal strings",
@@ -20,6 +21,9 @@
         "data": {
           "device": "Device"
         },
+        "data_description": {
+          "device": "Select the discovered device to configure"
+        },
         "title": "Select a discovered device"
       },
       "list": {
@@ -31,6 +35,11 @@
           "account": "Account",
           "password": "[%key:common::config_flow::data::password%]",
           "server": "Server"
+        },
+        "data_description": {
+          "account": "Your Midea cloud account username or email address",
+          "password": "Your Midea cloud account password",
+          "server": "The Midea cloud server for your region"
         },
         "title": "Cloud login"
       },

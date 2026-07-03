@@ -21,6 +21,7 @@ class MideaEntity(Entity):
     """Base Midea entity."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(self, device: MideaDevice, entity_key: str) -> None:
         """Initialize Midea base entity."""
@@ -57,12 +58,6 @@ class MideaEntity(Entity):
     def unique_id(self) -> str:
         """Return entity unique id."""
         return self._unique_id
-
-    @property
-    @override
-    def should_poll(self) -> bool:
-        """Return False as the integration does not poll."""
-        return False
 
     @property
     @override

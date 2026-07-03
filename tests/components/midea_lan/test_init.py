@@ -69,4 +69,4 @@ async def test_async_setup_entry_paths(hass: HomeAssistant) -> None:
         return_value=None,
     ):
         await hass.config_entries.async_setup(entry2.entry_id)
-    assert entry2.state is ConfigEntryState.SETUP_RETRY
+    assert entry2.state is ConfigEntryState.SETUP_ERROR

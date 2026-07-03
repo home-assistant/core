@@ -15,7 +15,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError
 
 from .const import CONF_KEY, CONF_SUBTYPE
 from .entity import MideaLanConfigEntry
@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaLanConfigEntry) -> 
         "",
     )
     if device is None:
-        raise ConfigEntryNotReady("Unable to initialize device")
+        raise ConfigEntryError("Unable to initialize device")
 
     await hass.async_add_executor_job(device.open)
     entry.runtime_data = device

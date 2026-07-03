@@ -6,12 +6,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.midea_lan.config_flow import MideaLanConfigFlow
-from homeassistant.components.midea_lan.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-
 
 class DummyDevice:
     """Shared fake Midea device for tests."""
@@ -45,6 +39,11 @@ class DummyDevice:
         """Record update callback removal."""
         self._callbacks.remove(callback)
 
+    def notify_update(self, status: dict[str, Any]) -> None:
+        """Notify all registered callbacks with new state."""
+        for callback in self._callbacks.copy():
+            callback(status)
+
     def get_attribute(self, attr: str) -> Any:
         """Return attribute value."""
         return self.attributes.get(attr)
@@ -65,14 +64,6 @@ class DummyDevice:
         """Record set mode call."""
         self.calls.append(("set_mode", zone, mode))
 
-    def set_customize(self, value: str) -> None:
-        """Record customize call."""
-        self.calls.append(("set_customize", value))
-
-    def set_ip_address(self, value: str) -> None:
-        """Record ip address call."""
-        self.calls.append(("set_ip_address", value))
-
     def open(self) -> None:
         """Record open call."""
         self.calls.append(("open",))
@@ -90,14 +81,3 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         return_value=True,
     ) as mock_entry:
         yield mock_entry
-
-
-@pytest.fixture
-async def mock_config_flow(hass: HomeAssistant) -> MideaLanConfigFlow:
-    """Return a configured config flow instance from the flow manager."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-    assert result["type"] is FlowResultType.MENU
-    return hass.config_entries.flow._progress[result["flow_id"]]
