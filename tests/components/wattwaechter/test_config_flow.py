@@ -479,3 +479,85 @@ async def test_reauth_flow_wrong_device(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_device"
     assert mock_config_entry.data[CONF_TOKEN] == MOCK_TOKEN
+
+
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring the host updates the entry and keeps the token."""
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    new_host = "192.168.1.222"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: new_host}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == new_host
+    # Token is preserved when the field is left empty
+    assert mock_config_entry.data[CONF_TOKEN] == MOCK_TOKEN
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (WattwaechterAuthenticationError("Invalid token"), "invalid_auth"),
+        (WattwaechterConnectionError("Connection lost"), "cannot_connect"),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test reconfigure recovers after an invalid token or connection failure."""
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "reconfigure"
+
+    mock_client.system_info.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: MOCK_HOST}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"]["base"] == expected_error
+
+    # Retry succeeds once the device is reachable again
+    mock_client.system_info.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: MOCK_HOST}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_flow_wrong_device(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure aborts when the host points to a different device."""
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "reconfigure"
+
+    mock_client.system_info.return_value = MagicMock(
+        **{"get_value.return_value": "WRONG-DEVICE"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.222"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
+    assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
