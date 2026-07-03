@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2026.7.0.dev0"
+version = "2026.8.0.dev0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -68,19 +68,19 @@ dependencies = [
   "PyYAML==6.0.3",
   "requests==2.34.2",
   "securetar==2026.4.1",
-  "SQLAlchemy==2.0.50",
+  "SQLAlchemy==2.0.51",
   "standard-aifc==3.13.0",
   "standard-telnetlib==3.13.0",
   "typing-extensions>=4.15.0,<5.0",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.11.21",
+  "uv==0.11.25",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
-  "voluptuous-openapi==0.3.0",
+  "voluptuous-openapi==0.4.1",
   "yarl==1.24.2",
   "webrtc-models==0.3.0",
-  "zeroconf==0.149.16",
+  "zeroconf==0.150.0",
 ]
 
 [project.urls]
@@ -648,7 +648,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.15.16"
+required-version = ">=0.15.19"
 
 [tool.ruff.lint]
 select = [

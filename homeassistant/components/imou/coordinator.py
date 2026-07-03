@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
+from typing import override
 
 from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice, ImouHaDeviceManager
@@ -61,6 +62,7 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Return the current device for device_key, if still on the account."""
         return self.devices_by_key.get(device_key)
 
+    @override
     async def _async_update_data(self) -> None:
         """Update coordinator data."""
         try:

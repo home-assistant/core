@@ -16,7 +16,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.target import TargetEntityChangeTracker, TargetSelection
-from homeassistant.helpers.trigger import Trigger, TriggerActionRunner, TriggerConfig
+from homeassistant.helpers.trigger import (
+    Trigger,
+    TriggerActionRunner,
+    TriggerConfig,
+    TriggerNotTriggeredReporter,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from . import TodoItem, TodoListEntity
@@ -125,6 +130,7 @@ class ItemTriggerBase(Trigger, abc.ABC):
     """todo item trigger base."""
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -139,8 +145,11 @@ class ItemTriggerBase(Trigger, abc.ABC):
             assert config.target is not None
         self._target = config.target
 
+    @override
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
 

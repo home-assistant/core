@@ -68,13 +68,11 @@ async def test_config_entry_persistent_storage(
 @pytest.mark.parametrize(
     ("mock_hub_configuration", "mock_hub_status"),
     [
-        ("mock_hub_configuration_prod_awning_dimmer", "mock_hub_status_prod_awning"),
-        ("mock_hub_configuration_prod_awning_dimmer", "mock_hub_status_prod_dimmer"),
-        (
-            "mock_hub_configuration_prod_roller_shutter",
-            "mock_hub_status_prod_roller_shutter",
-        ),
+        ("config_prod_awning_dimmer.json", "status_prod_awning.json"),
+        ("config_prod_awning_dimmer.json", "status_prod_dimmer.json"),
+        ("config_prod_roller_shutter.json", "status_prod_roller_shutter.json"),
     ],
+    indirect=True,
 )
 async def test_device_setup(
     hass: HomeAssistant,
@@ -84,12 +82,8 @@ async def test_device_setup(
     mock_hub_status: AsyncMock,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
-    request: pytest.FixtureRequest,
 ) -> None:
     """Test that the device is created correctly."""
-    mock_hub_configuration = request.getfixturevalue(mock_hub_configuration)
-    mock_hub_status = request.getfixturevalue(mock_hub_status)
-
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1

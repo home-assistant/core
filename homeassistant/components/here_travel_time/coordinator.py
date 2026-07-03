@@ -2,7 +2,7 @@
 
 from datetime import datetime, time, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import here_routing
 from here_routing import (
@@ -80,6 +80,7 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
         )
         self._api = HERERoutingApi(api_key)
 
+    @override
     async def _async_update_data(self) -> HERETravelTimeData:
         """Get the latest data from the HERE Routing API."""
         params = prepare_parameters(self.hass, self.config_entry)
@@ -204,6 +205,7 @@ class HERETransitDataUpdateCoordinator(
         )
         self._api = HERETransitApi(api_key)
 
+    @override
     async def _async_update_data(self) -> HERETravelTimeData | None:
         """Get the latest data from the HERE Routing API."""
         params = prepare_parameters(self.hass, self.config_entry)

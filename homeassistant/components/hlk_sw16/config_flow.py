@@ -1,7 +1,7 @@
 """Config flow for HLK-SW16."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from hlk_sw16 import create_hlk_sw16_connection
 from hlk_sw16.protocol import SW16Client
@@ -75,6 +75,7 @@ class SW16FlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle import."""
         return await self.async_step_user(import_data)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

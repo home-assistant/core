@@ -1,7 +1,7 @@
 """Config flow for KNX."""
 
 from collections.abc import AsyncGenerator
-from typing import Any, Final, Literal
+from typing import Any, Final, Literal, override
 
 import voluptuous as vol
 from xknx import XKNX
@@ -131,6 +131,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> KNXOptionsFlow:
         """Get the options flow for this handler."""
         return KNXOptionsFlow(config_entry)
@@ -196,6 +197,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             options=DEFAULT_ENTRY_OPTIONS,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

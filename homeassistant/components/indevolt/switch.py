@@ -1,7 +1,7 @@
 """Switch platform for Indevolt integration."""
 
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, override
 
 from indevolt_api import IndevoltConfig
 
@@ -97,6 +97,7 @@ class IndevoltSwitchEntity(IndevoltEntity, SwitchEntity):
         self._attr_unique_id = f"{self.serial_number}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         raw_value = self.coordinator.data.get(self.entity_description.read_key)
@@ -111,10 +112,12 @@ class IndevoltSwitchEntity(IndevoltEntity, SwitchEntity):
 
         return None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_toggle(1)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_toggle(0)

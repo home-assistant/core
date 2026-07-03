@@ -24,14 +24,14 @@
         "sections": {
           "advanced_settings": {
             "data": {
-              "community": "SNMP Community",
+              "community": "[%key:component::brother::config::step::user::sections::advanced_settings::data::community%]",
               "port": "[%key:common::config_flow::data::port%]"
             },
             "data_description": {
-              "community": "A simple password for devices to communicate to each other.",
-              "port": "The SNMP port of the Brother printer."
+              "community": "[%key:component::brother::config::step::user::sections::advanced_settings::data_description::community%]",
+              "port": "[%key:component::brother::config::step::user::sections::advanced_settings::data_description::port%]"
             },
-            "name": "Advanced settings"
+            "name": "[%key:component::brother::config::step::user::sections::advanced_settings::name%]"
           }
         }
       },
@@ -54,7 +54,7 @@
               "community": "A simple password for devices to communicate to each other.",
               "port": "The SNMP port of the Brother printer."
             },
-            "name": "Advanced settings"
+            "name": "Additional settings"
           }
         }
       },
@@ -69,14 +69,14 @@
         "sections": {
           "advanced_settings": {
             "data": {
-              "community": "SNMP Community",
+              "community": "[%key:component::brother::config::step::user::sections::advanced_settings::data::community%]",
               "port": "[%key:common::config_flow::data::port%]"
             },
             "data_description": {
-              "community": "A simple password for devices to communicate to each other.",
-              "port": "The SNMP port of the Brother printer."
+              "community": "[%key:component::brother::config::step::user::sections::advanced_settings::data_description::community%]",
+              "port": "[%key:component::brother::config::step::user::sections::advanced_settings::data_description::port%]"
             },
-            "name": "Advanced settings"
+            "name": "[%key:component::brother::config::step::user::sections::advanced_settings::name%]"
           }
         },
         "title": "Discovered Brother Printer"
