@@ -9,22 +9,15 @@ from homeassistant.helpers.significant_change import (
     check_valid_float,
 )
 
-from . import (
-    ATTR_AWAY_MODE,
-    ATTR_CURRENT_TEMPERATURE,
-    ATTR_OPERATION_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE,
-)
+from .const import WaterHeaterStateAttribute
 
 SIGNIFICANT_ATTRIBUTES: set[str] = {
-    ATTR_CURRENT_TEMPERATURE,
-    ATTR_TEMPERATURE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
-    ATTR_OPERATION_MODE,
-    ATTR_AWAY_MODE,
+    WaterHeaterStateAttribute.CURRENT_TEMPERATURE,
+    WaterHeaterStateAttribute.TEMPERATURE,
+    WaterHeaterStateAttribute.TARGET_TEMP_HIGH,
+    WaterHeaterStateAttribute.TARGET_TEMP_LOW,
+    WaterHeaterStateAttribute.OPERATION_MODE,
+    WaterHeaterStateAttribute.AWAY_MODE,
 }
 
 
@@ -51,7 +44,10 @@ def async_check_significant_change(
     ha_unit = hass.config.units.temperature_unit
 
     for attr_name in changed_attrs:
-        if attr_name in [ATTR_OPERATION_MODE, ATTR_AWAY_MODE]:
+        if attr_name in [
+            WaterHeaterStateAttribute.OPERATION_MODE,
+            WaterHeaterStateAttribute.AWAY_MODE,
+        ]:
             return True
 
         old_attr_value = old_attrs.get(attr_name)
