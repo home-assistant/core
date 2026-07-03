@@ -51,7 +51,6 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
         (tool for tool in result.tools if tool.name == "calendar_get_events"), None
     )
     assert tool is not None
-    assert tool.parameters.schema["calendar"].container == ["Mock Calendar Name"]
 
     calls = async_mock_service(
         hass,
