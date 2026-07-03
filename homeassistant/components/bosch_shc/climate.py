@@ -81,15 +81,12 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
     _attr_max_temp = 30.0
     _attr_min_temp = 5.0
     _enable_turn_on_off_backwards_compatibility = False
-
-    def __init__(
-        self,
-        device: SHCClimateControl,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize the SHC climate control entity."""
-        super().__init__(device=device, parent_id=parent_id, entry_id=entry_id)
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
 
     @property
     @override
@@ -181,17 +178,6 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
         if self._device.supports_low:
             presets.append(PRESET_ECO)
         return presets
-
-    @property
-    @override
-    def supported_features(self) -> ClimateEntityFeature:
-        """Return supported features."""
-        return (
-            ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.PRESET_MODE
-            | ClimateEntityFeature.TURN_OFF
-            | ClimateEntityFeature.TURN_ON
-        )
 
     @override
     def set_temperature(self, **kwargs: Any) -> None:
@@ -335,12 +321,6 @@ class SHCHeatingCircuitEntity(SHCEntity, ClimateEntity):
         """Initialize the SHC heating circuit entity."""
         super().__init__(device=device, parent_id=parent_id, entry_id=entry_id)
         self._attr_unique_id = f"{device.serial}_heating_circuit"
-
-    @property
-    @override
-    def current_temperature(self) -> float | None:
-        """Heating circuits expose no measured temperature."""
-        return None
 
     @property
     @override
