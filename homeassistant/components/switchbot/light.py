@@ -249,31 +249,37 @@ class SwitchbotRgbicwwCeilingLightMainEntity(SwitchbotEntity, LightEntity):
         self._attr_unique_id = f"{coordinator.base_unique_id}-main"
 
     @property
+    @override
     def max_color_temp_kelvin(self) -> int:
         """Return the max color temperature."""
         return self._device.max_temp
 
     @property
+    @override
     def min_color_temp_kelvin(self) -> int:
         """Return the min color temperature."""
         return self._device.min_temp
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the light is on."""
         return self._device.is_main_on
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of the light."""
         return max(0, min(255, round(self._device.main_brightness * 2.55)))
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature of the light."""
         return self._device.color_temp
 
     @exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the main light on."""
         _LOGGER.debug("Turning on main light %s, address %s", kwargs, self._address)
@@ -288,6 +294,7 @@ class SwitchbotRgbicwwCeilingLightMainEntity(SwitchbotEntity, LightEntity):
         await self._device.turn_on_main()
 
     @exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the main light off."""
         _LOGGER.debug("Turning off main light %s, address %s", kwargs, self._address)
@@ -308,36 +315,43 @@ class SwitchbotRgbicwwCeilingLightColorEntity(SwitchbotEntity, LightEntity):
         self._attr_unique_id = f"{coordinator.base_unique_id}-color"
 
     @property
+    @override
     def supported_features(self) -> LightEntityFeature:
         """Return the supported features."""
         return LightEntityFeature.EFFECT if self.effect_list else LightEntityFeature(0)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the light is on."""
         return self._device.on
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of the light."""
         return max(0, min(255, round(self._device.brightness * 2.55)))
 
     @property
+    @override
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the RGB color of the light."""
         return self._device.rgb
 
     @property
+    @override
     def effect_list(self) -> list[str] | None:
         """Return the list of effects supported by the light."""
         return self._device.get_effect_list
 
     @property
+    @override
     def effect(self) -> str | None:
         """Return the current effect of the light."""
         return self._device.get_effect()
 
     @exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the color light on."""
         _LOGGER.debug("Turning on color light %s, address %s", kwargs, self._address)
@@ -357,6 +371,7 @@ class SwitchbotRgbicwwCeilingLightColorEntity(SwitchbotEntity, LightEntity):
         await self._device.turn_on_color()
 
     @exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the color light off."""
         _LOGGER.debug("Turning off color light %s, address %s", kwargs, self._address)
