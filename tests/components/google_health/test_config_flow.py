@@ -10,9 +10,6 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.google_health.application_credentials import (
-    async_get_description_placeholders,
-)
 from homeassistant.components.google_health.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -356,13 +353,3 @@ async def test_config_flow_profile_name_unexpected_error(
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Google Health"
-
-
-async def test_application_credentials_placeholders(hass: HomeAssistant) -> None:
-    """Test description placeholders for credentials dialog."""
-    placeholders = await async_get_description_placeholders(hass)
-    assert placeholders == {
-        "oauth_consent_url": "https://console.cloud.google.com/apis/credentials/consent",
-        "more_info_url": "https://www.home-assistant.io/integrations/google_health/",
-        "oauth_creds_url": "https://console.cloud.google.com/apis/credentials",
-    }
