@@ -44,7 +44,7 @@ class FlowItData:
 class FlowItCoordinator(DataUpdateCoordinator[FlowItCoordinatorData]):
     """Class to manage fetching Flow-it data."""
 
-    config_entry: ConfigEntry
+    config_entry: FlowItConfigEntry
 
     def __init__(
         self,
