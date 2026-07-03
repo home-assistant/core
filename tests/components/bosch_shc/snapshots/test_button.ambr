@@ -39,7 +39,7 @@
 # name: test_buttons[button.test_device_detection_test-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Detection test',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Detection test',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_device_detection_test',
@@ -89,7 +89,7 @@
 # name: test_buttons[button.test_device_reset_tamper-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Reset tamper',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Reset tamper',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_device_reset_tamper',
@@ -139,7 +139,7 @@
 # name: test_buttons[button.test_device_smoke_test-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Smoke test',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Smoke test',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_device_smoke_test',
@@ -189,7 +189,7 @@
 # name: test_buttons[button.test_device_smoke_test_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Smoke test',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Smoke test',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_device_smoke_test_2',
@@ -239,7 +239,7 @@
 # name: test_buttons[button.test_device_stop_detection_test-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Stop detection test',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Stop detection test',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_device_stop_detection_test',
@@ -289,7 +289,7 @@
 # name: test_buttons[button.test_device_stop_walk_test-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Stop walk test',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Stop walk test',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_device_stop_walk_test',
@@ -339,7 +339,7 @@
 # name: test_buttons[button.test_device_trigger-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Trigger',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Trigger',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_device_trigger',
@@ -389,7 +389,7 @@
 # name: test_buttons[button.test_device_walk_test-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Walk test',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Walk test',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_device_walk_test',
@@ -439,8 +439,8 @@
 # name: test_buttons[button.test_shc_good_night-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test SHC Good Night',
-      'icon': 'mdi:script-text-play',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test SHC Good Night',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:script-text-play',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_shc_good_night',
