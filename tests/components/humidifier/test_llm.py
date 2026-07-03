@@ -24,7 +24,9 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
     return {tool.name for tool in result.tools}
 
 
-async def test_humidifier_intent_tool_requires_exposed_entity(hass: HomeAssistant) -> None:
+async def test_humidifier_intent_tool_requires_exposed_entity(
+    hass: HomeAssistant,
+) -> None:
     """Test the intent tools are only exposed when a humidifier entity is exposed."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
