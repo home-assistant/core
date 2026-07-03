@@ -43,21 +43,17 @@ def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
     ):
         wanted.update(TIMER_INTENTS)
 
+    exposed_domains = {
+        state.domain
+        for state in hass.states.async_all()
+        if async_should_expose(hass, llm_context.assistant, state.entity_id)
+    }
     handlers = [
-        handler for handler in intent.async_get(hass) if handler.intent_type in wanted
+        handler
+        for handler in intent.async_get(hass)
+        if handler.intent_type in wanted
+        and (handler.platforms is None or handler.platforms & exposed_domains)
     ]
-
-    if llm_context.assistant is not None:
-        exposed_domains = {
-            state.domain
-            for state in hass.states.async_all()
-            if async_should_expose(hass, llm_context.assistant, state.entity_id)
-        }
-        handlers = [
-            handler
-            for handler in handlers
-            if handler.platforms is None or handler.platforms & exposed_domains
-        ]
 
     tools: list[Tool] = [
         IntentTool(handler.intent_type, handler) for handler in handlers
