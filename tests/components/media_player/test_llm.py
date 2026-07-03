@@ -1,10 +1,26 @@
 """Tests for the media_player LLM tools platform."""
 
+import pytest
+
 from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
+
+ENTITY_ID = "media_player.test"
+
+
+@pytest.fixture(autouse=True)
+async def setup_integrations(hass: HomeAssistant) -> None:
+    """Set up the integrations and expose a media_player entity."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, "media_player", {})
+    assert await async_setup_component(hass, "llm", {})
+    hass.states.async_set(ENTITY_ID, "on", {"friendly_name": "Test media_player"})
+    async_expose_entity(hass, "conversation", ENTITY_ID, True)
+    await hass.async_block_till_done()
 
 
 def _llm_context() -> llm.LLMContext:
@@ -24,21 +40,12 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
     return {tool.name for tool in result.tools}
 
 
-async def test_media_player_intent_tool_requires_exposed_entity(
-    hass: HomeAssistant,
-) -> None:
-    """Test the intent tools are only exposed when a media_player entity is exposed."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "intent", {})
-    assert await async_setup_component(hass, "media_player", {})
-    assert await async_setup_component(hass, "llm", {})
-    await hass.async_block_till_done()
-
-    assert "HassMediaPause" not in await _tool_names(hass)
-
-    hass.states.async_set(
-        "media_player.test", "on", {"friendly_name": "Test media_player"}
-    )
-    async_expose_entity(hass, "conversation", "media_player.test", True)
-
+async def test_intent_tool_exposed(hass: HomeAssistant) -> None:
+    """Test the intent tool is offered for an exposed media_player entity."""
     assert "HassMediaPause" in await _tool_names(hass)
+
+
+async def test_intent_tool_not_exposed(hass: HomeAssistant) -> None:
+    """Test the intent tool is hidden when no media_player entity is exposed."""
+    async_expose_entity(hass, "conversation", ENTITY_ID, False)
+    assert "HassMediaPause" not in await _tool_names(hass)
