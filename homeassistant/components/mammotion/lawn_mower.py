@@ -97,7 +97,7 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
 
     async def async_start_mowing(self) -> None:
         """Start mowing."""
-        trans_key = "start_mowing_failed"
+        trans_key = "start_failed"
 
         mode = self.rpt_dev_status.sys_status
         if mode is None:
