@@ -57,7 +57,13 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     WEEKDAYS,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import (
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+    valid_entity_id,
+)
 from homeassistant.exceptions import (
     ConditionError,
     ConditionErrorContainer,
@@ -2118,6 +2124,13 @@ def async_extract_entities(config: ConfigType | Template) -> set[str]:
 
         if condition in ("and", "not", "or"):
             to_process.extend(config["conditions"])
+            continue
+
+        if condition == "time":
+            # The before and after options can be a time or an entity id.
+            for key in (CONF_AFTER, CONF_BEFORE):
+                if isinstance(value := config.get(key), str) and valid_entity_id(value):
+                    referenced.add(value)
             continue
 
         entity_ids = config.get(CONF_ENTITY_ID)
