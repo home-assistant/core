@@ -49,6 +49,7 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     result = await llm_component.async_get_tools(hass, llm_context)
     tool = next((tool for tool in result.tools if tool.name == "todo_get_items"), None)
     assert tool is not None
+    assert tool.parameters.schema["todo_list"].container == ["Mock Todo List Name"]
 
     calls = async_mock_service(
         hass,
@@ -76,6 +77,38 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
         "success": True,
         "result": [{"uid": "1234", "status": "needs_action", "summary": "Buy milk"}],
     }
+
+
+@pytest.mark.parametrize(
+    ("status", "expected"),
+    [
+        ("all", ["needs_action", "completed"]),
+        ("completed", ["completed"]),
+    ],
+)
+async def test_todo_get_items_status_filter(
+    hass: HomeAssistant, status: str, expected: list[str]
+) -> None:
+    """Test the status filter is translated into the service call."""
+    llm_context = _llm_context()
+    result = await llm_component.async_get_tools(hass, llm_context)
+    tool = next(tool for tool in result.tools if tool.name == "todo_get_items")
+
+    calls = async_mock_service(
+        hass,
+        domain=todo.DOMAIN,
+        service=todo.TodoServices.GET_ITEMS,
+        schema=cv.make_entity_service_schema(todo.TODO_SERVICE_GET_ITEMS_SCHEMA),
+        response={ENTITY_ID: {"items": []}},
+    )
+    await tool.async_call(
+        hass,
+        llm.ToolInput(
+            "todo_get_items", {"todo_list": "Mock Todo List Name", "status": status}
+        ),
+        llm_context,
+    )
+    assert calls[0].data == {"entity_id": [ENTITY_ID], "status": expected}
 
 
 async def test_todo_list_intents_exposed(hass: HomeAssistant) -> None:
