@@ -42,9 +42,6 @@
       "measure_cl": {
         "default": "mdi:shaker-outline"
       },
-      "measure_ph": {
-        "default": "mdi:ph"
-      },
       "measure_rx": {
         "default": "mdi:gradient-vertical"
       },

@@ -51,17 +51,19 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         corrupted = find_corrupted_gpio_registers(data)
         corrupted_keys = frozenset(key for key, _, _ in corrupted)
 
-        if corrupted_keys != self._corrupted_gpio_keys:
-            for key, label, value in corrupted:
-                _LOGGER.error(
-                    "Corrupted GPIO register %s (%s): value %d (0x%04X) is outside "
-                    "valid range 0-%d. The pool controller may malfunction",
-                    key,
-                    label,
-                    value,
-                    value & 0xFFFF,
-                    MAX_RELAY_GPIO,
-                )
+        if corrupted_keys == self._corrupted_gpio_keys:
+            return
+
+        for key, label, value in corrupted:
+            _LOGGER.error(
+                "Corrupted GPIO register %s (%s): value %d (0x%04X) is outside "
+                "valid range 0-%d. The pool controller may malfunction",
+                key,
+                label,
+                value,
+                value & 0xFFFF,
+                MAX_RELAY_GPIO,
+            )
 
         self._corrupted_gpio_keys = corrupted_keys
 
