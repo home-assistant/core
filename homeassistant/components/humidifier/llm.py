@@ -16,9 +16,6 @@ LLM_INTENTS = (INTENT_MODE, INTENT_HUMIDITY)
 @callback
 def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
     """Return LLM tools for the integration's intents when its domain is exposed."""
-    if not llm_context.assistant:
-        return LLMTools(tools=[])
-
     if not any(
         async_should_expose(hass, llm_context.assistant, state.entity_id)
         for state in hass.states.async_all(DOMAIN)
