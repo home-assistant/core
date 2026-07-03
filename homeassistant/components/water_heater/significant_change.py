@@ -20,6 +20,12 @@ SIGNIFICANT_ATTRIBUTES: set[str] = {
     WaterHeaterStateAttribute.AWAY_MODE,
 }
 
+# Any change to these non-numeric attributes is significant.
+NON_NUMERIC_ATTRIBUTES: set[str] = {
+    WaterHeaterStateAttribute.OPERATION_MODE,
+    WaterHeaterStateAttribute.AWAY_MODE,
+}
+
 
 @callback
 def async_check_significant_change(
@@ -44,10 +50,7 @@ def async_check_significant_change(
     ha_unit = hass.config.units.temperature_unit
 
     for attr_name in changed_attrs:
-        if attr_name in [
-            WaterHeaterStateAttribute.OPERATION_MODE,
-            WaterHeaterStateAttribute.AWAY_MODE,
-        ]:
+        if attr_name in NON_NUMERIC_ATTRIBUTES:
             return True
 
         old_attr_value = old_attrs.get(attr_name)
