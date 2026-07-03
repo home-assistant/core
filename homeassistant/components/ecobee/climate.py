@@ -78,7 +78,6 @@ HAS_HEAT_PUMP = "hasHeatPump"
 
 DEFAULT_MIN_HUMIDITY = 15
 DEFAULT_MAX_HUMIDITY = 50
-DATA_THERMOSTATS = "thermostats"
 HUMIDIFIER_MANUAL_MODE = "manual"
 
 # Order matters, because for reverse mapping we don't want to map HEAT to AUX
