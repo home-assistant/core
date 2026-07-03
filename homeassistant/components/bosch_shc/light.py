@@ -105,8 +105,8 @@ class SHCColorLight(SHCEntity, LightEntity):
     """Representation of a SHC dimmable/colour light (Hue, Ledvance, Dimmer).
 
     Maps Bosch capabilities onto HA color modes:
-      HSBColorActuator  → ColorMode.HS
-      HueColorTemperature (without HSB) → ColorMode.COLOR_TEMP
+      HSBColorActuator (implies HueColorTemperature too) → ColorMode.HS + ColorMode.COLOR_TEMP
+      HueColorTemperature only (no HSB) → ColorMode.COLOR_TEMP
       MultiLevelSwitch only → ColorMode.BRIGHTNESS
       none of the above → ColorMode.ONOFF
     """
