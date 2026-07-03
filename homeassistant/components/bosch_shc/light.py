@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from boschshcpy import SHCLight, SHCLightSwitch, SHCMicromoduleDimmer
+from boschshcpy import SHCLight, SHCMicromoduleDimmer
 from boschshcpy.services_impl import PowerSwitchService
 
 from homeassistant.components.light import (
@@ -14,7 +14,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.color import color_hs_to_RGB, color_RGB_to_hs
 
 from . import BoschConfigEntry
 from .entity import SHCEntity
@@ -79,15 +78,6 @@ class SHCOnOffLight(SHCEntity, LightEntity):
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
-    def __init__(
-        self,
-        device: SHCLightSwitch,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize a SHC on/off light."""
-        super().__init__(device, parent_id, entry_id)
-
     @property
     @override
     def is_on(self) -> bool:
@@ -125,39 +115,28 @@ class SHCColorLight(SHCEntity, LightEntity):
     ) -> None:
         """Initialize a SHC colour light."""
         super().__init__(device, parent_id, entry_id)
+        modes: set[ColorMode] = set()
+        if device.supports_color_hsb:
+            modes.add(ColorMode.HS)
+            modes.add(ColorMode.COLOR_TEMP)
+        elif device.supports_color_temp:
+            modes.add(ColorMode.COLOR_TEMP)
+        elif device.supports_brightness:
+            modes.add(ColorMode.BRIGHTNESS)
+        if not modes:
+            modes.add(ColorMode.ONOFF)
+        self._attr_supported_color_modes = modes
         # boschshcpy doesn't clear rgb when a color temperature is written (and
         # vice versa), so the active mode can't be inferred from device state
         # alone; track the mode we last wrote instead.
         if device.supports_color_hsb:
-            self._color_mode = ColorMode.HS if device.rgb else ColorMode.COLOR_TEMP
+            self._attr_color_mode = ColorMode.HS if device.rgb else ColorMode.COLOR_TEMP
         elif device.supports_color_temp:
-            self._color_mode = ColorMode.COLOR_TEMP
+            self._attr_color_mode = ColorMode.COLOR_TEMP
         elif device.supports_brightness:
-            self._color_mode = ColorMode.BRIGHTNESS
+            self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
-            self._color_mode = ColorMode.ONOFF
-
-    @property
-    @override
-    def supported_color_modes(self) -> set[ColorMode]:
-        """Return supported color modes based on device capabilities."""
-        modes: set[ColorMode] = set()
-        if self._device.supports_color_hsb:
-            modes.add(ColorMode.HS)
-            modes.add(ColorMode.COLOR_TEMP)
-        elif self._device.supports_color_temp:
-            modes.add(ColorMode.COLOR_TEMP)
-        elif self._device.supports_brightness:
-            modes.add(ColorMode.BRIGHTNESS)
-        if not modes:
-            modes.add(ColorMode.ONOFF)
-        return modes
-
-    @property
-    @override
-    def color_mode(self) -> ColorMode:
-        """Return the active color mode."""
-        return self._color_mode
+            self._attr_color_mode = ColorMode.ONOFF
 
     @property
     @override
@@ -197,16 +176,10 @@ class SHCColorLight(SHCEntity, LightEntity):
     @property
     @override
     def hs_color(self) -> tuple[float, float] | None:
-        """Return hue/saturation from the packed RGB integer."""
+        """Return hue/saturation."""
         if not self._device.supports_color_hsb:
             return None
-        rgb_int = self._device.rgb
-        if not rgb_int:
-            return None
-        red = (rgb_int >> 16) & 0xFF
-        green = (rgb_int >> 8) & 0xFF
-        blue = rgb_int & 0xFF
-        return color_RGB_to_hs(red, green, blue)
+        return self._device.hs_color
 
     @override
     def turn_on(self, **kwargs: Any) -> None:
@@ -222,13 +195,11 @@ class SHCColorLight(SHCEntity, LightEntity):
             self._device.supports_color_temp or self._device.supports_color_hsb
         ):
             self._device.color = kwargs[ATTR_COLOR_TEMP_KELVIN]
-            self._color_mode = ColorMode.COLOR_TEMP
+            self._attr_color_mode = ColorMode.COLOR_TEMP
 
         if ATTR_HS_COLOR in kwargs and self._device.supports_color_hsb:
-            hue, saturation = kwargs[ATTR_HS_COLOR]
-            red, green, blue = color_hs_to_RGB(hue, saturation)
-            self._device.rgb = (red << 16) | (green << 8) | blue
-            self._color_mode = ColorMode.HS
+            self._device.hs_color = kwargs[ATTR_HS_COLOR]
+            self._attr_color_mode = ColorMode.HS
 
     @override
     def turn_off(self, **kwargs: Any) -> None:

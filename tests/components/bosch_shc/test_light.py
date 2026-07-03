@@ -1,5 +1,6 @@
 """Tests for the Bosch SHC light platform."""
 
+from collections.abc import Callable
 from unittest.mock import MagicMock, create_autospec, patch
 
 from boschshcpy import SHCLight, SHCLightSwitch, SHCMicromoduleDimmer
@@ -19,9 +20,16 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_component import async_update_entity
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+def _find_subscribed_callback(device: MagicMock, entity_id: str) -> Callable[[], None]:
+    """Return the on_state_changed callback the entity registered on setup."""
+    for call in device.subscribe_callback.call_args_list:
+        if call[0][0] == entity_id:
+            return call[0][1]
+    pytest.fail(f"No subscribe_callback registered for {entity_id}")
 
 
 def _make_onoff_device(serial: str, device_id: str) -> MagicMock:
@@ -64,6 +72,7 @@ def _make_color_device(
     device.brightness = 80
     device.color = 4000
     device.rgb = 0
+    device.hs_color = None
     device.min_color_temperature = 2700
     device.max_color_temperature = 6500
     device.supports_brightness = supports_brightness
@@ -185,10 +194,10 @@ async def test_color_light_mode_switches_between_color_temp_and_hs(
     mock_config_entry: MockConfigEntry,
     mock_session: MagicMock,
 ) -> None:
-    """color_mode reflects the last write, not boschshcpy's stale rgb value.
+    """color_mode reflects the last write, not boschshcpy's stale hs_color value.
 
-    boschshcpy doesn't clear rgb when a color temperature is written, so
-    inferring the active mode from rgb's truthiness would get stuck on HS
+    boschshcpy doesn't clear hs_color when a color temperature is written, so
+    inferring the active mode from hs_color's truthiness would get stuck on HS
     forever after the first color was ever set. Regression test for that.
     """
     device = _make_color_device(
@@ -198,6 +207,7 @@ async def test_color_light_mode_switches_between_color_temp_and_hs(
 
     await _setup_light_platform(hass, mock_config_entry, mock_session)
     (entity_id,) = hass.states.async_entity_ids(LIGHT_DOMAIN)
+    on_state_changed = _find_subscribed_callback(device, entity_id)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -206,9 +216,10 @@ async def test_color_light_mode_switches_between_color_temp_and_hs(
         blocking=True,
     )
     # This integration is push-based: nothing re-reads entity properties until
-    # the (mocked) device pushes an update, so force a refresh like the real
-    # subscribe_callback would trigger.
-    await async_update_entity(hass, entity_id)
+    # the (mocked) device pushes an update, so invoke the callback the entity
+    # actually subscribed with, like a real device push would.
+    on_state_changed()
+    await hass.async_block_till_done()
     assert hass.states.get(entity_id).attributes["color_mode"] == ColorMode.HS
 
     await hass.services.async_call(
@@ -217,10 +228,11 @@ async def test_color_light_mode_switches_between_color_temp_and_hs(
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 3000},
         blocking=True,
     )
-    await async_update_entity(hass, entity_id)
+    on_state_changed()
+    await hass.async_block_till_done()
     assert hass.states.get(entity_id).attributes["color_mode"] == ColorMode.COLOR_TEMP
-    # boschshcpy's rgb value is untouched by the color-temp write.
-    assert device.rgb != 0
+    # boschshcpy's hs_color value is untouched by the color-temp write.
+    assert device.hs_color == (30.0, 100.0)
 
 
 @pytest.mark.parametrize(
