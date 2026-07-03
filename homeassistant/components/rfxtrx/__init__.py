@@ -7,7 +7,6 @@ import logging
 from typing import Any, NamedTuple, cast
 
 import RFXtrx as rfxtrxmod
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -20,7 +19,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import EventDeviceRegistryUpdatedData
@@ -33,7 +32,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ATTR_EVENT,
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_PROTOCOLS,
@@ -41,9 +39,9 @@ from .const import (
     DEVICE_PACKET_TYPE_LIGHTING4,
     DOMAIN,
     EVENT_RFXTRX_EVENT,
-    SERVICE_SEND,
     SIGNAL_EVENT,
 )
+from .services import async_setup_services
 
 DEFAULT_OFF_DELAY = 2.0
 
@@ -59,18 +57,6 @@ class DeviceTuple(NamedTuple):
     subtype: str
     id_string: str
 
-
-def _bytearray_string(data: Any) -> bytearray:
-    val = cv.string(data)
-    try:
-        return bytearray.fromhex(val)
-    except ValueError as err:
-        raise vol.Invalid(
-            "Data must be a hex string with multiple of two characters"
-        ) from err
-
-
-SERVICE_SEND_SCHEMA = vol.Schema({ATTR_EVENT: _bytearray_string})
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -88,14 +74,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up RFXtrx services."""
     hass.data.setdefault(DOMAIN, {})
-
-    def send(call: ServiceCall) -> None:
-        event = call.data[ATTR_EVENT]
-        # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=home-assistant-use-runtime-data
-        hass.data[DOMAIN][DATA_RFXOBJECT].transport.send(event)
-
-    hass.services.async_register(DOMAIN, SERVICE_SEND, send, schema=SERVICE_SEND_SCHEMA)
+    async_setup_services(hass)
     return True
 
 
