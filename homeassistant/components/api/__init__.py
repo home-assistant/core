@@ -46,6 +46,7 @@ from homeassistant.exceptions import (
     Unauthorized,
 )
 from homeassistant.helpers import config_validation as cv, recorder, template
+from homeassistant.helpers.http import MIN_COMPRESSED_RESPONSE_SIZE
 from homeassistant.helpers.json import json_dumps, json_fragment
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType
@@ -223,12 +224,14 @@ class APIStatesView(HomeAssistantView):
                 for state in hass.states.async_all()
                 if entity_perm(state.entity_id, POLICY_READ)
             )
+        body = b"".join((b"[", b",".join(states), b"]"))
         response = web.Response(
-            body=b"".join((b"[", b",".join(states), b"]")),
+            body=body,
             content_type=CONTENT_TYPE_JSON,
             zlib_executor_size=32768,
         )
-        response.enable_compression()
+        if len(body) > MIN_COMPRESSED_RESPONSE_SIZE:
+            response.enable_compression()
         return response
 
 
