@@ -27,6 +27,10 @@ from .json import find_paths_unserializable_data, json_bytes, json_dumps
 
 _LOGGER = logging.getLogger(__name__)
 
+# Responses smaller than this fit within a single network packet, so
+# compressing them wastes event-loop CPU without reducing round-trips.
+MIN_COMPRESSED_SIZE: Final = 1024
+
 
 type AllowCorsType = Callable[[AbstractRoute | AbstractResource], None]
 KEY_AUTHENTICATED: Final = "ha_authenticated"
@@ -160,7 +164,8 @@ class HomeAssistantView:
             headers=headers,
             zlib_executor_size=32768,
         )
-        response.enable_compression()
+        if len(msg) > MIN_COMPRESSED_SIZE:
+            response.enable_compression()
         return response
 
     def json_message(
