@@ -738,8 +738,11 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     that method must call async_restore_data manually before their first update.
     Data is saved after each successful refresh and after async_set_updated_data,
     batched by save_delay. The data of all restore coordinators is kept in a single
-    store; storage_key only needs to be unique within the config entry. Stored data
-    is removed when the config entry is removed if one was provided.
+    store; first separated by the config entry or domain; then by storage_key which
+    allows multiple coordinators to be used within the same config entry or domain.
+    storage_key must be a stable unique identifier within the provided config entry
+    or domain. Stored data is automatically removed when the config entry is removed
+    if one was provided.
     """
 
     def __init__(
