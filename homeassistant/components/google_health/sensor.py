@@ -36,69 +36,49 @@ class GoogleHealthSensorEntityDescription[
     value_fn: Callable[[Any], _ValueT]
 
 
-STEPS_SENSOR_DESCRIPTION = GoogleHealthSensorEntityDescription[
-    GoogleHealthActivityCoordinator,
-    int,
-](
-    key="steps",
-    translation_key="steps",
-    state_class=SensorStateClass.TOTAL_INCREASING,
-    value_fn=lambda data: data.steps.count_sum if data and data.steps else 0,
-)
-
-DISTANCE_SENSOR_DESCRIPTION = GoogleHealthSensorEntityDescription[
-    GoogleHealthActivityCoordinator,
-    float,
-](
-    key="distance",
-    native_unit_of_measurement=UnitOfLength.METERS,
-    device_class=SensorDeviceClass.DISTANCE,
-    state_class=SensorStateClass.TOTAL_INCREASING,
-    value_fn=lambda data: (
-        data.distance.millimeters_sum / 1000.0 if data and data.distance else 0.0
-    ),
-)
-
-WEIGHT_SENSOR_DESCRIPTION = GoogleHealthSensorEntityDescription[
-    GoogleHealthBodyCoordinator,
-    float | None,
-](
-    key="weight",
-    native_unit_of_measurement=UnitOfMass.KILOGRAMS,
-    device_class=SensorDeviceClass.WEIGHT,
-    state_class=SensorStateClass.MEASUREMENT,
-    value_fn=lambda data: (
-        data.weight.weight_grams / 1000.0 if data and data.weight else None
-    ),
-)
-
-RESTING_HEART_RATE_SENSOR_DESCRIPTION = GoogleHealthSensorEntityDescription[
-    GoogleHealthBodyCoordinator,
-    int | None,
-](
-    key="resting_heart_rate",
-    translation_key="resting_heart_rate",
-    native_unit_of_measurement="bpm",
-    state_class=SensorStateClass.MEASUREMENT,
-    value_fn=lambda data: (
-        data.resting_heart_rate.beats_per_minute
-        if data and data.resting_heart_rate
-        else None
-    ),
-)
-
 ACTIVITY_SENSORS: list[
     GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, Any]
 ] = [
-    STEPS_SENSOR_DESCRIPTION,
-    DISTANCE_SENSOR_DESCRIPTION,
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="steps",
+        translation_key="steps",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: data.steps.count_sum if data and data.steps else 0,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, float](
+        key="distance",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: (
+            data.distance.millimeters_sum / 1000.0 if data and data.distance else 0.0
+        ),
+    ),
 ]
 
 BODY_SENSORS: list[
     GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, Any]
 ] = [
-    WEIGHT_SENSOR_DESCRIPTION,
-    RESTING_HEART_RATE_SENSOR_DESCRIPTION,
+    GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, float | None](
+        key="weight",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: (
+            data.weight.weight_grams / 1000.0 if data and data.weight else None
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, int | None](
+        key="resting_heart_rate",
+        translation_key="resting_heart_rate",
+        native_unit_of_measurement="bpm",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: (
+            data.resting_heart_rate.beats_per_minute
+            if data and data.resting_heart_rate
+            else None
+        ),
+    ),
 ]
 
 
