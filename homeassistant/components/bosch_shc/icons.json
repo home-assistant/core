@@ -1,5 +1,25 @@
 {
   "entity": {
+    "button": {
+      "detection_test": {
+        "default": "mdi:walk"
+      },
+      "detection_test_stop": {
+        "default": "mdi:stop"
+      },
+      "reset_tamper": {
+        "default": "mdi:notification-clear-all"
+      },
+      "smoke_test": {
+        "default": "mdi:smoke-detector-alert"
+      },
+      "walk_test": {
+        "default": "mdi:walk"
+      },
+      "walk_test_stop": {
+        "default": "mdi:stop"
+      }
+    },
     "sensor": {
       "communication_quality": {
         "default": "mdi:wifi"

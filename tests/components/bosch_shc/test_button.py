@@ -1,74 +1,36 @@
 """Tests for the Bosch SHC button platform."""
 
-from unittest.mock import MagicMock, patch
+from typing import Any
+from unittest.mock import MagicMock, create_autospec, patch
 
+from boschshcpy import SHCSmokeDetector, SHCTwinguard
+from boschshcpy.device import SHCDevice
+from boschshcpy.models_impl import SHCMicromoduleRelay, SHCMotionDetector2
+from boschshcpy.scenario import SHCScenario
 from boschshcpy.services_impl import DetectionTestService, WalkTestService
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
-
-DOMAIN = "bosch_shc"
-
-MOCK_ENTRY_DATA = {
-    "host": "1.2.3.4",
-    "ssl_certificate": "/fake/cert.pem",
-    "ssl_key": "/fake/key.pem",
-    "hostname": "shc012345",
-    "token": "token:shc012345",
-}
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-def _make_mock_session(
-    scenarios=None,
-    impulse_relays=None,
-    smoke_detectors=None,
-    twinguards=None,
-    motion_detectors2=None,
-):
-    """Build a minimal mock SHCSession."""
-    session = MagicMock()
-    session.information.unique_id = "shc-test-uid"
-    session.information.version = "9.99"
-    session.information.updateState.name = "UP_TO_DATE"
-    session.scenarios = scenarios or []
-    session.device_helper.micromodule_impulse_relays = impulse_relays or []
-    session.device_helper.smoke_detectors = smoke_detectors or []
-    session.device_helper.twinguards = twinguards or []
-    session.device_helper.motion_detectors2 = motion_detectors2 or []
-    # Other device_helper properties used by other platforms
-    session.device_helper.shutter_contacts = []
-    session.device_helper.shutter_contacts2 = []
-    session.device_helper.shutter_controls = []
-    session.device_helper.micromodule_shutter_controls = []
-    session.device_helper.micromodule_blinds = []
-    session.device_helper.micromodule_relays = []
-    session.device_helper.light_switches_bsm = []
-    session.device_helper.micromodule_light_attached = []
-    session.device_helper.micromodule_light_controls = []
-    session.device_helper.smart_plugs = []
-    session.device_helper.smart_plugs_compact = []
-    session.device_helper.climate_controls = []
-    session.device_helper.thermostats = []
-    session.device_helper.wallthermostats = []
-    session.device_helper.roomthermostats = []
-    session.device_helper.motion_detectors = []
-    session.device_helper.universal_switches = []
-    session.device_helper.camera_eyes = []
-    session.device_helper.camera_360 = []
-    session.device_helper.camera_outdoor_gen2 = []
-    session.device_helper.heating_circuits = []
-    return session
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Load only the button platform."""
+    return [Platform.BUTTON]
 
 
-def _make_mock_device(serial="device-serial-1", device_id="device-id-1"):
-    """Build a minimal mock SHCDevice."""
-    device = MagicMock()
+def _make_device(spec: type[SHCDevice], serial: str, device_id: str) -> MagicMock:
+    """Build an autospecced SHC device with the base attributes SHCEntity needs."""
+    device = create_autospec(spec, instance=True)
     device.serial = serial
     device.id = device_id
-    device.root_device_id = device_id
+    device.root_device_id = "shc-test-uid"  # matches mock_session's hub unique_id
     device.name = "Test Device"
     device.manufacturer = "Bosch"
     device.device_model = "TEST_MODEL"
@@ -78,253 +40,202 @@ def _make_mock_device(serial="device-serial-1", device_id="device-id-1"):
     return device
 
 
-async def _setup_entry(hass: HomeAssistant, session: MagicMock) -> MockConfigEntry:
-    """Create and set up a mock config entry with the given session."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        version=1,
-        data=MOCK_ENTRY_DATA,
-        unique_id="shc012345",
-        title="Test SHC",
-    )
-    entry.add_to_hass(hass)
+def _make_scenario(scenario_id: str, name: str) -> MagicMock:
+    """Build an autospecced SHCScenario."""
+    scenario = create_autospec(SHCScenario, instance=True)
+    scenario.id = scenario_id
+    scenario.name = name
+    return scenario
 
+
+@pytest.fixture
+def mock_motion_detector2() -> MagicMock:
+    """Return a Motion Detector II with walk-test and detection-test both available."""
+    device = _make_device(SHCMotionDetector2, "md2-serial", "md2-id")
+    device.supports_walk_test = True
+    device.walk_state = MagicMock()  # anything but None → walk-test buttons created
+    device.supports_detection_test = True
+    return device
+
+
+async def _setup_button_platform(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+) -> None:
+    """Set up the bosch_shc config entry with only the button platform loaded."""
+    mock_config_entry.add_to_hass(hass)
     with (
         patch(
             "homeassistant.components.bosch_shc.SHCSession",
-            return_value=session,
+            return_value=mock_session,
         ),
-        patch(
-            "homeassistant.components.bosch_shc.async_get_instance",
-        ),
+        patch("homeassistant.components.bosch_shc.async_get_instance"),
+        patch("homeassistant.components.bosch_shc.PLATFORMS", [Platform.BUTTON]),
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    return entry
 
-
-async def test_scenario_button_created(hass: HomeAssistant) -> None:
-    """Scenario buttons are created for each SHC scenario."""
-    scenario = MagicMock()
-    scenario.id = "sc-1"
-    scenario.name = "Good Night"
-    session = _make_mock_session(scenarios=[scenario])
-
-    await _setup_entry(hass, session)
-
-    state = hass.states.get("button.test_shc_good_night")
-    assert state is not None
-
-
-async def test_scenario_button_press(hass: HomeAssistant) -> None:
-    """Pressing a scenario button calls scenario.trigger via executor."""
-    scenario = MagicMock()
-    scenario.id = "sc-2"
-    scenario.name = "Away Mode"
-    session = _make_mock_session(scenarios=[scenario])
-
-    entry = await _setup_entry(hass, session)
-    assert entry.state.value == "loaded"
-
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_shc_away_mode"},
-        blocking=True,
-    )
-
-    scenario.trigger.assert_called_once()
-
-
-async def test_impulse_relay_button(hass: HomeAssistant) -> None:
-    """Impulse relay button calls trigger_impulse_state via executor."""
-    device = _make_mock_device(serial="ir-serial", device_id="ir-id")
-    session = _make_mock_session(impulse_relays=[device])
-
-    entry = await _setup_entry(hass, session)
-    assert entry.state.value == "loaded"
-
-    state = hass.states.get("button.test_device_trigger")
-    assert state is not None
-
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_device_trigger"},
-        blocking=True,
-    )
-
-    device.trigger_impulse_state.assert_called_once()
-
-
-async def test_smoke_test_button_smoke_detector(hass: HomeAssistant) -> None:
-    """Smoke test button for smoke detector calls smoketest_requested."""
-    device = _make_mock_device(serial="sd-serial", device_id="sd-id")
-    session = _make_mock_session(smoke_detectors=[device])
-
-    entry = await _setup_entry(hass, session)
-    assert entry.state.value == "loaded"
-
-    state = hass.states.get("button.test_device_smoke_test")
-    assert state is not None
-
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_device_smoke_test"},
-        blocking=True,
-    )
-
-    device.smoketest_requested.assert_called_once()
-
-
-async def test_smoke_test_button_twinguard(hass: HomeAssistant) -> None:
-    """Smoke test button for twinguard calls smoketest_requested."""
-    device = _make_mock_device(serial="tg-serial", device_id="tg-id")
-    session = _make_mock_session(twinguards=[device])
-
-    entry = await _setup_entry(hass, session)
-    assert entry.state.value == "loaded"
-
-    state = hass.states.get("button.test_device_smoke_test")
-    assert state is not None
-
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_device_smoke_test"},
-        blocking=True,
-    )
-
-    device.smoketest_requested.assert_called_once()
-
-
-async def test_walk_test_buttons(hass: HomeAssistant) -> None:
-    """WalkTest start/stop buttons created and each calls correct method."""
-    device = _make_mock_device(serial="md2-serial", device_id="md2-id")
-    device.supports_walk_test = True
-    device.walk_state = MagicMock()  # not None → gate passes
-    device.supports_detection_test = False
-
-    session = _make_mock_session(motion_detectors2=[device])
-
-    entry = await _setup_entry(hass, session)
-    assert entry.state.value == "loaded"
-
-    start_state = hass.states.get("button.test_device_walk_test")
-    stop_state = hass.states.get("button.test_device_stop_walk_test")
-    assert start_state is not None
-    assert stop_state is not None
-
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_device_walk_test"},
-        blocking=True,
-    )
-    device.set_walk_state_request.assert_called_once_with(
-        WalkTestService.WalkStateRequest.WALK_STATE_START
-    )
-    device.set_walk_state_request.reset_mock()
-
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_device_stop_walk_test"},
-        blocking=True,
-    )
-    device.set_walk_state_request.assert_called_once_with(
-        WalkTestService.WalkStateRequest.WALK_STATE_STOP
-    )
-
-
-async def test_walk_test_skipped_when_service_absent(hass: HomeAssistant) -> None:
-    """WalkTest buttons are not created when walk_state is None."""
-    device = _make_mock_device(serial="md2-serial", device_id="md2-id")
-    device.supports_walk_test = True
-    device.walk_state = None  # gate fails
-    device.supports_detection_test = False
-
-    session = _make_mock_session(motion_detectors2=[device])
-
-    await _setup_entry(hass, session)
-
-    assert hass.states.get("button.test_device_walk_test") is None
-    assert hass.states.get("button.test_device_stop_walk_test") is None
-
-
-async def test_detection_test_buttons(hass: HomeAssistant) -> None:
-    """DetectionTest start/stop buttons created and call correct methods."""
-    device = _make_mock_device(serial="md2-serial", device_id="md2-id")
-    device.supports_walk_test = False
-    device.walk_state = None
-    device.supports_detection_test = True
-
-    session = _make_mock_session(motion_detectors2=[device])
-
-    entry = await _setup_entry(hass, session)
-    assert entry.state.value == "loaded"
-
-    start_state = hass.states.get("button.test_device_detection_test")
-    stop_state = hass.states.get("button.test_device_stop_detection_test")
-    assert start_state is not None
-    assert stop_state is not None
-
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_device_detection_test"},
-        blocking=True,
-    )
-    device.set_detection_state_request.assert_called_once_with(
-        DetectionTestService.DetectionStateRequest.DETECTION_STATE_START
-    )
-    device.set_detection_state_request.reset_mock()
-
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_device_stop_detection_test"},
-        blocking=True,
-    )
-    device.set_detection_state_request.assert_called_once_with(
-        DetectionTestService.DetectionStateRequest.DETECTION_STATE_STOP
-    )
-
-
-async def test_tamper_reset_button(hass: HomeAssistant) -> None:
-    """Tamper reset button is always created for MD2 and calls reset_tampered_state."""
-    device = _make_mock_device(serial="md2-serial", device_id="md2-id")
-    device.supports_walk_test = False
-    device.walk_state = None
-    device.supports_detection_test = False
-
-    session = _make_mock_session(motion_detectors2=[device])
-
-    entry = await _setup_entry(hass, session)
-    assert entry.state.value == "loaded"
-
-    state = hass.states.get("button.test_device_reset_tamper")
-    assert state is not None
-
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_device_reset_tamper"},
-        blocking=True,
-    )
-
-    device.reset_tampered_state.assert_called_once()
-
-
-async def test_no_buttons_when_no_devices(hass: HomeAssistant) -> None:
-    """No button entities are created when all device lists are empty."""
-    session = _make_mock_session()
-    entry = await _setup_entry(hass, session)
-    assert entry.state.value == "loaded"
-
-    button_states = [
-        s for eid, s in hass.states.async_all() if eid.startswith("button.")
+async def test_buttons(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    mock_motion_detector2: MagicMock,
+) -> None:
+    """Every button entity is created for a fully-featured SHC installation."""
+    mock_session.scenarios = [_make_scenario("sc-1", "Good Night")]
+    mock_session.device_helper.micromodule_impulse_relays = [
+        _make_device(SHCMicromoduleRelay, "ir-serial", "ir-id")
     ]
-    assert len(button_states) == 0
+    mock_session.device_helper.smoke_detectors = [
+        _make_device(SHCSmokeDetector, "sd-serial", "sd-id")
+    ]
+    mock_session.device_helper.twinguards = [
+        _make_device(SHCTwinguard, "tg-serial", "tg-id")
+    ]
+    mock_session.device_helper.motion_detectors2 = [mock_motion_detector2]
+
+    await _setup_button_platform(hass, mock_config_entry, mock_session)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_no_buttons_when_no_devices(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """No button entities are created when all device lists are empty."""
+    assert not er.async_entries_for_config_entry(
+        entity_registry, init_integration.entry_id
+    )
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "device_key", "mock_attr", "call_args"),
+    [
+        pytest.param(
+            "button.test_shc_good_night", "scenario", "trigger", (), id="scenario"
+        ),
+        pytest.param(
+            "button.test_device_trigger",
+            "impulse_relay",
+            "trigger_impulse_state",
+            (),
+            id="impulse_relay",
+        ),
+        pytest.param(
+            "button.test_device_smoke_test",
+            "smoke_detector",
+            "smoketest_requested",
+            (),
+            id="smoke_test",
+        ),
+        pytest.param(
+            "button.test_device_walk_test",
+            "motion_detector2",
+            "set_walk_state_request",
+            (WalkTestService.WalkStateRequest.WALK_STATE_START,),
+            id="walk_test_start",
+        ),
+        pytest.param(
+            "button.test_device_stop_walk_test",
+            "motion_detector2",
+            "set_walk_state_request",
+            (WalkTestService.WalkStateRequest.WALK_STATE_STOP,),
+            id="walk_test_stop",
+        ),
+        pytest.param(
+            "button.test_device_detection_test",
+            "motion_detector2",
+            "set_detection_state_request",
+            (DetectionTestService.DetectionStateRequest.DETECTION_STATE_START,),
+            id="detection_test_start",
+        ),
+        pytest.param(
+            "button.test_device_stop_detection_test",
+            "motion_detector2",
+            "set_detection_state_request",
+            (DetectionTestService.DetectionStateRequest.DETECTION_STATE_STOP,),
+            id="detection_test_stop",
+        ),
+        pytest.param(
+            "button.test_device_reset_tamper",
+            "motion_detector2",
+            "reset_tampered_state",
+            (),
+            id="reset_tamper",
+        ),
+    ],
+)
+async def test_button_press(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    mock_motion_detector2: MagicMock,
+    entity_id: str,
+    device_key: str,
+    mock_attr: str,
+    call_args: tuple[Any, ...],
+) -> None:
+    """Pressing a button calls the matching boschshcpy method with the right args."""
+    scenario = _make_scenario("sc-1", "Good Night")
+    impulse_relay = _make_device(SHCMicromoduleRelay, "ir-serial", "ir-id")
+    smoke_detector = _make_device(SHCSmokeDetector, "sd-serial", "sd-id")
+    mock_session.scenarios = [scenario]
+    mock_session.device_helper.micromodule_impulse_relays = [impulse_relay]
+    mock_session.device_helper.smoke_detectors = [smoke_detector]
+    mock_session.device_helper.motion_detectors2 = [mock_motion_detector2]
+
+    await _setup_button_platform(hass, mock_config_entry, mock_session)
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    device_by_key = {
+        "scenario": scenario,
+        "impulse_relay": impulse_relay,
+        "smoke_detector": smoke_detector,
+        "motion_detector2": mock_motion_detector2,
+    }
+    getattr(device_by_key[device_key], mock_attr).assert_called_once_with(*call_args)
+
+
+@pytest.mark.parametrize(
+    ("supports_walk_test", "walk_state_present", "supports_detection_test"),
+    [
+        pytest.param(False, False, False, id="neither_supported"),
+        pytest.param(True, False, False, id="walk_test_service_absent"),
+    ],
+)
+async def test_motion_detector2_optional_buttons_skipped(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    supports_walk_test: bool,
+    walk_state_present: bool,
+    supports_detection_test: bool,
+) -> None:
+    """Walk-test and detection-test buttons are only created when supported."""
+    device = _make_device(SHCMotionDetector2, "md2-serial", "md2-id")
+    device.supports_walk_test = supports_walk_test
+    device.walk_state = MagicMock() if walk_state_present else None
+    device.supports_detection_test = supports_detection_test
+    mock_session.device_helper.motion_detectors2 = [device]
+
+    await _setup_button_platform(hass, mock_config_entry, mock_session)
+
+    entity_ids = {
+        entry.entity_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+    }
+    # The tamper-reset button is always created for a Motion Detector II.
+    assert entity_ids == {"button.test_device_reset_tamper"}

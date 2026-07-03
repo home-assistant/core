@@ -8,7 +8,7 @@ from boschshcpy.models_impl import SHCMicromoduleRelay, SHCMotionDetector2
 from boschshcpy.scenario import SHCScenario
 from boschshcpy.services_impl import DetectionTestService, WalkTestService
 
-from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
+from homeassistant.components.button import ButtonEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -103,16 +103,10 @@ async def async_setup_entry(
 
 
 class SHCScenarioButton(ButtonEntity):
-    """Button entity that triggers a Bosch SHC scenario.
-
-    Scenarios are not SHC devices, so this does not inherit SHCEntity.
-    The unique_id is scoped to the controller serial so that each SHC
-    controller gets its own set of scenario buttons.
-    """
+    """Button entity that triggers a Bosch SHC scenario (not an SHCDevice, so no SHCEntity)."""
 
     _attr_has_entity_name = True
     _attr_icon = "mdi:script-text-play"
-    _attr_should_poll = False
 
     def __init__(
         self,
@@ -130,9 +124,9 @@ class SHCScenarioButton(ButtonEntity):
         )
 
     @override
-    async def async_press(self) -> None:
+    def press(self) -> None:
         """Trigger the scenario."""
-        await self.hass.async_add_executor_job(self._scenario.trigger)
+        self._scenario.trigger()
 
 
 class SHCImpulseRelayButton(SHCEntity, ButtonEntity):
@@ -151,15 +145,14 @@ class SHCImpulseRelayButton(SHCEntity, ButtonEntity):
         self._attr_unique_id = f"{device.serial}_impulse"
 
     @override
-    async def async_press(self) -> None:
+    def press(self) -> None:
         """Trigger the impulse relay."""
-        await self.hass.async_add_executor_job(self._device.trigger_impulse_state)
+        self._device.trigger_impulse_state()
 
 
 class SHCSmokeTestButton(SHCEntity, ButtonEntity):
     """Button entity that requests a smoke detector self-test."""
 
-    _attr_icon = "mdi:smoke-detector-alert"
     _attr_translation_key = "smoke_test"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -174,15 +167,14 @@ class SHCSmokeTestButton(SHCEntity, ButtonEntity):
         self._attr_unique_id = f"{device.serial}_smoke_test"
 
     @override
-    async def async_press(self) -> None:
+    def press(self) -> None:
         """Request a smoke-detector self-test."""
-        await self.hass.async_add_executor_job(self._device.smoketest_requested)
+        self._device.smoketest_requested()
 
 
 class SHCWalkTestButton(SHCEntity, ButtonEntity):
     """Button that starts a walk-test on a Motion Detector II."""
 
-    _attr_icon = "mdi:walk"
     _attr_translation_key = "walk_test"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -197,18 +189,16 @@ class SHCWalkTestButton(SHCEntity, ButtonEntity):
         self._attr_unique_id = f"{device.serial}_walk_test"
 
     @override
-    async def async_press(self) -> None:
+    def press(self) -> None:
         """Start the walk test."""
-        await self.hass.async_add_executor_job(
-            self._device.set_walk_state_request,
-            WalkTestService.WalkStateRequest.WALK_STATE_START,
+        self._device.set_walk_state_request(
+            WalkTestService.WalkStateRequest.WALK_STATE_START
         )
 
 
 class SHCWalkTestStopButton(SHCEntity, ButtonEntity):
     """Button that stops an in-progress walk-test on a Motion Detector II."""
 
-    _attr_icon = "mdi:stop"
     _attr_translation_key = "walk_test_stop"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -223,18 +213,16 @@ class SHCWalkTestStopButton(SHCEntity, ButtonEntity):
         self._attr_unique_id = f"{device.serial}_walk_test_stop"
 
     @override
-    async def async_press(self) -> None:
+    def press(self) -> None:
         """Stop the walk test."""
-        await self.hass.async_add_executor_job(
-            self._device.set_walk_state_request,
-            WalkTestService.WalkStateRequest.WALK_STATE_STOP,
+        self._device.set_walk_state_request(
+            WalkTestService.WalkStateRequest.WALK_STATE_STOP
         )
 
 
 class SHCDetectionTestButton(SHCEntity, ButtonEntity):
     """Button that starts a detection test via the DetectionTest service."""
 
-    _attr_icon = "mdi:walk"
     _attr_translation_key = "detection_test"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -249,18 +237,16 @@ class SHCDetectionTestButton(SHCEntity, ButtonEntity):
         self._attr_unique_id = f"{device.serial}_detection_test"
 
     @override
-    async def async_press(self) -> None:
+    def press(self) -> None:
         """Start the detection test."""
-        await self.hass.async_add_executor_job(
-            self._device.set_detection_state_request,
-            DetectionTestService.DetectionStateRequest.DETECTION_STATE_START,
+        self._device.set_detection_state_request(
+            DetectionTestService.DetectionStateRequest.DETECTION_STATE_START
         )
 
 
 class SHCDetectionTestStopButton(SHCEntity, ButtonEntity):
     """Button that stops an in-progress detection test."""
 
-    _attr_icon = "mdi:stop"
     _attr_translation_key = "detection_test_stop"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -275,18 +261,16 @@ class SHCDetectionTestStopButton(SHCEntity, ButtonEntity):
         self._attr_unique_id = f"{device.serial}_detection_test_stop"
 
     @override
-    async def async_press(self) -> None:
+    def press(self) -> None:
         """Stop the detection test."""
-        await self.hass.async_add_executor_job(
-            self._device.set_detection_state_request,
-            DetectionTestService.DetectionStateRequest.DETECTION_STATE_STOP,
+        self._device.set_detection_state_request(
+            DetectionTestService.DetectionStateRequest.DETECTION_STATE_STOP
         )
 
 
 class SHCTamperResetButton(SHCEntity, ButtonEntity):
     """Button that resets an active tamper condition on a Motion Detector II."""
 
-    _attr_device_class = ButtonDeviceClass.RESTART
     _attr_translation_key = "reset_tamper"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -301,6 +285,6 @@ class SHCTamperResetButton(SHCEntity, ButtonEntity):
         self._attr_unique_id = f"{device.serial}_reset_tamper"
 
     @override
-    async def async_press(self) -> None:
+    def press(self) -> None:
         """Reset the active tamper condition."""
-        await self.hass.async_add_executor_job(self._device.reset_tampered_state)
+        self._device.reset_tampered_state()
