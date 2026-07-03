@@ -207,13 +207,6 @@ PARK_AND_RIDE_SENSOR_DESCRIPTIONS: tuple[
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    DataGrandLyonParkAndRideSensorEntityDescription(
-        key="name",
-        translation_key="park_and_ride_name",
-        value_fn=lambda p: p.nom,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
 )
 
 

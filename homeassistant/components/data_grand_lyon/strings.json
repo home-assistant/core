@@ -210,9 +210,6 @@
       "park_and_ride_capacity": {
         "name": "Capacity",
         "unit_of_measurement": "[%key:component::data_grand_lyon::entity::sensor::accessible_spaces::unit_of_measurement%]"
-      },
-      "park_and_ride_name": {
-        "name": "Name"
       }
     }
   },

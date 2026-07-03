@@ -77,9 +77,6 @@
       },
       "park_and_ride_capacity": {
         "default": "mdi:counter"
-      },
-      "park_and_ride_name": {
-        "default": "mdi:sign-text"
       }
     }
   }

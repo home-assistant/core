@@ -382,7 +382,6 @@ async def test_park_and_ride_sensor_disabled_by_default(
     for unique_id in (
         "park_and_ride_P+R Gorge de Loup-accessible_spaces",
         "park_and_ride_P+R Gorge de Loup-opening_hours",
-        "park_and_ride_P+R Gorge de Loup-name",
     ):
         entry = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
         assert entry is not None, unique_id
