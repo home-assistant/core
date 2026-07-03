@@ -77,7 +77,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         return None
 
     async def async_step_bluetooth(
-        self, discovery_info: BluetoothServiceInfo | None = None
+        self, discovery_info: BluetoothServiceInfo
     ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         LOGGER.debug("Discovered bluetooth device: %s", discovery_info)
@@ -120,7 +120,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._discovered_device is not None
         assert self._discovered_device.name is not None
         device = self._discovered_device
-        name = device.name if device.name else ""
+        name = device.name or ""
         if entry := await self.check_and_update_bluetooth_device(device):
             existing_devices = {
                 name: format_mac(device.address),
