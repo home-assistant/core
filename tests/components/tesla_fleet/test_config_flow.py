@@ -400,14 +400,22 @@ async def test_domain_input_invalid_domain(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    "register_response",
+    [
+        pytest.param(None, id="none"),
+        pytest.param({"response": None}, id="null_response"),
+    ],
+)
 async def test_domain_registration_invalid_response(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     access_token: str,
     mock_private_key: Mock,
+    register_response: dict[str, dict[str, str] | None] | None,
 ) -> None:
-    """Test an empty home region response returns to the domain step."""
+    """Test an empty or malformed home region response returns to the domain step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -440,7 +448,7 @@ async def test_domain_registration_invalid_response(
     ):
         mock_api = _mock_api(
             mock_private_key,
-            register_response=None,
+            register_response=register_response,
         )
         mock_api_class.return_value = mock_api
 

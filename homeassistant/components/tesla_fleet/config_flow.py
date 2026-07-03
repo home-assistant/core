@@ -212,7 +212,7 @@ class OAuth2FlowHandler(
 
             # A non-raising but empty or malformed response (no usable public key)
             # must count as a failure, not a success.
-            if not (register_response or {}).get("response", {}).get("public_key"):
+            if not ((register_response or {}).get("response") or {}).get("public_key"):
                 LOGGER.warning(
                     "Partner registration for %s (%s) returned no usable response",
                     region,
