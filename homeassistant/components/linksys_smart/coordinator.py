@@ -4,10 +4,11 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from jnap import JNAPClient, JNAPDevice, JNAPError
+from jnap import JNAPClient, JNAPDevice, JNAPError, JNAPUnauthorizedError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -36,6 +37,8 @@ class LinksysDataUpdateCoordinator(DataUpdateCoordinator[dict[str, JNAPDevice]])
         """Fetch the current device list from the router."""
         try:
             response = await self.client.get_devices()
+        except JNAPUnauthorizedError as err:
+            raise ConfigEntryAuthFailed(str(err)) from err
         except JNAPError as err:
             raise UpdateFailed(str(err)) from err
         return {device.mac: device for device in response.devices}
