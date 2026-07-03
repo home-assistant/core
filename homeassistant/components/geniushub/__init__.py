@@ -71,6 +71,8 @@ PLATFORMS = [
 
 type GeniusHubConfigEntry = ConfigEntry[GeniusBroker]
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Genius Hub services."""
