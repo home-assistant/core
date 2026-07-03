@@ -394,14 +394,17 @@ class Searcher:
         # Areas with this label
         for area_entry in ar.async_entries_for_label(self._area_registry, label_id):
             self._add(ItemType.AREA, area_entry.id)
+            self._async_resolve_up_area(area_entry.id)
 
         # Devices with this label
         for device in dr.async_entries_for_label(self._device_registry, label_id):
             self._add(ItemType.DEVICE, device.id)
+            self._async_resolve_up_device(device.id)
 
         # Entities with this label
         for entity_entry in er.async_entries_for_label(self._entity_registry, label_id):
             self._add(ItemType.ENTITY, entity_entry.entity_id)
+            self._async_resolve_up_entity(entity_entry.entity_id)
 
             # If this entity also exists as a resource, we add it.
             domain = split_entity_id(entity_entry.entity_id)[0]
