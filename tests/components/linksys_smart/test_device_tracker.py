@@ -1,5 +1,6 @@
 """Linksys Smart Wi-Fi device tracker platform tests."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from jnap import GetDevicesResponse, JNAPClient, JNAPDevice
@@ -10,8 +11,11 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+UPDATE_INTERVAL = timedelta(seconds=31)
 
 LAPTOP = JNAPDevice(
     mac="aa:bb:cc:dd:ee:ff",
@@ -86,7 +90,7 @@ async def test_entity_state_when_disconnected(
     mock_client = await _setup_entry(hass, entry, [LAPTOP])
 
     mock_client.get_devices.return_value = GetDevicesResponse(devices=[])
-    await entry.runtime_data.async_refresh()
+    async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
@@ -129,7 +133,7 @@ async def test_setup_entry_does_not_duplicate_on_coordinator_update(
     entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     assert len(entries) == 1
 
-    await entry.runtime_data.async_refresh()
+    async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
@@ -149,7 +153,7 @@ async def test_new_device_added_on_coordinator_update(
     assert len(entries) == 1
 
     mock_client.get_devices.return_value = GetDevicesResponse(devices=[LAPTOP, PHONE])
-    await entry.runtime_data.async_refresh()
+    async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
