@@ -73,8 +73,12 @@ from .const import (
 )
 from .coordinator import UPDATE_INTERVAL, GatewayDeviceCoordinator
 from .gateway import ConnectXiaomiGateway
-from .light import async_setup_light_services
-from .services import async_setup_services
+from .services import (
+    async_setup_fan_services,
+    async_setup_light_services,
+    async_setup_services,
+    async_setup_switch_services,
+)
 from .typing import XiaomiMiioConfigEntry, XiaomiMiioRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
@@ -138,6 +142,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the component."""
     async_setup_services(hass)
     async_setup_light_services(hass)
+    async_setup_switch_services(hass)
+    async_setup_fan_services(hass)
     return True
 
 
