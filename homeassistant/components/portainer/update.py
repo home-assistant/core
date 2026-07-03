@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from pyportainer import Portainer
 from pyportainer.exceptions import (
@@ -132,11 +132,13 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
         self._in_progress_old_version: str | None = None
 
+    @override
     @property
     def title(self) -> str | None:
         """Return title."""
         return self.device_name
 
+    @override
     @property
     def installed_version(self) -> str | None:
         """Return installed version."""
@@ -144,16 +146,19 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
             self.container_data.local_image
         )
 
+    @override
     @property
     def latest_version(self) -> str | None:
         """Return latest version."""
         return self.entity_description.latest_version(self.container_data.image_status)
 
+    @override
     @property
     def in_progress(self) -> bool:
         """Return if an update is in progress."""
         return self._in_progress_old_version == self.installed_version
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
