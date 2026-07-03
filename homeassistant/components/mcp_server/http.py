@@ -3,14 +3,16 @@
 This registers HTTP endpoints that support the Streamable HTTP protocol as
 well as the older SSE as a transport layer.
 
-The Streamable HTTP protocol uses a single HTTP endpoint:
+The Streamable HTTP protocol uses a single HTTP endpoint per config entry:
 
-- /api/mcp_server: The Streamable HTTP endpoint currently implements the
-  stateless protocol for simplicity. This receives client requests and
-  sends them to the MCP server, then waits for a response to send back to
-  the client.
+- /api/mcp_server/<config entry id>: The Streamable HTTP endpoint currently
+  implements the stateless protocol for simplicity. This receives client
+  requests and sends them to the MCP server, then waits for a response to send
+  back to the client. Config entries that predate multiple config entry support
+  are instead served on the fixed legacy endpoint /api/mcp.
 
-The older SSE protocol has two HTTP endpoints:
+The older SSE protocol has two HTTP endpoints and only serves the legacy config
+entry:
 
 - /mcp_server/sse: The SSE endpoint that is used to establish a session
   with the client and glue to the MCP server. This is used to push responses
@@ -41,19 +43,23 @@ from mcp.shared.message import SessionMessage
 
 from homeassistant.components import conversation
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LLM_HASS_API, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import llm
 
-from .const import DOMAIN
+from .const import CONF_LEGACY, DOMAIN
 from .server import create_server
 from .session import Session
 from .types import MCPServerConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-# Streamable HTTP endpoint
+# Streamable HTTP endpoint for legacy config entries
 STREAMABLE_API = "/api/mcp"
+# Streamable HTTP endpoint for non-legacy config entries, one per config entry
+STREAMABLE_API_BASE = "/api/mcp_server"
+STREAMABLE_ENTRY_API = f"{STREAMABLE_API_BASE}/{{entry_id}}"
 TIMEOUT = 60  # Seconds
 
 # Legacy SSE endpoint
@@ -67,24 +73,50 @@ def async_register(hass: HomeAssistant) -> None:
     hass.http.register_view(ModelContextProtocolSSEView())
     hass.http.register_view(ModelContextProtocolMessagesView())
     hass.http.register_view(ModelContextProtocolStreamableView())
+    hass.http.register_view(ModelContextProtocolStreamableEntryView())
 
 
-def async_get_config_entry(hass: HomeAssistant) -> MCPServerConfigEntry:
-    """Get the first enabled MCP server config entry.
+@callback
+def async_get_mcp_server_path(entry: MCPServerConfigEntry) -> str:
+    """Return the Streamable HTTP path serving the given config entry."""
+    if entry.data.get(CONF_LEGACY):
+        return STREAMABLE_API
+    return f"{STREAMABLE_API_BASE}/{entry.entry_id}"
 
-    The ConfigEntry contains a reference to the actual MCP server used to
-    serve the Model Context Protocol.
+
+def async_get_legacy_config_entry(hass: HomeAssistant) -> MCPServerConfigEntry:
+    """Get the enabled legacy MCP server config entry.
+
+    Legacy config entries are served on the original fixed URLs that predate
+    multiple config entry support. Only a single legacy entry can exist.
 
     Will raise an HTTP error if the expected configuration is not present.
     """
-    config_entries: list[MCPServerConfigEntry] = (
-        hass.config_entries.async_loaded_entries(DOMAIN)
-    )
+    config_entries: list[MCPServerConfigEntry] = [
+        entry
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN)
+        if entry.data.get(CONF_LEGACY)
+    ]
     if not config_entries:
         raise HTTPNotFound(text="Model Context Protocol server is not configured")
     if len(config_entries) > 1:
         raise HTTPNotFound(text="Found multiple Model Context Protocol configurations")
     return config_entries[0]
+
+
+def async_get_config_entry(hass: HomeAssistant, entry_id: str) -> MCPServerConfigEntry:
+    """Get a loaded MCP server config entry by its identifier.
+
+    Will raise an HTTP error if the config entry is not present or not loaded.
+    """
+    entry = hass.config_entries.async_get_entry(entry_id)
+    if (
+        entry is None
+        or entry.domain != DOMAIN
+        or entry.state is not ConfigEntryState.LOADED
+    ):
+        raise HTTPNotFound(text="Model Context Protocol server is not configured")
+    return entry
 
 
 @dataclass
@@ -162,7 +194,7 @@ class ModelContextProtocolSSEView(HomeAssistantView):
         manages all protocol details and invokes commands on our MCP server.
         """
         hass = request.app[KEY_HASS]
-        entry = async_get_config_entry(hass)
+        entry = async_get_legacy_config_entry(hass)
         session_manager = entry.runtime_data
 
         server, options = await create_mcp_server(hass, self.context(request), entry)
@@ -212,7 +244,7 @@ class ModelContextProtocolMessagesView(HomeAssistantView):
         layer then writes them to the MCP server stream for the session.
         """
         hass = request.app[KEY_HASS]
-        config_entry = async_get_config_entry(hass)
+        config_entry = async_get_legacy_config_entry(hass)
 
         session_manager = config_entry.runtime_data
         if (session := session_manager.get(session_id)) is None:
@@ -231,8 +263,59 @@ class ModelContextProtocolMessagesView(HomeAssistantView):
         return web.Response(status=200)
 
 
+async def handle_streamable_request(
+    request: web.Request, context: Context, entry: MCPServerConfigEntry
+) -> web.StreamResponse:
+    """Process JSON-RPC messages for the Model Context Protocol."""
+    hass = request.app[KEY_HASS]
+
+    # The request must include a JSON-RPC message
+    if CONTENT_TYPE_JSON not in request.headers.get("accept", ""):
+        raise HTTPBadRequest(text=f"Client must accept {CONTENT_TYPE_JSON}")
+    if request.content_type != CONTENT_TYPE_JSON:
+        raise HTTPBadRequest(text=f"Content-Type must be {CONTENT_TYPE_JSON}")
+    try:
+        json_data = await request.json()
+        message = types.JSONRPCMessage.model_validate(json_data)
+    except ValueError as err:
+        _LOGGER.debug("Failed to parse message as JSON-RPC message: %s", err)
+        raise HTTPBadRequest(text="Request must be a JSON-RPC message") from err
+
+    _LOGGER.debug("Received client message: %s", message)
+
+    # For notifications and responses only, return 202 Accepted
+    if not isinstance(message.root, JSONRPCRequest):
+        _LOGGER.debug("Notification or response received, returning 202")
+        return web.Response(status=HTTPStatus.ACCEPTED)
+
+    # The MCP server runs as a background task for the duration of the
+    # request. We open a buffered stream pair to communicate with it. The
+    # request is sent to the MCP server and we wait for a single response
+    # then shut down the server.
+    server, options = await create_mcp_server(hass, context, entry)
+
+    async with create_streams() as streams:
+
+        async def run_server() -> None:
+            await server.run(
+                streams.read_stream, streams.write_stream, options, stateless=True
+            )
+
+        async with asyncio.timeout(TIMEOUT), anyio.create_task_group() as tg:
+            tg.start_soon(run_server)
+
+            await streams.read_stream_writer.send(SessionMessage(message))
+            session_message = await anext(streams.write_stream_reader)
+            tg.cancel_scope.cancel()
+
+        _LOGGER.debug("Sending response: %s", session_message)
+        return web.json_response(
+            data=session_message.message.model_dump(by_alias=True, exclude_none=True),
+        )
+
+
 class ModelContextProtocolStreamableView(HomeAssistantView):
-    """Model Context Protocol Streamable HTTP endpoint."""
+    """Model Context Protocol Streamable HTTP endpoint for legacy config entries."""
 
     name = f"{DOMAIN}:streamable"
     url = STREAMABLE_API
@@ -246,50 +329,24 @@ class ModelContextProtocolStreamableView(HomeAssistantView):
     async def post(self, request: web.Request) -> web.StreamResponse:
         """Process JSON-RPC messages for the Model Context Protocol."""
         hass = request.app[KEY_HASS]
-        entry = async_get_config_entry(hass)
+        entry = async_get_legacy_config_entry(hass)
+        return await handle_streamable_request(request, self.context(request), entry)
 
-        # The request must include a JSON-RPC message
-        if CONTENT_TYPE_JSON not in request.headers.get("accept", ""):
-            raise HTTPBadRequest(text=f"Client must accept {CONTENT_TYPE_JSON}")
-        if request.content_type != CONTENT_TYPE_JSON:
-            raise HTTPBadRequest(text=f"Content-Type must be {CONTENT_TYPE_JSON}")
-        try:
-            json_data = await request.json()
-            message = types.JSONRPCMessage.model_validate(json_data)
-        except ValueError as err:
-            _LOGGER.debug("Failed to parse message as JSON-RPC message: %s", err)
-            raise HTTPBadRequest(text="Request must be a JSON-RPC message") from err
 
-        _LOGGER.debug("Received client message: %s", message)
+class ModelContextProtocolStreamableEntryView(HomeAssistantView):
+    """Model Context Protocol Streamable HTTP endpoint for a single config entry."""
 
-        # For notifications and responses only, return 202 Accepted
-        if not isinstance(message.root, JSONRPCRequest):
-            _LOGGER.debug("Notification or response received, returning 202")
-            return web.Response(status=HTTPStatus.ACCEPTED)
+    name = f"{DOMAIN}:streamable_entry"
+    url = STREAMABLE_ENTRY_API
 
-        # The MCP server runs as a background task for the duration of the
-        # request. We open a buffered stream pair to communicate with it. The
-        # request is sent to the MCP server and we wait for a single response
-        # then shut down the server.
-        server, options = await create_mcp_server(hass, self.context(request), entry)
+    async def get(self, request: web.Request, entry_id: str) -> web.StreamResponse:
+        """Handle unsupported methods."""
+        return web.Response(
+            status=HTTPStatus.METHOD_NOT_ALLOWED, text="Only POST method is supported"
+        )
 
-        async with create_streams() as streams:
-
-            async def run_server() -> None:
-                await server.run(
-                    streams.read_stream, streams.write_stream, options, stateless=True
-                )
-
-            async with asyncio.timeout(TIMEOUT), anyio.create_task_group() as tg:
-                tg.start_soon(run_server)
-
-                await streams.read_stream_writer.send(SessionMessage(message))
-                session_message = await anext(streams.write_stream_reader)
-                tg.cancel_scope.cancel()
-
-            _LOGGER.debug("Sending response: %s", session_message)
-            return web.json_response(
-                data=session_message.message.model_dump(
-                    by_alias=True, exclude_none=True
-                ),
-            )
+    async def post(self, request: web.Request, entry_id: str) -> web.StreamResponse:
+        """Process JSON-RPC messages for the Model Context Protocol."""
+        hass = request.app[KEY_HASS]
+        entry = async_get_config_entry(hass, entry_id)
+        return await handle_streamable_request(request, self.context(request), entry)

@@ -45,7 +45,7 @@ rules:
     comment: Service does not a connection
   unique-config-entry:
     status: done
-    comment: Integration requires a single config entry.
+    comment: Prevents configuring multiple entries exposing the same set of APIs.
 
   # Silver
   action-exceptions:
@@ -106,7 +106,7 @@ rules:
   icon-translations:
     status: exempt
     comment: Service does not have entities
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: Service does not have anything to repair

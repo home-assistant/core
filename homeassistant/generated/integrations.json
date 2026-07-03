@@ -4099,8 +4099,7 @@
       "name": "Model Context Protocol Server",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "local_push",
-      "single_config_entry": true
+      "iot_class": "local_push"
     },
     "mealie": {
       "name": "Mealie",
