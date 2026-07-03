@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import cast
+from typing import cast, override
 
 from whois import Domain
 
@@ -198,6 +198,7 @@ class WhoisSensorEntity(CoordinatorEntity[WhoisCoordinator], SensorEntity):
         self._domain = domain
 
     @property
+    @override
     def native_value(self) -> datetime | int | str | None:
         """Return the state of the sensor."""
         if self.coordinator.data is None:
@@ -205,6 +206,7 @@ class WhoisSensorEntity(CoordinatorEntity[WhoisCoordinator], SensorEntity):
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, int | float | None] | None:
         """Return the state attributes of the monitored installation."""
 

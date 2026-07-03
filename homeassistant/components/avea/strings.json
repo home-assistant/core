@@ -22,6 +22,11 @@
       }
     }
   },
+  "exceptions": {
+    "device_not_found": {
+      "message": "Could not find Avea device with address {address}: {reason}"
+    }
+  },
   "issues": {
     "deprecated_yaml": {
       "description": "[%key:component::homeassistant::issues::deprecated_yaml::description%]",

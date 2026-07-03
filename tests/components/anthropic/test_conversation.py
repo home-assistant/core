@@ -216,6 +216,7 @@ async def test_template_variables(
             ),
         },
     )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         create_content_block(0, ["Okay, let", " me take care of that for you", "."])
@@ -297,6 +298,7 @@ async def test_prompt_caching_automatic(
             CONF_PROMPT_CACHING: "automatic",
         },
     )
+    await hass.async_block_till_done()
 
     context = Context()
 
@@ -498,7 +500,7 @@ async def test_assist_api_tools_conversion(
     mock_create_stream: AsyncMock,
 ) -> None:
     """Test that we are able to convert actual tools from Assist API."""
-    for component in (
+    for domain in (
         "calendar",
         "climate",
         "cover",
@@ -513,9 +515,9 @@ async def test_assist_api_tools_conversion(
         "vacuum",
         "weather",
     ):
-        assert await async_setup_component(hass, component, {})
-        hass.states.async_set(f"{component}.test", "on")
-        async_expose_entity(hass, "conversation", f"{component}.test", True)
+        assert await async_setup_component(hass, domain, {})
+        hass.states.async_set(f"{domain}.test", "on")
+        async_expose_entity(hass, "conversation", f"{domain}.test", True)
 
     async_register_timer_handler(hass, "test_device", lambda *args: None)
 
@@ -656,7 +658,7 @@ async def test_stream_wrong_type(
     mock_create_stream.return_value = Message(
         type="message",
         id="message_id",
-        model="claude-opus-4-6",
+        model="claude-fable-5",
         role="assistant",
         content=[TextBlock(type="text", text="This is not a stream")],
         usage=Usage(input_tokens=42, output_tokens=42),
@@ -726,6 +728,7 @@ async def test_extended_thinking(
             CONF_THINKING_EFFORT: "medium",
         },
     )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         (
@@ -790,6 +793,7 @@ async def test_disabled_thinking(
         next(iter(mock_config_entry.subentries.values())),
         data=subentry_data,
     )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         create_content_block(1, ["Hello, how can I help you today?"])
@@ -862,6 +866,7 @@ async def test_extended_thinking_tool_call(
             CONF_THINKING_EFFORT: "medium",
         },
     )
+    await hass.async_block_till_done()
 
     agent_id = "conversation.claude_conversation"
     context = Context()
@@ -946,6 +951,7 @@ async def test_web_search(
             CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
         },
     )
+    await hass.async_block_till_done()
 
     web_search_results = [
         WebSearchResultBlock(
@@ -1091,6 +1097,7 @@ async def test_web_search_error(
             CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
         },
     )
+    await hass.async_block_till_done()
 
     web_search_results = WebSearchToolResultError(
         type="web_search_tool_result_error",
@@ -1169,6 +1176,7 @@ async def test_web_search_dynamic_filtering(
             CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
         },
     )
+    await hass.async_block_till_done()
 
     web_search_results = [
         WebSearchResultBlock(
@@ -1305,6 +1313,7 @@ async def test_bash_code_execution(
             CONF_CODE_EXECUTION: True,
         },
     )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         (
@@ -1385,6 +1394,7 @@ async def test_bash_code_execution_error(
             CONF_CODE_EXECUTION: True,
         },
     )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         (
@@ -1558,6 +1568,7 @@ async def test_text_editor_code_execution(
             CONF_CODE_EXECUTION: True,
         },
     )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         (
@@ -1608,6 +1619,7 @@ async def test_tool_search(
             CONF_TOOL_SEARCH: True,
         },
     )
+    await hass.async_block_till_done()
 
     tool_search_result = ToolSearchToolSearchResultBlock(
         type="tool_search_tool_search_result",
@@ -1722,6 +1734,7 @@ async def test_tool_search_error(
             CONF_TOOL_SEARCH: True,
         },
     )
+    await hass.async_block_till_done()
 
     tool_search_result = ToolSearchToolResultError(
         type="tool_search_tool_result_error",
@@ -1795,6 +1808,7 @@ async def test_web_fetch(
             CONF_WEB_FETCH_MAX_USES: 5,
         },
     )
+    await hass.async_block_till_done()
 
     web_fetch_result = WebFetchBlock(
         type="web_fetch_result",
@@ -1897,11 +1911,12 @@ async def test_web_fetch_error(
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
             CONF_CODE_EXECUTION: True,
-            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CHAT_MODEL: "claude-fable-5",
             CONF_WEB_FETCH: True,
             CONF_WEB_FETCH_MAX_USES: 5,
         },
     )
+    await hass.async_block_till_done()
 
     web_fetch_result = WebFetchToolResultErrorBlock(
         type="web_fetch_tool_result_error",

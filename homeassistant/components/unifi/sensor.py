@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from functools import partial
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, override
 
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.clients import Clients
@@ -719,6 +719,7 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             self.async_write_ha_state()
 
     @callback
+    @override
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
         """Update entity state.
 
@@ -741,6 +742,7 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
                     dt_util.utcnow() + self.hub.config.option_detection_time,
                 )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
@@ -755,6 +757,7 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
                 )
             )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
         await super().async_will_remove_from_hass()

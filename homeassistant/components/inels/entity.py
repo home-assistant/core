@@ -1,5 +1,7 @@
 """Base class for iNELS components."""
 
+from typing import override
+
 from inelsmqtt.devices import Device
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -39,6 +41,7 @@ class InelsBaseEntity(Entity):
             sw_version=info.sw_version,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add subscription of the data listener."""
         # Register the HA callback
@@ -54,6 +57,7 @@ class InelsBaseEntity(Entity):
             self.schedule_update_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self._device.is_available

@@ -1,5 +1,7 @@
 """Comet Blue sensor integration."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -46,6 +48,7 @@ class CometBlueBatterySensorEntity(CometBlueBluetoothEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.address}-{self.entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         return self.coordinator.data.battery

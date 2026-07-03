@@ -1,6 +1,6 @@
 """Config flow for the LG TV RS-232 integration."""
 
-from typing import Any
+from typing import Any, override
 
 from lg_rs232_tv import DEFAULT_SET_ID, LGTV, TVNotRespondingError
 import voluptuous as vol
@@ -62,6 +62,7 @@ class LGTVRS232ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _user_input: dict[str, Any] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -70,7 +71,7 @@ class LGTVRS232ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             port = user_input[CONF_DEVICE]
-            set_id = user_input[CONF_SET_ID]
+            set_id = int(user_input[CONF_SET_ID])
 
             self._async_abort_entries_match({CONF_DEVICE: port, CONF_SET_ID: set_id})
             error = await _async_attempt_connect(port, set_id)

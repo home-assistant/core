@@ -14,6 +14,7 @@ from homeassistant.components.evohome.const import (
     ATTR_PERIOD,
     ATTR_SETPOINT,
     DOMAIN,
+    REFRESH_BREAKS_IN_HA_VERSION,
     RESET_BREAKS_IN_HA_VERSION,
     SERVICE_BREAKS_IN_HA_VERSION,
     EvoService,
@@ -25,14 +26,22 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import DATA_DOMAIN_PLATFORM_ENTITIES
+from homeassistant.setup import async_setup_component
 
 from .const import TEST_INSTALLS
 
 
 @pytest.mark.parametrize("install", ["default"])
 @pytest.mark.usefixtures("evohome")
-async def test_refresh_system(hass: HomeAssistant) -> None:
-    """Test Evohome's refresh_system service (for all temperature control systems)."""
+async def test_refresh_system_deprecated(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test Evohome's refresh_system service.
+
+    This service call remains supported during the deprecation window but should cause
+    a Repair issue.
+    """
 
     # EvoService.REFRESH_SYSTEM
     with patch("evohomeasync2.location.Location.update") as mock_fcn:
@@ -40,6 +49,38 @@ async def test_refresh_system(hass: HomeAssistant) -> None:
             DOMAIN,
             EvoService.REFRESH_SYSTEM,
             {},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_refresh_system_service")
+    assert issue is not None
+    assert issue.translation_key == "deprecated_refresh_system_service"
+    assert issue.translation_placeholders == {
+        "breaks_in_ha_version": REFRESH_BREAKS_IN_HA_VERSION,
+    }
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_update_entity(
+    hass: HomeAssistant,
+    ctl_id: str,
+) -> None:
+    """Test that homeassistant.update_entity triggers an appropriate refresh.
+
+    Any evohome entity can be targeted; the API invoked by the shared coordinator
+    refreshes the whole location.
+    """
+
+    await async_setup_component(hass, "homeassistant", {})
+
+    with patch("evohomeasync2.location.Location.update") as mock_fcn:
+        await hass.services.async_call(
+            "homeassistant",
+            "update_entity",
+            {},
+            target={ATTR_ENTITY_ID: ctl_id},
             blocking=True,
         )
 
@@ -97,7 +138,7 @@ async def test_set_system_mode_deprecated(
             blocking=True,
         )
 
-        mock_fcn.assert_awaited_once_with("Auto", until=None)
+        mock_fcn.assert_awaited_once_with("auto", until=None)
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_set_system_mode_service")
     assert issue
@@ -122,7 +163,7 @@ async def test_set_system_mode_deprecated(
         )
 
         mock_fcn.assert_awaited_once_with(
-            "AutoWithEco", until=datetime(2024, 7, 11, 0, 0, tzinfo=UTC)
+            "auto_with_eco", until=datetime(2024, 7, 11, 0, 0, tzinfo=UTC)
         )
 
     # EvoService.SET_SYSTEM_MODE: Away, days=7
@@ -138,7 +179,7 @@ async def test_set_system_mode_deprecated(
         )
 
         mock_fcn.assert_awaited_once_with(
-            "Away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
+            "away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
         )
 
 
@@ -166,7 +207,7 @@ async def test_set_system_mode(
         )
 
         mock_fcn.assert_awaited_once_with(
-            "Away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
+            "away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
         )
 
     # can remove, once the domain-level service is removed
@@ -183,7 +224,7 @@ async def test_set_system_mode(
         )
 
         mock_fcn.assert_awaited_once_with(
-            "Away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
+            "away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
         )
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_set_system_mode_service")

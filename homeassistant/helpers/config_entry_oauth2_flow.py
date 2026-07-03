@@ -17,7 +17,7 @@ import json
 import logging
 import secrets
 import time
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohttp import ClientError, ClientResponseError, client, web
 from habluetooth import BluetoothServiceInfoBleak
@@ -165,11 +165,13 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         self.token_url = token_url
 
     @property
+    @override
     def name(self) -> str:
         """Name of the implementation."""
         return "Local application credentials"
 
     @property
+    @override
     def domain(self) -> str:
         """Domain providing the implementation."""
         return self._domain
@@ -189,6 +191,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         """Extra data for the token resolve request."""
         return {}
 
+    @override
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
         redirect_uri = self.redirect_uri
@@ -207,6 +210,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             .update_query(self.extra_authorize_data)
         )
 
+    @override
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
         request_data: dict = {
@@ -217,6 +221,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         request_data.update(self.extra_token_resolve_data)
         return await self._token_request(request_data)
 
+    @override
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh a token."""
 
@@ -329,6 +334,7 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
         )
 
     @property
+    @override
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url.
 
@@ -351,6 +357,7 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
         }
 
     @property
+    @override
     def extra_token_resolve_data(self) -> dict:
         """Extra data that needs to be included in the token resolve request.
 
@@ -554,36 +561,42 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         """
         return self.async_create_entry(title=self.flow_impl.name, data=data)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow start."""
         return await self.async_step_pick_implementation(user_input)
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by Bluetooth discovery."""
         return await self.async_step_oauth_discovery()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by DHCP discovery."""
         return await self.async_step_oauth_discovery()
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by Homekit discovery."""
         return await self.async_step_oauth_discovery()
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by SSDP discovery."""
         return await self.async_step_oauth_discovery()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> config_entries.ConfigFlowResult:
