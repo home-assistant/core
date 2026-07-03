@@ -2,9 +2,12 @@
 
 import logging
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.helpers import service
 
 from .const import DOMAIN, SERVICE_REQUEST_SYNC
+from .http import GoogleConfig
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,11 +27,10 @@ def async_register_services(hass: HomeAssistant) -> None:
             )
             return
 
-        if not (entries := hass.config_entries.async_loaded_entries(DOMAIN)):
-            _LOGGER.warning("No Google Assistant config entry loaded for request_sync")
-            return
-
-        await entries[0].runtime_data.async_sync_entities(agent_user_id)
+        entry: ConfigEntry[GoogleConfig] = service.async_get_config_entry(
+            hass, DOMAIN, None
+        )
+        await entry.runtime_data.async_sync_entities(agent_user_id)
 
     hass.services.async_register(
         DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler
