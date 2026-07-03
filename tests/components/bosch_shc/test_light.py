@@ -24,12 +24,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.fixture
-def platforms() -> list[Platform]:
-    """Load only the light platform."""
-    return [Platform.LIGHT]
-
-
 def _make_onoff_device(serial: str, device_id: str) -> MagicMock:
     """Build an autospecced micromodule light-attached switch device."""
     device = create_autospec(SHCLightSwitch, instance=True)
