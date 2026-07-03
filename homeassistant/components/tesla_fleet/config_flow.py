@@ -339,31 +339,4 @@ class OAuth2FlowHandler(
         """Classify a Tesla registration failure into a translatable error key."""
         if isinstance(err, PreconditionFailed):
             return "origin_mismatch"
-
-        error_text = " ".join(
-            str(part).lower()
-            for part in (
-                getattr(err, "message", ""),
-                getattr(err, "data", ""),
-                err,
-            )
-            if part
-        )
-
-        if "origin" in error_text:
-            return "origin_mismatch"
-
-        if any(
-            marker in error_text
-            for marker in (
-                "public key",
-                "public_key",
-                "private key",
-                "private_key",
-                "prime256v1",
-                "secp256r1",
-            )
-        ):
-            return "reset_private_key"
-
         return "registration_failed"
