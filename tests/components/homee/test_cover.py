@@ -82,10 +82,7 @@ async def test_open_close_stop_cover(
 
     calls = mock_homee.set_value.call_args_list
     for index, call in enumerate(calls):
-        # Check positional arguments match expected values
         assert call[0] == (mock_homee.nodes[0].id, 1, index)
-        # Verify the third argument (enum value) is an IntEnum
-        # and that it formats to a numeric string when used in an f-string
         enum_value = call[0][2]
         assert f"{enum_value}" == str(index)
 
