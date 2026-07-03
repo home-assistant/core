@@ -1,7 +1,6 @@
 """Support for Ecobee Thermostats."""
 
 import collections
-import contextlib
 from typing import Any, override
 
 import voluptuous as vol
@@ -259,12 +258,6 @@ class Thermostat(ClimateEntity):
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         if self.hvac_mode != HVACMode.OFF:
             self._last_active_hvac_mode = self.hvac_mode
-
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Remove thermostat from service targets."""
-        with contextlib.suppress(ValueError):
-            _async_get_thermostats(self.hass).remove(self)
 
     @property
     @override
