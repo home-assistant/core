@@ -90,7 +90,7 @@ WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the OctoPrint component."""
+    """Set up the integration."""
     async_setup_services(hass)
     return True
 
