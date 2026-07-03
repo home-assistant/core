@@ -71,11 +71,20 @@
     }
   },
   "exceptions": {
+    "credentials_rejected": {
+      "message": "ecobee rejected the stored credentials"
+    },
+    "failed_to_refresh_tokens": {
+      "message": "Failed to refresh ecobee tokens"
+    },
     "invalid_preset": {
       "message": "Invalid climate program, available options are: {options}"
     },
     "invalid_sensor": {
       "message": "Invalid sensor for thermostat, available options are: {options}"
+    },
+    "mfa_reauthentication_needed": {
+      "message": "ecobee account requires MFA; reauthentication needed"
     },
     "sensor_lookup_failed": {
       "message": "There was an error getting the sensor IDs from sensor names. Try reloading the ecobee integration."
