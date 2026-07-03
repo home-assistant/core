@@ -14,13 +14,17 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import async_mock_service
 
+ENTITY_ID = "calendar.test_calendar"
+
 
 @pytest.fixture(autouse=True)
 async def setup_integrations(hass: HomeAssistant) -> None:
-    """Set up the integrations for the calendar LLM tools platform."""
+    """Set up the integrations and expose a calendar."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "calendar", {})
     assert await async_setup_component(hass, "llm", {})
+    hass.states.async_set(ENTITY_ID, "on", {"friendly_name": "Mock Calendar Name"})
+    async_expose_entity(hass, "conversation", ENTITY_ID, True)
     await hass.async_block_till_done()
 
 
@@ -37,17 +41,13 @@ def _llm_context() -> llm.LLMContext:
 
 async def test_get_tools_no_exposed_calendar(hass: HomeAssistant) -> None:
     """Test no calendar tool is offered when no calendar is exposed."""
+    async_expose_entity(hass, "conversation", ENTITY_ID, False)
     result = await llm_component.async_get_tools(hass, _llm_context())
     assert [tool.name for tool in result.tools] == []
 
 
 async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     """Test the calendar get events tool is exposed and works via the platform."""
-    hass.states.async_set(
-        "calendar.test_calendar", "on", {"friendly_name": "Mock Calendar Name"}
-    )
-    async_expose_entity(hass, "conversation", "calendar.test_calendar", True)
-
     llm_context = _llm_context()
     result = await llm_component.async_get_tools(hass, llm_context)
     tool = next(
@@ -61,7 +61,7 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
         service=calendar.SERVICE_GET_EVENTS,
         schema=calendar.SERVICE_GET_EVENTS_SCHEMA,
         response={
-            "calendar.test_calendar": {
+            ENTITY_ID: {
                 "events": [
                     {
                         "start": "2025-09-17",
@@ -94,7 +94,7 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     assert call.domain == calendar.DOMAIN
     assert call.service == calendar.SERVICE_GET_EVENTS
     assert call.data == {
-        "entity_id": ["calendar.test_calendar"],
+        "entity_id": [ENTITY_ID],
         "start_date_time": now,
         "end_date_time": dt_util.start_of_local_day() + timedelta(days=1),
     }
