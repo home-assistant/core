@@ -1,10 +1,22 @@
 """Tests for the climate LLM tools platform."""
 
+import pytest
+
 from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
+
+
+@pytest.fixture(autouse=True)
+async def setup_integrations(hass: HomeAssistant) -> None:
+    """Set up the integrations for the climate LLM tools platform."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, "climate", {})
+    assert await async_setup_component(hass, "llm", {})
+    await hass.async_block_till_done()
 
 
 def _llm_context() -> llm.LLMContext:
@@ -26,12 +38,6 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
 
 async def test_climate_intent_tool_requires_exposed_entity(hass: HomeAssistant) -> None:
     """Test the intent tools are only exposed when a climate entity is exposed."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "intent", {})
-    assert await async_setup_component(hass, "climate", {})
-    assert await async_setup_component(hass, "llm", {})
-    await hass.async_block_till_done()
-
     assert "HassClimateSetTemperature" not in await _tool_names(hass)
 
     hass.states.async_set("climate.test", "on", {"friendly_name": "Test climate"})
