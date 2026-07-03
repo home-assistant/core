@@ -214,6 +214,4 @@ def async_setup_services(hass: HomeAssistant) -> None:
             SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA,
         ),
     ):
-        if hass.services.has_service(DOMAIN, service):
-            continue
         async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
