@@ -65,7 +65,7 @@ def _calculate_disk_usage(data: dict[str, Any]) -> float | None:
 
 def _calculate_uptime(data: dict[str, Any]) -> datetime | None:
     """Calculate uptime."""
-    # es. 1d3h39m30s
+    # e.g. 1d3h39m30s
     uptime_string = data["uptime"]
 
     total = 0

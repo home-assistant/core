@@ -41,6 +41,8 @@
       "memory-usage": {
         "name": "Memory usage"
       }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "Error connecting: {error}"
