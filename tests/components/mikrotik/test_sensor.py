@@ -61,7 +61,7 @@ async def test_sensor_wrong_data(hass: HomeAssistant) -> None:
     assert (state := hass.states.get("sensor.mikrotik_disk_usage"))
     assert state.state == STATE_UNKNOWN
 
-    assert (state := hass.states.get("sensor.mikrotik_cpu_load")) is None
+    assert (state := hass.states.get("sensor.mikrotik_uptime")) is None
 
 
 @pytest.mark.parametrize(
