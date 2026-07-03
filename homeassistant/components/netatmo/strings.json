@@ -165,8 +165,8 @@
   },
   "issues": {
     "deprecated_webhook_service": {
-      "description": "The {service} action is deprecated and will be removed in a future release. Netatmo manages the webhook automatically, so calling this action is no longer needed. Please remove it from your automations and scripts.",
-      "title": "The {service} action is deprecated"
+      "description": "The `register_webhook` and `unregister_webhook` actions are deprecated and will be removed in a future release. Netatmo manages the webhook automatically, so these actions are no longer needed. Please remove them from your automations and scripts.",
+      "title": "Netatmo webhook actions are deprecated"
     }
   },
   "options": {

@@ -1,7 +1,5 @@
 """Services for the Netatmo integration."""
 
-import logging
-
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
@@ -11,12 +9,8 @@ from .const import DOMAIN
 from .data_handler import NetatmoConfigEntry
 from .webhook import async_register_webhook, async_unregister_webhook
 
-_LOGGER = logging.getLogger(__name__)
-
 SERVICE_REGISTER_WEBHOOK = "register_webhook"
 SERVICE_UNREGISTER_WEBHOOK = "unregister_webhook"
-
-WEBHOOK_SERVICES_DEPRECATION_VERSION = "2027.2.0"
 
 
 def _get_loaded_entry(hass: HomeAssistant) -> NetatmoConfigEntry:
@@ -34,22 +28,14 @@ def _get_loaded_entry(hass: HomeAssistant) -> NetatmoConfigEntry:
 
 def _deprecate(hass: HomeAssistant, service: str) -> None:
     """Warn and raise a repair issue for the deprecated webhook actions."""
-    _LOGGER.warning(
-        "The %s.%s action is deprecated and will be removed in %s; the webhook "
-        "is managed automatically",
-        DOMAIN,
-        service,
-        WEBHOOK_SERVICES_DEPRECATION_VERSION,
-    )
     ir.async_create_issue(
         hass,
         DOMAIN,
         f"deprecated_service_{service}",
-        breaks_in_ha_version=WEBHOOK_SERVICES_DEPRECATION_VERSION,
+        breaks_in_ha_version="2027.2.0",
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="deprecated_webhook_service",
-        translation_placeholders={"service": f"{DOMAIN}.{service}"},
     )
 
 
