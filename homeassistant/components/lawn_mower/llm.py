@@ -11,7 +11,10 @@ from homeassistant.helpers.llm import IntentTool, LLMContext, Tool
 from .const import DOMAIN
 
 # Intents owned by this integration that are exposed as LLM tools.
-LLM_INTENTS = ("HassLawnMowerDock", "HassLawnMowerStartMowing",)
+LLM_INTENTS = (
+    "HassLawnMowerDock",
+    "HassLawnMowerStartMowing",
+)
 
 
 @callback
