@@ -15,22 +15,22 @@ from .timers import async_device_supports_timers
 
 # Generic intents exposed as LLM tools regardless of a timer-capable device.
 LLM_INTENTS = (
-    "HassTurnOn",
-    "HassTurnOff",
-    "HassCancelAllTimers",
-    "HassSetPosition",
-    "HassStopMoving",
+    intent.INTENT_TURN_ON,
+    intent.INTENT_TURN_OFF,
+    intent.INTENT_CANCEL_ALL_TIMERS,
+    intent.INTENT_SET_POSITION,
+    intent.INTENT_STOP_MOVING,
 )
 
 # Timer intents, only exposed for a device that supports timers.
 TIMER_INTENTS = (
-    "HassStartTimer",
-    "HassCancelTimer",
-    "HassIncreaseTimer",
-    "HassDecreaseTimer",
-    "HassPauseTimer",
-    "HassUnpauseTimer",
-    "HassTimerStatus",
+    intent.INTENT_START_TIMER,
+    intent.INTENT_CANCEL_TIMER,
+    intent.INTENT_INCREASE_TIMER,
+    intent.INTENT_DECREASE_TIMER,
+    intent.INTENT_PAUSE_TIMER,
+    intent.INTENT_UNPAUSE_TIMER,
+    intent.INTENT_TIMER_STATUS,
 )
 
 
