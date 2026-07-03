@@ -127,22 +127,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
 
             api = HomeAssistantMowerApi(async_get_clientsession(hass))
 
-            coordinator = MammotionMowerUpdateCoordinator(hass, entry, device, api)
+            update_coordinator = MammotionMowerUpdateCoordinator(
+                hass, entry, device, api
+            )
 
-            await coordinator.async_restore_data()
+            await update_coordinator.async_restore_data()
 
             mammotion_mowers.append(
                 MammotionMowerData(
                     name=device.device_name,
                     api=api,
-                    coordinator=coordinator,
+                    coordinator=update_coordinator,
                     device=device,
                 )
             )
 
             async def _start_coordinator(
                 _: datetime | None = None,
-                coordinator: MammotionMowerUpdateCoordinator = coordinator,
+                coordinator: MammotionMowerUpdateCoordinator = update_coordinator,
             ) -> None:
                 await coordinator.async_config_entry_first_refresh()
 
