@@ -327,6 +327,12 @@ class Searcher:
             # Add labels of this entity
             self._add(ItemType.LABEL, entity_entry.labels)
 
+        if not entry_point:
+            # If this entity also exists as a resource, we add it.
+            domain = split_entity_id(entity_id)[0]
+            if domain in self.EXIST_AS_ENTITY:
+                self._add(ItemType(domain), entity_id)
+
         # Automations referencing this entity
         self._add(
             ItemType.AUTOMATION,
