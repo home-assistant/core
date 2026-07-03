@@ -1,6 +1,7 @@
 """Test Home Assistant template helper methods."""
 
 from datetime import datetime
+from enum import Enum, IntEnum, IntFlag, StrEnum
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -883,6 +884,95 @@ async def test_parse_result(hass: HomeAssistant) -> None:
         ("set()", set()),
     ):
         assert render(hass, tpl) == result
+
+
+class _Color(StrEnum):
+    RED = "red"
+
+
+class _Level(IntEnum):
+    LOW = 1
+
+
+class _LegacyStr(str, Enum):  # noqa: UP042  # legacy str-mixin under test
+    FOO = "foo"
+
+
+class _Plain(Enum):
+    A = "aval"
+
+
+class _Flags(IntFlag):
+    X = 1
+
+
+_ENUM_VARS = {
+    "color": _Color.RED,
+    "level": _Level.LOW,
+    "legacy": _LegacyStr.FOO,
+    "plain": _Plain.A,
+    "flag": _Flags.X,
+    # Jinja has no set-literal syntax, so a set can only reach output as a var.
+    "color_set": {_Color.RED},
+    "level_set": {_Level.LOW},
+}
+
+
+@pytest.mark.parametrize(
+    ("template_string", "expected"),
+    [
+        pytest.param("{{ {'k': color} }}", {"k": "red"}, id="strenum-dict-value"),
+        pytest.param("{{ {color: 1} }}", {"red": 1}, id="strenum-dict-key"),
+        pytest.param("{{ [color] }}", ["red"], id="strenum-list"),
+        pytest.param("{{ (color,) }}", ("red",), id="strenum-tuple"),
+        pytest.param("{{ color_set }}", {"red"}, id="strenum-set"),
+        pytest.param("{{ {'k': level} }}", {"k": 1}, id="intenum-dict-value"),
+        pytest.param("{{ {level: 'x'} }}", {1: "x"}, id="intenum-dict-key"),
+        pytest.param("{{ [level] }}", [1], id="intenum-list"),
+        pytest.param("{{ level_set }}", {1}, id="intenum-set"),
+        pytest.param(
+            "{{ {color: {level: [color, level]}} }}",
+            {"red": {1: ["red", 1]}},
+            id="deeply-nested-mixed-keys-and-values",
+        ),
+        pytest.param(
+            "{{ [{'a': (color, [level])}] }}",
+            [{"a": ("red", [1])}],
+            id="nested-mixed-containers",
+        ),
+    ],
+)
+async def test_parse_result_resolves_enums_in_containers(
+    hass: HomeAssistant, template_string: str, expected: object
+) -> None:
+    """StrEnum/IntEnum members in containers resolve to their value and round-trip."""
+    assert render(hass, template_string, _ENUM_VARS) == expected
+
+
+@pytest.mark.parametrize(
+    "variable",
+    ["legacy", "plain", "flag"],
+)
+async def test_parse_result_unsupported_enums_fall_back_to_string(
+    hass: HomeAssistant, variable: str
+) -> None:
+    """Enums other than StrEnum/IntEnum are not resolved, so the container is a str."""
+    result = render(hass, "{{ {'k': " + variable + "} }}", _ENUM_VARS)
+    assert isinstance(result, str)
+
+
+@pytest.mark.parametrize(
+    ("template_string", "expected"),
+    [
+        pytest.param("{{ color }}", "red", id="bare-strenum"),
+        pytest.param("{{ level }}", 1, id="bare-intenum"),
+    ],
+)
+async def test_parse_result_bare_enum_unchanged(
+    hass: HomeAssistant, template_string: str, expected: object
+) -> None:
+    """A bare Enum member renders via its default str() and is not coerced."""
+    assert render(hass, template_string, _ENUM_VARS) == expected
 
 
 @pytest.mark.parametrize(

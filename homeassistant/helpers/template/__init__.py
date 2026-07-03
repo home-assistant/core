@@ -6,6 +6,7 @@ import collections.abc
 from collections.abc import Callable
 import contextlib
 from datetime import timedelta
+from enum import IntEnum, StrEnum
 from functools import lru_cache, partial
 import logging
 import pathlib
@@ -266,6 +267,33 @@ def _parse_result(render_result: str) -> Any:
         return result
 
     return render_result
+
+
+_FINALIZE_CONTAINER_TYPES = (list, set, tuple)
+
+
+def _finalize_output(value: Any, _nested: bool = False) -> Any:
+    """Resolve StrEnum/IntEnum members nested in containers so output round-trips.
+
+    Jinja stringifies containers via repr() of their items, and StrEnum/IntEnum
+    members repr as e.g. <MyEnum.FOO: 'foo'>, which literal_eval cannot parse
+    back into a dict/list. Replace such members inside containers with their
+    underlying value before the container is stringified. Only StrEnum/IntEnum
+    are handled: their value is a literal-safe scalar that already matches their
+    bare str() output, so nested and top-level rendering stay consistent. A bare
+    member is left untouched. Only exact built-in container types are rebuilt so
+    namedtuples, result wrappers, and other subclasses are untouched.
+    """
+    if _nested and isinstance(value, (StrEnum, IntEnum)):
+        return value.value
+    if type(value) is dict:
+        return {
+            _finalize_output(key, True): _finalize_output(item, True)
+            for key, item in value.items()
+        }
+    if type(value) in _FINALIZE_CONTAINER_TYPES:
+        return type(value)(_finalize_output(item, True) for item in value)
+    return value
 
 
 class Template:
@@ -757,7 +785,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         log_fn: Callable[[int, str], None] | None = None,
     ) -> None:
         """Initialise template environment."""
-        super().__init__(undefined=make_logging_undefined(strict, log_fn))
+        super().__init__(
+            undefined=make_logging_undefined(strict, log_fn),
+            finalize=_finalize_output,
+        )
         self.hass = hass
         self.limited = limited
         self.template_cache: weakref.WeakValueDictionary[
