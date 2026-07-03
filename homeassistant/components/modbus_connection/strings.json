@@ -31,7 +31,7 @@
           "baudrate": "The serial baud rate the device communicates at.",
           "bytesize": "The number of data bits.",
           "device": "The serial port the Modbus device is connected to, e.g. /dev/ttyUSB0.",
-          "parity": "The serial parity (None, Even or Odd).",
+          "parity": "The serial parity.",
           "stopbits": "The number of stop bits."
         },
         "title": "Serial connection"
@@ -48,6 +48,15 @@
   "exceptions": {
     "connection_not_ready": {
       "message": "Modbus connection not ready"
+    }
+  },
+  "selector": {
+    "parity": {
+      "options": {
+        "N": "None",
+        "E": "Even",
+        "O": "Odd"
+      }
     }
   }
 }

@@ -8,7 +8,12 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.helpers.selector import SerialPortSelector
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    SerialPortSelector,
+)
 
 from . import _async_open
 from .const import (
@@ -42,7 +47,13 @@ STEP_SERIAL = vol.Schema(
         vol.Required(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): vol.All(
             vol.Coerce(int), vol.Range(min=1)
         ),
-        vol.Required(CONF_PARITY, default=DEFAULT_PARITY): vol.In(["N", "E", "O"]),
+        vol.Required(CONF_PARITY, default=DEFAULT_PARITY): SelectSelector(
+            SelectSelectorConfig(
+                options=["N", "E", "O"],
+                translation_key="parity",
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
         vol.Required(CONF_STOPBITS, default=DEFAULT_STOPBITS): vol.In([1, 2]),
         vol.Required(CONF_BYTESIZE, default=DEFAULT_BYTESIZE): vol.In([7, 8]),
     }
