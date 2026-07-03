@@ -22,12 +22,15 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from .const import _LOGGER, CONF_REFRESH_TOKEN, DOMAIN, PLATFORMS
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type EcobeeConfigEntry = ConfigEntry[EcobeeData]
 
