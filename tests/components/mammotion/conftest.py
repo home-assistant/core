@@ -16,7 +16,7 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 
 
 @pytest.fixture
-def mock_setup_entry():
+def mock_setup_entry() -> Generator[MagicMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.mammotion.async_setup_entry", return_value=True
@@ -35,7 +35,7 @@ def mock_async_discovered_service_info() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_cloud_gateway():
+def mock_cloud_gateway() -> Mock:
     """Mock a CloudIOTGateway."""
     mock_cloud = Mock()
     mock_cloud.mammotion_http = Mock()
@@ -46,7 +46,7 @@ def mock_cloud_gateway():
 
 
 @pytest.fixture
-def mock_http_response():
+def mock_http_response() -> Mock:
     """Mock a successful HTTP login response."""
     mock_response = Mock()
     mock_response.login_info = Mock()
@@ -56,7 +56,7 @@ def mock_http_response():
 
 
 @pytest.fixture
-def mock_mammotion():
+def mock_mammotion() -> AsyncMock:
     """Mock Mammotion class."""
     mock = AsyncMock()
     mock.mqtt_list = {}
@@ -65,7 +65,7 @@ def mock_mammotion():
 
 
 @pytest.fixture
-def mock_mower_coordinator():
+def mock_mower_coordinator() -> AsyncMock:
     """Return a mocked mower coordinator."""
     coordinator = AsyncMock()
     coordinator.data = Mock()

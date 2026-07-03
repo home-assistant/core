@@ -1,35 +1,20 @@
 """Provides the mammotion DataUpdateCoordinator."""
 
-from __future__ import annotations
-
-from abc import abstractmethod
 from collections.abc import Mapping
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from mashumaro.exceptions import InvalidFieldValue
 from pymammotion.aliyun.model.dev_by_account_response import Device
 from pymammotion.data.model.device import MowingDevice
 from pymammotion.homeassistant import HomeAssistantMowerApi
-from pymammotion.mammotion.devices.mammotion import MammotionMowerDeviceManager
 
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .config import MammotionConfigStore
-from .const import (
-    CONF_ACCOUNTNAME,
-    CONF_AEP_DATA,
-    CONF_AUTH_DATA,
-    CONF_CONNECT_DATA,
-    CONF_DEVICE_DATA,
-    CONF_MAMMOTION_DATA,
-    CONF_REGION_DATA,
-    CONF_SESSION_DATA,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_ACCOUNTNAME, DOMAIN, LOGGER
 
 if TYPE_CHECKING:
     from . import MammotionConfigEntry
@@ -64,14 +49,6 @@ class MammotionBaseUpdateCoordinator(DataUpdateCoordinator[MowingDevice]):
         self.password = config_entry.data[CONF_PASSWORD]
         self.update_failures = 0
 
-    def __del__(self) -> None:
-        """Cleanup and store credentials."""
-        self.store_cloud_credentials()
-
-    @abstractmethod
-    def get_coordinator_data(self, device: MammotionMowerDeviceManager) -> MowingDevice:
-        """Get coordinator data."""
-
     async def async_refresh_login(self) -> None:
         """Refresh login credentials asynchronously."""
         await self.api.mammotion.refresh_login(self.account)
@@ -79,35 +56,17 @@ class MammotionBaseUpdateCoordinator(DataUpdateCoordinator[MowingDevice]):
 
     def store_cloud_credentials(self) -> None:
         """Store cloud credentials in config entry."""
-        # config_updates = {}
         if config_entry := self.config_entry:
-            mammotion_cloud = self.api.mammotion.mqtt_list.get(
-                config_entry.data.get(CONF_ACCOUNTNAME, "")
+            cache = self.api.mammotion.to_cache()
+            if not cache:
+                return
+            self.hass.config_entries.async_update_entry(
+                config_entry, data={**config_entry.data, **cache}
             )
-            cloud_client = mammotion_cloud.cloud_client if mammotion_cloud else None
-
-            if cloud_client is not None:
-                config_updates = {
-                    **config_entry.data,
-                    CONF_CONNECT_DATA: cloud_client.connect_response,
-                    CONF_AUTH_DATA: cloud_client.login_by_oauth_response,
-                    CONF_REGION_DATA: cloud_client.region_response,
-                    CONF_AEP_DATA: cloud_client.aep_response,
-                    CONF_SESSION_DATA: cloud_client.session_by_authcode_response,
-                    CONF_DEVICE_DATA: cloud_client.devices_by_account_response,
-                    CONF_MAMMOTION_DATA: cloud_client.mammotion_http.response,
-                }
-                self.hass.config_entries.async_update_entry(
-                    config_entry, data=config_updates
-                )
 
     def is_online(self) -> bool:
         """Check if device is online."""
-        if device := self.api.mammotion.get_device_by_name(self.device_name):
-            return device.state.online or bool(
-                device.ble and device.ble.client and device.ble.client.is_connected
-            )
-        return False
+        return self.api.is_online(self.device_name)
 
     async def async_send_command(self, command: str, **kwargs: Any) -> bool | None:
         """Send command via api."""
@@ -133,10 +92,6 @@ class MammotionMowerUpdateCoordinator(MammotionBaseUpdateCoordinator):
             update_interval=DEFAULT_INTERVAL,
         )
 
-    def get_coordinator_data(self, device: MammotionMowerDeviceManager) -> MowingDevice:
-        """Get device state for the coordinator."""
-        return device.state
-
     async def async_restore_data(self) -> None:
         """Restore saved data."""
         store = MammotionConfigStore(self.hass)
@@ -144,17 +99,19 @@ class MammotionMowerUpdateCoordinator(MammotionBaseUpdateCoordinator):
 
         if restored_data is None:
             self.data = MowingDevice()
-            self.api.mammotion.get_device_by_name(self.device_name).state = self.data
+            if handle := self.api.mammotion.mower(self.device_name):
+                handle.restore_device(self.data)
             return
 
         try:
             if mower_data := restored_data.get(self.device_name):
                 mower_state = MowingDevice().from_dict(mower_data)
-                if device := self.api.mammotion.get_device_by_name(self.device_name):
-                    device.state = mower_state
+                if handle := self.api.mammotion.mower(self.device_name):
+                    handle.restore_device(mower_state)
         except InvalidFieldValue:
             self.data = MowingDevice()
-            self.api.mammotion.get_device_by_name(self.device_name).state = self.data
+            if handle := self.api.mammotion.mower(self.device_name):
+                handle.restore_device(self.data)
 
     async def async_save_data(self, data: MowingDevice) -> None:
         """Get map data from the device."""
@@ -163,9 +120,12 @@ class MammotionMowerUpdateCoordinator(MammotionBaseUpdateCoordinator):
         current_store[self.device_name] = data.to_dict()
         await store.async_save(current_store)
 
+    @override
     async def _async_update_data(self) -> MowingDevice:
         """Get data from the device."""
         data = await self.api.update(self.device_name)
+        if data is None:
+            raise UpdateFailed(f"No data returned for {self.device_name}")
         await self.async_save_data(data)
 
         return data

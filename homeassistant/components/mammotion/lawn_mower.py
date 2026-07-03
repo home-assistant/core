@@ -1,6 +1,6 @@
 """Luba lawn mowers."""
 
-from __future__ import annotations
+from typing import override
 
 from pymammotion.data.model.report_info import DeviceData, ReportData
 from pymammotion.utility.constant.device_constant import WorkMode
@@ -19,21 +19,6 @@ from .const import COMMAND_EXCEPTIONS, DOMAIN, LOGGER
 from .entity import MammotionBaseEntity
 
 PARALLEL_UPDATES = 0
-
-
-def get_entity_attribute(
-    hass: HomeAssistant, entity_id: str, attribute_name: str
-) -> str | None:
-    """Get an attribute from an entity."""
-    # Get the state object of the entity
-    entity = hass.states.get(entity_id)
-
-    # Check if the entity exists and has attributes
-    if entity and attribute_name in entity.attributes:
-        # Return the specific attribute
-        return entity.attributes.get(attribute_name, None)
-    # Return None if the entity or attribute does not exist
-    return None
 
 
 async def async_setup_entry(
@@ -73,6 +58,7 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
         """Return the report data."""
         return self.coordinator.data.report_data
 
+    @override
     @property
     def activity(self) -> LawnMowerActivity | None:
         """Return the state of the mower."""
@@ -95,6 +81,7 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
             return LawnMowerActivity.DOCKED
         return None
 
+    @override
     async def async_start_mowing(self) -> None:
         """Start mowing."""
         trans_key = "start_failed"
@@ -130,6 +117,7 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
                     self.coordinator.device_name
                 )
 
+    @override
     async def async_dock(self) -> None:
         """Start docking."""
         trans_key = "pause_failed"
@@ -167,6 +155,7 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
                     self.coordinator.device_name
                 )
 
+    @override
     async def async_pause(self) -> None:
         """Pause mower."""
         trans_key = "pause_failed"

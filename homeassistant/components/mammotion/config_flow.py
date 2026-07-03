@@ -1,6 +1,6 @@
 """Config flow for Mammotion."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp.web_exceptions import HTTPException
 from bleak.backends.device import BLEDevice
@@ -68,7 +68,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
                             device_entry.id,
                             merge_connections={(CONNECTION_BLUETOOTH, formatted_ble)},
                         )
-                        if entry.state == config_entries.ConfigEntryState.LOADED:
+                        if entry.state is config_entries.ConfigEntryState.LOADED:
                             # reload the entry now we have a ble address
                             self.hass.config_entries.async_schedule_reload(
                                 entry.entry_id
@@ -76,13 +76,12 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
                     return entry
         return None
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
     ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         LOGGER.debug("Discovered bluetooth device: %s", discovery_info)
-        if discovery_info is None:
-            return self.async_abort(reason="no_devices_found")
 
         await self.async_set_unique_id(format_mac(discovery_info.address))
         self._abort_if_unique_id_configured()
@@ -124,7 +123,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         if entry := await self.check_and_update_bluetooth_device(device):
             existing_devices = {
                 name: format_mac(device.address),
-                **entry.data.get(CONF_BLE_DEVICES, None),
+                **entry.data.get(CONF_BLE_DEVICES, {}),
             }
             self._abort_if_unique_id_configured(
                 updates={CONF_BLE_DEVICES: existing_devices}
@@ -143,6 +142,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"name": name},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
