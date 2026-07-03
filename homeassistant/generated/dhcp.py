@@ -915,6 +915,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "204EF6*",
     },
     {
+        "domain": "roomba",
+        "registered_devices": True,
+    },
+    {
         "domain": "ruuvi_gateway",
         "hostname": "ruuvigateway*",
     },

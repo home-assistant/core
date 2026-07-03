@@ -19,6 +19,7 @@ import jinja2
 from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
+from lru import LRU
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
@@ -98,6 +99,12 @@ _HASS_LOADER = "template.hass_loader"
 _IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
 
 EVAL_CACHE_SIZE = 512
+
+# Number of recently compiled template code objects to keep alive per
+# environment, so short-lived Template objects (REST API, config validation)
+# can reuse them via the weak cache. Bounded so one-off template strings
+# (like template editor keystrokes) cannot grow it indefinitely.
+COMPILED_CODE_PIN_SIZE = 256
 
 MAX_CUSTOM_TEMPLATE_SIZE = 5 * 1024 * 1024
 MAX_TEMPLATE_OUTPUT = 256 * 1024  # 256KiB
@@ -327,14 +334,20 @@ class Template:
         if self.is_static or self._compiled_code is not None:
             return
 
-        if compiled := self._env.template_cache.get(self.template):
+        env = self._env
+        if compiled := env.template_cache.get(self.template):
             self._compiled_code = compiled
+            # Refresh recency only when the pin is what keeps this code
+            # alive, so templates that are alive anyway do not take up
+            # pin slots.
+            if self.template in env.compiled_code_pin:
+                env.compiled_code_pin[self.template] = compiled
             return
 
         with template_context_manager as cm:
             cm.set_template(self.template, "compiling")
             try:
-                self._compiled_code = self._env.compile(self.template)
+                self._compiled_code = env.compile(self.template)
             except jinja2.TemplateError as err:
                 raise TemplateError(err) from err
 
@@ -763,6 +776,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.template_cache: weakref.WeakValueDictionary[
             str | jinja2.nodes.Template, CodeType | None
         ] = weakref.WeakValueDictionary()
+        self.compiled_code_pin: LRU[str | jinja2.nodes.Template, CodeType] = LRU(
+            COMPILED_CODE_PIN_SIZE
+        )
         self.add_extension("jinja2.ext.loopcontrols")
         self.add_extension("jinja2.ext.do")
         self.add_extension(AreaExtension)
@@ -859,4 +875,5 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         compiled = super().compile(source)
         self.template_cache[source] = compiled
+        self.compiled_code_pin[source] = compiled
         return compiled

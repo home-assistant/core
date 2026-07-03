@@ -55,7 +55,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
             for ww in wake_service.models
         ]
         self._attr_name = wake_service.name
-        self._attr_unique_id = f"{config_entry.entry_id}-wake_word"
+        self._attr_unique_id = f"{config_entry.entry_id}-wake_word"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @override
     async def get_supported_wake_words(self) -> list[wake_word.WakeWord]:
