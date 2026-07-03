@@ -17,6 +17,7 @@ from .const import (
     CONF_PARITY,
     CONF_STOPBITS,
     CONNECTION_SERIAL,
+    DOMAIN,
 )
 from .exceptions import ConnectionNotReady
 
@@ -81,14 +82,19 @@ def async_get_unit(
     Consumer integrations call this to borrow a ``ModbusUnit`` bound to their
     unit ID; the ``ModbusConnection`` itself never leaves this integration.
 
-    Raises ``ConnectionNotReady`` if the connection entry is missing or not
-    loaded. It is a ``ConfigEntryNotReady``, so a consumer can let it propagate
-    from its own ``async_setup_entry`` to get Home Assistant's setup retry.
+    Raises ``ConnectionNotReady`` if the connection entry is missing, is not a
+    ``modbus_connection`` entry, or is not loaded. It is a ``ConfigEntryNotReady``,
+    so a consumer can let it propagate from its own ``async_setup_entry`` to get
+    Home Assistant's setup retry.
     """
     entry = cast(
         "ModbusConnectionConfigEntry | None",
         hass.config_entries.async_get_entry(connection_entry_id),
     )
-    if entry is None or entry.state is not ConfigEntryState.LOADED:
+    if (
+        entry is None
+        or entry.domain != DOMAIN
+        or entry.state is not ConfigEntryState.LOADED
+    ):
         raise ConnectionNotReady(connection_entry_id)
     return entry.runtime_data.for_unit(unit_id)

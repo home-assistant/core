@@ -118,3 +118,12 @@ async def test_get_unit_not_ready_when_missing_or_unloaded(
     # mock_config_entry is added to hass but never set up -> not LOADED.
     with pytest.raises(ConnectionNotReady):
         async_get_unit(hass, mock_config_entry.entry_id, 1)
+
+
+async def test_get_unit_rejects_foreign_domain_entry(hass: HomeAssistant) -> None:
+    """A loaded entry from another integration raises ConnectionNotReady."""
+    other = MockConfigEntry(domain="sun", state=ConfigEntryState.LOADED)
+    other.add_to_hass(hass)
+
+    with pytest.raises(ConnectionNotReady):
+        async_get_unit(hass, other.entry_id, 1)
