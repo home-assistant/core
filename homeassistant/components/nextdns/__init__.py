@@ -246,9 +246,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: NextDnsConfigEntry) -> b
 
     entry.runtime_data = NextDnsData(client=nextdns, profiles=profiles)
 
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def _async_update_listener(
+    hass: HomeAssistant, entry: NextDnsConfigEntry
+) -> None:
+    """Reload the config entry when subentries change."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: NextDnsConfigEntry) -> bool:

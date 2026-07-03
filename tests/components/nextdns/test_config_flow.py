@@ -411,6 +411,7 @@ async def test_subentry_flow_already_configured(
             unique_id="abc34",
         ),
     )
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
