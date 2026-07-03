@@ -18,13 +18,13 @@ def _llm_context() -> llm.LLMContext:
     )
 
 
-async def test_no_live_context_without_exposed_entities(hass: HomeAssistant) -> None:
-    """Test GetLiveContext is not offered when nothing is exposed."""
+async def test_live_context_always_offered(hass: HomeAssistant) -> None:
+    """Test GetLiveContext is offered even when nothing is exposed."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "llm", {})
 
     result = await llm_component.async_get_tools(hass, _llm_context())
-    assert [tool.name for tool in result.tools] == []
+    assert [tool.name for tool in result.tools] == ["GetLiveContext"]
 
 
 async def test_get_live_context_tool(hass: HomeAssistant) -> None:

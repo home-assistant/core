@@ -17,8 +17,6 @@ from homeassistant.helpers.llm import (
 from homeassistant.util import yaml as yaml_util
 from homeassistant.util.json import JsonObjectType
 
-from .exposed_entities import async_should_expose
-
 
 def _live_context_match_error(
     match_result: intent.MatchTargetsResult,
@@ -170,14 +168,8 @@ class GetLiveContextTool(Tool):
 
 @callback
 def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
-    """Return the GetLiveContext tool when entities are exposed."""
-    if not llm_context.assistant:
-        return LLMTools(tools=[])
+    """Return the GetLiveContext tool.
 
-    has_exposed_entity = any(
-        async_should_expose(hass, llm_context.assistant, state.entity_id)
-        for state in hass.states.async_all()
-    )
-    if not has_exposed_entity:
-        return LLMTools(tools=[])
+    The tool is always offered; it reports when nothing is exposed at call time.
+    """
     return LLMTools(tools=[GetLiveContextTool()])
