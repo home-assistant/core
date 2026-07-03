@@ -188,11 +188,7 @@ class MikrotikSensorEntity(
     @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        if not (
-            data_list := self.coordinator.api.sensors.get(self.entity_description.type)
-        ):
-            return None
-
+        data_list = self.coordinator.api.sensors[self.entity_description.type]
         data_entry = data_list[self.entity_description.index]
 
         return self.entity_description.value(data_entry)

@@ -5,45 +5,18 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import mikrotik, sensor
+from homeassistant.components import mikrotik
 from homeassistant.components.mikrotik.const import HEALTH, SYSTEM
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import MOCK_DATA
+from .const import HEALTH_DATA, SYSTEM_DATA
 
-from tests.common import MockConfigEntry
-
-HEALTH_DATA = [
-    {"name": "voltage", "value": 24.2},
-    {"name": "temperature", "value": 50.0},
-]
-
-SYSTEM_DATA = [
-    {
-        "cpu-load": 15,
-        "total-memory": 1000,
-        "free-memory": 200,
-        "total-hdd-space": 100,
-        "free-hdd-space": 25,
-        "uptime": "1w2d3h4m5s",
-    }
-]
-
-EXPECTED_SENSOR_STATES = [
-    pytest.param("ABC123_voltage", "24.2", id="voltage"),
-    pytest.param("ABC123_temperature", "50.0", id="temperature"),
-    pytest.param("ABC123_cpu-load", "15", id="cpu_load"),
-    pytest.param("ABC123_memory-usage", "80.0", id="memory_usage"),
-    pytest.param("ABC123_disk-usage", "75.0", id="disk_usage"),
-    pytest.param(
-        "ABC123_uptime",
-        "2025-12-23T08:55:55+00:00",
-        id="uptime",
-    ),
-]
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def _setup_entry_with_sensor_data(  # pylint: disable=dangerous-default-value
@@ -91,30 +64,18 @@ async def _setup_entry_with_sensor_data(  # pylint: disable=dangerous-default-va
 
 
 @freeze_time("2026-01-01T12:00:00+00:00")
-@pytest.mark.parametrize(("entity_unique_id", "expected_state"), EXPECTED_SENSOR_STATES)
 async def test_sensor_entities_created(
     hass: HomeAssistant,
-    entity_unique_id: str,
-    expected_state: str,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test Mikrotik sensor entities are created with expected values."""
-    await _setup_entry_with_sensor_data(hass)
+    config_entry = await _setup_entry_with_sensor_data(hass)
 
-    entity_registry = er.async_get(hass)
-
-    entity_id = entity_registry.async_get_entity_id(
-        sensor.DOMAIN,
-        mikrotik.DOMAIN,
-        entity_unique_id,
-    )
-    assert entity_id is not None
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == expected_state
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-async def test_sensor_missing_wrong_data(hass: HomeAssistant) -> None:
+async def test_sensor_wrong_data(hass: HomeAssistant) -> None:
     """Test Mikrotik sensor entities handle missing data gracefully."""
     await _setup_entry_with_sensor_data(
         hass,
@@ -183,3 +144,15 @@ async def test_sensor_bad_uptime_data(
 
     assert (state := hass.states.get("sensor.mikrotik_uptime"))
     assert state.state == STATE_UNKNOWN
+
+
+async def test_sensor_no_data(hass: HomeAssistant) -> None:
+    """Test Mikrotik sensor entities handle missing data gracefully."""
+    await _setup_entry_with_sensor_data(hass, health_data=[], system_data=[])
+
+    assert hass.states.get("sensor.mikrotik_voltage") is None
+    assert hass.states.get("sensor.mikrotik_temperature") is None
+    assert hass.states.get("sensor.mikrotik_cpu_usage") is None
+    assert hass.states.get("sensor.mikrotik_memory_usage") is None
+    assert hass.states.get("sensor.mikrotik_disk_usage") is None
+    assert hass.states.get("sensor.mikrotik_uptime") is None
