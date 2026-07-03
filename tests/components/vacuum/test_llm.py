@@ -37,7 +37,7 @@ def _llm_context() -> llm.LLMContext:
 
 async def _tool_names(hass: HomeAssistant) -> set[str]:
     """Return the names of the tools offered by the vacuum platform."""
-    result = await llm_component.async_get_tools(hass, _llm_context())
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
     return {tool.name for tool in result.tools}
 
 

@@ -34,7 +34,9 @@ LLM_INTENTS = (
 
 
 @callback
-def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
+def async_get_tools(
+    hass: HomeAssistant, llm_context: LLMContext, api_id: str
+) -> LLMTools:
     """Return LLM tools for the integration's intents when its domain is exposed."""
     if not llm_context.assistant:
         return LLMTools(tools=[])

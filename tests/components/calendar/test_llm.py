@@ -42,14 +42,14 @@ def _llm_context() -> llm.LLMContext:
 async def test_get_tools_no_exposed_calendar(hass: HomeAssistant) -> None:
     """Test no calendar tool is offered when no calendar is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
-    result = await llm_component.async_get_tools(hass, _llm_context())
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
     assert "calendar_get_events" not in [tool.name for tool in result.tools]
 
 
 async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     """Test the calendar get events tool is exposed and works via the platform."""
     llm_context = _llm_context()
-    result = await llm_component.async_get_tools(hass, llm_context)
+    result = await llm_component.async_get_tools(hass, llm_context, "assist")
     tool = next(
         (tool for tool in result.tools if tool.name == "calendar_get_events"), None
     )
@@ -133,7 +133,7 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
 async def test_calendar_get_events_tool_not_found(hass: HomeAssistant) -> None:
     """Test the tool reports when the requested calendar no longer matches."""
     llm_context = _llm_context()
-    result = await llm_component.async_get_tools(hass, llm_context)
+    result = await llm_component.async_get_tools(hass, llm_context, "assist")
     tool = next(tool for tool in result.tools if tool.name == "calendar_get_events")
 
     # Unexpose after the tool (and its calendar enum) was built, so the call-time
@@ -160,6 +160,6 @@ async def test_calendar_get_events_tool_uses_aliases(
     hass.states.async_set(entry.entity_id, "on")
     async_expose_entity(hass, "conversation", entry.entity_id, True)
 
-    result = await llm_component.async_get_tools(hass, _llm_context())
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
     tool = next(tool for tool in result.tools if tool.name == "calendar_get_events")
     assert "Family Calendar" in tool.parameters.schema["calendar"].container

@@ -86,7 +86,9 @@ class CalendarGetEventsTool(Tool):
 
 
 @callback
-def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
+def async_get_tools(
+    hass: HomeAssistant, llm_context: LLMContext, api_id: str
+) -> LLMTools:
     """Return the calendar LLM tools when a calendar is exposed."""
     entity_registry = er.async_get(hass)
     names: list[str] = []

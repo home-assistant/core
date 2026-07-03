@@ -90,7 +90,9 @@ class TodoGetItemsTool(Tool):
 
 
 @callback
-def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
+def async_get_tools(
+    hass: HomeAssistant, llm_context: LLMContext, api_id: str
+) -> LLMTools:
     """Return the todo LLM tools when a to-do list is exposed."""
     if not llm_context.assistant:
         return LLMTools(tools=[])

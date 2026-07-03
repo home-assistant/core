@@ -12,7 +12,9 @@ from . import ScriptIntentHandler
 
 
 @callback
-def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
+def async_get_tools(
+    hass: HomeAssistant, llm_context: LLMContext, api_id: str
+) -> LLMTools:
     """Return an LLM tool for each configured intent script."""
     handlers = [
         handler
