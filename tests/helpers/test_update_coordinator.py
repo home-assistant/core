@@ -1410,7 +1410,7 @@ async def set_stored_data(
         "version": 1,
         "data": {bucket: {RESTORE_KEY: data}},
     }
-    await update_coordinator.async_load(hass)
+    await restore_state.async_load_coordinator_data(hass)
 
 
 def get_stored_data(hass_storage: dict[str, Any], entry: MockConfigEntry | None) -> Any:
@@ -1422,7 +1422,7 @@ def get_stored_data(hass_storage: dict[str, Any], entry: MockConfigEntry | None)
 
 async def flush_restore_store(hass: HomeAssistant) -> None:
     """Make sure all delayed writes of the restore coordinator store are written."""
-    await flush_store(update_coordinator._async_get_restore_store_manager(hass)._store)
+    await flush_store(restore_state._async_get_restore_store_manager(hass)._store)
 
 
 def get_restore_crd(
@@ -1768,7 +1768,7 @@ async def test_storage_removed_on_entry_removal(
             other_entry.entry_id: {RESTORE_KEY: {"value": "other"}},
         },
     }
-    await update_coordinator.async_load(hass)
+    await restore_state.async_load_coordinator_data(hass)
 
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
@@ -1981,7 +1981,7 @@ async def test_entry_removal_keeps_data_without_config_entry(
             RESTORE_DOMAIN: {RESTORE_KEY: {"value": "no entry"}},
         },
     }
-    await update_coordinator.async_load(hass)
+    await restore_state.async_load_coordinator_data(hass)
 
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()

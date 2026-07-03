@@ -428,3 +428,37 @@ class _RestoreStoreManager:
     def _data_to_save(self) -> dict[str, dict[str, Any]]:
         """Return the data to save."""
         return self._data
+
+
+DATA_RESTORE_STORE: HassKey[_RestoreStoreManager] = HassKey(
+    "update_coordinator_restore_store"
+)
+
+
+@callback
+@singleton(DATA_RESTORE_STORE)
+def _async_get_restore_store_manager(hass: HomeAssistant) -> _RestoreStoreManager:
+    """Get the manager of the restore coordinator store."""
+    return _RestoreStoreManager(hass)
+
+
+async def async_load_coordinator_data(
+    hass: HomeAssistant, *, load_empty: bool = False
+) -> None:
+    """Load the store shared by all restore coordinators.
+
+    Called from bootstrap before config entries are set up, so stored data is
+    available when coordinators restore it and is never overwritten by a save
+    happening before the load.
+    """
+    await _async_get_restore_store_manager(hass).async_load(load_empty=load_empty)
+
+
+@callback
+def async_clear_config_entry(hass: HomeAssistant, entry_id: str) -> None:
+    """Remove all restore coordinator data stored for a config entry.
+
+    Called by the config entry manager when an entry is removed, so stored data is
+    cleaned up even for entries that were never set up, e.g. disabled ones.
+    """
+    _async_get_restore_store_manager(hass).async_clear_config_entry(entry_id)

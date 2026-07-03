@@ -27,12 +27,10 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.util.dt import utcnow
-from homeassistant.util.hass_dict import HassKey
 
 from . import entity, event
 from .debounce import Debouncer
-from .restore_state import _RestoreStoreManager
-from .singleton import singleton
+from .restore_state import _async_get_restore_store_manager
 from .typing import UNDEFINED, UndefinedType
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
@@ -42,30 +40,6 @@ _DataT = TypeVar("_DataT", default=dict[str, Any])
 
 RESTORE_SAVE_DELAY = 10
 RESTORE_DEFAULT_STORAGE_KEY = "__restore_coordinator_default_key"
-
-DATA_RESTORE_STORE: HassKey[_RestoreStoreManager] = HassKey(
-    "update_coordinator_restore_store"
-)
-
-
-async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
-    """Load the store shared by all restore coordinators.
-
-    Called from bootstrap before config entries are set up, so stored data is
-    available when coordinators restore it and is never overwritten by a save
-    happening before the load.
-    """
-    await _async_get_restore_store_manager(hass).async_load(load_empty=load_empty)
-
-
-@callback
-def async_clear_config_entry(hass: HomeAssistant, entry_id: str) -> None:
-    """Remove all restore coordinator data stored for a config entry.
-
-    Called by the config entry manager when an entry is removed, so stored data is
-    cleaned up even for entries that were never set up, e.g. disabled ones.
-    """
-    _async_get_restore_store_manager(hass).async_clear_config_entry(entry_id)
 
 
 class UpdateFailed(HomeAssistantError):
@@ -662,13 +636,6 @@ class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         super()._async_refresh_finished()
         if self.last_update_success:
             self.last_update_success_time = utcnow()
-
-
-@callback
-@singleton(DATA_RESTORE_STORE)
-def _async_get_restore_store_manager(hass: HomeAssistant) -> _RestoreStoreManager:
-    """Get the manager of the restore coordinator store."""
-    return _RestoreStoreManager(hass)
 
 
 class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
