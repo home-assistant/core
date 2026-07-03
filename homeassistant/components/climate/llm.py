@@ -6,10 +6,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import intent
 from homeassistant.helpers.llm import IntentTool, LLMContext, Tool
 
-from .const import DOMAIN
+from .const import DOMAIN, INTENT_SET_TEMPERATURE
 
 # Intents owned by this integration that are exposed as LLM tools.
-LLM_INTENTS = ("HassClimateSetTemperature",)
+LLM_INTENTS = (INTENT_SET_TEMPERATURE,)
 
 
 @callback
