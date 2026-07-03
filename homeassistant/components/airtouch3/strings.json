@@ -37,14 +37,8 @@
     "command_failed": {
       "message": "Failed to send command to AirTouch: {error}"
     },
-    "unsupported_command": {
-      "message": "Unsupported AirTouch 3 command: {command}"
-    },
     "update_failed": {
       "message": "Error communicating with the AirTouch 3 controller: {error}"
-    },
-    "zone_missing": {
-      "message": "Current target temperature for zone {zone_id} not found"
     }
   }
 }

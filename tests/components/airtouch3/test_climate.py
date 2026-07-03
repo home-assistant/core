@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, Mock, call
 
+from pyairtouch3 import AirTouchError
 from pyairtouch3.airtouch_aircon import Aircon
 from pyairtouch3.airtouch_sensor import Sensor
 from pyairtouch3.airtouch_zone import AirtouchZone
@@ -28,6 +29,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
 
@@ -146,21 +148,44 @@ async def test_ac_hvac_mode_commands(
     """Test AC HVAC mode commands."""
     coordinator = _coordinator(hass)
     entity = AirtouchAC(coordinator, 1)
-    send_command = AsyncMock()
+    set_mode = AsyncMock()
+    toggle_ac_power = AsyncMock()
     write_state = Mock()
-    monkeypatch.setattr(coordinator, "send_command", send_command)
+    monkeypatch.setattr(coordinator.client, "set_mode", set_mode)
+    monkeypatch.setattr(coordinator.client, "toggle_ac_power", toggle_ac_power)
     monkeypatch.setattr(entity, "async_write_ha_state", write_state)
 
     await entity.async_set_hvac_mode(HVACMode.HEAT)
     await entity.async_set_hvac_mode(HVACMode.OFF)
 
-    assert send_command.mock_calls == [
-        call("set_mode", 1, AcMode.HEAT.value),
-        call("turn_on", 1),
-        call("turn_off", 1),
-    ]
+    set_mode.assert_awaited_once_with(1, 2, AcMode.HEAT.value)
+    toggle_ac_power.assert_awaited_once_with(1)
     assert coordinator.data.aircon.mode == AcMode.HEAT
+    assert coordinator.data.aircon.status is False
     assert write_state.call_count == 2
+
+
+async def test_ac_hvac_mode_turns_on_when_needed(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test setting an active HVAC mode powers on an off AC."""
+    coordinator = _coordinator(hass)
+    coordinator.data.aircon.status = False
+    entity = AirtouchAC(coordinator, 1)
+    set_mode = AsyncMock()
+    toggle_ac_power = AsyncMock()
+    write_state = Mock()
+    monkeypatch.setattr(coordinator.client, "set_mode", set_mode)
+    monkeypatch.setattr(coordinator.client, "toggle_ac_power", toggle_ac_power)
+    monkeypatch.setattr(entity, "async_write_ha_state", write_state)
+
+    await entity.async_set_hvac_mode(HVACMode.HEAT)
+
+    set_mode.assert_awaited_once_with(1, 2, AcMode.HEAT.value)
+    toggle_ac_power.assert_awaited_once_with(1)
+    assert coordinator.data.aircon.mode == AcMode.HEAT
+    assert coordinator.data.aircon.status is True
+    write_state.assert_called_once()
 
 
 async def test_ac_fan_mode_commands(
@@ -169,16 +194,34 @@ async def test_ac_fan_mode_commands(
     """Test AC fan mode commands."""
     coordinator = _coordinator(hass)
     entity = AirtouchAC(coordinator, 1)
-    send_command = AsyncMock()
+    set_fan_speed = AsyncMock()
     write_state = Mock()
-    monkeypatch.setattr(coordinator, "send_command", send_command)
+    monkeypatch.setattr(coordinator.client, "set_fan_speed", set_fan_speed)
     monkeypatch.setattr(entity, "async_write_ha_state", write_state)
 
     await entity.async_set_fan_mode(FAN_HIGH)
 
-    send_command.assert_awaited_once_with("set_fan_speed", 1, 3)
+    set_fan_speed.assert_awaited_once_with(1, 2, 3)
     assert coordinator.data.aircon.fan_speed == 3
     write_state.assert_called_once()
+
+
+async def test_ac_command_error_raises_home_assistant_error(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test pyairtouch3 write errors are surfaced as action errors."""
+    coordinator = _coordinator(hass)
+    entity = AirtouchAC(coordinator, 1)
+    set_fan_speed = AsyncMock(side_effect=AirTouchError("closed"))
+    write_state = Mock()
+    monkeypatch.setattr(coordinator.client, "set_fan_speed", set_fan_speed)
+    monkeypatch.setattr(entity, "async_write_ha_state", write_state)
+
+    with pytest.raises(HomeAssistantError):
+        await entity.async_set_fan_mode(FAN_HIGH)
+
+    set_fan_speed.assert_awaited_once_with(1, 2, 3)
+    write_state.assert_not_called()
 
 
 def test_group_properties(hass: HomeAssistant) -> None:
@@ -203,17 +246,16 @@ async def test_group_set_temperature_steps_to_target(
     """Test zone temperature changes are sent one step at a time."""
     coordinator = _coordinator(hass)
     entity = AirtouchGroup(coordinator, 1, 1, "Living")
-    send_command = AsyncMock()
+    adjust_zone_temperature = AsyncMock()
     write_state = Mock()
-    monkeypatch.setattr(coordinator, "send_command", send_command)
+    monkeypatch.setattr(
+        coordinator.client, "adjust_zone_temperature", adjust_zone_temperature
+    )
     monkeypatch.setattr(entity, "async_write_ha_state", write_state)
 
     await entity.async_set_temperature(**{ATTR_TEMPERATURE: 22})
 
-    assert send_command.mock_calls == [
-        call("set_group_temperature", 1, 1),
-        call("set_group_temperature", 1, 1),
-    ]
+    assert adjust_zone_temperature.mock_calls == [call(1, 1), call(1, 1)]
     assert coordinator.data.zones[1].desired_temperature == 22
     write_state.assert_called_once()
 
@@ -225,14 +267,16 @@ async def test_group_set_temperature_ignores_noop_and_missing_zone(
     coordinator = _coordinator(hass)
     living = AirtouchGroup(coordinator, 1, 1, "Living")
     missing = AirtouchGroup(coordinator, 99, 1, "Missing")
-    send_command = AsyncMock()
-    monkeypatch.setattr(coordinator, "send_command", send_command)
+    adjust_zone_temperature = AsyncMock()
+    monkeypatch.setattr(
+        coordinator.client, "adjust_zone_temperature", adjust_zone_temperature
+    )
 
     await living.async_set_temperature(**{ATTR_TEMPERATURE: 20})
     await living.async_set_temperature()
     await missing.async_set_temperature(**{ATTR_TEMPERATURE: 20})
 
-    send_command.assert_not_called()
+    adjust_zone_temperature.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -251,14 +295,14 @@ async def test_group_hvac_mode_toggles_zone(
     """Test zone HVAC mode toggles zone power when needed."""
     coordinator = _coordinator(hass)
     entity = AirtouchGroup(coordinator, group_id, 1, "Zone")
-    send_command = AsyncMock()
+    toggle_zone = AsyncMock()
     write_state = Mock()
-    monkeypatch.setattr(coordinator, "send_command", send_command)
+    monkeypatch.setattr(coordinator.client, "toggle_zone", toggle_zone)
     monkeypatch.setattr(entity, "async_write_ha_state", write_state)
 
     await entity.async_set_hvac_mode(hvac_mode)
 
-    send_command.assert_awaited_once_with("toggle_zone", group_id)
+    toggle_zone.assert_awaited_once_with(group_id)
     assert entity.hvac_mode == hvac_mode
     write_state.assert_called_once()
 
@@ -269,12 +313,12 @@ async def test_group_hvac_mode_ignores_missing_zone(
     """Test zone HVAC mode change is skipped when the zone is missing."""
     coordinator = _coordinator(hass)
     entity = AirtouchGroup(coordinator, 99, 1, "Missing")
-    send_command = AsyncMock()
-    monkeypatch.setattr(coordinator, "send_command", send_command)
+    toggle_zone = AsyncMock()
+    monkeypatch.setattr(coordinator.client, "toggle_zone", toggle_zone)
 
     await entity.async_set_hvac_mode(HVACMode.FAN_ONLY)
 
-    send_command.assert_not_called()
+    toggle_zone.assert_not_called()
 
 
 async def test_group_update_refreshes_hvac_mode(
