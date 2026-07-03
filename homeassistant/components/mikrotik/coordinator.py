@@ -7,6 +7,7 @@ from typing import Any, override
 
 import librouteros
 from librouteros.login import plain as login_plain, token as login_token
+from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -319,7 +320,7 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def device_info(self) -> DeviceInfo:
         """Return device information."""
         return DeviceInfo(
-            configuration_url=f"http://{self.host}",
+            configuration_url=URL.build(scheme="http", host=self.host),
             identifiers={(DOMAIN, self.serial_num)},
             name=self.hostname,
             manufacturer="Mikrotik",

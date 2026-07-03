@@ -24,7 +24,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
 from .const import HEALTH, SYSTEM
-from .coordinator import MikrotikConfigEntry, MikrotikDataUpdateCoordinator
+from .coordinator import _LOGGER, MikrotikConfigEntry, MikrotikDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
 
@@ -46,7 +46,7 @@ def _calculate_memory_usage(data: dict[str, Any]) -> float | None:
     total: int = data.get("total-memory", 0)
     free: int = data.get("free-memory", 0)
 
-    if total == 0 or free == 0:
+    if total == 0:
         return None
 
     return (total - free) / total * 100
@@ -57,7 +57,7 @@ def _calculate_disk_usage(data: dict[str, Any]) -> float | None:
     total: int = data.get("total-hdd-space", 0)
     free: int = data.get("free-hdd-space", 0)
 
-    if total == 0 or free == 0:
+    if total == 0:
         return None
 
     return (total - free) / total * 100
@@ -66,10 +66,7 @@ def _calculate_disk_usage(data: dict[str, Any]) -> float | None:
 def _calculate_uptime(data: dict[str, Any]) -> datetime | None:
     """Calculate uptime."""
     # es. 1d3h39m30s
-    uptime_string = data.get("uptime")
-
-    if not uptime_string:
-        return None
+    uptime_string = data["uptime"]
 
     total = 0
     num = 0
@@ -78,18 +75,25 @@ def _calculate_uptime(data: dict[str, Any]) -> datetime | None:
         if ch.isdigit():
             num = num * 10 + int(ch)
         else:
-            if ch == "d":
-                total += num * 86400
+            if ch == "w":
+                total += num * (60 * 60 * 24 * 7)
+            elif ch == "d":
+                total += num * (60 * 60 * 24)
             elif ch == "h":
-                total += num * 3600
+                total += num * (60 * 60)
             elif ch == "m":
                 total += num * 60
             elif ch == "s":
                 total += num
+            else:
+                _LOGGER.warning("Unknown uptime format: %s", uptime_string)
+                return None
+
             num = 0
 
-    if num != 0:  # leftover number without unit
-        raise ValueError("Invalid duration format")
+    if num != 0:
+        _LOGGER.warning("Unknown uptime format: %s", uptime_string)
+        return None
 
     return utcnow() - timedelta(seconds=total)
 
@@ -168,7 +172,8 @@ async def async_setup_entry(
     sensors_list = [
         MikrotikSensorEntity(coordinator, sensor_desc)
         for sensor_desc in SENSORS
-        if coordinator.api.sensors.get(sensor_desc.type, []) is not None
+        if len(coordinator.api.sensors.get(sensor_desc.type, []))
+        >= (sensor_desc.index + 1)
     ]
 
     async_add_entities(sensors_list)
@@ -192,15 +197,6 @@ class MikrotikSensorEntity(
         self.entity_description = description
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.api.serial_number}_{description.key}"
-
-    @property
-    @override
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of the sensor."""
-        if self.entity_description.native_unit_of_measurement:
-            return self.entity_description.native_unit_of_measurement
-
-        return super().native_unit_of_measurement
 
     @property
     @override
