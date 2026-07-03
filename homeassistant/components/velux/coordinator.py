@@ -52,8 +52,8 @@ class VeluxLimitationCoordinator(DataUpdateCoordinator[VeluxLimitationData | Non
             LOGGER.debug(
                 "Fetched limitations for %s: pyvlx_min=%s%% pyvlx_max=%s%%",
                 self.node.name,
-                min_pos.position_percent if min_pos else None,
-                max_pos.position_percent if max_pos else None,
+                min_pos.position_percent,
+                max_pos.position_percent,
             )
         except (OSError, PyVLXException) as err:
             raise UpdateFailed(f"Error fetching limitations: {err}") from err
