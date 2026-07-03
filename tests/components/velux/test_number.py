@@ -132,7 +132,6 @@ async def test_set_invalid_value_fails(
     mock_exterior_heating.set_intensity.assert_not_awaited()
 
 
-# helpers for limitation entity IDs
 def closed_limit_entity_id(mock: AsyncMock) -> str:
     """Return entity ID of the closed position limit entity."""
     return f"number.{mock.name.lower().replace(' ', '_')}_closed_position_limit"

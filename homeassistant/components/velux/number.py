@@ -1,4 +1,4 @@
-"""Support for Velux exterior heating number entities."""
+"""Support for Velux exterior heating and cover open/closed number entities."""
 
 from dataclasses import replace
 from typing import override
