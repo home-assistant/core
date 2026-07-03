@@ -65,7 +65,10 @@ def _async_camera_entities(
     package channel is a snapshot-first view and is always exposed (disabled by
     default), streaming only when its quality is active. When no main quality is
     active the first non-package channel is still created so snapshots work, and
-    a repair offers to activate its stream. RTSPS URLs come from the public API
+    a repair offers to activate its stream — but only when the streams could
+    actually be read; an unreadable stream state logs a warning instead of
+    raising a repair that may contradict the console. RTSPS URLs come from the
+    public API
     (the authoritative per-camera host, so stacked consoles resolve correctly)
     with SRTP stripped for go2rtc.
     """
@@ -124,6 +127,18 @@ def _async_camera_entities(
             or camera.state is not StateType.CONNECTED
         ):
             ir.async_delete_issue(hass, DOMAIN, issue_id)
+        elif streams is None:
+            # The camera's streams could not be read (the library primes them
+            # best-effort): a repair offering to create a stream that may
+            # already exist would mislead, so leave the issue state alone and
+            # surface the read failure instead.
+            _LOGGER.warning(
+                (
+                    "Could not read RTSPS streams for camera %s;"
+                    " live streaming stays disabled until the next reload"
+                ),
+                camera.display_name,
+            )
         else:
             _create_rtsp_repair(hass, entry, camera)
     return entities

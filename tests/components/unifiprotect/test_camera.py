@@ -274,9 +274,18 @@ async def test_no_channels(
 
 
 async def test_streams_unavailable(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera_all: ProtectCamera
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera_all: ProtectCamera,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A camera the library leaves unprimed (no streams) has no stream source."""
+    """A camera the library leaves unprimed (no streams) has no stream source.
+
+    An unreadable stream state is not "no streams": it must log a warning
+    instead of raising the enable-stream repair, which could offer to create a
+    stream that already exists on the console.
+    """
 
     async def _prime_streamless() -> Any:
         pb = ufp.api.public_bootstrap
@@ -293,6 +302,10 @@ async def test_streams_unavailable(
 
     high_id = _channel_entity_id(camera_all, 0)
     assert await async_get_stream_source(hass, high_id) is None
+    assert (
+        issue_registry.async_get_issue(DOMAIN, f"rtsp_disabled_{camera_all.id}") is None
+    )
+    assert "Could not read RTSPS streams" in caplog.text
 
 
 async def test_public_bootstrap_failure_not_ready(
