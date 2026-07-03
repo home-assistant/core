@@ -51,6 +51,7 @@ from homeassistant.const import (
     CONF_TARGET,
     CONF_VALUE_TEMPLATE,
     CONF_WEEKDAY,
+    CONF_ZONE,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_ANY,
     STATE_UNAVAILABLE,
@@ -2119,6 +2120,20 @@ def async_extract_entities(config: ConfigType | Template) -> set[str]:
         if condition in ("and", "not", "or"):
             to_process.extend(config["conditions"])
             continue
+
+        if condition == "zone":
+            options = config.get(CONF_OPTIONS, {})
+            referenced.update(options.get(CONF_ENTITY_ID, []))
+            referenced.update(options.get(CONF_ZONE, []))
+
+        elif condition in (
+            "zone.in_zone",
+            "zone.not_in_zone",
+            "zone.occupancy_is_detected",
+            "zone.occupancy_is_not_detected",
+        ):
+            if zone_entity_id := config.get(CONF_OPTIONS, {}).get(CONF_ZONE):
+                referenced.add(zone_entity_id)
 
         entity_ids = config.get(CONF_ENTITY_ID)
 
