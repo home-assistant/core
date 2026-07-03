@@ -33,11 +33,8 @@ def async_get_exposed_entities(
     hass: HomeAssistant,
     assistant: str,
     include_state: bool = True,
-) -> dict[str, dict[str, dict[str, Any]]]:
-    """Get exposed entities.
-
-    Splits out calendars and scripts.
-    """
+) -> dict[str, dict[str, Any]]:
+    """Get exposed entities, ignoring calendars and scripts."""
     area_registry = ar.async_get(hass)
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
@@ -57,14 +54,14 @@ def async_get_exposed_entities(
         "media_album_name",
     }
 
-    entities = {}
-    data: dict[str, dict[str, Any]] = {
-        SCRIPT_DOMAIN: {},
-        CALENDAR_DOMAIN: {},
-    }
+    entities: dict[str, dict[str, Any]] = {}
 
     for state in sorted(hass.states.async_all(), key=attrgetter("name")):
         if not async_should_expose(hass, assistant, state.entity_id):
+            continue
+
+        # Calendars and scripts have their own tools; skip them here.
+        if state.domain in (CALENDAR_DOMAIN, SCRIPT_DOMAIN):
             continue
 
         entity_entry = entity_registry.async_get(state.entity_id)
@@ -130,13 +127,9 @@ def async_get_exposed_entities(
         ):
             info["attributes"] = attributes
 
-        if state.domain in data:
-            data[state.domain][state.entity_id] = info
-        else:
-            entities[state.entity_id] = info
+        entities[state.entity_id] = info
 
-    data["entities"] = entities
-    return data
+    return entities
 
 
 def _live_context_match_error(
@@ -218,7 +211,7 @@ class GetLiveContextTool(Tool):
         assert llm_context.assistant is not None
         exposed_entities = async_get_exposed_entities(hass, llm_context.assistant)
 
-        if not exposed_entities["entities"]:
+        if not exposed_entities:
             return {"success": False, "error": NO_ENTITIES_PROMPT}
 
         name_filter = args.get("name")
@@ -238,7 +231,7 @@ class GetLiveContextTool(Tool):
         if name_filter or area_filter or domain_filter:
             exposed_states = [
                 state
-                for entity_id in exposed_entities["entities"]
+                for entity_id in exposed_entities
                 if (state := hass.states.get(entity_id)) is not None
             ]
             match_result = intent.async_match_targets(
@@ -266,11 +259,11 @@ class GetLiveContextTool(Tool):
             matched_ids = {state.entity_id for state in match_result.states}
             entities = [
                 info
-                for entity_id, info in exposed_entities["entities"].items()
+                for entity_id, info in exposed_entities.items()
                 if entity_id in matched_ids
             ]
         else:
-            entities = list(exposed_entities["entities"].values())
+            entities = list(exposed_entities.values())
 
         prompt = [
             "Live Context: An overview of the areas"
