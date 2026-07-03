@@ -297,11 +297,12 @@ class APIEntityStateView(HomeAssistantView):
             return self.json_message(
                 "Error storing state.", HTTPStatus.INTERNAL_SERVER_ERROR
             )
-        resp = self.json(state.as_dict(), status_code)
-
-        resp.headers.add("Location", f"/api/states/{entity_id}")
-
-        return resp
+        return web.Response(
+            body=state.as_dict_json,
+            content_type=CONTENT_TYPE_JSON,
+            status=status_code,
+            headers={"Location": f"/api/states/{entity_id}"},
+        )
 
     @ha.callback
     def delete(self, request: web.Request, entity_id: str) -> web.Response:
