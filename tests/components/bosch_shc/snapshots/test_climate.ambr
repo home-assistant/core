@@ -116,7 +116,7 @@
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': 'room_climate_control',
-    'unique_id': 'cc-serial_climate',
+    'unique_id': 'cc-serial',
     'unit_of_measurement': None,
   })
 # ---
