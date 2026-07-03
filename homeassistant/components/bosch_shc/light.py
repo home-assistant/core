@@ -14,7 +14,12 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.color import color_hs_to_RGB, color_RGB_to_hs
+from homeassistant.util.color import (
+    color_hs_to_RGB,
+    color_RGB_to_hs,
+    color_temperature_kelvin_to_mired,
+    color_temperature_mired_to_kelvin,
+)
 
 from . import BoschConfigEntry
 from .entity import SHCEntity
@@ -156,23 +161,38 @@ class SHCColorLight(SHCEntity, LightEntity):
     @property
     @override
     def color_temp_kelvin(self) -> int | None:
-        """Return colour temperature in Kelvin (Bosch stores Kelvin directly)."""
+        """Return colour temperature in Kelvin, converted from Bosch's mireds."""
         if not self._device.supports_color_temp and not self._device.supports_color_hsb:
             return None
-        value = self._device.color
-        return value or None
+        if not self._device.color:
+            return None
+        return color_temperature_mired_to_kelvin(self._device.color)
 
     @property
     @override
     def min_color_temp_kelvin(self) -> int:
-        """Return minimum colour temperature (warmest) in Kelvin."""
-        return self._device.min_color_temperature or 2700
+        """Return minimum colour temperature (warmest) in Kelvin.
+
+        Mireds and Kelvin are inversely related, so the largest mired value
+        (the device's max_color_temperature) is the smallest Kelvin value.
+        """
+        max_ct = self._device.max_color_temperature
+        if not max_ct:
+            return 2700
+        return color_temperature_mired_to_kelvin(max_ct)
 
     @property
     @override
     def max_color_temp_kelvin(self) -> int:
-        """Return maximum colour temperature (coolest) in Kelvin."""
-        return self._device.max_color_temperature or 6500
+        """Return maximum colour temperature (coolest) in Kelvin.
+
+        Mireds and Kelvin are inversely related, so the smallest mired value
+        (the device's min_color_temperature) is the largest Kelvin value.
+        """
+        min_ct = self._device.min_color_temperature
+        if not min_ct:
+            return 6500
+        return color_temperature_mired_to_kelvin(min_ct)
 
     @property
     @override
@@ -195,13 +215,17 @@ class SHCColorLight(SHCEntity, LightEntity):
             self._device.binarystate = True
 
         if ATTR_BRIGHTNESS in kwargs and self._device.supports_brightness:
-            # Convert HA 0-255 → Bosch 0-100
-            self._device.brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
+            # Convert HA 0-255 → Bosch 0-100, clamped to a minimum of 1: HA's
+            # lowest turn-on brightness is 1, and round(1 * 100 / 255) is 0,
+            # which is the Bosch "off" value.
+            self._device.brightness = max(round(kwargs[ATTR_BRIGHTNESS] * 100 / 255), 1)
 
         if ATTR_COLOR_TEMP_KELVIN in kwargs and (
             self._device.supports_color_temp or self._device.supports_color_hsb
         ):
-            self._device.color = kwargs[ATTR_COLOR_TEMP_KELVIN]
+            self._device.color = color_temperature_kelvin_to_mired(
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
+            )
             self._attr_color_mode = ColorMode.COLOR_TEMP
 
         if ATTR_HS_COLOR in kwargs and self._device.supports_color_hsb:

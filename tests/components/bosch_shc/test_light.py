@@ -70,10 +70,16 @@ def _make_color_device(
     device.device_services = []
     device.binarystate = True
     device.brightness = 80
-    device.color = 4000
+    # boschshcpy's color/min_color_temperature/max_color_temperature are
+    # mireds, not Kelvin (confirmed against boschshcpy's own
+    # async_set_color docstring and the mature boschshc-hass integration,
+    # which converts via color_temperature_mired_to_kelvin). 250 mireds =
+    # 4000K; min/max are crossed since mireds and Kelvin are inversely
+    # related (smallest mired = largest Kelvin).
+    device.color = 250
     device.rgb = 0
-    device.min_color_temperature = 2700
-    device.max_color_temperature = 6500
+    device.min_color_temperature = 153  # -> max_color_temp_kelvin ~6535K
+    device.max_color_temperature = 370  # -> min_color_temp_kelvin ~2702K
     device.supports_brightness = supports_brightness
     device.supports_color_temp = supports_color_temp
     device.supports_color_hsb = supports_color_hsb
