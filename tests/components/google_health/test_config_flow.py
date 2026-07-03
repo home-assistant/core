@@ -103,6 +103,7 @@ async def test_full_flow(
     aioclient_mock.get(
         USERINFO_URL,
         json={
+            "sub": "mock-sub",
             "given_name": "Allen",
             "name": "Allen Porter",
         },

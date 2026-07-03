@@ -3,7 +3,6 @@
 import logging
 from typing import Any, override
 
-import aiohttp
 from google_health_api import GoogleHealthApi
 from google_health_api.const import HealthApiScope
 from google_health_api.exceptions import GoogleHealthApiError
@@ -68,17 +67,10 @@ class OAuth2FlowHandler(
         display_name = None
         if "profile" in scopes:
             try:
-                resp = await websession.get(
-                    "https://www.googleapis.com/oauth2/v3/userinfo",
-                    headers={"Authorization": f"Bearer {access_token}"},
-                )
-                resp.raise_for_status()
-                userinfo = await resp.json()
-                display_name = userinfo.get("given_name") or userinfo.get("name")
-            except aiohttp.ClientError as err:
-                _LOGGER.warning("Error fetching user profile name: %s", err)
+                userinfo = await api.get_user_info()
+                display_name = userinfo.given_name or userinfo.name
             except Exception as err:  # pylint: disable=broad-except # noqa: BLE001
-                _LOGGER.warning("Unexpected error fetching user profile name: %s", err)
+                _LOGGER.warning("Error fetching user profile name: %s", err)
 
         title = display_name or "Google Health"
 
