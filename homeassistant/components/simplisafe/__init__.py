@@ -188,6 +188,8 @@ WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
     EVENT_USER_INITIATED_TEST,
 ]
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up SimpliSafe."""
