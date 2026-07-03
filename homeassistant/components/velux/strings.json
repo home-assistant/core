@@ -67,9 +67,6 @@
     "device_communication_error": {
       "message": "Failed to communicate with Velux device: {error}"
     },
-    "limitation_overlap": {
-      "message": "Cannot set limit: the closed position limit must not exceed the open position limit."
-    },
     "reboot_failed": {
       "message": "Failed to reboot gateway. Try again in a few moments or power cycle the device manually"
     }

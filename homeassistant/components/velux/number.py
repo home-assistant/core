@@ -8,12 +8,10 @@ from pyvlx import ExteriorHeating, Intensity, OpeningDevice, Position
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfRatio
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import VeluxConfigEntry
-from .const import DOMAIN
 from .coordinator import VeluxLimitationCoordinator
 from .entity import (
     VeluxEntity,
@@ -143,12 +141,6 @@ class VeluxPositionLimitNumber(
         """Set the limitation in Home Assistant semantics."""
         # this will only be called if the entity is available, so coordinator.data is not None
 
-        if self._overlaps(value):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="limitation_overlap",
-            )
-
         await self._async_set_pyvlx_limitation(
             Position(position_percent=100 - round(value))
         )
@@ -182,10 +174,6 @@ class VeluxPositionLimitNumber(
                 limitation_max=position_max,
             )
         )
-
-    def _overlaps(self, value: float) -> bool:
-        """Check if a value would overlap with sibling limitation."""
-        raise NotImplementedError
 
 
 class VeluxClosedPositionLimitNumber(VeluxPositionLimitNumber):
@@ -221,12 +209,6 @@ class VeluxClosedPositionLimitNumber(VeluxPositionLimitNumber):
         """Update pyvlx max and preserve pyvlx min for HA closed limit changes."""
         return current_min, updated_position
 
-    @override
-    def _overlaps(self, value: float) -> bool:
-        """Check if the closed limit would overlap the open limit."""
-        sibling_value = self._sibling_value()
-        return sibling_value is not None and value > sibling_value
-
 
 class VeluxOpenPositionLimitNumber(VeluxPositionLimitNumber):
     """Representation of the open position limit."""
@@ -260,9 +242,3 @@ class VeluxOpenPositionLimitNumber(VeluxPositionLimitNumber):
     ) -> tuple[Position, Position]:
         """Update pyvlx min and preserve pyvlx max for HA open limit changes."""
         return updated_position, current_max
-
-    @override
-    def _overlaps(self, value: float) -> bool:
-        """Check if the open limit would overlap the closed limit."""
-        sibling_value = self._sibling_value()
-        return sibling_value is not None and value < sibling_value
