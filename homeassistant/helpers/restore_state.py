@@ -346,3 +346,65 @@ class RestoreEntity(Entity):
         Implemented by platform classes.
         """
         return None
+
+
+RESTORE_STORAGE_KEY = "update_coordinator.restore_data"
+RESTORE_STORAGE_VERSION = 1
+
+
+class _RestoreStoreManager:
+    """Manage the single store holding the data of all restore coordinators.
+
+    The store maps a scope, a config entry id or an integration domain, to a map
+    of storage key to coordinator data.
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the store manager."""
+        self._hass = hass
+        self._store: Store[dict[str, dict[str, Any]]] = Store(
+            hass, RESTORE_STORAGE_VERSION, RESTORE_STORAGE_KEY
+        )
+        self._data: dict[str, dict[str, Any]] = {}
+
+    async def async_load(self, *, load_empty: bool = False) -> None:
+        """Load the store."""
+        if load_empty:
+            return
+        if (stored := await self._store.async_load()) is not None:
+            self._data = stored
+
+    @callback
+    def async_get(self, scope: str, storage_key: str) -> Any:
+        """Return the data stored for a coordinator, or None if nothing is stored."""
+        return self._data.get(scope, {}).get(storage_key)
+
+    @callback
+    def async_schedule_save(
+        self, scope: str, storage_key: str, data: Any, delay: float
+    ) -> None:
+        """Schedule saving the data of a coordinator."""
+        self._data.setdefault(scope, {})[storage_key] = data
+        self._store.async_delay_save(self._data_to_save, delay)
+
+    @callback
+    def async_remove_data(self, scope: str, storage_key: str) -> None:
+        """Remove the data stored for a coordinator."""
+        if storage_key not in self._data.get(scope, {}):
+            return
+        del self._data[scope][storage_key]
+        if not self._data[scope]:
+            del self._data[scope]
+        self._store.async_delay_save(self._data_to_save)
+
+    @callback
+    def async_clear_config_entry(self, entry_id: str) -> None:
+        """Remove all data stored for a config entry."""
+        if self._data.pop(entry_id, None) is None:
+            return
+        self._store.async_delay_save(self._data_to_save)
+
+    @callback
+    def _data_to_save(self) -> dict[str, dict[str, Any]]:
+        """Return the data to save."""
+        return self._data
