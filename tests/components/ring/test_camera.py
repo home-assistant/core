@@ -416,8 +416,9 @@ async def test_camera_live_view_for_video_intercom_update_keeps_snapshot_path(
     hass: HomeAssistant,
     mock_ring_client,
     mock_ring_devices,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test intercom camera updates do not use doorbell recording state."""
+    """Test intercom camera updates keep using the snapshot path."""
     intercom_mock = mock_ring_devices.get_device(INGRESS_DEVICE_ID)
     has_capability = intercom_mock.has_capability.side_effect
 
@@ -431,20 +432,19 @@ async def test_camera_live_view_for_video_intercom_update_keeps_snapshot_path(
 
     await setup_platform(hass, Platform.CAMERA)
 
-    camera = get_camera_from_entity_id(hass, "camera.ingress_live_view")
-    assert camera is not None
-    camera._last_event = {"id": 1, "recording": {"status": "ready"}}
-    camera._last_video_id = 1
-    camera._video_url = "http://dummy.url"
-    camera._images[(None, None)] = b"old image"
+    state = hass.states.get("camera.ingress_live_view")
+    assert state is not None
 
-    camera._handle_coordinator_update()
-    await camera.async_update()
+    image = await async_get_image(hass, "camera.ingress_live_view")
+    assert image.content == SMALLEST_VALID_JPEG_BYTES
+    intercom_mock.async_get_snapshot.assert_called_once()
 
-    assert camera._last_event is None
-    assert camera._last_video_id is None
-    assert camera._video_url is None
-    assert camera._images == {}
+    intercom_mock.async_get_snapshot.reset_mock()
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
     image = await async_get_image(hass, "camera.ingress_live_view")
     assert image.content == SMALLEST_VALID_JPEG_BYTES
     intercom_mock.async_get_snapshot.assert_called_once()
