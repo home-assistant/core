@@ -65,7 +65,7 @@ class RachioCalendarEntity(
         self._attr_translation_placeholders = {
             "base": coordinator.base_station[KEY_SERIAL_NUMBER]
         }
-        self._attr_unique_id = f"{coordinator.base_station[KEY_ID]}-calendar"
+        self._attr_unique_id = f"{coordinator.base_station[KEY_ID]}-calendar"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._previous_event: dict[str, Any] | None = None
 
     @property

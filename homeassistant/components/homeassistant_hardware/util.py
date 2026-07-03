@@ -36,9 +36,6 @@ from .const import (
     OTBR_ADDON_SLUG,
     Z2M_ADDON_NAME,
     Z2M_ADDON_SLUG_REGEX,
-    ZIGBEE_FLASHER_ADDON_MANAGER_DATA,
-    ZIGBEE_FLASHER_ADDON_NAME,
-    ZIGBEE_FLASHER_ADDON_SLUG,
 )
 from .helpers import async_firmware_update_context
 
@@ -88,7 +85,7 @@ class WaitingAddonManager(AddonManager):
             info = None
 
         # Do not try to uninstall an addon if it is already uninstalled
-        if info is not None and info.state == AddonState.NOT_INSTALLED:
+        if info is not None and info.state is AddonState.NOT_INSTALLED:
             return
 
         await self.async_uninstall_addon()
@@ -125,18 +122,6 @@ def get_otbr_addon_manager(hass: HomeAssistant) -> WaitingAddonManager:
         _LOGGER,
         OTBR_ADDON_NAME,
         OTBR_ADDON_SLUG,
-    )
-
-
-@singleton(ZIGBEE_FLASHER_ADDON_MANAGER_DATA)
-@callback
-def get_zigbee_flasher_addon_manager(hass: HomeAssistant) -> WaitingAddonManager:
-    """Get the flasher add-on manager."""
-    return WaitingAddonManager(
-        hass,
-        _LOGGER,
-        ZIGBEE_FLASHER_ADDON_NAME,
-        ZIGBEE_FLASHER_ADDON_SLUG,
     )
 
 
