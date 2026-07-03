@@ -43,6 +43,7 @@ _DataT = TypeVar("_DataT", default=dict[str, Any])
 RESTORE_SAVE_DELAY = 10
 RESTORE_STORAGE_KEY = "update_coordinator.restore_data"
 RESTORE_STORAGE_VERSION = 1
+RESTORE_DEFAULT_STORAGE_KEY = "default"
 
 DATA_RESTORE_STORE: HassKey[_RestoreStoreManager] = HassKey(
     "update_coordinator_restore_store"
@@ -753,7 +754,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         config_entry: config_entries.ConfigEntry | None,
         domain: str | None = None,
         name: str,
-        storage_key: str,
+        storage_key: str = RESTORE_DEFAULT_STORAGE_KEY,
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_DataT]] | None = None,
         setup_method: Callable[[], Awaitable[None]] | None = None,
