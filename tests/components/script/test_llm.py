@@ -1,25 +1,19 @@
 """Tests for the script LLM tools platform."""
 
+import pytest
+
 from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
-
-def _llm_context() -> llm.LLMContext:
-    """Return an LLM context for the conversation assistant."""
-    return llm.LLMContext(
-        platform="test_platform",
-        context=Context(),
-        language="*",
-        assistant="conversation",
-        device_id=None,
-    )
+ENTITY_ID = "script.test_script"
 
 
-async def _setup(hass: HomeAssistant) -> None:
-    """Set up the integrations and an exposed script."""
+@pytest.fixture(autouse=True)
+async def setup_integrations(hass: HomeAssistant) -> None:
+    """Set up the integrations and expose a script."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
     assert await async_setup_component(hass, "llm", {})
@@ -43,22 +37,36 @@ async def _setup(hass: HomeAssistant) -> None:
             }
         },
     )
+    async_expose_entity(hass, "conversation", ENTITY_ID, True)
+    await hass.async_block_till_done()
+
+
+def _llm_context() -> llm.LLMContext:
+    """Return an LLM context for the conversation assistant."""
+    return llm.LLMContext(
+        platform="test_platform",
+        context=Context(),
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
 
 
 async def test_script_tool_only_exposed(hass: HomeAssistant) -> None:
     """Test only exposed scripts get a tool."""
-    await _setup(hass)
-    async_expose_entity(hass, "conversation", "script.test_script", True)
-
     result = await llm_component.async_get_tools(hass, _llm_context())
     assert [tool.name for tool in result.tools] == ["test_script"]
 
 
+async def test_script_tool_not_exposed(hass: HomeAssistant) -> None:
+    """Test no script tool is offered when the script is not exposed."""
+    async_expose_entity(hass, "conversation", ENTITY_ID, False)
+    result = await llm_component.async_get_tools(hass, _llm_context())
+    assert [tool.name for tool in result.tools] == []
+
+
 async def test_script_tool_call(hass: HomeAssistant) -> None:
     """Test calling the exposed script through its tool."""
-    await _setup(hass)
-    async_expose_entity(hass, "conversation", "script.test_script", True)
-
     llm_context = _llm_context()
     result = await llm_component.async_get_tools(hass, llm_context)
     tool = next(tool for tool in result.tools if tool.name == "test_script")
