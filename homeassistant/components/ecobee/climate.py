@@ -1,6 +1,7 @@
 """Support for Ecobee Thermostats."""
 
 import collections
+import contextlib
 from typing import Any, override
 
 import voluptuous as vol
@@ -28,7 +29,7 @@ from homeassistant.const import (
     STATE_ON,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -78,6 +79,7 @@ HAS_HEAT_PUMP = "hasHeatPump"
 
 DEFAULT_MIN_HUMIDITY = 15
 DEFAULT_MAX_HUMIDITY = 50
+DATA_THERMOSTATS = "thermostats"
 HUMIDIFIER_MANUAL_MODE = "manual"
 
 # Order matters, because for reverse mapping we don't want to map HEAT to AUX
@@ -199,6 +201,104 @@ SUPPORT_FLAGS = (
 )
 
 
+@callback
+def async_register_services(hass: HomeAssistant) -> None:
+    """Register ecobee services."""
+    # pylint: disable-next=home-assistant-use-runtime-data
+    hass.data.setdefault(DOMAIN, {})[DATA_THERMOSTATS] = []
+
+    def create_vacation_service(service: ServiceCall) -> None:
+        """Create a vacation on the target thermostat."""
+        entity_id = service.data[ATTR_ENTITY_ID]
+
+        for thermostat in _async_get_thermostats(hass):
+            if thermostat.entity_id == entity_id:
+                thermostat.create_vacation(service.data)
+                thermostat.schedule_update_ha_state(True)
+                break
+
+    def delete_vacation_service(service: ServiceCall) -> None:
+        """Delete a vacation on the target thermostat."""
+        entity_id = service.data[ATTR_ENTITY_ID]
+        vacation_name = service.data[ATTR_VACATION_NAME]
+
+        for thermostat in _async_get_thermostats(hass):
+            if thermostat.entity_id == entity_id:
+                thermostat.delete_vacation(vacation_name)
+                thermostat.schedule_update_ha_state(True)
+                break
+
+    def fan_min_on_time_set_service(service: ServiceCall) -> None:
+        """Set the minimum fan on time on the target thermostats."""
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+        fan_min_on_time = service.data[ATTR_FAN_MIN_ON_TIME]
+
+        thermostats = _async_get_thermostats(hass)
+        if entity_id:
+            target_thermostats = [
+                thermostat
+                for thermostat in thermostats
+                if thermostat.entity_id in entity_id
+            ]
+        else:
+            target_thermostats = thermostats
+
+        for thermostat in target_thermostats:
+            thermostat.set_fan_min_on_time(str(fan_min_on_time))
+            thermostat.schedule_update_ha_state(True)
+
+    def resume_program_set_service(service: ServiceCall) -> None:
+        """Resume the program on the target thermostats."""
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+        resume_all = service.data.get(ATTR_RESUME_ALL)
+
+        thermostats = _async_get_thermostats(hass)
+        if entity_id:
+            target_thermostats = [
+                thermostat
+                for thermostat in thermostats
+                if thermostat.entity_id in entity_id
+            ]
+        else:
+            target_thermostats = thermostats
+
+        for thermostat in target_thermostats:
+            thermostat.resume_program(resume_all)
+            thermostat.schedule_update_ha_state(True)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CREATE_VACATION,
+        create_vacation_service,
+        schema=CREATE_VACATION_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_DELETE_VACATION,
+        delete_vacation_service,
+        schema=DELETE_VACATION_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_FAN_MIN_ON_TIME,
+        fan_min_on_time_set_service,
+        schema=SET_FAN_MIN_ON_TIME_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RESUME_PROGRAM,
+        resume_program_set_service,
+        schema=RESUME_PROGRAM_SCHEMA,
+    )
+
+
+@callback
+def _async_get_thermostats(hass: HomeAssistant) -> list[Thermostat]:
+    """Return loaded ecobee thermostat entities."""
+    # pylint: disable-next=home-assistant-use-runtime-data
+    return hass.data[DOMAIN][DATA_THERMOSTATS]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EcobeeConfigEntry,
@@ -226,95 +326,9 @@ async def async_setup_entry(
         entities.append(Thermostat(data, index, thermostat, hass))
 
     async_add_entities(entities, True)
+    _async_get_thermostats(hass).extend(entities)
 
     platform = entity_platform.async_get_current_platform()
-
-    def create_vacation_service(service: ServiceCall) -> None:
-        """Create a vacation on the target thermostat."""
-        entity_id = service.data[ATTR_ENTITY_ID]
-
-        for thermostat in entities:
-            if thermostat.entity_id == entity_id:
-                thermostat.create_vacation(service.data)
-                thermostat.schedule_update_ha_state(True)
-                break
-
-    def delete_vacation_service(service: ServiceCall) -> None:
-        """Delete a vacation on the target thermostat."""
-        entity_id = service.data[ATTR_ENTITY_ID]
-        vacation_name = service.data[ATTR_VACATION_NAME]
-
-        for thermostat in entities:
-            if thermostat.entity_id == entity_id:
-                thermostat.delete_vacation(vacation_name)
-                thermostat.schedule_update_ha_state(True)
-                break
-
-    def fan_min_on_time_set_service(service: ServiceCall) -> None:
-        """Set the minimum fan on time on the target thermostats."""
-        entity_id = service.data.get(ATTR_ENTITY_ID)
-        fan_min_on_time = service.data[ATTR_FAN_MIN_ON_TIME]
-
-        if entity_id:
-            target_thermostats = [
-                entity for entity in entities if entity.entity_id in entity_id
-            ]
-        else:
-            target_thermostats = entities
-
-        for thermostat in target_thermostats:
-            thermostat.set_fan_min_on_time(str(fan_min_on_time))
-
-            thermostat.schedule_update_ha_state(True)
-
-    def resume_program_set_service(service: ServiceCall) -> None:
-        """Resume the program on the target thermostats."""
-        entity_id = service.data.get(ATTR_ENTITY_ID)
-        resume_all = service.data.get(ATTR_RESUME_ALL)
-
-        if entity_id:
-            target_thermostats = [
-                entity for entity in entities if entity.entity_id in entity_id
-            ]
-        else:
-            target_thermostats = entities
-
-        for thermostat in target_thermostats:
-            thermostat.resume_program(resume_all)
-
-            thermostat.schedule_update_ha_state(True)
-
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_CREATE_VACATION,
-        create_vacation_service,
-        schema=CREATE_VACATION_SCHEMA,
-    )
-
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_DELETE_VACATION,
-        delete_vacation_service,
-        schema=DELETE_VACATION_SCHEMA,
-    )
-
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_FAN_MIN_ON_TIME,
-        fan_min_on_time_set_service,
-        schema=SET_FAN_MIN_ON_TIME_SCHEMA,
-    )
-
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_RESUME_PROGRAM,
-        resume_program_set_service,
-        schema=RESUME_PROGRAM_SCHEMA,
-    )
 
     platform.async_register_entity_service(
         SERVICE_SET_DST_MODE,
@@ -401,6 +415,12 @@ class Thermostat(ClimateEntity):
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         if self.hvac_mode != HVACMode.OFF:
             self._last_active_hvac_mode = self.hvac_mode
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove thermostat from service targets."""
+        with contextlib.suppress(ValueError):
+            _async_get_thermostats(self.hass).remove(self)
 
     @property
     @override
