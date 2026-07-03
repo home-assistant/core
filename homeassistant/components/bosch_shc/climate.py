@@ -203,19 +203,18 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
             )
             return
 
-        if self._attr_min_temp <= temperature <= self._attr_max_temp:
-            # SHC rejects a setpoint write while operationMode=AUTOMATIC.
-            # For a bare set_temperature (no hvac_mode given) drop to MANUAL
-            # first — matching the Bosch app.
-            if (
-                kwargs.get(ATTR_HVAC_MODE) is None
-                and self._device.operation_mode
-                == SHCClimateControl.RoomClimateControlService.OperationMode.AUTOMATIC
-            ):
-                self._device.operation_mode = (
-                    SHCClimateControl.RoomClimateControlService.OperationMode.MANUAL
-                )
-            self._device.setpoint_temperature = float(round(temperature * 2.0) / 2.0)
+        # SHC rejects a setpoint write while operationMode=AUTOMATIC. For a
+        # bare set_temperature (no hvac_mode given) drop to MANUAL first —
+        # matching the Bosch app.
+        if (
+            kwargs.get(ATTR_HVAC_MODE) is None
+            and self._device.operation_mode
+            == SHCClimateControl.RoomClimateControlService.OperationMode.AUTOMATIC
+        ):
+            self._device.operation_mode = (
+                SHCClimateControl.RoomClimateControlService.OperationMode.MANUAL
+            )
+        self._device.setpoint_temperature = float(round(temperature * 2.0) / 2.0)
 
     @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -351,8 +350,7 @@ class SHCHeatingCircuitEntity(SHCEntity, ClimateEntity):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        if self._attr_min_temp <= temperature <= self._attr_max_temp:
-            self._device.setpoint_temperature = float(round(temperature * 2.0) / 2.0)
+        self._device.setpoint_temperature = float(round(temperature * 2.0) / 2.0)
 
     @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:

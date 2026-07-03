@@ -473,8 +473,10 @@ async def test_climate_control_set_hvac_mode(
 @pytest.mark.parametrize(
     ("preset_mode", "expect_boost", "expect_low", "expect_operation_mode"),
     [
-        pytest.param(PRESET_BOOST, True, False, None, id="boost"),
-        pytest.param(PRESET_ECO, False, True, None, id="eco"),
+        # boost/eco don't touch operation_mode, so it stays at the device's
+        # starting value (MANUAL, set below).
+        pytest.param(PRESET_BOOST, True, False, OM_CC.MANUAL, id="boost"),
+        pytest.param(PRESET_ECO, False, True, OM_CC.MANUAL, id="eco"),
         pytest.param(PRESET_AUTO, False, False, OM_CC.AUTOMATIC, id="auto"),
         pytest.param(PRESET_MANUAL, False, False, OM_CC.MANUAL, id="manual"),
     ],
@@ -486,7 +488,7 @@ async def test_climate_control_set_preset_mode(
     preset_mode: str,
     expect_boost: bool,
     expect_low: bool,
-    expect_operation_mode: RoomClimateControlService.OperationMode | None,
+    expect_operation_mode: RoomClimateControlService.OperationMode,
 ) -> None:
     """set_preset_mode writes the regulation-axis fields for each preset."""
     device = _make_climate_device(
@@ -508,8 +510,7 @@ async def test_climate_control_set_preset_mode(
 
     assert device.boost_mode is expect_boost
     assert device.low is expect_low
-    if expect_operation_mode is not None:
-        assert device.operation_mode == expect_operation_mode
+    assert device.operation_mode == expect_operation_mode
 
 
 async def test_climate_control_turn_on_from_off(
