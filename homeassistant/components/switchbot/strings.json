@@ -382,9 +382,6 @@
       },
       "wireless_charging": {
         "name": "Wireless charging"
-      },
-      "vertical_oscillation": {
-        "name": "Vertical oscillation"
       }
     },
     "vacuum": {
