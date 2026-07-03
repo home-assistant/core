@@ -7,6 +7,7 @@ from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .account import StarlineAccount
 from .const import (
@@ -21,6 +22,59 @@ from .const import (
 )
 
 type StarlineConfigEntry = ConfigEntry[StarlineAccount]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up StarLine services."""
+
+    async def async_set_scan_interval(call: ServiceCall) -> None:
+        """Set scan interval."""
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            options = dict(entry.options)
+            options[CONF_SCAN_INTERVAL] = call.data[CONF_SCAN_INTERVAL]
+            hass.config_entries.async_update_entry(entry=entry, options=options)
+
+    async def async_set_scan_obd_interval(call: ServiceCall) -> None:
+        """Set OBD info scan interval."""
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            options = dict(entry.options)
+            options[CONF_SCAN_OBD_INTERVAL] = call.data[CONF_SCAN_INTERVAL]
+            hass.config_entries.async_update_entry(entry=entry, options=options)
+
+    async def async_update(call: ServiceCall | None = None) -> None:
+        """Update all data."""
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            account: StarlineAccount = entry.runtime_data
+            await account.update()
+            await account.update_obd()
+
+    hass.services.async_register(DOMAIN, SERVICE_UPDATE_STATE, async_update)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_SCAN_INTERVAL,
+        async_set_scan_interval,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_SCAN_INTERVAL): vol.All(
+                    vol.Coerce(int), vol.Range(min=10)
+                )
+            }
+        ),
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_SCAN_OBD_INTERVAL,
+        async_set_scan_obd_interval,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_SCAN_INTERVAL): vol.All(
+                    vol.Coerce(int), vol.Range(min=180)
+                )
+            }
+        ),
+    )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: StarlineConfigEntry) -> bool:
@@ -40,52 +94,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: StarlineConfigEntry) -> 
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    async def async_set_scan_interval(call: ServiceCall) -> None:
-        """Set scan interval."""
-        options = dict(entry.options)
-        options[CONF_SCAN_INTERVAL] = call.data[CONF_SCAN_INTERVAL]
-        hass.config_entries.async_update_entry(entry=entry, options=options)
-
-    async def async_set_scan_obd_interval(call: ServiceCall) -> None:
-        """Set OBD info scan interval."""
-        options = dict(entry.options)
-        options[CONF_SCAN_OBD_INTERVAL] = call.data[CONF_SCAN_INTERVAL]
-        hass.config_entries.async_update_entry(entry=entry, options=options)
-
-    async def async_update(call: ServiceCall | None = None) -> None:
-        """Update all data."""
-        await account.update()
-        await account.update_obd()
-
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(DOMAIN, SERVICE_UPDATE_STATE, async_update)
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_SCAN_INTERVAL,
-        async_set_scan_interval,
-        schema=vol.Schema(
-            {
-                vol.Required(CONF_SCAN_INTERVAL): vol.All(
-                    vol.Coerce(int), vol.Range(min=10)
-                )
-            }
-        ),
-    )
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_SCAN_OBD_INTERVAL,
-        async_set_scan_obd_interval,
-        schema=vol.Schema(
-            {
-                vol.Required(CONF_SCAN_INTERVAL): vol.All(
-                    vol.Coerce(int), vol.Range(min=180)
-                )
-            }
-        ),
-    )
 
     entry.async_on_unload(entry.add_update_listener(async_options_updated))
     await async_options_updated(hass, entry)
