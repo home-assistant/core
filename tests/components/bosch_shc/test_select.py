@@ -42,12 +42,6 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.fixture
-def platforms() -> list[Platform]:
-    """Load only the select platform."""
-    return [Platform.SELECT]
-
-
 def _make_device(
     spec: type, serial: str = "device-serial-1", **attrs: object
 ) -> MagicMock:
