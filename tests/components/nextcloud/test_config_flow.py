@@ -96,7 +96,7 @@ async def test_user_create_entry(
 async def test_reconfigure_entry(
     hass: HomeAssistant, snapshot: SnapshotAssertion
 ) -> None:
-    """Test that the user step works."""
+    """Test that the reconfigure step works."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="https://my.nc_url.local",

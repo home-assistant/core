@@ -93,7 +93,7 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle a flow initialized by the user."""
+        """Handle a reconfigure flow initialized by the user."""
         return await self.async_step_config(user_input)
 
     async def async_step_reauth(
