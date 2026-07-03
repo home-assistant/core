@@ -231,19 +231,11 @@ class OAuth2FlowHandler(
             )
 
         # Validate the home region's own returned public key against our shared
-        # key. The key file is shared across all region clients, so the point is
-        # identical per region.
-        registered_public_key = (
-            responses[self.region].get("response", {}).get("public_key")
-        )
+        # key. The loop above guarantees the home region produced a usable public
+        # key, and the key file is shared across all region clients, so the point
+        # is identical per region.
+        registered_public_key = responses[self.region]["response"]["public_key"]
 
-        if not registered_public_key:
-            errors["base"] = "public_key_not_found"
-            return self.async_show_form(
-                step_id="domain_registration",
-                description_placeholders=description_placeholders,
-                errors=errors,
-            )
         if (
             registered_public_key.lower()
             != self.apis[0][1].public_uncompressed_point.lower()
