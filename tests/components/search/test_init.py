@@ -111,6 +111,23 @@ async def test_search(
         wled_segment_2_entity.entity_id, area_id=bedroom_area.id
     )
 
+    # Config entry with a device providing a scene entity
+    esphome_config_entry = MockConfigEntry(domain="esphome")
+    esphome_config_entry.add_to_hass(hass)
+    esphome_device = device_registry.async_get_or_create(
+        config_entry_id=esphome_config_entry.entry_id,
+        name="Node",
+        identifiers={("esphome", "esphome-1")},
+    )
+    esphome_scene_entity = entity_registry.async_get_or_create(
+        "scene",
+        "esphome",
+        "esphome-1-scene",
+        suggested_object_id="esphome scene",
+        config_entry=esphome_config_entry,
+        device_id=esphome_device.id,
+    )
+
     scene_wled_hue_entity = entity_registry.async_get_or_create(
         "scene",
         "homeassistant",
@@ -657,6 +674,18 @@ async def test_search(
         ItemType.INTEGRATION: {"hue"},
         ItemType.SCENE: {"scene.scene_hue_seg_1", scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {"script.device", "script.hue"},
+    }
+    assert search(ItemType.DEVICE, esphome_device.id) == {
+        ItemType.CONFIG_ENTRY: {esphome_config_entry.entry_id},
+        ItemType.ENTITY: {esphome_scene_entity.entity_id},
+        ItemType.INTEGRATION: {"esphome"},
+        ItemType.SCENE: {esphome_scene_entity.entity_id},
+    }
+    assert search(ItemType.CONFIG_ENTRY, esphome_config_entry.entry_id) == {
+        ItemType.DEVICE: {esphome_device.id},
+        ItemType.ENTITY: {esphome_scene_entity.entity_id},
+        ItemType.INTEGRATION: {"esphome"},
+        ItemType.SCENE: {esphome_scene_entity.entity_id},
     }
 
     assert not search(ItemType.ENTITY, "sensor.unknown")
