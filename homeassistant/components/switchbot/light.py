@@ -242,25 +242,27 @@ class SwitchbotCirculatorFanProLightEntity(SwitchbotEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_color_mode = ColorMode.BRIGHTNESS
 
-    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.base_unique_id}-light"
-
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the night light is on."""
         return self._device.is_night_light_on()
 
     @property
+    @override
     def brightness(self) -> int | None:
-        """Return the brightness (level 1 high -> 255, level 2 low -> 128)."""
+        """Return HA brightness for the night light's two hardware levels.
+
+        The device reports level 1 (high) or level 2 (low); these map to HA
+        brightness 255 and 128 respectively. Returns None when unavailable.
+        """
         level = self._device.get_night_light_level()
         if not level:
             return None
         return 128 if level == 2 else 255
 
     @exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the night light on (picking high/low from the requested brightness)."""
         _LOGGER.debug("Turning on night light %s, address %s", kwargs, self._address)
@@ -270,6 +272,7 @@ class SwitchbotCirculatorFanProLightEntity(SwitchbotEntity, LightEntity):
         await self._device.turn_on_light(low=low)
 
     @exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the night light off."""
         _LOGGER.debug("Turning off night light %s, address %s", kwargs, self._address)
