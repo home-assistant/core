@@ -2555,6 +2555,12 @@
           "iot_class": "cloud_polling",
           "name": "Google Gemini"
         },
+        "google_health": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Health"
+        },
         "google_mail": {
           "integration_type": "service",
           "config_flow": true,
@@ -2645,12 +2651,6 @@
           "name": "YouTube"
         }
       }
-    },
-    "google_health": {
-      "name": "Google Health",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "govee": {
       "name": "Govee",

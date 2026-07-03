@@ -1,9 +1,13 @@
 """Tests for Google Health integration lifecycle (init/unloading)."""
 
 from collections.abc import Awaitable, Callable
+from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 
 from .conftest import (
     DISTANCE_ROLLUP_URL,
@@ -267,3 +271,20 @@ async def test_setup_missing_measurements_scope(
     # Activity sensor entities should exist
     assert hass.states.get("sensor.google_health_steps") is not None
     assert hass.states.get("sensor.google_health_distance") is not None
+
+
+async def test_setup_oauth_implementation_unavailable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.google_health.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY

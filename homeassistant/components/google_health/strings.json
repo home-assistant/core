@@ -7,6 +7,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "cannot_connect": "Failed to connect.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "missing_profile_scope": "Missing required Google Health profile read permission.",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
