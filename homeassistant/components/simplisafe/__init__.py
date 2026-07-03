@@ -62,6 +62,7 @@ from homeassistant.helpers.service import (
     async_register_admin_service,
     verify_domain_control,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
@@ -125,12 +126,6 @@ SERVICE_NAME_REMOVE_PIN = "remove_pin"
 SERVICE_NAME_SET_PIN = "set_pin"
 SERVICE_NAME_SET_SYSTEM_PROPERTIES = "set_system_properties"
 
-SERVICES = (
-    SERVICE_NAME_REMOVE_PIN,
-    SERVICE_NAME_SET_PIN,
-    SERVICE_NAME_SET_SYSTEM_PROPERTIES,
-)
-
 SERVICE_REMOVE_PIN_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): cv.string,
@@ -192,6 +187,68 @@ WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
     EVENT_SENSOR_PAIRED_AND_NAMED,
     EVENT_USER_INITIATED_TEST,
 ]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up SimpliSafe."""
+    _verify_domain_control = verify_domain_control(DOMAIN)
+
+    @callback
+    def extract_system(
+        func: Callable[[ServiceCall, SystemType], Coroutine[Any, Any, None]],
+    ) -> Callable[[ServiceCall], Coroutine[Any, Any, None]]:
+        """Define a decorator to get the correct system for a service call."""
+
+        async def wrapper(call: ServiceCall) -> None:
+            """Wrap the service function."""
+            system = _async_get_system_for_service_call(hass, call)
+
+            try:
+                await func(call, system)
+            except SimplipyError as err:
+                raise HomeAssistantError(
+                    f'Error while executing "{call.service}": {err}'
+                ) from err
+
+        return wrapper
+
+    @_verify_domain_control
+    @extract_system
+    async def async_remove_pin(call: ServiceCall, system: SystemType) -> None:
+        """Remove a PIN."""
+        await system.async_remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
+
+    @_verify_domain_control
+    @extract_system
+    async def async_set_pin(call: ServiceCall, system: SystemType) -> None:
+        """Set a PIN."""
+        await system.async_set_pin(call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE])
+
+    @_verify_domain_control
+    @extract_system
+    async def async_set_system_properties(
+        call: ServiceCall, system: SystemType
+    ) -> None:
+        """Set one or more system parameters."""
+        if not isinstance(system, SystemV3):
+            raise HomeAssistantError("Can only set system properties on V3 systems")
+
+        await system.async_set_properties(
+            {prop: value for prop, value in call.data.items() if prop != ATTR_DEVICE_ID}
+        )
+
+    for service, method, schema in (
+        (SERVICE_NAME_REMOVE_PIN, async_remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
+        (SERVICE_NAME_SET_PIN, async_set_pin, SERVICE_SET_PIN_SCHEMA),
+        (
+            SERVICE_NAME_SET_SYSTEM_PROPERTIES,
+            async_set_system_properties,
+            SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA,
+        ),
+    ):
+        async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
+
+    return True
 
 
 @callback
@@ -295,7 +352,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
     """Set up SimpliSafe as config entry."""
     _async_standardize_config_entry(hass, entry)
 
-    _verify_domain_control = verify_domain_control(DOMAIN)
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
@@ -318,64 +374,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
     entry.runtime_data = simplisafe
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    @callback
-    def extract_system(
-        func: Callable[[ServiceCall, SystemType], Coroutine[Any, Any, None]],
-    ) -> Callable[[ServiceCall], Coroutine[Any, Any, None]]:
-        """Define a decorator to get the correct system for a service call."""
-
-        async def wrapper(call: ServiceCall) -> None:
-            """Wrap the service function."""
-            system = _async_get_system_for_service_call(hass, call)
-
-            try:
-                await func(call, system)
-            except SimplipyError as err:
-                raise HomeAssistantError(
-                    f'Error while executing "{call.service}": {err}'
-                ) from err
-
-        return wrapper
-
-    @_verify_domain_control
-    @extract_system
-    async def async_remove_pin(call: ServiceCall, system: SystemType) -> None:
-        """Remove a PIN."""
-        await system.async_remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
-
-    @_verify_domain_control
-    @extract_system
-    async def async_set_pin(call: ServiceCall, system: SystemType) -> None:
-        """Set a PIN."""
-        await system.async_set_pin(call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE])
-
-    @_verify_domain_control
-    @extract_system
-    async def async_set_system_properties(
-        call: ServiceCall, system: SystemType
-    ) -> None:
-        """Set one or more system parameters."""
-        if not isinstance(system, SystemV3):
-            raise HomeAssistantError("Can only set system properties on V3 systems")
-
-        await system.async_set_properties(
-            {prop: value for prop, value in call.data.items() if prop != ATTR_DEVICE_ID}
-        )
-
-    for service, method, schema in (
-        (SERVICE_NAME_REMOVE_PIN, async_remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
-        (SERVICE_NAME_SET_PIN, async_set_pin, SERVICE_SET_PIN_SCHEMA),
-        (
-            SERVICE_NAME_SET_SYSTEM_PROPERTIES,
-            async_set_system_properties,
-            SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA,
-        ),
-    ):
-        if hass.services.has_service(DOMAIN, service):
-            continue
-        # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-        async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
     current_options = {**entry.options}
 
@@ -403,15 +401,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -> bool:
     """Unload a SimpliSafe config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        # If this is the last loaded instance of SimpliSafe, deregister any services
-        # defined during integration setup:
-        for service_name in SERVICES:
-            hass.services.async_remove(DOMAIN, service_name)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class SimpliSafe:
