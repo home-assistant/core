@@ -37,7 +37,7 @@ async def _start_menu(hass: HomeAssistant, step: str) -> str:
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.MENU
-    assert set(result["menu_options"]) == {"network", "serial"}
+    assert set(result["menu_options"]) == {"modbus_tcp", "serial"}
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": step}
     )
@@ -47,9 +47,9 @@ async def _start_menu(hass: HomeAssistant, step: str) -> str:
 
 
 @pytest.mark.usefixtures("mock_connect", "mock_setup_entry")
-async def test_network_flow(hass: HomeAssistant) -> None:
-    """The network step opens the connection and creates an entry."""
-    flow_id = await _start_menu(hass, "network")
+async def test_modbus_tcp_flow(hass: HomeAssistant) -> None:
+    """The Modbus TCP step opens the connection and creates an entry."""
+    flow_id = await _start_menu(hass, "modbus_tcp")
     result = await hass.config_entries.flow.async_configure(
         flow_id, {CONF_HOST: "1.2.3.4", CONF_PORT: 502}
     )
@@ -62,13 +62,13 @@ async def test_network_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_network_cannot_connect_then_recovers(
+async def test_modbus_tcp_cannot_connect_then_recovers(
     hass: HomeAssistant,
     mock_connect: AsyncMock,
     mock_modbus_connection: MockModbusConnection,
 ) -> None:
     """A failed probe shows an error; a later success creates the entry."""
-    flow_id = await _start_menu(hass, "network")
+    flow_id = await _start_menu(hass, "modbus_tcp")
     mock_connect.side_effect = ModbusConnectionError("nope")
     result = await hass.config_entries.flow.async_configure(
         flow_id, {CONF_HOST: "1.2.3.4", CONF_PORT: 502}
@@ -107,10 +107,10 @@ async def test_serial_cannot_open(hass: HomeAssistant, mock_connect: AsyncMock) 
     ("step", "data", "user_input"),
     [
         pytest.param(
-            "network",
+            "modbus_tcp",
             {CONF_TYPE: CONNECTION_TCP, CONF_HOST: "1.2.3.4", CONF_PORT: 502},
             {CONF_HOST: "1.2.3.4", CONF_PORT: 502},
-            id="network",
+            id="modbus_tcp",
         ),
         pytest.param(
             "serial",

@@ -8,7 +8,7 @@
       "cannot_open_serial_port": "Failed to open the serial port"
     },
     "step": {
-      "network": {
+      "modbus_tcp": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
@@ -39,7 +39,7 @@
       "user": {
         "description": "How is the Modbus network connected?",
         "menu_options": {
-          "network": "Modbus TCP",
+          "modbus_tcp": "Modbus TCP",
           "serial": "Serial (including serial proxies and networked connections)"
         }
       }

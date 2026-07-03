@@ -26,7 +26,7 @@ from .const import (
     DOMAIN,
 )
 
-STEP_NETWORK = vol.Schema(
+STEP_MODBUS_TCP = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
@@ -57,10 +57,10 @@ class ModbusConnectionConfigFlow(ConfigFlow, domain=DOMAIN):
         """Let the user choose the transport."""
         return self.async_show_menu(
             step_id="user",
-            menu_options=["network", "serial"],
+            menu_options=["modbus_tcp", "serial"],
         )
 
-    async def async_step_network(
+    async def async_step_modbus_tcp(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Configure a Modbus TCP / RTU-over-TCP connection."""
@@ -73,7 +73,7 @@ class ModbusConnectionConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=f"{data[CONF_HOST]}:{data[CONF_PORT]}", data=data
                 )
         return self.async_show_form(
-            step_id="network", data_schema=STEP_NETWORK, errors=errors
+            step_id="modbus_tcp", data_schema=STEP_MODBUS_TCP, errors=errors
         )
 
     async def async_step_serial(
