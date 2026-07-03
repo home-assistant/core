@@ -40,10 +40,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Hallway Shutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.maple_residence_hallway_shutter',
@@ -94,10 +94,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Hallway Shutter Low speed',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Shutter Low speed',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.maple_residence_hallway_shutter_low_speed',
@@ -148,10 +148,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Nursery Shutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.maple_residence_nursery_shutter',
@@ -202,10 +202,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Nursery Shutter Low speed',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Shutter Low speed',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.maple_residence_nursery_shutter_low_speed',
@@ -256,10 +256,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Office Shutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.maple_residence_office_shutter',
@@ -310,10 +310,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Office Shutter Low speed',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter Low speed',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.maple_residence_office_shutter_low_speed',
@@ -363,11 +363,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][cover.palm_court_jaloezie-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'blind',
-      'friendly_name': 'Jaloezie',
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jaloezie',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
-      'supported_features': <CoverEntityFeature: 123>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 123>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.palm_court_jaloezie',
@@ -417,11 +417,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][cover.palm_court_kitchen_sheer_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'blind',
-      'friendly_name': 'Kitchen Sheer Screen',
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Sheer Screen',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
-      'supported_features': <CoverEntityFeature: 123>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 123>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.palm_court_kitchen_sheer_screen',
@@ -471,11 +471,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][cover.palm_court_kitchen_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'shutter',
-      'friendly_name': 'Kitchen Shutter',
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.palm_court_kitchen_shutter',
@@ -525,11 +525,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][cover.palm_court_office_venetian_blind-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'blind',
-      'friendly_name': 'Office Venetian Blind',
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Venetian Blind',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
-      'supported_features': <CoverEntityFeature: 123>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 123>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.palm_court_office_venetian_blind',
@@ -579,11 +579,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][cover.palm_court_patio_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'shutter',
-      'friendly_name': 'Patio Shutter',
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.palm_court_patio_shutter',
@@ -634,10 +634,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
-      'device_class': 'window',
-      'friendly_name': 'Loft Window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Loft Window',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.loft_loft_window',
@@ -688,10 +688,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
-      'device_class': 'window',
-      'friendly_name': 'Studio Window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Studio Window',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.loft_studio_window',
@@ -742,10 +742,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 50,
-      'device_class': 'blind',
-      'friendly_name': 'Laundry Screen',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laundry Screen',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.playroom_laundry_screen',
@@ -796,10 +796,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'blind',
-      'friendly_name': 'Pantry Screen',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pantry Screen',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.playroom_pantry_screen',
@@ -850,10 +850,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'blind',
-      'friendly_name': 'Playroom Screen',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Playroom Screen',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.playroom_playroom_screen',
@@ -904,10 +904,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'blind',
-      'friendly_name': 'Workshop Screen',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Workshop Screen',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.playroom_workshop_screen',
@@ -958,10 +958,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'blind',
-      'friendly_name': 'Study Screen',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Screen',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.study_study_screen',
@@ -1013,10 +1013,10 @@
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 80,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Basement Roller Shutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Basement Roller Shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.veranda_basement_roller_shutter',
@@ -1068,10 +1068,10 @@
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Veranda Roller Shutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Veranda Roller Shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 255>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.veranda_veranda_roller_shutter',
@@ -1122,10 +1122,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
-      'device_class': 'shutter',
-      'friendly_name': 'Studio Shutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Studio Shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.dining_room_studio_shutter',
@@ -1176,10 +1176,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
-      'device_class': 'shutter',
-      'friendly_name': 'Dining Room Shutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.garage_dining_room_shutter',
@@ -1230,10 +1230,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
-      'device_class': 'shutter',
-      'friendly_name': 'Guest Room Shutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Guest Room Shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.garage_guest_room_shutter',
@@ -1284,10 +1284,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
-      'device_class': 'shutter',
-      'friendly_name': 'Kids Room Shutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kids Room Shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.guest_bedroom_kids_room_shutter',
@@ -1338,10 +1338,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Kitchen Shutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.kids_room_kitchen_shutter',
@@ -1392,10 +1392,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
-      'device_class': 'shutter',
-      'friendly_name': 'Office Shutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.kids_room_office_shutter',
@@ -1446,10 +1446,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
-      'device_class': 'shutter',
-      'friendly_name': 'Patio Shutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.kids_room_patio_shutter',
@@ -1499,10 +1499,10 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_basement_garage_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'Basement Garage Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Basement Garage Door',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_basement_garage_door',
@@ -1553,10 +1553,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
-      'device_class': 'window',
-      'friendly_name': 'Bedroom Window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Window',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_bedroom_window',
@@ -1607,10 +1607,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 11,
-      'device_class': 'awning',
-      'friendly_name': 'Bioclimatic Pergola',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'awning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bioclimatic Pergola',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 128>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 128>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_bioclimatic_pergola',
@@ -1660,10 +1660,10 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_cyclic_garage_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'Cyclic Garage Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cyclic Garage Door',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
-      'supported_features': <CoverEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_cyclic_garage_door',
@@ -1713,10 +1713,10 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_garage_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'Garage Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Door',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_garage_door',
@@ -1766,10 +1766,10 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_garden_gate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gate',
-      'friendly_name': 'Garden Gate',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Gate',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_garden_gate',
@@ -1820,10 +1820,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
-      'device_class': 'garage',
-      'friendly_name': 'Main Garage Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main Garage Door',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_main_garage_door',
@@ -1873,10 +1873,10 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_ogp_garage_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'OGP Garage Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OGP Garage Door',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_ogp_garage_door',
@@ -1926,10 +1926,10 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_ogp_gate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gate',
-      'friendly_name': 'OGP Gate',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OGP Gate',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_ogp_gate',
@@ -1979,10 +1979,10 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_partial_garage_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'Partial Garage Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Partial Garage Door',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_partial_garage_door',
@@ -2033,10 +2033,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 20,
-      'device_class': 'awning',
-      'friendly_name': 'Pergola Awning',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'awning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pergola Awning',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_pergola_awning',
@@ -2086,11 +2086,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_rts_garage_door_4t-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'garage',
-      'friendly_name': 'RTS Garage Door 4T',
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RTS Garage Door 4T',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
-      'supported_features': <CoverEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_rts_garage_door_4t',
@@ -2140,11 +2140,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_rts_gate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'gate',
-      'friendly_name': 'RTS Gate',
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RTS Gate',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
-      'supported_features': <CoverEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_rts_gate',
@@ -2195,10 +2195,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
-      'device_class': 'garage',
-      'friendly_name': 'Side Garage Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Side Garage Door',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_side_garage_door',
@@ -2248,10 +2248,10 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_sliding_gate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gate',
-      'friendly_name': 'Sliding Gate',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sliding Gate',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_sliding_gate',
@@ -2302,10 +2302,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
-      'device_class': 'awning',
-      'friendly_name': 'Somfy Pergola',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'awning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Somfy Pergola',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_somfy_pergola',
@@ -2355,10 +2355,10 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_swinging_gate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gate',
-      'friendly_name': 'Swinging Gate',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Swinging Gate',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
-      'supported_features': <CoverEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_swinging_gate',
@@ -2409,10 +2409,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
-      'device_class': 'shutter',
-      'friendly_name': 'Bedroom Blinds',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Blinds',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.main_bedroom_bedroom_blinds',
@@ -2464,10 +2464,10 @@
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 62,
-      'device_class': 'blind',
-      'friendly_name': 'Bedroom Venetian Blind',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 143>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 143>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.main_bedroom_bedroom_venetian_blind',
@@ -2518,10 +2518,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
-      'device_class': 'shutter',
-      'friendly_name': 'Garden House Shutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden House Shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.office_garden_house_shutter',
@@ -2572,10 +2572,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
-      'device_class': 'shutter',
-      'friendly_name': 'Living Room Shutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.reading_nook_living_room_shutter',
@@ -2626,10 +2626,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
-      'device_class': 'awning',
-      'friendly_name': 'Terrace Awning',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'awning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrace Awning',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.terrace_awning',
@@ -2681,10 +2681,10 @@
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
-      'device_class': 'blind',
-      'friendly_name': 'Bathroom Blinds',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bathroom Blinds',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.bathroom_blinds',
@@ -2736,10 +2736,10 @@
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
-      'device_class': 'blind',
-      'friendly_name': 'Bedroom Blinds',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Blinds',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.bedroom_blinds',
@@ -2791,10 +2791,10 @@
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 69,
-      'device_class': 'blind',
-      'friendly_name': 'Dining Room Blinds',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Blinds',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 255>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.dining_room_blinds',
@@ -2846,10 +2846,10 @@
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 69,
-      'device_class': 'blind',
-      'friendly_name': 'Garage Blinds',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Blinds',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.garage_blinds',
@@ -2901,10 +2901,10 @@
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
-      'device_class': 'blind',
-      'friendly_name': 'Guest Room Blinds',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Guest Room Blinds',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.guest_room_blinds',
@@ -2956,10 +2956,10 @@
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
-      'device_class': 'blind',
-      'friendly_name': 'Hallway Blinds',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Blinds',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.hallway_blinds',
@@ -3011,10 +3011,10 @@
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
-      'device_class': 'blind',
-      'friendly_name': 'Kitchen Blinds',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Blinds',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.kitchen_blinds',
@@ -3066,10 +3066,10 @@
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
-      'device_class': 'blind',
-      'friendly_name': 'Living Room Blinds',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Blinds',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_blinds',
@@ -3121,10 +3121,10 @@
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
-      'device_class': 'blind',
-      'friendly_name': 'Master Bedroom Blinds',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master Bedroom Blinds',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.master_bedroom_blinds',
@@ -3176,10 +3176,10 @@
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 69,
-      'device_class': 'blind',
-      'friendly_name': 'Nursery Blinds',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Blinds',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.nursery_blinds',
@@ -3231,10 +3231,10 @@
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 15,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
-      'device_class': 'blind',
-      'friendly_name': 'Office Blinds',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Blinds',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.office_blinds',
@@ -3286,10 +3286,10 @@
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 72,
-      'device_class': 'blind',
-      'friendly_name': 'Study Blinds',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Blinds',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.study_blinds',
@@ -3340,10 +3340,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Back Door Shutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back Door Shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.back_door_shutter',
@@ -3394,10 +3394,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Front Door Shutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.front_door_shutter',
@@ -3448,10 +3448,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'window',
-      'friendly_name': 'Roof Window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roof Window',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.roof_window',
@@ -3502,10 +3502,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'window',
-      'friendly_name': 'Roof Window Low speed',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roof Window Low speed',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.roof_window_low_speed',
@@ -3555,11 +3555,11 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][cover.attic_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'curtain',
-      'friendly_name': 'Attic Curtain',
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'curtain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Attic Curtain',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.attic_curtain',
@@ -3610,10 +3610,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 86,
-      'device_class': 'blind',
-      'friendly_name': 'Conservatory Screen',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Conservatory Screen',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.conservatory_screen',
@@ -3664,10 +3664,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 86,
-      'device_class': 'blind',
-      'friendly_name': 'Library Screen',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Library Screen',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.library_screen',
@@ -3718,10 +3718,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
-      'device_class': 'window',
-      'friendly_name': 'Patio Window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Window',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.patio_window',
@@ -3772,10 +3772,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'blind',
-      'friendly_name': 'Sunroom Shades',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sunroom Shades',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.sunroom_shades',
@@ -3826,10 +3826,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 86,
-      'device_class': 'blind',
-      'friendly_name': 'Terrace Awning',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrace Awning',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.terrace_awning',
@@ -3880,10 +3880,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'blind',
-      'friendly_name': 'Bedroom Screen',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Screen',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.bedroom_screen',
@@ -3934,10 +3934,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'blind',
-      'friendly_name': 'Dining Room Screen',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Screen',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.dining_room_screen',
@@ -3987,10 +3987,10 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.garage_door_rollixo-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'Garage Door Rollixo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Door Rollixo',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.garage_door_rollixo',
@@ -4041,10 +4041,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 0,
-      'device_class': 'awning',
-      'friendly_name': 'Garden Pergola',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'awning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Pergola',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 240>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 240>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.garden_pergola',
@@ -4094,11 +4094,11 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.kitchen_pergola-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'awning',
-      'friendly_name': 'Kitchen Pergola',
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'awning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Pergola',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.kitchen_pergola',
@@ -4148,11 +4148,11 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.living_room_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'curtain',
-      'friendly_name': 'Living Room Curtain',
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'curtain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Curtain',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_curtain',
@@ -4204,10 +4204,10 @@
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 100,
-      'device_class': 'blind',
-      'friendly_name': 'Living Room Venetian Blind',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Venetian Blind',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 143>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 143>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_venetian_blind',
@@ -4258,10 +4258,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'blind',
-      'friendly_name': 'Office Screen',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Screen',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.office_screen',

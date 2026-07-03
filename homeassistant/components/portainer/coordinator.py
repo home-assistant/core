@@ -38,6 +38,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+from .util import sanitize_container_name
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
@@ -283,7 +284,7 @@ class PortainerCoordinator(
 
             # Map containers, started and stopped
             for container in containers:
-                container_name = self._get_container_name(container.names[0])
+                container_name = sanitize_container_name(container.names[0])
                 prev_container = (
                     prev_endpoint.containers.get(container_name)
                     if prev_endpoint
@@ -355,7 +356,7 @@ class PortainerCoordinator(
                 container_stats = dict(
                     zip(
                         (
-                            self._get_container_name(container.names[0])
+                            sanitize_container_name(container.names[0])
                             for container in active_containers
                         ),
                         await asyncio.gather(
@@ -472,10 +473,6 @@ class PortainerCoordinator(
             ]
             for stack_callback in self.new_stacks_callbacks:
                 stack_callback(new_stack_data)
-
-    def _get_container_name(self, container_name: str) -> str:
-        """Sanitize to get a proper container name."""
-        return container_name.replace("/", " ").strip()
 
     async def _get_inspect_local_image(
         self, endpoint_id: int, container_id: str

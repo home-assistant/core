@@ -39,7 +39,7 @@
 # name: test_button_snapshot[button.garden_test_mower_1_confirm_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Confirm error',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Confirm error',
     }),
     'context': <ANY>,
     'entity_id': 'button.garden_test_mower_1_confirm_error',
@@ -89,7 +89,7 @@
 # name: test_button_snapshot[button.garden_test_mower_1_reset_cutting_blade_usage_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Reset cutting blade usage time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Reset cutting blade usage time',
     }),
     'context': <ANY>,
     'entity_id': 'button.garden_test_mower_1_reset_cutting_blade_usage_time',
@@ -139,7 +139,7 @@
 # name: test_button_snapshot[button.garden_test_mower_1_sync_clock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Sync clock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Sync clock',
     }),
     'context': <ANY>,
     'entity_id': 'button.garden_test_mower_1_sync_clock',
@@ -189,7 +189,7 @@
 # name: test_button_snapshot[button.garden_test_mower_2_sync_clock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 2 Sync clock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 2 Sync clock',
     }),
     'context': <ANY>,
     'entity_id': 'button.garden_test_mower_2_sync_clock',

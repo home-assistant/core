@@ -290,7 +290,7 @@
         'wrong_pin_code',
         'zone_generator_problem',
       ]),
-      'friendly_name': 'Test Mower 1 Message',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Message',
       'latitude': 49.0,
       'longitude': 10.0,
       'severity': <Severity.ERROR: 'error'>,

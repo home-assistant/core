@@ -31,7 +31,7 @@
       <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: True,
       <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: '',
       <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2022-01-07 00:00:00',
-      'friendly_name': 'Twente Milieu',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Twente Milieu',
       <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
       <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Christmas tree pickup',
       <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2022-01-06 00:00:00',

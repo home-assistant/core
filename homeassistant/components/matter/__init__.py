@@ -4,6 +4,7 @@ import asyncio
 from functools import cache
 from typing import TYPE_CHECKING
 
+from aiohasupervisor.models import InterfaceMethod
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import (
     CannotConnect,
@@ -15,13 +16,20 @@ from matter_server.client.exceptions import (
 from matter_server.common.errors import MatterError, NodeNotExists
 from yarl import URL
 
-from homeassistant.components.hassio import AddonError, AddonManager, AddonState
+from homeassistant.components.hassio import (
+    AddonError,
+    AddonManager,
+    AddonState,
+    SupervisorError,
+    get_supervisor_client,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -122,6 +130,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
 
     async_delete_issue(hass, DOMAIN, "server_version_version_too_old")
     async_delete_issue(hass, DOMAIN, "server_version_version_too_new")
+
+    await _async_check_ipv6_enabled(hass)
 
     ble_proxy: MatterBleProxy | None = None
 
@@ -250,6 +260,53 @@ def _derive_ble_proxy_url(matter_ws_url: str) -> str | None:
     else:
         return None
     return str(parsed.with_path(new_path))
+
+
+async def _async_check_ipv6_enabled(hass: HomeAssistant) -> None:
+    """Raise a repair issue when IPv6 is disabled in Supervisor network settings.
+
+    Matter relies on IPv6 to communicate with devices. On Supervised/HAOS
+    installations the host network IPv6 method can be disabled per interface,
+    which silently breaks Matter, so we surface a repair pointing the user at
+    the network settings.
+    """
+    if not is_hassio(hass):
+        return
+
+    client = get_supervisor_client(hass)
+    try:
+        network_info = await client.network.info()
+    except SupervisorError as err:
+        LOGGER.debug("Failed to fetch Supervisor network info: %s", err)
+        return
+
+    connected_interfaces = [
+        interface
+        for interface in network_info.interfaces
+        if interface.enabled and interface.connected
+    ]
+    # Without a connected interface we can't tell whether IPv6 is disabled or
+    # the network is simply not up yet, so avoid raising a false repair.
+    if not connected_interfaces:
+        return
+
+    if any(
+        interface.ipv6 is not None
+        and interface.ipv6.method is not InterfaceMethod.DISABLED
+        for interface in connected_interfaces
+    ):
+        async_delete_issue(hass, DOMAIN, "ipv6_disabled")
+        return
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "ipv6_disabled",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="ipv6_disabled",
+        learn_more_url="homeassistant://config/network",
+    )
 
 
 async def _client_listen(

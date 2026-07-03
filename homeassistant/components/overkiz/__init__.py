@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import cast
 
 from aiohttp import ClientError
+from pyoverkiz.action_queue import ActionQueueSettings
 from pyoverkiz.auth.credentials import (
     LocalTokenCredentials,
     RexelTokenCredentials,
@@ -185,14 +186,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
 
     # Map Overkiz entities to Home Assistant platform
     for device in coordinator.data.values():
-        LOGGER.debug(
-            (
-                "The following device has been retrieved. Report an issue if not"
-                " supported correctly (%s)"
-            ),
-            device,
-        )
-
         if platform := OVERKIZ_DEVICE_TO_PLATFORM.get(
             device.widget
         ) or OVERKIZ_DEVICE_TO_PLATFORM.get(device.ui_class):
@@ -201,8 +194,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
     device_registry = dr.async_get(hass)
 
     for gateway in setup.gateways:
-        LOGGER.debug("Added gateway (%s)", gateway)
-
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, gateway.id)},
@@ -317,7 +308,9 @@ def create_local_client(
         credentials=LocalTokenCredentials(token),
         session=session,
         verify_ssl=verify_ssl,
-        settings=OverkizClientSettings(default_rts_command_duration=0),
+        settings=OverkizClientSettings(
+            action_queue=ActionQueueSettings(), default_rts_command_duration=0
+        ),
     )
 
 
@@ -333,7 +326,9 @@ def create_cloud_client(
         server=server,
         credentials=UsernamePasswordCredentials(username, password),
         session=session,
-        settings=OverkizClientSettings(default_rts_command_duration=0),
+        settings=OverkizClientSettings(
+            action_queue=ActionQueueSettings(), default_rts_command_duration=0
+        ),
     )
 
 
@@ -360,4 +355,7 @@ async def create_rexel_client(
             gateway_id=entry.data[CONF_GATEWAY_ID],
         ),
         session=async_create_clientsession(hass),
+        settings=OverkizClientSettings(
+            action_queue=ActionQueueSettings(), default_rts_command_duration=0
+        ),
     )

@@ -2,9 +2,9 @@
 # name: test_valve_setup
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Valve',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Valve',
       <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.valve',
@@ -18,9 +18,9 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ValveEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 50,
-      'friendly_name': 'Valve',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Valve',
       <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <ValveEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.valve_2',
@@ -33,9 +33,9 @@
 # name: test_valve_setup.2
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Valve',
-      'restored': True,
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Valve',
+      <EntityStateAttribute.RESTORED: 'restored'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.valve',
@@ -48,9 +48,9 @@
 # name: test_valve_setup.3
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Valve',
-      'restored': True,
-      'supported_features': <ValveEntityFeature: 15>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Valve',
+      <EntityStateAttribute.RESTORED: 'restored'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.valve_2',
