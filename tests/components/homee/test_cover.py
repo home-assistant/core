@@ -82,7 +82,12 @@ async def test_open_close_stop_cover(
 
     calls = mock_homee.set_value.call_args_list
     for index, call in enumerate(calls):
+        # Check positional arguments match expected values
         assert call[0] == (mock_homee.nodes[0].id, 1, index)
+        # Verify the third argument (enum value) is an IntEnum
+        # and that it formats to a numeric string when used in an f-string
+        enum_value = call[0][2]
+        assert f"{enum_value}" == str(index)
 
 
 async def test_open_close_reverse_cover(
@@ -113,6 +118,11 @@ async def test_open_close_reverse_cover(
     calls = mock_homee.set_value.call_args_list
     assert calls[0][0] == (mock_homee.nodes[0].id, 1, 1)  # Open
     assert calls[1][0] == (mock_homee.nodes[0].id, 1, 0)  # Close
+
+    # Verify enum values format correctly to numeric strings
+    for call in calls:
+        enum_value = call[0][2]
+        assert f"{enum_value}" in ("0", "1")
 
 
 async def test_set_cover_position(
@@ -191,6 +201,9 @@ async def test_close_open_slats(
     calls = mock_homee.set_value.call_args_list
     for index, call in enumerate(calls):
         assert call[0] == (mock_homee.nodes[0].id, 2, index)
+        # Verify enum values format correctly
+        enum_value = call[0][2]
+        assert f"{enum_value}" == str(index)
 
 
 async def test_close_open_reversed_slats(
@@ -228,6 +241,11 @@ async def test_close_open_reversed_slats(
     calls = mock_homee.set_value.call_args_list
     assert calls[0][0] == (mock_homee.nodes[0].id, 2, 2)  # Close
     assert calls[1][0] == (mock_homee.nodes[0].id, 2, 1)  # Open
+
+    # Verify enum values format correctly
+    for call in calls:
+        enum_value = call[0][2]
+        assert f"{enum_value}" in ("1", "2")
 
 
 async def test_set_slat_position(
