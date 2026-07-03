@@ -5,11 +5,9 @@ import pytest
 from homeassistant.components.media_player import (
     MediaClass,
     MediaType,
-    SearchMedia,
     SearchMediaQuery,
 )
 from homeassistant.components.media_source import const, models
-from homeassistant.components.media_source.const import MEDIA_SOURCE_DATA
 from homeassistant.core import HomeAssistant
 
 
@@ -100,36 +98,3 @@ async def test_media_source_search_media_not_implemented(hass: HomeAssistant) ->
     item = models.MediaSourceItem(hass, const.DOMAIN, "", None)
     with pytest.raises(NotImplementedError):
         await source.async_search_media(item, SearchMediaQuery(search_query="test"))
-
-
-async def test_media_source_item_search_root_aggregates(hass: HomeAssistant) -> None:
-    """Test root search aggregates results and skips sources without search."""
-    result_item = models.BrowseMediaSource(
-        domain="searchable",
-        identifier="hit",
-        media_class=MediaClass.MUSIC,
-        media_content_type=MediaType.MUSIC,
-        title="A result",
-        can_play=True,
-        can_expand=False,
-    )
-
-    class SearchableSource(models.MediaSource):
-        """A media source that supports search."""
-
-        async def async_search_media(
-            self, item: models.MediaSourceItem, query: SearchMediaQuery
-        ) -> SearchMedia:
-            """Return a fixed result."""
-            return SearchMedia(result=[result_item])
-
-    hass.data[MEDIA_SOURCE_DATA] = {
-        "searchable": SearchableSource("searchable"),
-        "plain": models.MediaSource("plain"),
-    }
-
-    item = models.MediaSourceItem(hass, None, "", None)
-    result = await item.async_search(SearchMediaQuery(search_query="test"))
-
-    # "plain" does not implement search and is skipped
-    assert [entry.title for entry in result.result] == ["A result"]

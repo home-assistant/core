@@ -174,3 +174,16 @@ async def test_async_search_media_not_supported(hass: HomeAssistant) -> None:
             f"{const.URI_SCHEME}plain",
             SearchMediaQuery(search_query="test"),
         )
+
+
+async def test_async_search_media_root_not_supported(hass: HomeAssistant) -> None:
+    """Test searching the aggregate root of multiple sources is not supported."""
+    hass.data[MEDIA_SOURCE_DATA] = {
+        "source_a": models.MediaSource("source_a"),
+        "source_b": models.MediaSource("source_b"),
+    }
+
+    with pytest.raises(BrowseError):
+        await media_source.async_search_media(
+            hass, "", SearchMediaQuery(search_query="test")
+        )

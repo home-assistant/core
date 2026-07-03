@@ -109,18 +109,10 @@ class MediaSourceItem:
 
     async def async_search(self, query: SearchMediaQuery) -> SearchMedia:
         """Search this item."""
+        # Searching the aggregate root (no specific source) is currently not supported
+        # because it would possibly returns 100s of items
         if self.domain is None:
-            results: list[BrowseMedia] = []
-            for source in self.hass.data[MEDIA_SOURCE_DATA].values():
-                sub_item = MediaSourceItem(
-                    self.hass, source.domain, "", self.target_media_player
-                )
-                try:
-                    source_result = await source.async_search_media(sub_item, query)
-                except NotImplementedError:
-                    continue
-                results.extend(source_result.result)
-            return SearchMedia(result=results)
+            raise NotImplementedError
 
         return await self.async_media_source().async_search_media(self, query)
 
