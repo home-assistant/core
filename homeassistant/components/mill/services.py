@@ -31,14 +31,12 @@ SET_ROOM_TEMP_SCHEMA = vol.Schema(
 
 async def _set_room_temp(call: ServiceCall) -> None:
     """Set room temp."""
-    room_name = call.data[ATTR_ROOM_NAME]
-    sleep_temp = call.data.get(ATTR_SLEEP_TEMP)
-    comfort_temp = call.data.get(ATTR_COMFORT_TEMP)
-    away_temp = call.data.get(ATTR_AWAY_TEMP)
-
     entry: MillConfigEntry = service.async_get_config_entry(call.hass, DOMAIN, None)
     await entry.runtime_data.mill_data_connection.set_room_temperatures_by_name(
-        room_name, sleep_temp, comfort_temp, away_temp
+        call.data[ATTR_ROOM_NAME],
+        call.data.get(ATTR_SLEEP_TEMP),
+        call.data.get(ATTR_COMFORT_TEMP),
+        call.data.get(ATTR_AWAY_TEMP),
     )
 
 
