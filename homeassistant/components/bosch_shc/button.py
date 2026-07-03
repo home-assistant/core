@@ -34,7 +34,6 @@ async def async_setup_entry(
         SHCScenarioButton(
             scenario=scenario,
             shc_uid=shc_uid,
-            entry_id=config_entry.entry_id,
         )
         for scenario in session.scenarios
     ]
@@ -112,11 +111,9 @@ class SHCScenarioButton(ButtonEntity):
         self,
         scenario: SHCScenario,
         shc_uid: str,
-        entry_id: str,
     ) -> None:
         """Initialize a scenario button."""
         self._scenario = scenario
-        self._entry_id = entry_id
         self._attr_unique_id = f"{shc_uid}_scenario_{scenario.id}"
         self._attr_name = scenario.name
         self._attr_device_info = DeviceInfo(
