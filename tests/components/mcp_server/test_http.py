@@ -26,7 +26,12 @@ from homeassistant.components.mcp_server.http import (
     STREAMABLE_API,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_LLM_HASS_API, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    CONF_LLM_HASS_API,
+    CONTENT_TYPE_JSON,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -633,3 +638,58 @@ async def test_mcp_tool_call_unicode(
     response_text = result.content[0].text
     assert "这是一个测试" in response_text
     assert "\\u" not in response_text
+
+
+async def test_streamable_api_id_exposes_registered_api(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test the keyed endpoint exposes any registered API, not just the configured one."""
+    llm.async_register_api(
+        hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test API")
+    )
+
+    client = await hass_client()
+    mcp_url = str(client.make_url(f"{STREAMABLE_API}/{TEST_LLM_API_ID}"))
+
+    async with mcp_streamable_session(
+        hass, mcp_url, hass_supervisor_access_token
+    ) as session:
+        result = await session.list_prompts()
+
+    assert len(result.prompts) == 1
+    assert result.prompts[0].name == "Test API"
+
+
+async def test_streamable_api_id_requires_admin(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test the keyed endpoint requires an admin user."""
+    client = await hass_client(hass_read_only_access_token)
+    response = await client.post(
+        f"{STREAMABLE_API}/{llm.LLM_API_ASSIST}",
+        json=INITIALIZE_MESSAGE,
+        headers={"accept": CONTENT_TYPE_JSON},
+    )
+    assert response.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_streamable_api_id_unknown(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the keyed endpoint returns 404 for an unknown API ID."""
+    client = await hass_client()
+    response = await client.post(
+        f"{STREAMABLE_API}/does-not-exist",
+        json=INITIALIZE_MESSAGE,
+        headers={"accept": CONTENT_TYPE_JSON},
+    )
+    assert response.status == HTTPStatus.NOT_FOUND
+    assert "Unknown LLM API" in await response.text()
