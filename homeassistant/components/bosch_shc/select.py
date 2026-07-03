@@ -1,15 +1,15 @@
 """Platform for select integration."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from enum import Enum
 from typing import override
 
-from boschshcpy import SHCShutterContact2Plus, SHCSmokeDetector, SHCTwinguard
+from boschshcpy import SHCShutterContact2Plus
 from boschshcpy.device import SHCDevice
 from boschshcpy.models_impl import (
-    SHCLightControl,
-    SHCMicromoduleRelay,
     SHCMotionDetector2,
     SHCRoomThermostat2,
-    SHCThermostat,
     SHCThermostatGen2,
 )
 from boschshcpy.services_impl import (
@@ -26,7 +26,7 @@ from boschshcpy.services_impl import (
     WallThermostatConfiguration,
 )
 
-from homeassistant.components.select import SelectEntity
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -36,97 +36,284 @@ from .entity import SHCEntity
 
 PARALLEL_UPDATES = 1
 
-_MOTION_SENSITIVITY_OPTIONS = [
-    PirSensorConfigurationService.MotionSensitivity.HIGH.name,
-    PirSensorConfigurationService.MotionSensitivity.MIDDLE.name,
-    PirSensorConfigurationService.MotionSensitivity.LOW.name,
-]
 
-_VIBRATION_SENSITIVITY_OPTIONS = [
-    VibrationSensorService.SensitivityState.VERY_HIGH.name,
-    VibrationSensorService.SensitivityState.HIGH.name,
-    VibrationSensorService.SensitivityState.MEDIUM.name,
-    VibrationSensorService.SensitivityState.LOW.name,
-    VibrationSensorService.SensitivityState.VERY_LOW.name,
-]
+def _attr_value_fn(attr: str) -> Callable[[SHCDevice], str | None]:
+    """Return a value_fn reading an enum-valued device attribute by name."""
 
-_POLL_CONTROL_OPTIONS = [
-    PollControlService.PollControlState.LONG.name,
-    PollControlService.PollControlState.SHORT.name,
-]
+    def _value_fn(device: SHCDevice) -> str | None:
+        value = getattr(device, attr)
+        return value.name if value is not None else None
 
-_STATE_AFTER_POWER_OUTAGE_OPTIONS = [
-    PowerSwitchConfigurationService.StateAfterPowerOutage.OFF.name,
-    PowerSwitchConfigurationService.StateAfterPowerOutage.ON.name,
-    PowerSwitchConfigurationService.StateAfterPowerOutage.LAST_STATE.name,
-]
+    return _value_fn
 
-_SMOKE_SENSITIVITY_OPTIONS = [
-    SmokeSensitivityService.SmokeSensitivityLevel.HIGH.name,
-    SmokeSensitivityService.SmokeSensitivityLevel.MIDDLE.name,
-    SmokeSensitivityService.SmokeSensitivityLevel.LOW.name,
-]
 
-_DISPLAY_DIRECTION_OPTIONS = [
-    DisplayDirection.Direction.NORMAL.name,
-    DisplayDirection.Direction.REVERSED.name,
-]
+def _attr_set_fn(attr: str, enum_cls: type[Enum]) -> Callable[[SHCDevice, str], None]:
+    """Return a set_fn writing an enum member (looked up by option name) by attr name."""
 
-_DISPLAYED_TEMPERATURE_OPTIONS = [
-    DisplayedTemperatureConfiguration.DisplayedTemperature.SETPOINT.name,
-    DisplayedTemperatureConfiguration.DisplayedTemperature.MEASURED.name,
-]
+    def _set_fn(device: SHCDevice, option: str) -> None:
+        setattr(device, attr, enum_cls[option])
 
-_TERMINAL_TYPE_OPTIONS = [
-    TerminalConfiguration.Type.NOT_CONNECTED.name,
-    TerminalConfiguration.Type.FLOOR_SENSOR_CONNECTED.name,
-    TerminalConfiguration.Type.FLOOR_SENSOR_USED_FOR_REGULATION.name,
-    TerminalConfiguration.Type.FLOOR_SENSOR_DISPLAYED.name,
-    TerminalConfiguration.Type.FLOOR_SENSOR_DISPLAYED_AND_USED_FOR_REGULATION.name,
-    TerminalConfiguration.Type.VOLT_FREE_SENSOR_CONNECTED.name,
-    TerminalConfiguration.Type.VOLT_FREE_SENSOR_CONNECTED_AND_USED_FOR_OPERATION.name,
-    TerminalConfiguration.Type.OUTDOOR_SENSOR_CONNECTED.name,
-]
+    return _set_fn
 
-_VALVE_TYPE_OPTIONS = [
-    WallThermostatConfiguration.ValveType.NORMALLY_CLOSE.name,
-    WallThermostatConfiguration.ValveType.NORMALLY_OPEN.name,
-]
 
-_HEATER_TYPE_OPTIONS = [
-    WallThermostatConfiguration.HeaterType.FLOOR_HEATING.name,
-    WallThermostatConfiguration.HeaterType.FLOOR_HEATING_LOW_ENERGY.name,
-    WallThermostatConfiguration.HeaterType.RADIATOR.name,
-    WallThermostatConfiguration.HeaterType.CONVECTOR_PASSIVE.name,
-    WallThermostatConfiguration.HeaterType.CONVECTOR_ACTIVE.name,
-]
+def _get_smart_sensitivity(
+    device: SHCMotionDetector2,
+    context: SmartSensitivityControlService.SmartSensitivityContext,
+) -> str | None:
+    sensitivity = device.get_smart_sensitivity(context)
+    if sensitivity is None:
+        return None
+    level = sensitivity.get("manualLevel")
+    if level is None:
+        return None
+    return level.name if hasattr(level, "name") else str(level)
 
-_SWITCH_TYPE_OPTIONS = [
-    SwitchConfiguration.SwitchType.NONE.name,
-    SwitchConfiguration.SwitchType.PUSHBUTTON.name,
-    SwitchConfiguration.SwitchType.SWITCH.name,
-    SwitchConfiguration.SwitchType.NO_SWITCH.name,
-]
 
-_ACTUATOR_TYPE_OPTIONS = [
-    SwitchConfiguration.ActuatorType.NORMALLY_CLOSED.name,
-    SwitchConfiguration.ActuatorType.NORMALLY_OPEN.name,
-    SwitchConfiguration.ActuatorType.UNSUPPORTED.name,
-]
+def _set_smart_sensitivity(
+    device: SHCMotionDetector2,
+    context: SmartSensitivityControlService.SmartSensitivityContext,
+    option: str,
+) -> None:
+    level = SmartSensitivityControlService.MotionSensitivity[option]
+    device.set_smart_sensitivity_manual_level(context, level)
 
-_OUTPUT_MODE_OPTIONS = [
-    SwitchConfiguration.OutputMode.ATTACHED.name,
-    SwitchConfiguration.OutputMode.DETACHED.name,
-    SwitchConfiguration.OutputMode.DETACHED_SHORT_PRESS.name,
-    SwitchConfiguration.OutputMode.DETACHED_LONG_PRESS.name,
-    SwitchConfiguration.OutputMode.UNSUPPORTED.name,
-]
 
-_SMART_SENSITIVITY_OPTIONS = [
-    SmartSensitivityControlService.MotionSensitivity.HIGH.name,
-    SmartSensitivityControlService.MotionSensitivity.MIDDLE.name,
-    SmartSensitivityControlService.MotionSensitivity.LOW.name,
-]
+@dataclass(frozen=True, kw_only=True)
+class SHCSelectEntityDescription(SelectEntityDescription):
+    """Describes a SHC select entity."""
+
+    value_fn: Callable[[SHCDevice], str | None]
+    set_fn: Callable[[SHCDevice, str], None]
+
+
+MOTION_SENSITIVITY_SELECT = "motion_sensitivity"
+ORIENTATION_LIGHT_RESPONSE_SELECT = "orientation_light_response"
+SMART_SENSITIVITY_SECURITY_SELECT = "smart_sensitivity_security"
+SMART_SENSITIVITY_COMFORT_SELECT = "smart_sensitivity_comfort"
+VIBRATION_SENSITIVITY_SELECT = "vibration_sensitivity"
+STATE_AFTER_POWER_OUTAGE_SELECT = "state_after_power_outage"
+SMOKE_SENSITIVITY_SELECT = "smoke_sensitivity"
+DISPLAY_DIRECTION_SELECT = "display_direction"
+DISPLAYED_TEMPERATURE_SELECT = "displayed_temperature"
+VALVE_TYPE_SELECT = "valve_type"
+HEATER_TYPE_SELECT = "heater_type"
+TERMINAL_TYPE_SELECT = "terminal_type"
+SWITCH_TYPE_SELECT = "switch_type"
+ACTUATOR_TYPE_SELECT = "actuator_type"
+OUTPUT_MODE_SELECT = "output_mode"
+
+SELECT_DESCRIPTIONS: dict[str, SHCSelectEntityDescription] = {
+    MOTION_SENSITIVITY_SELECT: SHCSelectEntityDescription(
+        key=MOTION_SENSITIVITY_SELECT,
+        translation_key=MOTION_SENSITIVITY_SELECT,
+        entity_category=EntityCategory.CONFIG,
+        options=[
+            PirSensorConfigurationService.MotionSensitivity.HIGH.name,
+            PirSensorConfigurationService.MotionSensitivity.MIDDLE.name,
+            PirSensorConfigurationService.MotionSensitivity.LOW.name,
+        ],
+        value_fn=_attr_value_fn("motion_sensitivity"),
+        set_fn=_attr_set_fn(
+            "motion_sensitivity", PirSensorConfigurationService.MotionSensitivity
+        ),
+    ),
+    ORIENTATION_LIGHT_RESPONSE_SELECT: SHCSelectEntityDescription(
+        key=ORIENTATION_LIGHT_RESPONSE_SELECT,
+        translation_key=ORIENTATION_LIGHT_RESPONSE_SELECT,
+        entity_category=EntityCategory.CONFIG,
+        options=[
+            PollControlService.PollControlState.LONG.name,
+            PollControlService.PollControlState.SHORT.name,
+        ],
+        value_fn=_attr_value_fn("long_poll_interval"),
+        set_fn=_attr_set_fn("long_poll_interval", PollControlService.PollControlState),
+    ),
+    SMART_SENSITIVITY_SECURITY_SELECT: SHCSelectEntityDescription(
+        key=SMART_SENSITIVITY_SECURITY_SELECT,
+        translation_key=SMART_SENSITIVITY_SECURITY_SELECT,
+        entity_category=EntityCategory.CONFIG,
+        options=[
+            SmartSensitivityControlService.MotionSensitivity.HIGH.name,
+            SmartSensitivityControlService.MotionSensitivity.MIDDLE.name,
+            SmartSensitivityControlService.MotionSensitivity.LOW.name,
+        ],
+        value_fn=lambda device: _get_smart_sensitivity(
+            device, SmartSensitivityControlService.SmartSensitivityContext.SECURITY
+        ),
+        set_fn=lambda device, option: _set_smart_sensitivity(
+            device,
+            SmartSensitivityControlService.SmartSensitivityContext.SECURITY,
+            option,
+        ),
+    ),
+    SMART_SENSITIVITY_COMFORT_SELECT: SHCSelectEntityDescription(
+        key=SMART_SENSITIVITY_COMFORT_SELECT,
+        translation_key=SMART_SENSITIVITY_COMFORT_SELECT,
+        entity_category=EntityCategory.CONFIG,
+        options=[
+            SmartSensitivityControlService.MotionSensitivity.HIGH.name,
+            SmartSensitivityControlService.MotionSensitivity.MIDDLE.name,
+            SmartSensitivityControlService.MotionSensitivity.LOW.name,
+        ],
+        value_fn=lambda device: _get_smart_sensitivity(
+            device, SmartSensitivityControlService.SmartSensitivityContext.COMFORT
+        ),
+        set_fn=lambda device, option: _set_smart_sensitivity(
+            device,
+            SmartSensitivityControlService.SmartSensitivityContext.COMFORT,
+            option,
+        ),
+    ),
+    VIBRATION_SENSITIVITY_SELECT: SHCSelectEntityDescription(
+        key=VIBRATION_SENSITIVITY_SELECT,
+        translation_key=VIBRATION_SENSITIVITY_SELECT,
+        entity_category=EntityCategory.CONFIG,
+        options=[
+            VibrationSensorService.SensitivityState.VERY_HIGH.name,
+            VibrationSensorService.SensitivityState.HIGH.name,
+            VibrationSensorService.SensitivityState.MEDIUM.name,
+            VibrationSensorService.SensitivityState.LOW.name,
+            VibrationSensorService.SensitivityState.VERY_LOW.name,
+        ],
+        value_fn=_attr_value_fn("sensitivity"),
+        set_fn=_attr_set_fn("sensitivity", VibrationSensorService.SensitivityState),
+    ),
+    STATE_AFTER_POWER_OUTAGE_SELECT: SHCSelectEntityDescription(
+        key=STATE_AFTER_POWER_OUTAGE_SELECT,
+        translation_key=STATE_AFTER_POWER_OUTAGE_SELECT,
+        entity_category=EntityCategory.CONFIG,
+        options=[
+            PowerSwitchConfigurationService.StateAfterPowerOutage.OFF.name,
+            PowerSwitchConfigurationService.StateAfterPowerOutage.ON.name,
+            PowerSwitchConfigurationService.StateAfterPowerOutage.LAST_STATE.name,
+        ],
+        value_fn=_attr_value_fn("state_after_power_outage"),
+        set_fn=_attr_set_fn(
+            "state_after_power_outage",
+            PowerSwitchConfigurationService.StateAfterPowerOutage,
+        ),
+    ),
+    SMOKE_SENSITIVITY_SELECT: SHCSelectEntityDescription(
+        key=SMOKE_SENSITIVITY_SELECT,
+        translation_key=SMOKE_SENSITIVITY_SELECT,
+        entity_category=EntityCategory.CONFIG,
+        options=[
+            SmokeSensitivityService.SmokeSensitivityLevel.HIGH.name,
+            SmokeSensitivityService.SmokeSensitivityLevel.MIDDLE.name,
+            SmokeSensitivityService.SmokeSensitivityLevel.LOW.name,
+        ],
+        value_fn=_attr_value_fn("smoke_sensitivity"),
+        set_fn=_attr_set_fn(
+            "smoke_sensitivity", SmokeSensitivityService.SmokeSensitivityLevel
+        ),
+    ),
+    DISPLAY_DIRECTION_SELECT: SHCSelectEntityDescription(
+        key=DISPLAY_DIRECTION_SELECT,
+        translation_key=DISPLAY_DIRECTION_SELECT,
+        entity_category=EntityCategory.CONFIG,
+        options=[
+            DisplayDirection.Direction.NORMAL.name,
+            DisplayDirection.Direction.REVERSED.name,
+        ],
+        value_fn=_attr_value_fn("display_direction"),
+        set_fn=_attr_set_fn("display_direction", DisplayDirection.Direction),
+    ),
+    DISPLAYED_TEMPERATURE_SELECT: SHCSelectEntityDescription(
+        key=DISPLAYED_TEMPERATURE_SELECT,
+        translation_key=DISPLAYED_TEMPERATURE_SELECT,
+        entity_category=EntityCategory.CONFIG,
+        options=[
+            DisplayedTemperatureConfiguration.DisplayedTemperature.SETPOINT.name,
+            DisplayedTemperatureConfiguration.DisplayedTemperature.MEASURED.name,
+        ],
+        value_fn=_attr_value_fn("displayed_temperature"),
+        set_fn=_attr_set_fn(
+            "displayed_temperature",
+            DisplayedTemperatureConfiguration.DisplayedTemperature,
+        ),
+    ),
+    VALVE_TYPE_SELECT: SHCSelectEntityDescription(
+        key=VALVE_TYPE_SELECT,
+        translation_key=VALVE_TYPE_SELECT,
+        entity_category=EntityCategory.CONFIG,
+        options=[
+            WallThermostatConfiguration.ValveType.NORMALLY_CLOSE.name,
+            WallThermostatConfiguration.ValveType.NORMALLY_OPEN.name,
+        ],
+        value_fn=_attr_value_fn("valve_type"),
+        set_fn=_attr_set_fn("valve_type", WallThermostatConfiguration.ValveType),
+    ),
+    HEATER_TYPE_SELECT: SHCSelectEntityDescription(
+        key=HEATER_TYPE_SELECT,
+        translation_key=HEATER_TYPE_SELECT,
+        entity_category=EntityCategory.CONFIG,
+        options=[
+            WallThermostatConfiguration.HeaterType.FLOOR_HEATING.name,
+            WallThermostatConfiguration.HeaterType.FLOOR_HEATING_LOW_ENERGY.name,
+            WallThermostatConfiguration.HeaterType.RADIATOR.name,
+            WallThermostatConfiguration.HeaterType.CONVECTOR_PASSIVE.name,
+            WallThermostatConfiguration.HeaterType.CONVECTOR_ACTIVE.name,
+        ],
+        value_fn=_attr_value_fn("heater_type"),
+        set_fn=_attr_set_fn("heater_type", WallThermostatConfiguration.HeaterType),
+    ),
+    TERMINAL_TYPE_SELECT: SHCSelectEntityDescription(
+        key=TERMINAL_TYPE_SELECT,
+        translation_key=TERMINAL_TYPE_SELECT,
+        entity_category=EntityCategory.CONFIG,
+        options=[
+            TerminalConfiguration.Type.NOT_CONNECTED.name,
+            TerminalConfiguration.Type.FLOOR_SENSOR_CONNECTED.name,
+            TerminalConfiguration.Type.FLOOR_SENSOR_USED_FOR_REGULATION.name,
+            TerminalConfiguration.Type.FLOOR_SENSOR_DISPLAYED.name,
+            TerminalConfiguration.Type.FLOOR_SENSOR_DISPLAYED_AND_USED_FOR_REGULATION.name,
+            TerminalConfiguration.Type.VOLT_FREE_SENSOR_CONNECTED.name,
+            TerminalConfiguration.Type.VOLT_FREE_SENSOR_CONNECTED_AND_USED_FOR_OPERATION.name,
+            TerminalConfiguration.Type.OUTDOOR_SENSOR_CONNECTED.name,
+        ],
+        value_fn=_attr_value_fn("terminal_type"),
+        set_fn=_attr_set_fn("terminal_type", TerminalConfiguration.Type),
+    ),
+    SWITCH_TYPE_SELECT: SHCSelectEntityDescription(
+        key=SWITCH_TYPE_SELECT,
+        translation_key=SWITCH_TYPE_SELECT,
+        entity_category=EntityCategory.CONFIG,
+        options=[
+            SwitchConfiguration.SwitchType.NONE.name,
+            SwitchConfiguration.SwitchType.PUSHBUTTON.name,
+            SwitchConfiguration.SwitchType.SWITCH.name,
+            SwitchConfiguration.SwitchType.NO_SWITCH.name,
+        ],
+        value_fn=_attr_value_fn("switch_type"),
+        set_fn=_attr_set_fn("switch_type", SwitchConfiguration.SwitchType),
+    ),
+    ACTUATOR_TYPE_SELECT: SHCSelectEntityDescription(
+        key=ACTUATOR_TYPE_SELECT,
+        translation_key=ACTUATOR_TYPE_SELECT,
+        entity_category=EntityCategory.CONFIG,
+        options=[
+            SwitchConfiguration.ActuatorType.NORMALLY_CLOSED.name,
+            SwitchConfiguration.ActuatorType.NORMALLY_OPEN.name,
+            SwitchConfiguration.ActuatorType.UNSUPPORTED.name,
+        ],
+        value_fn=_attr_value_fn("actuator_type"),
+        set_fn=_attr_set_fn("actuator_type", SwitchConfiguration.ActuatorType),
+    ),
+    OUTPUT_MODE_SELECT: SHCSelectEntityDescription(
+        key=OUTPUT_MODE_SELECT,
+        translation_key=OUTPUT_MODE_SELECT,
+        entity_category=EntityCategory.CONFIG,
+        options=[
+            SwitchConfiguration.OutputMode.ATTACHED.name,
+            SwitchConfiguration.OutputMode.DETACHED.name,
+            SwitchConfiguration.OutputMode.DETACHED_SHORT_PRESS.name,
+            SwitchConfiguration.OutputMode.DETACHED_LONG_PRESS.name,
+            SwitchConfiguration.OutputMode.UNSUPPORTED.name,
+        ],
+        value_fn=_attr_value_fn("output_mode"),
+        set_fn=_attr_set_fn("output_mode", SwitchConfiguration.OutputMode),
+    ),
+}
 
 
 async def async_setup_entry(
@@ -139,23 +326,19 @@ async def async_setup_entry(
     parent_id = session.information.unique_id
     entities: list[SelectEntity] = []
 
+    def _make(device: SHCDevice, select_type: str) -> SHCSelect:
+        return SHCSelect(
+            device=device,
+            entity_description=SELECT_DESCRIPTIONS[select_type],
+            parent_id=parent_id,
+            entry_id=config_entry.entry_id,
+        )
+
     for device in session.device_helper.motion_detectors2:
         if device.motion_sensitivity is not None:
-            entities.append(
-                SHCMotionSensitivitySelect(
-                    device=device,
-                    parent_id=parent_id,
-                    entry_id=config_entry.entry_id,
-                )
-            )
+            entities.append(_make(device, MOTION_SENSITIVITY_SELECT))
         if device.long_poll_interval is not None:
-            entities.append(
-                SHCOrientationLightResponseSelect(
-                    device=device,
-                    parent_id=parent_id,
-                    entry_id=config_entry.entry_id,
-                )
-            )
+            entities.append(_make(device, ORIENTATION_LIGHT_RESPONSE_SELECT))
         if (
             device.supports_smart_sensitivity
             and device.get_smart_sensitivity(
@@ -163,37 +346,17 @@ async def async_setup_entry(
             )
             is not None
         ):
-            entities.extend(
-                [
-                    SHCSmartSensitivitySecuritySelect(
-                        device=device,
-                        parent_id=parent_id,
-                        entry_id=config_entry.entry_id,
-                    ),
-                    SHCSmartSensitivityComfortSelect(
-                        device=device,
-                        parent_id=parent_id,
-                        entry_id=config_entry.entry_id,
-                    ),
-                ]
-            )
+            entities.append(_make(device, SMART_SENSITIVITY_SECURITY_SELECT))
+            entities.append(_make(device, SMART_SENSITIVITY_COMFORT_SELECT))
 
     entities.extend(
-        SHCVibrationSensitivitySelect(
-            device=device,
-            parent_id=parent_id,
-            entry_id=config_entry.entry_id,
-        )
+        _make(device, VIBRATION_SENSITIVITY_SELECT)
         for device in session.device_helper.shutter_contacts2
         if isinstance(device, SHCShutterContact2Plus)
     )
 
     entities.extend(
-        SHCStateAfterPowerOutageSelect(
-            device=device,
-            parent_id=parent_id,
-            entry_id=config_entry.entry_id,
-        )
+        _make(device, STATE_AFTER_POWER_OUTAGE_SELECT)
         for device in (
             *session.device_helper.smart_plugs,
             *session.device_helper.smart_plugs_compact,
@@ -203,11 +366,7 @@ async def async_setup_entry(
     )
 
     entities.extend(
-        SHCSmokeSensitivitySelect(
-            device=device,
-            parent_id=parent_id,
-            entry_id=config_entry.entry_id,
-        )
+        _make(device, SMOKE_SENSITIVITY_SELECT)
         for device in (
             *session.device_helper.smoke_detectors,
             *session.device_helper.twinguards,
@@ -226,24 +385,12 @@ async def async_setup_entry(
                 device.supports_display_direction
                 and device.display_direction is not None
             ):
-                entities.append(
-                    SHCDisplayDirectionSelect(
-                        device=device,
-                        parent_id=parent_id,
-                        entry_id=config_entry.entry_id,
-                    )
-                )
+                entities.append(_make(device, DISPLAY_DIRECTION_SELECT))
             if (
                 device.supports_displayed_temperature
                 and device.displayed_temperature is not None
             ):
-                entities.append(
-                    SHCDisplayedTemperatureSelect(
-                        device=device,
-                        parent_id=parent_id,
-                        entry_id=config_entry.entry_id,
-                    )
-                )
+                entities.append(_make(device, DISPLAYED_TEMPERATURE_SELECT))
         # valve/heater type are only on SHCThermostatGen2 — not on Gen1, and
         # not on SHCRoomThermostat2 either (which has terminal_type instead).
         if isinstance(device, SHCThermostatGen2):
@@ -251,34 +398,16 @@ async def async_setup_entry(
                 device.supports_wall_thermostat_configuration
                 and device.valve_type is not None
             ):
-                entities.append(
-                    SHCValveTypeSelect(
-                        device=device,
-                        parent_id=parent_id,
-                        entry_id=config_entry.entry_id,
-                    )
-                )
+                entities.append(_make(device, VALVE_TYPE_SELECT))
             if (
                 device.supports_wall_thermostat_configuration
                 and device.heater_type is not None
             ):
-                entities.append(
-                    SHCHeaterTypeSelect(
-                        device=device,
-                        parent_id=parent_id,
-                        entry_id=config_entry.entry_id,
-                    )
-                )
+                entities.append(_make(device, HEATER_TYPE_SELECT))
         if isinstance(device, SHCRoomThermostat2) and (
             device.supports_terminal_configuration and device.terminal_type is not None
         ):
-            entities.append(
-                SHCTerminalTypeSelect(
-                    device=device,
-                    parent_id=parent_id,
-                    entry_id=config_entry.entry_id,
-                )
-            )
+            entities.append(_make(device, TERMINAL_TYPE_SELECT))
 
     # supports_switch_configuration only exists on SHCMicromoduleRelay (and is
     # there simply "the switch-config service is present"); SHCLightControl
@@ -290,534 +419,39 @@ async def async_setup_entry(
         *session.device_helper.micromodule_light_controls,
     ):
         if device.switch_type is not None:
-            entities.append(
-                SHCSwitchTypeSelect(
-                    device=device,
-                    parent_id=parent_id,
-                    entry_id=config_entry.entry_id,
-                )
-            )
+            entities.append(_make(device, SWITCH_TYPE_SELECT))
         if device.actuator_type is not None:
-            entities.append(
-                SHCActuatorTypeSelect(
-                    device=device,
-                    parent_id=parent_id,
-                    entry_id=config_entry.entry_id,
-                )
-            )
+            entities.append(_make(device, ACTUATOR_TYPE_SELECT))
         if device.output_mode is not None:
-            entities.append(
-                SHCOutputModeSelect(
-                    device=device,
-                    parent_id=parent_id,
-                    entry_id=config_entry.entry_id,
-                )
-            )
+            entities.append(_make(device, OUTPUT_MODE_SELECT))
 
     async_add_entities(entities)
 
 
-class SHCMotionSensitivitySelect(SHCEntity, SelectEntity):
-    """Select entity for Motion Detector II motion sensitivity."""
+class SHCSelect(SHCEntity, SelectEntity):
+    """Representation of a SHC select entity."""
 
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_options = _MOTION_SENSITIVITY_OPTIONS
-    _attr_translation_key = "motion_sensitivity"
-
-    def __init__(
-        self,
-        device: SHCMotionDetector2,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize the motion sensitivity select."""
-        super().__init__(device, parent_id, entry_id)
-        self._attr_unique_id = f"{device.serial}_motion_sensitivity"
-
-    @property
-    @override
-    def current_option(self) -> str | None:
-        """Return the current sensitivity option."""
-        val = self._device.motion_sensitivity
-        if val is None or val.name not in self._attr_options:
-            return None
-        return val.name
-
-    @override
-    def select_option(self, option: str) -> None:
-        """Set the motion sensitivity."""
-        self._device.motion_sensitivity = (
-            PirSensorConfigurationService.MotionSensitivity[option]
-        )
-
-
-class SHCOrientationLightResponseSelect(SHCEntity, SelectEntity):
-    """Select entity for Motion Detector II orientation-light response time.
-
-    Backed by the PollControl service (longPollInterval): LONG = lower battery
-    consumption / slower response, SHORT = faster response / higher battery use.
-    """
-
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_options = _POLL_CONTROL_OPTIONS
-    _attr_translation_key = "orientation_light_response"
-
-    def __init__(
-        self,
-        device: SHCMotionDetector2,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize the orientation-light response-time select."""
-        super().__init__(device, parent_id, entry_id)
-        self._attr_unique_id = f"{device.serial}_orientation_light_response"
-
-    @property
-    @override
-    def current_option(self) -> str | None:
-        """Return the current poll-interval option."""
-        val = self._device.long_poll_interval
-        if val is None or val.name not in self._attr_options:
-            return None
-        return val.name
-
-    @override
-    def select_option(self, option: str) -> None:
-        """Set the orientation-light response time."""
-        self._device.long_poll_interval = PollControlService.PollControlState[option]
-
-
-class SHCSmartSensitivitySecuritySelect(SHCEntity, SelectEntity):
-    """Select entity for Motion Detector II smart sensitivity — security context."""
-
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_options = _SMART_SENSITIVITY_OPTIONS
-    _attr_translation_key = "smart_sensitivity_security"
-
-    def __init__(
-        self,
-        device: SHCMotionDetector2,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize the smart sensitivity security select."""
-        super().__init__(device, parent_id, entry_id)
-        self._attr_unique_id = f"{device.serial}_smart_sensitivity_security"
-
-    @property
-    @override
-    def current_option(self) -> str | None:
-        """Return the current manual level for the security context."""
-        ctx = SmartSensitivityControlService.SmartSensitivityContext.SECURITY
-        sensitivity = self._device.get_smart_sensitivity(ctx)
-        if sensitivity is None:
-            return None
-        level = sensitivity.get("manualLevel")
-        if level is None:
-            return None
-        name = level.name if hasattr(level, "name") else str(level)
-        return name if name in self._attr_options else None
-
-    @override
-    def select_option(self, option: str) -> None:
-        """Set the manual level for the security context."""
-        ctx = SmartSensitivityControlService.SmartSensitivityContext.SECURITY
-        level = SmartSensitivityControlService.MotionSensitivity[option]
-        self._device.set_smart_sensitivity_manual_level(ctx, level)
-
-
-class SHCSmartSensitivityComfortSelect(SHCEntity, SelectEntity):
-    """Select entity for Motion Detector II smart sensitivity — comfort context."""
-
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_options = _SMART_SENSITIVITY_OPTIONS
-    _attr_translation_key = "smart_sensitivity_comfort"
-
-    def __init__(
-        self,
-        device: SHCMotionDetector2,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize the smart sensitivity comfort select."""
-        super().__init__(device, parent_id, entry_id)
-        self._attr_unique_id = f"{device.serial}_smart_sensitivity_comfort"
-
-    @property
-    @override
-    def current_option(self) -> str | None:
-        """Return the current manual level for the comfort context."""
-        ctx = SmartSensitivityControlService.SmartSensitivityContext.COMFORT
-        sensitivity = self._device.get_smart_sensitivity(ctx)
-        if sensitivity is None:
-            return None
-        level = sensitivity.get("manualLevel")
-        if level is None:
-            return None
-        name = level.name if hasattr(level, "name") else str(level)
-        return name if name in self._attr_options else None
-
-    @override
-    def select_option(self, option: str) -> None:
-        """Set the manual level for the comfort context."""
-        ctx = SmartSensitivityControlService.SmartSensitivityContext.COMFORT
-        level = SmartSensitivityControlService.MotionSensitivity[option]
-        self._device.set_smart_sensitivity_manual_level(ctx, level)
-
-
-class SHCVibrationSensitivitySelect(SHCEntity, SelectEntity):
-    """Select entity for Shutter Contact 2 Plus vibration sensitivity."""
-
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_options = _VIBRATION_SENSITIVITY_OPTIONS
-    _attr_translation_key = "vibration_sensitivity"
-
-    def __init__(
-        self,
-        device: SHCShutterContact2Plus,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize the vibration sensitivity select."""
-        super().__init__(device, parent_id, entry_id)
-        self._attr_unique_id = f"{device.serial}_vibration_sensitivity"
-
-    @property
-    @override
-    def current_option(self) -> str | None:
-        """Return the current vibration sensitivity option."""
-        val = self._device.sensitivity
-        if val is None or val.name not in self._attr_options:
-            return None
-        return val.name
-
-    @override
-    def select_option(self, option: str) -> None:
-        """Set the vibration sensitivity."""
-        self._device.sensitivity = VibrationSensorService.SensitivityState[option]
-
-
-class SHCStateAfterPowerOutageSelect(SHCEntity, SelectEntity):
-    """Select entity for smart plug power-loss behaviour."""
-
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_options = _STATE_AFTER_POWER_OUTAGE_OPTIONS
-    _attr_translation_key = "state_after_power_outage"
+    entity_description: SHCSelectEntityDescription
 
     def __init__(
         self,
         device: SHCDevice,
+        entity_description: SHCSelectEntityDescription,
         parent_id: str,
         entry_id: str,
     ) -> None:
-        """Initialize the state-after-power-outage select."""
+        """Initialize the select entity."""
         super().__init__(device, parent_id, entry_id)
-        self._attr_unique_id = f"{device.serial}_state_after_power_outage"
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{device.serial}_{entity_description.key}"
 
     @property
     @override
     def current_option(self) -> str | None:
-        """Return the current power-outage behaviour option."""
-        val = self._device.state_after_power_outage
-        if val is None or val.name not in self._attr_options:
-            return None
-        return val.name
+        """Return the current option."""
+        return self.entity_description.value_fn(self._device)
 
     @override
     def select_option(self, option: str) -> None:
-        """Set the state-after-power-outage behaviour."""
-        self._device.state_after_power_outage = (
-            PowerSwitchConfigurationService.StateAfterPowerOutage[option]
-        )
-
-
-class SHCSmokeSensitivitySelect(SHCEntity, SelectEntity):
-    """Select entity for smoke detector / Twinguard smoke sensitivity."""
-
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_options = _SMOKE_SENSITIVITY_OPTIONS
-    _attr_translation_key = "smoke_sensitivity"
-
-    def __init__(
-        self,
-        device: SHCSmokeDetector | SHCTwinguard,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize the smoke sensitivity select."""
-        super().__init__(device, parent_id, entry_id)
-        self._attr_unique_id = f"{device.serial}_smoke_sensitivity"
-
-    @property
-    @override
-    def current_option(self) -> str | None:
-        """Return the current smoke sensitivity level."""
-        val = self._device.smoke_sensitivity
-        if val is None or val.name not in self._attr_options:
-            return None
-        return val.name
-
-    @override
-    def select_option(self, option: str) -> None:
-        """Set the smoke sensitivity level."""
-        self._device.smoke_sensitivity = SmokeSensitivityService.SmokeSensitivityLevel[
-            option
-        ]
-
-
-class SHCDisplayDirectionSelect(SHCEntity, SelectEntity):
-    """Select entity for thermostat display orientation."""
-
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_options = _DISPLAY_DIRECTION_OPTIONS
-    _attr_translation_key = "display_direction"
-
-    def __init__(
-        self,
-        device: SHCThermostat | SHCRoomThermostat2,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize the display direction select."""
-        super().__init__(device, parent_id, entry_id)
-        self._attr_unique_id = f"{device.serial}_display_direction"
-
-    @property
-    @override
-    def current_option(self) -> str | None:
-        """Return the current display direction."""
-        val = self._device.display_direction
-        if val is None or val.name not in self._attr_options:
-            return None
-        return val.name
-
-    @override
-    def select_option(self, option: str) -> None:
-        """Set the display direction."""
-        self._device.display_direction = DisplayDirection.Direction[option]
-
-
-class SHCDisplayedTemperatureSelect(SHCEntity, SelectEntity):
-    """Select entity for the temperature value shown on the thermostat display."""
-
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_options = _DISPLAYED_TEMPERATURE_OPTIONS
-    _attr_translation_key = "displayed_temperature"
-
-    def __init__(
-        self,
-        device: SHCThermostat | SHCRoomThermostat2,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize the displayed-temperature select."""
-        super().__init__(device, parent_id, entry_id)
-        self._attr_unique_id = f"{device.serial}_displayed_temperature"
-
-    @property
-    @override
-    def current_option(self) -> str | None:
-        """Return the current displayed-temperature type."""
-        val = self._device.displayed_temperature
-        if val is None or val.name not in self._attr_options:
-            return None
-        return val.name
-
-    @override
-    def select_option(self, option: str) -> None:
-        """Set the displayed-temperature type."""
-        self._device.displayed_temperature = (
-            DisplayedTemperatureConfiguration.DisplayedTemperature[option]
-        )
-
-
-class SHCValveTypeSelect(SHCEntity, SelectEntity):
-    """Select entity for thermostat valve type (normally open/close)."""
-
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_options = _VALVE_TYPE_OPTIONS
-    _attr_translation_key = "valve_type"
-
-    def __init__(
-        self,
-        device: SHCThermostat | SHCRoomThermostat2,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize the valve type select."""
-        super().__init__(device, parent_id, entry_id)
-        self._attr_unique_id = f"{device.serial}_valve_type"
-
-    @property
-    @override
-    def current_option(self) -> str | None:
-        """Return the current valve type."""
-        val = self._device.valve_type
-        if val is None or val.name not in self._attr_options:
-            return None
-        return val.name
-
-    @override
-    def select_option(self, option: str) -> None:
-        """Set the valve type."""
-        self._device.valve_type = WallThermostatConfiguration.ValveType[option]
-
-
-class SHCHeaterTypeSelect(SHCEntity, SelectEntity):
-    """Select entity for thermostat heater type."""
-
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_options = _HEATER_TYPE_OPTIONS
-    _attr_translation_key = "heater_type"
-
-    def __init__(
-        self,
-        device: SHCThermostat | SHCRoomThermostat2,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize the heater type select."""
-        super().__init__(device, parent_id, entry_id)
-        self._attr_unique_id = f"{device.serial}_heater_type"
-
-    @property
-    @override
-    def current_option(self) -> str | None:
-        """Return the current heater type."""
-        val = self._device.heater_type
-        if val is None or val.name not in self._attr_options:
-            return None
-        return val.name
-
-    @override
-    def select_option(self, option: str) -> None:
-        """Set the heater type."""
-        self._device.heater_type = WallThermostatConfiguration.HeaterType[option]
-
-
-class SHCTerminalTypeSelect(SHCEntity, SelectEntity):
-    """Select entity for Room Thermostat 2 terminal (external sensor) type."""
-
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_options = _TERMINAL_TYPE_OPTIONS
-    _attr_translation_key = "terminal_type"
-
-    def __init__(
-        self,
-        device: SHCRoomThermostat2,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize the terminal type select."""
-        super().__init__(device, parent_id, entry_id)
-        self._attr_unique_id = f"{device.serial}_terminal_type"
-
-    @property
-    @override
-    def current_option(self) -> str | None:
-        """Return the current terminal type."""
-        val = self._device.terminal_type
-        if val is None or val.name not in self._attr_options:
-            return None
-        return val.name
-
-    @override
-    def select_option(self, option: str) -> None:
-        """Set the terminal type."""
-        self._device.terminal_type = TerminalConfiguration.Type[option]
-
-
-class SHCSwitchTypeSelect(SHCEntity, SelectEntity):
-    """Select entity for relay / light control switch type."""
-
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_options = _SWITCH_TYPE_OPTIONS
-    _attr_translation_key = "switch_type"
-
-    def __init__(
-        self,
-        device: SHCMicromoduleRelay | SHCLightControl,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize the switch type select."""
-        super().__init__(device, parent_id, entry_id)
-        self._attr_unique_id = f"{device.serial}_switch_type"
-
-    @property
-    @override
-    def current_option(self) -> str | None:
-        """Return the current switch type."""
-        val = self._device.switch_type
-        if val is None or val.name not in self._attr_options:
-            return None
-        return val.name
-
-    @override
-    def select_option(self, option: str) -> None:
-        """Set the switch type."""
-        self._device.switch_type = SwitchConfiguration.SwitchType[option]
-
-
-class SHCActuatorTypeSelect(SHCEntity, SelectEntity):
-    """Select entity for relay / light control actuator type."""
-
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_options = _ACTUATOR_TYPE_OPTIONS
-    _attr_translation_key = "actuator_type"
-
-    def __init__(
-        self,
-        device: SHCMicromoduleRelay | SHCLightControl,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize the actuator type select."""
-        super().__init__(device, parent_id, entry_id)
-        self._attr_unique_id = f"{device.serial}_actuator_type"
-
-    @property
-    @override
-    def current_option(self) -> str | None:
-        """Return the current actuator type."""
-        val = self._device.actuator_type
-        if val is None or val.name not in self._attr_options:
-            return None
-        return val.name
-
-    @override
-    def select_option(self, option: str) -> None:
-        """Set the actuator type."""
-        self._device.actuator_type = SwitchConfiguration.ActuatorType[option]
-
-
-class SHCOutputModeSelect(SHCEntity, SelectEntity):
-    """Select entity for relay / light control output mode."""
-
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_options = _OUTPUT_MODE_OPTIONS
-    _attr_translation_key = "output_mode"
-
-    def __init__(
-        self,
-        device: SHCMicromoduleRelay | SHCLightControl,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize the output mode select."""
-        super().__init__(device, parent_id, entry_id)
-        self._attr_unique_id = f"{device.serial}_output_mode"
-
-    @property
-    @override
-    def current_option(self) -> str | None:
-        """Return the current output mode."""
-        val = self._device.output_mode
-        if val is None or val.name not in self._attr_options:
-            return None
-        return val.name
-
-    @override
-    def select_option(self, option: str) -> None:
-        """Set the output mode."""
-        self._device.output_mode = SwitchConfiguration.OutputMode[option]
+        """Set the option."""
+        self.entity_description.set_fn(self._device, option)
