@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -105,6 +105,9 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_CONFIG] = yaml_config[DOMAIN]
 
+    if CONF_SERVICE_ACCOUNT in yaml_config[DOMAIN]:
+        async_register_services(hass)
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
@@ -114,6 +117,32 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     )
 
     return True
+
+
+@callback
+def async_register_services(hass: HomeAssistant) -> None:
+    """Register Google Assistant services."""
+
+    async def request_sync_service_handler(call: ServiceCall) -> None:
+        """Handle request sync service calls."""
+        agent_user_id = call.data.get("agent_user_id") or call.context.user_id
+
+        if agent_user_id is None:
+            _LOGGER.warning(
+                "No agent_user_id supplied for request_sync. Call as a user or pass in"
+                " user id as agent_user_id"
+            )
+            return
+
+        if not (entries := hass.config_entries.async_loaded_entries(DOMAIN)):
+            _LOGGER.warning("No Google Assistant config entry loaded for request_sync")
+            return
+
+        await entries[0].runtime_data.async_sync_entities(agent_user_id)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bool:
@@ -148,26 +177,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bo
 
     if google_config.should_report_state:
         google_config.async_enable_report_state()
-
-    async def request_sync_service_handler(call: ServiceCall) -> None:
-        """Handle request sync service calls."""
-        agent_user_id = call.data.get("agent_user_id") or call.context.user_id
-
-        if agent_user_id is None:
-            _LOGGER.warning(
-                "No agent_user_id supplied for request_sync. Call as a user or pass in"
-                " user id as agent_user_id"
-            )
-            return
-
-        await google_config.async_sync_entities(agent_user_id)
-
-    # Register service only if key is provided
-    if CONF_SERVICE_ACCOUNT in config:
-        # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-        hass.services.async_register(
-            DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler
-        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
