@@ -167,7 +167,6 @@ class SyncthingClient:
                             f"{INITIAL_EVENTS_READY}-{self._server_id}",
                         )
 
-                    # Discard all events that are not supported
                     if (
                         event["type"] not in FOLDER_EVENTS
                         and event["type"] not in DEVICE_EVENTS
