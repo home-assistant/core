@@ -47,8 +47,8 @@
 # name: test_sensors[sensor.backup_backup_manager_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Backup Backup Manager state',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Backup Backup Manager state',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'idle',
         'create_backup',
@@ -105,8 +105,8 @@
 # name: test_sensors[sensor.backup_last_attempted_automatic_backup-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Backup Last attempted automatic backup',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Backup Last attempted automatic backup',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.backup_last_attempted_automatic_backup',
@@ -156,8 +156,8 @@
 # name: test_sensors[sensor.backup_last_successful_automatic_backup-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Backup Last successful automatic backup',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Backup Last successful automatic backup',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.backup_last_successful_automatic_backup',
@@ -207,8 +207,8 @@
 # name: test_sensors[sensor.backup_next_scheduled_automatic_backup-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Backup Next scheduled automatic backup',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Backup Next scheduled automatic backup',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.backup_next_scheduled_automatic_backup',

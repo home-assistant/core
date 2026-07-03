@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-from typing import Any, cast, override
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
@@ -20,7 +20,7 @@ from .const import (
     STEAM_MAIN_IMAGE_FILE,
     STEAM_STATUSES,
 )
-from .coordinator import SteamConfigEntry, SteamDataUpdateCoordinator
+from .coordinator import PlayerData, SteamConfigEntry, SteamDataUpdateCoordinator
 from .entity import SteamEntity
 
 PARALLEL_UPDATES = 1
@@ -36,18 +36,18 @@ class SteamSensor(StrEnum):
 class SteamSensorEntityDescription(SensorEntityDescription):
     """Steam sensor description."""
 
-    value_fn: Callable[[dict[str, Any]], StateType]
-    name_fn: Callable[[dict[str, Any]], str]
-    entity_picture_fn: Callable[[dict[str, Any]], str] | None = None
+    value_fn: Callable[[PlayerData], StateType]
+    name_fn: Callable[[PlayerData], str]
+    entity_picture_fn: Callable[[PlayerData], str] | None = None
 
 
 SENSOR_DESCRIPTIONS: tuple[SteamSensorEntityDescription, ...] = (
     SteamSensorEntityDescription(
         key=SteamSensor.ACCOUNT,
         translation_key=SteamSensor.ACCOUNT,
-        value_fn=lambda x: STEAM_STATUSES[x["personastate"]],
-        name_fn=lambda x: x["personaname"],
-        entity_picture_fn=lambda x: x["avatarfull"],
+        value_fn=lambda x: STEAM_STATUSES[x.personastate],
+        name_fn=lambda x: x.personaname,
+        entity_picture_fn=lambda x: x.avatarfull,
     ),
 )
 
@@ -80,10 +80,7 @@ class SteamSensorEntity(SteamEntity, SensorEntity):
         description: SteamSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._steamid = steamid
-        self.entity_description = description
-        self._attr_unique_id = f"sensor.steam_{steamid}"
+        super().__init__(coordinator, steamid, description)
         self._attr_name = self.entity_description.name_fn(coordinator.data[steamid])
 
     @property
@@ -109,29 +106,27 @@ class SteamSensorEntity(SteamEntity, SensorEntity):
         player = self.coordinator.data[self._steamid]
 
         attrs: dict[str, str | int | datetime] = {}
-        if game := player.get("gameextrainfo"):
+        if game := player.gameextrainfo:
             attrs["game"] = game
-        if game_id := player.get("gameid"):
+        if game_id := player.gameid:
             attrs["game_id"] = game_id
-            game_url = f"{STEAM_API_URL}{player['gameid']}/"
+            game_url = f"{STEAM_API_URL}{player.gameid}/"
             attrs["game_image_header"] = f"{game_url}{STEAM_HEADER_IMAGE_FILE}"
             attrs["game_image_main"] = f"{game_url}{STEAM_MAIN_IMAGE_FILE}"
             if info := self._get_game_icon(player):
                 attrs["game_icon"] = f"{STEAM_ICON_URL}{game_id}/{info}.jpg"
-        if last_online := cast(int | None, player.get("lastlogoff")):
+        if last_online := player.lastlogoff:
             attrs["last_online"] = dt_util.as_local(
                 dt_util.utc_from_timestamp(last_online)
             )
-        if level := self.coordinator.data[self._steamid]["level"]:
+        if level := self.coordinator.data[self._steamid].level:
             attrs["level"] = level
         return attrs
 
-    def _get_game_icon(self, player: dict) -> str | None:
+    def _get_game_icon(self, player: PlayerData) -> str | None:
         """Get game icon identifier."""
-        if player.get("gameid") in self.coordinator.game_icons:
-            return self.coordinator.game_icons[player["gameid"]]
-        # Reset game icons to have coordinator get id for new game
-        self.coordinator.game_icons = {}
+        if player.gameid is not None and player.gameid in self.coordinator.game_icons:
+            return self.coordinator.game_icons[player.gameid]
         return None
 
     @property
