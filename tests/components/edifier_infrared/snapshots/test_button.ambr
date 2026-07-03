@@ -39,7 +39,7 @@
 # name: test_entities[button.edifier_r1700bt_bluetooth-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Edifier R1700BT Bluetooth',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edifier R1700BT Bluetooth',
     }),
     'context': <ANY>,
     'entity_id': 'button.edifier_r1700bt_bluetooth',
@@ -89,7 +89,7 @@
 # name: test_entities[button.edifier_r1700bt_fx_off-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Edifier R1700BT FX off',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edifier R1700BT FX off',
     }),
     'context': <ANY>,
     'entity_id': 'button.edifier_r1700bt_fx_off',
@@ -139,7 +139,7 @@
 # name: test_entities[button.edifier_r1700bt_fx_on-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Edifier R1700BT FX on',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edifier R1700BT FX on',
     }),
     'context': <ANY>,
     'entity_id': 'button.edifier_r1700bt_fx_on',
@@ -189,7 +189,7 @@
 # name: test_entities[button.edifier_r1700bt_line_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Edifier R1700BT Line 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edifier R1700BT Line 1',
     }),
     'context': <ANY>,
     'entity_id': 'button.edifier_r1700bt_line_1',
@@ -239,7 +239,7 @@
 # name: test_entities[button.edifier_r1700bt_line_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Edifier R1700BT Line 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edifier R1700BT Line 2',
     }),
     'context': <ANY>,
     'entity_id': 'button.edifier_r1700bt_line_2',
