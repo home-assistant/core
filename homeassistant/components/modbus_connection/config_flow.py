@@ -29,7 +29,9 @@ from .const import (
 STEP_MODBUS_TCP = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=65535)
+        ),
     }
 )
 
@@ -37,7 +39,9 @@ STEP_MODBUS_TCP = vol.Schema(
 STEP_SERIAL = vol.Schema(
     {
         vol.Required(CONF_DEVICE): SerialPortSelector(),
-        vol.Required(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): vol.Coerce(int),
+        vol.Required(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): vol.All(
+            vol.Coerce(int), vol.Range(min=1)
+        ),
         vol.Required(CONF_PARITY, default=DEFAULT_PARITY): vol.In(["N", "E", "O"]),
         vol.Required(CONF_STOPBITS, default=DEFAULT_STOPBITS): vol.In([1, 2]),
         vol.Required(CONF_BYTESIZE, default=DEFAULT_BYTESIZE): vol.In([7, 8]),
