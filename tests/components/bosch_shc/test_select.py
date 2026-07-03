@@ -14,6 +14,8 @@ from boschshcpy.models_impl import (
     SHCMotionDetector2,
     SHCRoomThermostat2,
     SHCSmartPlug,
+    SHCThermostat,
+    SHCThermostatGen2,
 )
 from boschshcpy.services_impl import (
     DisplayDirection,
@@ -131,11 +133,16 @@ def _rich_smoke_detector() -> MagicMock:
     )
 
 
-def _rich_room_thermostat2() -> MagicMock:
-    """A Room Thermostat 2 with every gated thermostat select available."""
+def _rich_thermostat_gen2() -> MagicMock:
+    """A Gen2 TRV with display/wall-thermostat selects available.
+
+    valve_type/heater_type only exist on SHCThermostatGen2 — not on Gen1
+    SHCThermostat, and not on SHCRoomThermostat2 either.
+    """
     return _make_device(
-        SHCRoomThermostat2,
-        serial="trv-1",
+        SHCThermostatGen2,
+        serial="trv2-1",
+        name="Gen2 Thermostat",
         supports_display_direction=True,
         display_direction=DisplayDirection.Direction.NORMAL,
         supports_displayed_temperature=True,
@@ -143,6 +150,22 @@ def _rich_room_thermostat2() -> MagicMock:
         supports_wall_thermostat_configuration=True,
         valve_type=WallThermostatConfiguration.ValveType.NORMALLY_CLOSE,
         heater_type=WallThermostatConfiguration.HeaterType.RADIATOR,
+    )
+
+
+def _rich_room_thermostat2() -> MagicMock:
+    """A Room Thermostat 2 with display + terminal-type selects available.
+
+    RoomThermostat2 has no valve_type/heater_type — those are Gen2-only.
+    """
+    return _make_device(
+        SHCRoomThermostat2,
+        serial="rth2-1",
+        name="Room Thermostat 2",
+        supports_display_direction=True,
+        display_direction=DisplayDirection.Direction.NORMAL,
+        supports_displayed_temperature=True,
+        displayed_temperature=DisplayedTemperatureConfiguration.DisplayedTemperature.SETPOINT,
         supports_terminal_configuration=True,
         terminal_type=TerminalConfiguration.Type.NOT_CONNECTED,
     )
@@ -153,7 +176,6 @@ def _rich_micromodule_relay() -> MagicMock:
     return _make_device(
         SHCMicromoduleRelay,
         serial="relay-1",
-        supports_switch_configuration=True,
         switch_type=SwitchConfiguration.SwitchType.PUSHBUTTON,
         actuator_type=SwitchConfiguration.ActuatorType.NORMALLY_OPEN,
         output_mode=SwitchConfiguration.OutputMode.ATTACHED,
@@ -172,6 +194,7 @@ async def test_selects(
     mock_session.device_helper.shutter_contacts2 = [_rich_shutter_contact2_plus()]
     mock_session.device_helper.smart_plugs = [_rich_smart_plug()]
     mock_session.device_helper.smoke_detectors = [_rich_smoke_detector()]
+    mock_session.device_helper.thermostats = [_rich_thermostat_gen2()]
     mock_session.device_helper.roomthermostats = [_rich_room_thermostat2()]
     mock_session.device_helper.micromodule_relays = [_rich_micromodule_relay()]
 
@@ -362,11 +385,11 @@ async def test_display_direction(
     mock_session.device_helper.roomthermostats = [device]
     await _setup_select_platform(hass, mock_config_entry, mock_session)
 
-    state = hass.states.get("select.test_device_display_direction")
+    state = hass.states.get("select.room_thermostat_2_display_direction")
     assert state is not None
     assert state.state == "NORMAL"
 
-    await _select_option(hass, "select.test_device_display_direction", "REVERSED")
+    await _select_option(hass, "select.room_thermostat_2_display_direction", "REVERSED")
     assert device.display_direction == DisplayDirection.Direction.REVERSED
 
 
@@ -378,11 +401,13 @@ async def test_displayed_temperature(
     mock_session.device_helper.roomthermostats = [device]
     await _setup_select_platform(hass, mock_config_entry, mock_session)
 
-    state = hass.states.get("select.test_device_displayed_temperature")
+    state = hass.states.get("select.room_thermostat_2_displayed_temperature")
     assert state is not None
     assert state.state == "SETPOINT"
 
-    await _select_option(hass, "select.test_device_displayed_temperature", "MEASURED")
+    await _select_option(
+        hass, "select.room_thermostat_2_displayed_temperature", "MEASURED"
+    )
     assert (
         device.displayed_temperature
         == DisplayedTemperatureConfiguration.DisplayedTemperature.MEASURED
@@ -392,19 +417,23 @@ async def test_displayed_temperature(
 async def test_valve_and_heater_type(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
 ) -> None:
-    """Valve type and heater type are both created and can be changed independently."""
-    device = _rich_room_thermostat2()
-    mock_session.device_helper.roomthermostats = [device]
+    """Valve type and heater type are both created and can be changed independently.
+
+    Only SHCThermostatGen2 has these — not Gen1 SHCThermostat, and not
+    SHCRoomThermostat2 either.
+    """
+    device = _rich_thermostat_gen2()
+    mock_session.device_helper.thermostats = [device]
     await _setup_select_platform(hass, mock_config_entry, mock_session)
 
-    valve_state = hass.states.get("select.test_device_valve_type")
-    heater_state = hass.states.get("select.test_device_heater_type")
+    valve_state = hass.states.get("select.gen2_thermostat_valve_type")
+    heater_state = hass.states.get("select.gen2_thermostat_heater_type")
     assert valve_state is not None
     assert valve_state.state == "NORMALLY_CLOSE"
     assert heater_state is not None
     assert heater_state.state == "RADIATOR"
 
-    await _select_option(hass, "select.test_device_valve_type", "NORMALLY_OPEN")
+    await _select_option(hass, "select.gen2_thermostat_valve_type", "NORMALLY_OPEN")
     assert device.valve_type == WallThermostatConfiguration.ValveType.NORMALLY_OPEN
 
 
@@ -416,14 +445,33 @@ async def test_terminal_type_only_for_roomthermostat2(
     mock_session.device_helper.roomthermostats = [device]
     await _setup_select_platform(hass, mock_config_entry, mock_session)
 
-    state = hass.states.get("select.test_device_terminal_type")
+    state = hass.states.get("select.room_thermostat_2_terminal_type")
     assert state is not None
     assert state.state == "NOT_CONNECTED"
 
     await _select_option(
-        hass, "select.test_device_terminal_type", "FLOOR_SENSOR_CONNECTED"
+        hass, "select.room_thermostat_2_terminal_type", "FLOOR_SENSOR_CONNECTED"
     )
     assert device.terminal_type == TerminalConfiguration.Type.FLOOR_SENSOR_CONNECTED
+
+
+async def test_gen1_thermostat_does_not_crash_setup(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+) -> None:
+    """A Gen1 TRV in thermostats must not crash select setup.
+
+    Gen1 SHCThermostat has none of the display/wall-thermostat-config
+    properties Gen2 and RoomThermostat2 have; setup must not access them
+    on a Gen1 instance. Autospec (spec, not spec_set) would otherwise let
+    a test silently pass even if the code regressed, so this device is
+    deliberately built without any of those attributes.
+    """
+    device = _make_device(SHCThermostat, serial="trv1-1")
+    mock_session.device_helper.thermostats = [device]
+    await _setup_select_platform(hass, mock_config_entry, mock_session)
+
+    assert hass.states.get("select.test_device_display_direction") is None
+    assert hass.states.get("select.test_device_valve_type") is None
 
 
 @pytest.mark.parametrize(
@@ -445,7 +493,6 @@ async def test_switch_configuration_selects(
     device = _make_device(
         spec,
         serial="relay-1",
-        supports_switch_configuration=True,
         switch_type=SwitchConfiguration.SwitchType.PUSHBUTTON,
         actuator_type=SwitchConfiguration.ActuatorType.NORMALLY_OPEN,
         output_mode=SwitchConfiguration.OutputMode.ATTACHED,

@@ -1,4 +1,435 @@
 # serializer version: 1
+# name: test_selects[select.gen2_thermostat_display_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'NORMAL',
+        'REVERSED',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.gen2_thermostat_display_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Display direction',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Display direction',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'display_direction',
+    'unique_id': 'trv2-1_display_direction',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.gen2_thermostat_display_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen2 Thermostat Display direction',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'NORMAL',
+        'REVERSED',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.gen2_thermostat_display_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'NORMAL',
+  })
+# ---
+# name: test_selects[select.gen2_thermostat_displayed_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'SETPOINT',
+        'MEASURED',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.gen2_thermostat_displayed_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Displayed temperature',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Displayed temperature',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'displayed_temperature',
+    'unique_id': 'trv2-1_displayed_temperature',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.gen2_thermostat_displayed_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen2 Thermostat Displayed temperature',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'SETPOINT',
+        'MEASURED',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.gen2_thermostat_displayed_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'SETPOINT',
+  })
+# ---
+# name: test_selects[select.gen2_thermostat_heater_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'FLOOR_HEATING',
+        'FLOOR_HEATING_LOW_ENERGY',
+        'RADIATOR',
+        'CONVECTOR_PASSIVE',
+        'CONVECTOR_ACTIVE',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.gen2_thermostat_heater_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heater type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heater type',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heater_type',
+    'unique_id': 'trv2-1_heater_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.gen2_thermostat_heater_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen2 Thermostat Heater type',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'FLOOR_HEATING',
+        'FLOOR_HEATING_LOW_ENERGY',
+        'RADIATOR',
+        'CONVECTOR_PASSIVE',
+        'CONVECTOR_ACTIVE',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.gen2_thermostat_heater_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'RADIATOR',
+  })
+# ---
+# name: test_selects[select.gen2_thermostat_valve_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'NORMALLY_CLOSE',
+        'NORMALLY_OPEN',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.gen2_thermostat_valve_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Valve type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Valve type',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'valve_type',
+    'unique_id': 'trv2-1_valve_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.gen2_thermostat_valve_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen2 Thermostat Valve type',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'NORMALLY_CLOSE',
+        'NORMALLY_OPEN',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.gen2_thermostat_valve_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'NORMALLY_CLOSE',
+  })
+# ---
+# name: test_selects[select.room_thermostat_2_display_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'NORMAL',
+        'REVERSED',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.room_thermostat_2_display_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Display direction',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Display direction',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'display_direction',
+    'unique_id': 'rth2-1_display_direction',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.room_thermostat_2_display_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Thermostat 2 Display direction',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'NORMAL',
+        'REVERSED',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.room_thermostat_2_display_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'NORMAL',
+  })
+# ---
+# name: test_selects[select.room_thermostat_2_displayed_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'SETPOINT',
+        'MEASURED',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.room_thermostat_2_displayed_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Displayed temperature',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Displayed temperature',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'displayed_temperature',
+    'unique_id': 'rth2-1_displayed_temperature',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.room_thermostat_2_displayed_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Thermostat 2 Displayed temperature',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'SETPOINT',
+        'MEASURED',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.room_thermostat_2_displayed_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'SETPOINT',
+  })
+# ---
+# name: test_selects[select.room_thermostat_2_terminal_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'NOT_CONNECTED',
+        'FLOOR_SENSOR_CONNECTED',
+        'FLOOR_SENSOR_USED_FOR_REGULATION',
+        'FLOOR_SENSOR_DISPLAYED',
+        'FLOOR_SENSOR_DISPLAYED_AND_USED_FOR_REGULATION',
+        'VOLT_FREE_SENSOR_CONNECTED',
+        'VOLT_FREE_SENSOR_CONNECTED_AND_USED_FOR_OPERATION',
+        'OUTDOOR_SENSOR_CONNECTED',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.room_thermostat_2_terminal_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Terminal type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Terminal type',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'terminal_type',
+    'unique_id': 'rth2-1_terminal_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.room_thermostat_2_terminal_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Thermostat 2 Terminal type',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'NOT_CONNECTED',
+        'FLOOR_SENSOR_CONNECTED',
+        'FLOOR_SENSOR_USED_FOR_REGULATION',
+        'FLOOR_SENSOR_DISPLAYED',
+        'FLOOR_SENSOR_DISPLAYED_AND_USED_FOR_REGULATION',
+        'VOLT_FREE_SENSOR_CONNECTED',
+        'VOLT_FREE_SENSOR_CONNECTED_AND_USED_FOR_OPERATION',
+        'OUTDOOR_SENSOR_CONNECTED',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.room_thermostat_2_terminal_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'NOT_CONNECTED',
+  })
+# ---
 # name: test_selects[select.test_device_actuator_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -119,189 +550,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'HIGH',
-  })
-# ---
-# name: test_selects[select.test_device_display_direction-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'NORMAL',
-        'REVERSED',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.test_device_display_direction',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Display direction',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Display direction',
-    'platform': 'bosch_shc',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'display_direction',
-    'unique_id': 'trv-1_display_direction',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[select.test_device_display_direction-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Display direction',
-      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'NORMAL',
-        'REVERSED',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.test_device_display_direction',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'NORMAL',
-  })
-# ---
-# name: test_selects[select.test_device_displayed_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'SETPOINT',
-        'MEASURED',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.test_device_displayed_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Displayed temperature',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Displayed temperature',
-    'platform': 'bosch_shc',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'displayed_temperature',
-    'unique_id': 'trv-1_displayed_temperature',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[select.test_device_displayed_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Displayed temperature',
-      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'SETPOINT',
-        'MEASURED',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.test_device_displayed_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'SETPOINT',
-  })
-# ---
-# name: test_selects[select.test_device_heater_type-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'FLOOR_HEATING',
-        'FLOOR_HEATING_LOW_ENERGY',
-        'RADIATOR',
-        'CONVECTOR_PASSIVE',
-        'CONVECTOR_ACTIVE',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.test_device_heater_type',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Heater type',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Heater type',
-    'platform': 'bosch_shc',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'heater_type',
-    'unique_id': 'trv-1_heater_type',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[select.test_device_heater_type-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Heater type',
-      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'FLOOR_HEATING',
-        'FLOOR_HEATING_LOW_ENERGY',
-        'RADIATOR',
-        'CONVECTOR_PASSIVE',
-        'CONVECTOR_ACTIVE',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.test_device_heater_type',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'RADIATOR',
   })
 # ---
 # name: test_selects[select.test_device_motion_sensitivity-entry]
@@ -733,136 +981,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'PUSHBUTTON',
-  })
-# ---
-# name: test_selects[select.test_device_terminal_type-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'NOT_CONNECTED',
-        'FLOOR_SENSOR_CONNECTED',
-        'FLOOR_SENSOR_USED_FOR_REGULATION',
-        'FLOOR_SENSOR_DISPLAYED',
-        'FLOOR_SENSOR_DISPLAYED_AND_USED_FOR_REGULATION',
-        'VOLT_FREE_SENSOR_CONNECTED',
-        'VOLT_FREE_SENSOR_CONNECTED_AND_USED_FOR_OPERATION',
-        'OUTDOOR_SENSOR_CONNECTED',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.test_device_terminal_type',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Terminal type',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Terminal type',
-    'platform': 'bosch_shc',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'terminal_type',
-    'unique_id': 'trv-1_terminal_type',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[select.test_device_terminal_type-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Terminal type',
-      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'NOT_CONNECTED',
-        'FLOOR_SENSOR_CONNECTED',
-        'FLOOR_SENSOR_USED_FOR_REGULATION',
-        'FLOOR_SENSOR_DISPLAYED',
-        'FLOOR_SENSOR_DISPLAYED_AND_USED_FOR_REGULATION',
-        'VOLT_FREE_SENSOR_CONNECTED',
-        'VOLT_FREE_SENSOR_CONNECTED_AND_USED_FOR_OPERATION',
-        'OUTDOOR_SENSOR_CONNECTED',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.test_device_terminal_type',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'NOT_CONNECTED',
-  })
-# ---
-# name: test_selects[select.test_device_valve_type-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'NORMALLY_CLOSE',
-        'NORMALLY_OPEN',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.test_device_valve_type',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Valve type',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Valve type',
-    'platform': 'bosch_shc',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'valve_type',
-    'unique_id': 'trv-1_valve_type',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[select.test_device_valve_type-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Valve type',
-      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'NORMALLY_CLOSE',
-        'NORMALLY_OPEN',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.test_device_valve_type',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'NORMALLY_CLOSE',
   })
 # ---
 # name: test_selects[select.test_device_vibration_sensitivity-entry]

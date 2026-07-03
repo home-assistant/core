@@ -10,6 +10,7 @@ from boschshcpy.models_impl import (
     SHCMotionDetector2,
     SHCRoomThermostat2,
     SHCThermostat,
+    SHCThermostatGen2,
 )
 from boschshcpy.services_impl import (
     DisplayDirection,
@@ -218,47 +219,56 @@ async def async_setup_entry(
         *session.device_helper.thermostats,
         *session.device_helper.roomthermostats,
     ):
-        if device.supports_display_direction and device.display_direction is not None:
-            entities.append(
-                SHCDisplayDirectionSelect(
-                    device=device,
-                    parent_id=parent_id,
-                    entry_id=config_entry.entry_id,
+        # Gen1 SHCThermostat (model "TRV") has none of the display/wall-config
+        # properties below; only SHCThermostatGen2 and SHCRoomThermostat2 do.
+        if isinstance(device, (SHCThermostatGen2, SHCRoomThermostat2)):
+            if (
+                device.supports_display_direction
+                and device.display_direction is not None
+            ):
+                entities.append(
+                    SHCDisplayDirectionSelect(
+                        device=device,
+                        parent_id=parent_id,
+                        entry_id=config_entry.entry_id,
+                    )
                 )
-            )
-        if (
-            device.supports_displayed_temperature
-            and device.displayed_temperature is not None
-        ):
-            entities.append(
-                SHCDisplayedTemperatureSelect(
-                    device=device,
-                    parent_id=parent_id,
-                    entry_id=config_entry.entry_id,
+            if (
+                device.supports_displayed_temperature
+                and device.displayed_temperature is not None
+            ):
+                entities.append(
+                    SHCDisplayedTemperatureSelect(
+                        device=device,
+                        parent_id=parent_id,
+                        entry_id=config_entry.entry_id,
+                    )
                 )
-            )
-        if (
-            device.supports_wall_thermostat_configuration
-            and device.valve_type is not None
-        ):
-            entities.append(
-                SHCValveTypeSelect(
-                    device=device,
-                    parent_id=parent_id,
-                    entry_id=config_entry.entry_id,
+        # valve/heater type are only on SHCThermostatGen2 — not on Gen1, and
+        # not on SHCRoomThermostat2 either (which has terminal_type instead).
+        if isinstance(device, SHCThermostatGen2):
+            if (
+                device.supports_wall_thermostat_configuration
+                and device.valve_type is not None
+            ):
+                entities.append(
+                    SHCValveTypeSelect(
+                        device=device,
+                        parent_id=parent_id,
+                        entry_id=config_entry.entry_id,
+                    )
                 )
-            )
-        if (
-            device.supports_wall_thermostat_configuration
-            and device.heater_type is not None
-        ):
-            entities.append(
-                SHCHeaterTypeSelect(
-                    device=device,
-                    parent_id=parent_id,
-                    entry_id=config_entry.entry_id,
+            if (
+                device.supports_wall_thermostat_configuration
+                and device.heater_type is not None
+            ):
+                entities.append(
+                    SHCHeaterTypeSelect(
+                        device=device,
+                        parent_id=parent_id,
+                        entry_id=config_entry.entry_id,
+                    )
                 )
-            )
         if isinstance(device, SHCRoomThermostat2) and (
             device.supports_terminal_configuration and device.terminal_type is not None
         ):
@@ -270,35 +280,39 @@ async def async_setup_entry(
                 )
             )
 
+    # supports_switch_configuration only exists on SHCMicromoduleRelay (and is
+    # there simply "the switch-config service is present"); SHCLightControl
+    # has no such flag at all, but its switch_type/actuator_type/output_mode
+    # are already null-safe, so checking them directly covers both classes
+    # without needing a per-class guard.
     for device in (
         *session.device_helper.micromodule_relays,
         *session.device_helper.micromodule_light_controls,
     ):
-        if device.supports_switch_configuration:
-            if device.switch_type is not None:
-                entities.append(
-                    SHCSwitchTypeSelect(
-                        device=device,
-                        parent_id=parent_id,
-                        entry_id=config_entry.entry_id,
-                    )
+        if device.switch_type is not None:
+            entities.append(
+                SHCSwitchTypeSelect(
+                    device=device,
+                    parent_id=parent_id,
+                    entry_id=config_entry.entry_id,
                 )
-            if device.actuator_type is not None:
-                entities.append(
-                    SHCActuatorTypeSelect(
-                        device=device,
-                        parent_id=parent_id,
-                        entry_id=config_entry.entry_id,
-                    )
+            )
+        if device.actuator_type is not None:
+            entities.append(
+                SHCActuatorTypeSelect(
+                    device=device,
+                    parent_id=parent_id,
+                    entry_id=config_entry.entry_id,
                 )
-            if device.output_mode is not None:
-                entities.append(
-                    SHCOutputModeSelect(
-                        device=device,
-                        parent_id=parent_id,
-                        entry_id=config_entry.entry_id,
-                    )
+            )
+        if device.output_mode is not None:
+            entities.append(
+                SHCOutputModeSelect(
+                    device=device,
+                    parent_id=parent_id,
+                    entry_id=config_entry.entry_id,
                 )
+            )
 
     async_add_entities(entities)
 
