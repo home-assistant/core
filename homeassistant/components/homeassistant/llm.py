@@ -1,21 +1,142 @@
 """LLM tools for the homeassistant integration."""
 
-from typing import override
+from decimal import Decimal
+from enum import Enum
+from operator import attrgetter
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.llm import LLMTools
+from homeassistant.components.sensor import async_rounded_state
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, intent
-from homeassistant.helpers.llm import (
-    NO_ENTITIES_PROMPT,
-    LLMContext,
-    Tool,
-    ToolInput,
-    async_get_exposed_entities,
+from homeassistant.helpers import (
+    area_registry as ar,
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+    intent,
 )
-from homeassistant.util import yaml as yaml_util
+from homeassistant.helpers.llm import NO_ENTITIES_PROMPT, LLMContext, Tool, ToolInput
+from homeassistant.util import dt as dt_util, yaml as yaml_util
 from homeassistant.util.json import JsonObjectType
+
+from .exposed_entities import async_should_expose
+
+# Domains bucketed out of the exposed-entity overview.
+CALENDAR_DOMAIN = "calendar"
+SCRIPT_DOMAIN = "script"
+
+
+@callback
+def async_get_exposed_entities(
+    hass: HomeAssistant,
+    assistant: str,
+    include_state: bool = True,
+) -> dict[str, dict[str, dict[str, Any]]]:
+    """Get exposed entities.
+
+    Splits out calendars and scripts.
+    """
+    area_registry = ar.async_get(hass)
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+    interesting_attributes = {
+        "temperature",
+        "current_temperature",
+        "temperature_unit",
+        "brightness",
+        "humidity",
+        "unit_of_measurement",
+        "device_class",
+        "current_position",
+        "percentage",
+        "volume_level",
+        "media_title",
+        "media_artist",
+        "media_album_name",
+    }
+
+    entities = {}
+    data: dict[str, dict[str, Any]] = {
+        SCRIPT_DOMAIN: {},
+        CALENDAR_DOMAIN: {},
+    }
+
+    for state in sorted(hass.states.async_all(), key=attrgetter("name")):
+        if not async_should_expose(hass, assistant, state.entity_id):
+            continue
+
+        entity_entry = entity_registry.async_get(state.entity_id)
+        device_entry = (
+            device_registry.async_get(entity_entry.device_id)
+            if entity_entry is not None and entity_entry.device_id is not None
+            else None
+        )
+        names = intent.async_get_entity_aliases(hass, entity_entry, state=state)
+        area_names = []
+
+        if entity_entry is not None:
+            if (
+                entity_entry.area_id is not None
+                and (area_entry := area_registry.async_get_area(entity_entry.area_id))
+                is not None
+            ):
+                # Entity is in area
+                area_names.append(area_entry.name)
+                area_names.extend(sorted(area_entry.aliases))
+            elif device_entry is not None:
+                # Check device area
+                if (
+                    device_entry.area_id is not None
+                    and (
+                        area_entry := area_registry.async_get_area(device_entry.area_id)
+                    )
+                    is not None
+                ):
+                    area_names.append(area_entry.name)
+                    area_names.extend(sorted(area_entry.aliases))
+
+        info: dict[str, Any] = {
+            "names": ", ".join(names),
+            "domain": state.domain,
+        }
+
+        if include_state:
+            info["state"] = state.state
+
+            # Format numeric states with configured display precision
+            if state.domain == "sensor":
+                info["state"] = async_rounded_state(hass, state.entity_id, state)
+
+            # Convert timestamp device_class states from UTC to local time
+            if state.attributes.get("device_class") == "timestamp" and state.state:
+                if (parsed_utc := dt_util.parse_datetime(state.state)) is not None:
+                    info["state"] = dt_util.as_local(parsed_utc).isoformat()
+
+        if area_names:
+            info["areas"] = ", ".join(area_names)
+
+        if include_state and (
+            attributes := {
+                str(attr_name): (
+                    str(attr_value)
+                    if isinstance(attr_value, (Enum, Decimal, int))
+                    else attr_value
+                )
+                for attr_name, attr_value in state.attributes.items()
+                if attr_name in interesting_attributes
+            }
+        ):
+            info["attributes"] = attributes
+
+        if state.domain in data:
+            data[state.domain][state.entity_id] = info
+        else:
+            entities[state.entity_id] = info
+
+    data["entities"] = entities
+    return data
 
 
 def _live_context_match_error(
@@ -93,12 +214,8 @@ class GetLiveContextTool(Tool):
         llm_context: LLMContext,
     ) -> JsonObjectType:
         """Get the current state of exposed entities."""
-        if llm_context.assistant is None:
-            # Note this doesn't happen in practice since this tool won't be
-            # exposed if no assistant is configured.
-            return {"success": False, "error": "No assistant configured"}
-
         args = self.parameters(tool_input.tool_args)
+        assert llm_context.assistant is not None
         exposed_entities = async_get_exposed_entities(hass, llm_context.assistant)
 
         if not exposed_entities["entities"]:

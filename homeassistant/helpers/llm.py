@@ -489,7 +489,7 @@ class AssistAPI(API):
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
         """Return the instance of the API."""
         if llm_context.assistant:
-            exposed_entities: dict | None = async_get_exposed_entities(
+            exposed_entities: dict | None = _get_exposed_entities(
                 self.hass, llm_context.assistant, include_state=False
             )
         else:
@@ -650,8 +650,7 @@ class AssistAPI(API):
         return tools
 
 
-@callback
-def async_get_exposed_entities(
+def _get_exposed_entities(
     hass: HomeAssistant,
     assistant: str,
     include_state: bool = True,
@@ -1285,7 +1284,7 @@ class GetLiveContextTool(Tool):
             return {"success": False, "error": "No assistant configured"}
 
         args = self.parameters(tool_input.tool_args)
-        exposed_entities = async_get_exposed_entities(hass, llm_context.assistant)
+        exposed_entities = _get_exposed_entities(hass, llm_context.assistant)
 
         if not exposed_entities["entities"]:
             return {"success": False, "error": NO_ENTITIES_PROMPT}

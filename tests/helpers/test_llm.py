@@ -2012,10 +2012,8 @@ This is prompt 2
     assert result == {"result": {"Tool_2": {"arg2": "value2"}}}
 
 
-async def test_async_get_exposed_entities_timestamp_conversion(
-    hass: HomeAssistant,
-) -> None:
-    """Test that async_get_exposed_entities converts timestamp states to local time."""
+async def test_get_exposed_entities_timestamp_conversion(hass: HomeAssistant) -> None:
+    """Test that _get_exposed_entities converts timestamp states to local time."""
     assert await async_setup_component(hass, "homeassistant", {})
 
     # Set the timezone to something other than UTC to ensure conversion is tested
@@ -2055,8 +2053,8 @@ async def test_async_get_exposed_entities_timestamp_conversion(
     async_expose_entity(hass, "conversation", "sensor.invalid_timestamp", True)
     async_expose_entity(hass, "conversation", "sensor.empty_timestamp", True)
 
-    # Call async_get_exposed_entities
-    exposed = llm.async_get_exposed_entities(hass, "conversation", include_state=True)
+    # Call _get_exposed_entities
+    exposed = llm._get_exposed_entities(hass, "conversation", include_state=True)
 
     # Check the converted timestamp
     sensor_info = exposed["entities"]["sensor.test_timestamp"]
@@ -2075,7 +2073,7 @@ async def test_async_get_exposed_entities_timestamp_conversion(
     assert empty_info["state"] == ""
 
     # Test with include_state=False to ensure no conversion happens
-    exposed_no_state = llm.async_get_exposed_entities(
+    exposed_no_state = llm._get_exposed_entities(
         hass, "conversation", include_state=False
     )
     assert "state" not in exposed_no_state["entities"]["sensor.test_timestamp"]
