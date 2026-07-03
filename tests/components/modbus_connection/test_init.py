@@ -107,23 +107,22 @@ async def test_get_unit_returns_connection_unit(
     assert async_get_unit(hass, init_integration.entry_id, 1) is mock_modbus_unit
 
 
-async def test_get_unit_not_ready_when_missing_or_unloaded(
+async def test_get_unit_not_ready_when_unloaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """An unknown or not-loaded connection entry raises ConnectionNotReady."""
-    with pytest.raises(ConnectionNotReady):
-        async_get_unit(hass, "does-not-exist", 1)
-
+    """A modbus_connection entry that is not loaded raises ConnectionNotReady."""
     # mock_config_entry is added to hass but never set up -> not LOADED.
     with pytest.raises(ConnectionNotReady):
         async_get_unit(hass, mock_config_entry.entry_id, 1)
 
 
-async def test_get_unit_rejects_foreign_domain_entry(hass: HomeAssistant) -> None:
-    """A loaded entry from another integration raises ValueError."""
+async def test_get_unit_rejects_invalid_entry(hass: HomeAssistant) -> None:
+    """An unknown entry_id or a foreign-domain entry raises ValueError."""
+    with pytest.raises(ValueError):
+        async_get_unit(hass, "does-not-exist", 1)
+
     other = MockConfigEntry(domain="sun", state=ConfigEntryState.LOADED)
     other.add_to_hass(hass)
-
     with pytest.raises(ValueError):
         async_get_unit(hass, other.entry_id, 1)
