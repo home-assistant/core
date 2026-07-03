@@ -1,6 +1,6 @@
 """Config flow for Plaato."""
 
-from typing import Any
+from typing import Any, override
 
 from pyplaato.plaato import PlaatoDeviceType
 import voluptuous as vol
@@ -42,6 +42,7 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._init_info: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -59,6 +60,8 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=home-assistant-config-flow-name-field
                     vol.Required(
                         CONF_DEVICE_NAME,
                         default=self._init_info.get(CONF_DEVICE_NAME, None),
@@ -179,6 +182,7 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> PlaatoOptionsFlowHandler:
@@ -209,7 +213,7 @@ class PlaatoOptionsFlowHandler(OptionsFlow):
             data_schema=vol.Schema(
                 {
                     # Polling interval is user-configurable, which is no longer allowed
-                    # pylint: disable-next=hass-config-flow-polling-field
+                    # pylint: disable-next=home-assistant-config-flow-polling-field
                     vol.Optional(
                         CONF_SCAN_INTERVAL,
                         default=self.config_entry.options.get(

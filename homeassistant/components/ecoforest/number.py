@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyecoforest.models.device import Device
 
@@ -54,10 +55,12 @@ class EcoforestNumberEntity(EcoforestEntity, NumberEntity):
     entity_description: EcoforestNumberEntityDescription
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the entity."""
         return self.entity_description.value_fn(self.data)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the native value."""
         await self.coordinator.api.set_power(int(value))

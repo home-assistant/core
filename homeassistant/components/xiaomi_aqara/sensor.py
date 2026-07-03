@@ -1,7 +1,7 @@
 """Support for Xiaomi Aqara sensors."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from xiaomi_gateway import XiaomiGateway
 
@@ -61,7 +61,6 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "bed_activity": SensorEntityDescription(
         key="bed_activity",
         native_unit_of_measurement="μm",
-        device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "load_power": SensorEntityDescription(
@@ -178,6 +177,7 @@ class XiaomiSensor(XiaomiDevice, SensorEntity):
         self.entity_description = SENSOR_TYPES[data_key]
         super().__init__(device, name, xiaomi_hub, config_entry)
 
+    @override
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         if (value := data.get(self._data_key)) is None:
@@ -209,6 +209,7 @@ class XiaomiBatterySensor(XiaomiDevice, SensorEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_device_class = SensorDeviceClass.BATTERY
 
+    @override
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         succeed = super().parse_voltage(data)
@@ -220,6 +221,7 @@ class XiaomiBatterySensor(XiaomiDevice, SensorEntity):
         self._attr_native_value = battery_level
         return True
 
+    @override
     def parse_voltage(self, data):
         """Parse battery level data sent by gateway."""
         return False  # Override parse_voltage to do nothing

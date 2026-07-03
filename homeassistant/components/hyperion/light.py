@@ -3,7 +3,7 @@
 from collections.abc import Callable, Mapping, Sequence
 import functools
 import logging
-from typing import Any
+from typing import Any, override
 
 from hyperion import client, const
 
@@ -161,16 +161,19 @@ class HyperionLight(LightEntity):
         return get_hyperion_unique_id(server_id, instance_num, TYPE_HYPERION_LIGHT)
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return self._brightness
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float]:
         """Return last color value set."""
         return color_util.color_RGB_to_hs(*self._rgb_color)
 
     @property
+    @override
     def icon(self) -> str:
         """Return state specific icon."""
         if self.is_on:
@@ -179,16 +182,19 @@ class HyperionLight(LightEntity):
         return ICON_LIGHTBULB
 
     @property
+    @override
     def effect(self) -> str:
         """Return the current effect."""
         return self._effect
 
     @property
+    @override
     def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         return self._effect_list
 
     @property
+    @override
     def available(self) -> bool:
         """Return server availability."""
         return bool(self._client.has_loaded_state)
@@ -202,10 +208,16 @@ class HyperionLight(LightEntity):
         return self._options.get(key, defaults[key])
 
     @property
+    @override
     def is_on(self) -> bool:
-        """Return true if light is on. Light is considered on when there is a source at the configured HA priority."""
+        """Return true if light is on.
+
+        Light is considered on when there is a source at the
+        configured HA priority.
+        """
         return self._get_priority_entry_that_dictates_state() is not None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         # == Get key parameters ==
@@ -228,8 +240,8 @@ class HyperionLight(LightEntity):
                     and not await self._client.async_send_set_adjustment(
                         **{
                             const.KEY_ADJUSTMENT: {
-                                const.KEY_BRIGHTNESS: int(
-                                    round((float(brightness) * 100) / 255)
+                                const.KEY_BRIGHTNESS: round(
+                                    (float(brightness) * 100) / 255
                                 ),
                                 const.KEY_ID: item[const.KEY_ID],
                             }
@@ -259,6 +271,7 @@ class HyperionLight(LightEntity):
         ):
             return
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light i.e. clear the configured priority."""
         if not await self._client.async_send_clear(
@@ -295,7 +308,7 @@ class HyperionLight(LightEntity):
             if brightness_pct < 0 or brightness_pct > 100:
                 return
             self._set_internal_state(
-                brightness=int(round((brightness_pct * 255) / float(100)))
+                brightness=round((brightness_pct * 255) / float(100))
             )
             self.async_write_ha_state()
 
@@ -361,6 +374,7 @@ class HyperionLight(LightEntity):
         """Update client connection state."""
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity added to hass."""
         self.async_on_remove(
@@ -376,6 +390,7 @@ class HyperionLight(LightEntity):
         # Load initial state.
         self._update_full_state()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Cleanup prior to hass removal."""
         self._client.remove_callbacks(self._client_callbacks)

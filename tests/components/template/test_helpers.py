@@ -6,6 +6,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.device_automation import toggle_entity
+from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.alarm_control_panel import (
     SCRIPT_FIELDS as ALARM_CONTROL_PANEL_SCRIPT_FIELDS,
 )
@@ -96,7 +97,7 @@ async def _setup_mock_devices(
     await hass.async_block_till_done()
 
     platform_setup = TemplatePlatformSetup(
-        domain, None, "test_entity", make_test_trigger("sensor.trigger")
+        domain, "test_entity", make_test_trigger("sensor.trigger")
     )
     return (platform_setup, device_entry, entity_entry)
 
@@ -286,7 +287,7 @@ async def test_yaml_device_actions(
     entity_registry: er.EntityRegistry,
     calls: list,
 ) -> None:
-    """Test device actions in platforms that support both trigger and modern configurations."""
+    """Test device actions in platforms supporting trigger and modern configs."""
     await _setup_and_test_yaml_device_action(
         hass,
         style,
@@ -515,7 +516,7 @@ async def test_config_entry_device_actions(
 
     template_config_entry = MockConfigEntry(
         data={},
-        domain="template",
+        domain=DOMAIN,
         options={
             "name": platform_setup.object_id,
             "template_type": domain,
@@ -542,7 +543,7 @@ async def test_config_entry_device_actions(
 async def test_platform_not_ready(
     hass: HomeAssistant,
 ) -> None:
-    """Test async_setup_template_platform raises PlatformNotReady when trigger object is None."""
+    """Test async_setup_template_platform raises PlatformNotReady."""
     with pytest.raises(PlatformNotReady):
         await async_setup_template_platform(
             hass,

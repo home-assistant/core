@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 from rachiopy import Rachio
 import voluptuous as vol
@@ -158,7 +158,8 @@ class RachioPerson:
         for controller in devices:
             webhooks = rachio.notification.get_device_webhook(controller[KEY_ID])[1]
             # The API does not provide a way to tell if a controller is shared
-            # or if they are the owner. To work around this problem we fetch the webhooks
+            # or if they are the owner. To work around this problem
+            # we fetch the webhooks
             # before we setup the device so we can skip it instead of failing.
             # webhooks are normally a list, however if there is an error
             # rachio hands us back a dict
@@ -257,7 +258,8 @@ class RachioIro:
         def _deinit_webhooks(_) -> None:
             """Stop getting updates from the Rachio API."""
             if not self._webhooks:
-                # We fetched webhooks when we created the device, however if we call _init_webhooks
+                # We fetched webhooks when we created the device,
+                # however if we call _init_webhooks
                 # again we need to fetch again
                 self._webhooks = self.rachio.notification.get_device_webhook(
                     self.controller_id
@@ -289,6 +291,7 @@ class RachioIro:
         current_webhook_id = new_webhook[1][KEY_ID]
         self.hass.bus.listen(EVENT_HOMEASSISTANT_STOP, _deinit_webhooks)
 
+    @override
     def __str__(self) -> str:
         """Display the controller as a string."""
         return f'Rachio controller "{self.name}"'

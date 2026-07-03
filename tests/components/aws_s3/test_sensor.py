@@ -61,10 +61,9 @@ async def test_sensor_availability(
     assert (state := hass.states.get("sensor.bucket_test_total_size_of_backups"))
     assert state.state == STATE_UNAVAILABLE
 
-    mock_client.get_paginator.return_value.paginate.side_effect = None
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
-        {"Contents": []}
-    ]
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.side_effect = None
+    paginate.return_value.__aiter__.return_value = [{"Contents": []}]
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -93,9 +92,8 @@ async def test_calculate_backups_size(
     expected_pagination_call: dict,
 ) -> None:
     """Test the total size of backups calculation with and without prefix."""
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
-        {"Contents": []}
-    ]
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [{"Contents": []}]
     await setup_integration(hass, mock_config_entry)
 
     assert (state := hass.states.get("sensor.bucket_test_total_size_of_backups"))
@@ -107,7 +105,8 @@ async def test_calculate_backups_size(
     mock_body.read.return_value = metadata_content.encode()
     mock_client.get_object.return_value = {"Body": mock_body}
 
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [
         {
             "Contents": [
                 {"Key": "backup.tar"},

@@ -15,7 +15,7 @@ import shutil
 import sys
 import tarfile
 import time
-from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast
+from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast, override
 
 import aiohttp
 from securetar import SecureTarArchive, atomic_contents_add
@@ -1187,10 +1187,10 @@ class BackupManager:
                 "Cannot include all addons and specify specific addons"
             )
 
+        kind = "Automatic" if with_automatic_settings else "Custom"
         backup_name = (
-            (name if name is None else name.strip())
-            or f"{'Automatic' if with_automatic_settings else 'Custom'} backup {HAVERSION}"
-        )
+            name if name is None else name.strip()
+        ) or f"{kind} backup {HAVERSION}"
         extra_metadata = extra_metadata or {}
 
         try:
@@ -1287,7 +1287,8 @@ class BackupManager:
             )
             if not agent_errors:
                 if with_automatic_settings:
-                    # create backup was successful, update last_completed_automatic_backup
+                    # create backup was successful, update
+                    # last_completed_automatic_backup
                     self.config.data.last_completed_automatic_backup = dt_util.now()
                     self.store.save()
                 backup_success = True
@@ -1711,6 +1712,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         self._hass = hass
         self.temp_backup_dir = Path(hass.config.path("tmp_backups"))
 
+    @override
     async def async_create_backup(
         self,
         *,
@@ -1956,6 +1958,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             ) from err
         return (tar_file_path, stat_result.st_size)
 
+    @override
     async def async_receive_backup(
         self,
         *,
@@ -1977,7 +1980,13 @@ class CoreBackupReaderWriter(BackupReaderWriter):
 
         try:
             backup = await async_add_executor_job(read_backup, temp_file)
-        except (OSError, tarfile.TarError, json.JSONDecodeError, KeyError) as err:
+        except (
+            OSError,
+            tarfile.TarError,
+            json.JSONDecodeError,
+            KeyError,
+            InvalidBackupFilename,
+        ) as err:
             LOGGER.warning("Unable to parse backup %s: %s", temp_file, err)
             raise
 
@@ -2014,6 +2023,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             release_stream=remove_backup,
         )
 
+    @override
     async def async_restore_backup(
         self,
         backup_id: str,
@@ -2092,6 +2102,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         )
         await self._hass.services.async_call("homeassistant", "restart", blocking=True)
 
+    @override
     async def async_resume_restore_progress_after_restart(
         self,
         *,
@@ -2140,6 +2151,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         )
         on_progress(IdleEvent())
 
+    @override
     async def async_validate_config(self, *, config: BackupConfig) -> None:
         """Validate backup config.
 
@@ -2157,7 +2169,8 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             return
 
         LOGGER.info(
-            "Adjusting backup settings to not include addons, folders or supervisor locations"
+            "Adjusting backup settings to not include addons,"
+            " folders or supervisor locations"
         )
         automatic_agents = [
             agent_id

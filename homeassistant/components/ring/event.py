@@ -1,7 +1,7 @@
 """Component providing support for ring events."""
 
 from dataclasses import dataclass
-from typing import Generic
+from typing import Generic, override
 
 from ring_doorbell import RingCapability, RingEvent as RingAlert
 from ring_doorbell.const import KIND_DING, KIND_INTERCOM_UNLOCK, KIND_MOTION
@@ -24,7 +24,7 @@ PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingEventEntityDescription(EventEntityDescription, Generic[RingDeviceT]):
+class RingEventEntityDescription(EventEntityDescription, Generic[RingDeviceT]):  # noqa: UP046
     """Base class for event entity description."""
 
     capability: RingCapability
@@ -99,6 +99,7 @@ class RingEvent(RingBaseEntity[RingListenCoordinator, RingDeviceT], EventEntity)
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         if (alert := self._get_coordinator_alert()) and not alert.is_update:
             if alert.kind == KIND_DING:
@@ -108,9 +109,11 @@ class RingEvent(RingBaseEntity[RingListenCoordinator, RingDeviceT], EventEntity)
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.event_listener.started
 
+    @override
     async def async_update(self) -> None:
         """All updates are passive."""

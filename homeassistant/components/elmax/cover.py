@@ -1,7 +1,7 @@
 """Elmax cover platform."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from elmax_api.model.command import CoverCommand
 from elmax_api.model.cover_status import CoverStatus
@@ -15,7 +15,7 @@ from .entity import ElmaxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-_COMMAND_BY_MOTION_STATUS = {  # Maps the stop command to use for every cover motion status
+_COMMAND_BY_MOTION_STATUS = {  # Maps the stop command for each cover motion status
     CoverStatus.DOWN: CoverCommand.DOWN,
     CoverStatus.UP: CoverCommand.UP,
     CoverStatus.IDLE: None,
@@ -37,7 +37,9 @@ async def async_setup_entry(
 
     def _discover_new_devices():
         if (panel_status := coordinator.data) is None:
-            return  # In case the panel is offline, its status will be None. In that case, simply do nothing
+            # In case the panel is offline, its status will be
+            # None. In that case, simply do nothing
+            return
 
         # Otherwise, add all the entities we found
         entities = []
@@ -79,11 +81,13 @@ class ElmaxCover(ElmaxEntity, CoverEntity):
         return state == status_to_check
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Tells if the cover is closed or not."""
         return self.coordinator.get_cover_state(self._device.endpoint_id).position == 0
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
@@ -92,19 +96,24 @@ class ElmaxCover(ElmaxEntity, CoverEntity):
         return self.coordinator.get_cover_state(self._device.endpoint_id).position
 
     @property
+    @override
     def is_opening(self) -> bool | None:
         """Tells if the cover is opening or not."""
         return self.__check_cover_status(CoverStatus.UP)
 
     @property
+    @override
     def is_closing(self) -> bool | None:
         """Return if the cover is closing or not."""
         return self.__check_cover_status(CoverStatus.DOWN)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        # To stop the cover, Elmax requires us to re-issue the same command once again.
-        # To detect the current motion status, we request an immediate refresh to the coordinator
+        # To stop the cover, Elmax requires us to re-issue the
+        # same command once again. To detect the current motion
+        # status, we request an immediate refresh to the
+        # coordinator
         await self.coordinator.async_request_refresh()
         motion_status = self.coordinator.get_cover_state(
             self._device.endpoint_id
@@ -117,12 +126,14 @@ class ElmaxCover(ElmaxEntity, CoverEntity):
         else:
             _LOGGER.debug("Ignoring stop request as the cover is IDLE")
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.coordinator.http_client.execute_command(
             endpoint_id=self._device.endpoint_id, command=CoverCommand.UP
         )
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.coordinator.http_client.execute_command(

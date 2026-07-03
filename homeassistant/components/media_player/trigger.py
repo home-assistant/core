@@ -1,6 +1,7 @@
 """Provides triggers for media players."""
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from typing import override
+
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
@@ -8,6 +9,7 @@ from homeassistant.helpers.trigger import (
     EntityNumericalStateCrossedThresholdTriggerBase,
     EntityNumericalStateTriggerBase,
     EntityTriggerBase,
+    NotTriggeredReasonReporter,
     Trigger,
     make_entity_transition_trigger,
 )
@@ -15,7 +17,7 @@ from homeassistant.helpers.trigger import (
 from . import ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED, MediaPlayerState
 from .const import DOMAIN
 
-VOLUME_DOMAIN_SPECS = {
+VOLUME_DOMAIN_SPECS: dict[str, DomainSpec] = {
     DOMAIN: DomainSpec(value_source=ATTR_MEDIA_VOLUME_LEVEL),
 }
 
@@ -33,6 +35,7 @@ class _MediaPlayerMutedStateTriggerBase(EntityTriggerBase):
             or state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) is not None
         )
 
+    @override
     def _should_include(self, state: State) -> bool:
         """Check if an entity should participate in all/count checks.
 
@@ -49,17 +52,20 @@ class _MediaPlayerMutedStateTriggerBase(EntityTriggerBase):
             or state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) == 0
         )
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is valid and the state has changed."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
-
+        """Check that the muted-state changed."""
         if not self._has_volume_attributes(to_state):
             return False
 
         return self.is_muted(from_state) != self.is_muted(to_state)
 
-    def is_valid_state(self, state: State) -> bool:
+    @override
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the new state matches the expected state."""
         if not self._has_volume_attributes(state):
             return False
@@ -84,6 +90,7 @@ class VolumeTriggerMixin(EntityNumericalStateTriggerBase):
     _domain_specs = VOLUME_DOMAIN_SPECS
     _valid_unit = "%"
 
+    @override
     def _get_tracked_value(self, state: State) -> float | None:
         """Get tracked volume as a percentage."""
         value = super()._get_tracked_value(state)
@@ -92,6 +99,7 @@ class VolumeTriggerMixin(EntityNumericalStateTriggerBase):
         # Convert 0.0-1.0 range to percentage (0-100)
         return value * 100.0
 
+    @override
     def _should_include(self, state: State) -> bool:
         """Check if an entity should participate in all/count checks.
 
