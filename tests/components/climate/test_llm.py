@@ -8,14 +8,18 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
+ENTITY_ID = "climate.test"
+
 
 @pytest.fixture(autouse=True)
 async def setup_integrations(hass: HomeAssistant) -> None:
-    """Set up the integrations for the climate LLM tools platform."""
+    """Set up the integrations and expose a climate entity."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
     assert await async_setup_component(hass, "climate", {})
     assert await async_setup_component(hass, "llm", {})
+    hass.states.async_set(ENTITY_ID, "on", {"friendly_name": "Test climate"})
+    async_expose_entity(hass, "conversation", ENTITY_ID, True)
     await hass.async_block_till_done()
 
 
@@ -36,11 +40,12 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
     return {tool.name for tool in result.tools}
 
 
-async def test_climate_intent_tool_requires_exposed_entity(hass: HomeAssistant) -> None:
-    """Test the intent tools are only exposed when a climate entity is exposed."""
-    assert "HassClimateSetTemperature" not in await _tool_names(hass)
-
-    hass.states.async_set("climate.test", "on", {"friendly_name": "Test climate"})
-    async_expose_entity(hass, "conversation", "climate.test", True)
-
+async def test_intent_tool_exposed(hass: HomeAssistant) -> None:
+    """Test the intent tool is offered for an exposed climate entity."""
     assert "HassClimateSetTemperature" in await _tool_names(hass)
+
+
+async def test_intent_tool_not_exposed(hass: HomeAssistant) -> None:
+    """Test the intent tool is hidden when no climate entity is exposed."""
+    async_expose_entity(hass, "conversation", ENTITY_ID, False)
+    assert "HassClimateSetTemperature" not in await _tool_names(hass)
