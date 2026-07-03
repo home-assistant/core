@@ -41,28 +41,6 @@ class MikrotikSensorEntityDescription(SensorEntityDescription):
     index: int
 
 
-def _calculate_memory_usage(data: dict[str, Any]) -> float | None:
-    """Calculate memory usage percentage."""
-    total: int = data.get("total-memory", 0)
-    free: int = data.get("free-memory", 0)
-
-    if total == 0:
-        return None
-
-    return (total - free) / total * 100
-
-
-def _calculate_disk_usage(data: dict[str, Any]) -> float | None:
-    """Calculate disk usage percentage."""
-    total: int = data.get("total-hdd-space", 0)
-    free: int = data.get("free-hdd-space", 0)
-
-    if total == 0:
-        return None
-
-    return (total - free) / total * 100
-
-
 def _calculate_uptime(data: dict[str, Any]) -> datetime | None:
     """Calculate uptime."""
     # e.g. 1d3h39m30s
@@ -135,7 +113,11 @@ SENSORS: Final = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=2,
-        value=_calculate_memory_usage,
+        value=lambda _data: (
+            None
+            if (total := _data.get("total-memory", 0)) == 0
+            else (total - _data.get("free-memory", 0)) / total * 100
+        ),
         type=SYSTEM,
         index=0,
     ),
@@ -146,7 +128,11 @@ SENSORS: Final = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=2,
-        value=_calculate_disk_usage,
+        value=lambda _data: (
+            None
+            if (total := _data.get("total-hdd-space", 0)) == 0
+            else (total - _data.get("free-hdd-space", 0)) / total * 100
+        ),
         type=SYSTEM,
         index=0,
     ),
