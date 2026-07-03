@@ -1,12 +1,17 @@
 """Tests for the intent_script LLM tools platform."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
-from homeassistant.components.intent_script import llm as intent_script_llm
+from homeassistant.components.intent_script import (
+    ScriptIntentHandler,
+    llm as intent_script_llm,
+)
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import llm
+from homeassistant.helpers import intent, llm
 from homeassistant.setup import async_setup_component
 
 LIGHT_ENTITY_ID = "light.kitchen"
@@ -77,3 +82,18 @@ async def test_intent_script_platform_filtered(hass: HomeAssistant) -> None:
 async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:
     """Test the platform returns None for an unsupported API."""
     assert intent_script_llm.async_get_tools(hass, _llm_context(), "other") is None
+
+
+async def test_no_tools_when_no_scripts_match(hass: HomeAssistant) -> None:
+    """Test None is returned when no intent scripts match the exposed domains."""
+    async_expose_entity(hass, "conversation", LIGHT_ENTITY_ID, False)
+    restricted_handlers = [
+        handler
+        for handler in intent.async_get(hass)
+        if isinstance(handler, ScriptIntentHandler) and handler.platforms
+    ]
+    with patch(
+        "homeassistant.components.intent_script.llm.intent.async_get",
+        return_value=restricted_handlers,
+    ):
+        assert intent_script_llm.async_get_tools(hass, _llm_context(), "assist") is None
