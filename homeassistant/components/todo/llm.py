@@ -12,9 +12,14 @@ from homeassistant.helpers.llm import IntentTool, LLMContext, Tool, ToolInput
 from homeassistant.util.json import JsonObjectType
 
 from .const import DOMAIN, TodoServices
+from .intent import (
+    INTENT_LIST_ADD_ITEM,
+    INTENT_LIST_COMPLETE_ITEM,
+    INTENT_LIST_REMOVE_ITEM,
+)
 
 # Intents owned by this integration that are exposed as LLM tools.
-LLM_INTENTS = ("HassListAddItem", "HassListCompleteItem", "HassListRemoveItem")
+LLM_INTENTS = (INTENT_LIST_ADD_ITEM, INTENT_LIST_COMPLETE_ITEM, INTENT_LIST_REMOVE_ITEM)
 
 
 class TodoGetItemsTool(Tool):
