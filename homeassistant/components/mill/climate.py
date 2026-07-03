@@ -4,7 +4,6 @@ from typing import Any, override
 
 import mill
 from mill_local import OperationMode
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -15,33 +14,13 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_AWAY_TEMP,
-    ATTR_COMFORT_TEMP,
-    ATTR_ROOM_NAME,
-    ATTR_SLEEP_TEMP,
-    CONNECTION_TYPE,
-    LOCAL,
-    MANUFACTURER,
-    MAX_TEMP,
-    MIN_TEMP,
-)
+from .const import CONNECTION_TYPE, LOCAL, MANUFACTURER, MAX_TEMP, MIN_TEMP
 from .coordinator import MillConfigEntry, MillDataUpdateCoordinator
 from .entity import MillBaseEntity
-
-SET_ROOM_TEMP_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ROOM_NAME): cv.string,
-        vol.Optional(ATTR_AWAY_TEMP): cv.positive_int,
-        vol.Optional(ATTR_COMFORT_TEMP): cv.positive_int,
-        vol.Optional(ATTR_SLEEP_TEMP): cv.positive_int,
-    }
-)
 
 
 async def async_setup_entry(
