@@ -1,14 +1,16 @@
 """LLM tools for the calendar integration."""
 
 from datetime import timedelta
+from operator import attrgetter
 from typing import cast, override
 
 import voluptuous as vol
 
+from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import intent
-from homeassistant.helpers.llm import LLMContext, Tool, ToolInput, _get_exposed_entities
+from homeassistant.helpers import entity_registry as er, intent
+from homeassistant.helpers.llm import LLMContext, Tool, ToolInput
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
 
@@ -89,13 +91,14 @@ def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
     if not llm_context.assistant:
         return LLMTools(tools=[])
 
-    exposed_entities = _get_exposed_entities(
-        hass, llm_context.assistant, include_state=False
-    )
-    if not exposed_entities[DOMAIN]:
-        return LLMTools(tools=[])
-
+    entity_registry = er.async_get(hass)
     names: list[str] = []
-    for info in exposed_entities[DOMAIN].values():
-        names.extend(info["names"].split(", "))
+    for state in sorted(hass.states.async_all(DOMAIN), key=attrgetter("name")):
+        if not async_should_expose(hass, llm_context.assistant, state.entity_id):
+            continue
+        entity_entry = entity_registry.async_get(state.entity_id)
+        names.extend(intent.async_get_entity_aliases(hass, entity_entry, state=state))
+
+    if not names:
+        return LLMTools(tools=[])
     return LLMTools(tools=[CalendarGetEventsTool(names)])
