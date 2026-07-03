@@ -330,13 +330,10 @@ class SHCMotionSensitivitySelect(SHCEntity, SelectEntity):
         return val.name
 
     @override
-    async def async_select_option(self, option: str) -> None:
+    def select_option(self, option: str) -> None:
         """Set the motion sensitivity."""
-        await self.hass.async_add_executor_job(
-            setattr,
-            self._device,
-            "motion_sensitivity",
-            PirSensorConfigurationService.MotionSensitivity[option],
+        self._device.motion_sensitivity = (
+            PirSensorConfigurationService.MotionSensitivity[option]
         )
 
 
@@ -348,7 +345,6 @@ class SHCOrientationLightResponseSelect(SHCEntity, SelectEntity):
     """
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:timer-cog-outline"
     _attr_options = _POLL_CONTROL_OPTIONS
     _attr_translation_key = "orientation_light_response"
 
@@ -372,14 +368,9 @@ class SHCOrientationLightResponseSelect(SHCEntity, SelectEntity):
         return val.name
 
     @override
-    async def async_select_option(self, option: str) -> None:
+    def select_option(self, option: str) -> None:
         """Set the orientation-light response time."""
-        await self.hass.async_add_executor_job(
-            setattr,
-            self._device,
-            "long_poll_interval",
-            PollControlService.PollControlState[option],
-        )
+        self._device.long_poll_interval = PollControlService.PollControlState[option]
 
 
 class SHCSmartSensitivitySecuritySelect(SHCEntity, SelectEntity):
@@ -414,13 +405,11 @@ class SHCSmartSensitivitySecuritySelect(SHCEntity, SelectEntity):
         return name if name in self._attr_options else None
 
     @override
-    async def async_select_option(self, option: str) -> None:
+    def select_option(self, option: str) -> None:
         """Set the manual level for the security context."""
         ctx = SmartSensitivityControlService.SmartSensitivityContext.SECURITY
         level = SmartSensitivityControlService.MotionSensitivity[option]
-        await self.hass.async_add_executor_job(
-            self._device.set_smart_sensitivity_manual_level, ctx, level
-        )
+        self._device.set_smart_sensitivity_manual_level(ctx, level)
 
 
 class SHCSmartSensitivityComfortSelect(SHCEntity, SelectEntity):
@@ -455,13 +444,11 @@ class SHCSmartSensitivityComfortSelect(SHCEntity, SelectEntity):
         return name if name in self._attr_options else None
 
     @override
-    async def async_select_option(self, option: str) -> None:
+    def select_option(self, option: str) -> None:
         """Set the manual level for the comfort context."""
         ctx = SmartSensitivityControlService.SmartSensitivityContext.COMFORT
         level = SmartSensitivityControlService.MotionSensitivity[option]
-        await self.hass.async_add_executor_job(
-            self._device.set_smart_sensitivity_manual_level, ctx, level
-        )
+        self._device.set_smart_sensitivity_manual_level(ctx, level)
 
 
 class SHCVibrationSensitivitySelect(SHCEntity, SelectEntity):
@@ -491,14 +478,9 @@ class SHCVibrationSensitivitySelect(SHCEntity, SelectEntity):
         return val.name
 
     @override
-    async def async_select_option(self, option: str) -> None:
+    def select_option(self, option: str) -> None:
         """Set the vibration sensitivity."""
-        await self.hass.async_add_executor_job(
-            setattr,
-            self._device,
-            "sensitivity",
-            VibrationSensorService.SensitivityState[option],
-        )
+        self._device.sensitivity = VibrationSensorService.SensitivityState[option]
 
 
 class SHCStateAfterPowerOutageSelect(SHCEntity, SelectEntity):
@@ -528,13 +510,10 @@ class SHCStateAfterPowerOutageSelect(SHCEntity, SelectEntity):
         return val.name
 
     @override
-    async def async_select_option(self, option: str) -> None:
+    def select_option(self, option: str) -> None:
         """Set the state-after-power-outage behaviour."""
-        await self.hass.async_add_executor_job(
-            setattr,
-            self._device,
-            "state_after_power_outage",
-            PowerSwitchConfigurationService.StateAfterPowerOutage[option],
+        self._device.state_after_power_outage = (
+            PowerSwitchConfigurationService.StateAfterPowerOutage[option]
         )
 
 
@@ -565,14 +544,11 @@ class SHCSmokeSensitivitySelect(SHCEntity, SelectEntity):
         return val.name
 
     @override
-    async def async_select_option(self, option: str) -> None:
+    def select_option(self, option: str) -> None:
         """Set the smoke sensitivity level."""
-        await self.hass.async_add_executor_job(
-            setattr,
-            self._device,
-            "smoke_sensitivity",
-            SmokeSensitivityService.SmokeSensitivityLevel[option],
-        )
+        self._device.smoke_sensitivity = SmokeSensitivityService.SmokeSensitivityLevel[
+            option
+        ]
 
 
 class SHCDisplayDirectionSelect(SHCEntity, SelectEntity):
@@ -602,14 +578,9 @@ class SHCDisplayDirectionSelect(SHCEntity, SelectEntity):
         return val.name
 
     @override
-    async def async_select_option(self, option: str) -> None:
+    def select_option(self, option: str) -> None:
         """Set the display direction."""
-        await self.hass.async_add_executor_job(
-            setattr,
-            self._device,
-            "display_direction",
-            DisplayDirection.Direction[option],
-        )
+        self._device.display_direction = DisplayDirection.Direction[option]
 
 
 class SHCDisplayedTemperatureSelect(SHCEntity, SelectEntity):
@@ -639,13 +610,10 @@ class SHCDisplayedTemperatureSelect(SHCEntity, SelectEntity):
         return val.name
 
     @override
-    async def async_select_option(self, option: str) -> None:
+    def select_option(self, option: str) -> None:
         """Set the displayed-temperature type."""
-        await self.hass.async_add_executor_job(
-            setattr,
-            self._device,
-            "displayed_temperature",
-            DisplayedTemperatureConfiguration.DisplayedTemperature[option],
+        self._device.displayed_temperature = (
+            DisplayedTemperatureConfiguration.DisplayedTemperature[option]
         )
 
 
@@ -676,14 +644,9 @@ class SHCValveTypeSelect(SHCEntity, SelectEntity):
         return val.name
 
     @override
-    async def async_select_option(self, option: str) -> None:
+    def select_option(self, option: str) -> None:
         """Set the valve type."""
-        await self.hass.async_add_executor_job(
-            setattr,
-            self._device,
-            "valve_type",
-            WallThermostatConfiguration.ValveType[option],
-        )
+        self._device.valve_type = WallThermostatConfiguration.ValveType[option]
 
 
 class SHCHeaterTypeSelect(SHCEntity, SelectEntity):
@@ -713,14 +676,9 @@ class SHCHeaterTypeSelect(SHCEntity, SelectEntity):
         return val.name
 
     @override
-    async def async_select_option(self, option: str) -> None:
+    def select_option(self, option: str) -> None:
         """Set the heater type."""
-        await self.hass.async_add_executor_job(
-            setattr,
-            self._device,
-            "heater_type",
-            WallThermostatConfiguration.HeaterType[option],
-        )
+        self._device.heater_type = WallThermostatConfiguration.HeaterType[option]
 
 
 class SHCTerminalTypeSelect(SHCEntity, SelectEntity):
@@ -750,14 +708,9 @@ class SHCTerminalTypeSelect(SHCEntity, SelectEntity):
         return val.name
 
     @override
-    async def async_select_option(self, option: str) -> None:
+    def select_option(self, option: str) -> None:
         """Set the terminal type."""
-        await self.hass.async_add_executor_job(
-            setattr,
-            self._device,
-            "terminal_type",
-            TerminalConfiguration.Type[option],
-        )
+        self._device.terminal_type = TerminalConfiguration.Type[option]
 
 
 class SHCSwitchTypeSelect(SHCEntity, SelectEntity):
@@ -787,14 +740,9 @@ class SHCSwitchTypeSelect(SHCEntity, SelectEntity):
         return val.name
 
     @override
-    async def async_select_option(self, option: str) -> None:
+    def select_option(self, option: str) -> None:
         """Set the switch type."""
-        await self.hass.async_add_executor_job(
-            setattr,
-            self._device,
-            "switch_type",
-            SwitchConfiguration.SwitchType[option],
-        )
+        self._device.switch_type = SwitchConfiguration.SwitchType[option]
 
 
 class SHCActuatorTypeSelect(SHCEntity, SelectEntity):
@@ -824,14 +772,9 @@ class SHCActuatorTypeSelect(SHCEntity, SelectEntity):
         return val.name
 
     @override
-    async def async_select_option(self, option: str) -> None:
+    def select_option(self, option: str) -> None:
         """Set the actuator type."""
-        await self.hass.async_add_executor_job(
-            setattr,
-            self._device,
-            "actuator_type",
-            SwitchConfiguration.ActuatorType[option],
-        )
+        self._device.actuator_type = SwitchConfiguration.ActuatorType[option]
 
 
 class SHCOutputModeSelect(SHCEntity, SelectEntity):
@@ -861,11 +804,6 @@ class SHCOutputModeSelect(SHCEntity, SelectEntity):
         return val.name
 
     @override
-    async def async_select_option(self, option: str) -> None:
+    def select_option(self, option: str) -> None:
         """Set the output mode."""
-        await self.hass.async_add_executor_job(
-            setattr,
-            self._device,
-            "output_mode",
-            SwitchConfiguration.OutputMode[option],
-        )
+        self._device.output_mode = SwitchConfiguration.OutputMode[option]

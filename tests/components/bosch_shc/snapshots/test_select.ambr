@@ -1,0 +1,932 @@
+# serializer version: 1
+# name: test_selects[select.test_device_actuator_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'NORMALLY_CLOSED',
+        'NORMALLY_OPEN',
+        'UNSUPPORTED',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_device_actuator_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Actuator type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Actuator type',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'actuator_type',
+    'unique_id': 'relay-1_actuator_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.test_device_actuator_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Device Actuator type',
+      'options': list([
+        'NORMALLY_CLOSED',
+        'NORMALLY_OPEN',
+        'UNSUPPORTED',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_device_actuator_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'NORMALLY_OPEN',
+  })
+# ---
+# name: test_selects[select.test_device_comfort_sensitivity_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'HIGH',
+        'MIDDLE',
+        'LOW',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_device_comfort_sensitivity_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Comfort sensitivity level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Comfort sensitivity level',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'smart_sensitivity_comfort',
+    'unique_id': 'md2-1_smart_sensitivity_comfort',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.test_device_comfort_sensitivity_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Device Comfort sensitivity level',
+      'options': list([
+        'HIGH',
+        'MIDDLE',
+        'LOW',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_device_comfort_sensitivity_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'HIGH',
+  })
+# ---
+# name: test_selects[select.test_device_display_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'NORMAL',
+        'REVERSED',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_device_display_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Display direction',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Display direction',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'display_direction',
+    'unique_id': 'trv-1_display_direction',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.test_device_display_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Device Display direction',
+      'options': list([
+        'NORMAL',
+        'REVERSED',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_device_display_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'NORMAL',
+  })
+# ---
+# name: test_selects[select.test_device_displayed_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'SETPOINT',
+        'MEASURED',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_device_displayed_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Displayed temperature',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Displayed temperature',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'displayed_temperature',
+    'unique_id': 'trv-1_displayed_temperature',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.test_device_displayed_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Device Displayed temperature',
+      'options': list([
+        'SETPOINT',
+        'MEASURED',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_device_displayed_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'SETPOINT',
+  })
+# ---
+# name: test_selects[select.test_device_heater_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'FLOOR_HEATING',
+        'FLOOR_HEATING_LOW_ENERGY',
+        'RADIATOR',
+        'CONVECTOR_PASSIVE',
+        'CONVECTOR_ACTIVE',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_device_heater_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heater type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heater type',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heater_type',
+    'unique_id': 'trv-1_heater_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.test_device_heater_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Device Heater type',
+      'options': list([
+        'FLOOR_HEATING',
+        'FLOOR_HEATING_LOW_ENERGY',
+        'RADIATOR',
+        'CONVECTOR_PASSIVE',
+        'CONVECTOR_ACTIVE',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_device_heater_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'RADIATOR',
+  })
+# ---
+# name: test_selects[select.test_device_motion_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'HIGH',
+        'MIDDLE',
+        'LOW',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_device_motion_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Motion sensitivity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Motion sensitivity',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'motion_sensitivity',
+    'unique_id': 'md2-1_motion_sensitivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.test_device_motion_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Device Motion sensitivity',
+      'options': list([
+        'HIGH',
+        'MIDDLE',
+        'LOW',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_device_motion_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MIDDLE',
+  })
+# ---
+# name: test_selects[select.test_device_orientation_light_response_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'LONG',
+        'SHORT',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_device_orientation_light_response_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Orientation light response time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Orientation light response time',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'orientation_light_response',
+    'unique_id': 'md2-1_orientation_light_response',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.test_device_orientation_light_response_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Device Orientation light response time',
+      'options': list([
+        'LONG',
+        'SHORT',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_device_orientation_light_response_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'LONG',
+  })
+# ---
+# name: test_selects[select.test_device_output_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'ATTACHED',
+        'DETACHED',
+        'DETACHED_SHORT_PRESS',
+        'DETACHED_LONG_PRESS',
+        'UNSUPPORTED',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_device_output_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Output mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Output mode',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'output_mode',
+    'unique_id': 'relay-1_output_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.test_device_output_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Device Output mode',
+      'options': list([
+        'ATTACHED',
+        'DETACHED',
+        'DETACHED_SHORT_PRESS',
+        'DETACHED_LONG_PRESS',
+        'UNSUPPORTED',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_device_output_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ATTACHED',
+  })
+# ---
+# name: test_selects[select.test_device_security_sensitivity_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'HIGH',
+        'MIDDLE',
+        'LOW',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_device_security_sensitivity_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Security sensitivity level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Security sensitivity level',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'smart_sensitivity_security',
+    'unique_id': 'md2-1_smart_sensitivity_security',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.test_device_security_sensitivity_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Device Security sensitivity level',
+      'options': list([
+        'HIGH',
+        'MIDDLE',
+        'LOW',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_device_security_sensitivity_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'HIGH',
+  })
+# ---
+# name: test_selects[select.test_device_smoke_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'HIGH',
+        'MIDDLE',
+        'LOW',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_device_smoke_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Smoke sensitivity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Smoke sensitivity',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'smoke_sensitivity',
+    'unique_id': 'sd-1_smoke_sensitivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.test_device_smoke_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Device Smoke sensitivity',
+      'options': list([
+        'HIGH',
+        'MIDDLE',
+        'LOW',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_device_smoke_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MIDDLE',
+  })
+# ---
+# name: test_selects[select.test_device_state_after_power_outage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'OFF',
+        'ON',
+        'LAST_STATE',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_device_state_after_power_outage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'State after power outage',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'State after power outage',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'state_after_power_outage',
+    'unique_id': 'plug-1_state_after_power_outage',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.test_device_state_after_power_outage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Device State after power outage',
+      'options': list([
+        'OFF',
+        'ON',
+        'LAST_STATE',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_device_state_after_power_outage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'OFF',
+  })
+# ---
+# name: test_selects[select.test_device_switch_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'NONE',
+        'PUSHBUTTON',
+        'SWITCH',
+        'NO_SWITCH',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_device_switch_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Switch type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Switch type',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_type',
+    'unique_id': 'relay-1_switch_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.test_device_switch_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Device Switch type',
+      'options': list([
+        'NONE',
+        'PUSHBUTTON',
+        'SWITCH',
+        'NO_SWITCH',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_device_switch_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'PUSHBUTTON',
+  })
+# ---
+# name: test_selects[select.test_device_terminal_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'NOT_CONNECTED',
+        'FLOOR_SENSOR_CONNECTED',
+        'FLOOR_SENSOR_USED_FOR_REGULATION',
+        'FLOOR_SENSOR_DISPLAYED',
+        'FLOOR_SENSOR_DISPLAYED_AND_USED_FOR_REGULATION',
+        'VOLT_FREE_SENSOR_CONNECTED',
+        'VOLT_FREE_SENSOR_CONNECTED_AND_USED_FOR_OPERATION',
+        'OUTDOOR_SENSOR_CONNECTED',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_device_terminal_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Terminal type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Terminal type',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'terminal_type',
+    'unique_id': 'trv-1_terminal_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.test_device_terminal_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Device Terminal type',
+      'options': list([
+        'NOT_CONNECTED',
+        'FLOOR_SENSOR_CONNECTED',
+        'FLOOR_SENSOR_USED_FOR_REGULATION',
+        'FLOOR_SENSOR_DISPLAYED',
+        'FLOOR_SENSOR_DISPLAYED_AND_USED_FOR_REGULATION',
+        'VOLT_FREE_SENSOR_CONNECTED',
+        'VOLT_FREE_SENSOR_CONNECTED_AND_USED_FOR_OPERATION',
+        'OUTDOOR_SENSOR_CONNECTED',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_device_terminal_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'NOT_CONNECTED',
+  })
+# ---
+# name: test_selects[select.test_device_valve_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'NORMALLY_CLOSE',
+        'NORMALLY_OPEN',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_device_valve_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Valve type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Valve type',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'valve_type',
+    'unique_id': 'trv-1_valve_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.test_device_valve_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Device Valve type',
+      'options': list([
+        'NORMALLY_CLOSE',
+        'NORMALLY_OPEN',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_device_valve_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'NORMALLY_CLOSE',
+  })
+# ---
+# name: test_selects[select.test_device_vibration_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'VERY_HIGH',
+        'HIGH',
+        'MEDIUM',
+        'LOW',
+        'VERY_LOW',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_device_vibration_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vibration sensitivity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vibration sensitivity',
+    'platform': 'bosch_shc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vibration_sensitivity',
+    'unique_id': 'sc2p-1_vibration_sensitivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.test_device_vibration_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Device Vibration sensitivity',
+      'options': list([
+        'VERY_HIGH',
+        'HIGH',
+        'MEDIUM',
+        'LOW',
+        'VERY_LOW',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_device_vibration_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MEDIUM',
+  })
+# ---

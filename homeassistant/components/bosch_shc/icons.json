@@ -1,5 +1,10 @@
 {
   "entity": {
+    "select": {
+      "orientation_light_response": {
+        "default": "mdi:timer-cog-outline"
+      }
+    },
     "sensor": {
       "communication_quality": {
         "default": "mdi:wifi"
