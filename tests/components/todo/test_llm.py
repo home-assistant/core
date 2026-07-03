@@ -75,3 +75,22 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
         "success": True,
         "result": [{"uid": "1234", "status": "needs_action", "summary": "Buy milk"}],
     }
+
+
+async def test_todo_list_intents_exposed(hass: HomeAssistant) -> None:
+    """Test the todo list intents are exposed as tools when a list is exposed."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, "todo", {})
+    assert await async_setup_component(hass, "llm", {})
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        "todo.test_list", "0", {"friendly_name": "Mock Todo List Name"}
+    )
+    async_expose_entity(hass, "conversation", "todo.test_list", True)
+
+    result = await llm_component.async_get_tools(hass, _llm_context())
+    names = {tool.name for tool in result.tools}
+    assert "HassListAddItem" in names
+    assert "HassListCompleteItem" in names
+    assert "HassListRemoveItem" in names

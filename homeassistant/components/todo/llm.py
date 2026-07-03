@@ -3,16 +3,20 @@
 from operator import attrgetter
 from typing import Any, cast, override
 
+import slugify as unicode_slug
 import voluptuous as vol
 
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, intent
-from homeassistant.helpers.llm import LLMContext, Tool, ToolInput
+from homeassistant.helpers.llm import IntentTool, LLMContext, Tool, ToolInput
 from homeassistant.util.json import JsonObjectType
 
 from .const import DOMAIN, TodoServices
+
+# Intents owned by this integration that are exposed as LLM tools.
+LLM_INTENTS = ("HassListAddItem", "HassListCompleteItem", "HassListRemoveItem")
 
 
 class TodoGetItemsTool(Tool):
@@ -97,4 +101,15 @@ def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
 
     if not names:
         return LLMTools(tools=[])
-    return LLMTools(tools=[TodoGetItemsTool(names)])
+
+    handlers = {handler.intent_type: handler for handler in intent.async_get(hass)}
+    tools: list[Tool] = [TodoGetItemsTool(names)]
+    tools.extend(
+        IntentTool(
+            unicode_slug.slugify(intent_type, separator="_", lowercase=False),
+            handlers[intent_type],
+        )
+        for intent_type in LLM_INTENTS
+        if intent_type in handlers
+    )
+    return LLMTools(tools=tools)
