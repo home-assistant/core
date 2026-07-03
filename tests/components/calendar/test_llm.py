@@ -54,6 +54,7 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
         (tool for tool in result.tools if tool.name == "calendar_get_events"), None
     )
     assert tool is not None
+    assert tool.parameters.schema["calendar"].container == ["Mock Calendar Name"]
 
     calls = async_mock_service(
         hass,
@@ -130,15 +131,18 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
 
 
 async def test_calendar_get_events_tool_not_found(hass: HomeAssistant) -> None:
-    """Test the tool reports when the requested calendar does not match."""
+    """Test the tool reports when the requested calendar no longer matches."""
     llm_context = _llm_context()
     result = await llm_component.async_get_tools(hass, llm_context)
     tool = next(tool for tool in result.tools if tool.name == "calendar_get_events")
 
+    # Unexpose after the tool (and its calendar enum) was built, so the call-time
+    # match no longer finds the calendar.
+    async_expose_entity(hass, "conversation", ENTITY_ID, False)
     response = await tool.async_call(
         hass,
         llm.ToolInput(
-            "calendar_get_events", {"calendar": "Nonexistent", "range": "today"}
+            "calendar_get_events", {"calendar": "Mock Calendar Name", "range": "today"}
         ),
         llm_context,
     )
