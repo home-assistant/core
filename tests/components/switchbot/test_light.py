@@ -134,13 +134,28 @@ FLOOR_LAMP_PARAMETERS = (
     ],
 )
 
-CANDLE_WARMER_LAMP_PARAMETERS = (RGBIC_NEON_LIGHT_PARAMETERS = (
+CANDLE_WARMER_LAMP_PARAMETERS = (
     COMMON_PARAMETERS,
     [
         TURN_ON_PARAMETERS,
         TURN_OFF_PARAMETERS,
         SET_BRIGHTNESS_PARAMETERS,
-SET_RGB_PARAMETERS,        (            SERVICE_TURN_ON,            {ATTR_EFFECT: "party"},            "set_effect",            ("party",),        ),
+    ],
+)
+
+RGBIC_NEON_LIGHT_PARAMETERS = (
+    COMMON_PARAMETERS,
+    [
+        TURN_ON_PARAMETERS,
+        TURN_OFF_PARAMETERS,
+        SET_BRIGHTNESS_PARAMETERS,
+        SET_RGB_PARAMETERS,
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "party"},
+            "set_effect",
+            ("party",),
+        ),
     ],
 )
 
