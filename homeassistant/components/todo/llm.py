@@ -1,6 +1,5 @@
 """LLM tools for the todo integration."""
 
-from operator import attrgetter
 from typing import Any, cast, override
 
 import slugify as unicode_slug
@@ -9,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er, intent
+from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.llm import IntentTool, LLMContext, Tool, ToolInput
 from homeassistant.util.json import JsonObjectType
 
@@ -31,22 +30,20 @@ class TodoGetItemsTool(Tool):
         "Filters items by status (needs_action, completed, all)."
     )
 
-    def __init__(self, todo_lists: list[str]) -> None:
-        """Init the get items tool."""
-        self.parameters = vol.Schema(
-            {
-                vol.Required("todo_list"): vol.In(todo_lists),
-                vol.Optional(
-                    "status",
-                    description=(
-                        "Filter returned items by status,"
-                        " by default returns incomplete"
-                        " items"
-                    ),
-                    default="needs_action",
-                ): vol.In(["needs_action", "completed", "all"]),
-            }
-        )
+    parameters = vol.Schema(
+        {
+            vol.Required("todo_list"): cv.string,
+            vol.Optional(
+                "status",
+                description=(
+                    "Filter returned items by status,"
+                    " by default returns incomplete"
+                    " items"
+                ),
+                default="needs_action",
+            ): vol.In(["needs_action", "completed", "all"]),
+        }
+    )
 
     @override
     async def async_call(
@@ -87,23 +84,18 @@ class TodoGetItemsTool(Tool):
 
 @callback
 def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
-    """Return the todo LLM tools for the exposed to-do lists."""
+    """Return the todo LLM tools when a to-do list is exposed."""
     if not llm_context.assistant:
         return LLMTools(tools=[])
 
-    entity_registry = er.async_get(hass)
-    names: list[str] = []
-    for state in sorted(hass.states.async_all(DOMAIN), key=attrgetter("name")):
-        if not async_should_expose(hass, llm_context.assistant, state.entity_id):
-            continue
-        entity_entry = entity_registry.async_get(state.entity_id)
-        names.extend(intent.async_get_entity_aliases(hass, entity_entry, state=state))
-
-    if not names:
+    if not any(
+        async_should_expose(hass, llm_context.assistant, state.entity_id)
+        for state in hass.states.async_all(DOMAIN)
+    ):
         return LLMTools(tools=[])
 
     handlers = {handler.intent_type: handler for handler in intent.async_get(hass)}
-    tools: list[Tool] = [TodoGetItemsTool(names)]
+    tools: list[Tool] = [TodoGetItemsTool()]
     tools.extend(
         IntentTool(
             unicode_slug.slugify(intent_type, separator="_", lowercase=False),

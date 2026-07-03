@@ -44,7 +44,6 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     result = await llm_component.async_get_tools(hass, llm_context)
     tool = next((tool for tool in result.tools if tool.name == "todo_get_items"), None)
     assert tool is not None
-    assert tool.parameters.schema["todo_list"].container == ["Mock Todo List Name"]
 
     calls = async_mock_service(
         hass,
