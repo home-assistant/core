@@ -132,8 +132,7 @@ async def test_setup_auth_error(
     assert config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth_confirm"
+    assert len(flows) == 0
 
 
 async def test_setup_missing_scopes(
@@ -141,7 +140,7 @@ async def test_setup_missing_scopes(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
-    """Test setup fails and triggers reauth if token has missing profile scope."""
+    """Test setup fails if token has missing profile scope."""
     # Modify token to exclude profile scope
     hass.config_entries.async_update_entry(
         config_entry,
@@ -158,8 +157,7 @@ async def test_setup_missing_scopes(
     assert config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth_confirm"
+    assert len(flows) == 0
 
 
 async def test_setup_missing_activity_scope(
