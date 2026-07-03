@@ -19848,7 +19848,7 @@
             'area_id': None,
             'capabilities': dict({
               <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
-                'single_press',
+                'ring',
                 'double_press',
                 'long_press',
               ]),
@@ -19887,7 +19887,7 @@
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'doorbell',
               <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
               <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
-                'single_press',
+                'ring',
                 'double_press',
                 'long_press',
               ]),
