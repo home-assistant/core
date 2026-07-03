@@ -33,6 +33,10 @@ ENTITY_DESCRIPTION = UpdateEntityDescription(
     key=ATTR_VERSION_LATEST,
 )
 
+OS_UPDATE_REBOOT_NOTICE = (
+    "A reboot is required after install for the update to take effect."
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -233,6 +237,7 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
         UpdateEntityFeature.INSTALL
         | UpdateEntityFeature.SPECIFIC_VERSION
         | UpdateEntityFeature.BACKUP
+        | UpdateEntityFeature.RELEASE_NOTES
     )
     _attr_title = "Home Assistant Operating System"
 
@@ -261,7 +266,7 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         version = AwesomeVersion(self.latest_version)
-        if version.dev or version.strategy is AwesomeVersionStrategy.UNKNOWN:
+        if version.dev or version.strategy == AwesomeVersionStrategy.UNKNOWN:
             return "https://github.com/home-assistant/operating-system/commits/dev"
         return (
             f"https://github.com/home-assistant/operating-system/releases/tag/{version}"
@@ -273,6 +278,11 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
     ) -> None:
         """Install an update."""
         await update_os(self.hass, version, backup)
+
+    @override
+    async def async_release_notes(self) -> str | None:
+        """Return reboot notice as an ha-alert box."""
+        return f"<ha-alert alert-type='info'>{OS_UPDATE_REBOOT_NOTICE}</ha-alert>\n"
 
 
 class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
@@ -324,7 +334,7 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         version = AwesomeVersion(self.latest_version)
-        if version.dev or version.strategy is AwesomeVersionStrategy.UNKNOWN:
+        if version.dev or version.strategy == AwesomeVersionStrategy.UNKNOWN:
             return "https://github.com/home-assistant/supervisor/commits/main"
         return f"https://github.com/home-assistant/supervisor/releases/tag/{version}"
 
