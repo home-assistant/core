@@ -183,6 +183,7 @@ class OAuth2FlowHandler(
         assert self.apis
         assert self.apis[0][1].private_key
         assert self.domain
+        assert self.region
 
         self._failed_regions = []
 
@@ -192,7 +193,7 @@ class OAuth2FlowHandler(
             "pem": self.apis[0][1].public_pem,
         }
 
-        successful_response: dict[str, Any] | None = None
+        responses: dict[str, dict[str, Any]] = {}
         failures: dict[str, str] = {}
 
         for region, api in self.apis:
@@ -207,9 +208,19 @@ class OAuth2FlowHandler(
                     exc_info=err,
                 )
                 failures[region] = self._classify_region_registration_failure(err)
+                continue
+
+            # A non-raising but empty or malformed response (no usable public key)
+            # must count as a failure, not a success.
+            if not (register_response or {}).get("response", {}).get("public_key"):
+                LOGGER.warning(
+                    "Partner registration for %s (%s) returned no usable response",
+                    region,
+                    api.server,
+                )
+                failures[region] = "invalid_response"
             else:
-                if successful_response is None:
-                    successful_response = register_response
+                responses[region] = register_response
 
         # Commands are signed using the home region, so it must be registered
         # before continuing. Send the user back to the domain step with guidance
@@ -219,17 +230,11 @@ class OAuth2FlowHandler(
                 errors={"base": failures[self.region]}
             )
 
-        if successful_response is None:
-            errors["base"] = "invalid_response"
-            return self.async_show_form(
-                step_id="domain_registration",
-                description_placeholders=description_placeholders,
-                errors=errors,
-            )
-
-        # Verify public key from the successful response
-        registered_public_key = successful_response.get("response", {}).get(
-            "public_key"
+        # Validate the home region's own returned public key against our shared
+        # key. The key file is shared across all region clients, so the point is
+        # identical per region.
+        registered_public_key = (
+            responses[self.region].get("response", {}).get("public_key")
         )
 
         if not registered_public_key:

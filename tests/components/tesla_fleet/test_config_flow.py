@@ -407,7 +407,7 @@ async def test_domain_registration_invalid_response(
     access_token: str,
     mock_private_key: Mock,
 ) -> None:
-    """Test domain registration with an invalid response payload."""
+    """Test an empty home region response returns to the domain step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -447,12 +447,13 @@ async def test_domain_registration_invalid_response(
         # Complete OAuth
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-        # Enter domain - this should fail and stay on domain_registration
+        # Enter domain - the home region returns nothing usable, so the flow
+        # returns to the domain step instead of creating an entry
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DOMAIN: "example.com"}
         )
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "domain_registration"
+        assert result["step_id"] == "domain_input"
         assert result["errors"] == {"base": "invalid_response"}
 
 
@@ -520,14 +521,14 @@ async def test_domain_registration_precondition_failed(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-async def test_domain_registration_public_key_not_found(
+async def test_domain_registration_missing_public_key(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     access_token: str,
     mock_private_key: Mock,
 ) -> None:
-    """Test domain registration with missing public key."""
+    """Test a home region response without a public key returns to the domain step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -568,13 +569,14 @@ async def test_domain_registration_public_key_not_found(
         # Complete OAuth
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-        # Enter domain - this should fail and stay on domain_registration
+        # Enter domain - the home region returns no public key, so the flow
+        # returns to the domain step instead of creating an entry
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DOMAIN: "example.com"}
         )
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "domain_registration"
-        assert result["errors"] == {"base": "public_key_not_found"}
+        assert result["step_id"] == "domain_input"
+        assert result["errors"] == {"base": "invalid_response"}
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -970,6 +972,73 @@ async def test_domain_registration_home_region_must_register(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "domain_input"
     assert result["errors"] == {"base": "origin_mismatch"}
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_domain_registration_home_region_invalid_response(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    access_token: str,
+    mock_private_key: Mock,
+) -> None:
+    """Test a malformed home region response does not create an entry.
+
+    The home region (NA) returns a 200 with no usable payload while a secondary
+    region (EU) succeeds. Commands are signed using the home region, so the flow
+    must not validate the secondary region's key and complete setup.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT,
+        },
+    )
+
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": access_token,
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.tesla_fleet.config_flow.TeslaFleetApi",
+        side_effect=[
+            _mock_api(
+                mock_private_key,
+                server="https://fleet-api.prd.na.vn.cloud.tesla.com",
+                register_response=None,
+            ),
+            _mock_api(
+                mock_private_key,
+                server="https://fleet-api.prd.eu.vn.cloud.tesla.com",
+            ),
+        ],
+    ):
+        # Complete OAuth
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+        # Enter domain - the home region (NA) returns nothing usable while EU
+        # succeeds, so the flow returns to the domain step
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DOMAIN: "example.com"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "domain_input"
+    assert result["errors"] == {"base": "invalid_response"}
 
 
 @pytest.mark.usefixtures("current_request_with_host")
