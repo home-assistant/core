@@ -1,46 +1,22 @@
 """Test the KEBA charging station config flow."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.keba.const import (
-    CONF_FS,
-    CONF_FS_FALLBACK,
-    CONF_FS_PERSIST,
-    CONF_FS_TIMEOUT,
-    CONF_RFID,
-    DOMAIN,
-)
-from homeassistant.const import CONF_HOST
+from homeassistant.components.keba.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import ENTRY_DATA
+
 from tests.common import MockConfigEntry
 
-USER_INPUT = {
-    CONF_HOST: "192.168.1.100",
-    CONF_RFID: "",
-    CONF_FS: False,
-    CONF_FS_TIMEOUT: 30,
-    CONF_FS_FALLBACK: 6,
-    CONF_FS_PERSIST: 0,
-}
 
-
-def _mock_keba_handler(serial: str = "12345678", product: str = "KC-P30"):
-    """Return a mock KebaHandler that connects successfully."""
-    mock = AsyncMock()
-    mock.setup.return_value = True
-    mock.get_value = MagicMock(side_effect={"Serial": serial, "Product": product}.get)
-    mock.device_name = product
-    mock.device_id = f"keba_wallbox_{serial}"
-    return mock
-
-
-async def test_form_shows_on_init(hass: HomeAssistant) -> None:
-    """Test that the user step form is shown on init."""
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_successful_setup(hass: HomeAssistant, mock_keba: MagicMock) -> None:
+    """Test a successful config entry creation."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -48,30 +24,15 @@ async def test_form_shows_on_init(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], ENTRY_DATA
+    )
+    await hass.async_block_till_done()
 
-async def test_successful_setup(hass: HomeAssistant) -> None:
-    """Test a successful config entry creation."""
-    with (
-        patch(
-            "homeassistant.components.keba.config_flow.KebaHandler",
-            return_value=_mock_keba_handler(),
-        ),
-        patch(
-            "homeassistant.components.keba.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "KC-P30"
-    assert result2["data"] == USER_INPUT
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "KC-P30"
+    assert result["data"] == ENTRY_DATA
+    assert result["result"].unique_id == "12345678"
 
 
 @pytest.mark.parametrize(
@@ -82,54 +43,53 @@ async def test_successful_setup(hass: HomeAssistant) -> None:
         pytest.param(Exception("unexpected error"), True, "unknown", id="unexpected"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_step_errors(
     hass: HomeAssistant,
+    mock_keba: MagicMock,
     setup_side_effect: Exception | None,
     setup_return_value: bool,
     expected_error: str,
 ) -> None:
     """Test that connection problems in the user step show the matching error."""
-    mock = _mock_keba_handler()
-    mock.setup.side_effect = setup_side_effect
-    mock.setup.return_value = setup_return_value
+    mock_keba.setup.side_effect = setup_side_effect
+    mock_keba.setup.return_value = setup_return_value
 
-    with patch(
-        "homeassistant.components.keba.config_flow.KebaHandler",
-        return_value=mock,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], ENTRY_DATA
+    )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": expected_error}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+
+    # The flow must recover once the connection problem is fixed
+    mock_keba.setup.side_effect = None
+    mock_keba.setup.return_value = True
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], ENTRY_DATA
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_import_from_yaml(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_from_yaml(hass: HomeAssistant, mock_keba: MagicMock) -> None:
     """Test that a YAML config is silently imported as a config entry."""
-    with (
-        patch(
-            "homeassistant.components.keba.config_flow.KebaHandler",
-            return_value=_mock_keba_handler(),
-        ),
-        patch(
-            "homeassistant.components.keba.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=USER_INPUT,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=ENTRY_DATA,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "KC-P30"
-    assert result["data"] == USER_INPUT
+    assert result["data"] == ENTRY_DATA
 
 
 @pytest.mark.parametrize(
@@ -142,63 +102,42 @@ async def test_import_from_yaml(hass: HomeAssistant) -> None:
 )
 async def test_import_errors(
     hass: HomeAssistant,
+    mock_keba: MagicMock,
     setup_side_effect: Exception | None,
     setup_return_value: bool,
     expected_reason: str,
 ) -> None:
     """Test that connection problems during import abort with the matching reason."""
-    mock = _mock_keba_handler()
-    mock.setup.side_effect = setup_side_effect
-    mock.setup.return_value = setup_return_value
+    mock_keba.setup.side_effect = setup_side_effect
+    mock_keba.setup.return_value = setup_return_value
 
-    with patch(
-        "homeassistant.components.keba.config_flow.KebaHandler",
-        return_value=mock,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=USER_INPUT,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=ENTRY_DATA,
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected_reason
 
 
-async def test_reconfigure_shows_form(hass: HomeAssistant) -> None:
-    """Test that the reconfigure step shows the form."""
-    entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT, unique_id="12345678")
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_updates_entry(
+    hass: HomeAssistant, mock_keba: MagicMock
+) -> None:
+    """Test that submitting reconfigure validates the connection and updates the entry."""
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA, unique_id="12345678")
     entry.add_to_hass(hass)
 
     result = await entry.start_reconfigure_flow(hass)
-
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
+    new_data = {**ENTRY_DATA, "failsafe_timeout": 60}
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], new_data)
 
-async def test_reconfigure_updates_entry(hass: HomeAssistant) -> None:
-    """Test that submitting reconfigure validates the connection and updates the entry."""
-    entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT, unique_id="12345678")
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reconfigure_flow(hass)
-    new_data = {**USER_INPUT, "failsafe_timeout": 60}
-    with (
-        patch(
-            "homeassistant.components.keba.config_flow.KebaHandler",
-            return_value=_mock_keba_handler(),
-        ),
-        patch(
-            "homeassistant.components.keba.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], new_data
-        )
-
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reconfigure_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
     assert entry.data["failsafe_timeout"] == 60
 
 
@@ -212,68 +151,55 @@ async def test_reconfigure_updates_entry(hass: HomeAssistant) -> None:
 )
 async def test_reconfigure_errors(
     hass: HomeAssistant,
+    mock_keba: MagicMock,
     setup_side_effect: Exception | None,
     setup_return_value: bool,
     expected_error: str,
 ) -> None:
     """Test that connection problems during reconfigure show the matching error."""
-    entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT, unique_id="12345678")
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA, unique_id="12345678")
     entry.add_to_hass(hass)
 
-    mock = _mock_keba_handler()
-    mock.setup.side_effect = setup_side_effect
-    mock.setup.return_value = setup_return_value
+    mock_keba.setup.side_effect = setup_side_effect
+    mock_keba.setup.return_value = setup_return_value
 
     result = await entry.start_reconfigure_flow(hass)
-    with patch(
-        "homeassistant.components.keba.config_flow.KebaHandler",
-        return_value=mock,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], ENTRY_DATA
+    )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "reconfigure"
-    assert result2["errors"] == {"base": expected_error}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": expected_error}
 
 
-async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant, mock_keba: MagicMock
+) -> None:
     """Test that reconfiguring against a different charger aborts."""
-    entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT, unique_id="12345678")
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA, unique_id="12345678")
     entry.add_to_hass(hass)
 
-    result = await entry.start_reconfigure_flow(hass)
-    with patch(
-        "homeassistant.components.keba.config_flow.KebaHandler",
-        return_value=_mock_keba_handler(serial="87654321"),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT
-        )
+    mock_keba.get_value.side_effect = {"Serial": "87654321", "Product": "KC-P30"}.get
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "unique_id_mismatch"
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], ENTRY_DATA
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
     assert entry.unique_id == "12345678"
 
 
+@pytest.mark.usefixtures("mock_keba", "mock_setup_entry")
 async def test_already_configured(hass: HomeAssistant) -> None:
     """Test that a second setup is blocked because single_config_entry is true."""
-    with (
-        patch(
-            "homeassistant.components.keba.config_flow.KebaHandler",
-            return_value=_mock_keba_handler(),
-        ),
-        patch(
-            "homeassistant.components.keba.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT)
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.config_entries.flow.async_configure(result["flow_id"], ENTRY_DATA)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

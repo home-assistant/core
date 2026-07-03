@@ -1,7 +1,7 @@
 """Tests for the KEBA charging station integration setup."""
 
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -147,26 +147,16 @@ async def test_service_call_no_entries_is_noop(hass: HomeAssistant) -> None:
         pytest.param({**ENTRY_DATA, "refresh_interval": 10}, id="removed_option"),
     ],
 )
+@pytest.mark.usefixtures("mock_keba", "mock_setup_entry")
 async def test_async_setup_with_yaml_triggers_import(
     hass: HomeAssistant,
-    mock_keba: MagicMock,
     issue_registry: ir.IssueRegistry,
     yaml_config: dict[str, Any],
 ) -> None:
     """Test that YAML config creates a deprecated issue and triggers an import flow."""
-    with (
-        patch(
-            "homeassistant.components.keba.config_flow.KebaHandler",
-            return_value=mock_keba,
-        ),
-        patch(
-            "homeassistant.components.keba.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        result = await async_setup_component(hass, DOMAIN, {DOMAIN: yaml_config})
-        assert result is True
-        await hass.async_block_till_done()
+    result = await async_setup_component(hass, DOMAIN, {DOMAIN: yaml_config})
+    assert result is True
+    await hass.async_block_till_done()
 
     assert (
         issue_registry.async_get_issue(
@@ -202,13 +192,9 @@ async def test_async_setup_with_yaml_import_fails(
     mock_keba.setup.side_effect = setup_side_effect
     mock_keba.setup.return_value = setup_return_value
 
-    with patch(
-        "homeassistant.components.keba.config_flow.KebaHandler",
-        return_value=mock_keba,
-    ):
-        result = await async_setup_component(hass, DOMAIN, {DOMAIN: ENTRY_DATA})
-        assert result is True
-        await hass.async_block_till_done()
+    result = await async_setup_component(hass, DOMAIN, {DOMAIN: ENTRY_DATA})
+    assert result is True
+    await hass.async_block_till_done()
 
     assert (
         issue_registry.async_get_issue(
@@ -219,22 +205,18 @@ async def test_async_setup_with_yaml_import_fails(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
 
+@pytest.mark.usefixtures("mock_keba")
 async def test_async_setup_with_yaml_and_existing_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_keba: MagicMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test that YAML config next to an existing entry creates the deprecated issue."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.keba.config_flow.KebaHandler",
-        return_value=mock_keba,
-    ):
-        result = await async_setup_component(hass, DOMAIN, {DOMAIN: ENTRY_DATA})
-        assert result is True
-        await hass.async_block_till_done()
+    result = await async_setup_component(hass, DOMAIN, {DOMAIN: ENTRY_DATA})
+    assert result is True
+    await hass.async_block_till_done()
 
     assert (
         issue_registry.async_get_issue(
