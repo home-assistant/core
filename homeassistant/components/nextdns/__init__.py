@@ -226,7 +226,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NextDnsConfigEntry) -> b
 
     profiles: dict[str, NextDnsCoordinators] = {}
 
-    for subentry_id, subentry in entry.subentries.items():
+    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PROFILE):
+        subentry_id = subentry.subentry_id
         profile_id = subentry.data[CONF_PROFILE_ID]
         tasks = []
         coordinators = {}
