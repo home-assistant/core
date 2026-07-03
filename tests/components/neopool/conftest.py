@@ -166,31 +166,10 @@ def minimal_pool_data() -> dict[str, Any]:
 
 
 @pytest.fixture
-def mock_neopool_client_minimal(
-    minimal_pool_data: dict[str, Any],
-) -> Generator[MagicMock]:
-    """Like mock_neopool_client but seeded with minimal_pool_data."""
-    with (
-        patch(
-            "homeassistant.components.neopool.NeoPoolModbusClient",
-            autospec=True,
-        ) as mock_client_cls,
-        patch(
-            "homeassistant.components.neopool.config_flow.async_probe_serial",
-            new=AsyncMock(return_value=MOCK_SERIAL),
-        ),
-    ):
-        mock_client = mock_client_cls.return_value
-        mock_client.async_read_all = AsyncMock(return_value=dict(minimal_pool_data))
-        mock_client.close = AsyncMock()
-        yield mock_client
-
-
-@pytest.fixture
-def mock_socket_connection() -> Generator[None]:
+def mock_socket_connection() -> Generator[AsyncMock]:
     """Patch the lib probe in config_flow so we don't hit the network."""
     with patch(
         "homeassistant.components.neopool.config_flow.async_probe_serial",
         new=AsyncMock(return_value=MOCK_SERIAL),
-    ):
-        yield
+    ) as mock:
+        yield mock

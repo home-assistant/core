@@ -78,7 +78,6 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
     ),
     "MBF_MEASURE_PH": NeoPoolSensorEntityDescription(
         key="MBF_MEASURE_PH",
-        translation_key="measure_ph",
         device_class=SensorDeviceClass.PH,
         state_class=SensorStateClass.MEASUREMENT,
         supported_fn=lambda data, opts: (
@@ -340,7 +339,7 @@ class NeoPoolSensor(NeoPoolEntity, SensorEntity):
         """Return the suggested display precision for the sensor value."""
         if (precision_fn := self.entity_description.precision_fn) is not None:
             return precision_fn(self.coordinator.data)
-        return self.entity_description.suggested_display_precision
+        return super().suggested_display_precision
 
     @property
     @override
@@ -348,7 +347,7 @@ class NeoPoolSensor(NeoPoolEntity, SensorEntity):
         """Return the unit of measurement for the sensor value."""
         if (unit_fn := self.entity_description.unit_fn) is not None:
             return unit_fn(self.coordinator.data)
-        return self.entity_description.native_unit_of_measurement
+        return super().native_unit_of_measurement
 
     def _filtration_off(self) -> bool:
         """Return True when the filtration pump is off."""
@@ -385,4 +384,4 @@ class NeoPoolSensor(NeoPoolEntity, SensorEntity):
         """Return the list of options for the sensor."""
         if (options_fn := self.entity_description.options_fn) is not None:
             return options_fn(self.coordinator.data)
-        return self.entity_description.options
+        return super().options

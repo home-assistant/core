@@ -19,17 +19,20 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+type NeoPoolConfigEntry = ConfigEntry["NeoPoolCoordinator"]
+
+
 class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for NeoPool platform."""
 
     client: NeoPoolModbusClient
-    config_entry: ConfigEntry
+    config_entry: NeoPoolConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         client: NeoPoolModbusClient,
-        entry: ConfigEntry,
+        entry: NeoPoolConfigEntry,
     ) -> None:
         """Initialise the NeoPool data update coordinator."""
         super().__init__(

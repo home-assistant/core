@@ -1,6 +1,7 @@
 """Tests for the NeoPool sensor platform."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -15,7 +16,7 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_measurement_sensors_suppressed_when_filtration_off(
@@ -34,7 +35,7 @@ async def test_measurement_sensors_suppressed_when_filtration_off(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     for entity_id in (
-        "sensor.neopool_ph_level",
+        "sensor.neopool_ph",
         "sensor.neopool_redox_potential",
         "sensor.neopool_water_temperature",
     ):
@@ -170,6 +171,7 @@ _CELL_RUNTIME_ENTITY_IDS: dict[str, str] = {
         ("CELL_RUNTIME_POLB", 1800),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_cell_runtime_duration_sensor_reads_combined_register(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -179,25 +181,20 @@ async def test_cell_runtime_duration_sensor_reads_combined_register(
 ) -> None:
     """Each duration CELL_RUNTIME_* sensor reads the combined u32 key from coordinator data.
 
-    Sensors have ``entity_registry_enabled_default=False``; we set up the
-    integration first, enable the specific entity in the registry, and reload
-    the entry so the platform re-creates it as an active entity. The sensors
-    declare seconds but suggest hours, so ``state.state`` is expressed in
-    hours (converted by the frontend layer).
+    Sensors have ``entity_registry_enabled_default=False``; enabling every
+    disabled-by-default entity via the fixture avoids the reload dance. The
+    sensors declare seconds but suggest hours, so ``state.state`` is expressed
+    in hours (converted by the frontend layer).
     """
     await setup_integration(hass, mock_config_entry)
 
     entity_id = _CELL_RUNTIME_ENTITY_IDS[key]
-    registry = er.async_get(hass)
-    registry.async_update_entity(entity_id, disabled_by=None)
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} not registered"
     assert float(state.state) == pytest.approx(expected_seconds / 3600, abs=1e-4)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_cell_runtime_pol_changes_sensor_reads_combined_register(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -211,16 +208,13 @@ async def test_cell_runtime_pol_changes_sensor_reads_combined_register(
     await setup_integration(hass, mock_config_entry)
 
     entity_id = _CELL_RUNTIME_ENTITY_IDS["CELL_RUNTIME_POL_CHANGES"]
-    registry = er.async_get(hass)
-    registry.async_update_entity(entity_id, disabled_by=None)
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} not registered"
     assert state.state == "7"
 
 
+@pytest.mark.freeze_time("2026-07-03T12:00:00Z")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -231,25 +225,21 @@ async def test_all_entities(
     """Snapshot every entity registered by the sensor platform."""
     with patch("homeassistant.components.neopool.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
-    entries = sorted(
-        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id),
-        key=lambda e: e.entity_id,
-    )
-    assert entries == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.freeze_time("2026-07-03T12:00:00Z")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_setup_when_modules_absent(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_neopool_client_minimal: MagicMock,
+    mock_neopool_client: MagicMock,
+    minimal_pool_data: dict[str, Any],
 ) -> None:
     """Snapshot the sensor entities registered when no modules are present."""
+    mock_neopool_client.async_read_all.return_value = minimal_pool_data
     with patch("homeassistant.components.neopool.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
-    entries = sorted(
-        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id),
-        key=lambda e: e.entity_id,
-    )
-    assert entries == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

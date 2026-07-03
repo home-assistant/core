@@ -106,9 +106,6 @@
       "measure_conductivity": {
         "name": "Conductivity level"
       },
-      "measure_ph": {
-        "name": "pH level"
-      },
       "measure_rx": {
         "name": "Redox potential"
       },

@@ -2,13 +2,10 @@
 
 from neopool_modbus import NeoPoolModbusClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import PLATFORMS
-from .coordinator import NeoPoolCoordinator
-
-type NeoPoolConfigEntry = ConfigEntry[NeoPoolCoordinator]
+from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NeoPoolConfigEntry) -> bool:

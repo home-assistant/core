@@ -1,8 +1,12 @@
 """Test the NeoPool config flow."""
 
-import importlib
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
+from neopool_modbus.exceptions import (
+    NeoPoolConnectionError,
+    NeoPoolModbusError,
+    NeoPoolTimeoutError,
+)
 import pytest
 
 from homeassistant.components.neopool.const import DEFAULT_UNIT_ID, DOMAIN
@@ -49,46 +53,34 @@ async def test_user_flow(
 
 
 @pytest.mark.parametrize(
-    ("exc", "error_key"),
+    ("exc_cls", "error_key"),
     [
-        (
-            "homeassistant.components.neopool.config_flow.NeoPoolConnectionError",
-            "cannot_connect",
-        ),
-        (
-            "homeassistant.components.neopool.config_flow.NeoPoolTimeoutError",
-            "cannot_connect",
-        ),
-        (
-            "homeassistant.components.neopool.config_flow.NeoPoolModbusError",
-            "cannot_read_modbus",
-        ),
+        (NeoPoolConnectionError, "cannot_connect"),
+        (NeoPoolTimeoutError, "cannot_connect"),
+        (NeoPoolModbusError, "cannot_read_modbus"),
     ],
 )
 async def test_user_flow_probe_errors_recover(
     hass: HomeAssistant,
-    mock_neopool_client: MagicMock,
     mock_setup_entry: AsyncMock,
-    exc: str,
+    mock_socket_connection: AsyncMock,
+    exc_cls: type[Exception],
     error_key: str,
 ) -> None:
     """Probe errors surface as form errors, and the flow recovers on retry."""
-    exc_cls = _resolve(exc)
+    mock_socket_connection.side_effect = exc_cls("boom")
 
-    with patch(
-        "homeassistant.components.neopool.config_flow.async_probe_serial",
-        new=AsyncMock(side_effect=exc_cls("boom")),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: error_key}
 
+    mock_socket_connection.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
@@ -112,10 +104,3 @@ async def test_user_flow_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-def _resolve(dotted: str) -> type[Exception]:
-    """Import an exception class from a dotted path."""
-    module_name, _, attr = dotted.rpartition(".")
-    module = importlib.import_module(module_name)
-    return getattr(module, attr)
