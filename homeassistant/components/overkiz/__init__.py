@@ -102,18 +102,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
     client: OverkizClient | None = None
     api_type = entry.data.get(CONF_API_TYPE, APIType.CLOUD)
 
-    # Rexel Cloud API (OAuth2)
-    if entry.data.get(CONF_HUB) == Server.REXEL:
-        client = await create_rexel_client(hass, entry)
-
     # Local API
-    elif api_type == APIType.LOCAL:
+    if api_type == APIType.LOCAL:
         client = create_local_client(
             hass,
             host=entry.data[CONF_HOST],
             token=entry.data[CONF_TOKEN],
             verify_ssl=entry.data[CONF_VERIFY_SSL],
         )
+
+    # Rexel Cloud API (OAuth2)
+    elif entry.data.get(CONF_HUB) == Server.REXEL:
+        client = await create_rexel_client(hass, entry)
 
     # Overkiz Cloud API
     else:
