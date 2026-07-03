@@ -198,6 +198,39 @@ async def test_limitation_entities_enabled_state(
 
 @pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_limitation_entity_bounds_follow_sibling_value(
+    hass: HomeAssistant,
+    mock_window: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Reported min/max bounds track the sibling limitation value."""
+    mock_window.get_limitation_min.return_value = MagicMock(position_percent=20)
+    mock_window.get_limitation_max.return_value = MagicMock(position_percent=70)
+    await update_polled_entities(hass, freezer)
+
+    closed_state = hass.states.get(closed_limit_entity_id(mock_window))
+    open_state = hass.states.get(open_limit_entity_id(mock_window))
+
+    assert closed_state is not None
+    assert open_state is not None
+    assert closed_state.attributes["max"] == 80
+    assert open_state.attributes["min"] == 30
+
+    mock_window.get_limitation_min.return_value = MagicMock(position_percent=40)
+    mock_window.get_limitation_max.return_value = MagicMock(position_percent=90)
+    await update_polled_entities(hass, freezer)
+
+    closed_state = hass.states.get(closed_limit_entity_id(mock_window))
+    open_state = hass.states.get(open_limit_entity_id(mock_window))
+
+    assert closed_state is not None
+    assert open_state is not None
+    assert closed_state.attributes["max"] == 60
+    assert open_state.attributes["min"] == 10
+
+
+@pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_set_min_limitation(
     hass: HomeAssistant,
     mock_window: AsyncMock,
