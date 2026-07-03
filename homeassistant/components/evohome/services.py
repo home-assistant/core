@@ -1,13 +1,16 @@
 """Service handlers for the Evohome integration."""
 
 from datetime import timedelta
+import re
 from typing import Any, Final
 
 from evohomeasync2 import ControlSystem
-from evohomeasync2.const import SZ_CAN_BE_TEMPORARY, SZ_SYSTEM_MODE, SZ_TIMING_MODE
-from evohomeasync2.schemas.const import (
-    S2_DURATION as SZ_DURATION,
-    S2_PERIOD as SZ_PERIOD,
+from evohomeasync2.const import (
+    SZ_CAN_BE_TEMPORARY,
+    SZ_DURATION,
+    SZ_PERIOD,
+    SZ_SYSTEM_MODE,
+    SZ_TIMING_MODE,
 )
 import voluptuous as vol
 
@@ -36,6 +39,12 @@ from .const import (
 )
 from .coordinator import EvoDataUpdateCoordinator
 from .helpers import async_create_deprecation_issue_once
+
+
+def _as_snake_case(mode: str) -> str:
+    """Convert a CamelCase string to the snake_case used by the library."""
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", mode).lower()
+
 
 # System service schemas (registered as domain services)
 SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
@@ -155,13 +164,13 @@ def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -
     """Validate that a set_system_mode service call is properly formed."""
 
     mode = data[ATTR_MODE]
-    tcs_modes = {m[SZ_SYSTEM_MODE]: m for m in tcs.allowed_system_modes}
+    tcs_modes = {m[SZ_SYSTEM_MODE].value: m for m in tcs.allowed_system_modes}
 
     # Validation occurs here, instead of in the library, because it uses a slightly
     # different schema (until instead of duration/period) for the method invoked
     # via this service call
 
-    if (mode_info := tcs_modes.get(mode)) is None:
+    if (mode_info := tcs_modes.get(_as_snake_case(mode))) is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="mode_not_supported",
@@ -243,7 +252,9 @@ def setup_service_functions(
         payload = {
             "unique_id": unique_id,
             "service": call.service,
-            "data": call.data,
+            "data": {**call.data, ATTR_MODE: _as_snake_case(call.data[ATTR_MODE])}
+            if ATTR_MODE in call.data
+            else call.data,
         }
         async_dispatcher_send(hass, DOMAIN, payload)
 
