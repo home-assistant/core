@@ -9,7 +9,10 @@ from homeassistant.helpers.llm import IntentTool, LLMContext, Tool
 from .const import DOMAIN
 
 # Intents owned by this integration that are exposed as LLM tools.
-LLM_INTENTS = ("HassHumidifierMode", "HassHumidifierSetpoint",)
+LLM_INTENTS = (
+    "HassHumidifierMode",
+    "HassHumidifierSetpoint",
+)
 
 
 @callback
