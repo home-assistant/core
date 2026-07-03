@@ -1152,6 +1152,48 @@ async def test_subscribe(
     }
 
 
+async def test_subscribe_new_subscriber_does_not_notify_existing(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entity: TodoListEntity,
+) -> None:
+    """Test a new subscriber does not push an update to existing subscribers."""
+
+    await create_mock_platform(hass, [test_entity])
+
+    client1 = await hass_ws_client(hass)
+    await client1.send_json_auto_id(
+        {
+            "type": "todo/item/subscribe",
+            "entity_id": test_entity.entity_id,
+        }
+    )
+    msg = await client1.receive_json()
+    assert msg["success"]
+    # Initial push to the first subscriber
+    msg = await client1.receive_json()
+    assert msg["type"] == "event"
+
+    # A second client subscribes and receives its own initial push
+    client2 = await hass_ws_client(hass)
+    await client2.send_json_auto_id(
+        {
+            "type": "todo/item/subscribe",
+            "entity_id": test_entity.entity_id,
+        }
+    )
+    msg = await client2.receive_json()
+    assert msg["success"]
+    msg = await client2.receive_json()
+    assert msg["type"] == "event"
+
+    # The first client must not receive a leaked event from the second
+    # subscription; the next message it gets is the pong for its own ping.
+    await client1.send_json_auto_id({"type": "ping"})
+    msg = await client1.receive_json()
+    assert msg["type"] == "pong"
+
+
 async def test_subscribe_entity_does_not_exist(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

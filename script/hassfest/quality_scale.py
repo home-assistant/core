@@ -2056,6 +2056,7 @@ NO_QUALITY_SCALE = [
     "intent_script",
     "intent",
     "labs",
+    "llm",
     "logbook",
     "logger",
     "lovelace",
