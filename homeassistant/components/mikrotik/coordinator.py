@@ -169,8 +169,12 @@ class MikrotikData:
             # get new hub firmware version if updated
             self.firmware = self.get_info(ATTR_FIRMWARE)
 
-            self.sensors[HEALTH] = self.command(MIKROTIK_SERVICES[HEALTH])
-            self.sensors[SYSTEM] = self.command(MIKROTIK_SERVICES[SYSTEM])
+            self.sensors[HEALTH] = (
+                self.command(MIKROTIK_SERVICES[HEALTH], suppress_errors=True) or []
+            )
+            self.sensors[SYSTEM] = (
+                self.command(MIKROTIK_SERVICES[SYSTEM], suppress_errors=True) or []
+            )
 
         if not device_list:
             return

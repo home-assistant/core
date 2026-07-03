@@ -1,66 +1,18 @@
 """Tests for the Mikrotik sensor platform."""
 
-from typing import Any
 from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import mikrotik
-from homeassistant.components.mikrotik.const import HEALTH, SYSTEM
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MOCK_DATA
-from .const import HEALTH_DATA, SYSTEM_DATA
+from . import setup_mikrotik_entry
 
-from tests.common import MockConfigEntry, snapshot_platform
-
-
-async def _setup_entry_with_sensor_data(  # pylint: disable=dangerous-default-value
-    hass: HomeAssistant,
-    health_data: list[dict[str, Any]] = HEALTH_DATA,
-    system_data: list[dict[str, Any]] = SYSTEM_DATA,
-) -> MockConfigEntry:
-    """Set up Mikrotik integration with health and system sensor data."""
-
-    def mock_command(self, cmd: str, params=None, suppress_errors: bool = False):
-        """Return mocked Mikrotik API responses for known service commands."""
-
-        command_responses = {
-            mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IDENTITY]: [
-                {"name": "Mikrotik"}
-            ],
-            mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.INFO]: [
-                {
-                    "model": "RB5009",
-                    "current-firmware": "7.18.2",
-                    "serial-number": "ABC123",
-                }
-            ],
-            mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_CAPSMAN]: [],
-            mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_WIRELESS]: [],
-            mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_WIFIWAVE2]: [],
-            mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_WIFI]: [],
-            mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.DHCP]: [],
-            mikrotik.const.MIKROTIK_SERVICES[HEALTH]: health_data,
-            mikrotik.const.MIKROTIK_SERVICES[SYSTEM]: system_data,
-        }
-        return command_responses.get(cmd, [])
-
-    config_entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=MOCK_DATA)
-    config_entry.add_to_hass(hass)
-
-    with (
-        patch("librouteros.connect"),
-        patch.object(mikrotik.coordinator.MikrotikData, "command", new=mock_command),
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    return config_entry
+from tests.common import snapshot_platform
 
 
 @freeze_time("2026-01-01T12:00:00+00:00")
@@ -70,14 +22,15 @@ async def test_sensor_entities_created(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test Mikrotik sensor entities are created with expected values."""
-    config_entry = await _setup_entry_with_sensor_data(hass)
+    with patch("homeassistant.components.mikrotik.PLATFORMS", [Platform.SENSOR]):
+        config_entry = await setup_mikrotik_entry(hass)
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_sensor_wrong_data(hass: HomeAssistant) -> None:
     """Test Mikrotik sensor entities handle missing data gracefully."""
-    await _setup_entry_with_sensor_data(
+    await setup_mikrotik_entry(
         hass,
         health_data=[
             {"name": "voltage", "value": 24.2},
@@ -126,7 +79,7 @@ async def test_sensor_bad_uptime_data(
 ) -> None:
     """Test Mikrotik sensor entities handle missing data gracefully."""
 
-    await _setup_entry_with_sensor_data(
+    await setup_mikrotik_entry(
         hass,
         system_data=[
             {
@@ -148,7 +101,11 @@ async def test_sensor_bad_uptime_data(
 
 async def test_sensor_no_data(hass: HomeAssistant) -> None:
     """Test Mikrotik sensor entities handle missing data gracefully."""
-    await _setup_entry_with_sensor_data(hass, health_data=[], system_data=[])
+    await setup_mikrotik_entry(
+        hass,
+        health_data=[],
+        system_data=[],
+    )
 
     assert hass.states.get("sensor.mikrotik_voltage") is None
     assert hass.states.get("sensor.mikrotik_temperature") is None
