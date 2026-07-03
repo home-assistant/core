@@ -17,7 +17,7 @@
           "host": "The hostname or IP address of the Modbus gateway or device.",
           "port": "The TCP port the Modbus gateway listens on (default 502)."
         },
-        "title": "Network connection"
+        "title": "Modbus TCP"
       },
       "serial": {
         "data": {
@@ -39,8 +39,8 @@
       "user": {
         "description": "How is the Modbus network connected?",
         "menu_options": {
-          "network": "Network",
-          "serial": "Serial"
+          "network": "Modbus TCP",
+          "serial": "Serial (including serial proxies and networked connections)"
         }
       }
     }
