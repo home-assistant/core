@@ -41,7 +41,7 @@ REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 _DataT = TypeVar("_DataT", default=dict[str, Any])
 
 RESTORE_SAVE_DELAY = 10
-RESTORE_DEFAULT_STORAGE_KEY = "default"
+RESTORE_DEFAULT_STORAGE_KEY = "__restore_coordinator_default_key"
 
 DATA_RESTORE_STORE: HassKey[_RestoreStoreManager] = HassKey(
     "update_coordinator_restore_store"
@@ -680,10 +680,12 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     Data is saved after each successful refresh and after async_set_updated_data,
     batched by save_delay. The data of all restore coordinators is kept in a single
     store; first separated by the config entry or domain; then by storage_key which
-    allows multiple coordinators to be used within the same config entry or domain.
-    storage_key must be a stable unique identifier within the provided config entry
-    or domain. Stored data is automatically removed when the config entry is removed
-    if one was provided.
+    allows multiple coordinators to be used. storage_key must be a stable unique
+    identifier within the provided config entry or domain. Stored data is
+    automatically removed when the config entry is removed if one was provided.
+    Creating a coordinator with a config entry (or domain) and storage_key
+    combination that is already in use by another live coordinator raises
+    ValueError.
     """
 
     def __init__(
@@ -710,6 +712,8 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
             storage_scope = domain
         else:
             raise ValueError("config_entry or domain is required")
+        store_manager = _async_get_restore_store_manager(hass)
+        store_manager.async_register(storage_scope, storage_key)
         super().__init__(
             hass,
             logger,
@@ -724,7 +728,13 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         self._save_delay = save_delay
         self._storage_key = storage_key
         self._storage_scope = storage_scope
-        self._store_manager = _async_get_restore_store_manager(hass)
+        self._store_manager = store_manager
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Free the storage key so it can be reused by a new coordinator."""
+        self._store_manager.async_unregister(self._storage_scope, self._storage_key)
+        await super().async_shutdown()
 
     @override
     async def _async_setup(self) -> None:

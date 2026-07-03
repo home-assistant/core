@@ -366,6 +366,7 @@ class _RestoreStoreManager:
             hass, RESTORE_STORAGE_VERSION, RESTORE_STORAGE_KEY
         )
         self._data: dict[str, dict[str, Any]] = {}
+        self._active_keys: set[tuple[str, str]] = set()
 
     async def async_load(self, *, load_empty: bool = False) -> None:
         """Load the store."""
@@ -373,6 +374,25 @@ class _RestoreStoreManager:
             return
         if (stored := await self._store.async_load()) is not None:
             self._data = stored
+
+    @callback
+    def async_register(self, scope: str, storage_key: str) -> None:
+        """Register a coordinator's storage key.
+
+        Raises ValueError if another live coordinator already uses the same
+        scope and storage_key.
+        """
+        key = (scope, storage_key)
+        if key in self._active_keys:
+            raise ValueError(
+                f"Storage key {storage_key!r} is already in use for {scope!r}"
+            )
+        self._active_keys.add(key)
+
+    @callback
+    def async_unregister(self, scope: str, storage_key: str) -> None:
+        """Unregister a coordinator's storage key, freeing it for reuse."""
+        self._active_keys.discard((scope, storage_key))
 
     @callback
     def async_get(self, scope: str, storage_key: str) -> Any:

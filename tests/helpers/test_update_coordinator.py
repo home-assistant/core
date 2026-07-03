@@ -1645,8 +1645,10 @@ async def test_generic_non_dict_roundtrip(
     await flush_restore_store(hass)
     assert get_stored_data(hass_storage, restore_entry) == payload
 
-    # After a reload, a new coordinator for the same config entry and storage key
+    # Simulate a reload: the old coordinator is shut down, freeing its storage
+    # key, before a new coordinator for the same config entry and storage key
     # restores the stored list
+    await crd1.async_shutdown()
     seen: list[Any] = []
 
     async def update_method() -> list[dict[str, Any]]:
@@ -1704,6 +1706,45 @@ async def test_coordinators_share_single_store(
         },
         other_entry.entry_id: {RESTORE_KEY: {"value": "third"}},
     }
+
+
+async def test_duplicate_storage_key_raises(
+    hass: HomeAssistant, restore_entry: MockConfigEntry
+) -> None:
+    """Test creating a second coordinator with the same key raises."""
+    crd = get_restore_crd(hass, config_entry=restore_entry)
+
+    with pytest.raises(ValueError, match="already in use"):
+        get_restore_crd(hass, config_entry=restore_entry)
+
+    # A different storage key or config entry is not a conflict
+    get_restore_crd(hass, config_entry=restore_entry, storage_key="other_key")
+    get_restore_crd(hass, config_entry=MockConfigEntry())
+
+    await crd.async_shutdown()
+
+
+async def test_duplicate_storage_key_without_config_entry_raises(
+    hass: HomeAssistant,
+) -> None:
+    """Test the duplicate storage key guard also applies to domain scoping."""
+    crd = get_restore_crd(hass, config_entry=None, domain=RESTORE_DOMAIN)
+
+    with pytest.raises(ValueError, match="already in use"):
+        get_restore_crd(hass, config_entry=None, domain=RESTORE_DOMAIN)
+
+    await crd.async_shutdown()
+
+
+async def test_storage_key_reusable_after_shutdown(
+    hass: HomeAssistant, restore_entry: MockConfigEntry
+) -> None:
+    """Test a storage key is freed for reuse once its coordinator shuts down."""
+    crd1 = get_restore_crd(hass, config_entry=restore_entry)
+    await crd1.async_shutdown()
+
+    # Does not raise now that crd1 released the key
+    get_restore_crd(hass, config_entry=restore_entry)
 
 
 async def test_storage_removed_on_entry_removal(
