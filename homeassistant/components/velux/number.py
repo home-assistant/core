@@ -111,7 +111,7 @@ class VeluxPositionLimitNumber(
     async def async_added_to_hass(self) -> None:
         """Request an immediate refresh when the entity is first added."""
         await super().async_added_to_hass()
-        # Request an immediate refresh if we haven't fetched data yet
+        # Get initial state as we didn't do it on coordinator initialization to avoid doing it for disabled entities
         if self.coordinator.data is None:
             await self.coordinator.async_request_refresh()
 
