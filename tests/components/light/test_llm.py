@@ -8,14 +8,18 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
+ENTITY_ID = "light.test"
+
 
 @pytest.fixture(autouse=True)
 async def setup_integrations(hass: HomeAssistant) -> None:
-    """Set up the integrations for the light LLM tools platform."""
+    """Set up the integrations and expose a light entity."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
     assert await async_setup_component(hass, "light", {})
     assert await async_setup_component(hass, "llm", {})
+    hass.states.async_set(ENTITY_ID, "on", {"friendly_name": "Test light"})
+    async_expose_entity(hass, "conversation", ENTITY_ID, True)
     await hass.async_block_till_done()
 
 
@@ -36,11 +40,12 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
     return {tool.name for tool in result.tools}
 
 
-async def test_light_intent_tool_requires_exposed_entity(hass: HomeAssistant) -> None:
-    """Test the intent tools are only exposed when a light entity is exposed."""
-    assert "HassLightSet" not in await _tool_names(hass)
-
-    hass.states.async_set("light.test", "on", {"friendly_name": "Test light"})
-    async_expose_entity(hass, "conversation", "light.test", True)
-
+async def test_intent_tool_exposed(hass: HomeAssistant) -> None:
+    """Test the intent tool is offered for an exposed light entity."""
     assert "HassLightSet" in await _tool_names(hass)
+
+
+async def test_intent_tool_not_exposed(hass: HomeAssistant) -> None:
+    """Test the intent tool is hidden when no light entity is exposed."""
+    async_expose_entity(hass, "conversation", ENTITY_ID, False)
+    assert "HassLightSet" not in await _tool_names(hass)
