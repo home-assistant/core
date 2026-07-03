@@ -6,7 +6,7 @@ import logging
 from keba_kecontact.connection import KebaKeContact
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -90,7 +90,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up services and import YAML configuration."""
 
     async def execute_service(call: ServiceCall) -> None:
-        entries = hass.config_entries.async_entries(DOMAIN)
+        entries = [
+            entry
+            for entry in hass.config_entries.async_entries(DOMAIN)
+            if entry.state is ConfigEntryState.LOADED
+        ]
         if not entries:
             return
         keba: KebaHandler = entries[0].runtime_data
@@ -278,9 +282,8 @@ class KebaHandler(KebaKeContact):
     def add_update_listener(self, listener):
         """Add a listener for update notifications."""
         self._update_listeners.append(listener)
-
-        # initial data is already loaded, thus update the component
         listener()
+        return lambda: self._update_listeners.remove(listener)
 
     async def async_request_data(self, param):
         """Request new data in async way."""

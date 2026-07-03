@@ -52,4 +52,4 @@ class KebaSwitch(SwitchEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Add update callback after being added to hass."""
-        self._keba.add_update_listener(self.update_callback)
+        self.async_on_remove(self._keba.add_update_listener(self.update_callback))

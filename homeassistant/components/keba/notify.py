@@ -16,7 +16,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the KEBA charging station notify platform."""
     keba = entry.runtime_data
-    async_add_entities([KebaNotifyEntity(keba, entry.entry_id)])
+    async_add_entities([KebaNotifyEntity(keba)])
 
 
 class KebaNotifyEntity(NotifyEntity):
@@ -24,10 +24,10 @@ class KebaNotifyEntity(NotifyEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, keba: KebaHandler, entry_id: str) -> None:
+    def __init__(self, keba: KebaHandler) -> None:
         """Initialize the notify entity."""
         self._keba = keba
-        self._attr_unique_id = entry_id
+        self._attr_unique_id = keba.device_id
         self._attr_name = f"{keba.device_name} Display"
 
     @override
