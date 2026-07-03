@@ -3,11 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.easywave import (
-    async_remove_config_entry_device,
-    async_setup_entry,
-    async_unload_entry,
-)
+from homeassistant.components.easywave import async_remove_config_entry_device
 from homeassistant.components.easywave.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -52,7 +48,7 @@ async def test_setup_entry_success(
 
     t_patch, c_patch, f_patch, mock_coord = _patch_transceiver_and_coordinator()
     with t_patch, c_patch, f_patch:
-        result = await async_setup_entry(hass, mock_config_entry)
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert result is True
     assert mock_coord.async_config_entry_first_refresh.called
@@ -68,7 +64,7 @@ async def test_setup_entry_country_allowed(
 
     t_patch, c_patch, f_patch, _ = _patch_transceiver_and_coordinator()
     with t_patch, c_patch, f_patch:
-        result = await async_setup_entry(hass, mock_config_entry)
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert result is True
 
@@ -80,7 +76,7 @@ async def test_setup_entry_country_not_allowed(
     mock_config_entry.add_to_hass(hass)
     hass.config.country = "US"
 
-    result = await async_setup_entry(hass, mock_config_entry)
+    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert result is False
 
@@ -92,7 +88,7 @@ async def test_setup_entry_creates_repair_issue(
     mock_config_entry.add_to_hass(hass)
     hass.config.country = "US"
 
-    result = await async_setup_entry(hass, mock_config_entry)
+    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert result is False
     issues = ir.async_get(hass)
@@ -112,7 +108,7 @@ async def test_setup_entry_deletes_stale_repair_issue(
 
     t_patch, c_patch, f_patch, _ = _patch_transceiver_and_coordinator()
     with t_patch, c_patch, f_patch:
-        result = await async_setup_entry(hass, mock_config_entry)
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert result is True
     issues = ir.async_get(hass)
@@ -131,7 +127,7 @@ async def test_setup_entry_no_country(
 
     t_patch, c_patch, f_patch, _ = _patch_transceiver_and_coordinator()
     with t_patch, c_patch, f_patch:
-        result = await async_setup_entry(hass, mock_config_entry)
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert result is True
 
@@ -145,10 +141,10 @@ async def test_unload_entry(
 
     t_patch, c_patch, f_patch, mock_coord = _patch_transceiver_and_coordinator()
     with t_patch, c_patch, f_patch:
-        await async_setup_entry(hass, mock_config_entry)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
-        result = await async_unload_entry(hass, mock_config_entry)
+        result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
     assert result is True
     assert mock_coord.async_shutdown.called

@@ -3,7 +3,6 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.easywave import async_setup_entry
 from homeassistant.components.easywave.const import (
     DOMAIN,
     FREQUENCY_868MHZ,
@@ -101,7 +100,7 @@ class TestIntegrationSetupCompliance:
 
         t_patch, c_patch, f_patch = _patch_for_successful_setup()
         with t_patch, c_patch, f_patch:
-            result = await async_setup_entry(hass, mock_config_entry)
+            result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
         assert result is True
 
@@ -112,7 +111,7 @@ class TestIntegrationSetupCompliance:
         mock_config_entry.add_to_hass(hass)
         hass.config.country = "US"
 
-        result = await async_setup_entry(hass, mock_config_entry)
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
         assert result is False
 
@@ -125,7 +124,7 @@ class TestIntegrationSetupCompliance:
 
         t_patch, c_patch, f_patch = _patch_for_successful_setup()
         with t_patch, c_patch, f_patch:
-            result = await async_setup_entry(hass, mock_config_entry)
+            result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
         assert result is True
 
@@ -136,7 +135,7 @@ class TestIntegrationSetupCompliance:
         mock_config_entry.add_to_hass(hass)
         hass.config.country = "US"
 
-        await async_setup_entry(hass, mock_config_entry)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
         issues = ir.async_get(hass)
         issue = issues.async_get_issue(
@@ -155,7 +154,7 @@ class TestIntegrationSetupCompliance:
 
         t_patch, c_patch, f_patch = _patch_for_successful_setup()
         with t_patch, c_patch, f_patch:
-            result = await async_setup_entry(hass, mock_config_entry)
+            result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
         assert result is True
         issues = ir.async_get(hass)

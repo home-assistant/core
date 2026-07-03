@@ -302,13 +302,6 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 button,
             )
 
-    _MOTOR_BUTTON_EVENT_MAP: dict[int, str] = {
-        0: "opened",
-        1: "closed",
-        2: "stopped",
-        3: "stopped",
-    }
-
     def fire_device_event(self, subentry_id: str, event_type: str) -> None:
         """Fire an HA event for a device-level trigger (e.g. battery_low)."""
         device_registry = dr.async_get(self.hass)
@@ -338,29 +331,6 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if device_entry is None:
             return
 
-        # Type-3 motor transmitters expose semantic triggers
-        # (opened / closed / stopped) instead of raw button presses.
-        if operating_type == "3":
-            if info_type != self._INFO_TYPE_EW_PUSH:
-                return
-            event_type = self._MOTOR_BUTTON_EVENT_MAP.get(button)
-            if event_type is None:
-                return
-            self.hass.bus.async_fire(
-                EVENT_EASYWAVE,
-                {"device_id": device_entry.id, "type": event_type},
-            )
-            return
-
-        # Type-2 transmitters: state is tracked by channel binary sensors
-        # and cover sensors.  The HA binary_sensor platform auto-generates
-        # the appropriate device triggers ("turned on"/"turned off", etc.).
-        # No custom events are fired here.
-        if operating_type == "2":
-            return
-
-        # Type-1 group mode: fire state_a/b/c/d or state_released so
-        # automations can react to the current button state.
         if operating_type == "1" and grouping_mode == TRANSMITTER_GROUPING_GROUP:
             if info_type == self._INFO_TYPE_EW_PUSH:
                 button_letter = "abcd"[button] if 0 <= button < 4 else None
@@ -377,26 +347,3 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     EVENT_EASYWAVE,
                     {"device_id": device_entry.id, "type": "state_released"},
                 )
-            return
-
-        if info_type == self._INFO_TYPE_EW_PUSH:
-            action = "pressed"
-            button_letter = "abcd"[button] if 0 <= button < 4 else None
-        elif info_type == self._INFO_TYPE_EW_RELEASE:
-            # The hardware sends button=0 on release regardless of which button.
-            # Fire a generic "released" event with button=None.
-            action = "released"
-            button_letter = None
-        else:
-            return
-
-        event_type = (
-            f"button_{button_letter}_{action}" if button_letter else f"button_{action}"
-        )
-        self.hass.bus.async_fire(
-            EVENT_EASYWAVE,
-            {
-                "device_id": device_entry.id,
-                "type": event_type,
-            },
-        )

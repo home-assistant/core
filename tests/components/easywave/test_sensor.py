@@ -1,17 +1,15 @@
 """Tests for the sensor platform of the Easywave Core integration."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.easywave import EasywaveRuntimeData
-from homeassistant.components.easywave.sensor import (
-    EasywaveGatewaySensor,
-    async_setup_entry,
-)
+from homeassistant.components.easywave.const import DOMAIN
+from homeassistant.components.easywave.sensor import EasywaveGatewaySensor
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 
 from tests.common import MockConfigEntry
@@ -31,21 +29,26 @@ async def test_sensor_setup_entry(
     mock_config_entry: MockConfigEntry,
     mock_coordinator: MagicMock,
 ) -> None:
-    """Test sensor platform setup from runtime_data."""
-    mock_config_entry.runtime_data = EasywaveRuntimeData(
-        coordinator=mock_coordinator,
-        frequency="868 MHz",
-        country="DE",
+    """Test that sensor platform setup creates a gateway sensor entity."""
+    mock_coordinator.async_config_entry_first_refresh = AsyncMock()
+    mock_config_entry.add_to_hass(hass)
+    hass.config.country = "DE"
+
+    with (
+        patch("homeassistant.components.easywave.RX11Transceiver"),
+        patch(
+            "homeassistant.components.easywave.EasywaveCoordinator",
+            return_value=mock_coordinator,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    entity_id = registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{mock_config_entry.entry_id}_rx11_gateway"
     )
-    async_add_entities = MagicMock()
-
-    await async_setup_entry(hass, mock_config_entry, async_add_entities)
-
-    assert async_add_entities.called
-    entities = async_add_entities.call_args[0][0]
-    assert len(entities) == 1
-    assert isinstance(entities[0], EasywaveGatewaySensor)
-    assert entities[0].coordinator is mock_coordinator
+    assert entity_id is not None
 
 
 def test_sensor_class_attributes(gateway_sensor: EasywaveGatewaySensor) -> None:
