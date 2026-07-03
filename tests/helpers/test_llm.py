@@ -38,7 +38,7 @@ def llm_context() -> llm.LLMContext:
         platform="",
         context=None,
         language=None,
-        assistant=None,
+        assistant="conversation",
         device_id=None,
     )
 
@@ -367,8 +367,6 @@ async def test_assist_api_tools(
     assert [tool.name for tool in api.tools] == [
         "HassTurnOn",
         "HassTurnOff",
-        "HassSetPosition",
-        "HassStopMoving",
         "HassStartTimer",
         "HassCancelTimer",
         "HassCancelAllTimers",
