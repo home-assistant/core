@@ -8,6 +8,7 @@ from mill_local import Mill as MillLocal
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
@@ -32,6 +33,8 @@ from .coordinator import (
 PLATFORMS = [Platform.CLIMATE, Platform.NUMBER, Platform.SENSOR]
 
 __all__ = ["CLOUD", "CONNECTION_TYPE", "DOMAIN", "LOCAL"]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
