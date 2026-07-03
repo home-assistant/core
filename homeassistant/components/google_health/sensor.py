@@ -8,6 +8,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.const import UnitOfLength, UnitOfMass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -20,23 +21,19 @@ from .coordinator import GoogleHealthActivityCoordinator, GoogleHealthBodyCoordi
 STEPS_SENSOR_DESCRIPTION = SensorEntityDescription(
     key="steps",
     translation_key="steps",
-    native_unit_of_measurement="steps",
-    icon="mdi:walk",
     state_class=SensorStateClass.TOTAL_INCREASING,
 )
 
 DISTANCE_SENSOR_DESCRIPTION = SensorEntityDescription(
     key="distance",
-    translation_key="distance",
-    native_unit_of_measurement="m",
+    native_unit_of_measurement=UnitOfLength.METERS,
     device_class=SensorDeviceClass.DISTANCE,
     state_class=SensorStateClass.TOTAL_INCREASING,
 )
 
 WEIGHT_SENSOR_DESCRIPTION = SensorEntityDescription(
     key="weight",
-    translation_key="weight",
-    native_unit_of_measurement="kg",
+    native_unit_of_measurement=UnitOfMass.KILOGRAMS,
     device_class=SensorDeviceClass.WEIGHT,
     state_class=SensorStateClass.MEASUREMENT,
 )
@@ -45,7 +42,6 @@ RESTING_HEART_RATE_SENSOR_DESCRIPTION = SensorEntityDescription(
     key="resting_heart_rate",
     translation_key="resting_heart_rate",
     native_unit_of_measurement="bpm",
-    icon="mdi:heart-pulse",
     state_class=SensorStateClass.MEASUREMENT,
 )
 

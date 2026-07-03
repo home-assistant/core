@@ -70,7 +70,6 @@ async def test_sensor_steps_and_distance(
     assert state is not None
     assert state.state == "10500"
     assert state.attributes.get("unit_of_measurement") == "steps"
-    assert state.attributes.get("icon") == "mdi:walk"
 
     distance_state = hass.states.get("sensor.google_health_distance")
     assert distance_state is not None
@@ -142,7 +141,6 @@ async def test_sensor_weight_and_resting_heart_rate(
     assert hr_state is not None
     assert hr_state.state == "65"
     assert hr_state.attributes.get("unit_of_measurement") == "bpm"
-    assert hr_state.attributes.get("icon") == "mdi:heart-pulse"
 
 
 async def test_sensor_empty_rollup(
