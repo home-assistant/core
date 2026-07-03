@@ -1,6 +1,6 @@
 """API for Google Health bound to Home Assistant OAuth."""
 
-from typing import cast
+from typing import cast, override
 
 from aiohttp import ClientSession
 from google_health_api.auth import AbstractAuth
@@ -8,7 +8,7 @@ from google_health_api.auth import AbstractAuth
 from homeassistant.helpers import config_entry_oauth2_flow
 
 
-class AsyncConfigEntryAuth(AbstractAuth):  # type: ignore[misc]
+class AsyncConfigEntryAuth(AbstractAuth):
     """Provide Google Health authentication tied to an OAuth2 based config entry."""
 
     def __init__(
@@ -20,6 +20,7 @@ class AsyncConfigEntryAuth(AbstractAuth):  # type: ignore[misc]
         super().__init__(websession)
         self._oauth_session = oauth_session
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         await self._oauth_session.async_ensure_token_valid()
@@ -27,7 +28,7 @@ class AsyncConfigEntryAuth(AbstractAuth):  # type: ignore[misc]
         return cast(str, self._oauth_session.token["access_token"])
 
 
-class SimpleAuth(AbstractAuth):  # type: ignore[misc]
+class SimpleAuth(AbstractAuth):
     """Temporary auth helper for the config flow."""
 
     def __init__(self, websession: ClientSession, access_token: str) -> None:
@@ -35,6 +36,7 @@ class SimpleAuth(AbstractAuth):  # type: ignore[misc]
         super().__init__(websession)
         self._access_token = access_token
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return the access token."""
         return self._access_token
