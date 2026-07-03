@@ -10,7 +10,7 @@ from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, intent
-from homeassistant.helpers.llm import LLMContext, Tool, ToolInput
+from homeassistant.helpers.llm import LLM_API_ASSIST, LLMContext, Tool, ToolInput
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
 
@@ -88,8 +88,11 @@ class CalendarGetEventsTool(Tool):
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
-) -> LLMTools:
+) -> LLMTools | None:
     """Return the calendar LLM tools when a calendar is exposed."""
+    if api_id != LLM_API_ASSIST:
+        return None
+
     entity_registry = er.async_get(hass)
     names: list[str] = []
     for state in sorted(hass.states.async_all(DOMAIN), key=attrgetter("name")):

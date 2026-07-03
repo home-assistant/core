@@ -4,6 +4,7 @@ import pytest
 
 from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
+from homeassistant.components.media_player import llm as media_player_llm
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
@@ -60,3 +61,8 @@ async def test_intent_tool_not_exposed(hass: HomeAssistant) -> None:
     """Test the intent tool is hidden when no media_player entity is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
     assert not INTENTS & await _tool_names(hass)
+
+
+async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:
+    """Test the platform returns None for an unsupported API."""
+    assert media_player_llm.async_get_tools(hass, _llm_context(), "other") is None

@@ -4,6 +4,7 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import llm as llm_component
+from homeassistant.components.llm import llm as llm_platform
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
@@ -50,3 +51,8 @@ async def test_get_datetime_tool(hass: HomeAssistant) -> None:
             "weekday": "Wednesday",
         },
     }
+
+
+async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:
+    """Test the platform returns None for an unsupported API."""
+    assert llm_platform.async_get_tools(hass, _llm_context(), "other") is None

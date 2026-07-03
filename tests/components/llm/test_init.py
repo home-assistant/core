@@ -44,7 +44,7 @@ def llm_context() -> llm.LLMContext:
 
 
 def _mock_tools_platform(
-    hass: HomeAssistant, domain: str, tools: LLMTools | Exception
+    hass: HomeAssistant, domain: str, tools: LLMTools | Exception | None
 ) -> Mock:
     """Register a mock <integration>/llm.py platform returning the given tools."""
     if isinstance(tools, Exception):
@@ -104,6 +104,21 @@ async def test_get_tools_merges_sorted(
     result = await async_get_tools(hass, llm_context, "assist")
     assert [tool.name for tool in result.tools] == ["GetDateTime", "tool_a", "tool_b"]
     assert result.prompt == "prompt a\nprompt b"
+
+
+async def test_get_tools_skips_none_platform(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test that a platform returning None for the API is skipped."""
+    tool = _StubTool("good_tool")
+    _mock_tools_platform(hass, "test_none", None)
+    _mock_tools_platform(hass, "test_good", LLMTools(tools=[tool]))
+
+    assert await async_setup_component(hass, "llm", {})
+
+    result = await async_get_tools(hass, llm_context, "assist")
+    assert [tool.name for tool in result.tools] == ["GetDateTime", "good_tool"]
+    assert result.prompt is None
 
 
 async def test_get_tools_isolates_failing_platform(

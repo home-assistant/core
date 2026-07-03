@@ -9,7 +9,13 @@ from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, intent
-from homeassistant.helpers.llm import IntentTool, LLMContext, Tool, ToolInput
+from homeassistant.helpers.llm import (
+    LLM_API_ASSIST,
+    IntentTool,
+    LLMContext,
+    Tool,
+    ToolInput,
+)
 from homeassistant.util.json import JsonObjectType
 
 from .const import DOMAIN, TodoServices
@@ -92,8 +98,11 @@ class TodoGetItemsTool(Tool):
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
-) -> LLMTools:
+) -> LLMTools | None:
     """Return the todo LLM tools when a to-do list is exposed."""
+    if api_id != LLM_API_ASSIST:
+        return None
+
     if not llm_context.assistant:
         return LLMTools(tools=[])
 

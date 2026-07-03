@@ -6,6 +6,7 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import calendar, llm as llm_component
+from homeassistant.components.calendar import llm as calendar_llm
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.core import Context, HomeAssistant, SupportsResponse
 from homeassistant.helpers import entity_registry as er, llm
@@ -44,6 +45,11 @@ async def test_get_tools_no_exposed_calendar(hass: HomeAssistant) -> None:
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
     assert "calendar_get_events" not in [tool.name for tool in result.tools]
+
+
+async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:
+    """Test the platform returns None for an unsupported API."""
+    assert calendar_llm.async_get_tools(hass, _llm_context(), "other") is None
 
 
 async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:

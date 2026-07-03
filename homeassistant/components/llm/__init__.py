@@ -42,8 +42,11 @@ class LLMToolsPlatformProtocol(Protocol):
     @callback
     def async_get_tools(
         self, hass: HomeAssistant, llm_context: LLMContext, api_id: str
-    ) -> LLMTools:
-        """Return the integration's LLM tools for the given context and API."""
+    ) -> LLMTools | None:
+        """Return the integration's LLM tools for the given context and API.
+
+        Return None when the integration has nothing for the given API.
+        """
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -76,6 +79,8 @@ async def async_get_tools(
             result = platform.async_get_tools(hass, llm_context, api_id)
         except Exception:
             _LOGGER.exception("Error getting tools from LLM platform %s", domain)
+            continue
+        if result is None:
             continue
         tools.extend(result.tools)
         if result.prompt:

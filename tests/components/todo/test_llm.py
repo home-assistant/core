@@ -4,6 +4,7 @@ import pytest
 
 from homeassistant.components import llm as llm_component, todo
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
+from homeassistant.components.todo import llm as todo_llm
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.setup import async_setup_component
@@ -41,6 +42,11 @@ async def test_get_tools_no_exposed_todo(hass: HomeAssistant) -> None:
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
     assert "todo_get_items" not in [tool.name for tool in result.tools]
+
+
+async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:
+    """Test the platform returns None for an unsupported API."""
+    assert todo_llm.async_get_tools(hass, _llm_context(), "other") is None
 
 
 async def test_todo_get_items_tool(hass: HomeAssistant) -> None:

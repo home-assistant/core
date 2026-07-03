@@ -3,6 +3,7 @@
 import pytest
 
 from homeassistant.components import llm as llm_component
+from homeassistant.components.climate import llm as climate_llm
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
@@ -49,3 +50,8 @@ async def test_intent_tool_not_exposed(hass: HomeAssistant) -> None:
     """Test the intent tool is hidden when no climate entity is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
     assert "HassClimateSetTemperature" not in await _tool_names(hass)
+
+
+async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:
+    """Test the platform returns None for an unsupported API."""
+    assert climate_llm.async_get_tools(hass, _llm_context(), "other") is None
