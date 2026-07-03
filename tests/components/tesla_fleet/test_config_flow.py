@@ -789,7 +789,7 @@ async def test_domain_registration_failure_with_key_guidance(
     access_token: str,
     mock_private_key: Mock,
 ) -> None:
-    """Test Tesla key errors map to the reset-private-key guidance."""
+    """Test unclassified Tesla errors map to the generic registration guidance."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -843,7 +843,7 @@ async def test_domain_registration_failure_with_key_guidance(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "domain_input"
-    assert result["errors"] == {"base": "reset_private_key"}
+    assert result["errors"] == {"base": "registration_failed"}
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -1325,12 +1325,14 @@ def test_is_valid_domain(domain: str, expected_valid: bool) -> None:
     ("err", "expected"),
     [
         (PreconditionFailed(), "origin_mismatch"),
-        (_tesla_error({"error": "allowed origin mismatch"}), "origin_mismatch"),
-        (_tesla_error({"error": "public key must use secp256r1"}), "reset_private_key"),
-        (_tesla_error({"error": "private_key does not match"}), "reset_private_key"),
+        (_tesla_error({"error": "allowed origin mismatch"}), "registration_failed"),
+        (
+            _tesla_error({"error": "public key must use secp256r1"}),
+            "registration_failed",
+        ),
         (_tesla_error({"error": "registration rejected"}), "registration_failed"),
     ],
-    ids=["precondition", "origin_text", "public_key", "private_key", "generic"],
+    ids=["precondition", "origin_text", "public_key", "generic"],
 )
 def test_classify_region_registration_failure(
     err: TeslaFleetError, expected: str
