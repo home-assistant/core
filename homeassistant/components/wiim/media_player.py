@@ -864,6 +864,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         raise BrowseError(f"Invalid browse path: {media_content_id}")
 
     @media_player_exception_wrap
+    @override
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join group_members (entity_ids) to the group led by the current player."""
         target_device = self._get_command_target_device("join")
@@ -910,6 +911,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         )
 
     @media_player_exception_wrap
+    @override
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group it is currently in."""
         LOGGER.debug(
