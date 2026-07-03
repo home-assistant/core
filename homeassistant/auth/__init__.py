@@ -32,6 +32,12 @@ EVENT_USER_ADDED = "user_added"
 EVENT_USER_UPDATED = "user_updated"
 EVENT_USER_REMOVED = "user_removed"
 
+# Leeway in seconds applied to the access token expiry check, matching the
+# leeway passed to the JWT verify.
+ACCESS_TOKEN_LEEWAY = 10
+# Number of validated access tokens to cache to skip the per-request HMAC verify.
+ACCESS_TOKEN_CACHE_SIZE = 128
+
 type _MfaModuleDict = dict[str, MultiFactorAuthModule]
 type _ProviderKey = tuple[str, str | None]
 type _ProviderDict = dict[_ProviderKey, AuthProvider]
@@ -190,6 +196,9 @@ class AuthManager:
         self._mfa_modules = mfa_modules
         self.login_flow = AuthManagerFlowManager(hass, self)
         self._revoke_callbacks: dict[str, set[CALLBACK_TYPE]] = {}
+        # Maps a validated access token to (refresh_token_id, exp) so repeated
+        # requests with the same token skip the HMAC signature verification.
+        self._access_token_cache: OrderedDict[str, tuple[str, int]] = OrderedDict()
         self._expire_callback: CALLBACK_TYPE | None = None
         self._remove_expired_job = HassJob(
             self._async_remove_expired_refresh_tokens, job_type=HassJobType.Callback
@@ -655,6 +664,22 @@ class AuthManager:
     @callback
     def async_validate_access_token(self, token: str) -> models.RefreshToken | None:
         """Return refresh token if an access token is valid."""
+        if (cached := self._access_token_cache.get(token)) is not None:
+            # This exact token string already passed the full signature, issuer
+            # and iat verification. Those never change, so only the exp claim
+            # needs rechecking and revocation is enforced by re-fetching the
+            # refresh token below.
+            refresh_token_id, exp = cached
+            if exp <= time.time() - ACCESS_TOKEN_LEEWAY:
+                del self._access_token_cache[token]
+                return None
+            refresh_token = self.async_get_refresh_token(refresh_token_id)
+            if refresh_token is None or not refresh_token.user.is_active:
+                del self._access_token_cache[token]
+                return None
+            self._access_token_cache.move_to_end(token)
+            return refresh_token
+
         try:
             unverif_claims = jwt_wrapper.unverified_hs256_token_decode(token)
         except jwt.InvalidTokenError:
@@ -672,14 +697,22 @@ class AuthManager:
             issuer = refresh_token.id
 
         try:
-            jwt_wrapper.verify_and_decode(
-                token, jwt_key, leeway=10, issuer=issuer, algorithms=["HS256"]
+            verif_claims = jwt_wrapper.verify_and_decode(
+                token,
+                jwt_key,
+                leeway=ACCESS_TOKEN_LEEWAY,
+                issuer=issuer,
+                algorithms=["HS256"],
             )
         except jwt.InvalidTokenError:
             return None
 
         if refresh_token is None or not refresh_token.user.is_active:
             return None
+
+        self._access_token_cache[token] = (refresh_token.id, verif_claims["exp"])
+        if len(self._access_token_cache) > ACCESS_TOKEN_CACHE_SIZE:
+            self._access_token_cache.popitem(last=False)
 
         return refresh_token
 

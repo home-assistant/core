@@ -1399,3 +1399,23 @@ async def test_access_token_from_the_future(mock_hass) -> None:
     with freeze_time(now + timedelta(days=365)):
         rt = manager.async_validate_access_token(access_token)
         assert rt.id == refresh_token.id
+
+
+async def test_access_token_validation_is_cached(mock_hass) -> None:
+    """Test a repeated access token validation skips the signature verify."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
+    access_token = manager.async_create_access_token(refresh_token)
+
+    # First validation performs the full verify and caches the result.
+    assert manager.async_validate_access_token(access_token) is refresh_token
+
+    # A second validation is served from the cache and never re-verifies.
+    with patch("homeassistant.auth.jwt_wrapper.verify_and_decode") as mock_verify:
+        assert manager.async_validate_access_token(access_token) is refresh_token
+    assert mock_verify.call_count == 0
+
+    # Once the refresh token is revoked, the cached token is rejected again.
+    manager.async_remove_refresh_token(refresh_token)
+    assert manager.async_validate_access_token(access_token) is None
