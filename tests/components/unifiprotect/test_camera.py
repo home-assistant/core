@@ -280,7 +280,7 @@ async def test_streams_unavailable(
     issue_registry: ir.IssueRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A camera the library leaves unprimed (no streams) has no stream source.
+    """A camera whose RTSPS streams could not be read has no stream source.
 
     An unreadable stream state is not "no streams": it must log a warning
     instead of raising the enable-stream repair, which could offer to create a
