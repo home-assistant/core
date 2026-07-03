@@ -42,7 +42,8 @@ async def async_setup_entry(
         implementation = await async_get_config_entry_implementation(hass, entry)
     except ImplementationUnavailableError as err:
         raise ConfigEntryNotReady(
-            "OAuth2 implementation temporarily unavailable, will retry"
+            translation_domain=DOMAIN,
+            translation_key="oauth_error",
         ) from err
 
     session = OAuth2Session(hass, entry, implementation)

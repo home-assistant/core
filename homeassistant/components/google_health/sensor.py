@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, override
+from typing import Any, cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -24,6 +24,8 @@ from .coordinator import (
     GoogleHealthBodyCoordinator,
     GoogleHealthDataUpdateCoordinator,
 )
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -133,4 +135,4 @@ class GoogleHealthSensor[_CoordinatorT: GoogleHealthDataUpdateCoordinator[Any]](
     @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return cast(StateType, self.entity_description.value_fn(self.coordinator.data))
