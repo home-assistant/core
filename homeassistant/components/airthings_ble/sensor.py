@@ -66,7 +66,6 @@ SENSORS_MAPPING_TEMPLATE: dict[str, AirthingsBLESensorEntityDescription] = {
         translation_key="radon_1day_avg",
         device_class=SensorDeviceClass.RADON,
         native_unit_of_measurement=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
-        suggested_display_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "radon_longterm_avg": AirthingsBLESensorEntityDescription(
@@ -74,7 +73,6 @@ SENSORS_MAPPING_TEMPLATE: dict[str, AirthingsBLESensorEntityDescription] = {
         translation_key="radon_longterm_avg",
         device_class=SensorDeviceClass.RADON,
         native_unit_of_measurement=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
-        suggested_display_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "radon_1day_level": AirthingsBLESensorEntityDescription(
