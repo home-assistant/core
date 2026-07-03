@@ -60,7 +60,8 @@ class VeluxRainSensor(
         """Called when the entity is added to Home Assistant."""
         await super().async_added_to_hass()
         # Get initial state as we didn't do it on coordinator initialization to avoid doing it for disabled entities
-        await self.coordinator.async_request_refresh()
+        if self.coordinator.data is None:
+            await self.coordinator.async_request_refresh()
 
     @property
     @override
