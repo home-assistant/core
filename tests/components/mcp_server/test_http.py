@@ -669,14 +669,34 @@ async def test_streamable_api_id_requires_admin(
     hass_client: ClientSessionGenerator,
     hass_read_only_access_token: str,
 ) -> None:
-    """Test the keyed endpoint requires an admin user."""
+    """Test a non-Assist keyed endpoint requires an admin user."""
+    llm.async_register_api(
+        hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test API")
+    )
+
+    client = await hass_client(hass_read_only_access_token)
+    response = await client.post(
+        f"{STREAMABLE_API}/{TEST_LLM_API_ID}",
+        json=INITIALIZE_MESSAGE,
+        headers={"accept": CONTENT_TYPE_JSON},
+    )
+    assert response.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_streamable_api_id_assist_allows_non_admin(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test the Assist keyed endpoint does not require an admin user."""
     client = await hass_client(hass_read_only_access_token)
     response = await client.post(
         f"{STREAMABLE_API}/{llm.LLM_API_ASSIST}",
         json=INITIALIZE_MESSAGE,
         headers={"accept": CONTENT_TYPE_JSON},
     )
-    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert response.status == HTTPStatus.OK
 
 
 async def test_streamable_api_id_unknown(

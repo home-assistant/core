@@ -8,10 +8,11 @@ The Streamable HTTP protocol uses these HTTP endpoints:
 - /api/mcp: The Streamable HTTP endpoint currently implements the
   stateless protocol for simplicity. This receives client requests and
   sends them to the MCP server, then waits for a response to send back to
-  the client. This serves the configured Assist API and does not require
+  the client. This serves the configured LLM APIs and does not require
   admin access.
 - /api/mcp/<API ID>: The same Streamable HTTP endpoint, but exposing a
-  specific LLM API selected by its ID. These endpoints require admin access.
+  specific LLM API selected by its ID. These endpoints require admin access,
+  except for the Assist API.
 
 The older SSE protocol has two HTTP endpoints:
 
@@ -43,9 +44,10 @@ from mcp.server import InitializationOptions, Server
 from mcp.shared.message import SessionMessage
 
 from homeassistant.components import conversation
-from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import CONF_LLM_HASS_API, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import llm
 
 from .const import DOMAIN
@@ -290,20 +292,14 @@ async def _async_handle_streamable_message(
 class ModelContextProtocolStreamableView(HomeAssistantView):
     """Model Context Protocol Streamable HTTP endpoint.
 
-    This serves the configured Assist API and does not require admin access.
+    This serves the configured LLM APIs and does not require admin access.
     """
 
     name = f"{DOMAIN}:streamable"
     url = STREAMABLE_API
 
-    async def get(self, request: web.Request) -> web.StreamResponse:
-        """Handle unsupported methods."""
-        return web.Response(
-            status=HTTPStatus.METHOD_NOT_ALLOWED, text="Only POST method is supported"
-        )
-
     async def post(self, request: web.Request) -> web.StreamResponse:
-        """Process JSON-RPC messages for the configured Assist API."""
+        """Process JSON-RPC messages for the configured LLM APIs."""
         hass = request.app[KEY_HASS]
         entry = async_get_config_entry(hass)
         return await _async_handle_streamable_message(
@@ -315,23 +311,18 @@ class ModelContextProtocolStreamableApiView(HomeAssistantView):
     """Model Context Protocol Streamable HTTP endpoint for a specific LLM API.
 
     The LLM API is selected by its ID in the URL. These endpoints require
-    admin access.
+    admin access, except for the Assist API.
     """
 
     name = f"{DOMAIN}:streamable_api"
     url = f"{STREAMABLE_API}/{{api_id}}"
 
-    async def get(self, request: web.Request, api_id: str) -> web.StreamResponse:
-        """Handle unsupported methods."""
-        return web.Response(
-            status=HTTPStatus.METHOD_NOT_ALLOWED, text="Only POST method is supported"
-        )
-
-    @require_admin
     async def post(self, request: web.Request, api_id: str) -> web.StreamResponse:
         """Process JSON-RPC messages for the LLM API identified by api_id."""
         hass = request.app[KEY_HASS]
         async_get_config_entry(hass)
+        if api_id != llm.LLM_API_ASSIST and not request["hass_user"].is_admin:
+            raise Unauthorized
         if api_id not in {api.id for api in llm.async_get_apis(hass)}:
             raise HTTPNotFound(text=f"Unknown LLM API '{api_id}'")
         return await _async_handle_streamable_message(
