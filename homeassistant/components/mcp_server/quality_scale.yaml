@@ -44,8 +44,10 @@ rules:
     status: exempt
     comment: Service does not a connection
   unique-config-entry:
-    status: done
-    comment: Integration requires a single config entry.
+    status: exempt
+    comment: >-
+      Multiple entries exposing the same APIs are intentionally allowed; each
+      is served on its own URL.
 
   # Silver
   action-exceptions:

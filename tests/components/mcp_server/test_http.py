@@ -19,11 +19,17 @@ import pytest
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.mcp_server.const import DOMAIN, STATELESS_LLM_API
+from homeassistant.components.mcp_server.const import (
+    CONF_LEGACY,
+    CONF_URL_ID,
+    DOMAIN,
+    STATELESS_LLM_API,
+)
 from homeassistant.components.mcp_server.http import (
     MESSAGES_API,
     SSE_API,
     STREAMABLE_API,
+    STREAMABLE_API_BASE,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LLM_HASS_API, STATE_OFF, STATE_ON
@@ -207,19 +213,21 @@ async def test_http_messages_invalid_message_format(
     assert response_data == "Could not parse message"
 
 
-async def test_http_sse_multiple_config_entries(
+async def test_http_sse_multiple_legacy_config_entries(
     hass: HomeAssistant,
     setup_integration: None,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test the SSE endpoint will fail with multiple config entries.
+    """Test the SSE endpoint will fail with multiple legacy config entries.
 
-    This cannot happen in practice as the integration only supports a single
-    config entry, but this is added for test coverage.
+    This cannot happen in practice as only a single legacy config entry can
+    exist, but this is added for test coverage.
     """
 
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_LLM_HASS_API: ["llm-api-id"]}
+        domain=DOMAIN,
+        data={CONF_LLM_HASS_API: ["llm-api-id"], CONF_LEGACY: True},
+        minor_version=2,
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -231,6 +239,22 @@ async def test_http_sse_multiple_config_entries(
     assert response.status == HTTPStatus.NOT_FOUND
     response_data = await response.text()
     assert "Found multiple Model Context Protocol" in response_data
+
+
+@pytest.mark.parametrize("legacy", [False])
+async def test_http_sse_requires_legacy_config_entry(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the legacy SSE endpoint is unavailable for non-legacy entries."""
+
+    client = await hass_client()
+
+    response = await client.get(SSE_API)
+    assert response.status == HTTPStatus.NOT_FOUND
+    response_data = await response.text()
+    assert "Model Context Protocol server is not configured" in response_data
 
 
 async def test_http_sse_no_config_entry(
@@ -633,3 +657,108 @@ async def test_mcp_tool_call_unicode(
     response_text = result.content[0].text
     assert "这是一个测试" in response_text
     assert "\\u" not in response_text
+
+
+@pytest.mark.parametrize("legacy", [False])
+async def test_streamable_per_config_entry(
+    hass: HomeAssistant,
+    setup_integration: None,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test a non-legacy config entry is served on its own Streamable URL."""
+
+    client = await hass_client()
+    url = f"{STREAMABLE_API_BASE}/{config_entry.data[CONF_URL_ID]}"
+
+    response = await client.post(
+        url,
+        json=INITIALIZE_MESSAGE,
+        headers={"accept": "application/json", "content-type": "application/json"},
+    )
+    assert response.status == HTTPStatus.OK
+    message = await response.json()
+    assert message.get("jsonrpc") == "2.0"
+    assert message.get("id") == "request-id-1"
+    assert "serverInfo" in message.get("result", {})
+
+    # The legacy URL is not available for a non-legacy config entry
+    response = await client.post(
+        STREAMABLE_API,
+        json=INITIALIZE_MESSAGE,
+        headers={"accept": "application/json", "content-type": "application/json"},
+    )
+    assert response.status == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.parametrize("legacy", [False])
+async def test_streamable_unknown_config_entry(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the Streamable URL fails for an unknown config entry."""
+
+    client = await hass_client()
+
+    response = await client.post(
+        f"{STREAMABLE_API_BASE}/unknown-entry-id",
+        json=INITIALIZE_MESSAGE,
+        headers={"accept": "application/json", "content-type": "application/json"},
+    )
+    assert response.status == HTTPStatus.NOT_FOUND
+    response_data = await response.text()
+    assert "Model Context Protocol server is not configured" in response_data
+
+
+@pytest.mark.parametrize("legacy", [False])
+async def test_streamable_unloaded_config_entry(
+    hass: HomeAssistant,
+    setup_integration: None,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the Streamable URL fails once the config entry is unloaded."""
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    client = await hass_client()
+
+    response = await client.post(
+        f"{STREAMABLE_API_BASE}/{config_entry.data[CONF_URL_ID]}",
+        json=INITIALIZE_MESSAGE,
+        headers={"accept": "application/json", "content-type": "application/json"},
+    )
+    assert response.status == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.parametrize("legacy", [False])
+async def test_streamable_multiple_config_entries(
+    hass: HomeAssistant,
+    setup_integration: None,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test multiple non-legacy config entries are served on separate URLs."""
+
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_LLM_HASS_API: [llm.LLM_API_ASSIST], CONF_URL_ID: "second"},
+        minor_version=2,
+    )
+    other_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(other_entry.entry_id)
+    assert other_entry.state is ConfigEntryState.LOADED
+
+    client = await hass_client()
+
+    for entry in (config_entry, other_entry):
+        response = await client.post(
+            f"{STREAMABLE_API_BASE}/{entry.data[CONF_URL_ID]}",
+            json=INITIALIZE_MESSAGE,
+            headers={"accept": "application/json", "content-type": "application/json"},
+        )
+        assert response.status == HTTPStatus.OK
+        message = await response.json()
+        assert "serverInfo" in message.get("result", {})

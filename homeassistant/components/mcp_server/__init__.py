@@ -5,7 +5,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import http
-from .const import DOMAIN
+from .const import CONF_LEGACY, DOMAIN
 from .session import SessionManager
 from .types import MCPServerConfigEntry
 
@@ -20,6 +20,19 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Model Context Protocol component."""
     http.async_register(hass)
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: MCPServerConfigEntry) -> bool:
+    """Migrate old config entries."""
+    if entry.minor_version < 2:
+        # Entries created before multiple config entries were supported keep
+        # serving on the original fixed URLs.
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_LEGACY: True},
+            minor_version=2,
+        )
     return True
 
 

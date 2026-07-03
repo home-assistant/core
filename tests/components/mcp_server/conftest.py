@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.mcp_server.const import DOMAIN
+from homeassistant.components.mcp_server.const import CONF_LEGACY, CONF_URL_ID, DOMAIN
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
@@ -35,16 +35,26 @@ def llm_hass_api_fixture() -> list[str]:
     return [llm.LLM_API_ASSIST]
 
 
+@pytest.fixture(name="legacy")
+def legacy_fixture() -> bool:
+    """Fixture for whether the config entry is a legacy entry."""
+    return True
+
+
 @pytest.fixture(name="config_entry")
 def mock_config_entry(
-    hass: HomeAssistant, llm_hass_api: str | list[str]
+    hass: HomeAssistant, llm_hass_api: str | list[str], legacy: bool
 ) -> MockConfigEntry:
     """Fixture to load the integration."""
+    data = {CONF_LLM_HASS_API: llm_hass_api}
+    if legacy:
+        data[CONF_LEGACY] = True
+    else:
+        data[CONF_URL_ID] = "assist"
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_LLM_HASS_API: llm_hass_api,
-        },
+        data=data,
+        minor_version=2,
     )
     config_entry.add_to_hass(hass)
     return config_entry
