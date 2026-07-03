@@ -7,12 +7,17 @@ from homeassistant.helpers import intent
 from homeassistant.helpers.llm import IntentTool, LLMContext, Tool
 
 from .const import DOMAIN
+from .intent import (
+    INTENT_VACUUM_CLEAN_AREA,
+    INTENT_VACUUM_RETURN_TO_BASE,
+    INTENT_VACUUM_START,
+)
 
 # Intents owned by this integration that are exposed as LLM tools.
 LLM_INTENTS = (
-    "HassVacuumCleanArea",
-    "HassVacuumReturnToBase",
-    "HassVacuumStart",
+    INTENT_VACUUM_CLEAN_AREA,
+    INTENT_VACUUM_RETURN_TO_BASE,
+    INTENT_VACUUM_START,
 )
 
 
