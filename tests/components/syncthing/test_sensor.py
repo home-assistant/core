@@ -300,28 +300,36 @@ async def test_local_server_device_online(
     assert state is not None and state.state == "online"
 
 
+@pytest.mark.parametrize(
+    ("event_fixture", "expected_state"),
+    [
+        pytest.param("device_connected_event.json", "connected", id="connected"),
+        pytest.param(
+            "device_disconnected_event.json", "disconnected", id="disconnected"
+        ),
+        pytest.param("device_paused_event.json", "paused", id="paused"),
+        pytest.param("device_resumed_event.json", "disconnected", id="resumed"),
+    ],
+)
 async def test_device_sensor_initial_events_ready(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     mock_syncthing_client: MagicMock,
     entity_registry: er.EntityRegistry,
+    event_fixture: str,
+    expected_state: str,
 ) -> None:
-    """Test device sensor reflects the last connect/disconnect from initial events."""
-    connected_event = await hass.async_add_executor_job(
-        load_json_object_fixture, "device_connected_event.json", DOMAIN
+    """Test device sensor reflects the last device event from initial events on startup."""
+    initial_event = await hass.async_add_executor_job(
+        load_json_object_fixture, event_fixture, DOMAIN
     )
-    trigger_event = {
-        "id": 10,
-        "globalID": 10,
-        "type": "Ping",
-        "time": "2024-01-01T00:10:00.000000000Z",
-        "data": {},
-    }
-
+    trigger_event = await hass.async_add_executor_job(
+        load_json_object_fixture, "ping_event.json", DOMAIN
+    )
     ready_to_trigger = asyncio.Event()
 
     async def mock_listen():
-        yield connected_event
+        yield initial_event
         await ready_to_trigger.wait()
         mock_syncthing_client.events.last_seen_id = 10
         yield trigger_event
@@ -329,7 +337,6 @@ async def test_device_sensor_initial_events_ready(
 
     mock_syncthing_client.events.last_seen_id = 0
     mock_syncthing_client.events.listen = mock_listen
-
     with patch(
         "homeassistant.components.syncthing.aiosyncthing.Syncthing",
         autospec=True,
@@ -337,15 +344,12 @@ async def test_device_sensor_initial_events_ready(
         mock_class.return_value = mock_syncthing_client
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-
         ready_to_trigger.set()
         await hass.async_block_till_done()
-
         entity_id = entity_registry.async_get_entity_id(
             "sensor", DOMAIN, f"{SERVER_ID_SHORT_HA}-{DEVICE_ID}"
         )
         state = hass.states.get(entity_id) if entity_id else None
-        assert state is not None and state.state == "connected"
-
+        assert state is not None and state.state == expected_state
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
