@@ -868,11 +868,20 @@ async def test_search(
 
     assert not search(ItemType.LABEL, "unknown")
     assert search(ItemType.LABEL, label_christmas.label_id) == {
+        ItemType.AREA: {living_room_area.id},
         ItemType.AUTOMATION: {"automation.label"},
+        ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
         ItemType.DEVICE: {wled_device.id},
+        ItemType.FLOOR: {first_floor.floor_id},
+        ItemType.INTEGRATION: {"wled"},
     }
     assert search(ItemType.LABEL, label_energy.label_id) == {
+        ItemType.AREA: {kitchen_area.id},
+        ItemType.CONFIG_ENTRY: {hue_config_entry.entry_id},
+        ItemType.DEVICE: {hue_device.id},
         ItemType.ENTITY: {hue_segment_1_entity.entity_id},
+        ItemType.FLOOR: {first_floor.floor_id},
+        ItemType.INTEGRATION: {"hue"},
     }
     assert search(ItemType.LABEL, label_other.label_id) == {
         ItemType.AREA: {bedroom_area.id},
@@ -881,6 +890,7 @@ async def test_search(
             person_paulus_entity.entity_id,
             script_scene_entity.entity_id,
         },
+        ItemType.FLOOR: {second_floor.floor_id},
         ItemType.PERSON: {person_paulus_entity.entity_id},
         ItemType.SCENE: {scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {"script.label", script_scene_entity.entity_id},
