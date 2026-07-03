@@ -386,6 +386,9 @@ async def test_subentry_flow_already_configured(
         second_profile,
         third_profile,
     ]
+    mock_nextdns_client.get_profile_id = lambda name: (
+        "abc34" if name == "Second Profile" else "xyz12"
+    )
 
     await init_integration(hass, mock_config_entry)
 
