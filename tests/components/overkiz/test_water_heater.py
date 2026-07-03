@@ -10,7 +10,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import ATTR_OPERATION_MODE, STATE_PERFORMANCE
-from homeassistant.const import ATTR_TEMPERATURE, Platform
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -29,6 +29,13 @@ DHW_CE_FLAT_C2 = FixtureDevice(
     "setup/cloud_atlantic_cozytouch.json",
     "io://1234-5678-5643/109286#1",
     "water_heater.my_home_patio_water_heating",
+)
+
+# Hitachi Yutaki DHW (modbus:YutakiV2DHWTComponent)
+DHW_HITACHI_YUTAKI = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch.json",
+    "modbus://1234-5678-5643/6381497/1#4",
+    "water_heater.yutaki_dhw",
 )
 
 SNAPSHOT_FIXTURES = [
@@ -257,3 +264,52 @@ async def test_current_operation_reports_performance_when_boost_on(
     state = hass.states.get(DHW_CE_FLAT_C2.entity_id)
     assert state is not None
     assert state.attributes[ATTR_OPERATION_MODE] == STATE_PERFORMANCE
+
+
+# --- Hitachi Yutaki DHW (modbus:YutakiV2DHWTComponent) ---
+async def test_hitachi_turn_on_uses_run(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test turning on from off sends setControlDHW['run'] then setDHWMode."""
+    await setup_overkiz_integration(fixture=DHW_HITACHI_YUTAKI.fixture)
+
+    await hass.services.async_call(
+        "water_heater",
+        "set_operation_mode",
+        {"entity_id": DHW_HITACHI_YUTAKI.entity_id, ATTR_OPERATION_MODE: STATE_ON},
+        blocking=True,
+    )
+
+    assert_commands_call(
+        mock_client,
+        device_url=DHW_HITACHI_YUTAKI.device_url,
+        commands=[
+            ("setControlDHW", ["run"]),
+            ("setDHWMode", ["standard"]),
+        ],
+    )
+
+
+async def test_hitachi_turn_off_uses_stop(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test turning off sends setControlDHW['stop']."""
+    await setup_overkiz_integration(fixture=DHW_HITACHI_YUTAKI.fixture)
+
+    await hass.services.async_call(
+        "water_heater",
+        "set_operation_mode",
+        {"entity_id": DHW_HITACHI_YUTAKI.entity_id, ATTR_OPERATION_MODE: STATE_OFF},
+        blocking=True,
+    )
+
+    assert_command_call(
+        mock_client,
+        device_url=DHW_HITACHI_YUTAKI.device_url,
+        command_name="setControlDHW",
+        parameters=["stop"],
+    )

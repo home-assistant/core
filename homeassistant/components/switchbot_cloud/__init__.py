@@ -523,11 +523,7 @@ async def _async_get_webhook_url(
             return str(entry.data[CONF_CLOUDHOOK_URL])
         if cloud.async_is_connected(hass):
             webhook_id = entry.data[CONF_WEBHOOK_ID]
-            # A previous run may have left a cloudhook registered for this
-            # webhook id; delete it so we can create a fresh one.
-            with contextlib.suppress(cloud.CloudNotAvailable):
-                await cloud.async_delete_cloudhook(hass, webhook_id)
-            cloudhook_url = await cloud.async_create_cloudhook(hass, webhook_id)
+            cloudhook_url = await cloud.async_get_or_create_cloudhook(hass, webhook_id)
             hass.config_entries.async_update_entry(
                 entry, data={**entry.data, CONF_CLOUDHOOK_URL: cloudhook_url}
             )
@@ -596,7 +592,6 @@ def _create_handle_webhook(
                 data,
             )
             return
-
         coordinator = coordinators_by_id[device_mac]
         coordinator.webhook_subscription_listener(True)
         coordinator.async_set_updated_data(data["context"])

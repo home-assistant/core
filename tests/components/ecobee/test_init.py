@@ -139,13 +139,13 @@ async def test_setup_rejects_entry_with_no_credentials(hass: HomeAssistant) -> N
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_setup_fails_when_refresh_returns_false(hass: HomeAssistant) -> None:
-    """A False return from pyecobee.refresh_tokens aborts setup."""
+async def test_setup_retries_when_refresh_returns_false(hass: HomeAssistant) -> None:
+    """A False return from pyecobee.refresh_tokens triggers setup retry."""
     entry = _api_key_entry(hass)
     ecobee = _build_mock_ecobee(refresh_returns=False)
 
     assert await _setup_with_mock(hass, entry, ecobee) is False
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     assert not _has_reauth_flow(hass)
 
 
@@ -187,7 +187,7 @@ async def test_setup_triggers_reauth_on_auth_failed_with_username(
 async def test_setup_no_reauth_on_auth_failed_without_username(
     hass: HomeAssistant,
 ) -> None:
-    """API-key entries surface EcobeeAuthFailedError as a False return, not reauth."""
+    """API-key entries surface EcobeeAuthFailedError as permanent error, not reauth."""
     entry = _api_key_entry(hass)
     ecobee = _build_mock_ecobee(config={ECOBEE_API_KEY: "test-api-key"})
     ecobee.refresh_tokens.side_effect = EcobeeAuthFailedError("bad creds")
@@ -204,7 +204,7 @@ async def test_setup_no_reauth_on_unknown_error(hass: HomeAssistant) -> None:
     ecobee.refresh_tokens.side_effect = EcobeeAuthUnknownError("network")
 
     assert await _setup_with_mock(hass, entry, ecobee) is False
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     assert not _has_reauth_flow(hass)
 
 

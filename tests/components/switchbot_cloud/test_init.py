@@ -408,7 +408,7 @@ async def test_setup_creates_cloudhook_when_cloud_active(
         patch("homeassistant.components.cloud.async_is_connected", return_value=True),
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
-            "homeassistant.components.cloud.async_create_cloudhook",
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
             return_value=CLOUDHOOK_URL,
         ) as fake_create_cloudhook,
         patch("homeassistant.components.cloud.async_delete_cloudhook"),
@@ -463,7 +463,7 @@ async def test_setup_reuses_persisted_cloudhook(
         patch("homeassistant.components.cloud.async_is_connected", return_value=True),
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
-            "homeassistant.components.cloud.async_create_cloudhook",
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
             return_value=CLOUDHOOK_URL,
         ) as fake_create_cloudhook,
         patch("homeassistant.components.cloud.async_delete_cloudhook"),
@@ -549,7 +549,7 @@ async def test_cloud_connects_after_setup(
         patch("homeassistant.components.cloud.async_is_connected", return_value=True),
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
-            "homeassistant.components.cloud.async_create_cloudhook",
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
             return_value=CLOUDHOOK_URL,
         ) as fake_create_cloudhook,
         patch("homeassistant.components.cloud.async_delete_cloudhook"),
@@ -593,7 +593,7 @@ async def test_setup_active_subscription_not_connected(
         patch("homeassistant.components.cloud.async_is_connected", return_value=False),
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
-            "homeassistant.components.cloud.async_create_cloudhook",
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
             side_effect=cloud.CloudNotConnected,
         ) as fake_create_cloudhook,
         patch("homeassistant.components.cloud.async_delete_cloudhook"),
@@ -611,7 +611,7 @@ async def test_setup_active_subscription_not_connected(
         patch("homeassistant.components.cloud.async_is_connected", return_value=True),
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
-            "homeassistant.components.cloud.async_create_cloudhook",
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
             return_value=CLOUDHOOK_URL,
         ) as fake_create_cloudhook,
         patch("homeassistant.components.cloud.async_delete_cloudhook"),
@@ -647,7 +647,7 @@ async def test_cloudhook_deleted_on_entry_removal(
         patch("homeassistant.components.cloud.async_is_connected", return_value=True),
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
-            "homeassistant.components.cloud.async_create_cloudhook",
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
             return_value=CLOUDHOOK_URL,
         ),
         patch(
@@ -728,7 +728,7 @@ async def test_remove_entry_with_cloud_unavailable(
         patch("homeassistant.components.cloud.async_is_connected", return_value=True),
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
-            "homeassistant.components.cloud.async_create_cloudhook",
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
             return_value=CLOUDHOOK_URL,
         ),
         patch(
