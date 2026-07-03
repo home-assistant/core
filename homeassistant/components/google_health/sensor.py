@@ -1,6 +1,8 @@
 """Sensor platform for the Google Health integration."""
 
-from typing import override
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,37 +14,77 @@ from homeassistant.const import UnitOfLength, UnitOfMass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import GoogleHealthConfigEntry
 from .const import DOMAIN
-from .coordinator import GoogleHealthActivityCoordinator, GoogleHealthBodyCoordinator
+from .coordinator import (
+    GoogleHealthActivityCoordinator,
+    GoogleHealthBodyCoordinator,
+    GoogleHealthDataUpdateCoordinator,
+)
 
-STEPS_SENSOR_DESCRIPTION = SensorEntityDescription(
+
+@dataclass(frozen=True, kw_only=True)
+class GoogleHealthSensorEntityDescription[
+    _CoordinatorT: GoogleHealthDataUpdateCoordinator[Any],
+    _ValueT: StateType,
+](SensorEntityDescription):
+    """Class describing Google Health sensor entities."""
+
+    value_fn: Callable[[Any], _ValueT]
+
+
+STEPS_SENSOR_DESCRIPTION = GoogleHealthSensorEntityDescription[
+    GoogleHealthActivityCoordinator,
+    int,
+](
     key="steps",
     translation_key="steps",
     state_class=SensorStateClass.TOTAL_INCREASING,
+    value_fn=lambda data: data.steps.count_sum if data and data.steps else 0,
 )
 
-DISTANCE_SENSOR_DESCRIPTION = SensorEntityDescription(
+DISTANCE_SENSOR_DESCRIPTION = GoogleHealthSensorEntityDescription[
+    GoogleHealthActivityCoordinator,
+    float,
+](
     key="distance",
     native_unit_of_measurement=UnitOfLength.METERS,
     device_class=SensorDeviceClass.DISTANCE,
     state_class=SensorStateClass.TOTAL_INCREASING,
+    value_fn=lambda data: (
+        data.distance.millimeters_sum / 1000.0 if data and data.distance else 0.0
+    ),
 )
 
-WEIGHT_SENSOR_DESCRIPTION = SensorEntityDescription(
+WEIGHT_SENSOR_DESCRIPTION = GoogleHealthSensorEntityDescription[
+    GoogleHealthBodyCoordinator,
+    float | None,
+](
     key="weight",
     native_unit_of_measurement=UnitOfMass.KILOGRAMS,
     device_class=SensorDeviceClass.WEIGHT,
     state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda data: (
+        data.weight.weight_grams / 1000.0 if data and data.weight else None
+    ),
 )
 
-RESTING_HEART_RATE_SENSOR_DESCRIPTION = SensorEntityDescription(
+RESTING_HEART_RATE_SENSOR_DESCRIPTION = GoogleHealthSensorEntityDescription[
+    GoogleHealthBodyCoordinator,
+    int | None,
+](
     key="resting_heart_rate",
     translation_key="resting_heart_rate",
     native_unit_of_measurement="bpm",
     state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda data: (
+        data.resting_heart_rate.beats_per_minute
+        if data and data.resting_heart_rate
+        else None
+    ),
 )
 
 
@@ -58,16 +100,14 @@ async def async_setup_entry(
     if data.activity_coordinator is not None:
         entities.extend(
             [
-                GoogleHealthStepsSensor(
+                GoogleHealthSensor(
                     data.activity_coordinator,
                     entry.entry_id,
-                    entry.title,
                     STEPS_SENSOR_DESCRIPTION,
                 ),
-                GoogleHealthDistanceSensor(
+                GoogleHealthSensor(
                     data.activity_coordinator,
                     entry.entry_id,
-                    entry.title,
                     DISTANCE_SENSOR_DESCRIPTION,
                 ),
             ]
@@ -75,16 +115,14 @@ async def async_setup_entry(
     if data.body_coordinator is not None:
         entities.extend(
             [
-                GoogleHealthWeightSensor(
+                GoogleHealthSensor(
                     data.body_coordinator,
                     entry.entry_id,
-                    entry.title,
                     WEIGHT_SENSOR_DESCRIPTION,
                 ),
-                GoogleHealthRestingHeartRateSensor(
+                GoogleHealthSensor(
                     data.body_coordinator,
                     entry.entry_id,
-                    entry.title,
                     RESTING_HEART_RATE_SENSOR_DESCRIPTION,
                 ),
             ]
@@ -94,136 +132,31 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class GoogleHealthStepsSensor(
-    CoordinatorEntity[GoogleHealthActivityCoordinator], SensorEntity
+class GoogleHealthSensor[_CoordinatorT: GoogleHealthDataUpdateCoordinator[Any]](
+    CoordinatorEntity[_CoordinatorT], SensorEntity
 ):
-    """Steps sensor entity."""
+    """Generic Google Health sensor entity."""
 
     _attr_has_entity_name = True
+    entity_description: GoogleHealthSensorEntityDescription[_CoordinatorT, Any]
 
     def __init__(
         self,
-        coordinator: GoogleHealthActivityCoordinator,
+        coordinator: _CoordinatorT,
         entry_id: str,
-        entry_title: str,
-        description: SensorEntityDescription,
+        description: GoogleHealthSensorEntityDescription[_CoordinatorT, Any],
     ) -> None:
-        """Initialize the steps sensor."""
+        """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry_id)},
-            name=entry_title,
             manufacturer="Google",
         )
 
     @property
     @override
-    def native_value(self) -> int:
-        """Return the steps count."""
-        if self.coordinator.data is None or self.coordinator.data.steps is None:
-            return 0
-        return self.coordinator.data.steps.count_sum
-
-
-class GoogleHealthDistanceSensor(
-    CoordinatorEntity[GoogleHealthActivityCoordinator], SensorEntity
-):
-    """Distance sensor entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: GoogleHealthActivityCoordinator,
-        entry_id: str,
-        entry_title: str,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Initialize the distance sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{entry_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry_id)},
-            name=entry_title,
-            manufacturer="Google",
-        )
-
-    @property
-    @override
-    def native_value(self) -> float:
-        """Return the daily distance in meters."""
-        if self.coordinator.data is None or self.coordinator.data.distance is None:
-            return 0.0
-        return self.coordinator.data.distance.millimeters_sum / 1000.0
-
-
-class GoogleHealthWeightSensor(
-    CoordinatorEntity[GoogleHealthBodyCoordinator], SensorEntity
-):
-    """Weight sensor entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: GoogleHealthBodyCoordinator,
-        entry_id: str,
-        entry_title: str,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Initialize the weight sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{entry_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry_id)},
-            name=entry_title,
-            manufacturer="Google",
-        )
-
-    @property
-    @override
-    def native_value(self) -> float | None:
-        """Return the body weight."""
-        if self.coordinator.data is None or self.coordinator.data.weight is None:
-            return None
-        return self.coordinator.data.weight.weight_grams / 1000.0
-
-
-class GoogleHealthRestingHeartRateSensor(
-    CoordinatorEntity[GoogleHealthBodyCoordinator], SensorEntity
-):
-    """Resting heart rate sensor entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: GoogleHealthBodyCoordinator,
-        entry_id: str,
-        entry_title: str,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Initialize the resting heart rate sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{entry_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry_id)},
-            name=entry_title,
-            manufacturer="Google",
-        )
-
-    @property
-    @override
-    def native_value(self) -> int | None:
-        """Return the resting heart rate."""
-        if (
-            self.coordinator.data is None
-            or self.coordinator.data.resting_heart_rate is None
-        ):
-            return None
-        return self.coordinator.data.resting_heart_rate.beats_per_minute
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.coordinator.data)
