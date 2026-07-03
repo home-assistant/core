@@ -120,12 +120,8 @@ async def _setup_climate_platform(
         await hass.async_block_till_done()
 
 
-# ---------------------------------------------------------------------------
-# SHCClimateControlEntity — computed-property tests (direct construction: no
-# HA setup needed, these don't touch self.hass).
-# ---------------------------------------------------------------------------
-
-
+# The computed-property tests below construct the entity directly (no hass
+# setup) since they only exercise pure property logic with no I/O.
 def test_climate_current_and_target_temperature() -> None:
     """Temperatures are read straight from the device."""
     device = _make_climate_device(temperature=21.0, setpoint_temperature=22.0)
@@ -277,11 +273,6 @@ def test_climate_supported_features() -> None:
     assert features & ClimateEntityFeature.TURN_ON
 
 
-# ---------------------------------------------------------------------------
-# SHCHeatingCircuitEntity — computed-property tests
-# ---------------------------------------------------------------------------
-
-
 def test_heating_circuit_current_temperature_is_none() -> None:
     """Heating circuits have no measured temperature."""
     device = _make_heating_circuit_device()
@@ -345,11 +336,6 @@ def test_heating_circuit_hvac_modes_and_features() -> None:
     assert entity.supported_features == ClimateEntityFeature.TARGET_TEMPERATURE
 
 
-# ---------------------------------------------------------------------------
-# Entity creation (snapshot) + empty-session test
-# ---------------------------------------------------------------------------
-
-
 async def test_climate_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -382,11 +368,6 @@ async def test_no_climate_entities_when_no_devices(
     assert not er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-
-
-# ---------------------------------------------------------------------------
-# SHCClimateControlEntity — service-call (write path) tests
-# ---------------------------------------------------------------------------
 
 
 async def test_climate_control_set_temperature(
@@ -561,11 +542,6 @@ async def test_climate_control_turn_off_from_heat(
     )
 
     assert device.summer_mode is True
-
-
-# ---------------------------------------------------------------------------
-# SHCHeatingCircuitEntity — service-call (write path) tests
-# ---------------------------------------------------------------------------
 
 
 async def test_heating_circuit_set_temperature(
