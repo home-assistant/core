@@ -1,5 +1,7 @@
 """LLM tools for the intent_script integration."""
 
+import slugify as unicode_slug
+
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
@@ -30,7 +32,13 @@ def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
             if handler.platforms is None or handler.platforms & exposed_domains
         ]
 
+    # Intent script names come from user configuration, so slugify them into
+    # valid tool names.
     tools: list[Tool] = [
-        IntentTool(handler.intent_type, handler) for handler in handlers
+        IntentTool(
+            unicode_slug.slugify(handler.intent_type, separator="_", lowercase=False),
+            handler,
+        )
+        for handler in handlers
     ]
     return LLMTools(tools=tools)

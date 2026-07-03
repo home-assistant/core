@@ -21,7 +21,7 @@ async def setup_integrations(hass: HomeAssistant) -> None:
         "intent_script",
         {
             "intent_script": {
-                "TellJoke": {
+                "Tell a joke": {
                     "description": "Tell a joke",
                     "speech": {"text": "Why did the chicken cross the road?"},
                 },
@@ -57,9 +57,10 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
 
 
 async def test_intent_scripts_exposed(hass: HomeAssistant) -> None:
-    """Test intent scripts are exposed as LLM tools."""
+    """Test intent scripts are exposed as LLM tools with slugified names."""
     names = await _tool_names(hass)
-    assert "TellJoke" in names
+    # The user-provided "Tell a joke" name is slugified into a valid tool name.
+    assert "Tell_a_joke" in names
     assert "LightAction" in names
 
 
@@ -69,4 +70,4 @@ async def test_intent_script_platform_filtered(hass: HomeAssistant) -> None:
     names = await _tool_names(hass)
     assert "LightAction" not in names
     # Unrestricted intent scripts stay exposed.
-    assert "TellJoke" in names
+    assert "Tell_a_joke" in names
