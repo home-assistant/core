@@ -1,5 +1,7 @@
 """Tests for the todo LLM tools platform."""
 
+import pytest
+
 from homeassistant.components import llm as llm_component, todo
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.core import Context, HomeAssistant
@@ -7,6 +9,20 @@ from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
+
+ENTITY_ID = "todo.test_list"
+
+
+@pytest.fixture(autouse=True)
+async def setup_integrations(hass: HomeAssistant) -> None:
+    """Set up the integrations and expose a to-do list."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, "todo", {})
+    assert await async_setup_component(hass, "llm", {})
+    hass.states.async_set(ENTITY_ID, "0", {"friendly_name": "Mock Todo List Name"})
+    async_expose_entity(hass, "conversation", ENTITY_ID, True)
+    await hass.async_block_till_done()
 
 
 def _llm_context() -> llm.LLMContext:
@@ -22,24 +38,13 @@ def _llm_context() -> llm.LLMContext:
 
 async def test_get_tools_no_exposed_todo(hass: HomeAssistant) -> None:
     """Test no todo tool is offered when no to-do list is exposed."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "todo", {})
-    assert await async_setup_component(hass, "llm", {})
-
+    async_expose_entity(hass, "conversation", ENTITY_ID, False)
     result = await llm_component.async_get_tools(hass, _llm_context())
     assert [tool.name for tool in result.tools] == []
 
 
 async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     """Test the todo get items tool is exposed and works via the platform."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "todo", {})
-    assert await async_setup_component(hass, "llm", {})
-    hass.states.async_set(
-        "todo.test_list", "0", {"friendly_name": "Mock Todo List Name"}
-    )
-    async_expose_entity(hass, "conversation", "todo.test_list", True)
-
     llm_context = _llm_context()
     result = await llm_component.async_get_tools(hass, llm_context)
     tool = next((tool for tool in result.tools if tool.name == "todo_get_items"), None)
@@ -51,7 +56,7 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
         service=todo.TodoServices.GET_ITEMS,
         schema=cv.make_entity_service_schema(todo.TODO_SERVICE_GET_ITEMS_SCHEMA),
         response={
-            "todo.test_list": {
+            ENTITY_ID: {
                 "items": [
                     {"uid": "1234", "summary": "Buy milk", "status": "needs_action"},
                 ]
@@ -66,10 +71,7 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     )
 
     assert len(calls) == 1
-    assert calls[0].data == {
-        "entity_id": ["todo.test_list"],
-        "status": ["needs_action"],
-    }
+    assert calls[0].data == {"entity_id": [ENTITY_ID], "status": ["needs_action"]}
     assert result == {
         "success": True,
         "result": [{"uid": "1234", "status": "needs_action", "summary": "Buy milk"}],
@@ -78,16 +80,6 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
 
 async def test_todo_list_intents_exposed(hass: HomeAssistant) -> None:
     """Test the todo list intents are exposed as tools when a list is exposed."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "intent", {})
-    assert await async_setup_component(hass, "todo", {})
-    assert await async_setup_component(hass, "llm", {})
-    await hass.async_block_till_done()
-    hass.states.async_set(
-        "todo.test_list", "0", {"friendly_name": "Mock Todo List Name"}
-    )
-    async_expose_entity(hass, "conversation", "todo.test_list", True)
-
     result = await llm_component.async_get_tools(hass, _llm_context())
     names = {tool.name for tool in result.tools}
     assert "HassListAddItem" in names
