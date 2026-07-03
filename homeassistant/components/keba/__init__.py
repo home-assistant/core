@@ -24,6 +24,16 @@ from .const import (
     MAX_POLLING_INTERVAL,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
+PLATFORMS = (
+    Platform.BINARY_SENSOR,
+    Platform.LOCK,
+    Platform.NOTIFY,
+    Platform.SENSOR,
+    Platform.SWITCH,
+)
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -38,16 +48,6 @@ CONFIG_SCHEMA = vol.Schema(
         )
     },
     extra=vol.ALLOW_EXTRA,
-)
-
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORMS = (
-    Platform.BINARY_SENSOR,
-    Platform.LOCK,
-    Platform.NOTIFY,
-    Platform.SENSOR,
-    Platform.SWITCH,
 )
 
 _SERVICE_MAP = {
@@ -160,13 +160,13 @@ class KebaHandler(KebaKeContact):
         self._update_listeners: list = []
         self._hass = hass
         self.rfid = rfid
-        self.device_name = "keba"
-        self.device_id = "keba_wallbox_"
+        self.device_name = "keba"  # correct device name will be set in setup()
+        self.device_id = "keba_wallbox_"  # correct device id will be set in setup()
 
         self._fast_polling_count = MAX_FAST_POLLING_COUNT
         self._polling_task: asyncio.Task | None = None
 
-    def start_periodic_request(self) -> None:
+    def start_periodic_request(self):
         """Start periodic data polling."""
         self._polling_task = self._hass.loop.create_task(self._periodic_request())
 
@@ -178,8 +178,8 @@ class KebaHandler(KebaKeContact):
         if self.keba_protocol is not None and self.keba_protocol._transport is not None:  # noqa: SLF001
             self.keba_protocol._transport.close()  # noqa: SLF001
 
-    async def _periodic_request(self) -> None:
-        """Send periodic update requests."""
+    async def _periodic_request(self):
+        """Send  periodic update requests."""
         await self.request_data()
 
         if self._fast_polling_count < MAX_FAST_POLLING_COUNT:
@@ -196,10 +196,11 @@ class KebaHandler(KebaKeContact):
         _LOGGER.debug("Periodic data request rescheduled")
         self._polling_task = self._hass.loop.create_task(self._periodic_request())
 
-    async def setup(self, loop=None) -> bool:
+    async def setup(self, loop=None):
         """Initialize KebaHandler object."""
         await super().setup(loop)
 
+        # Request initial values and extract serial number
         await self.request_data()
         if (
             self.get_value("Serial") is not None
@@ -211,31 +212,35 @@ class KebaHandler(KebaKeContact):
 
         return False
 
-    def hass_callback(self, data) -> None:
+    def hass_callback(self, data):
         """Handle component notification via callback."""
+
+        # Inform entities about updated values
         for listener in self._update_listeners:
             listener()
 
         _LOGGER.debug("Notifying %d listeners", len(self._update_listeners))
 
-    def _set_fast_polling(self) -> None:
+    def _set_fast_polling(self):
         _LOGGER.debug("Fast polling enabled")
         self._fast_polling_count = 0
         if self._polling_task is not None:
             self._polling_task.cancel()
         self._polling_task = self._hass.loop.create_task(self._periodic_request())
 
-    def add_update_listener(self, listener) -> None:
+    def add_update_listener(self, listener):
         """Add a listener for update notifications."""
         self._update_listeners.append(listener)
+
+        # initial data is already loaded, thus update the component
         listener()
 
-    async def async_request_data(self, param) -> None:
+    async def async_request_data(self, param):
         """Request new data in async way."""
         await self.request_data()
         _LOGGER.debug("New data from KEBA wallbox requested")
 
-    async def async_set_energy(self, param) -> None:
+    async def async_set_energy(self, param):
         """Set energy target in async way."""
         try:
             energy = param["energy"]
@@ -244,35 +249,36 @@ class KebaHandler(KebaKeContact):
         except (KeyError, ValueError) as ex:
             _LOGGER.warning("Energy value is not correct. %s", ex)
 
-    async def async_set_current(self, param) -> None:
+    async def async_set_current(self, param):
         """Set current maximum in async way."""
         try:
             current = param["current"]
             await self.set_current(float(current))
+            # No fast polling as this function might be called regularly
         except (KeyError, ValueError) as ex:
             _LOGGER.warning("Current value is not correct. %s", ex)
 
-    async def async_start(self, param=None) -> None:
+    async def async_start(self, param=None):
         """Authorize EV in async way."""
         await self.start(self.rfid)
         self._set_fast_polling()
 
-    async def async_stop(self, param=None) -> None:
+    async def async_stop(self, param=None):
         """De-authorize EV in async way."""
         await self.stop(self.rfid)
         self._set_fast_polling()
 
-    async def async_enable_ev(self, param=None) -> None:
+    async def async_enable_ev(self, param=None):
         """Enable EV in async way."""
         await self.enable(True)
         self._set_fast_polling()
 
-    async def async_disable_ev(self, param=None) -> None:
+    async def async_disable_ev(self, param=None):
         """Disable EV in async way."""
         await self.enable(False)
         self._set_fast_polling()
 
-    async def async_set_failsafe(self, param=None) -> None:
+    async def async_set_failsafe(self, param=None):
         """Set failsafe mode in async way."""
         try:
             timeout = param[CONF_FS_TIMEOUT]
@@ -282,7 +288,9 @@ class KebaHandler(KebaKeContact):
             self._set_fast_polling()
         except (KeyError, ValueError) as ex:
             _LOGGER.warning(
-                "Values are not correct for: failsafe_timeout, failsafe_fallback"
-                " and/or failsafe_persist: %s",
+                (
+                    "Values are not correct for: failsafe_timeout, failsafe_fallback"
+                    " and/or failsafe_persist: %s"
+                ),
                 ex,
             )

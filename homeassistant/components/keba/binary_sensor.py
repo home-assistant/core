@@ -17,41 +17,40 @@ async def async_setup_entry(
     entry: KebaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the KEBA charging station binary sensor platform."""
+    """Set up the KEBA charging station platform."""
     keba = entry.runtime_data
 
-    async_add_entities(
-        [
-            KebaBinarySensor(
-                keba,
-                "Online",
-                "Status",
-                "device_state",
-                BinarySensorDeviceClass.CONNECTIVITY,
-            ),
-            KebaBinarySensor(
-                keba,
-                "Plug",
-                "Plug",
-                "plug_state",
-                BinarySensorDeviceClass.PLUG,
-            ),
-            KebaBinarySensor(
-                keba,
-                "State",
-                "Charging State",
-                "charging_state",
-                BinarySensorDeviceClass.POWER,
-            ),
-            KebaBinarySensor(
-                keba,
-                "Tmo FS",
-                "Failsafe Mode",
-                "failsafe_mode_state",
-                BinarySensorDeviceClass.SAFETY,
-            ),
-        ]
-    )
+    sensors = [
+        KebaBinarySensor(
+            keba,
+            "Online",
+            "Status",
+            "device_state",
+            BinarySensorDeviceClass.CONNECTIVITY,
+        ),
+        KebaBinarySensor(
+            keba,
+            "Plug",
+            "Plug",
+            "plug_state",
+            BinarySensorDeviceClass.PLUG,
+        ),
+        KebaBinarySensor(
+            keba,
+            "State",
+            "Charging State",
+            "charging_state",
+            BinarySensorDeviceClass.POWER,
+        ),
+        KebaBinarySensor(
+            keba,
+            "Tmo FS",
+            "Failsafe Mode",
+            "failsafe_mode_state",
+            BinarySensorDeviceClass.SAFETY,
+        ),
+    ]
+    async_add_entities(sensors)
 
 
 class KebaBinarySensor(BinarySensorEntity):

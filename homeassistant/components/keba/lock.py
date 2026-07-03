@@ -14,9 +14,11 @@ async def async_setup_entry(
     entry: KebaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the KEBA charging station lock platform."""
+    """Set up the KEBA charging station platform."""
     keba = entry.runtime_data
-    async_add_entities([KebaLock(keba, "Authentication", "authentication")])
+
+    locks = [KebaLock(keba, "Authentication", "authentication")]
+    async_add_entities(locks)
 
 
 class KebaLock(LockEntity):
