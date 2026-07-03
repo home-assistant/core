@@ -2,9 +2,8 @@
 
 from typing import TYPE_CHECKING, Any, override
 
-from aiohttp.web_exceptions import HTTPException
+from aiohttp import ClientError
 from bleak.backends.device import BLEDevice
-from pymammotion.aliyun.cloud_gateway import CloudIOTGateway
 from pymammotion.http.http import MammotionHTTP
 import voluptuous as vol
 
@@ -35,7 +34,6 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._config: dict = {}
-        self._cloud_client: CloudIOTGateway | None = None
         self._discovered_devices: dict[str, str] = {}
         self._discovered_device: BLEDevice | None = None
 
@@ -193,7 +191,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
                 await mammotion_http.login_v2(account, password)
                 if mammotion_http.login_info is None:
                     errors["base"] = "invalid_auth"
-            except HTTPException:
+            except ClientError, TimeoutError, OSError:
                 errors["base"] = "cannot_connect"
 
             if not errors and (login_info := mammotion_http.login_info):

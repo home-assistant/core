@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiohttp.web_exceptions import HTTPException
+from aiohttp import ClientConnectionError
 from bleak.backends.device import BLEDevice
 
 from homeassistant import config_entries
@@ -262,7 +262,7 @@ async def test_wifi_step_connection_error(hass: HomeAssistant) -> None:
     )
 
     mock_http = MagicMock()
-    mock_http.login_v2 = AsyncMock(side_effect=HTTPException(text="Conn Err"))
+    mock_http.login_v2 = AsyncMock(side_effect=ClientConnectionError("Conn Err"))
 
     with patch(
         "homeassistant.components.mammotion.config_flow.MammotionHTTP",
