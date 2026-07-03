@@ -216,6 +216,10 @@ async def test_create_subscription_connection_error(
     devices.subscribe.assert_not_called()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        mock_config_entry.reason
+        == "Could not create new subscription: Connection error"
+    )
     assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
 
 
