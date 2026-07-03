@@ -267,7 +267,7 @@ SWITCHES = (
     ),
     NextDnsSwitchEntityDescription(
         key="block_hulu",
-        name="Block Hulu",
+        translation_key="block_hulu",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         state=lambda data: data.block_hulu,

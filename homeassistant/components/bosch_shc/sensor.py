@@ -13,10 +13,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -58,13 +57,13 @@ SENSOR_DESCRIPTIONS: dict[str, SHCSensorEntityDescription] = {
     HUMIDITY_SENSOR: SHCSensorEntityDescription(
         key=HUMIDITY_SENSOR,
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_fn=lambda device: device.humidity,
     ),
     PURITY_SENSOR: SHCSensorEntityDescription(
         key=PURITY_SENSOR,
         translation_key=PURITY_SENSOR,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         value_fn=lambda device: device.purity,
     ),
     AIR_QUALITY_SENSOR: SHCSensorEntityDescription(
@@ -112,7 +111,7 @@ SENSOR_DESCRIPTIONS: dict[str, SHCSensorEntityDescription] = {
         key=VALVE_TAPPET_SENSOR,
         translation_key=VALVE_TAPPET_SENSOR,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_fn=lambda device: device.position,
         attributes_fn=lambda device: {
             "valve_tappet_state": device.valvestate.name,

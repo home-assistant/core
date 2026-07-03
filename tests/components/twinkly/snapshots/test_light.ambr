@@ -54,7 +54,7 @@
         '1 Rainbow',
         '2 Flare',
       ]),
-      'friendly_name': 'Tree 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tree 1',
       <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         0.0,
         0.0,
@@ -67,7 +67,7 @@
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
-      'supported_features': <LightEntityFeature: 4>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 4>,
       <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.323,
         0.329,

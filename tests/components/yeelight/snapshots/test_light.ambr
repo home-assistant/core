@@ -35,7 +35,7 @@
       'Stop',
     ]),
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f Ambilight',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f Ambilight',
     <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
       27.001,
       19.243,
@@ -54,7 +54,7 @@
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
     ]),
-    'supported_features': <LightEntityFeature: 44>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 44>,
     <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
       0.371,
       0.349,
@@ -97,7 +97,7 @@
       'Stop',
     ]),
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f Ambilight',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f Ambilight',
     <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
       200,
       70,
@@ -116,7 +116,7 @@
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
     ]),
-    'supported_features': <LightEntityFeature: 44>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 44>,
     <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
       0.168,
       0.247,
@@ -159,7 +159,7 @@
       'Stop',
     ]),
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f Ambilight',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f Ambilight',
     <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
       120.0,
       100.0,
@@ -178,7 +178,7 @@
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
     ]),
-    'supported_features': <LightEntityFeature: 44>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 44>,
     <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
       0.172,
       0.747,
@@ -221,7 +221,7 @@
       'Stop',
     ]),
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f',
     <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
       26.812,
       34.87,
@@ -240,7 +240,7 @@
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
     ]),
-    'supported_features': <LightEntityFeature: 44>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 44>,
     <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
       0.42,
       0.365,
@@ -251,13 +251,13 @@
   ReadOnlyDict({
     <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f Nightlight',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f Nightlight',
     'music_mode': False,
     'night_light': True,
     <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.ONOFF: 'onoff'>,
     ]),
-    'supported_features': <LightEntityFeature: 0>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
   })
 # ---
 # name: test_device_types[color_ct][color_ct_nightlight_mode]
@@ -296,7 +296,7 @@
       'Stop',
     ]),
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f',
     <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
       28.401,
       100.0,
@@ -315,7 +315,7 @@
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
     ]),
-    'supported_features': <LightEntityFeature: 44>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 44>,
     <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
       0.62,
       0.368,
@@ -358,7 +358,7 @@
       'Stop',
     ]),
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f',
     <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
       100,
       35,
@@ -377,7 +377,7 @@
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
     ]),
-    'supported_features': <LightEntityFeature: 44>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 44>,
     <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
       0.31,
       0.45,
@@ -388,13 +388,13 @@
   ReadOnlyDict({
     <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f Nightlight',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f Nightlight',
     'music_mode': False,
     'night_light': True,
     <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.ONOFF: 'onoff'>,
     ]),
-    'supported_features': <LightEntityFeature: 0>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
   })
 # ---
 # name: test_device_types[color_hsv_no_hue]
@@ -433,7 +433,7 @@
       'Stop',
     ]),
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f',
     <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
     <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
     <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 1700,
@@ -445,7 +445,7 @@
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
     ]),
-    'supported_features': <LightEntityFeature: 44>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 44>,
     <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
   })
 # ---
@@ -453,13 +453,13 @@
   ReadOnlyDict({
     <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f Nightlight',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f Nightlight',
     'music_mode': False,
     'night_light': True,
     <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.ONOFF: 'onoff'>,
     ]),
-    'supported_features': <LightEntityFeature: 0>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
   })
 # ---
 # name: test_device_types[color_rgb]
@@ -498,7 +498,7 @@
       'Stop',
     ]),
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f',
     <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
       0.0,
       100.0,
@@ -517,7 +517,7 @@
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
     ]),
-    'supported_features': <LightEntityFeature: 44>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 44>,
     <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
       0.701,
       0.299,
@@ -528,13 +528,13 @@
   ReadOnlyDict({
     <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f Nightlight',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f Nightlight',
     'music_mode': False,
     'night_light': True,
     <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.ONOFF: 'onoff'>,
     ]),
-    'supported_features': <LightEntityFeature: 0>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
   })
 # ---
 # name: test_device_types[color_rgb_no_color]
@@ -573,7 +573,7 @@
       'Stop',
     ]),
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f',
     <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
     <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
     <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 1700,
@@ -585,7 +585,7 @@
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
     ]),
-    'supported_features': <LightEntityFeature: 44>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 44>,
     <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
   })
 # ---
@@ -593,13 +593,13 @@
   ReadOnlyDict({
     <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f Nightlight',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f Nightlight',
     'music_mode': False,
     'night_light': True,
     <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.ONOFF: 'onoff'>,
     ]),
-    'supported_features': <LightEntityFeature: 0>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
   })
 # ---
 # name: test_device_types[color_unsupported]
@@ -638,7 +638,7 @@
       'Stop',
     ]),
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f',
     <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
     <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
     <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 1700,
@@ -650,7 +650,7 @@
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
     ]),
-    'supported_features': <LightEntityFeature: 44>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 44>,
     <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
   })
 # ---
@@ -658,13 +658,13 @@
   ReadOnlyDict({
     <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f Nightlight',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f Nightlight',
     'music_mode': False,
     'night_light': True,
     <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.ONOFF: 'onoff'>,
     ]),
-    'supported_features': <LightEntityFeature: 0>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
   })
 # ---
 # name: test_device_types[default]
@@ -687,13 +687,13 @@
       'Stop',
     ]),
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f',
     'music_mode': False,
     'night_light': False,
     <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.BRIGHTNESS: 'brightness'>,
     ]),
-    'supported_features': <LightEntityFeature: 44>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 44>,
   })
 # ---
 # name: test_device_types[white]
@@ -716,13 +716,13 @@
       'Stop',
     ]),
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f',
     'music_mode': False,
     'night_light': False,
     <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.BRIGHTNESS: 'brightness'>,
     ]),
-    'supported_features': <LightEntityFeature: 44>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 44>,
   })
 # ---
 # name: test_device_types[whitetemp]
@@ -736,7 +736,7 @@
       'Stop',
     ]),
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f',
     <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
       26.812,
       34.87,
@@ -753,7 +753,7 @@
     <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.COLOR_TEMP: 'color_temp'>,
     ]),
-    'supported_features': <LightEntityFeature: 44>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 44>,
     <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
       0.42,
       0.365,
@@ -765,13 +765,13 @@
     <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 59,
     <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f Nightlight',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f Nightlight',
     'music_mode': False,
     'night_light': True,
     <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.BRIGHTNESS: 'brightness'>,
     ]),
-    'supported_features': <LightEntityFeature: 0>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
   })
 # ---
 # name: test_device_types[whitetemp][whitetemp_nightlight_mode]
@@ -785,7 +785,7 @@
       'Stop',
     ]),
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f',
     <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
       28.395,
       65.723,
@@ -802,7 +802,7 @@
     <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.COLOR_TEMP: 'color_temp'>,
     ]),
-    'supported_features': <LightEntityFeature: 44>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 44>,
     <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
       0.525,
       0.388,
@@ -820,7 +820,7 @@
       'Stop',
     ]),
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f',
     <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
       26.812,
       34.87,
@@ -837,7 +837,7 @@
     <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.COLOR_TEMP: 'color_temp'>,
     ]),
-    'supported_features': <LightEntityFeature: 44>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 44>,
     <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
       0.42,
       0.365,
@@ -849,13 +849,13 @@
     <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 59,
     <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f Nightlight',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f Nightlight',
     'music_mode': False,
     'night_light': True,
     <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.BRIGHTNESS: 'brightness'>,
     ]),
-    'supported_features': <LightEntityFeature: 0>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
   })
 # ---
 # name: test_device_types[whitetempmood][whitetempmood_nightlight_mode]
@@ -869,7 +869,7 @@
       'Stop',
     ]),
     'flowing': False,
-    'friendly_name': 'Yeelight Color 0x15243f',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yeelight Color 0x15243f',
     <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
       28.395,
       65.723,
@@ -886,7 +886,7 @@
     <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.COLOR_TEMP: 'color_temp'>,
     ]),
-    'supported_features': <LightEntityFeature: 44>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 44>,
     <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
       0.525,
       0.388,

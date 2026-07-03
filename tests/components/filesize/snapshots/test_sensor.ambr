@@ -39,8 +39,8 @@
 # name: test_sensors[load_platforms0][sensor.mock_file_test_filesize_txt_created-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'mock_file_test_filesize.txt Created',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock_file_test_filesize.txt Created',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_file_test_filesize_txt_created',
@@ -90,8 +90,8 @@
 # name: test_sensors[load_platforms0][sensor.mock_file_test_filesize_txt_last_updated-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'mock_file_test_filesize.txt Last updated',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock_file_test_filesize.txt Last updated',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_file_test_filesize_txt_last_updated',
@@ -146,10 +146,10 @@
 # name: test_sensors[load_platforms0][sensor.mock_file_test_filesize_txt_size-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'mock_file_test_filesize.txt Size',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock_file_test_filesize.txt Size',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEGABYTES: 'MB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_file_test_filesize_txt_size',
@@ -204,10 +204,10 @@
 # name: test_sensors[load_platforms0][sensor.mock_file_test_filesize_txt_size_in_bytes-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'mock_file_test_filesize.txt Size in bytes',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock_file_test_filesize.txt Size in bytes',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.BYTES: 'B'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.BYTES: 'B'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_file_test_filesize_txt_size_in_bytes',

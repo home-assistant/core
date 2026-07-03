@@ -88,7 +88,7 @@ type SqueezeboxConfigEntry = ConfigEntry[SqueezeboxData]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the component."""
+    """Set up the integration."""
     async_setup_services(hass)
     return True
 

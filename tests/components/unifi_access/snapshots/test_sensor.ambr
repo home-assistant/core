@@ -49,8 +49,8 @@
 # name: test_sensor_entities[sensor.back_door_lock_rule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Back Door Lock rule',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back Door Lock rule',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'schedule',
         'keep_lock',
@@ -109,8 +109,8 @@
 # name: test_sensor_entities[sensor.back_door_rule_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Back Door Rule end time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back Door Rule end time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.back_door_rule_end_time',
@@ -170,8 +170,8 @@
 # name: test_sensor_entities[sensor.front_door_lock_rule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Front Door Lock rule',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Lock rule',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'schedule',
         'keep_lock',
@@ -230,8 +230,8 @@
 # name: test_sensor_entities[sensor.front_door_rule_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Front Door Rule end time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Rule end time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.front_door_rule_end_time',

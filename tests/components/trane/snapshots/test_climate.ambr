@@ -63,7 +63,7 @@
         'on',
         'circulate',
       ]),
-      'friendly_name': 'Living Room',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
@@ -74,7 +74,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 45,
-      'supported_features': <ClimateEntityFeature: 395>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 395>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 76,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 68,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,

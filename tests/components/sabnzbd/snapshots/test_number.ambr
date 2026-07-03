@@ -44,12 +44,12 @@
 # name: test_number_setup[number.sabnzbd_speedlimit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sabnzbd Speedlimit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sabnzbd Speedlimit',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.sabnzbd_speedlimit',
