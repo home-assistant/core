@@ -7,9 +7,10 @@ from homeassistant.helpers import intent
 from homeassistant.helpers.llm import IntentTool, LLMContext, Tool
 
 from .const import DOMAIN
+from .intent import INTENT_SET
 
 # Intents owned by this integration that are exposed as LLM tools.
-LLM_INTENTS = ("HassLightSet",)
+LLM_INTENTS = (INTENT_SET,)
 
 
 @callback
