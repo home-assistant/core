@@ -27,7 +27,7 @@ class KebaNotifyEntity(NotifyEntity):
     def __init__(self, keba: KebaHandler, entry_id: str) -> None:
         """Initialize the notify entity."""
         self._keba = keba
-        self._attr_unique_id = f"{entry_id}_notify"
+        self._attr_unique_id = entry_id
         self._attr_name = f"{keba.device_name} Display"
 
     @override
