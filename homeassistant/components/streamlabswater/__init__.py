@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import StreamlabsConfigEntry, StreamlabsCoordinator
@@ -29,6 +30,27 @@ SET_AWAY_MODE_SCHEMA = vol.Schema(
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up StreamLabs services."""
+
+    def set_away_mode(service: ServiceCall) -> None:
+        """Set the StreamLabsWater Away Mode."""
+        away_mode = service.data[ATTR_AWAY_MODE]
+        service_location_id = service.data.get(CONF_LOCATION_ID)
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            coordinator: StreamlabsCoordinator = entry.runtime_data
+            location_id = service_location_id or next(iter(coordinator.data))
+            if location_id in coordinator.data:
+                coordinator.client.update_location(location_id, away_mode)
+                return
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_AWAY_MODE, set_away_mode, schema=SET_AWAY_MODE_SCHEMA
+    )
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: StreamlabsConfigEntry) -> bool:
     """Set up StreamLabs from a config entry."""
 
@@ -40,17 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: StreamlabsConfigEntry) -
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    def set_away_mode(service: ServiceCall) -> None:
-        """Set the StreamLabsWater Away Mode."""
-        away_mode = service.data.get(ATTR_AWAY_MODE)
-        location_id = service.data.get(CONF_LOCATION_ID) or list(coordinator.data)[0]
-        client.update_location(location_id, away_mode)
-
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_AWAY_MODE, set_away_mode, schema=SET_AWAY_MODE_SCHEMA
-    )
 
     return True
 
