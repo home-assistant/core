@@ -30,6 +30,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_EVENT,
@@ -82,6 +83,20 @@ PLATFORMS = [
 ]
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up RFXtrx services."""
+    hass.data.setdefault(DOMAIN, {})
+
+    def send(call: ServiceCall) -> None:
+        event = call.data[ATTR_EVENT]
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=home-assistant-use-runtime-data
+        hass.data[DOMAIN][DATA_RFXOBJECT].transport.send(event)
+
+    hass.services.async_register(DOMAIN, SERVICE_SEND, send, schema=SERVICE_SEND_SCHEMA)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the RFXtrx component."""
     hass.data.setdefault(DOMAIN, {})
@@ -97,12 +112,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
 
-    hass.services.async_remove(DOMAIN, SERVICE_SEND)
-
     rfx_object = hass.data[DOMAIN][DATA_RFXOBJECT]
     await hass.async_add_executor_job(rfx_object.close_connection)
 
-    hass.data.pop(DOMAIN)
+    hass.data[DOMAIN].pop(DATA_RFXOBJECT)
 
     return True
 
@@ -283,13 +296,6 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_rfxtrx)
     )
-
-    def send(call: ServiceCall) -> None:
-        event = call.data[ATTR_EVENT]
-        rfx_object.transport.send(event)
-
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(DOMAIN, SERVICE_SEND, send, schema=SERVICE_SEND_SCHEMA)
 
 
 async def async_setup_platform_entry(
