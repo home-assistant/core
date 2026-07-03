@@ -146,7 +146,7 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     for entry in hass.config_entries.async_entries(DOMAIN):
         members = [
             er.async_resolve_entity_id(entity_registry, member) or member
-            for member in entry.options.get(CONF_ENTITIES, [])
+            for member in entry.options[CONF_ENTITIES]
         ]
         if entity_id not in members:
             continue
