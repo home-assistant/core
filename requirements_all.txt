@@ -1210,7 +1210,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==6.25.1
+habluetooth==6.26.2
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1263,7 +1263,7 @@ hole==0.9.2
 holidays==0.99
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260624.3
+home-assistant-frontend==20260624.4
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.6.24
@@ -1939,7 +1939,7 @@ py-schluter==0.1.7
 py-sucks==0.9.11
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.10.1
+py-synologydsm-api==2.10.2
 
 # homeassistant.components.unifi_access
 py-unifi-access==1.3.0
@@ -2298,7 +2298,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.2.5
+pylamarzocco==2.4.1
 
 # homeassistant.components.lastfm
 pylast==5.1.0
