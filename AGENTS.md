@@ -10,6 +10,8 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 - When opening a pull request, use the repository's PR template (`.github/PULL_REQUEST_TEMPLATE.md`). NEVER REMOVE ANYTHING from the template.
 - Do not remove checkboxes that are not checked — leave all unchecked checkboxes in place so reviewers can see which options were not selected.
+- Never add comments to Pull Requests with a summary of what has been implemented.
+- Never reply to GitHub review comments just to state what has been implemented or the commit addressing the comment. Unless a question needs clarification or a suggestion is not applicable, don't add a reply.
 
 ## Development Commands
 
