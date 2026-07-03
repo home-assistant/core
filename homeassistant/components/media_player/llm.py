@@ -42,13 +42,13 @@ def async_get_tools(
         return None
 
     if not llm_context.assistant:
-        return LLMTools(tools=[])
+        return None
 
     if not any(
         async_should_expose(hass, llm_context.assistant, state.entity_id)
         for state in hass.states.async_all(DOMAIN)
     ):
-        return LLMTools(tools=[])
+        return None
 
     tools: list[Tool] = [
         IntentTool(handler.intent_type, handler)

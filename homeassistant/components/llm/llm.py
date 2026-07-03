@@ -3,7 +3,7 @@
 from typing import override
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.llm import LLM_API_ASSIST, LLMContext, Tool, ToolInput
+from homeassistant.helpers.llm import LLMContext, Tool, ToolInput
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
 
@@ -40,9 +40,6 @@ class GetDateTimeTool(Tool):
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
-) -> LLMTools | None:
-    """Return the LLM tools for the Assist API."""
-    if api_id != LLM_API_ASSIST:
-        return None
-
+) -> LLMTools:
+    """Return the always-available LLM tools."""
     return LLMTools(tools=[GetDateTimeTool()])

@@ -50,6 +50,7 @@ async def test_intent_tool_not_exposed(hass: HomeAssistant) -> None:
     """Test the intent tool is hidden when no light entity is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
     assert "HassLightSet" not in await _tool_names(hass)
+    assert light_llm.async_get_tools(hass, _llm_context(), "assist") is None
 
 
 async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:

@@ -102,5 +102,5 @@ def async_get_tools(
         names.extend(intent.async_get_entity_aliases(hass, entity_entry, state=state))
 
     if not names:
-        return LLMTools(tools=[])
+        return None
     return LLMTools(tools=[CalendarGetEventsTool(names)])

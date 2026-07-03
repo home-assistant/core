@@ -104,7 +104,7 @@ def async_get_tools(
         return None
 
     if not llm_context.assistant:
-        return LLMTools(tools=[])
+        return None
 
     entity_registry = er.async_get(hass)
     names: list[str] = []
@@ -115,7 +115,7 @@ def async_get_tools(
         names.extend(intent.async_get_entity_aliases(hass, entity_entry, state=state))
 
     if not names:
-        return LLMTools(tools=[])
+        return None
 
     tools: list[Tool] = [TodoGetItemsTool(names)]
     tools.extend(
