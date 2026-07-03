@@ -4,7 +4,8 @@ import pytest
 
 from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.components.intent.timers import async_register_timer_handler
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
@@ -49,6 +50,23 @@ async def test_generic_intents_exposed(hass: HomeAssistant) -> None:
 async def test_timer_intents_require_timer_device(hass: HomeAssistant) -> None:
     """Test timer intents are not exposed without a timer-capable device."""
     assert "HassStartTimer" not in await _tool_names(hass)
+
+
+async def test_timer_intents_offered_for_timer_device(hass: HomeAssistant) -> None:
+    """Test timer intents are exposed for a timer-capable device."""
+
+    @callback
+    def handle_timer(*args: object) -> None:
+        pass
+
+    async_register_timer_handler(hass, "test_device", handle_timer)
+
+    result = await llm_component.async_get_tools(
+        hass, _llm_context(device_id="test_device")
+    )
+    names = {tool.name for tool in result.tools}
+    assert "HassStartTimer" in names
+    assert "HassTimerStatus" in names
 
 
 async def test_set_position_requires_exposed_cover(hass: HomeAssistant) -> None:
