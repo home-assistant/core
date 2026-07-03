@@ -65,6 +65,19 @@ async def test_script_tool_not_exposed(hass: HomeAssistant) -> None:
     assert [tool.name for tool in result.tools] == []
 
 
+async def test_no_tools_without_assistant(hass: HomeAssistant) -> None:
+    """Test no tools are offered when the context has no assistant."""
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=Context(),
+        language="*",
+        assistant=None,
+        device_id=None,
+    )
+    result = await llm_component.async_get_tools(hass, llm_context)
+    assert result.tools == []
+
+
 async def test_script_tool_call(hass: HomeAssistant) -> None:
     """Test calling the exposed script through its tool."""
     llm_context = _llm_context()
