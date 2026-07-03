@@ -28,7 +28,7 @@ from homeassistant.helpers.entity import (
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
+from . import DOMAIN, SensorDeviceClass, SensorEntityCapabilityAttribute
 
 DEVICE_CLASS_NONE = "none"
 
@@ -276,7 +276,9 @@ async def async_get_triggers(
 
     for entry in entries:
         device_class = get_device_class(hass, entry.entity_id) or DEVICE_CLASS_NONE
-        state_class = get_capability(hass, entry.entity_id, ATTR_STATE_CLASS)
+        state_class = get_capability(
+            hass, entry.entity_id, SensorEntityCapabilityAttribute.STATE_CLASS
+        )
         unit_of_measurement = get_unit_of_measurement(hass, entry.entity_id)
 
         if not unit_of_measurement and not state_class:
