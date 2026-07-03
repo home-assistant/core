@@ -12,7 +12,7 @@ from homeassistant.helpers.llm import (
     LLMContext,
     Tool,
     ToolInput,
-    _get_exposed_entities,
+    async_get_exposed_entities,
 )
 from homeassistant.util import yaml as yaml_util
 from homeassistant.util.json import JsonObjectType
@@ -101,7 +101,7 @@ class GetLiveContextTool(Tool):
             return {"success": False, "error": "No assistant configured"}
 
         args = self.parameters(tool_input.tool_args)
-        exposed_entities = _get_exposed_entities(hass, llm_context.assistant)
+        exposed_entities = async_get_exposed_entities(hass, llm_context.assistant)
 
         if not exposed_entities["entities"]:
             return {"success": False, "error": NO_ENTITIES_PROMPT}
