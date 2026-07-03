@@ -4734,6 +4734,14 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
                     ],
                 },
                 {"event": "test_event"},
+                {
+                    "event": "test_event",
+                    "event_data": {"entity_id": "light.event_data"},
+                },
+                {
+                    "event": "test_event",
+                    "event_data": {"entity_id": "not-a-valid-entity-id"},
+                },
                 {"delay": "{{ delay_period }}"},
                 {
                     "if": [],
@@ -4811,6 +4819,7 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
         "light.direct_entity_referenced",
         "light.entity_in_data_template",
         "light.entity_in_target",
+        "light.event_data",
         "light.service_list",
         "light.service_not_list",
         "light.if_then",
@@ -4946,6 +4955,11 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
                         "domain": "switch",
                     },
                 },
+                {"event": "test_event"},
+                {
+                    "event": "test_event",
+                    "event_data": {"device_id": "event-data-device"},
+                },
                 {
                     "wait_for_trigger": {
                         "platform": "state",
@@ -4982,6 +4996,7 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
         "data-string-id",
         "data-template-string-id",
         "default-device-target",
+        "event-data-device",
         "script-dev-id",
         "target-list-id-1",
         "target-list-id-2",
