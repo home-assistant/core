@@ -73,6 +73,7 @@ from .const import (
 )
 from .coordinator import UPDATE_INTERVAL, GatewayDeviceCoordinator
 from .gateway import ConnectXiaomiGateway
+from .light import async_setup_light_services
 from .services import async_setup_services
 from .typing import XiaomiMiioConfigEntry, XiaomiMiioRuntimeData
 
@@ -136,6 +137,7 @@ LAZY_DISCOVER_FOR_MODEL = {
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the component."""
     async_setup_services(hass)
+    async_setup_light_services(hass)
     return True
 
 

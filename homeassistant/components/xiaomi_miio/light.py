@@ -126,6 +126,44 @@ SERVICE_TO_METHOD = {
 }
 
 
+def async_setup_light_services(hass: HomeAssistant) -> None:
+    """Set up Xiaomi Miio light services."""
+    hass.data.setdefault(DATA_KEY, {})
+
+    async def async_service_handler(service: ServiceCall) -> None:
+        """Map services to methods on Xiaomi Philips Lights."""
+        method = SERVICE_TO_METHOD[service.service]
+        params = {
+            key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
+        }
+        if entity_ids := service.data.get(ATTR_ENTITY_ID):
+            target_devices = [
+                dev
+                for dev in hass.data[DATA_KEY].values()
+                if dev.entity_id in entity_ids
+            ]
+        else:
+            target_devices = hass.data[DATA_KEY].values()
+
+        update_tasks = []
+        for target_device in target_devices:
+            if not hasattr(target_device, method.method):
+                continue
+            await getattr(target_device, method.method)(**params)
+            update_tasks.append(
+                asyncio.create_task(target_device.async_update_ha_state(True))
+            )
+
+        if update_tasks:
+            await asyncio.wait(update_tasks)
+
+    for xiaomi_miio_service, method in SERVICE_TO_METHOD.items():
+        schema = method.schema or XIAOMI_MIIO_SERVICE_SCHEMA
+        hass.services.async_register(
+            DOMAIN, xiaomi_miio_service, async_service_handler, schema=schema
+        )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: XiaomiMiioConfigEntry,
@@ -211,42 +249,6 @@ async def async_setup_entry(
                 model,
             )
             return
-
-        async def async_service_handler(service: ServiceCall) -> None:
-            """Map services to methods on Xiaomi Philips Lights."""
-            method = SERVICE_TO_METHOD[service.service]
-            params = {
-                key: value
-                for key, value in service.data.items()
-                if key != ATTR_ENTITY_ID
-            }
-            if entity_ids := service.data.get(ATTR_ENTITY_ID):
-                target_devices = [
-                    dev
-                    for dev in hass.data[DATA_KEY].values()
-                    if dev.entity_id in entity_ids
-                ]
-            else:
-                target_devices = hass.data[DATA_KEY].values()
-
-            update_tasks = []
-            for target_device in target_devices:
-                if not hasattr(target_device, method.method):
-                    continue
-                await getattr(target_device, method.method)(**params)
-                update_tasks.append(
-                    asyncio.create_task(target_device.async_update_ha_state(True))
-                )
-
-            if update_tasks:
-                await asyncio.wait(update_tasks)
-
-        for xiaomi_miio_service, method in SERVICE_TO_METHOD.items():
-            schema = method.schema or XIAOMI_MIIO_SERVICE_SCHEMA
-            # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-            hass.services.async_register(
-                DOMAIN, xiaomi_miio_service, async_service_handler, schema=schema
-            )
 
     async_add_entities(entities, update_before_add=True)
 
