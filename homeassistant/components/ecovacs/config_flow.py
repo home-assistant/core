@@ -3,7 +3,7 @@
 from functools import partial
 import logging
 import ssl
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from aiohttp import ClientError
@@ -133,6 +133,7 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _mode: InstanceMode = InstanceMode.CLOUD
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

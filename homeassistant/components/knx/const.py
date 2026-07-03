@@ -10,9 +10,11 @@ from xknx.telegram import Telegram
 from homeassistant.components.climate import FAN_AUTO, FAN_OFF, HVACAction, HVACMode
 from homeassistant.const import Platform
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.signal_type import SignalType
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
+    from .telegrams import TelegramDict
 
 DOMAIN: Final = "knx"
 KNX_MODULE_KEY: HassKey[KNXModule] = HassKey(DOMAIN)
@@ -50,9 +52,18 @@ CONF_KNX_DEFAULT_RATE_LIMIT: Final = 0
 
 DEFAULT_ROUTING_IA: Final = "0.0.240"
 
-CONF_KNX_TELEGRAM_LOG_SIZE: Final = "telegram_log_size"
-TELEGRAM_LOG_DEFAULT: Final = 1000
-TELEGRAM_LOG_MAX: Final = 25000  # ~10 MB or ~25 hours of reasonable bus load
+CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: Final = "telegram_db_retention_days"
+CONF_KNX_TELEGRAM_DB_LOAD_HOURS: Final = "telegram_db_load_hours"
+
+KNX_TELEGRAM_DB_RETENTION_DEFAULT: Final = 10  # days
+KNX_TELEGRAM_LOAD_HOURS_DEFAULT: Final = 24  # 1 day
+KNX_TELEGRAM_DB_PATH_SQLITE: Final = "knx/telegrams.db"  # relative to STORAGE_DIR
+
+# dispatcher signal for KNX interface device triggers
+SIGNAL_KNX_TELEGRAM: SignalType[Telegram, TelegramDict] = SignalType("knx_telegram")
+SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM: SignalType[Telegram, TelegramDict] = SignalType(
+    "knx_data_secure_issue_telegram"
+)
 
 ##
 # Secure constants
@@ -94,10 +105,11 @@ SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
 SERVICE_KNX_READ: Final = "read"
 
 REPAIR_ISSUE_DATA_SECURE_GROUP_KEY: Final = "data_secure_group_key_issue"
+REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR: Final = "telegram_backend_error"
 
 
 class KNXConfigEntryData(TypedDict, total=False):
-    """Config entry for the KNX integration."""
+    """Config entry data for the KNX integration."""
 
     connection_type: str
     individual_address: str
@@ -116,11 +128,16 @@ class KNXConfigEntryData(TypedDict, total=False):
     knxkeys_password: str  # not required
     backbone_key: str | None  # not required
     sync_latency_tolerance: int | None  # not required
-    # OptionsFlow only
+
+
+class KNXConfigEntryOptions(TypedDict, total=False):
+    """Config entry options for the KNX integration."""
+
     state_updater: bool  # default state updater: True -> expire 60; False -> init
     rate_limit: int
     #   Integration only (not forwarded to xknx)
-    telegram_log_size: int  # not required
+    telegram_db_retention_days: int
+    telegram_db_load_hours: int
 
 
 class ColorTempModes(Enum):

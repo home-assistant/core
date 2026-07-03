@@ -1,6 +1,6 @@
 """Helper to track the current http request."""
 
-from collections.abc import Awaitable, Callable, Container, Mapping
+from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 from http import HTTPStatus
 import inspect
@@ -20,7 +20,7 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.const import CONTENT_TYPE_JSON
-from homeassistant.core import Context, HomeAssistant, callback, is_callback
+from homeassistant.core import Context, HomeAssistant, is_callback
 from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS, format_unserializable_data
 
 from .json import find_paths_unserializable_data, json_bytes, json_dumps
@@ -55,23 +55,14 @@ def request_handler_factory(
 
         authenticated = request.get(KEY_AUTHENTICATED, False)
 
-        if view.use_query_token_for_auth and not authenticated:
-            token = request.query.get("token")
-            if token and token in view.get_valid_auth_tokens(request.match_info):
-                _LOGGER.debug("Authenticated request with query token")
-                authenticated = True
-
-        if (view.requires_auth or view.use_query_token_for_auth) and not authenticated:
+        if view.requires_auth and not authenticated:
             # Import here to avoid circular dependency with network.py
             from .network import NoURLAvailableError, get_url  # noqa: PLC0415
 
             # Get the current request header to include as resource metadata
-            # endpoint for RFC9728. We currently prefer external since this
-            # is likely most used by remote OAuth clients
+            # endpoint for RFC9728.
             try:
-                url_prefix = get_url(
-                    hass, require_current_request=True, prefer_external=True
-                )
+                url_prefix = get_url(hass, require_current_request=True)
             except NoURLAvailableError:
                 # Omit header to avoid leaking configured URLs
                 raise HTTPUnauthorized from None
@@ -135,7 +126,6 @@ class HomeAssistantView:
     extra_urls: list[str] = []
     # Views inheriting from this class can override this
     requires_auth = True
-    use_query_token_for_auth = False
     cors_allowed = False
 
     @staticmethod
@@ -211,8 +201,3 @@ class HomeAssistantView:
         if allow_cors:
             for route in routes:
                 allow_cors(route)
-
-    @callback
-    def get_valid_auth_tokens(self, match_info: Mapping[str, str]) -> Container[str]:
-        """Return valid auth tokens, which can be used for query token authentication."""
-        return ()

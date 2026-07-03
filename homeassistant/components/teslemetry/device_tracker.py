@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from tesla_fleet_api.const import Scope
 from teslemetry_stream import TeslemetryStreamVehicle
@@ -108,6 +109,7 @@ class TeslemetryVehiclePollingDeviceTrackerEntity(
         self.entity_description = description
         super().__init__(vehicle, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         self._attr_latitude = self.get(
@@ -137,6 +139,7 @@ class TeslemetryStreamingDeviceTrackerEntity(
         self.entity_description = description
         super().__init__(vehicle, description.key)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()

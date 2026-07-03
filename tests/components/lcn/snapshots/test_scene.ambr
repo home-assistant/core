@@ -39,7 +39,7 @@
 # name: test_setup_lcn_scene[scene.testmodule_romantic-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TestModule Romantic',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Romantic',
     }),
     'context': <ANY>,
     'entity_id': 'scene.testmodule_romantic',
@@ -89,7 +89,7 @@
 # name: test_setup_lcn_scene[scene.testmodule_romantic_transition-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TestModule Romantic Transition',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Romantic Transition',
     }),
     'context': <ANY>,
     'entity_id': 'scene.testmodule_romantic_transition',

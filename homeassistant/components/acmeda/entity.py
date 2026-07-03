@@ -1,5 +1,7 @@
 """Base class for Acmeda Roller Blinds."""
 
+from typing import override
+
 import aiopulse
 
 from homeassistant.core import callback
@@ -40,6 +42,7 @@ class AcmedaEntity(entity.Entity):
 
         await self.async_remove(force_remove=True)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity has been added to hass."""
         self.roller.callback_subscribe(self.notify_update)
@@ -52,6 +55,7 @@ class AcmedaEntity(entity.Entity):
             )
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         self.roller.callback_unsubscribe(self.notify_update)
@@ -63,6 +67,7 @@ class AcmedaEntity(entity.Entity):
         self.async_write_ha_state()
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID of this roller."""
         return str(self.roller.id)
@@ -73,6 +78,7 @@ class AcmedaEntity(entity.Entity):
         return self.roller.id  # type: ignore[no-any-return]
 
     @property
+    @override
     def device_info(self) -> dr.DeviceInfo:
         """Return the device info."""
         return dr.DeviceInfo(

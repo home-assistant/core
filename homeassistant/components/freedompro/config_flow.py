@@ -1,6 +1,6 @@
 """Config flow to configure Freedompro."""
 
-from typing import Any
+from typing import Any, override
 
 from pyfreedompro import get_list
 import voluptuous as vol
@@ -48,6 +48,7 @@ class FreedomProConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

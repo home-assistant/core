@@ -1,6 +1,7 @@
 """Support for Toon binary sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -61,10 +62,11 @@ class ToonBinarySensor(ToonEntity, BinarySensorEntity):
         self._attr_unique_id = (
             # This unique ID is a bit ugly and contains unneeded information.
             # It is here for legacy / backward compatible reasons.
-            f"{DOMAIN}_{coordinator.data.agreement.agreement_id}_binary_sensor_{description.key}"
+            f"{DOMAIN}_{coordinator.data.agreement.agreement_id}_binary_sensor_{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the status of the binary sensor."""
         section = getattr(self.coordinator.data, self.entity_description.section)

@@ -11,7 +11,20 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_STATION, DOMAIN
+from .const import (
+    CONF_RADAR_LAYER,
+    CONF_RADAR_LEGEND,
+    CONF_RADAR_OPACITY,
+    CONF_RADAR_RADIUS,
+    CONF_RADAR_TIMESTAMP,
+    CONF_STATION,
+    DEFAULT_RADAR_LAYER,
+    DEFAULT_RADAR_LEGEND,
+    DEFAULT_RADAR_OPACITY,
+    DEFAULT_RADAR_RADIUS,
+    DEFAULT_RADAR_TIMESTAMP,
+    DOMAIN,
+)
 from .coordinator import ECConfigEntry, ECDataUpdateCoordinator, ECRuntimeData
 from .services import async_setup_services
 
@@ -54,7 +67,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ECConfigEntry) ->
         errors = errors + 1
         _LOGGER.warning("Unable to retrieve Environment Canada weather")
 
-    radar_data = ECMap(coordinates=(lat, lon), layer="precip_type", legend=False)
+    options = config_entry.options
+    radar_data = ECMap(
+        coordinates=(lat, lon),
+        layer=options.get(CONF_RADAR_LAYER, DEFAULT_RADAR_LAYER),
+        legend=options.get(CONF_RADAR_LEGEND, DEFAULT_RADAR_LEGEND),
+        timestamp=options.get(CONF_RADAR_TIMESTAMP, DEFAULT_RADAR_TIMESTAMP),
+        layer_opacity=int(options.get(CONF_RADAR_OPACITY, DEFAULT_RADAR_OPACITY)),
+        radius=int(options.get(CONF_RADAR_RADIUS, DEFAULT_RADAR_RADIUS)),
+    )
     radar_coordinator = ECDataUpdateCoordinator(
         hass, config_entry, radar_data, "radar", DEFAULT_RADAR_UPDATE_INTERVAL
     )

@@ -1,15 +1,52 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_cert": "Invalid certificate",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::smtp::config::step::user::data_description::password%]",
+          "username": "[%key:component::smtp::config::step::user::data_description::username%]"
+        },
+        "title": "Re-authenticate SMTP"
+      },
+      "reconfigure": {
+        "data": {
+          "encryption": "[%key:component::smtp::config::step::user::data::encryption%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "sender": "[%key:component::smtp::config::step::user::data::sender%]",
+          "sender_name": "[%key:component::smtp::config::step::user::data::sender_name%]",
+          "server": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "encryption": "[%key:component::smtp::config::step::user::data_description::encryption%]",
+          "password": "[%key:component::smtp::config::step::user::data_description::password%]",
+          "port": "[%key:component::smtp::config::step::user::data_description::port%]",
+          "sender": "[%key:component::smtp::config::step::user::data_description::sender%]",
+          "sender_name": "[%key:component::smtp::config::step::user::data_description::sender_name%]",
+          "server": "[%key:component::smtp::config::step::user::data_description::server%]",
+          "username": "[%key:component::smtp::config::step::user::data_description::username%]",
+          "verify_ssl": "[%key:component::smtp::config::step::user::data_description::verify_ssl%]"
+        },
+        "title": "Reconfigure SMTP"
+      },
       "user": {
         "data": {
           "encryption": "Connection security",
@@ -60,14 +97,35 @@
     }
   },
   "exceptions": {
+    "authentication_error": {
+      "message": "Failed to authenticate with SMTP server. Please verify your credentials."
+    },
+    "connection_error": {
+      "message": "Failed to connect to SMTP server."
+    },
     "remote_path_not_allowed": {
       "message": "Cannot send email with attachment \"{file_name}\" from directory \"{file_path}\" which is not secure to load data from. Only folders added to `{allow_list}` are accessible. See {url} for more information."
+    },
+    "send_mail_connection_error": {
+      "message": "Failed to send email message due to a connection error."
     }
   },
   "issues": {
     "deprecated_yaml_import_issue_error": {
       "description": "YAML configuration for SMTP is being deprecated, but an error occurred while importing your existing configuration.\n\nVerify that the YAML configuration is valid, then restart Home Assistant to try again. Alternatively remove the SMTP YAML configuration from your `configuration.yaml` file and continue to [set up the integration]({url}) manually.\n\n**Configuration that could not be imported:**\n\n```{config}```",
       "title": "Failed to import SMTP YAML configuration"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "timeout": "Connection timeout"
+        },
+        "data_description": {
+          "timeout": "Maximum time to wait for a response from the SMTP server before the connection attempt is aborted."
+        }
+      }
     }
   },
   "selector": {
