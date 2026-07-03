@@ -5,8 +5,6 @@ Exposes the generic, cross-domain intents owned by the intent integration
 exposed by their own integration's ``llm.py`` platform.
 """
 
-import slugify as unicode_slug
-
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
@@ -62,10 +60,6 @@ def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
         ]
 
     tools: list[Tool] = [
-        IntentTool(
-            unicode_slug.slugify(handler.intent_type, separator="_", lowercase=False),
-            handler,
-        )
-        for handler in handlers
+        IntentTool(handler.intent_type, handler) for handler in handlers
     ]
     return LLMTools(tools=tools)
