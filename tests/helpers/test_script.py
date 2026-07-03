@@ -4308,6 +4308,45 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
                     ],
                 },
                 {
+                    "repeat": {
+                        "count": 3,
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"label_id": "label_repeat_count_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "while": {
+                            "condition": "light.is_on",
+                            "target": {"label_id": "label_repeat_while_cond"},
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"label_id": "label_repeat_while_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "until": {
+                            "condition": "light.is_on",
+                            "target": {"label_id": "label_repeat_until_cond"},
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"label_id": "label_repeat_until_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
                     "wait_for_trigger": {
                         "platform": "state",
                         "entity_id": "sensor.test",
@@ -4345,6 +4384,11 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
         "label_in_data_template",
         "label_in_target",
         "label_parallel",
+        "label_repeat_count_seq",
+        "label_repeat_until_cond",
+        "label_repeat_until_seq",
+        "label_repeat_while_cond",
+        "label_repeat_while_seq",
         "label_sequence",
         "label_service_list_1",
         "label_service_list_2",
@@ -4462,6 +4506,45 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
                     ],
                 },
                 {
+                    "repeat": {
+                        "count": 3,
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"floor_id": "floor_repeat_count_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "while": {
+                            "condition": "light.is_on",
+                            "target": {"floor_id": "floor_repeat_while_cond"},
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"floor_id": "floor_repeat_while_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "until": {
+                            "condition": "light.is_on",
+                            "target": {"floor_id": "floor_repeat_until_cond"},
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"floor_id": "floor_repeat_until_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
                     "wait_for_trigger": {
                         "platform": "state",
                         "entity_id": "sensor.test",
@@ -4499,6 +4582,11 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
         "floor_in_data_template",
         "floor_in_target",
         "floor_parallel",
+        "floor_repeat_count_seq",
+        "floor_repeat_until_cond",
+        "floor_repeat_until_seq",
+        "floor_repeat_while_cond",
+        "floor_repeat_while_seq",
         "floor_sequence",
         "floor_service_list",
         "floor_service_not_list",
@@ -4615,6 +4703,45 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
                     ],
                 },
                 {
+                    "repeat": {
+                        "count": 3,
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"area_id": "area_repeat_count_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "while": {
+                            "condition": "light.is_on",
+                            "target": {"area_id": "area_repeat_while_cond"},
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"area_id": "area_repeat_while_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "until": {
+                            "condition": "light.is_on",
+                            "target": {"area_id": "area_repeat_until_cond"},
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"area_id": "area_repeat_until_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
                     "wait_for_trigger": {
                         "platform": "state",
                         "entity_id": "sensor.test",
@@ -4652,6 +4779,11 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
         "area_in_data_template",
         "area_in_target",
         "area_parallel",
+        "area_repeat_count_seq",
+        "area_repeat_until_cond",
+        "area_repeat_until_seq",
+        "area_repeat_while_cond",
+        "area_repeat_while_seq",
         "area_sequence",
         "area_service_list",
         "area_service_not_list",
@@ -4780,6 +4912,47 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
                     ],
                 },
                 {
+                    "repeat": {
+                        "count": 3,
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"entity_id": "light.repeat_count_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "while": {
+                            "condition": "state",
+                            "entity_id": "sensor.repeat_while_cond",
+                            "state": "100",
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"entity_id": "light.repeat_while_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "until": {
+                            "condition": "state",
+                            "entity_id": "sensor.repeat_until_cond",
+                            "state": "100",
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"entity_id": "light.repeat_until_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
                     "wait_for_trigger": {
                         "platform": "state",
                         "entity_id": ["sensor.wait_trigger_state"],
@@ -4816,7 +4989,12 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
         "light.if_then",
         "light.if_else",
         "light.parallel",
+        "light.repeat_count_seq",
+        "light.repeat_until_seq",
+        "light.repeat_while_seq",
         "light.sequence",
+        "sensor.repeat_until_cond",
+        "sensor.repeat_while_cond",
         # "light.service_template",  # no entity extraction from template
         "scene.hello",
         "sensor.condition",
@@ -4940,6 +5118,47 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
                     ],
                 },
                 {
+                    "repeat": {
+                        "count": 3,
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "target": {"device_id": "repeat-count-seq-device"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "while": {
+                            "condition": "device",
+                            "device_id": "repeat-while-cond-dev-id",
+                            "domain": "switch",
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "target": {"device_id": "repeat-while-seq-device"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "until": {
+                            "condition": "device",
+                            "device_id": "repeat-until-cond-dev-id",
+                            "domain": "switch",
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "target": {"device_id": "repeat-until-seq-device"},
+                            }
+                        ],
+                    },
+                },
+                {
                     "wait_for_trigger": {
                         "platform": "device",
                         "device_id": "wait-trigger-device",
@@ -4989,6 +5208,11 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
         "if-then",
         "if-else",
         "parallel-device",
+        "repeat-count-seq-device",
+        "repeat-until-cond-dev-id",
+        "repeat-until-seq-device",
+        "repeat-while-cond-dev-id",
+        "repeat-while-seq-device",
         "sequence-device",
         "wait-trigger-device",
         "wait-trigger-target",
