@@ -5,7 +5,11 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player import BrowseError
+from homeassistant.components.media_player import (
+    BrowseError,
+    SearchMedia,
+    SearchMediaQuery,
+)
 from homeassistant.components.media_source import const, models
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -125,5 +129,35 @@ async def test_browse_resolve_without_setup() -> None:
     with pytest.raises(BrowseError):
         await media_source.async_browse_media(Mock(data={}), None)
 
+    with pytest.raises(BrowseError):
+        await media_source.async_search_media(
+            Mock(data={}), None, SearchMediaQuery(search_query="test")
+        )
+
     with pytest.raises(media_source.Unresolvable):
         await media_source.async_resolve_media(Mock(data={}), None, None)
+
+
+async def test_async_search_media(hass: HomeAssistant) -> None:
+    """Test search media helper."""
+    assert await async_setup_component(hass, media_source.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # Search the default media directory by file name
+    result = await media_source.async_search_media(
+        hass, "", SearchMediaQuery(search_query="test")
+    )
+    assert isinstance(result, SearchMedia)
+    assert [item.title for item in result.result] == ["test.mp3"]
+
+    # A query without matches returns an empty result
+    result = await media_source.async_search_media(
+        hass, "", SearchMediaQuery(search_query="no-such-file")
+    )
+    assert result.result == []
+
+    # Invalid media content raises a BrowseError
+    with pytest.raises(BrowseError):
+        await media_source.async_search_media(
+            hass, "invalid", SearchMediaQuery(search_query="test")
+        )

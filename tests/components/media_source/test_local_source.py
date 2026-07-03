@@ -10,8 +10,13 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import media_source, websocket_api
-from homeassistant.components.media_player import BrowseError
+from homeassistant.components.media_player import (
+    BrowseError,
+    MediaClass,
+    SearchMediaQuery,
+)
 from homeassistant.components.media_source import const
+from homeassistant.components.media_source.local_source import MAX_SEARCH_RESULTS
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
@@ -88,6 +93,120 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
         hass, f"{const.URI_SCHEME}{const.DOMAIN}/recordings/."
     )
     assert media
+
+
+async def test_async_search_media(hass: HomeAssistant) -> None:
+    """Test searching local media."""
+    local_media = hass.config.path("media")
+    await async_process_ha_core_config(
+        hass, {"media_dirs": {"local": local_media, "recordings": local_media}}
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, const.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # Search within a single directory (contextual)
+    result = await media_source.async_search_media(
+        hass,
+        f"{const.URI_SCHEME}{const.DOMAIN}/local",
+        SearchMediaQuery(search_query="test"),
+    )
+    assert [item.title for item in result.result] == ["test.mp3"]
+    assert (
+        result.result[0].media_content_id
+        == f"{const.URI_SCHEME}{const.DOMAIN}/local/test.mp3"
+    )
+
+    # Search across all directories (global) finds the file in both dirs
+    result = await media_source.async_search_media(
+        hass,
+        f"{const.URI_SCHEME}{const.DOMAIN}",
+        SearchMediaQuery(search_query="sax"),
+    )
+    assert {item.title for item in result.result} == {"Epic Sax Guy 10 Hours.mp4"}
+    assert len(result.result) == 2
+
+    # Non-media files are not returned
+    result = await media_source.async_search_media(
+        hass,
+        f"{const.URI_SCHEME}{const.DOMAIN}/local",
+        SearchMediaQuery(search_query="not_media"),
+    )
+    assert result.result == []
+
+    # Searching a non-existent directory returns no results
+    result = await media_source.async_search_media(
+        hass,
+        f"{const.URI_SCHEME}{const.DOMAIN}/local/nonexistent",
+        SearchMediaQuery(search_query="test"),
+    )
+    assert result.result == []
+
+    # Filter by media class
+    result = await media_source.async_search_media(
+        hass,
+        f"{const.URI_SCHEME}{const.DOMAIN}/local",
+        SearchMediaQuery(search_query="", media_filter_classes=[MediaClass.MUSIC]),
+    )
+    assert [item.title for item in result.result] == ["test.mp3"]
+
+    # Invalid path raises a BrowseError
+    with pytest.raises(BrowseError):
+        await media_source.async_search_media(
+            hass,
+            f"{const.URI_SCHEME}{const.DOMAIN}/local/../secret",
+            SearchMediaQuery(search_query="test"),
+        )
+
+
+async def test_async_search_media_limit_and_hidden(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test that search caps results and skips hidden files."""
+    for i in range(MAX_SEARCH_RESULTS + 20):
+        (tmp_path / f"song_{i}.mp3").touch()
+    (tmp_path / ".hidden_song.mp3").touch()
+
+    await async_process_ha_core_config(hass, {"media_dirs": {"local": str(tmp_path)}})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, const.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    result = await media_source.async_search_media(
+        hass,
+        f"{const.URI_SCHEME}{const.DOMAIN}/local",
+        SearchMediaQuery(search_query="song"),
+    )
+    assert len(result.result) == MAX_SEARCH_RESULTS
+    assert all(not item.title.startswith(".") for item in result.result)
+
+
+async def test_browse_media_can_search(hass: HomeAssistant) -> None:
+    """Test that browsable directories advertise search support."""
+    local_media = hass.config.path("media")
+    await async_process_ha_core_config(
+        hass, {"media_dirs": {"local": local_media, "recordings": local_media}}
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, const.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # The root of multiple directories is searchable
+    media = await media_source.async_browse_media(
+        hass, f"{const.URI_SCHEME}{const.DOMAIN}"
+    )
+    assert media.can_search
+
+    # A directory is searchable, but the files inside it are not
+    media = await media_source.async_browse_media(
+        hass, f"{const.URI_SCHEME}{const.DOMAIN}/local/."
+    )
+    assert media.can_search
+    file_child = next(child for child in media.children if child.can_play)
+    assert not file_child.can_search
 
 
 async def test_media_view(

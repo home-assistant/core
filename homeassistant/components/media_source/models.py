@@ -3,7 +3,13 @@
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
+from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaClass,
+    MediaType,
+    SearchMedia,
+    SearchMediaQuery,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.translation import async_get_cached_translations
 
@@ -101,6 +107,23 @@ class MediaSourceItem:
 
         return await self.async_media_source().async_browse_media(self)
 
+    async def async_search(self, query: SearchMediaQuery) -> SearchMedia:
+        """Search this item."""
+        if self.domain is None:
+            results: list[BrowseMedia] = []
+            for source in self.hass.data[MEDIA_SOURCE_DATA].values():
+                sub_item = MediaSourceItem(
+                    self.hass, source.domain, "", self.target_media_player
+                )
+                try:
+                    source_result = await source.async_search_media(sub_item, query)
+                except NotImplementedError:
+                    continue
+                results.extend(source_result.result)
+            return SearchMedia(result=results)
+
+        return await self.async_media_source().async_search_media(self, query)
+
     async def async_resolve(self) -> PlayMedia:
         """Resolve to playable item."""
         return await self.async_media_source().async_resolve_media(self)
@@ -143,4 +166,10 @@ class MediaSource:
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Browse media."""
+        raise NotImplementedError
+
+    async def async_search_media(
+        self, item: MediaSourceItem, query: SearchMediaQuery
+    ) -> SearchMedia:
+        """Search media."""
         raise NotImplementedError

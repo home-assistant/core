@@ -2,7 +2,12 @@
 
 from collections.abc import Callable
 
-from homeassistant.components.media_player import BrowseError, BrowseMedia
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    SearchMedia,
+    SearchMediaQuery,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -65,6 +70,28 @@ async def async_browse_media(
     ]
     item.not_shown += old_count - len(item.children)
     return item
+
+
+async def async_search_media(
+    hass: HomeAssistant,
+    media_content_id: str | None,
+    query: SearchMediaQuery,
+) -> SearchMedia:
+    """Return media searched in the media source."""
+    if DOMAIN not in hass.data:
+        raise BrowseError("Media Source not loaded")
+
+    try:
+        return await _get_media_item(hass, media_content_id, None).async_search(query)
+    except ValueError as err:
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="search_media_failed",
+            translation_placeholders={
+                "media_content_id": str(media_content_id),
+                "error": str(err),
+            },
+        ) from err
 
 
 async def async_resolve_media(
