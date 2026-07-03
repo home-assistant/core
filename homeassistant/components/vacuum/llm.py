@@ -1,7 +1,5 @@
 """LLM tools for the vacuum integration."""
 
-import slugify as unicode_slug
-
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
@@ -11,11 +9,7 @@ from homeassistant.helpers.llm import IntentTool, LLMContext, Tool
 from .const import DOMAIN
 
 # Intents owned by this integration that are exposed as LLM tools.
-LLM_INTENTS = (
-    "HassVacuumCleanArea",
-    "HassVacuumReturnToBase",
-    "HassVacuumStart",
-)
+LLM_INTENTS = ("HassVacuumCleanArea", "HassVacuumReturnToBase", "HassVacuumStart",)
 
 
 @callback
@@ -30,13 +24,9 @@ def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
     ):
         return LLMTools(tools=[])
 
-    handlers = {handler.intent_type: handler for handler in intent.async_get(hass)}
     tools: list[Tool] = [
-        IntentTool(
-            unicode_slug.slugify(intent_type, separator="_", lowercase=False),
-            handlers[intent_type],
-        )
-        for intent_type in LLM_INTENTS
-        if intent_type in handlers
+        IntentTool(handler.intent_type, handler)
+        for handler in intent.async_get(hass)
+        if handler.intent_type in LLM_INTENTS
     ]
     return LLMTools(tools=tools)
