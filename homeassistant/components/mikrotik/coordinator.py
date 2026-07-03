@@ -49,6 +49,7 @@ from .const import (
 )
 from .device import Device
 from .errors import CannotConnect, LoginError
+from .utils import mikrotik_config_entry_errors
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -139,7 +140,11 @@ class MikrotikData:
         arp_devices = {}
         device_list = {}
         wireless_devices = {}
-        try:
+        with mikrotik_config_entry_errors():
+            # Check if connection/login are still valid
+            self.api = get_api(dict(self.config_entry.data))
+
+            # Retrieve data
             self.all_devices = self.get_list_from_interface(DHCP)
             if self.support_capsman:
                 _LOGGER.debug("Hub is a CAPSman manager")
@@ -167,11 +172,6 @@ class MikrotikData:
 
             self.sensors[HEALTH] = self.command(MIKROTIK_SERVICES[HEALTH])
             self.sensors[SYSTEM] = self.command(MIKROTIK_SERVICES[SYSTEM])
-
-        except CannotConnect as err:
-            raise UpdateFailed from err
-        except LoginError as err:
-            raise ConfigEntryAuthFailed from err
 
         if not device_list:
             return
@@ -233,27 +233,12 @@ class MikrotikData:
     ) -> list[dict[str, Any]]:
         """Retrieve data from Mikrotik API."""
         _LOGGER.debug("Running command %s", cmd)
-        try:
+        with mikrotik_config_entry_errors(
+            suppress_errors=suppress_errors, host=self._host
+        ):
             if params:
                 return list(self.api(cmd, **params))
             return list(self.api(cmd))
-        except (
-            librouteros.exceptions.ConnectionClosed,
-            OSError,
-            TimeoutError,
-        ) as api_error:
-            _LOGGER.error("Mikrotik %s connection error %s", self._host, api_error)
-            # try to reconnect
-            self.api = get_api(dict(self.config_entry.data))
-            # we still have to raise CannotConnect to fail the update.
-            raise CannotConnect from api_error
-        except librouteros.exceptions.ProtocolError as api_error:
-            emsg = "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s"
-            if suppress_errors and "no such command prefix" in str(api_error):
-                _LOGGER.debug(emsg, self._host, cmd, api_error)
-                return []
-            _LOGGER.warning(emsg, self._host, cmd, api_error)
-            return []
 
 
 class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):

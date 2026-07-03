@@ -1,13 +1,20 @@
 """The Mikrotik component."""
 
+from typing import Any
+
+from librouteros import Api
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import ATTR_MANUFACTURER, DOMAIN
-from .coordinator import MikrotikConfigEntry, MikrotikDataUpdateCoordinator, get_api
-from .errors import CannotConnect, LoginError
+from .coordinator import (
+    MikrotikConfigEntry,
+    MikrotikDataUpdateCoordinator,
+    get_api,
+    mikrotik_config_entry_errors,
+)
 
 PLATFORMS = [
     Platform.DEVICE_TRACKER,
@@ -15,16 +22,18 @@ PLATFORMS = [
 ]
 
 
+def _call_api(data: dict[str, Any]) -> Api:
+    """Call the Mikrotik API."""
+    with mikrotik_config_entry_errors():
+        api: Api = get_api(data)
+        return api
+
+
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: MikrotikConfigEntry
 ) -> bool:
     """Set up the Mikrotik component."""
-    try:
-        api = await hass.async_add_executor_job(get_api, dict(config_entry.data))
-    except CannotConnect as api_error:
-        raise ConfigEntryNotReady from api_error
-    except LoginError as err:
-        raise ConfigEntryAuthFailed from err
+    api = await hass.async_add_executor_job(_call_api, dict(config_entry.data))
 
     coordinator = MikrotikDataUpdateCoordinator(hass, config_entry, api)
     await hass.async_add_executor_job(coordinator.api.get_hub_details)
