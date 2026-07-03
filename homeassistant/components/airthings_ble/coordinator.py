@@ -35,8 +35,6 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
 
     def __init__(self, hass: HomeAssistant, entry: AirthingsBLEConfigEntry) -> None:
         """Initialize the coordinator."""
-        # Always fetch radon values in Bq/m³ (metric) and let Home Assistant's
-        # radon device class handle unit conversion for display.
         self.airthings = AirthingsBluetoothDeviceData(_LOGGER, is_metric=True)
 
         device_model = entry.data.get(DEVICE_MODEL)
