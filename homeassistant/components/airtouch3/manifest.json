@@ -3,7 +3,6 @@
   "name": "AirTouch 3 Air Conditioner",
   "codeowners": ["@L0rdCha0s"],
   "config_flow": true,
-  "dependencies": ["network"],
   "dhcp": [
     {
       "hostname": "*aritouch3*"

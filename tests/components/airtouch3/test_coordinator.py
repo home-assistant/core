@@ -19,6 +19,7 @@ from homeassistant.components.airtouch3.coordinator import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
@@ -65,7 +66,9 @@ def _aircon() -> Aircon:
 
 def _coordinator(hass: HomeAssistant) -> Airtouch3DataUpdateCoordinator:
     """Create a coordinator with data."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "1.1.1.1"})
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="35901813", data={CONF_HOST: "1.1.1.1"}
+    )
     entry.add_to_hass(hass)
     coordinator = Airtouch3DataUpdateCoordinator(hass, entry, "1.1.1.1")
     coordinator.data = AirTouch3Data.from_aircon(_aircon())
@@ -139,7 +142,6 @@ async def test_send_command_normalizes_command_key(
     monkeypatch.setattr(coordinator._client, "set_mode", set_mode)
 
     await coordinator.send_command(cast(str, CommandType.SET_MODE), 1, 4)
-    await coordinator.send_command(cast(str, 123), 1)
 
     set_mode.assert_awaited_once_with(1, 2, 4)
 
@@ -203,10 +205,9 @@ async def test_send_command_sends_power_toggle(
     [
         ("turn_on", True),
         ("turn_off", False),
-        ("unknown", True),
     ],
 )
-async def test_send_command_skips_unneeded_or_unknown_commands(
+async def test_send_command_skips_unneeded_power_commands(
     hass: HomeAssistant,
     monkeypatch: pytest.MonkeyPatch,
     command_type: str,
@@ -223,15 +224,24 @@ async def test_send_command_skips_unneeded_or_unknown_commands(
     toggle_ac_power.assert_not_called()
 
 
-async def test_send_command_handles_write_error(
+async def test_send_command_raises_on_unknown_command(hass: HomeAssistant) -> None:
+    """Test unsupported commands raise an action error."""
+    coordinator = _coordinator(hass)
+
+    with pytest.raises(HomeAssistantError):
+        await coordinator.send_command(cast(str, 123), 1)
+
+
+async def test_send_command_raises_on_write_error(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Test command delivery handles pyairtouch3 write errors."""
+    """Test pyairtouch3 write errors are surfaced as action errors."""
     coordinator = _coordinator(hass)
     toggle_zone = AsyncMock(side_effect=AirTouchError("closed"))
     monkeypatch.setattr(coordinator._client, "toggle_zone", toggle_zone)
 
-    await coordinator.send_command("toggle_zone", 1)
+    with pytest.raises(HomeAssistantError):
+        await coordinator.send_command("toggle_zone", 1)
 
     toggle_zone.assert_awaited_once_with(1)
 
@@ -260,6 +270,7 @@ async def test_adjust_temperature_skips_missing_target(
     send_command = AsyncMock()
     monkeypatch.setattr(coordinator, "send_command", send_command)
 
-    await coordinator.adjust_temperature(99, 22)
+    with pytest.raises(HomeAssistantError):
+        await coordinator.adjust_temperature(99, 22)
 
     send_command.assert_not_called()

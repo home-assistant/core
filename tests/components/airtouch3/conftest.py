@@ -13,13 +13,3 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.airtouch3.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
-
-
-@pytest.fixture(autouse=True)
-def mock_background_discovery() -> Generator[AsyncMock]:
-    """Prevent background discovery from opening sockets in tests."""
-    with patch(
-        "homeassistant.components.airtouch3.async_discover_devices",
-        AsyncMock(return_value=[]),
-    ) as mock_discovery:
-        yield mock_discovery

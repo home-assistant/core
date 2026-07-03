@@ -1,6 +1,5 @@
 """Test AirTouch 3 climate entities."""
 
-from typing import cast
 from unittest.mock import AsyncMock, Mock, call
 
 from pyairtouch3.airtouch_aircon import Aircon
@@ -13,7 +12,6 @@ from homeassistant.components.airtouch3.climate import (
     PARALLEL_UPDATES,
     AirtouchAC,
     AirtouchGroup,
-    _create_climate_entities,
 )
 from homeassistant.components.airtouch3.const import DOMAIN
 from homeassistant.components.airtouch3.coordinator import (
@@ -25,6 +23,7 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    ClimateEntity,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST
@@ -77,7 +76,9 @@ def _aircon() -> Aircon:
     return aircon
 
 
-def _coordinator(hass: HomeAssistant) -> Airtouch3DataUpdateCoordinator:
+def _entry_and_coordinator(
+    hass: HomeAssistant,
+) -> tuple[MockConfigEntry, Airtouch3DataUpdateCoordinator]:
     """Create a coordinator with data."""
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id=SYSTEM_ID, data={CONF_HOST: "1.1.1.1"}
@@ -85,15 +86,26 @@ def _coordinator(hass: HomeAssistant) -> Airtouch3DataUpdateCoordinator:
     entry.add_to_hass(hass)
     coordinator = Airtouch3DataUpdateCoordinator(hass, entry, "1.1.1.1")
     coordinator.data = AirTouch3Data.from_aircon(_aircon())
-    return coordinator
+    entry.runtime_data = coordinator
+    return entry, coordinator
+
+
+def _coordinator(hass: HomeAssistant) -> Airtouch3DataUpdateCoordinator:
+    """Create a coordinator with data."""
+    return _entry_and_coordinator(hass)[1]
 
 
 async def test_async_setup_entry_adds_ac_and_zone_entities(
     hass: HomeAssistant,
 ) -> None:
-    """Test climate setup creates the AC and zone entities."""
-    coordinator = _coordinator(hass)
-    entities = _create_climate_entities(coordinator)
+    """Test the integration creates the AC and zone entities."""
+    _, coordinator = _entry_and_coordinator(hass)
+    aircon = coordinator.data.aircon
+    entities: list[ClimateEntity] = [AirtouchAC(coordinator, aircon.ac_id)]
+    entities.extend(
+        AirtouchGroup(coordinator, zone.id, aircon.ac_id, zone.name)
+        for zone in coordinator.data.zones.values()
+    )
 
     assert [entity.unique_id for entity in entities] == [
         "35901813_ac_1",
@@ -103,7 +115,9 @@ async def test_async_setup_entry_adds_ac_and_zone_entities(
     assert PARALLEL_UPDATES == 1
     assert entities[0].translation_key == "air_conditioner"
     assert entities[1].translation_key == "zone"
-    assert entities[0].device_info["manufacturer"] == "Polyaire"
+    device_info = entities[0].device_info
+    assert device_info is not None
+    assert device_info["manufacturer"] == "Polyaire"
 
 
 async def test_ac_properties(hass: HomeAssistant) -> None:
@@ -149,23 +163,6 @@ async def test_ac_hvac_mode_commands(
     assert write_state.call_count == 2
 
 
-async def test_ac_unsupported_hvac_mode_does_not_write_state(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Test unsupported AC HVAC mode is ignored."""
-    coordinator = _coordinator(hass)
-    entity = AirtouchAC(coordinator, 1)
-    send_command = AsyncMock()
-    write_state = Mock()
-    monkeypatch.setattr(coordinator, "send_command", send_command)
-    monkeypatch.setattr(entity, "async_write_ha_state", write_state)
-
-    await entity.async_set_hvac_mode(cast(HVACMode, "unsupported"))
-
-    send_command.assert_not_called()
-    write_state.assert_not_called()
-
-
 async def test_ac_fan_mode_commands(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -178,7 +175,6 @@ async def test_ac_fan_mode_commands(
     monkeypatch.setattr(entity, "async_write_ha_state", write_state)
 
     await entity.async_set_fan_mode(FAN_HIGH)
-    await entity.async_set_fan_mode("turbo")
 
     send_command.assert_awaited_once_with("set_fan_speed", 1, 3)
     assert coordinator.data.aircon.fan_speed == 3
@@ -197,6 +193,7 @@ def test_group_properties(hass: HomeAssistant) -> None:
     assert living.hvac_mode == HVACMode.FAN_ONLY
     assert bedroom.current_temperature == 19
     assert bedroom.hvac_mode == HVACMode.OFF
+    assert missing.available is False
     assert missing.target_temperature is None
 
 

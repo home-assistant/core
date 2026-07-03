@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyairtouch3 import (
     DEFAULT_PORT,
@@ -15,6 +15,7 @@ from pyairtouch3 import (
 from homeassistant.components.climate import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -22,6 +23,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 VALUE_COMMANDS = {"set_mode", "set_fan_speed", "set_group_temperature"}
+type AirTouch3ConfigEntry = ConfigEntry[Airtouch3DataUpdateCoordinator]
 
 
 @dataclass(slots=True)
@@ -52,7 +54,7 @@ async def async_fetch_airtouch_data(host: str, port: int = DEFAULT_PORT) -> Airc
             translation_placeholders={"error": str(err)},
         ) from err
 
-    if getattr(aircon, "ac_id", None) is None:
+    if aircon.ac_id is None:
         raise UpdateFailed(
             translation_domain=DOMAIN,
             translation_key="update_failed",
@@ -67,11 +69,12 @@ class Airtouch3DataUpdateCoordinator(DataUpdateCoordinator[AirTouch3Data]):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: AirTouch3ConfigEntry,
         host: str,
         port: int = DEFAULT_PORT,
     ) -> None:
         """Initialize the Airtouch data updater."""
+        assert entry.unique_id is not None
         super().__init__(
             hass,
             _LOGGER,
@@ -79,16 +82,12 @@ class Airtouch3DataUpdateCoordinator(DataUpdateCoordinator[AirTouch3Data]):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
-        self._entry = entry
+        self.system_id = entry.unique_id
         self.host = host
         self.port = port
         self._client = AirTouchClient(host, port, logger=_LOGGER)
 
-    @property
-    def system_id(self) -> str:
-        """Return a stable controller identifier for entity unique IDs."""
-        return self._entry.unique_id or self.host
-
+    @override
     async def _async_update_data(self) -> AirTouch3Data:
         """Fetch data from AirTouch."""
         return AirTouch3Data.from_aircon(
@@ -108,20 +107,21 @@ class Airtouch3DataUpdateCoordinator(DataUpdateCoordinator[AirTouch3Data]):
         if command_key == "turn_on":
             if not self.data.aircon.status:
                 _LOGGER.debug("AC is off, sending turn_on command")
-                self.data.aircon.status = True
             else:
                 _LOGGER.debug("AC is already on, skipping turn_on command")
                 return
         elif command_key == "turn_off":
             if self.data.aircon.status:
                 _LOGGER.debug("AC is on, sending turn_off command")
-                self.data.aircon.status = False
             else:
                 _LOGGER.debug("AC is already off, skipping turn_off command")
                 return
         elif command_key != "toggle_zone" and command_key not in VALUE_COMMANDS:
-            _LOGGER.error("Unknown command type: %s", command_key)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_command",
+                translation_placeholders={"command": command_key},
+            )
 
         try:
             if command_key == "set_mode":
@@ -137,6 +137,11 @@ class Airtouch3DataUpdateCoordinator(DataUpdateCoordinator[AirTouch3Data]):
             elif command_key == "toggle_zone":
                 await self._client.toggle_zone(target_id)
 
+            if command_key == "turn_on":
+                self.data.aircon.status = True
+            elif command_key == "turn_off":
+                self.data.aircon.status = False
+
             _LOGGER.debug(
                 "Sent %s command to AirTouch target %s with value %s",
                 command_key,
@@ -144,13 +149,20 @@ class Airtouch3DataUpdateCoordinator(DataUpdateCoordinator[AirTouch3Data]):
                 value,
             )
         except AirTouchError as err:
-            _LOGGER.error("Failed to send command to AirTouch: %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     async def adjust_temperature(self, zone_id: int, target_temp: int) -> None:
         """Adjust temperature by sending repeated set_fan commands based on current target."""
         if (zone := self.data.zones.get(zone_id)) is None:
-            _LOGGER.error("Current target temperature for zone %s not found", zone_id)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="zone_missing",
+                translation_placeholders={"zone_id": str(zone_id)},
+            )
 
         current_target = zone.desired_temperature
         diff = target_temp - current_target

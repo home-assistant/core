@@ -1,7 +1,7 @@
 """AirTouch 3 component to control AirTouch 3 Climate Devices."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyairtouch3 import AcMode, Aircon, AirtouchZone, ZoneStatus
 
@@ -14,15 +14,14 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirTouch3ConfigEntry
 from .const import DOMAIN
-from .coordinator import Airtouch3DataUpdateCoordinator
+from .coordinator import AirTouch3ConfigEntry, Airtouch3DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,25 +57,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up AirTouch 3 climate entities."""
     coordinator = config_entry.runtime_data
-    entities = _create_climate_entities(coordinator)
-
-    _LOGGER.debug("Adding entities %s", entities)
-    async_add_entities(entities)
-
-
-def _create_climate_entities(
-    coordinator: Airtouch3DataUpdateCoordinator,
-) -> list[ClimateEntity]:
-    """Create AirTouch 3 climate entities from coordinator data."""
     aircon = coordinator.data.aircon
 
     entities: list[ClimateEntity] = [AirtouchAC(coordinator, aircon.ac_id)]
-
     entities.extend(
         AirtouchGroup(coordinator, zone.id, aircon.ac_id, zone.name)
         for zone in coordinator.data.zones.values()
     )
-    return entities
+
+    _LOGGER.debug("Adding entities %s", entities)
+    async_add_entities(entities)
 
 
 class AirtouchClimateEntity(
@@ -103,7 +93,8 @@ class AirtouchAC(AirtouchClimateEntity):
         | ClimateEntityFeature.TURN_OFF
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_target_temperature_step = 1  # Only allow whole degree increments
+    # The controller accepts floating-point values but some modules crash on them.
+    _attr_target_temperature_step = PRECISION_WHOLE
 
     _attr_hvac_modes = [HVACMode.OFF, *HA_STATE_TO_AT]
     _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
@@ -115,23 +106,25 @@ class AirtouchAC(AirtouchClimateEntity):
         self._attr_unique_id = f"{coordinator.system_id}_ac_{ac_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{coordinator.system_id}_ac_{ac_id}")},
-            name="AirTouch 3",
             manufacturer="Polyaire",
             model="AirTouch 3",
         )
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
         fan_speed = self.aircon.fan_speed
         return AT_TO_HA_FAN_SPEED.get(fan_speed, FAN_AUTO)
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.aircon.room_temperature
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode."""
         if not self.aircon.status:
@@ -139,37 +132,30 @@ class AirtouchAC(AirtouchClimateEntity):
         mode = self.aircon.mode
         return AT_TO_HA_STATE.get(mode, HVACMode.AUTO)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode with power control."""
-        at_mode = HA_STATE_TO_AT.get(hvac_mode)
-
         if hvac_mode == HVACMode.OFF:
             await self.coordinator.send_command("turn_off", self.ac_id)
             _LOGGER.debug("Turning off AC %s", self.ac_id)
-        elif at_mode is not None:
+        else:
+            at_mode = HA_STATE_TO_AT[hvac_mode]
             await self.coordinator.send_command("set_mode", self.ac_id, at_mode.value)
             _LOGGER.debug("Setting HVAC mode of AC %s to %s", self.ac_id, hvac_mode)
             await self.coordinator.send_command("turn_on", self.ac_id)
             _LOGGER.debug("Turning on AC %s after setting mode", self.ac_id)
             self.aircon.mode = at_mode
-        else:
-            _LOGGER.warning("Unsupported HVAC mode: %s", hvac_mode)
-            return
 
         self.async_write_ha_state()
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
-        at_fan_mode = HA_FAN_SPEED_TO_AT.get(fan_mode)
-        if at_fan_mode is not None:
-            await self.coordinator.send_command(
-                "set_fan_speed", self.ac_id, at_fan_mode
-            )
-            _LOGGER.debug("Setting fan mode of AC %s to %s", self.ac_id, fan_mode)
-            self.aircon.fan_speed = at_fan_mode
-            self.async_write_ha_state()
-        else:
-            _LOGGER.warning("Unsupported fan mode: %s", fan_mode)
+        at_fan_mode = HA_FAN_SPEED_TO_AT[fan_mode]
+        await self.coordinator.send_command("set_fan_speed", self.ac_id, at_fan_mode)
+        _LOGGER.debug("Setting fan mode of AC %s to %s", self.ac_id, fan_mode)
+        self.aircon.fan_speed = at_fan_mode
+        self.async_write_ha_state()
 
 
 class AirtouchGroup(AirtouchClimateEntity):
@@ -188,7 +174,8 @@ class AirtouchGroup(AirtouchClimateEntity):
         | ClimateEntityFeature.TURN_OFF
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_target_temperature_step = 1  # Only allow whole degree increments
+    # The controller accepts floating-point values but some modules crash on them.
+    _attr_target_temperature_step = PRECISION_WHOLE
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.FAN_ONLY]
 
     def __init__(
@@ -215,20 +202,29 @@ class AirtouchGroup(AirtouchClimateEntity):
         return self.coordinator.data.zones.get(self.group_id)
 
     @property
+    @override
+    def available(self) -> bool:
+        """Return if the group exists in the latest AirTouch data."""
+        return super().available and self.group_id in self.coordinator.data.zones
+
+    @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature for this group (zone)."""
         zone = self._get_zone()
         if zone and zone.sensor and zone.sensor.is_available:
             return zone.sensor.current_temperature
-        return self.aircon.room_temperature or None
+        return self.aircon.room_temperature
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the target temperature for this group (zone)."""
         zone = self._get_zone()
         return zone.desired_temperature if zone else None
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return the HVAC mode for the group, mapped to its on/off state."""
         zone = self._get_zone()
@@ -236,6 +232,7 @@ class AirtouchGroup(AirtouchClimateEntity):
             return HVACMode.FAN_ONLY
         return HVACMode.OFF
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature for the group (zone)."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
@@ -277,6 +274,7 @@ class AirtouchGroup(AirtouchClimateEntity):
                 zone.desired_temperature,
             )
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode by toggling the zone's power state as needed."""
         zone = self._get_zone()
