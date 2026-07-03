@@ -57,6 +57,7 @@ from roborock.devices.traits.v1.valley_electricity_timer import (
 )
 from roborock.devices.traits.v1.volume import SoundVolumeTrait
 from roborock.devices.traits.v1.wash_towel_mode import WashTowelModeTrait
+from roborock.map.b01_q10_map_parser import Q10Room
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
 
 from homeassistant.components.roborock.const import (
@@ -181,11 +182,42 @@ def create_b01_q10_trait() -> Mock:
     for attr_name, value in vars(status_data).items():
         if not attr_name.startswith("_"):
             setattr(status, attr_name, value)
+    status.not_disturb = True
     q10_trait.status = status
 
     q10_trait.vacuum = AsyncMock()
     q10_trait.command = AsyncMock()
     q10_trait.refresh = AsyncMock()
+    q10_trait.do_not_disturb = AsyncMock()
+    q10_trait.do_not_disturb.is_on = True
+    _dnd_listeners: list[Callable[[], None]] = []
+
+    def _dnd_add_update_listener(cb: Callable[[], None]) -> Callable[[], None]:
+        _dnd_listeners.append(cb)
+        return lambda: _dnd_listeners.remove(cb)
+
+    q10_trait.do_not_disturb.add_update_listener = Mock(
+        side_effect=_dnd_add_update_listener
+    )
+    q10_trait.do_not_disturb.enable = AsyncMock(
+        side_effect=lambda: (
+            setattr(q10_trait.do_not_disturb, "is_on", True),
+            setattr(q10_trait.status, "not_disturb", True),
+            [cb() for cb in _dnd_listeners],
+        )
+    )
+    q10_trait.do_not_disturb.disable = AsyncMock(
+        side_effect=lambda: (
+            setattr(q10_trait.do_not_disturb, "is_on", False),
+            setattr(q10_trait.status, "not_disturb", False),
+            [cb() for cb in _dnd_listeners],
+        )
+    )
+    q10_trait.map = Mock()
+    q10_trait.map.rooms = [
+        Q10Room(id=9, raw_name="rr_bedroom", pixel_value=36, pixel_count=100),
+        Q10Room(id=10, raw_name="rr_living_room", pixel_value=40, pixel_count=200),
+    ]
     return q10_trait
 
 

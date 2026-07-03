@@ -79,7 +79,9 @@ __all__ = [
     "RestoreSensor",
     "SensorDeviceClass",
     "SensorEntity",
+    "SensorEntityCapabilityAttribute",
     "SensorEntityDescription",
+    "SensorEntityStateAttribute",
     "SensorExtraStoredData",
     "SensorStateClass",
 ]
