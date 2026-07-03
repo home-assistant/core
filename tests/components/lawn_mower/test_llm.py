@@ -9,6 +9,7 @@ from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
 ENTITY_ID = "lawn_mower.test"
+INTENTS = {"HassLawnMowerDock", "HassLawnMowerStartMowing"}
 
 
 @pytest.fixture(autouse=True)
@@ -42,10 +43,10 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
 
 async def test_intent_tool_exposed(hass: HomeAssistant) -> None:
     """Test the intent tool is offered for an exposed lawn_mower entity."""
-    assert "HassLawnMowerDock" in await _tool_names(hass)
+    assert await _tool_names(hass) >= INTENTS
 
 
 async def test_intent_tool_not_exposed(hass: HomeAssistant) -> None:
     """Test the intent tool is hidden when no lawn_mower entity is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
-    assert "HassLawnMowerDock" not in await _tool_names(hass)
+    assert not INTENTS & await _tool_names(hass)
