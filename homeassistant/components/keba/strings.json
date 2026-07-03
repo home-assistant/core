@@ -56,9 +56,9 @@
       "description": "The `keba.enable` service is deprecated. Use the **Charging Enabled** switch entity instead.\n\nPlease update your automations and scripts to use `switch.turn_on` targeting the KEBA Charging Enabled entity.",
       "title": "Deprecated service: keba.enable"
     },
-    "deprecated_yaml": {
-      "description": "The KEBA charging station integration has been set up via your `configuration.yaml`. This is deprecated and will no longer work in a future release.\n\nYour configuration has been imported automatically. Please remove the `keba:` section from your `configuration.yaml` and restart Home Assistant to fix this issue.",
-      "title": "KEBA YAML configuration is deprecated"
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, a connection error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
     }
   },
   "services": {

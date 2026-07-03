@@ -8,7 +8,12 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    ServiceCall,
+)
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
@@ -16,6 +21,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_FS,
     CONF_FS_FALLBACK,
+    CONF_FS_INTERVAL,
     CONF_FS_PERSIST,
     CONF_FS_TIMEOUT,
     CONF_RFID,
@@ -36,15 +42,18 @@ PLATFORMS = (
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_RFID, default=""): cv.string,
-                vol.Optional(CONF_FS, default=False): cv.boolean,
-                vol.Optional(CONF_FS_TIMEOUT, default=30): cv.positive_int,
-                vol.Optional(CONF_FS_FALLBACK, default=6): cv.positive_int,
-                vol.Optional(CONF_FS_PERSIST, default=0): cv.positive_int,
-            }
+        DOMAIN: vol.All(
+            cv.removed(CONF_FS_INTERVAL, raise_if_present=False),
+            vol.Schema(
+                {
+                    vol.Required(CONF_HOST): cv.string,
+                    vol.Optional(CONF_RFID, default=""): cv.string,
+                    vol.Optional(CONF_FS, default=False): cv.boolean,
+                    vol.Optional(CONF_FS_TIMEOUT, default=30): cv.positive_int,
+                    vol.Optional(CONF_FS_FALLBACK, default=6): cv.positive_int,
+                    vol.Optional(CONF_FS_PERSIST, default=0): cv.positive_int,
+                }
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -91,23 +100,51 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.services.async_register(DOMAIN, service, execute_service)
 
     if DOMAIN in config:
+        hass.async_create_task(_async_import_yaml(hass, config[DOMAIN]))
+    return True
+
+
+async def _async_import_yaml(hass: HomeAssistant, config: ConfigType) -> None:
+    """Import YAML configuration and create the deprecation repair issue."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
+    if result["type"] is FlowResultType.ABORT and result["reason"] not in (
+        "already_configured",
+        "single_instance_allowed",
+    ):
         ir.async_create_issue(
             hass,
             DOMAIN,
-            "deprecated_yaml",
+            f"deprecated_yaml_import_issue_{result['reason']}",
             breaks_in_ha_version=None,
             is_fixable=False,
+            issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Keba Charging Station",
+            },
         )
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config[DOMAIN],
-            )
-        )
-    return True
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version=None,
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Keba Charging Station",
+        },
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: KebaConfigEntry) -> bool:

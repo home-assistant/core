@@ -1,5 +1,6 @@
 """Tests for the KEBA charging station integration setup."""
 
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -11,7 +12,7 @@ from homeassistant.components.keba.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -139,10 +140,18 @@ async def test_service_call_no_entries_is_noop(hass: HomeAssistant) -> None:
     await hass.services.async_call(DOMAIN, "request_data", {}, blocking=True)
 
 
+@pytest.mark.parametrize(
+    "yaml_config",
+    [
+        pytest.param(ENTRY_DATA, id="plain"),
+        pytest.param({**ENTRY_DATA, "refresh_interval": 10}, id="removed_option"),
+    ],
+)
 async def test_async_setup_with_yaml_triggers_import(
     hass: HomeAssistant,
     mock_keba: MagicMock,
     issue_registry: ir.IssueRegistry,
+    yaml_config: dict[str, Any],
 ) -> None:
     """Test that YAML config creates a deprecated issue and triggers an import flow."""
     with (
@@ -155,11 +164,71 @@ async def test_async_setup_with_yaml_triggers_import(
             return_value=True,
         ),
     ):
+        result = await async_setup_component(hass, DOMAIN, {DOMAIN: yaml_config})
+        assert result is True
+        await hass.async_block_till_done()
+
+    assert (
+        issue_registry.async_get_issue(
+            HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+        )
+        is not None
+    )
+
+
+async def test_async_setup_with_yaml_import_fails(
+    hass: HomeAssistant,
+    mock_keba: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that a failed YAML import creates an import issue instead."""
+    mock_keba.setup.return_value = False
+
+    with patch(
+        "homeassistant.components.keba.config_flow.KebaHandler",
+        return_value=mock_keba,
+    ):
         result = await async_setup_component(hass, DOMAIN, {DOMAIN: ENTRY_DATA})
         assert result is True
         await hass.async_block_till_done()
 
-    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml") is not None
+    assert (
+        issue_registry.async_get_issue(
+            HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+        )
+        is None
+    )
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+        )
+        is not None
+    )
+
+
+async def test_async_setup_with_yaml_and_existing_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_keba: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that YAML config next to an existing entry creates the deprecated issue."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.keba.config_flow.KebaHandler",
+        return_value=mock_keba,
+    ):
+        result = await async_setup_component(hass, DOMAIN, {DOMAIN: ENTRY_DATA})
+        assert result is True
+        await hass.async_block_till_done()
+
+    assert (
+        issue_registry.async_get_issue(
+            HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+        )
+        is not None
+    )
 
 
 @pytest.mark.usefixtures("init_integration")
