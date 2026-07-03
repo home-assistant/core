@@ -208,7 +208,6 @@ class GetLiveContextTool(Tool):
     ) -> JsonObjectType:
         """Get the current state of exposed entities."""
         args = self.parameters(tool_input.tool_args)
-        assert llm_context.assistant is not None
         exposed_entities = async_get_exposed_entities(hass, llm_context.assistant)
 
         if not exposed_entities:
