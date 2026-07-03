@@ -49,7 +49,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery-update-info:
     status: exempt
     comment: Integration does not support discovery.
@@ -59,9 +59,7 @@ rules:
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
-  docs-supported-devices:
-    status: exempt
-    comment: Integration is a service type with no physical devices to document.
+  docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
@@ -80,7 +78,7 @@ rules:
   icon-translations:
     status: exempt
     comment: Entity names are dynamically provided by the Gatus service.
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: Integration does not require user intervention repairs.

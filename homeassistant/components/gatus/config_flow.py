@@ -71,44 +71,6 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration of an existing Gatus integration instance."""
-        errors: dict[str, str] = {}
-        reconfigure_entry = self._get_reconfigure_entry()
-
-        if user_input is not None:
-            try:
-                normalized_url = str(URL(user_input[CONF_URL]).origin())
-            except ValueError:
-                errors["base"] = "invalid_url"
-            else:
-                user_input[CONF_URL] = normalized_url
-
-                self._async_abort_entries_match({CONF_URL: normalized_url})
-
-                try:
-                    await validate_input(self.hass, user_input)
-                except CannotConnect:
-                    errors["base"] = "cannot_connect"
-                except Exception:
-                    _LOGGER.exception(
-                        "Unexpected exception during Gatus reconfiguration"
-                    )
-                    errors["base"] = "unknown"
-                else:
-                    return self.async_update_reload_and_abort(
-                        reconfigure_entry, data=user_input
-                    )
-
-        current_url = reconfigure_entry.data.get(CONF_URL, "")
-        schema = vol.Schema({vol.Required(CONF_URL, default=current_url): str})
-
-        return self.async_show_form(
-            step_id="reconfigure", data_schema=schema, errors=errors
-        )
-
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect to the server."""
