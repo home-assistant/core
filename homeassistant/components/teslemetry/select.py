@@ -177,7 +177,10 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         ],
     ),
     TeslemetrySelectEntityDescription(
-        key="climate_state_seat_cooler_left",
+        # remote_seat_cooler_request uses 1-indexed positions (front-left=1,
+        # front-right=2), unlike the 0-indexed Seat enum used for heaters.
+        # Polled state comes from the seat_fan_front_* vehicle_data fields.
+        key="climate_state_seat_fan_front_left",
         select_fn=lambda api, level: api.remote_seat_cooler_request(1, level),
         supported_fn=lambda data: bool(data.get("has_seat_cooling")),
         streaming_listener=lambda x, y: x.listen_ClimateSeatCoolingFrontLeft(y),
@@ -189,7 +192,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         ],
     ),
     TeslemetrySelectEntityDescription(
-        key="climate_state_seat_cooler_right",
+        key="climate_state_seat_fan_front_right",
         select_fn=lambda api, level: api.remote_seat_cooler_request(2, level),
         supported_fn=lambda data: bool(data.get("has_seat_cooling")),
         streaming_listener=lambda x, y: x.listen_ClimateSeatCoolingFrontRight(y),
