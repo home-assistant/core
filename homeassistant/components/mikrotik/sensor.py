@@ -33,10 +33,7 @@ PARALLEL_UPDATES = 0
 class MikrotikSensorEntityDescription(SensorEntityDescription):
     """Shared Mikrotik Sensors entity description."""
 
-    value: Callable[
-        [dict[str, Any]],
-        str | datetime | float | None,
-    ]
+    value: Callable[[dict[str, Any]], StateType | datetime]
     type: str
     index: int
 
