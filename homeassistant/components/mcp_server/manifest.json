@@ -1,6 +1,7 @@
 {
   "domain": "mcp_server",
   "name": "Model Context Protocol Server",
+  "after_dependencies": ["ai_task"],
   "codeowners": ["@allenporter"],
   "config_flow": true,
   "dependencies": ["http", "conversation"],

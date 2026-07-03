@@ -1,13 +1,16 @@
 {
   "config": {
     "abort": {
-      "already_configured": "A Model Context Protocol server exposing these APIs is already configured.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "llm_api_required": "At least one LLM API must be configured."
     },
     "step": {
+      "finish": {
+        "description": "The **{name}** Model Context Protocol server is available at:\n\n- Internal URL: `{internal_url}`\n- External URL: `{external_url}`",
+        "title": "MCP server ready"
+      },
       "reconfigure": {
         "data": {
           "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]"

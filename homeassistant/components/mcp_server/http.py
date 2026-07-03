@@ -5,11 +5,12 @@ well as the older SSE as a transport layer.
 
 The Streamable HTTP protocol uses a single HTTP endpoint per config entry:
 
-- /api/mcp_server/<config entry id>: The Streamable HTTP endpoint currently
-  implements the stateless protocol for simplicity. This receives client
-  requests and sends them to the MCP server, then waits for a response to send
-  back to the client. Config entries that predate multiple config entry support
-  are instead served on the fixed legacy endpoint /api/mcp.
+- /api/mcp_server/<url id>: The Streamable HTTP endpoint currently implements
+  the stateless protocol for simplicity. This receives client requests and
+  sends them to the MCP server, then waits for a response to send back to the
+  client. The URL identifier is generated when the config entry is created.
+  Config entries that predate multiple config entry support are instead served
+  on the fixed legacy endpoint /api/mcp.
 
 The older SSE protocol has two HTTP endpoints and only serves the legacy config
 entry:
@@ -43,12 +44,11 @@ from mcp.shared.message import SessionMessage
 
 from homeassistant.components import conversation
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LLM_HASS_API, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import llm
 
-from .const import CONF_LEGACY, DOMAIN
+from .const import CONF_LEGACY, CONF_URL_ID, DOMAIN
 from .server import create_server
 from .session import Session
 from .types import MCPServerConfigEntry
@@ -59,7 +59,7 @@ _LOGGER = logging.getLogger(__name__)
 STREAMABLE_API = "/api/mcp"
 # Streamable HTTP endpoint for non-legacy config entries, one per config entry
 STREAMABLE_API_BASE = "/api/mcp_server"
-STREAMABLE_ENTRY_API = f"{STREAMABLE_API_BASE}/{{entry_id}}"
+STREAMABLE_ENTRY_API = f"{STREAMABLE_API_BASE}/{{url_id}}"
 TIMEOUT = 60  # Seconds
 
 # Legacy SSE endpoint
@@ -81,7 +81,7 @@ def async_get_mcp_server_path(entry: MCPServerConfigEntry) -> str:
     """Return the Streamable HTTP path serving the given config entry."""
     if entry.data.get(CONF_LEGACY):
         return STREAMABLE_API
-    return f"{STREAMABLE_API_BASE}/{entry.entry_id}"
+    return f"{STREAMABLE_API_BASE}/{entry.data[CONF_URL_ID]}"
 
 
 def async_get_legacy_config_entry(hass: HomeAssistant) -> MCPServerConfigEntry:
@@ -104,19 +104,15 @@ def async_get_legacy_config_entry(hass: HomeAssistant) -> MCPServerConfigEntry:
     return config_entries[0]
 
 
-def async_get_config_entry(hass: HomeAssistant, entry_id: str) -> MCPServerConfigEntry:
-    """Get a loaded MCP server config entry by its identifier.
+def async_get_config_entry(hass: HomeAssistant, url_id: str) -> MCPServerConfigEntry:
+    """Get a loaded MCP server config entry by its URL identifier.
 
     Will raise an HTTP error if the config entry is not present or not loaded.
     """
-    entry = hass.config_entries.async_get_entry(entry_id)
-    if (
-        entry is None
-        or entry.domain != DOMAIN
-        or entry.state is not ConfigEntryState.LOADED
-    ):
-        raise HTTPNotFound(text="Model Context Protocol server is not configured")
-    return entry
+    for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+        if entry.data.get(CONF_URL_ID) == url_id:
+            return entry
+    raise HTTPNotFound(text="Model Context Protocol server is not configured")
 
 
 @dataclass
@@ -339,14 +335,14 @@ class ModelContextProtocolStreamableEntryView(HomeAssistantView):
     name = f"{DOMAIN}:streamable_entry"
     url = STREAMABLE_ENTRY_API
 
-    async def get(self, request: web.Request, entry_id: str) -> web.StreamResponse:
+    async def get(self, request: web.Request, url_id: str) -> web.StreamResponse:
         """Handle unsupported methods."""
         return web.Response(
             status=HTTPStatus.METHOD_NOT_ALLOWED, text="Only POST method is supported"
         )
 
-    async def post(self, request: web.Request, entry_id: str) -> web.StreamResponse:
+    async def post(self, request: web.Request, url_id: str) -> web.StreamResponse:
         """Process JSON-RPC messages for the Model Context Protocol."""
         hass = request.app[KEY_HASS]
-        entry = async_get_config_entry(hass, entry_id)
+        entry = async_get_config_entry(hass, url_id)
         return await handle_streamable_request(request, self.context(request), entry)

@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.mcp_server.const import CONF_LEGACY, DOMAIN
+from homeassistant.components.mcp_server.const import CONF_LEGACY, CONF_URL_ID, DOMAIN
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
@@ -49,6 +49,8 @@ def mock_config_entry(
     data = {CONF_LLM_HASS_API: llm_hass_api}
     if legacy:
         data[CONF_LEGACY] = True
+    else:
+        data[CONF_URL_ID] = "assist"
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=data,

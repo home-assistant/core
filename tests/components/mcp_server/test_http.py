@@ -21,6 +21,7 @@ from homeassistant.components.homeassistant.exposed_entities import async_expose
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.mcp_server.const import (
     CONF_LEGACY,
+    CONF_URL_ID,
     DOMAIN,
     STATELESS_LLM_API,
 )
@@ -668,7 +669,7 @@ async def test_streamable_per_config_entry(
     """Test a non-legacy config entry is served on its own Streamable URL."""
 
     client = await hass_client()
-    url = f"{STREAMABLE_API_BASE}/{config_entry.entry_id}"
+    url = f"{STREAMABLE_API_BASE}/{config_entry.data[CONF_URL_ID]}"
 
     response = await client.post(
         url,
@@ -725,7 +726,7 @@ async def test_streamable_unloaded_config_entry(
     client = await hass_client()
 
     response = await client.post(
-        f"{STREAMABLE_API_BASE}/{config_entry.entry_id}",
+        f"{STREAMABLE_API_BASE}/{config_entry.data[CONF_URL_ID]}",
         json=INITIALIZE_MESSAGE,
         headers={"accept": "application/json", "content-type": "application/json"},
     )
@@ -743,7 +744,7 @@ async def test_streamable_multiple_config_entries(
 
     other_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_LLM_HASS_API: [llm.LLM_API_ASSIST]},
+        data={CONF_LLM_HASS_API: [llm.LLM_API_ASSIST], CONF_URL_ID: "second"},
         minor_version=2,
     )
     other_entry.add_to_hass(hass)
@@ -754,7 +755,7 @@ async def test_streamable_multiple_config_entries(
 
     for entry in (config_entry, other_entry):
         response = await client.post(
-            f"{STREAMABLE_API_BASE}/{entry.entry_id}",
+            f"{STREAMABLE_API_BASE}/{entry.data[CONF_URL_ID]}",
             json=INITIALIZE_MESSAGE,
             headers={"accept": "application/json", "content-type": "application/json"},
         )
