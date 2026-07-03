@@ -24,7 +24,8 @@ class CalendarGetEventsTool(Tool):
     name = "calendar_get_events"
     description = (
         "Get events from a calendar. "
-        "When asked if something happens, search the whole week."
+        "When asked if something happens, search the whole week. "
+        "Results are RFC 5545 which means 'end' is exclusive."
     )
 
     def __init__(self, calendars: list[str]) -> None:

@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components import calendar, llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.core import Context, HomeAssistant, SupportsResponse
-from homeassistant.helpers import llm
+from homeassistant.helpers import entity_registry as er, llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -97,7 +97,7 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     assert call.data == {
         "entity_id": [ENTITY_ID],
         "start_date_time": now,
-        "end_date_time": dt_util.start_of_local_day() + timedelta(days=1),
+        "end_date_time": dt_util.start_of_local_day(now) + timedelta(days=1),
     }
 
     assert response == {
@@ -126,7 +126,7 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
         await tool.async_call(hass, tool_input, llm_context)
     assert call.domain == calendar.DOMAIN
     assert calls[0].data["end_date_time"] == (
-        dt_util.start_of_local_day() + timedelta(days=7)
+        dt_util.start_of_local_day(now) + timedelta(days=7)
     )
 
 
@@ -147,3 +147,19 @@ async def test_calendar_get_events_tool_not_found(hass: HomeAssistant) -> None:
         llm_context,
     )
     assert response == {"success": False, "error": "Calendar not found"}
+
+
+async def test_calendar_get_events_tool_uses_aliases(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test exposed calendar aliases are offered as valid tool values."""
+    entry = entity_registry.async_get_or_create(
+        "calendar", "test", "aliased", suggested_object_id="aliased"
+    )
+    entity_registry.async_update_entity(entry.entity_id, aliases={"Family Calendar"})
+    hass.states.async_set(entry.entity_id, "on")
+    async_expose_entity(hass, "conversation", entry.entity_id, True)
+
+    result = await llm_component.async_get_tools(hass, _llm_context())
+    tool = next(tool for tool in result.tools if tool.name == "calendar_get_events")
+    assert "Family Calendar" in tool.parameters.schema["calendar"].container
