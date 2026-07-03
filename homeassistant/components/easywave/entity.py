@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.restore_state import RestoreStateData
 
 from .const import (
     CONF_BUTTON_COUNT,
@@ -154,10 +153,6 @@ class EasywaveTransmitterEntity(Entity):
         coordinator = self._coordinator
         coordinator.register_transmitter_entities([self])
         self.async_on_remove(lambda: coordinator.unregister_transmitter_entity(self))
-
-    async def async_persist_state(self) -> None:
-        """Persist the current state immediately so it survives an abrupt shutdown."""
-        await RestoreStateData.async_save_persistent_states(self.hass)
 
     @property
     def transmitter_serial(self) -> str:

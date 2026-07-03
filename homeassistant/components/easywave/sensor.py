@@ -286,18 +286,10 @@ class EasywaveTransmitterLastButtonSensor(EasywaveTransmitterEntity, RestoreSens
                 if state in (self._attr_options or ()):
                     self._native_value = state
                     self.async_write_ha_state()
-                    self.hass.async_create_task(
-                        self.async_persist_state(),
-                        eager_start=False,
-                    )
         elif info_type == 0x00 and self._switch_mode == TRANSMITTER_SWITCH_IMPULSE:
             if _BUTTON_STATE_RELEASED in (self._attr_options or ()):
                 self._native_value = _BUTTON_STATE_RELEASED
                 self.async_write_ha_state()
-                self.hass.async_create_task(
-                    self.async_persist_state(),
-                    eager_start=False,
-                )
 
 
 _BATTERY_STATE_OK = "ok"

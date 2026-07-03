@@ -16,7 +16,6 @@
       "device_no_longer_available": "The selected device is no longer available. Please try again."
     },
     "progress": {
-      "waiting_for_sensor": "Waiting for a sensor learn telegram...",
       "waiting_for_transmitter": "Waiting for a transmitter telegram..."
     },
     "step": {
