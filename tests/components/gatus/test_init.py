@@ -26,7 +26,7 @@ async def test_setup_and_unload_entry(
     mock_gatus_client.get_endpoints_statuses.return_value = mock_data
 
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_URL: "http://gatus.local:8080"}
+        domain=DOMAIN, data={CONF_URL: "http://gatus.example.com:8080"}
     )
     config_entry.add_to_hass(hass)
 

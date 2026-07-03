@@ -89,3 +89,36 @@ async def test_dynamic_endpoint_discovery(
         )
         is not None
     )
+
+
+async def test_binary_sensor_missing_data(
+    hass: HomeAssistant,
+    mock_gatus_client: AsyncMock,
+) -> None:
+    """Test binary sensor behavior when endpoint data or results are missing."""
+    missing_data = [{"key": "service_one", "name": "Service One", "results": []}]
+
+    await setup_integration(
+        hass, mock_gatus_client, missing_data, entry_id=TEST_ENTRY_ID
+    )
+
+    state = hass.states.get("binary_sensor.service_one")
+    assert state is not None
+    assert state.state == "unavailable"
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get("binary_sensor.service_one")
+    assert entry is not None
+
+    component = hass.data["binary_sensor"]
+    entity = next(
+        ent
+        for ent in component.entities
+        if ent.entity_id == "binary_sensor.service_one"
+    )
+
+    assert entity.latest_result is None
+    assert entity.is_on is None
+
+    entity.coordinator.data = {}
+    assert entity.latest_result is None

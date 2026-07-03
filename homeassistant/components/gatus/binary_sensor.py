@@ -67,9 +67,14 @@ class GatusEndpointBinarySensor(
         super().__init__(coordinator)
         self._endpoint_key = endpoint_key
 
-        endpoint_name = self.endpoint_data["name"]
-        if "group" in self.endpoint_data and self.endpoint_data["group"] is not None:
-            device_name = f"{self.endpoint_data['group']} {endpoint_name}"
+        endpoint_data = self.endpoint_data
+
+        if TYPE_CHECKING:
+            assert endpoint_data is not None
+
+        endpoint_name = endpoint_data["name"]
+        if "group" in endpoint_data and endpoint_data["group"] is not None:
+            device_name = f"{endpoint_data['group']} {endpoint_name}"
         else:
             device_name = endpoint_name
 
@@ -87,18 +92,37 @@ class GatusEndpointBinarySensor(
     def is_on(self) -> bool | None:
         """Return true if the endpoint is up and healthy."""
         latest_result = self.latest_result
-        if TYPE_CHECKING:
-            assert latest_result is not None
+        if latest_result is None:
+            return None
 
         return bool(latest_result["success"])
 
     @property
-    def endpoint_data(self) -> dict[str, Any]:
-        """Return this specific endpoint's data from the coordinator."""
-        return self.coordinator.data[self._endpoint_key]
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        data = self.coordinator.data
+        return (
+            super().available
+            and data is not None
+            and self._endpoint_key in data
+            and bool(data[self._endpoint_key].get("results"))
+        )
 
     @property
-    def latest_result(self) -> dict[str, Any]:
+    def endpoint_data(self) -> dict[str, Any] | None:
+        """Return this specific endpoint's data from the coordinator."""
+        return self.coordinator.data.get(self._endpoint_key)
+
+    @property
+    def latest_result(self) -> dict[str, Any] | None:
         """Return the most recent monitoring result (Gatus appends newest last)."""
-        results = self.endpoint_data["results"]
+        data = self.endpoint_data
+        if data is None:
+            return None
+
+        results = data["results"]
+        if not results:
+            return None
+
         return cast(dict[str, Any], results[-1])

@@ -10,16 +10,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reconfigure": {
-        "data": {
-          "url": "[%key:common::config_flow::data::url%]"
-        },
-        "data_description": {
-          "url": "The full base URL of your Gatus status page instance including protocol and port."
-        },
-        "description": "Update the URL for your Gatus instance.",
-        "title": "Reconfigure Gatus Connection"
-      },
       "user": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]"

@@ -28,14 +28,14 @@ async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_URL: "http://gatus.local:8080"},
+            {CONF_URL: "http://gatus.example.com:8080"},
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Gatus"
     assert result["data"] == {
-        CONF_URL: "http://gatus.local:8080",
+        CONF_URL: "http://gatus.example.com:8080",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -49,7 +49,7 @@ async def test_form_invalid_url(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_URL: "gatus.local"},
+        {CONF_URL: "gatus.example.com"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -80,7 +80,7 @@ async def test_form_failures_and_recovery(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_URL: "http://gatus.local:8080"},
+            {CONF_URL: "http://gatus.example.com:8080"},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -92,7 +92,7 @@ async def test_form_failures_and_recovery(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_URL: "http://gatus.local:8080"},
+            {CONF_URL: "http://gatus.example.com:8080"},
         )
         await hass.async_block_till_done()
 
@@ -104,7 +104,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test that duplicate configurations for the same base URL abort early."""
     old_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_URL: "http://gatus.local:8080"},
+        data={CONF_URL: "http://gatus.example.com:8080"},
     )
     old_entry.add_to_hass(hass)
 
@@ -114,7 +114,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_URL: "http://gatus.local:8080"},
+        {CONF_URL: "http://gatus.example.com:8080"},
     )
 
     assert result["type"] is FlowResultType.ABORT

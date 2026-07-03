@@ -22,7 +22,7 @@ async def test_coordinator_successful_update(
     config_entry = await setup_integration(hass, mock_gatus_client, mock_data)
     coordinator: GatusDataUpdateCoordinator = config_entry.runtime_data
 
-    assert coordinator.url == "http://gatus.local:80"
+    assert coordinator.url == "http://gatus.example.com:80"
 
     assert coordinator.last_update_success is True
     assert isinstance(coordinator.data, dict)
