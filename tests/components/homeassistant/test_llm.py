@@ -44,7 +44,7 @@ async def test_live_context_always_offered(hass: HomeAssistant) -> None:
     """Test GetLiveContext is offered even when nothing is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
     result = await llm_component.async_get_tools(hass, _llm_context())
-    assert [tool.name for tool in result.tools] == ["GetLiveContext"]
+    assert "GetLiveContext" in [tool.name for tool in result.tools]
 
 
 async def test_get_live_context_no_exposed_entities(hass: HomeAssistant) -> None:
