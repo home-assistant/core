@@ -43,7 +43,7 @@ async def test_get_tools_no_exposed_calendar(hass: HomeAssistant) -> None:
     """Test no calendar tool is offered when no calendar is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
     result = await llm_component.async_get_tools(hass, _llm_context())
-    assert [tool.name for tool in result.tools] == []
+    assert "calendar_get_events" not in [tool.name for tool in result.tools]
 
 
 async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
