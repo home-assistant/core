@@ -3,29 +3,17 @@
 from datetime import timedelta
 import logging
 
-from surepy.enums import Location
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
-import voluptuous as vol
 
-from homeassistant.const import ATTR_LOCATION, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    ATTR_FLAP_ID,
-    ATTR_LOCK_STATE,
-    ATTR_PET_NAME,
-    DOMAIN,
-    SERVICE_SET_LOCK_STATE,
-    SERVICE_SET_PET_LOCATION,
-)
+from .const import DOMAIN
 from .coordinator import SurePetcareConfigEntry, SurePetcareDataCoordinator
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,66 +25,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Sure Petcare services."""
-
-    async def handle_set_lock_state(call: ServiceCall) -> None:
-        """Set lock state for a flap."""
-        flap_id = call.data[ATTR_FLAP_ID]
-        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
-            coordinator: SurePetcareDataCoordinator = entry.runtime_data
-            if flap_id in coordinator.data:
-                await coordinator.handle_set_lock_state(call)
-                return
-        raise HomeAssistantError(f"Unknown Sure Petcare flap ID: {flap_id}")
-
-    async def handle_set_pet_location(call: ServiceCall) -> None:
-        """Set pet location."""
-        pet_name = call.data[ATTR_PET_NAME]
-        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
-            coordinator: SurePetcareDataCoordinator = entry.runtime_data
-            if pet_name in coordinator.get_pets():
-                await coordinator.handle_set_pet_location(call)
-                return
-        raise HomeAssistantError(f"Unknown Sure Petcare pet: {pet_name}")
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_LOCK_STATE,
-        handle_set_lock_state,
-        schema=vol.Schema(
-            {
-                vol.Required(ATTR_FLAP_ID): cv.positive_int,
-                vol.Required(ATTR_LOCK_STATE): vol.All(
-                    cv.string,
-                    vol.Lower,
-                    vol.In(
-                        [
-                            "unlocked",
-                            "locked_in",
-                            "locked_out",
-                            "locked_all",
-                        ]
-                    ),
-                ),
-            }
-        ),
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_PET_LOCATION,
-        handle_set_pet_location,
-        schema=vol.Schema(
-            {
-                vol.Required(ATTR_PET_NAME): cv.string,
-                vol.Required(ATTR_LOCATION): vol.In(
-                    [
-                        Location.INSIDE.name.title(),
-                        Location.OUTSIDE.name.title(),
-                    ]
-                ),
-            }
-        ),
-    )
-
+    async_setup_services(hass)
     return True
 
 
