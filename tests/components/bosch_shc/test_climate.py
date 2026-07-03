@@ -1,6 +1,5 @@
 """Tests for the Bosch SHC climate platform."""
 
-from typing import Any
 from unittest.mock import MagicMock, create_autospec, patch
 
 from boschshcpy import SHCClimateControl, SHCHeatingCircuit
@@ -36,12 +35,6 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 OM_CC = RoomClimateControlService.OperationMode
 OM_HC = SHCHeatingCircuit.HeatingCircuitService.OperationMode
-
-
-@pytest.fixture
-def platforms() -> list[Platform]:
-    """Load only the climate platform."""
-    return [Platform.CLIMATE]
 
 
 def _make_climate_device(
@@ -512,7 +505,7 @@ async def test_climate_control_set_preset_mode(
     preset_mode: str,
     expect_boost: bool,
     expect_low: bool,
-    expect_operation_mode: Any,
+    expect_operation_mode: RoomClimateControlService.OperationMode | None,
 ) -> None:
     """set_preset_mode writes the regulation-axis fields for each preset."""
     device = _make_climate_device(

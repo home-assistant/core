@@ -25,11 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
-# Preset mode strings (regulation axis — independent of hvac_mode direction axis).
-# Bosch separates direction (HEATING/COOLING/OFF) from regulation (AUTOMATIC
-# schedule vs MANUAL setpoint + eco/boost overrides). We map regulation onto
-# HA preset_mode so AUTO is a preset, not an hvac_mode. auto/manual aren't
-# standard HA presets, so only those two need defining here.
+# auto/manual aren't standard HA presets (unlike boost/eco), so only these two
+# need defining here — see SHCClimateControlEntity's docstring for the mapping.
 PRESET_AUTO = "auto"
 PRESET_MANUAL = "manual"
 

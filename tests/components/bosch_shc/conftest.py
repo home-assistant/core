@@ -7,11 +7,9 @@ from boschshcpy.information import SHCInformation
 from boschshcpy.session import SHCSession
 import pytest
 
-from homeassistant.const import Platform
+from homeassistant.components.bosch_shc.const import DOMAIN
 
 from tests.common import MockConfigEntry
-
-DOMAIN = "bosch_shc"
 
 MOCK_ENTRY_DATA = {
     "host": "1.2.3.4",
@@ -57,9 +55,3 @@ def mock_session() -> MagicMock:
     session.device_helper.climate_controls = []
     session.device_helper.heating_circuits = []
     return session
-
-
-@pytest.fixture
-def platforms() -> list[Platform]:
-    """Platforms to load; override in a test module to scope setup to one platform."""
-    return []
