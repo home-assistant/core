@@ -72,9 +72,6 @@
     },
     "reboot_failed": {
       "message": "Failed to reboot gateway. Try again in a few moments or power cycle the device manually"
-    },
-    "set_limitation_before_data": {
-      "message": "Unable to update Velux limitation before the current limits are known"
     }
   }
 }

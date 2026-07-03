@@ -6,9 +6,9 @@ from typing import override
 from pyvlx import ExteriorHeating, Intensity, OpeningDevice, Position
 
 from homeassistant.components.number import NumberEntity, NumberMode
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfRatio
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -93,7 +93,7 @@ class VeluxPositionLimitNumber(
     _attr_entity_registry_enabled_default = False
     _attr_mode = NumberMode.BOX
     _attr_native_step = 1
-    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = UnitOfRatio.PERCENTAGE
     _attr_has_entity_name = True
 
     _limitation_kind: str
@@ -102,7 +102,7 @@ class VeluxPositionLimitNumber(
         self, coordinator: VeluxLimitationCoordinator, config_entry_id: str
     ) -> None:
         """Initialize Velux limitation number."""
-        CoordinatorEntity.__init__(self, coordinator)
+        super().__init__(coordinator)
         node = coordinator.node
         unique_id = velux_unique_id(node, config_entry_id)
         self._attr_unique_id = f"{unique_id}_{self._limitation_kind}_limitation"
@@ -141,14 +141,7 @@ class VeluxPositionLimitNumber(
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the limitation in Home Assistant semantics."""
-        if self.coordinator.data is None:
-            await self.coordinator.async_refresh()
-
-        if self.coordinator.data is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_limitation_before_data",
-            )
+        # this will only be called if the entity is available, so coordinator.data is not None
 
         if self._overlaps(value):
             raise ServiceValidationError(

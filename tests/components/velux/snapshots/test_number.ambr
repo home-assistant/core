@@ -38,7 +38,7 @@
     'supported_features': 0,
     'translation_key': 'closed_position_limitation',
     'unique_id': '4711_closed_limitation',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_number_setup[number.test_blind_closed_position_limit-state]
@@ -49,7 +49,7 @@
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_blind_closed_position_limit',
@@ -98,7 +98,7 @@
     'supported_features': 0,
     'translation_key': 'open_position_limitation',
     'unique_id': '4711_open_limitation',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_number_setup[number.test_blind_open_position_limit-state]
@@ -109,7 +109,7 @@
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_blind_open_position_limit',
@@ -158,7 +158,7 @@
     'supported_features': 0,
     'translation_key': 'closed_position_limitation',
     'unique_id': '987654321_closed_limitation',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_number_setup[number.test_dual_roller_shutter_closed_position_limit-state]
@@ -169,7 +169,7 @@
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_dual_roller_shutter_closed_position_limit',
@@ -218,7 +218,7 @@
     'supported_features': 0,
     'translation_key': 'open_position_limitation',
     'unique_id': '987654321_open_limitation',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_number_setup[number.test_dual_roller_shutter_open_position_limit-state]
@@ -229,7 +229,7 @@
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_dual_roller_shutter_open_position_limit',
@@ -338,7 +338,7 @@
     'supported_features': 0,
     'translation_key': 'closed_position_limitation',
     'unique_id': '123456789_closed_limitation',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_number_setup[number.test_window_closed_position_limit-state]
@@ -349,7 +349,7 @@
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_window_closed_position_limit',
@@ -398,7 +398,7 @@
     'supported_features': 0,
     'translation_key': 'open_position_limitation',
     'unique_id': '123456789_open_limitation',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_number_setup[number.test_window_open_position_limit-state]
@@ -409,7 +409,7 @@
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_window_open_position_limit',

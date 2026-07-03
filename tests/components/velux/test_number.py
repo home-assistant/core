@@ -16,7 +16,7 @@ from homeassistant.components.number import (
 from homeassistant.components.velux.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import update_callback_entity, update_polled_entities
@@ -247,58 +247,6 @@ async def test_set_limitation_updates_state_optimistically(
     )
 
     assert hass.states.get(closed_limit_entity_id(mock_window)).state == "40"
-
-
-@pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_set_limitation_refreshes_before_first_write(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_window: AsyncMock,
-) -> None:
-    """Setting a limitation refreshes the coordinator if data is not loaded yet."""
-    entity = get_limit_number_entity(hass, closed_limit_entity_id(mock_window))
-
-    coordinator = mock_config_entry.runtime_data.limitation_coordinators[
-        mock_window.node_id
-    ]
-    coordinator.data = None
-    mock_window.get_limitation_min.reset_mock()
-    mock_window.get_limitation_max.reset_mock()
-    mock_window.set_position_limitations.reset_mock()
-
-    await entity.async_set_native_value(40)
-
-    mock_window.get_limitation_min.assert_awaited_once()
-    mock_window.get_limitation_max.assert_awaited_once()
-    mock_window.set_position_limitations.assert_awaited_once_with(
-        position_min=mock_window.get_limitation_min.return_value,
-        position_max=Position(position_percent=60),
-    )
-
-
-@pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_set_limitation_fails_when_refresh_has_no_data(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_window: AsyncMock,
-) -> None:
-    """Setting a limitation fails cleanly if a refresh cannot populate data."""
-    entity = get_limit_number_entity(hass, closed_limit_entity_id(mock_window))
-
-    coordinator = mock_config_entry.runtime_data.limitation_coordinators[
-        mock_window.node_id
-    ]
-    coordinator.data = None
-    mock_window.get_limitation_min.side_effect = PyVLXException("Connection lost")
-    mock_window.get_limitation_max.side_effect = PyVLXException("Connection lost")
-    mock_window.set_position_limitations.reset_mock()
-
-    with pytest.raises(HomeAssistantError):
-        await entity.async_set_native_value(40)
-
-    mock_window.set_position_limitations.assert_not_awaited()
 
 
 @pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
