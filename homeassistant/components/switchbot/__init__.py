@@ -426,9 +426,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) 
     minor_version = entry.minor_version
     _LOGGER.debug("Migrating from version %s.%s", version, minor_version)
 
-    if version > 1:
-        return False
-
     if version == 1 and minor_version < 2:
         new_options: dict[str, Any] = {**entry.options}
 
