@@ -246,7 +246,9 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             {
                 **vars(info),
                 "NewDeviceLog": "***omitted***",
+                "device_log": "***omitted***",
                 "NewSerialNumber": "***omitted***",
+                "serial_number": "***omitted***",
             },
         )
 
