@@ -38,9 +38,6 @@ class ScriptTool(ActionTool):
 @callback
 def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
     """Return a script LLM tool for each exposed script."""
-    if not llm_context.assistant:
-        return LLMTools(tools=[])
-
     tools: list[Tool] = [
         ScriptTool(hass, state.entity_id)
         for state in sorted(hass.states.async_all(DOMAIN), key=attrgetter("name"))
