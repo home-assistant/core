@@ -124,7 +124,7 @@ class SyncthingClient:
 
     def get_initial_events(self) -> list[dict[str, Any]]:
         """Get initial events received upon subscription."""
-        return self._initial_events
+        return list(self._initial_events)
 
     async def unsubscribe(self) -> None:
         """Stop event listener coroutine."""
@@ -142,6 +142,8 @@ class SyncthingClient:
                     _LOGGER.warning(
                         "The syncthing server '%s' is back online", self._client.url
                     )
+                    self._initial_events = []
+                    self._initial_events_processed = False
                     async_dispatcher_send(
                         self._hass, f"{SERVER_AVAILABLE}-{self._server_id}"
                     )
@@ -151,13 +153,14 @@ class SyncthingClient:
                 continue
             try:
                 async for event in events.listen():
-                    if events.last_seen_id == 0 and event["type"] in DEVICE_EVENTS:
-                        # Storing initial events to find current device state, skipping all other events
-                        self._initial_events.append(event)
+                    if events.last_seen_id == 0:
+                        if event["type"] in DEVICE_EVENTS:
+                            # Storing initial events to find current device state, skipping all other events
+                            self._initial_events.append(event)
                         continue
 
                     # Triggering device status check once initial events are ready
-                    if not self._initial_events_processed and events.last_seen_id != 0:
+                    if not self._initial_events_processed:
                         self._initial_events_processed = True
                         async_dispatcher_send(
                             self._hass,

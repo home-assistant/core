@@ -166,7 +166,7 @@ class FolderSensor(SensorEntity):
         """Start polling syncthing folder status."""
         if self._unsub_timer is None:
 
-            async def refresh(event_time) -> None:
+            async def refresh(event_time: Any) -> None:
                 """Get the latest data from Syncthing."""
                 await self.async_update_status()
 
@@ -306,7 +306,6 @@ class DeviceSensor(SensorEntity):
         "maxRequestKiB": "max_request_kib",
         "untrusted": "untrusted",
         "remoteGUIPort": "remote_gui_port",
-        "numConnections": "num_connections",
         "deviceName": "device_name",
         "clientName": "client_name",
         "clientVersion": "client_version",
@@ -331,10 +330,8 @@ class DeviceSensor(SensorEntity):
         self._unsub_timer: CALLBACK_TYPE | None = None
 
         self._short_server_id = server_id.split("-", maxsplit=1)[0]
-        self._short_device_id = device_id.split("-", maxsplit=1)[0]
-        self._attr_name = (
-            f"{self._short_server_id} {self._short_device_id} {device_label}"
-        )
+        short_device_id = device_id.split("-", maxsplit=1)[0]
+        self._attr_name = f"{self._short_server_id} {short_device_id} {device_label}"
         self._attr_unique_id = f"{self._short_server_id}-{device_id}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
@@ -450,7 +447,8 @@ class DeviceSensor(SensorEntity):
             )
         )
 
-        async def handle_device_resumed(event: dict[str, Any]) -> None:
+        @callback
+        def handle_device_resumed(event: dict[str, Any]) -> None:
             """Handle device resumed event."""
             if self._state:
                 self._state["state"] = "disconnected"
@@ -513,29 +511,29 @@ class DeviceSensor(SensorEntity):
         await self.async_update_status()
 
     def _get_initial_device_state(self) -> dict[str, Any]:
-        """Get initial device state from stored events on startup."""
-        state = "unknown" if self._server_id != self._device_id else "online"
-        last_event: Mapping[str, Any] = {"data": {}}
-
-        for event in [
-            e
-            for e in self._syncthing.get_initial_events()
-            if e["data"].get("device") == self._device_id
-            or e["data"].get("id") == self._device_id
-        ]:
-            if event["type"] == "DeviceConnected":
-                last_event = event
+        """Compute initial device state from stored events on startup."""
+        state = "online" if self._server_id == self._device_id else "unknown"
+        last_data: dict[str, Any] = {}
+        for event in self._syncthing.get_initial_events():
+            data = event["data"]
+            if (
+                data.get("device") != self._device_id
+                and data.get("id") != self._device_id
+            ):
+                continue
+            event_type = event["type"]
+            if event_type == "DeviceConnected":
+                last_data = data
                 state = "connected"
-            elif event["type"] == "DeviceDisconnected":
-                last_event = event
-                state = "disconnected" if state != "paused" else state
-            elif event["type"] == "DevicePaused":
+            elif event_type == "DeviceDisconnected":
+                last_data = data
+                if state != "paused":
+                    state = "disconnected"
+            elif event_type == "DevicePaused":
                 state = "paused"
-            elif event["type"] == "DeviceResumed":
+            elif event_type == "DeviceResumed":
                 state = "disconnected"
-
-        last_event["data"]["state"] = state
-        return self._filter_state(last_event["data"])
+        return self._filter_state({**last_data, "state": state})
 
     def _filter_state(self, updates: dict[str, Any]) -> dict[str, Any]:
         """Filter and map state attributes."""
@@ -543,6 +541,6 @@ class DeviceSensor(SensorEntity):
 
         for key, value in updates.items():
             if key in self.STATE_ATTRIBUTES:
-                filtered_state[key] = value
+                filtered_state[self.STATE_ATTRIBUTES[key]] = value
 
         return filtered_state
