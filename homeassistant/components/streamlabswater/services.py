@@ -29,9 +29,10 @@ def set_away_mode(call: ServiceCall) -> None:
         call.hass, DOMAIN, None
     )
     coordinator = entry.runtime_data
-    away_mode = call.data.get(ATTR_AWAY_MODE)
-    location_id = call.data.get(CONF_LOCATION_ID) or list(coordinator.data)[0]
-    coordinator.client.update_location(location_id, away_mode)
+    coordinator.client.update_location(
+        call.data.get(CONF_LOCATION_ID) or list(coordinator.data)[0],
+        call.data[ATTR_AWAY_MODE],
+    )
 
 
 @callback
