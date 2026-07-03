@@ -7,12 +7,11 @@ DOMAIN = "google_health"
 OAUTH2_AUTHORIZE = "https://accounts.google.com/o/oauth2/v2/auth"
 OAUTH2_TOKEN = "https://oauth2.googleapis.com/token"
 
-OAUTH_SCOPE_PROFILE = "profile"
 DEFAULT_TITLE = "Google Health"
 
 OAUTH_SCOPES = [
     HealthApiScope.ACTIVITY_READ,
     HealthApiScope.PROFILE_READ,
     HealthApiScope.MEASUREMENTS_READ,
-    OAUTH_SCOPE_PROFILE,
+    HealthApiScope.USERINFO_PROFILE,
 ]
