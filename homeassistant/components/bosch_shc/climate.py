@@ -93,7 +93,6 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
     ) -> None:
         """Initialize the SHC climate control entity."""
         super().__init__(device=device, parent_id=parent_id, entry_id=entry_id)
-        self._attr_unique_id = f"{device.serial}_climate"
 
     @property
     @override
