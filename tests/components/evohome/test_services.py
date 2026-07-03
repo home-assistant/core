@@ -138,7 +138,7 @@ async def test_set_system_mode_deprecated(
             blocking=True,
         )
 
-        mock_fcn.assert_awaited_once_with("Auto", until=None)
+        mock_fcn.assert_awaited_once_with("auto", until=None)
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_set_system_mode_service")
     assert issue
@@ -163,7 +163,7 @@ async def test_set_system_mode_deprecated(
         )
 
         mock_fcn.assert_awaited_once_with(
-            "AutoWithEco", until=datetime(2024, 7, 11, 0, 0, tzinfo=UTC)
+            "auto_with_eco", until=datetime(2024, 7, 11, 0, 0, tzinfo=UTC)
         )
 
     # EvoService.SET_SYSTEM_MODE: Away, days=7
@@ -179,7 +179,7 @@ async def test_set_system_mode_deprecated(
         )
 
         mock_fcn.assert_awaited_once_with(
-            "Away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
+            "away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
         )
 
 
@@ -207,7 +207,7 @@ async def test_set_system_mode(
         )
 
         mock_fcn.assert_awaited_once_with(
-            "Away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
+            "away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
         )
 
     # can remove, once the domain-level service is removed
@@ -224,7 +224,7 @@ async def test_set_system_mode(
         )
 
         mock_fcn.assert_awaited_once_with(
-            "Away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
+            "away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
         )
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_set_system_mode_service")

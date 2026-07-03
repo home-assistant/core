@@ -976,7 +976,7 @@ eurotronic-cometblue-ha==1.4.0
 # evdev==1.9.3
 
 # homeassistant.components.evohome
-evohome-async==1.2.0
+evohome-async==2.0.1
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.19
@@ -1616,7 +1616,7 @@ mullvad-api==1.0.0
 music-assistant-client==1.3.6
 
 # homeassistant.components.tts
-mutagen==1.48.0
+mutagen==1.48.1
 
 # homeassistant.components.mutesync
 mutesync==0.0.1
@@ -1942,7 +1942,7 @@ py-schluter==0.1.7
 py-sucks==0.9.11
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.10.1
+py-synologydsm-api==2.10.2
 
 # homeassistant.components.unifi_access
 py-unifi-access==1.3.0
@@ -2537,7 +2537,7 @@ pyseventeentrack==1.1.3
 pysiaalarm==3.2.2
 
 # homeassistant.components.signal_messenger
-pysignalclirestapi==0.3.24
+pysignalclirestapi==0.3.25
 
 # homeassistant.components.sky_hub
 pyskyqhub==0.1.4
@@ -2785,7 +2785,7 @@ pytradfri[async]==9.0.1
 pytrafikverket==1.1.1
 
 # homeassistant.components.v2c
-pytrydan==1.0.2
+pytrydan==1.0.3
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==25.0.0
@@ -3152,7 +3152,7 @@ tesla-powerwall==0.5.3
 tesla-wall-connector==1.1.0
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.9.0
+teslemetry-stream==0.9.1
 
 # homeassistant.components.tessie
 tessie-api==0.1.3
@@ -3335,7 +3335,7 @@ waterfurnace==1.7.1
 watergate-local-api==2025.1.0
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==1.5.4
+weatherflow4py==1.5.8
 
 # homeassistant.components.cisco_webex_teams
 webexpythonsdk==2.0.6
@@ -3374,7 +3374,7 @@ wolf-comm==0.0.52
 wsdot==0.0.1
 
 # homeassistant.components.wyoming
-wyoming==1.9.0
+wyoming==1.10.0
 
 # homeassistant.components.xiaomi_ble
 xiaomi-ble==1.11.0
