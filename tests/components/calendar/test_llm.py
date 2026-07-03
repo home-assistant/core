@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 from freezegun import freeze_time
+import pytest
 
 from homeassistant.components import calendar, llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -12,6 +13,15 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_mock_service
+
+
+@pytest.fixture(autouse=True)
+async def setup_integrations(hass: HomeAssistant) -> None:
+    """Set up the integrations for the calendar LLM tools platform."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "calendar", {})
+    assert await async_setup_component(hass, "llm", {})
+    await hass.async_block_till_done()
 
 
 def _llm_context() -> llm.LLMContext:
@@ -27,19 +37,12 @@ def _llm_context() -> llm.LLMContext:
 
 async def test_get_tools_no_exposed_calendar(hass: HomeAssistant) -> None:
     """Test no calendar tool is offered when no calendar is exposed."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "calendar", {})
-    assert await async_setup_component(hass, "llm", {})
-
     result = await llm_component.async_get_tools(hass, _llm_context())
     assert [tool.name for tool in result.tools] == []
 
 
 async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     """Test the calendar get events tool is exposed and works via the platform."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "calendar", {})
-    assert await async_setup_component(hass, "llm", {})
     hass.states.async_set(
         "calendar.test_calendar", "on", {"friendly_name": "Mock Calendar Name"}
     )
