@@ -36,6 +36,9 @@ def async_get_tools(
         if handler.platforms is None or handler.platforms & exposed_domains
     ]
 
+    if not handlers:
+        return None
+
     # Intent script names come from user configuration, so slugify them into
     # valid tool names.
     tools: list[Tool] = [
