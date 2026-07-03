@@ -177,15 +177,21 @@ async def test_reconfigure_shows_form(hass: HomeAssistant) -> None:
 
 
 async def test_reconfigure_updates_entry(hass: HomeAssistant) -> None:
-    """Test that submitting reconfigure updates the entry data."""
+    """Test that submitting reconfigure validates the connection and updates the entry."""
     entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT, unique_id="12345678")
     entry.add_to_hass(hass)
 
     result = await entry.start_reconfigure_flow(hass)
     new_data = {**USER_INPUT, "failsafe_timeout": 60}
-    with patch(
-        "homeassistant.components.keba.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.keba.config_flow.KebaHandler",
+            return_value=_mock_keba_handler(),
+        ),
+        patch(
+            "homeassistant.components.keba.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], new_data
@@ -193,6 +199,62 @@ async def test_reconfigure_updates_entry(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reconfigure_successful"
+    assert entry.data["failsafe_timeout"] == 60
+
+
+@pytest.mark.parametrize(
+    ("setup_side_effect", "setup_return_value", "expected_error"),
+    [
+        pytest.param(None, False, "cannot_connect", id="no_response"),
+        pytest.param(OSError("no route to host"), True, "cannot_connect", id="oserror"),
+        pytest.param(Exception("unexpected error"), True, "unknown", id="unexpected"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    setup_side_effect: Exception | None,
+    setup_return_value: bool,
+    expected_error: str,
+) -> None:
+    """Test that connection problems during reconfigure show the matching error."""
+    entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT, unique_id="12345678")
+    entry.add_to_hass(hass)
+
+    mock = _mock_keba_handler()
+    mock.setup.side_effect = setup_side_effect
+    mock.setup.return_value = setup_return_value
+
+    result = await entry.start_reconfigure_flow(hass)
+    with patch(
+        "homeassistant.components.keba.config_flow.KebaHandler",
+        return_value=mock,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "reconfigure"
+    assert result2["errors"] == {"base": expected_error}
+
+
+async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test that reconfiguring against a different charger aborts."""
+    entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT, unique_id="12345678")
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    with patch(
+        "homeassistant.components.keba.config_flow.KebaHandler",
+        return_value=_mock_keba_handler(serial="87654321"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "unique_id_mismatch"
+    assert entry.unique_id == "12345678"
 
 
 async def test_already_configured(hass: HomeAssistant) -> None:

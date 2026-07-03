@@ -25,6 +25,11 @@ from .const import (
     CONF_FS_PERSIST,
     CONF_FS_TIMEOUT,
     CONF_RFID,
+    DEFAULT_FS,
+    DEFAULT_FS_FALLBACK,
+    DEFAULT_FS_PERSIST,
+    DEFAULT_FS_TIMEOUT,
+    DEFAULT_RFID,
     DOMAIN,
     MAX_FAST_POLLING_COUNT,
     MAX_POLLING_INTERVAL,
@@ -47,11 +52,17 @@ CONFIG_SCHEMA = vol.Schema(
             vol.Schema(
                 {
                     vol.Required(CONF_HOST): cv.string,
-                    vol.Optional(CONF_RFID, default=""): cv.string,
-                    vol.Optional(CONF_FS, default=False): cv.boolean,
-                    vol.Optional(CONF_FS_TIMEOUT, default=30): cv.positive_int,
-                    vol.Optional(CONF_FS_FALLBACK, default=6): cv.positive_int,
-                    vol.Optional(CONF_FS_PERSIST, default=0): cv.positive_int,
+                    vol.Optional(CONF_RFID, default=DEFAULT_RFID): cv.string,
+                    vol.Optional(CONF_FS, default=DEFAULT_FS): cv.boolean,
+                    vol.Optional(
+                        CONF_FS_TIMEOUT, default=DEFAULT_FS_TIMEOUT
+                    ): cv.positive_int,
+                    vol.Optional(
+                        CONF_FS_FALLBACK, default=DEFAULT_FS_FALLBACK
+                    ): cv.positive_int,
+                    vol.Optional(
+                        CONF_FS_PERSIST, default=DEFAULT_FS_PERSIST
+                    ): cv.positive_int,
                 }
             ),
         )
