@@ -5,6 +5,13 @@ import contextlib
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+from easywave_home_control.codec import (
+    ButtonFunction,
+    ButtonPushEvent,
+    ButtonReleaseEvent,
+    EwbRcvEvent,
+)
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -226,81 +233,65 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 _LOGGER.debug("Telegram listener error: %s", err)
                 await asyncio.sleep(5.0)
 
-    # EWB info_type constants (from easywave_home_control protocol)
-    _INFO_TYPE_EW_RELEASE = 0x00
-    _INFO_TYPE_EW_PUSH = 0x01
-
-    def _dispatch_telegram(self, telegram: dict[str, Any]) -> None:
-        """Dispatch a received telegram to the matching entity based on info_type."""
-        info_type: int = telegram.get("info_type", 0)
-        serial_bytes: bytes = telegram.get("serial", b"")
-        serial_hex = serial_bytes.hex()
-
-        if info_type in (self._INFO_TYPE_EW_RELEASE, self._INFO_TYPE_EW_PUSH):
-            self._dispatch_transmitter_telegram(telegram, serial_hex)
+    def _dispatch_telegram(self, event: EwbRcvEvent) -> None:
+        """Dispatch a received telegram to the matching entity."""
+        if isinstance(event, ButtonPushEvent):
+            if not event.should_ignore:
+                self._dispatch_button_push(event)
+        elif isinstance(event, ButtonReleaseEvent):
+            self._dispatch_button_release(event)
         else:
-            _LOGGER.debug(
-                "Unknown telegram info_type=0x%02x from %s", info_type, serial_hex
-            )
+            _LOGGER.debug("Unhandled telegram event type: %s", type(event).__name__)
 
-    def _dispatch_transmitter_telegram(
-        self, telegram: dict[str, Any], serial_hex: str
-    ) -> None:
-        """Dispatch an EW transmitter button telegram to all registered entities."""
-        button: int = telegram.get("button", 0)
-        info_type: int = telegram.get("info_type", 0)
-        info_data: bytes = telegram.get("info_data", b"")
-        # Bit 7 of the PUSH info_data byte signals a low battery on the
-        # transmitter (TM_BUTTON_LOWBAT in the Eldat protocol).  Release
-        # telegrams do not carry this flag.
-        is_low_battery: bool | None = None
-        # The upper 6 bits of info_data[0] encode the telegram function
-        # (TM_BUTTON_FUNC_MASK = 0xFC): 0x00 = normal button press, non-zero
-        # values indicate special telegrams such as LOWBAT (0x80), HOLD,
-        # RELEASE or learn-mode.  We only treat clean presses as button
-        # events; anything else (e.g. the LOWBAT follow-up that reuses the
-        # last button code) must not surface as a press.
-        is_button_press = True
-        if info_type == self._INFO_TYPE_EW_PUSH and info_data:
-            func_byte = info_data[0] & 0xFC
-            is_button_press = func_byte == 0
-            # Battery status is only meaningful on a normal button press
-            # (no function bits) or on the dedicated LOWBAT follow-up
-            # telegram (0x80).  HOLD, RELEASE or learn-mode telegrams must
-            # NOT clear an existing warning.
-            if func_byte in (0x00, 0x80):
-                is_low_battery = bool(info_data[0] & 0x80)
+    def _dispatch_button_push(self, event: ButtonPushEvent) -> None:
+        """Dispatch a button push event to matching entities."""
+        serial_hex = event.transmitter_serial.hex()
+        is_low_battery = event.function == ButtonFunction.LOW_BATTERY
 
         matched_subentry_id: str | None = None
         matched_operating_type: str | None = None
         matched_grouping_mode: str | None = None
         for entity in list(self._transmitter_entities):
             if entity.transmitter_serial == serial_hex:
-                if is_button_press:
-                    entity.handle_telegram(info_type, button)
-                if is_low_battery is not None:
-                    entity.handle_battery_status(is_low_battery)
+                entity.handle_telegram(event)
+                entity.handle_battery_status(is_low_battery)
                 if matched_subentry_id is None:
                     matched_subentry_id = getattr(entity, "subentry_id", None)
                     matched_operating_type = getattr(entity, "operating_type", None)
                     matched_grouping_mode = getattr(entity, "grouping_mode", None)
         if matched_subentry_id is None:
-            _LOGGER.debug(
-                "Received EW telegram from unknown transmitter: %s", serial_hex
-            )
+            _LOGGER.debug("Received EW push from unknown transmitter: %s", serial_hex)
             return
-
-        # Fire HA event for device triggers (button_a_pressed, button_a_released, etc.)
-        # Only for real button presses/releases — not for LOWBAT or other
-        # function telegrams.
-        if is_button_press:
+        if not is_low_battery:
             self._fire_transmitter_event(
                 matched_subentry_id,
                 matched_operating_type,
                 matched_grouping_mode,
-                info_type,
-                button,
+                event,
             )
+
+    def _dispatch_button_release(self, event: ButtonReleaseEvent) -> None:
+        """Dispatch a button release event to matching entities."""
+        serial_hex = event.transmitter_serial.hex()
+
+        matched_subentry_id: str | None = None
+        matched_operating_type: str | None = None
+        matched_grouping_mode: str | None = None
+        for entity in list(self._transmitter_entities):
+            if entity.transmitter_serial == serial_hex:
+                entity.handle_telegram(event)
+                if matched_subentry_id is None:
+                    matched_subentry_id = getattr(entity, "subentry_id", None)
+                    matched_operating_type = getattr(entity, "operating_type", None)
+                    matched_grouping_mode = getattr(entity, "grouping_mode", None)
+        if matched_subentry_id is None:
+            return
+        self._fire_transmitter_event(
+            matched_subentry_id,
+            matched_operating_type,
+            matched_grouping_mode,
+            event,
+        )
 
     def fire_device_event(self, subentry_id: str, event_type: str) -> None:
         """Fire an HA event for a device-level trigger (e.g. battery_low)."""
@@ -320,8 +311,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         subentry_id: str,
         operating_type: str | None,
         grouping_mode: str | None,
-        info_type: int,
-        button: int,
+        event: ButtonPushEvent | ButtonReleaseEvent,
     ) -> None:
         """Fire an HA event so device triggers can react to button presses."""
         device_registry = dr.async_get(self.hass)
@@ -332,8 +322,8 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return
 
         if operating_type == "1" and grouping_mode == TRANSMITTER_GROUPING_GROUP:
-            if info_type == self._INFO_TYPE_EW_PUSH:
-                button_letter = "abcd"[button] if 0 <= button < 4 else None
+            if isinstance(event, ButtonPushEvent):
+                button_letter = "abcd"[event.button] if event.button < 4 else None
                 if button_letter:
                     self.hass.bus.async_fire(
                         EVENT_EASYWAVE,
@@ -342,7 +332,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                             "type": f"state_{button_letter}",
                         },
                     )
-            elif info_type == self._INFO_TYPE_EW_RELEASE:
+            elif isinstance(event, ButtonReleaseEvent):
                 self.hass.bus.async_fire(
                     EVENT_EASYWAVE,
                     {"device_id": device_entry.id, "type": "state_released"},

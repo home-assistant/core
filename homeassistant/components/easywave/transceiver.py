@@ -7,6 +7,7 @@ import logging
 import time
 
 from easywave_home_control import RX11Device, RX11ErrorCode
+from easywave_home_control.codec import EwbRcvEvent, parse_ewb_rcv_result
 import serial
 import serial.tools.list_ports
 
@@ -568,34 +569,24 @@ class RX11Transceiver:
             return False
         return result == RX11ErrorCode.SUCCESS
 
-    async def receive_telegram(self, timeout: float = 30.0) -> dict | None:
+    async def receive_telegram(self, timeout: float = 30.0) -> EwbRcvEvent | None:
         """Wait for any EW/EWneo telegram (transmitter or sensor).
 
         Uses ewb_rcv_request (EWB_RCV) which catches all telegram types:
-        - info_type 0x01 (TM_IT_EASW_PUSH): EW transmitter button
-        - info_type 0x02 (TM_IT_SENSOR_DATA): EWneo sensor data (8 bytes)
+        - ButtonPushEvent: EW transmitter button press
+        - ButtonReleaseEvent: EW transmitter button release
+        - SensorTelegramEvent: EWneo sensor data
 
-        Returns:
-            Dict with keys: info_type, serial, button, info_data; or None.
+        Returns a typed EwbRcvEvent parsed by the codec, or None on timeout/error.
         """
         if not self._device or not self.is_connected:
             return None
 
         try:
-            (
-                result,
-                info_type,
-                serial_bytes,
-                info_data,
-            ) = await self._device.ewb_rcv_request(timeout=timeout)
-            if result == RX11ErrorCode.SUCCESS:
-                button = info_data[0] & 0x03 if info_data else 0
-                return {
-                    "info_type": info_type,
-                    "serial": serial_bytes,
-                    "button": button,
-                    "info_data": info_data,
-                }
+            raw = await self._device.ewb_rcv_request(timeout=timeout)
+            error_code = raw[0]
+            if error_code == RX11ErrorCode.SUCCESS:
+                return parse_ewb_rcv_result(raw)
         except _SERIAL_OR_OS_ERRORS as err:
             _LOGGER.debug("Error receiving telegram: %s", err)
         except TimeoutError:

@@ -3,6 +3,8 @@
 import logging
 from typing import Any, override
 
+from easywave_home_control.codec import ButtonPushEvent, ButtonReleaseEvent
+
 from homeassistant.components.sensor import (
     RestoreSensor,
     SensorDeviceClass,
@@ -287,15 +289,17 @@ class EasywaveTransmitterLastButtonSensor(EasywaveTransmitterEntity, RestoreSens
         )
 
     @callback
-    def handle_telegram(self, info_type: int, button: int) -> None:
+    def handle_telegram(self, event: ButtonPushEvent | ButtonReleaseEvent) -> None:
         """Update the sensor state from an incoming transmitter telegram."""
-        if info_type == 0x01:
-            if 0 <= button < 4:
-                state = _BUTTON_STATES[button]
-                if state in (self._attr_options or ()):
-                    self._native_value = state
-                    self.async_write_ha_state()
-        elif info_type == 0x00 and self._switch_mode == TRANSMITTER_SWITCH_IMPULSE:
+        if isinstance(event, ButtonPushEvent):
+            button_letter = "abcd"[event.button] if event.button < 4 else None
+            if button_letter in (self._attr_options or ()):
+                self._native_value = button_letter
+                self.async_write_ha_state()
+        elif (
+            isinstance(event, ButtonReleaseEvent)
+            and self._switch_mode == TRANSMITTER_SWITCH_IMPULSE
+        ):
             if _BUTTON_STATE_RELEASED in (self._attr_options or ()):
                 self._native_value = _BUTTON_STATE_RELEASED
                 self.async_write_ha_state()
@@ -360,8 +364,8 @@ class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor)
         return "mdi:battery-unknown"
 
     @callback
-    def handle_telegram(self, info_type: int, button: int) -> None:
-        """Button press/release; battery state is updated via handle_battery_status."""
+    def handle_telegram(self, event: ButtonPushEvent | ButtonReleaseEvent) -> None:
+        """Battery state is updated via handle_battery_status."""
 
     @override
     @callback
