@@ -33,7 +33,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_RFID, default=""): TextSelector(),
         vol.Optional(CONF_FS, default=False): BooleanSelector(),
         vol.Optional(CONF_FS_TIMEOUT, default=30): NumberSelector(
-            NumberSelectorConfig(min=1, max=3600, step=1, mode=NumberSelectorMode.BOX)
+            NumberSelectorConfig(min=10, max=600, step=1, mode=NumberSelectorMode.BOX)
         ),
         vol.Optional(CONF_FS_FALLBACK, default=6): NumberSelector(
             NumberSelectorConfig(min=6, max=63, step=0.1, mode=NumberSelectorMode.BOX)
@@ -63,13 +63,20 @@ class KebaConfigFlow(ConfigFlow, domain=DOMAIN):
         keba = KebaHandler(self.hass, data[CONF_HOST], data[CONF_RFID])
         try:
             connected = await keba.setup()
-        except Exception:
+        except OSError:
             _LOGGER.exception(
                 "Could not import KEBA config from configuration.yaml: "
                 "failed to connect to %s",
                 data[CONF_HOST],
             )
             return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception(
+                "Could not import KEBA config from configuration.yaml: "
+                "unexpected error while connecting to %s",
+                data[CONF_HOST],
+            )
+            return self.async_abort(reason="unknown")
 
         if not connected:
             _LOGGER.error(
@@ -96,6 +103,8 @@ class KebaConfigFlow(ConfigFlow, domain=DOMAIN):
             keba = KebaHandler(self.hass, user_input[CONF_HOST], user_input[CONF_RFID])
             try:
                 connected = await keba.setup()
+            except OSError:
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected error connecting to KEBA wallbox")
                 errors["base"] = "unknown"

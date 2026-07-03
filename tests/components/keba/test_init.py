@@ -112,7 +112,7 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
     assert init_integration.state is ConfigEntryState.NOT_LOADED
-    assert mock_keba.stop_periodic_request.call_count >= 1
+    mock_keba.stop_periodic_request.assert_called_once()
 
 
 async def test_async_setup_registers_services(hass: HomeAssistant) -> None:
@@ -176,13 +176,31 @@ async def test_async_setup_with_yaml_triggers_import(
     )
 
 
+@pytest.mark.parametrize(
+    ("setup_side_effect", "setup_return_value", "issue_id"),
+    [
+        pytest.param(
+            None, False, "deprecated_yaml_import_issue_cannot_connect", id="no_response"
+        ),
+        pytest.param(
+            Exception("unexpected error"),
+            True,
+            "deprecated_yaml_import_issue_unknown",
+            id="unexpected",
+        ),
+    ],
+)
 async def test_async_setup_with_yaml_import_fails(
     hass: HomeAssistant,
     mock_keba: MagicMock,
     issue_registry: ir.IssueRegistry,
+    setup_side_effect: Exception | None,
+    setup_return_value: bool,
+    issue_id: str,
 ) -> None:
     """Test that a failed YAML import creates an import issue instead."""
-    mock_keba.setup.return_value = False
+    mock_keba.setup.side_effect = setup_side_effect
+    mock_keba.setup.return_value = setup_return_value
 
     with patch(
         "homeassistant.components.keba.config_flow.KebaHandler",
@@ -198,12 +216,7 @@ async def test_async_setup_with_yaml_import_fails(
         )
         is None
     )
-    assert (
-        issue_registry.async_get_issue(
-            DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
-        )
-        is not None
-    )
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
 
 async def test_async_setup_with_yaml_and_existing_entry(

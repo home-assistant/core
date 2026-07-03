@@ -169,12 +169,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: KebaConfigEntry) -> bool
     try:
         await keba.set_failsafe(int(timeout), float(fallback), bool(persist))
     except ValueError as ex:
-        _LOGGER.warning("Could not set failsafe mode: %s", ex)
+        _LOGGER.warning("Charging station rejected failsafe settings: %s", ex)
 
     entry.runtime_data = keba
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     keba.start_periodic_request()
-    entry.async_on_unload(keba.stop_periodic_request)
     return True
 
 

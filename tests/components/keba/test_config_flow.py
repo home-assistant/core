@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.keba.const import (
     CONF_FS,
@@ -72,10 +74,24 @@ async def test_successful_setup(hass: HomeAssistant) -> None:
     assert result2["data"] == USER_INPUT
 
 
-async def test_cannot_connect(hass: HomeAssistant) -> None:
-    """Test that cannot_connect error is shown when setup returns False."""
+@pytest.mark.parametrize(
+    ("setup_side_effect", "setup_return_value", "expected_error"),
+    [
+        pytest.param(None, False, "cannot_connect", id="no_response"),
+        pytest.param(OSError("no route to host"), True, "cannot_connect", id="oserror"),
+        pytest.param(Exception("unexpected error"), True, "unknown", id="unexpected"),
+    ],
+)
+async def test_user_step_errors(
+    hass: HomeAssistant,
+    setup_side_effect: Exception | None,
+    setup_return_value: bool,
+    expected_error: str,
+) -> None:
+    """Test that connection problems in the user step show the matching error."""
     mock = _mock_keba_handler()
-    mock.setup.return_value = False
+    mock.setup.side_effect = setup_side_effect
+    mock.setup.return_value = setup_return_value
 
     with patch(
         "homeassistant.components.keba.config_flow.KebaHandler",
@@ -89,27 +105,7 @@ async def test_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_unknown_exception(hass: HomeAssistant) -> None:
-    """Test that unknown error is shown when an exception is raised."""
-    mock = _mock_keba_handler()
-    mock.setup.side_effect = Exception("Unexpected error")
-
-    with patch(
-        "homeassistant.components.keba.config_flow.KebaHandler",
-        return_value=mock,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT
-        )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result2["errors"] == {"base": expected_error}
 
 
 async def test_import_from_yaml(hass: HomeAssistant) -> None:
@@ -136,10 +132,24 @@ async def test_import_from_yaml(hass: HomeAssistant) -> None:
     assert result["data"] == USER_INPUT
 
 
-async def test_import_cannot_connect(hass: HomeAssistant) -> None:
-    """Test that a failed import aborts with cannot_connect."""
+@pytest.mark.parametrize(
+    ("setup_side_effect", "setup_return_value", "expected_reason"),
+    [
+        pytest.param(None, False, "cannot_connect", id="no_response"),
+        pytest.param(OSError("no route to host"), True, "cannot_connect", id="oserror"),
+        pytest.param(Exception("unexpected error"), True, "unknown", id="unexpected"),
+    ],
+)
+async def test_import_errors(
+    hass: HomeAssistant,
+    setup_side_effect: Exception | None,
+    setup_return_value: bool,
+    expected_reason: str,
+) -> None:
+    """Test that connection problems during import abort with the matching reason."""
     mock = _mock_keba_handler()
-    mock.setup.return_value = False
+    mock.setup.side_effect = setup_side_effect
+    mock.setup.return_value = setup_return_value
 
     with patch(
         "homeassistant.components.keba.config_flow.KebaHandler",
@@ -152,26 +162,7 @@ async def test_import_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_import_exception(hass: HomeAssistant) -> None:
-    """Test that an exception during import aborts with cannot_connect."""
-    mock = _mock_keba_handler()
-    mock.setup.side_effect = Exception("unexpected error")
-
-    with patch(
-        "homeassistant.components.keba.config_flow.KebaHandler",
-        return_value=mock,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=USER_INPUT,
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == expected_reason
 
 
 async def test_reconfigure_shows_form(hass: HomeAssistant) -> None:
