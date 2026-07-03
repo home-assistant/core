@@ -68,6 +68,8 @@ START_MULTIPLE_ZONES_SCHEMA = vol.Schema(
 
 STOP_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_DEVICES): cv.string})
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Rachio integration."""
