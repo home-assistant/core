@@ -20,17 +20,16 @@ def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
         if isinstance(handler, ScriptIntentHandler)
     ]
 
-    if llm_context.assistant is not None:
-        exposed_domains = {
-            state.domain
-            for state in hass.states.async_all()
-            if async_should_expose(hass, llm_context.assistant, state.entity_id)
-        }
-        handlers = [
-            handler
-            for handler in handlers
-            if handler.platforms is None or handler.platforms & exposed_domains
-        ]
+    exposed_domains = {
+        state.domain
+        for state in hass.states.async_all()
+        if async_should_expose(hass, llm_context.assistant, state.entity_id)
+    }
+    handlers = [
+        handler
+        for handler in handlers
+        if handler.platforms is None or handler.platforms & exposed_domains
+    ]
 
     # Intent script names come from user configuration, so slugify them into
     # valid tool names.
