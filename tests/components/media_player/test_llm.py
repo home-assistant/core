@@ -24,7 +24,9 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
     return {tool.name for tool in result.tools}
 
 
-async def test_media_player_intent_tool_requires_exposed_entity(hass: HomeAssistant) -> None:
+async def test_media_player_intent_tool_requires_exposed_entity(
+    hass: HomeAssistant,
+) -> None:
     """Test the intent tools are only exposed when a media_player entity is exposed."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
@@ -34,7 +36,9 @@ async def test_media_player_intent_tool_requires_exposed_entity(hass: HomeAssist
 
     assert "HassMediaPause" not in await _tool_names(hass)
 
-    hass.states.async_set("media_player.test", "on", {"friendly_name": "Test media_player"})
+    hass.states.async_set(
+        "media_player.test", "on", {"friendly_name": "Test media_player"}
+    )
     async_expose_entity(hass, "conversation", "media_player.test", True)
 
     assert "HassMediaPause" in await _tool_names(hass)
