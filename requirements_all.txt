@@ -193,7 +193,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==14.1.8
+aioamazondevices==14.1.9
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -976,7 +976,7 @@ eurotronic-cometblue-ha==1.4.0
 # evdev==1.9.3
 
 # homeassistant.components.evohome
-evohome-async==1.2.0
+evohome-async==2.0.1
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.19
@@ -1266,7 +1266,7 @@ hole==0.9.2
 holidays==0.99
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260624.3
+home-assistant-frontend==20260624.4
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.6.24
@@ -1616,7 +1616,7 @@ mullvad-api==1.0.0
 music-assistant-client==1.3.6
 
 # homeassistant.components.tts
-mutagen==1.48.0
+mutagen==1.48.1
 
 # homeassistant.components.mutesync
 mutesync==0.0.1
@@ -1942,7 +1942,7 @@ py-schluter==0.1.7
 py-sucks==0.9.11
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.10.1
+py-synologydsm-api==2.10.2
 
 # homeassistant.components.unifi_access
 py-unifi-access==1.3.0
@@ -2301,7 +2301,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.2.5
+pylamarzocco==2.4.2
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2537,7 +2537,7 @@ pyseventeentrack==1.1.3
 pysiaalarm==3.2.2
 
 # homeassistant.components.signal_messenger
-pysignalclirestapi==0.3.24
+pysignalclirestapi==0.3.25
 
 # homeassistant.components.sky_hub
 pyskyqhub==0.1.4
@@ -2785,7 +2785,7 @@ pytradfri[async]==9.0.1
 pytrafikverket==1.1.1
 
 # homeassistant.components.v2c
-pytrydan==1.0.2
+pytrydan==1.0.3
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==25.0.0
@@ -3143,7 +3143,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.4.7
+tesla-fleet-api==1.5.2
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
@@ -3152,7 +3152,7 @@ tesla-powerwall==0.5.3
 tesla-wall-connector==1.1.0
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.9.0
+teslemetry-stream==0.9.1
 
 # homeassistant.components.tessie
 tessie-api==0.1.3
@@ -3289,7 +3289,7 @@ viaggiatreno_ha==0.2.4
 victron-ble-ha-parser==0.7.0
 
 # homeassistant.components.victron_gx
-victron-mqtt==2026.6.1.1
+victron-mqtt==2026.6.6
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.12
@@ -3335,7 +3335,7 @@ waterfurnace==1.7.1
 watergate-local-api==2025.1.0
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==1.5.4
+weatherflow4py==1.5.8
 
 # homeassistant.components.cisco_webex_teams
 webexpythonsdk==2.0.6
@@ -3374,7 +3374,7 @@ wolf-comm==0.0.52
 wsdot==0.0.1
 
 # homeassistant.components.wyoming
-wyoming==1.9.0
+wyoming==1.10.0
 
 # homeassistant.components.xiaomi_ble
 xiaomi-ble==1.11.0
