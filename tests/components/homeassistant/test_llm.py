@@ -47,6 +47,19 @@ async def test_live_context_always_offered(hass: HomeAssistant) -> None:
     assert [tool.name for tool in result.tools] == ["GetLiveContext"]
 
 
+async def test_get_live_context_no_exposed_entities(hass: HomeAssistant) -> None:
+    """Test GetLiveContext reports an error when nothing is exposed."""
+    async_expose_entity(hass, "conversation", ENTITY_ID, False)
+    llm_context = _llm_context()
+    result = await llm_component.async_get_tools(hass, llm_context)
+    tool = next(tool for tool in result.tools if tool.name == "GetLiveContext")
+
+    response = await tool.async_call(
+        hass, llm.ToolInput("GetLiveContext", {}), llm_context
+    )
+    assert response == {"success": False, "error": llm.NO_ENTITIES_PROMPT}
+
+
 async def test_get_live_context_tool(hass: HomeAssistant) -> None:
     """Test GetLiveContext returns exposed entity state."""
     llm_context = _llm_context()
