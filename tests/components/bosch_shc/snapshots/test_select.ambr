@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'NORMALLY_CLOSED',
         'NORMALLY_OPEN',
         'UNSUPPORTED',
@@ -45,8 +45,8 @@
 # name: test_selects[select.test_device_actuator_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Actuator type',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Actuator type',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'NORMALLY_CLOSED',
         'NORMALLY_OPEN',
         'UNSUPPORTED',
@@ -67,7 +67,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'HIGH',
         'MIDDLE',
         'LOW',
@@ -106,8 +106,8 @@
 # name: test_selects[select.test_device_comfort_sensitivity_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Comfort sensitivity level',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Comfort sensitivity level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'HIGH',
         'MIDDLE',
         'LOW',
@@ -128,7 +128,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'NORMAL',
         'REVERSED',
       ]),
@@ -166,8 +166,8 @@
 # name: test_selects[select.test_device_display_direction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Display direction',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Display direction',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'NORMAL',
         'REVERSED',
       ]),
@@ -187,7 +187,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'SETPOINT',
         'MEASURED',
       ]),
@@ -225,8 +225,8 @@
 # name: test_selects[select.test_device_displayed_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Displayed temperature',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Displayed temperature',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'SETPOINT',
         'MEASURED',
       ]),
@@ -246,7 +246,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'FLOOR_HEATING',
         'FLOOR_HEATING_LOW_ENERGY',
         'RADIATOR',
@@ -287,8 +287,8 @@
 # name: test_selects[select.test_device_heater_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Heater type',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Heater type',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'FLOOR_HEATING',
         'FLOOR_HEATING_LOW_ENERGY',
         'RADIATOR',
@@ -311,7 +311,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'HIGH',
         'MIDDLE',
         'LOW',
@@ -350,8 +350,8 @@
 # name: test_selects[select.test_device_motion_sensitivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Motion sensitivity',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Motion sensitivity',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'HIGH',
         'MIDDLE',
         'LOW',
@@ -372,7 +372,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'LONG',
         'SHORT',
       ]),
@@ -410,8 +410,8 @@
 # name: test_selects[select.test_device_orientation_light_response_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Orientation light response time',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Orientation light response time',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'LONG',
         'SHORT',
       ]),
@@ -431,7 +431,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'ATTACHED',
         'DETACHED',
         'DETACHED_SHORT_PRESS',
@@ -472,8 +472,8 @@
 # name: test_selects[select.test_device_output_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Output mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Output mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'ATTACHED',
         'DETACHED',
         'DETACHED_SHORT_PRESS',
@@ -496,7 +496,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'HIGH',
         'MIDDLE',
         'LOW',
@@ -535,8 +535,8 @@
 # name: test_selects[select.test_device_security_sensitivity_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Security sensitivity level',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Security sensitivity level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'HIGH',
         'MIDDLE',
         'LOW',
@@ -557,7 +557,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'HIGH',
         'MIDDLE',
         'LOW',
@@ -596,8 +596,8 @@
 # name: test_selects[select.test_device_smoke_sensitivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Smoke sensitivity',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Smoke sensitivity',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'HIGH',
         'MIDDLE',
         'LOW',
@@ -618,7 +618,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'OFF',
         'ON',
         'LAST_STATE',
@@ -657,8 +657,8 @@
 # name: test_selects[select.test_device_state_after_power_outage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device State after power outage',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device State after power outage',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'OFF',
         'ON',
         'LAST_STATE',
@@ -679,7 +679,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'NONE',
         'PUSHBUTTON',
         'SWITCH',
@@ -719,8 +719,8 @@
 # name: test_selects[select.test_device_switch_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Switch type',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Switch type',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'NONE',
         'PUSHBUTTON',
         'SWITCH',
@@ -742,7 +742,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'NOT_CONNECTED',
         'FLOOR_SENSOR_CONNECTED',
         'FLOOR_SENSOR_USED_FOR_REGULATION',
@@ -786,8 +786,8 @@
 # name: test_selects[select.test_device_terminal_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Terminal type',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Terminal type',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'NOT_CONNECTED',
         'FLOOR_SENSOR_CONNECTED',
         'FLOOR_SENSOR_USED_FOR_REGULATION',
@@ -813,7 +813,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'NORMALLY_CLOSE',
         'NORMALLY_OPEN',
       ]),
@@ -851,8 +851,8 @@
 # name: test_selects[select.test_device_valve_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Valve type',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Valve type',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'NORMALLY_CLOSE',
         'NORMALLY_OPEN',
       ]),
@@ -872,7 +872,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'VERY_HIGH',
         'HIGH',
         'MEDIUM',
@@ -913,8 +913,8 @@
 # name: test_selects[select.test_device_vibration_sensitivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Vibration sensitivity',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Vibration sensitivity',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'VERY_HIGH',
         'HIGH',
         'MEDIUM',
