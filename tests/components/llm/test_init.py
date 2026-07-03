@@ -71,18 +71,19 @@ async def test_get_tools(hass: HomeAssistant, llm_context: llm.LLMContext) -> No
     assert await async_setup_component(hass, "llm", {})
 
     result = await async_get_tools(hass, llm_context)
-    assert result.tools == [tool]
+    # The llm integration also exposes its own GetDateTime tool (domain "llm").
+    assert [tool.name for tool in result.tools] == ["GetDateTime", "my_tool"]
     assert result.prompt == "use my_tool wisely"
 
 
 async def test_get_tools_empty(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
-    """Test that no platforms yields no tools."""
+    """Test that only the llm integration's own tools are returned by default."""
     assert await async_setup_component(hass, "llm", {})
 
     result = await async_get_tools(hass, llm_context)
-    assert result.tools == []
+    assert [tool.name for tool in result.tools] == ["GetDateTime"]
     assert result.prompt is None
 
 
@@ -99,7 +100,7 @@ async def test_get_tools_merges_sorted(
     assert await async_setup_component(hass, "llm", {})
 
     result = await async_get_tools(hass, llm_context)
-    assert result.tools == [tool_a, tool_b]
+    assert [tool.name for tool in result.tools] == ["GetDateTime", "tool_a", "tool_b"]
     assert result.prompt == "prompt a\nprompt b"
 
 
@@ -116,6 +117,6 @@ async def test_get_tools_isolates_failing_platform(
     assert await async_setup_component(hass, "llm", {})
 
     result = await async_get_tools(hass, llm_context)
-    assert result.tools == [tool]
+    assert [tool.name for tool in result.tools] == ["GetDateTime", "good_tool"]
     assert result.prompt == "prompt"
     assert "Error getting tools from LLM platform test_bad" in caplog.text
