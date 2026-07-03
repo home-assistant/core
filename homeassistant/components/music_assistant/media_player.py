@@ -19,7 +19,7 @@ from music_assistant_models.enums import (
 )
 from music_assistant_models.errors import MediaNotFoundError
 from music_assistant_models.event import MassEvent
-from music_assistant_models.media_items import ItemMapping, MediaItemType, Track
+from music_assistant_models.media_items import ItemMapping, MediaItemType
 from music_assistant_models.player_queue import PlayerQueue
 
 from homeassistant.components import media_source
@@ -138,7 +138,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._attr_icon = self.player.icon.replace("mdi-", "mdi:")
         self._set_supported_features()
         self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
-        self._prev_time: float = 0
         self._source_list_mapping: dict[str, str] = {}
         self._sound_mode_list_mapping: dict[str, str] = {}
 
@@ -146,23 +145,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
-
-        # we subscribe to player queue time update but we only
-        # accept a state change on big time jumps (e.g. seeking)
-        async def queue_time_updated(event: MassEvent) -> None:
-            if event.object_id != self.player.active_source:
-                return
-            if abs((self._prev_time or 0) - event.data) > 5:
-                await self.async_on_update()
-                self.async_write_ha_state()
-            self._prev_time = event.data
-
-        self.async_on_remove(
-            self.mass.subscribe(
-                queue_time_updated,
-                EventType.QUEUE_TIME_UPDATED,
-            )
-        )
 
         # we subscribe to the player config changed event to update
         # the supported features of the player
@@ -669,88 +651,43 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     def _update_media_attributes(
         self, player: Player, queue: PlayerQueue | None
     ) -> None:
-        """Update media attributes for the active queue item."""
-        self._attr_media_artist = None
-        self._attr_media_album_artist = None
-        self._attr_media_album_name = None
-        self._attr_media_title = None
-        self._attr_media_content_id = None
-        self._attr_media_duration = None
-        self._attr_media_position = None
-        self._attr_media_position_updated_at = None
-
-        if queue is None and player.current_media:
-            # player has some external source active
-            self._attr_media_content_id = player.current_media.uri
+        """Update media attributes from the player's current media."""
+        # shuffle and repeat are queue concepts and not part of current_media
+        if queue is not None:
+            self._attr_app_id = DOMAIN
+            self._attr_shuffle = queue.shuffle_enabled
+            self._attr_repeat = REPEAT_MODE_MAPPING_TO_HA.get(queue.repeat_mode)
+        else:
             self._attr_app_id = player.active_source
-            self._attr_media_title = player.current_media.title
-            self._attr_media_artist = player.current_media.artist
-            self._attr_media_album_name = player.current_media.album
-            self._attr_media_duration = player.current_media.duration
-            # shuffle and repeat are not (yet) supported for external sources
             self._attr_shuffle = None
             self._attr_repeat = None
-            self._attr_media_position = int(player.elapsed_time or 0)
+
+        # media metadata comes from current_media, which the server resolves for
+        # every playback scenario (queue items, radio/icy, external sources)
+        current_media = player.current_media
+        self._attr_media_content_id = current_media.uri if current_media else None
+        self._attr_media_title = current_media.title if current_media else None
+        self._attr_media_artist = current_media.artist if current_media else None
+        self._attr_media_album_name = current_media.album if current_media else None
+        self._attr_media_album_artist = (
+            current_media.album_artist if current_media else None
+        )
+        self._attr_media_duration = current_media.duration if current_media else None
+
+        # position also comes from current_media; the server pushes a player
+        # update with a fresh position and anchor whenever the corrected
+        # position jumps (e.g. seeking), and HA extrapolates from
+        # elapsed_time_last_updated in between
+        if current_media and current_media.elapsed_time is not None:
+            self._attr_media_position = int(current_media.elapsed_time)
             self._attr_media_position_updated_at = (
-                utc_from_timestamp(player.elapsed_time_last_updated)
-                if player.elapsed_time_last_updated
+                utc_from_timestamp(current_media.elapsed_time_last_updated)
+                if current_media.elapsed_time_last_updated
                 else None
             )
-            self._prev_time = player.elapsed_time or 0
-            return
-
-        if queue is None:
-            # player has no MA queue active
-            self._attr_source = player.active_source
-            self._attr_app_id = player.active_source
-            return
-
-        # player has an MA queue active (either its own queue or some group queue)
-        self._attr_app_id = DOMAIN
-        self._attr_shuffle = queue.shuffle_enabled
-        self._attr_repeat = REPEAT_MODE_MAPPING_TO_HA.get(queue.repeat_mode)
-        if not (cur_item := queue.current_item):
-            # queue is empty
-            return
-
-        self._attr_media_content_id = queue.current_item.uri
-        self._attr_media_duration = queue.current_item.duration
-        self._attr_media_position = int(queue.elapsed_time)
-        self._attr_media_position_updated_at = utc_from_timestamp(
-            queue.elapsed_time_last_updated
-        )
-        self._prev_time = queue.elapsed_time
-
-        # handle stream title (radio station icy metadata)
-        if (stream_details := cur_item.streamdetails) and stream_details.stream_title:
-            self._attr_media_album_name = cur_item.name
-            if " - " in stream_details.stream_title:
-                stream_title_parts = stream_details.stream_title.split(" - ", 1)
-                self._attr_media_title = stream_title_parts[1]
-                self._attr_media_artist = stream_title_parts[0]
-            else:
-                self._attr_media_title = stream_details.stream_title
-            return
-
-        if not (media_item := cur_item.media_item):
-            # queue is not playing a regular media item (edge case?!)
-            self._attr_media_title = cur_item.name
-            return
-
-        # queue is playing regular media item
-        self._attr_media_title = media_item.name
-        # for tracks we can extract more info
-        if media_item.media_type == MediaType.TRACK:
-            if TYPE_CHECKING:
-                assert isinstance(media_item, Track)
-            self._attr_media_artist = media_item.artist_str
-            if media_item.version:
-                self._attr_media_title += f" ({media_item.version})"
-            if media_item.album:
-                self._attr_media_album_name = media_item.album.name
-                self._attr_media_album_artist = getattr(
-                    media_item.album, "artist_str", None
-                )
+        else:
+            self._attr_media_position = None
+            self._attr_media_position_updated_at = None
 
     def _convert_queueoption_to_media_player_enqueue(
         self, queue_option: MediaPlayerEnqueue | QueueOption | None
