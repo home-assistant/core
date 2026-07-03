@@ -83,6 +83,12 @@ async def async_search_media(
 
     try:
         return await _get_media_item(hass, media_content_id, None).async_search(query)
+    except NotImplementedError as err:
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="search_not_supported",
+            translation_placeholders={"media_content_id": str(media_content_id)},
+        ) from err
     except ValueError as err:
         raise BrowseError(
             translation_domain=DOMAIN,

@@ -209,12 +209,15 @@ class LocalSource(MediaSource):
         results: list[BrowseMedia] = []
 
         for source_dir_id, location in search_dirs:
+            if len(results) >= MAX_SEARCH_RESULTS:
+                break
             base_path = Path(self.media_dirs[source_dir_id])
             search_path = base_path / location
             if not search_path.is_dir():
                 continue
 
-            for path in sorted(search_path.rglob("*")):
+            # Traverse lazily so MAX_SEARCH_RESULTS can short-circuit large libraries
+            for path in search_path.rglob("*"):
                 if len(results) >= MAX_SEARCH_RESULTS:
                     break
                 relative = path.relative_to(base_path)
@@ -242,6 +245,7 @@ class LocalSource(MediaSource):
                     )
                 )
 
+        results.sort(key=lambda item: item.title)
         return SearchMedia(result=results)
 
     def _browse_media(

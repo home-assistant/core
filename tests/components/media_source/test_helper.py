@@ -11,6 +11,7 @@ from homeassistant.components.media_player import (
     SearchMediaQuery,
 )
 from homeassistant.components.media_source import const, models
+from homeassistant.components.media_source.const import MEDIA_SOURCE_DATA
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -160,4 +161,16 @@ async def test_async_search_media(hass: HomeAssistant) -> None:
     with pytest.raises(BrowseError):
         await media_source.async_search_media(
             hass, "invalid", SearchMediaQuery(search_query="test")
+        )
+
+
+async def test_async_search_media_not_supported(hass: HomeAssistant) -> None:
+    """Test searching a source without search support raises a BrowseError."""
+    hass.data[MEDIA_SOURCE_DATA] = {"plain": models.MediaSource("plain")}
+
+    with pytest.raises(BrowseError):
+        await media_source.async_search_media(
+            hass,
+            f"{const.URI_SCHEME}plain",
+            SearchMediaQuery(search_query="test"),
         )

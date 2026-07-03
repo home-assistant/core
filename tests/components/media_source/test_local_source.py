@@ -168,15 +168,18 @@ async def test_async_search_media_limit_and_hidden(
         (tmp_path / f"song_{i}.mp3").touch()
     (tmp_path / ".hidden_song.mp3").touch()
 
-    await async_process_ha_core_config(hass, {"media_dirs": {"local": str(tmp_path)}})
+    await async_process_ha_core_config(
+        hass, {"media_dirs": {"local": str(tmp_path), "recordings": str(tmp_path)}}
+    )
     await hass.async_block_till_done()
 
     assert await async_setup_component(hass, const.DOMAIN, {})
     await hass.async_block_till_done()
 
+    # Global search across both dirs; the first dir already fills the limit
     result = await media_source.async_search_media(
         hass,
-        f"{const.URI_SCHEME}{const.DOMAIN}/local",
+        f"{const.URI_SCHEME}{const.DOMAIN}",
         SearchMediaQuery(search_query="song"),
     )
     assert len(result.result) == MAX_SEARCH_RESULTS
