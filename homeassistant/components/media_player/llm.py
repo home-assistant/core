@@ -6,19 +6,30 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import intent
 from homeassistant.helpers.llm import IntentTool, LLMContext, Tool
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    INTENT_MEDIA_NEXT,
+    INTENT_MEDIA_PAUSE,
+    INTENT_MEDIA_PREVIOUS,
+    INTENT_MEDIA_SEARCH_AND_PLAY,
+    INTENT_MEDIA_UNPAUSE,
+    INTENT_PLAYER_MUTE,
+    INTENT_PLAYER_UNMUTE,
+    INTENT_SET_VOLUME,
+    INTENT_SET_VOLUME_RELATIVE,
+)
 
 # Intents owned by this integration that are exposed as LLM tools.
 LLM_INTENTS = (
-    "HassMediaNext",
-    "HassMediaPause",
-    "HassMediaPlayerMute",
-    "HassMediaPlayerUnmute",
-    "HassMediaPrevious",
-    "HassMediaSearchAndPlay",
-    "HassMediaUnpause",
-    "HassSetVolume",
-    "HassSetVolumeRelative",
+    INTENT_MEDIA_NEXT,
+    INTENT_MEDIA_PAUSE,
+    INTENT_PLAYER_MUTE,
+    INTENT_PLAYER_UNMUTE,
+    INTENT_MEDIA_PREVIOUS,
+    INTENT_MEDIA_SEARCH_AND_PLAY,
+    INTENT_MEDIA_UNPAUSE,
+    INTENT_SET_VOLUME,
+    INTENT_SET_VOLUME_RELATIVE,
 )
 
 
