@@ -29,7 +29,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Bosch Smart Home Controller."
+          "host": "[%key:component::bosch_shc::config::step::user::data_description::host%]"
         },
         "description": "The Bosch SHC integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
