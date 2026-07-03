@@ -55,7 +55,7 @@
       },
       "entry_type": "NextDNS profile",
       "error": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+        "already_configured": "This NextDNS profile is already configured.",
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
