@@ -1,10 +1,8 @@
 """The StarLine component."""
 
-import voluptuous as vol
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
@@ -16,10 +14,8 @@ from .const import (
     DEFAULT_SCAN_OBD_INTERVAL,
     DOMAIN,
     PLATFORMS,
-    SERVICE_SET_SCAN_INTERVAL,
-    SERVICE_SET_SCAN_OBD_INTERVAL,
-    SERVICE_UPDATE_STATE,
 )
+from .services import async_setup_services
 
 type StarlineConfigEntry = ConfigEntry[StarlineAccount]
 
@@ -27,55 +23,8 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up StarLine services."""
-
-    async def async_set_scan_interval(call: ServiceCall) -> None:
-        """Set scan interval."""
-        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
-            options = dict(entry.options)
-            options[CONF_SCAN_INTERVAL] = call.data[CONF_SCAN_INTERVAL]
-            hass.config_entries.async_update_entry(entry=entry, options=options)
-
-    async def async_set_scan_obd_interval(call: ServiceCall) -> None:
-        """Set OBD info scan interval."""
-        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
-            options = dict(entry.options)
-            options[CONF_SCAN_OBD_INTERVAL] = call.data[CONF_SCAN_INTERVAL]
-            hass.config_entries.async_update_entry(entry=entry, options=options)
-
-    async def async_update(call: ServiceCall | None = None) -> None:
-        """Update all data."""
-        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
-            account: StarlineAccount = entry.runtime_data
-            await account.update()
-            await account.update_obd()
-
-    hass.services.async_register(DOMAIN, SERVICE_UPDATE_STATE, async_update)
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_SCAN_INTERVAL,
-        async_set_scan_interval,
-        schema=vol.Schema(
-            {
-                vol.Required(CONF_SCAN_INTERVAL): vol.All(
-                    vol.Coerce(int), vol.Range(min=10)
-                )
-            }
-        ),
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_SCAN_OBD_INTERVAL,
-        async_set_scan_obd_interval,
-        schema=vol.Schema(
-            {
-                vol.Required(CONF_SCAN_INTERVAL): vol.All(
-                    vol.Coerce(int), vol.Range(min=180)
-                )
-            }
-        ),
-    )
-
+    """Set up the StarLine integration."""
+    async_setup_services(hass)
     return True
 
 
