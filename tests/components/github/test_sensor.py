@@ -84,6 +84,22 @@ async def test_latest_tag_date_annotated_tag(
     assert state.state == STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_latest_release_date_unpublished_release(
+    hass: HomeAssistant,
+    github_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A release with a null publishedAt (for example a draft) -> unavailable."""
+    github_client.graphql.return_value.data["data"]["repository"]["release"][
+        "published"
+    ] = None
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.octocat_hello_world_latest_release_date")
+    assert state.state == STATE_UNAVAILABLE
+
+
 async def test_sensor_updates_with_empty_release_array(
     hass: HomeAssistant,
     github_client: AsyncMock,

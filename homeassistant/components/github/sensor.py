@@ -221,7 +221,8 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
         translation_key="latest_release_date",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
-        avabl_fn=lambda data: data["release"] is not None,
+        avabl_fn=lambda data: data["release"] is not None
+        and data["release"]["published"] is not None,
         value_fn=lambda data: dt_util.parse_datetime(data["release"]["published"]),
     ),
     GitHubSensorEntityDescription(
