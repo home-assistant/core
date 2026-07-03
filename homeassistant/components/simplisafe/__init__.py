@@ -35,6 +35,7 @@ from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
@@ -48,6 +49,7 @@ from .const import (
     LOGGER,
 )
 from .coordinator import SimpliSafeDataUpdateCoordinator
+from .services import async_setup_services
 from .typing import SystemType
 
 type SimpliSafeConfigEntry = ConfigEntry[SimpliSafe]
@@ -85,6 +87,12 @@ WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
     EVENT_SENSOR_PAIRED_AND_NAMED,
     EVENT_USER_INITIATED_TEST,
 ]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the OctoPrint component."""
+    async_setup_services(hass)
+    return True
 
 
 @callback
