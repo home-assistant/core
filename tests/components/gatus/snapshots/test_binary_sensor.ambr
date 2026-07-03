@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensor_setup_and_states[binary_sensor.mock_title_core_backend-entry]
+# name: test_binary_sensor_setup_and_states[binary_sensor.core_backend-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.mock_title_core_backend',
+    'entity_id': 'binary_sensor.core_backend',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'core backend',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'core backend',
+    'original_name': None,
     'platform': 'gatus',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,21 +36,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor_setup_and_states[binary_sensor.mock_title_core_backend-state]
+# name: test_binary_sensor_setup_and_states[binary_sensor.core_backend-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title core backend',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'core backend',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_title_core_backend',
+    'entity_id': 'binary_sensor.core_backend',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor_setup_and_states[binary_sensor.mock_title_frontend-entry]
+# name: test_binary_sensor_setup_and_states[binary_sensor.frontend-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -64,7 +64,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.mock_title_frontend',
+    'entity_id': 'binary_sensor.frontend',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -72,12 +72,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'frontend',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'frontend',
+    'original_name': None,
     'platform': 'gatus',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -87,14 +87,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor_setup_and_states[binary_sensor.mock_title_frontend-state]
+# name: test_binary_sensor_setup_and_states[binary_sensor.frontend-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title frontend',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'frontend',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_title_frontend',
+    'entity_id': 'binary_sensor.frontend',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

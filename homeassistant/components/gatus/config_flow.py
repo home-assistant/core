@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_URL, default="http://gatus.local:8080"): str,
+        vol.Required(CONF_URL, default="https://gatus.example.com"): str,
     }
 )
 

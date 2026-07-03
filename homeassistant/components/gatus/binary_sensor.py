@@ -38,6 +38,7 @@ class GatusEndpointBinarySensor(
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -49,18 +50,17 @@ class GatusEndpointBinarySensor(
         super().__init__(coordinator)
         self._endpoint_key = endpoint_key
 
-        # Check group is defined for this endpoint Note: Group is optional
-        if "group" in self.endpoint_data:
-            group = self.endpoint_data["group"]
-            if group is not None:
-                self._attr_name = f"{group} {self.endpoint_data['name']}"
+        endpoint_name = self.endpoint_data["name"]
+        if "group" in self.endpoint_data and self.endpoint_data["group"] is not None:
+            device_name = f"{self.endpoint_data['group']} {endpoint_name}"
         else:
-            self._attr_name = f"{self.endpoint_data['name']}"
+            device_name = endpoint_name
 
         self._attr_unique_id = f"{entry.entry_id}_{endpoint_key}"
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
+            identifiers={(DOMAIN, f"{entry.entry_id}_{endpoint_key}")},
+            name=device_name,
             manufacturer="Gatus",
             entry_type=DeviceEntryType.SERVICE,
         )
