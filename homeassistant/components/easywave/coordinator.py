@@ -3,7 +3,7 @@
 import asyncio
 import contextlib
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -47,6 +47,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._transmitter_entities: list[Any] = []
         self._listener_task: asyncio.Task[None] | None = None
 
+    @override
     async def _async_setup(self) -> None:
         """Set up coordinator and attempt initial connection.
 
@@ -94,6 +95,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             }
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update device data periodically.
 
@@ -149,6 +151,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "device_path": self.transceiver.device_path,
             }
 
+    @override
     async def async_shutdown(self) -> None:
         """Shutdown coordinator and disconnect transceiver."""
         try:

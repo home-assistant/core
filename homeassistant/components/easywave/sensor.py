@@ -1,7 +1,7 @@
 """Sensor platform for the Easywave Core integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -108,6 +108,7 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
 
         return "disconnected"
 
+    @override
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -136,6 +137,7 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
 
         super()._handle_coordinator_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Called when entity is added to hass."""
         await super().async_added_to_hass()
@@ -161,6 +163,7 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
             # with async_on_remove or HA raises ValueError on the double-remove.
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _on_ha_started)
 
+    @override
     @property
     def native_value(self) -> str | None:
         """Return connection status key - translated by frontend via translation_key.
@@ -170,6 +173,7 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
         """
         return self._current_status
 
+    @override
     @property
     def icon(self) -> str:
         """Return icon based on connection status."""
@@ -178,12 +182,14 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
         # None / disconnected
         return "mdi:close-thick"
 
+    @override
     @property
     def available(self) -> bool:
         """Gateway sensor is always available to show status."""
         # Gateway sensor should always be available so users can see the connection status.
         return True
 
+    @override
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the USB device path as a state attribute.
@@ -251,6 +257,7 @@ class EasywaveTransmitterLastButtonSensor(EasywaveTransmitterEntity, RestoreSens
         self._switch_mode = switch_mode
         self._native_value: str | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to coordinator and restore last known state.
 
@@ -265,11 +272,13 @@ class EasywaveTransmitterLastButtonSensor(EasywaveTransmitterEntity, RestoreSens
         # Then subscribe to coordinator
         await super().async_added_to_hass()
 
+    @override
     @property
     def native_value(self) -> str | None:
         """Return the current state (last button or 'released')."""
         return self._native_value
 
+    @override
     @property
     def icon(self) -> str:
         """Return an icon reflecting the most recent button state."""
@@ -319,6 +328,7 @@ class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor)
         self._native_value: str | None = None
         self._ok_streak: int = 0
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to coordinator and restore last known battery state.
 
@@ -333,11 +343,13 @@ class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor)
         # Then subscribe to coordinator
         await super().async_added_to_hass()
 
+    @override
     @property
     def native_value(self) -> str | None:
         """Return the current battery state."""
         return self._native_value
 
+    @override
     @property
     def icon(self) -> str:
         """Return a battery icon reflecting the current state."""
@@ -351,6 +363,7 @@ class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor)
     def handle_telegram(self, info_type: int, button: int) -> None:
         """Button press/release; battery state is updated via handle_battery_status."""
 
+    @override
     @callback
     def handle_battery_status(self, is_low: bool) -> None:
         """Update battery state from the LOWBAT flag of a PUSH telegram."""

@@ -3,7 +3,7 @@
 import asyncio
 import logging
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 import uuid
 
 import serial.tools.list_ports
@@ -488,6 +488,7 @@ class EasywaveConfigFlow(_EasywaveDeviceMixin, ConfigFlow, domain=DOMAIN):
     # Mixin interface implementation
     # ------------------------------------------------------------------
 
+    @override
     def _get_coordinator(self) -> Any | None:
         """Return the coordinator from the existing gateway entry."""
         entry = self._existing_entry
@@ -495,12 +496,14 @@ class EasywaveConfigFlow(_EasywaveDeviceMixin, ConfigFlow, domain=DOMAIN):
             return entry.runtime_data.coordinator
         return None
 
+    @override
     def _get_devices(self) -> list[dict[str, Any]]:
         """Return devices from the existing gateway entry options."""
         if self._existing_entry is not None:
             return list(self._existing_entry.options.get("devices", []))
         return []
 
+    @override
     def _update_devices(self, devices: list[dict[str, Any]]) -> ConfigFlowResult:
         """Update the existing gateway options and finish the config flow."""
         assert self._existing_entry is not None
@@ -514,6 +517,7 @@ class EasywaveConfigFlow(_EasywaveDeviceMixin, ConfigFlow, domain=DOMAIN):
     # Entry point
     # ------------------------------------------------------------------
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -576,6 +580,7 @@ class EasywaveConfigFlow(_EasywaveDeviceMixin, ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB discovery."""
         vid = int(discovery_info.vid, 16)

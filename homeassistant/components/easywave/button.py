@@ -1,6 +1,7 @@
 """Button platform for Easywave receivers."""
 
 import logging
+from typing import override
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
@@ -64,6 +65,7 @@ class EasywaveReceiverButton(EasywaveReceiverEntity, ButtonEntity):
 
         self._attr_translation_key = f"universal_{suffix}"
 
+    @override
     async def async_press(self) -> None:
         """Send the button command to the receiver."""
         if not await self._send_command(self._button_code):

@@ -6,10 +6,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    device_registry as dr,
-    issue_registry as ir,
-)
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .const import (
     CONF_DEVICE_PATH,

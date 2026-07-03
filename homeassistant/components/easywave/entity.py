@@ -1,7 +1,7 @@
 """Base entities for the Easywave integration."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -92,6 +92,7 @@ class EasywaveReceiverEntity(Entity):
         """Return the coordinator from the shared runtime data."""
         return self._entry.runtime_data.coordinator
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to coordinator updates so availability changes propagate."""
         await super().async_added_to_hass()
@@ -105,6 +106,7 @@ class EasywaveReceiverEntity(Entity):
             self._gateway_serial, button_code
         )
 
+    @override
     @property
     def available(self) -> bool:
         """Return if entity is available (transceiver connected)."""
@@ -144,6 +146,7 @@ class EasywaveTransmitterEntity(Entity):
         """Return the coordinator from the shared runtime data."""
         return self._entry.runtime_data.coordinator
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to coordinator updates and register for telegram dispatch."""
         await super().async_added_to_hass()
@@ -174,6 +177,7 @@ class EasywaveTransmitterEntity(Entity):
         """Return grouping_mode for type-1 transmitters ('single' or 'group')."""
         return self._grouping_mode
 
+    @override
     @property
     def available(self) -> bool:
         """Return if entity is available (transceiver connected)."""
