@@ -270,15 +270,19 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates={CONF_HOST: user_input[CONF_HOST], CONF_TOKEN: token},
                 )
 
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST): str,
+                vol.Optional(CONF_TOKEN): str,
+            }
+        )
+        # Preserve the entered host across validation errors without
+        # pre-filling the token field with the stored value.
+        suggested_host = (user_input or reconfigure_entry.data)[CONF_HOST]
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_HOST, default=reconfigure_entry.data[CONF_HOST]
-                    ): str,
-                    vol.Optional(CONF_TOKEN): str,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                schema, {CONF_HOST: suggested_host}
             ),
             errors=errors,
         )
