@@ -24,6 +24,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import verify_domain_control
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -71,6 +72,12 @@ PLATFORMS = [
 type GeniusHubConfigEntry = ConfigEntry[GeniusBroker]
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Genius Hub services."""
+    setup_service_functions(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) -> bool:
     """Create a Genius Hub system."""
     if CONF_TOKEN in entry.data and CONF_MAC in entry.data:
@@ -111,15 +118,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) ->
 
     async_track_time_interval(hass, broker.async_update, SCAN_INTERVAL)
 
-    setup_service_functions(hass, broker)
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
 @callback
-def setup_service_functions(hass: HomeAssistant, broker):
+def setup_service_functions(hass: HomeAssistant) -> None:
     """Set up the service functions."""
 
     @verify_domain_control(DOMAIN)
@@ -144,11 +149,9 @@ def setup_service_functions(hass: HomeAssistant, broker):
 
         async_dispatcher_send(hass, DOMAIN, payload)
 
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN, SVC_SET_ZONE_MODE, set_zone_mode, schema=SET_ZONE_MODE_SCHEMA
     )
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN, SVC_SET_ZONE_OVERRIDE, set_zone_mode, schema=SET_ZONE_OVERRIDE_SCHEMA
     )
