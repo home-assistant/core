@@ -87,6 +87,20 @@ RESTING_HEART_RATE_SENSOR_DESCRIPTION = GoogleHealthSensorEntityDescription[
     ),
 )
 
+ACTIVITY_SENSORS: list[
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, Any]
+] = [
+    STEPS_SENSOR_DESCRIPTION,
+    DISTANCE_SENSOR_DESCRIPTION,
+]
+
+BODY_SENSORS: list[
+    GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, Any]
+] = [
+    WEIGHT_SENSOR_DESCRIPTION,
+    RESTING_HEART_RATE_SENSOR_DESCRIPTION,
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -97,35 +111,15 @@ async def async_setup_entry(
     data = entry.runtime_data
 
     entities: list[SensorEntity] = []
-    if data.activity_coordinator is not None:
+    if (activity_coordinator := data.activity_coordinator) is not None:
         entities.extend(
-            [
-                GoogleHealthSensor(
-                    data.activity_coordinator,
-                    entry.entry_id,
-                    STEPS_SENSOR_DESCRIPTION,
-                ),
-                GoogleHealthSensor(
-                    data.activity_coordinator,
-                    entry.entry_id,
-                    DISTANCE_SENSOR_DESCRIPTION,
-                ),
-            ]
+            GoogleHealthSensor(activity_coordinator, entry.entry_id, description)
+            for description in ACTIVITY_SENSORS
         )
-    if data.body_coordinator is not None:
+    if (body_coordinator := data.body_coordinator) is not None:
         entities.extend(
-            [
-                GoogleHealthSensor(
-                    data.body_coordinator,
-                    entry.entry_id,
-                    WEIGHT_SENSOR_DESCRIPTION,
-                ),
-                GoogleHealthSensor(
-                    data.body_coordinator,
-                    entry.entry_id,
-                    RESTING_HEART_RATE_SENSOR_DESCRIPTION,
-                ),
-            ]
+            GoogleHealthSensor(body_coordinator, entry.entry_id, description)
+            for description in BODY_SENSORS
         )
 
     if entities:

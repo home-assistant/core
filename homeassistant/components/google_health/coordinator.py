@@ -1,7 +1,5 @@
 """Coordinators for Google Health."""
 
-from collections.abc import Generator
-from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -52,23 +50,6 @@ class GoogleHealthBodyData:
     resting_heart_rate: DailyRestingHeartRate | None = None
 
 
-@contextmanager
-def handle_api_errors() -> Generator[None]:
-    """Context manager to handle Google Health API errors."""
-    try:
-        yield
-    except (HealthAuthException, HealthApiForbiddenException) as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key="auth_error",
-        ) from err
-    except GoogleHealthApiError as err:
-        raise UpdateFailed(
-            translation_domain=DOMAIN,
-            translation_key="communication_error",
-        ) from err
-
-
 class GoogleHealthDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base coordinator for Google Health API."""
 
@@ -94,8 +75,18 @@ class GoogleHealthDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     @override
     async def _async_update_data(self) -> _DataT:
         """Fetch data from API."""
-        with handle_api_errors():
+        try:
             return await self._async_fetch_data()
+        except (HealthAuthException, HealthApiForbiddenException) as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+            ) from err
+        except GoogleHealthApiError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from err
 
     async def _async_fetch_data(self) -> _DataT:
         """Fetch data from API."""
