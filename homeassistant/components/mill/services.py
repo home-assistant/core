@@ -32,8 +32,7 @@ async def _set_room_temp(call: ServiceCall) -> None:
     away_temp = call.data.get(ATTR_AWAY_TEMP)
 
     entry: MillConfigEntry = service.async_get_config_entry(call.hass, DOMAIN, None)
-    coordinator = entry.runtime_data
-    await coordinator.mill_data_connection.set_room_temperatures_by_name(
+    await entry.runtime_data.mill_data_connection.set_room_temperatures_by_name(
         room_name, sleep_temp, comfort_temp, away_temp
     )
 
