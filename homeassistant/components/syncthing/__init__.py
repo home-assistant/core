@@ -153,9 +153,9 @@ class SyncthingClient:
                 continue
             try:
                 async for event in events.listen():
+                    # Storing initial device events to construct current state, skip all other events
                     if events.last_seen_id == 0:
                         if event["type"] in DEVICE_EVENTS:
-                            # Storing initial events to find current device state, skipping all other events
                             self._initial_events.append(event)
                         continue
 

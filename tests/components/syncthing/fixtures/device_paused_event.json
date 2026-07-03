@@ -1,0 +1,9 @@
+{
+  "id": 8,
+  "globalID": 8,
+  "type": "DevicePaused",
+  "time": "2024-01-01T00:07:00.000000000Z",
+  "data": {
+    "device": "ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW-XYZABCD"
+  }
+}

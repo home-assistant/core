@@ -8,6 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.syncthing.const import (
+    DEVICE_EVENTS,
     DOMAIN,
     FOLDER_EVENTS,
     RECONNECT_INTERVAL,
@@ -98,6 +99,10 @@ async def test_syncthing_client_reconnect_on_error(
         "folder_summary_event.json",
         "state_changed_event.json",
         "folder_paused_event.json",
+        "device_connected_event.json",
+        "device_disconnected_event.json",
+        "device_paused_event.json",
+        "device_resumed_event.json",
     ],
 )
 async def test_client_dispatches_event(
@@ -118,8 +123,13 @@ async def test_client_dispatches_event(
     mock_syncthing_client.events.listen = mock_listen
     mock_syncthing_client.events.last_seen_id = 10
 
-    folder = event["data"].get("folder") or event["data"]["id"]
-    signal = f"{FOLDER_EVENTS[event['type']]}-{SERVER_ID}-{folder}"
+    target = (
+        event["data"].get("folder")
+        or event["data"].get("device")
+        or event["data"]["id"]
+    )
+    signal_name = FOLDER_EVENTS.get(event["type"]) or DEVICE_EVENTS.get(event["type"])
+    signal = f"{signal_name}-{SERVER_ID}-{target}"
 
     received = asyncio.Event()
     captured: list[dict] = []
