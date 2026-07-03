@@ -1,32 +1,47 @@
 """Tests for the Bosch SHC climate platform."""
 
-from unittest.mock import MagicMock, patch
+from typing import Any
+from unittest.mock import MagicMock, create_autospec, patch
 
 from boschshcpy import SHCClimateControl, SHCHeatingCircuit
 from boschshcpy.services_impl import RoomClimateControlService
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bosch_shc.climate import (
     PRESET_AUTO,
-    PRESET_BOOST,
-    PRESET_ECO,
     PRESET_MANUAL,
     SHCClimateControlEntity,
     SHCHeatingCircuitEntity,
-    _set_cool_mode,
 )
-from homeassistant.components.bosch_shc.const import DOMAIN
-from homeassistant.components.climate import ClimateEntityFeature, HVACAction, HVACMode
+from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
+    DOMAIN as CLIMATE_DOMAIN,
+    PRESET_BOOST,
+    PRESET_ECO,
+    SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
+)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 OM_CC = RoomClimateControlService.OperationMode
 OM_HC = SHCHeatingCircuit.HeatingCircuitService.OperationMode
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Load only the climate platform."""
+    return [Platform.CLIMATE]
 
 
 def _make_climate_device(
@@ -43,16 +58,10 @@ def _make_climate_device(
     supports_low: bool = True,
     operation_mode: RoomClimateControlService.OperationMode = OM_CC.MANUAL,
     serial: str = "test-serial-1",
-    id: str = "hdm:ZigBee:test-climate-1",
-    root_device_id: str = "hdm:HomeMaticIP:test-root",
-    manufacturer: str = "Bosch",
-    device_model: str = "ROOM_CLIMATE_CONTROL",
     name: str = "Test Room",
-    status: str = "AVAILABLE",
-    deleted: bool = False,
 ) -> MagicMock:
-    """Create a mock SHCClimateControl device."""
-    device = MagicMock(spec=SHCClimateControl)
+    """Create an autospecced SHCClimateControl device."""
+    device = create_autospec(SHCClimateControl, instance=True)
     device.temperature = temperature
     device.setpoint_temperature = setpoint_temperature
     device.summer_mode = summer_mode
@@ -65,16 +74,14 @@ def _make_climate_device(
     device.supports_low = supports_low
     device.operation_mode = operation_mode
     device.serial = serial
-    device.id = id
-    device.root_device_id = root_device_id
-    device.manufacturer = manufacturer
-    device.device_model = device_model
+    device.id = f"{serial}-id"
+    device.root_device_id = "shc-test-uid"
+    device.manufacturer = "Bosch"
+    device.device_model = "ROOM_CLIMATE_CONTROL"
     device.name = name
-    device.status = status
-    device.deleted = deleted
+    device.status = "AVAILABLE"
+    device.deleted = False
     device.device_services = []
-    device.subscribe_callback = MagicMock()
-    device.unsubscribe_callback = MagicMock()
     return device
 
 
@@ -84,171 +91,192 @@ def _make_heating_circuit_device(
     operation_mode: SHCHeatingCircuit.HeatingCircuitService.OperationMode = OM_HC.MANUAL,
     on: bool = True,
     serial: str = "test-serial-hc",
-    id: str = "hdm:ZigBee:test-hc-1",
-    root_device_id: str = "hdm:HomeMaticIP:test-root",
-    manufacturer: str = "Bosch",
-    device_model: str = "HEATING_CIRCUIT",
     name: str = "Heating Circuit",
-    status: str = "AVAILABLE",
-    deleted: bool = False,
 ) -> MagicMock:
-    """Create a mock SHCHeatingCircuit device."""
-    device = MagicMock(spec=SHCHeatingCircuit)
+    """Create an autospecced SHCHeatingCircuit device."""
+    device = create_autospec(SHCHeatingCircuit, instance=True)
     device.setpoint_temperature = setpoint_temperature
     device.operation_mode = operation_mode
     device.on = on
     device.serial = serial
-    device.id = id
-    device.root_device_id = root_device_id
-    device.manufacturer = manufacturer
-    device.device_model = device_model
+    device.id = f"{serial}-id"
+    device.root_device_id = "shc-test-uid"
+    device.manufacturer = "Bosch"
+    device.device_model = "HEATING_CIRCUIT"
     device.name = name
-    device.status = status
-    device.deleted = deleted
+    device.status = "AVAILABLE"
+    device.deleted = False
     device.device_services = []
-    device.subscribe_callback = MagicMock()
-    device.unsubscribe_callback = MagicMock()
     return device
 
 
-def _make_climate_entity(device: MagicMock) -> SHCClimateControlEntity:
-    """Create a SHCClimateControlEntity bypassing __init__ for unit tests."""
-    entity = SHCClimateControlEntity.__new__(SHCClimateControlEntity)
-    entity._device = device
-    entity._entry_id = "test-entry-id"
-    entity._attr_name = None
-    entity._attr_unique_id = f"{device.serial}_climate"
-    return entity
-
-
-def _make_heating_entity(device: MagicMock) -> SHCHeatingCircuitEntity:
-    """Create a SHCHeatingCircuitEntity bypassing __init__ for unit tests."""
-    entity = SHCHeatingCircuitEntity.__new__(SHCHeatingCircuitEntity)
-    entity._device = device
-    entity._entry_id = "test-entry-id"
-    entity._attr_name = None
-    entity._attr_unique_id = f"{device.serial}_heating_circuit"
-    return entity
+async def _setup_climate_platform(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+) -> None:
+    """Set up the bosch_shc config entry with only the climate platform loaded."""
+    mock_config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.bosch_shc.SHCSession",
+            return_value=mock_session,
+        ),
+        patch("homeassistant.components.bosch_shc.async_get_instance"),
+        patch("homeassistant.components.bosch_shc.PLATFORMS", [Platform.CLIMATE]),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
 
 # ---------------------------------------------------------------------------
-# SHCClimateControlEntity — heating-only device tests
+# SHCClimateControlEntity — computed-property tests (direct construction: no
+# HA setup needed, these don't touch self.hass).
 # ---------------------------------------------------------------------------
 
 
-def test_climate_heating_only_current_temperature() -> None:
-    """Temperature is read from the device."""
-    device = _make_climate_device(
-        supports_cooling=False, summer_mode=False, has_demand=True
+def test_climate_current_and_target_temperature() -> None:
+    """Temperatures are read straight from the device."""
+    device = _make_climate_device(temperature=21.0, setpoint_temperature=22.0)
+    entity = SHCClimateControlEntity(
+        device=device, parent_id="shc-test-uid", entry_id="e"
     )
-    entity = _make_climate_entity(device)
     assert entity.current_temperature == 21.0
-
-
-def test_climate_heating_only_target_temperature() -> None:
-    """Target temperature is read from the device."""
-    device = _make_climate_device(supports_cooling=False)
-    entity = _make_climate_entity(device)
     assert entity.target_temperature == 22.0
 
 
-def test_climate_heating_only_hvac_mode_heat() -> None:
-    """Returns HEAT when summer_mode is False and no cooling."""
-    device = _make_climate_device(supports_cooling=False, summer_mode=False)
-    entity = _make_climate_entity(device)
-    assert entity.hvac_mode == HVACMode.HEAT
-
-
-def test_climate_heating_only_hvac_mode_off() -> None:
-    """Returns OFF when summer_mode is True."""
-    device = _make_climate_device(supports_cooling=False, summer_mode=True)
-    entity = _make_climate_entity(device)
-    assert entity.hvac_mode == HVACMode.OFF
-
-
-def test_climate_heating_only_hvac_modes_no_cooling() -> None:
-    """COOL not in hvac_modes for heating-only device."""
-    device = _make_climate_device(supports_cooling=False)
-    entity = _make_climate_entity(device)
-    modes = entity.hvac_modes
-    assert HVACMode.HEAT in modes
-    assert HVACMode.OFF in modes
-    assert HVACMode.COOL not in modes
-
-
-def test_climate_heating_only_hvac_action_heating() -> None:
-    """HEATING action when has_demand is True."""
+@pytest.mark.parametrize(
+    ("supports_cooling", "summer_mode", "cooling_mode", "expected"),
+    [
+        pytest.param(False, False, False, HVACMode.HEAT, id="heating_only_heat"),
+        pytest.param(False, True, False, HVACMode.OFF, id="heating_only_off"),
+        pytest.param(True, False, True, HVACMode.COOL, id="cooling_capable_cool"),
+        pytest.param(
+            True, True, True, HVACMode.OFF, id="summer_mode_wins_over_cooling"
+        ),
+    ],
+)
+def test_climate_hvac_mode(
+    supports_cooling: bool,
+    summer_mode: bool,
+    cooling_mode: bool,
+    expected: HVACMode,
+) -> None:
+    """hvac_mode reflects the direction axis (summer_mode, then cooling_mode)."""
     device = _make_climate_device(
-        supports_cooling=False, summer_mode=False, has_demand=True
+        supports_cooling=supports_cooling,
+        summer_mode=summer_mode,
+        cooling_mode=cooling_mode,
     )
-    entity = _make_climate_entity(device)
-    assert entity.hvac_action == HVACAction.HEATING
+    entity = SHCClimateControlEntity(
+        device=device, parent_id="shc-test-uid", entry_id="e"
+    )
+    assert entity.hvac_mode == expected
 
 
-def test_climate_heating_only_hvac_action_idle() -> None:
-    """IDLE action when has_demand is False."""
+@pytest.mark.parametrize(
+    ("supports_cooling", "expected_modes"),
+    [
+        pytest.param(False, {HVACMode.HEAT, HVACMode.OFF}, id="heating_only"),
+        pytest.param(
+            True, {HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF}, id="cooling_capable"
+        ),
+    ],
+)
+def test_climate_hvac_modes(
+    supports_cooling: bool, expected_modes: set[HVACMode]
+) -> None:
+    """COOL only appears in hvac_modes when the device supports it."""
+    device = _make_climate_device(supports_cooling=supports_cooling)
+    entity = SHCClimateControlEntity(
+        device=device, parent_id="shc-test-uid", entry_id="e"
+    )
+    assert set(entity.hvac_modes) == expected_modes
+
+
+@pytest.mark.parametrize(
+    ("summer_mode", "cooling_mode", "supports_cooling", "has_demand", "expected"),
+    [
+        pytest.param(True, False, False, True, HVACAction.OFF, id="off"),
+        pytest.param(False, True, True, True, HVACAction.COOLING, id="cooling"),
+        pytest.param(False, False, False, True, HVACAction.HEATING, id="heating"),
+        pytest.param(False, False, False, False, HVACAction.IDLE, id="idle"),
+    ],
+)
+def test_climate_hvac_action(
+    summer_mode: bool,
+    cooling_mode: bool,
+    supports_cooling: bool,
+    has_demand: bool,
+    expected: HVACAction,
+) -> None:
+    """hvac_action follows OFF > COOLING > HEATING/IDLE precedence."""
     device = _make_climate_device(
-        supports_cooling=False, summer_mode=False, has_demand=False
+        summer_mode=summer_mode,
+        cooling_mode=cooling_mode,
+        supports_cooling=supports_cooling,
+        has_demand=has_demand,
     )
-    entity = _make_climate_entity(device)
-    assert entity.hvac_action == HVACAction.IDLE
+    entity = SHCClimateControlEntity(
+        device=device, parent_id="shc-test-uid", entry_id="e"
+    )
+    assert entity.hvac_action == expected
 
 
-def test_climate_heating_only_hvac_action_off() -> None:
-    """OFF action when hvac_mode is OFF."""
-    device = _make_climate_device(supports_cooling=False, summer_mode=True)
-    entity = _make_climate_entity(device)
-    assert entity.hvac_action == HVACAction.OFF
-
-
-def test_climate_heating_only_preset_mode_manual() -> None:
-    """MANUAL preset when operation_mode is MANUAL."""
-    device = _make_climate_device(supports_cooling=False, operation_mode=OM_CC.MANUAL)
-    entity = _make_climate_entity(device)
-    assert entity.preset_mode == PRESET_MANUAL
-
-
-def test_climate_heating_only_preset_mode_auto() -> None:
-    """AUTO preset when operation_mode is AUTOMATIC."""
+@pytest.mark.parametrize(
+    ("boost_mode", "low", "operation_mode", "expected"),
+    [
+        pytest.param(True, False, OM_CC.MANUAL, PRESET_BOOST, id="boost_wins"),
+        pytest.param(False, True, OM_CC.MANUAL, PRESET_ECO, id="eco"),
+        pytest.param(False, False, OM_CC.AUTOMATIC, PRESET_AUTO, id="auto"),
+        pytest.param(False, False, OM_CC.MANUAL, PRESET_MANUAL, id="manual"),
+    ],
+)
+def test_climate_preset_mode(
+    boost_mode: bool,
+    low: bool,
+    operation_mode: RoomClimateControlService.OperationMode,
+    expected: str,
+) -> None:
+    """preset_mode follows boost > eco > auto/manual precedence."""
     device = _make_climate_device(
-        supports_cooling=False, operation_mode=OM_CC.AUTOMATIC
+        boost_mode=boost_mode, low=low, operation_mode=operation_mode
     )
-    entity = _make_climate_entity(device)
-    assert entity.preset_mode == PRESET_AUTO
+    entity = SHCClimateControlEntity(
+        device=device, parent_id="shc-test-uid", entry_id="e"
+    )
+    assert entity.preset_mode == expected
 
 
-def test_climate_heating_only_preset_mode_boost() -> None:
-    """BOOST preset when boost_mode is True."""
-    device = _make_climate_device(supports_cooling=False, boost_mode=True)
-    entity = _make_climate_entity(device)
-    assert entity.preset_mode == PRESET_BOOST
+@pytest.mark.parametrize(
+    ("supports_boost_mode", "supports_low", "expected"),
+    [
+        pytest.param(
+            True,
+            True,
+            {PRESET_AUTO, PRESET_MANUAL, PRESET_BOOST, PRESET_ECO},
+            id="all_supported",
+        ),
+        pytest.param(False, False, {PRESET_AUTO, PRESET_MANUAL}, id="none_supported"),
+    ],
+)
+def test_climate_preset_modes(
+    supports_boost_mode: bool, supports_low: bool, expected: set[str]
+) -> None:
+    """preset_modes only lists boost/eco when the device supports them."""
+    device = _make_climate_device(
+        supports_boost_mode=supports_boost_mode, supports_low=supports_low
+    )
+    entity = SHCClimateControlEntity(
+        device=device, parent_id="shc-test-uid", entry_id="e"
+    )
+    assert set(entity.preset_modes) == expected
 
 
-def test_climate_heating_only_preset_mode_eco() -> None:
-    """ECO preset when low is True."""
-    device = _make_climate_device(supports_cooling=False, low=True)
-    entity = _make_climate_entity(device)
-    assert entity.preset_mode == PRESET_ECO
-
-
-def test_climate_heating_only_preset_modes_includes_eco() -> None:
-    """ECO in preset_modes when supports_low is True."""
-    device = _make_climate_device(supports_cooling=False, supports_low=True)
-    entity = _make_climate_entity(device)
-    assert PRESET_ECO in entity.preset_modes
-
-
-def test_climate_heating_only_preset_modes_no_eco_when_not_supported() -> None:
-    """ECO not in preset_modes when supports_low is False."""
-    device = _make_climate_device(supports_cooling=False, supports_low=False)
-    entity = _make_climate_entity(device)
-    assert PRESET_ECO not in entity.preset_modes
-
-
-def test_climate_heating_only_supported_features() -> None:
+def test_climate_supported_features() -> None:
     """Supported features include temperature, preset, turn on/off."""
-    device = _make_climate_device(supports_cooling=False)
-    entity = _make_climate_entity(device)
+    device = _make_climate_device()
+    entity = SHCClimateControlEntity(
+        device=device, parent_id="shc-test-uid", entry_id="e"
+    )
     features = entity.supported_features
     assert features & ClimateEntityFeature.TARGET_TEMPERATURE
     assert features & ClimateEntityFeature.PRESET_MODE
@@ -257,596 +285,341 @@ def test_climate_heating_only_supported_features() -> None:
 
 
 # ---------------------------------------------------------------------------
-# SHCClimateControlEntity — cooling-capable device tests
-# ---------------------------------------------------------------------------
-
-
-def test_climate_cooling_hvac_modes_includes_cool() -> None:
-    """COOL in hvac_modes when supports_cooling is True."""
-    device = _make_climate_device(
-        supports_cooling=True, summer_mode=False, cooling_mode=False
-    )
-    entity = _make_climate_entity(device)
-    assert HVACMode.COOL in entity.hvac_modes
-
-
-def test_climate_cooling_hvac_mode_cool() -> None:
-    """Returns COOL when supports_cooling and cooling_mode are True."""
-    device = _make_climate_device(
-        supports_cooling=True, summer_mode=False, cooling_mode=True
-    )
-    entity = _make_climate_entity(device)
-    assert entity.hvac_mode == HVACMode.COOL
-
-
-def test_climate_cooling_hvac_action_cooling() -> None:
-    """COOLING action when in COOL mode."""
-    device = _make_climate_device(
-        supports_cooling=True, summer_mode=False, cooling_mode=True
-    )
-    entity = _make_climate_entity(device)
-    assert entity.hvac_action == HVACAction.COOLING
-
-
-# ---------------------------------------------------------------------------
-# SHCClimateControlEntity — async service call tests
-# ---------------------------------------------------------------------------
-
-
-async def test_climate_service_set_temperature_calls_executor(
-    hass: HomeAssistant,
-) -> None:
-    """set_temperature uses async_add_executor_job for the sync setter."""
-    device = _make_climate_device(
-        supports_cooling=True,
-        summer_mode=False,
-        cooling_mode=False,
-        operation_mode=OM_CC.MANUAL,
-        supports_low=True,
-        low=False,
-    )
-    entity = _make_climate_entity(device)
-    entity.hass = hass
-
-    calls: list[tuple] = []
-
-    async def mock_executor(fn, *args):
-        calls.append((fn, args))
-        fn(*args)
-
-    with patch.object(hass, "async_add_executor_job", side_effect=mock_executor):
-        await entity.async_set_temperature(temperature=21.5)
-
-    assert any(len(c[1]) == 3 and c[1][1] == "setpoint_temperature" for c in calls), (
-        f"setpoint_temperature setter not called; calls={calls}"
-    )
-
-
-async def test_climate_service_set_temperature_skips_when_off(
-    hass: HomeAssistant,
-) -> None:
-    """set_temperature is a no-op when hvac_mode is OFF."""
-    device = _make_climate_device(
-        supports_cooling=True,
-        summer_mode=True,
-        cooling_mode=False,
-        operation_mode=OM_CC.MANUAL,
-        supports_low=True,
-        low=False,
-    )
-    entity = _make_climate_entity(device)
-    entity.hass = hass
-
-    calls: list = []
-
-    async def mock_executor(fn, *args):
-        calls.append((fn, args))
-
-    with patch.object(hass, "async_add_executor_job", side_effect=mock_executor):
-        await entity.async_set_temperature(temperature=22.0)
-
-    assert not any(len(c[1]) == 3 and c[1][1] == "setpoint_temperature" for c in calls)
-
-
-async def test_climate_service_set_hvac_mode_heat(hass: HomeAssistant) -> None:
-    """set_hvac_mode HEAT calls summer_mode=False."""
-    device = _make_climate_device(
-        supports_cooling=True,
-        summer_mode=False,
-        cooling_mode=False,
-        operation_mode=OM_CC.MANUAL,
-        supports_low=True,
-        low=False,
-    )
-    entity = _make_climate_entity(device)
-    entity.hass = hass
-
-    calls: list[tuple] = []
-
-    async def mock_executor(fn, *args):
-        calls.append((fn, args))
-        fn(*args)
-
-    with patch.object(hass, "async_add_executor_job", side_effect=mock_executor):
-        await entity.async_set_hvac_mode(HVACMode.HEAT)
-
-    assert any(
-        len(c[1]) == 3 and c[1][1] == "summer_mode" and c[1][2] is False for c in calls
-    ), f"summer_mode=False not called; calls={calls}"
-
-
-async def test_climate_service_set_hvac_mode_off(hass: HomeAssistant) -> None:
-    """set_hvac_mode OFF calls summer_mode=True."""
-    device = _make_climate_device(
-        supports_cooling=True,
-        summer_mode=False,
-        cooling_mode=False,
-        operation_mode=OM_CC.MANUAL,
-        supports_low=True,
-        low=False,
-    )
-    entity = _make_climate_entity(device)
-    entity.hass = hass
-
-    calls: list[tuple] = []
-
-    async def mock_executor(fn, *args):
-        calls.append((fn, args))
-        fn(*args)
-
-    with patch.object(hass, "async_add_executor_job", side_effect=mock_executor):
-        await entity.async_set_hvac_mode(HVACMode.OFF)
-
-    assert any(
-        len(c[1]) == 3 and c[1][1] == "summer_mode" and c[1][2] is True for c in calls
-    ), f"summer_mode=True not called; calls={calls}"
-
-
-async def test_climate_service_set_hvac_mode_cool(hass: HomeAssistant) -> None:
-    """set_hvac_mode COOL delegates to _set_cool_mode helper."""
-    device = _make_climate_device(
-        supports_cooling=True,
-        summer_mode=False,
-        cooling_mode=False,
-        operation_mode=OM_CC.MANUAL,
-        supports_low=True,
-        low=False,
-    )
-    entity = _make_climate_entity(device)
-    entity.hass = hass
-
-    calls: list[tuple] = []
-
-    async def mock_executor(fn, *args):
-        calls.append((fn, args))
-        fn(*args)
-
-    with patch.object(hass, "async_add_executor_job", side_effect=mock_executor):
-        await entity.async_set_hvac_mode(HVACMode.COOL)
-
-    # The COOL branch uses _set_cool_mode as a single grouped executor job
-    assert any(
-        c[0] is _set_cool_mode and len(c[1]) == 1 and c[1][0] is device for c in calls
-    ), f"_set_cool_mode not called with device; calls={calls}"
-    # Verify the helper actually applied the state changes
-    assert device.cooling_mode is True
-    assert device.summer_mode is False
-
-
-async def test_climate_service_set_preset_auto(hass: HomeAssistant) -> None:
-    """set_preset_mode AUTO sets operation_mode=AUTOMATIC."""
-    device = _make_climate_device(
-        supports_cooling=True,
-        summer_mode=False,
-        cooling_mode=False,
-        operation_mode=OM_CC.MANUAL,
-        supports_low=True,
-        low=False,
-    )
-    entity = _make_climate_entity(device)
-    entity.hass = hass
-
-    calls: list[tuple] = []
-
-    async def mock_executor(fn, *args):
-        calls.append((fn, args))
-        fn(*args)
-
-    with patch.object(hass, "async_add_executor_job", side_effect=mock_executor):
-        await entity.async_set_preset_mode(PRESET_AUTO)
-
-    assert any(
-        len(c[1]) == 3 and c[1][1] == "operation_mode" and c[1][2] == OM_CC.AUTOMATIC
-        for c in calls
-    ), f"operation_mode=AUTOMATIC not called; calls={calls}"
-
-
-async def test_climate_service_set_preset_manual(hass: HomeAssistant) -> None:
-    """set_preset_mode MANUAL sets operation_mode=MANUAL."""
-    device = _make_climate_device(
-        supports_cooling=True,
-        summer_mode=False,
-        cooling_mode=False,
-        operation_mode=OM_CC.MANUAL,
-        supports_low=True,
-        low=False,
-    )
-    entity = _make_climate_entity(device)
-    entity.hass = hass
-
-    calls: list[tuple] = []
-
-    async def mock_executor(fn, *args):
-        calls.append((fn, args))
-        fn(*args)
-
-    with patch.object(hass, "async_add_executor_job", side_effect=mock_executor):
-        await entity.async_set_preset_mode(PRESET_MANUAL)
-
-    assert any(
-        len(c[1]) == 3 and c[1][1] == "operation_mode" and c[1][2] == OM_CC.MANUAL
-        for c in calls
-    ), f"operation_mode=MANUAL not called; calls={calls}"
-
-
-async def test_climate_service_set_preset_boost(hass: HomeAssistant) -> None:
-    """set_preset_mode BOOST sets boost_mode=True."""
-    device = _make_climate_device(
-        supports_cooling=True,
-        summer_mode=False,
-        cooling_mode=False,
-        operation_mode=OM_CC.MANUAL,
-        supports_low=True,
-        low=False,
-    )
-    entity = _make_climate_entity(device)
-    entity.hass = hass
-
-    calls: list[tuple] = []
-
-    async def mock_executor(fn, *args):
-        calls.append((fn, args))
-        fn(*args)
-
-    with patch.object(hass, "async_add_executor_job", side_effect=mock_executor):
-        await entity.async_set_preset_mode(PRESET_BOOST)
-
-    assert any(
-        len(c[1]) == 3 and c[1][1] == "boost_mode" and c[1][2] is True for c in calls
-    ), f"boost_mode=True not called; calls={calls}"
-
-
-async def test_climate_service_set_preset_eco(hass: HomeAssistant) -> None:
-    """set_preset_mode ECO sets low=True."""
-    device = _make_climate_device(
-        supports_cooling=True,
-        summer_mode=False,
-        cooling_mode=False,
-        operation_mode=OM_CC.MANUAL,
-        supports_low=True,
-        low=False,
-    )
-    entity = _make_climate_entity(device)
-    entity.hass = hass
-
-    calls: list[tuple] = []
-
-    async def mock_executor(fn, *args):
-        calls.append((fn, args))
-        fn(*args)
-
-    with patch.object(hass, "async_add_executor_job", side_effect=mock_executor):
-        await entity.async_set_preset_mode(PRESET_ECO)
-
-    assert any(
-        len(c[1]) == 3 and c[1][1] == "low" and c[1][2] is True for c in calls
-    ), f"low=True not called; calls={calls}"
-
-
-async def test_climate_service_turn_on_from_off(hass: HomeAssistant) -> None:
-    """turn_on calls set_hvac_mode(HEAT) when device is OFF."""
-    device = _make_climate_device(
-        supports_cooling=True,
-        summer_mode=True,
-        cooling_mode=False,
-        operation_mode=OM_CC.MANUAL,
-        supports_low=True,
-        low=False,
-    )
-    entity = _make_climate_entity(device)
-    entity.hass = hass
-
-    calls: list[tuple] = []
-
-    async def mock_executor(fn, *args):
-        calls.append((fn, args))
-        fn(*args)
-
-    with patch.object(hass, "async_add_executor_job", side_effect=mock_executor):
-        await entity.async_turn_on()
-
-    assert any(
-        len(c[1]) == 3 and c[1][1] == "summer_mode" and c[1][2] is False for c in calls
-    )
-
-
-async def test_climate_service_turn_off_from_heat(hass: HomeAssistant) -> None:
-    """turn_off calls set_hvac_mode(OFF) when device is HEAT."""
-    device = _make_climate_device(
-        supports_cooling=True,
-        summer_mode=False,
-        cooling_mode=False,
-        operation_mode=OM_CC.MANUAL,
-        supports_low=True,
-        low=False,
-    )
-    entity = _make_climate_entity(device)
-    entity.hass = hass
-
-    calls: list[tuple] = []
-
-    async def mock_executor(fn, *args):
-        calls.append((fn, args))
-        fn(*args)
-
-    with patch.object(hass, "async_add_executor_job", side_effect=mock_executor):
-        await entity.async_turn_off()
-
-    assert any(
-        len(c[1]) == 3 and c[1][1] == "summer_mode" and c[1][2] is True for c in calls
-    )
-
-
-# ---------------------------------------------------------------------------
-# SHCHeatingCircuitEntity tests
+# SHCHeatingCircuitEntity — computed-property tests
 # ---------------------------------------------------------------------------
 
 
 def test_heating_circuit_current_temperature_is_none() -> None:
     """Heating circuits have no measured temperature."""
-    device = _make_heating_circuit_device(operation_mode=OM_HC.MANUAL, on=True)
-    entity = _make_heating_entity(device)
+    device = _make_heating_circuit_device()
+    entity = SHCHeatingCircuitEntity(
+        device=device, parent_id="shc-test-uid", entry_id="e"
+    )
     assert entity.current_temperature is None
 
 
 def test_heating_circuit_target_temperature() -> None:
-    """Target temperature read from device."""
-    device = _make_heating_circuit_device(
-        operation_mode=OM_HC.MANUAL, on=True, setpoint_temperature=20.0
+    """Target temperature is read from the device."""
+    device = _make_heating_circuit_device(setpoint_temperature=20.0)
+    entity = SHCHeatingCircuitEntity(
+        device=device, parent_id="shc-test-uid", entry_id="e"
     )
-    entity = _make_heating_entity(device)
     assert entity.target_temperature == 20.0
 
 
-def test_heating_circuit_hvac_mode_heat() -> None:
-    """Returns HEAT when operation_mode is MANUAL."""
-    device = _make_heating_circuit_device(operation_mode=OM_HC.MANUAL)
-    entity = _make_heating_entity(device)
-    assert entity.hvac_mode == HVACMode.HEAT
+@pytest.mark.parametrize(
+    ("operation_mode", "expected"),
+    [
+        pytest.param(OM_HC.MANUAL, HVACMode.HEAT, id="manual_is_heat"),
+        pytest.param(OM_HC.AUTOMATIC, HVACMode.AUTO, id="automatic_is_auto"),
+    ],
+)
+def test_heating_circuit_hvac_mode(
+    operation_mode: SHCHeatingCircuit.HeatingCircuitService.OperationMode,
+    expected: HVACMode,
+) -> None:
+    """hvac_mode is derived from the operation mode."""
+    device = _make_heating_circuit_device(operation_mode=operation_mode)
+    entity = SHCHeatingCircuitEntity(
+        device=device, parent_id="shc-test-uid", entry_id="e"
+    )
+    assert entity.hvac_mode == expected
 
 
-def test_heating_circuit_hvac_mode_auto() -> None:
-    """Returns AUTO when operation_mode is AUTOMATIC."""
-    device = _make_heating_circuit_device(operation_mode=OM_HC.AUTOMATIC)
-    entity = _make_heating_entity(device)
-    assert entity.hvac_mode == HVACMode.AUTO
+@pytest.mark.parametrize(
+    ("on", "expected"),
+    [
+        pytest.param(True, HVACAction.HEATING, id="on_is_heating"),
+        pytest.param(False, HVACAction.IDLE, id="off_is_idle"),
+    ],
+)
+def test_heating_circuit_hvac_action(on: bool, expected: HVACAction) -> None:
+    """hvac_action reflects whether the circuit currently has demand."""
+    device = _make_heating_circuit_device(on=on)
+    entity = SHCHeatingCircuitEntity(
+        device=device, parent_id="shc-test-uid", entry_id="e"
+    )
+    assert entity.hvac_action == expected
 
 
-def test_heating_circuit_hvac_action_heating() -> None:
-    """HEATING action when on is True."""
-    device = _make_heating_circuit_device(on=True)
-    entity = _make_heating_entity(device)
-    assert entity.hvac_action == HVACAction.HEATING
-
-
-def test_heating_circuit_hvac_action_idle() -> None:
-    """IDLE action when on is False."""
-    device = _make_heating_circuit_device(on=False)
-    entity = _make_heating_entity(device)
-    assert entity.hvac_action == HVACAction.IDLE
-
-
-def test_heating_circuit_hvac_modes() -> None:
-    """Only AUTO and HEAT modes available."""
+def test_heating_circuit_hvac_modes_and_features() -> None:
+    """Only AUTO/HEAT and TARGET_TEMPERATURE (no presets) are exposed."""
     device = _make_heating_circuit_device()
-    entity = _make_heating_entity(device)
+    entity = SHCHeatingCircuitEntity(
+        device=device, parent_id="shc-test-uid", entry_id="e"
+    )
     assert entity.hvac_modes == [HVACMode.AUTO, HVACMode.HEAT]
-
-
-def test_heating_circuit_supported_features() -> None:
-    """Only TARGET_TEMPERATURE supported (no presets)."""
-    device = _make_heating_circuit_device()
-    entity = _make_heating_entity(device)
     assert entity.supported_features == ClimateEntityFeature.TARGET_TEMPERATURE
 
 
-async def test_heating_circuit_set_temperature_calls_executor(
+# ---------------------------------------------------------------------------
+# Entity creation (snapshot) + empty-session test
+# ---------------------------------------------------------------------------
+
+
+async def test_climate_entities(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
 ) -> None:
-    """set_temperature uses async_add_executor_job."""
-    device = _make_heating_circuit_device(
-        operation_mode=OM_HC.MANUAL, on=True, setpoint_temperature=20.0
+    """Both climate-control and heating-circuit entities are created."""
+    mock_session.device_helper.climate_controls = [
+        _make_climate_device(supports_cooling=True, serial="cc-serial")
+    ]
+    mock_session.device_helper.heating_circuits = [
+        _make_heating_circuit_device(serial="hc-serial")
+    ]
+
+    await _setup_climate_platform(hass, mock_config_entry, mock_session)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_no_climate_entities_when_no_devices(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+) -> None:
+    """No climate entities are created when both device lists are empty."""
+    await _setup_climate_platform(hass, mock_config_entry, mock_session)
+
+    assert not er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
     )
-    entity = _make_heating_entity(device)
-    entity.hass = hass
-
-    calls: list[tuple] = []
-
-    async def mock_executor(fn, *args):
-        calls.append((fn, args))
-        fn(*args)
-
-    with patch.object(hass, "async_add_executor_job", side_effect=mock_executor):
-        await entity.async_set_temperature(temperature=19.0)
-
-    assert any(len(c[1]) == 3 and c[1][1] == "setpoint_temperature" for c in calls), (
-        f"setpoint_temperature setter not called; calls={calls}"
-    )
-
-
-async def test_heating_circuit_set_hvac_mode_auto(hass: HomeAssistant) -> None:
-    """set_hvac_mode AUTO sets operation_mode=AUTOMATIC."""
-    device = _make_heating_circuit_device(
-        operation_mode=OM_HC.MANUAL, on=True, setpoint_temperature=20.0
-    )
-    entity = _make_heating_entity(device)
-    entity.hass = hass
-
-    calls: list[tuple] = []
-
-    async def mock_executor(fn, *args):
-        calls.append((fn, args))
-        fn(*args)
-
-    with patch.object(hass, "async_add_executor_job", side_effect=mock_executor):
-        await entity.async_set_hvac_mode(HVACMode.AUTO)
-
-    assert any(
-        len(c[1]) == 3 and c[1][1] == "operation_mode" and c[1][2] == OM_HC.AUTOMATIC
-        for c in calls
-    ), f"operation_mode=AUTOMATIC not called; calls={calls}"
-
-
-async def test_heating_circuit_set_hvac_mode_heat(hass: HomeAssistant) -> None:
-    """set_hvac_mode HEAT sets operation_mode=MANUAL."""
-    device = _make_heating_circuit_device(
-        operation_mode=OM_HC.AUTOMATIC, on=True, setpoint_temperature=20.0
-    )
-    entity = _make_heating_entity(device)
-    entity.hass = hass
-
-    calls: list[tuple] = []
-
-    async def mock_executor(fn, *args):
-        calls.append((fn, args))
-        fn(*args)
-
-    with patch.object(hass, "async_add_executor_job", side_effect=mock_executor):
-        await entity.async_set_hvac_mode(HVACMode.HEAT)
-
-    assert any(
-        len(c[1]) == 3 and c[1][1] == "operation_mode" and c[1][2] == OM_HC.MANUAL
-        for c in calls
-    ), f"operation_mode=MANUAL not called; calls={calls}"
 
 
 # ---------------------------------------------------------------------------
-# async_setup_entry tests (use hass.config_entries.async_setup per W7420)
+# SHCClimateControlEntity — service-call (write path) tests
 # ---------------------------------------------------------------------------
 
 
-async def test_async_setup_entry_climate_controls(hass: HomeAssistant) -> None:
-    """async_setup_entry creates climate entities from session.device_helper.climate_controls."""
-    mock_device = _make_climate_device()
-    mock_session = MagicMock()
-    mock_session.information.unique_id = "test-shc-id"
-    mock_session.information.updateState.name = "NO_UPDATE_AVAILABLE"
-    mock_session.information.version = "1.0"
-    mock_session.device_helper.climate_controls = [mock_device]
-    mock_session.device_helper.heating_circuits = []
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test-shc-id",
-        data={
-            "host": "1.2.3.4",
-            "ssl_certificate": "/fake/cert.pem",
-            "ssl_key": "/fake/key.pem",
-            "token": "test-token",
-            "hostname": "shc012345",
-        },
-        title="Test SHC",
+async def test_climate_control_set_temperature(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+) -> None:
+    """Setting a temperature within range writes setpoint_temperature."""
+    device = _make_climate_device(
+        supports_cooling=True, summer_mode=False, operation_mode=OM_CC.MANUAL
     )
-    entry.add_to_hass(hass)
+    mock_session.device_helper.climate_controls = [device]
+    await _setup_climate_platform(hass, mock_config_entry, mock_session)
+    (entity_id,) = hass.states.async_entity_ids(CLIMATE_DOMAIN)
 
-    with (
-        patch(
-            "homeassistant.components.bosch_shc.SHCSession",
-            return_value=mock_session,
-        ),
-        patch(
-            "homeassistant.components.bosch_shc.async_get_instance",
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    state = hass.states.get(f"climate.{mock_device.name.lower().replace(' ', '_')}")
-    assert state is not None or entry.state.value == "loaded"
-
-
-async def test_async_setup_entry_heating_circuits(hass: HomeAssistant) -> None:
-    """async_setup_entry creates heating circuit entities."""
-    mock_device = _make_heating_circuit_device()
-    mock_session = MagicMock()
-    mock_session.information.unique_id = "test-shc-id"
-    mock_session.information.updateState.name = "NO_UPDATE_AVAILABLE"
-    mock_session.information.version = "1.0"
-    mock_session.device_helper.climate_controls = []
-    mock_session.device_helper.heating_circuits = [mock_device]
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test-shc-id-hc",
-        data={
-            "host": "1.2.3.4",
-            "ssl_certificate": "/fake/cert.pem",
-            "ssl_key": "/fake/key.pem",
-            "token": "test-token",
-            "hostname": "shc012345",
-        },
-        title="Test SHC HC",
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 21.5},
+        blocking=True,
     )
-    entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.bosch_shc.SHCSession",
-            return_value=mock_session,
-        ),
-        patch(
-            "homeassistant.components.bosch_shc.async_get_instance",
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state.value == "loaded"
+    assert device.setpoint_temperature == 21.5
 
 
-async def test_async_setup_entry_empty(hass: HomeAssistant) -> None:
-    """async_setup_entry handles empty device lists without error."""
-    mock_session = MagicMock()
-    mock_session.information.unique_id = "test-shc-id"
-    mock_session.information.updateState.name = "NO_UPDATE_AVAILABLE"
-    mock_session.information.version = "1.0"
-    mock_session.device_helper.climate_controls = []
-    mock_session.device_helper.heating_circuits = []
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test-shc-id-empty",
-        data={
-            "host": "1.2.3.4",
-            "ssl_certificate": "/fake/cert.pem",
-            "ssl_key": "/fake/key.pem",
-            "token": "test-token",
-            "hostname": "shc012345",
-        },
-        title="Test SHC Empty",
+async def test_climate_control_set_temperature_drops_automatic_to_manual(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+) -> None:
+    """A bare temperature write while AUTOMATIC switches to MANUAL first."""
+    device = _make_climate_device(
+        supports_cooling=True, summer_mode=False, operation_mode=OM_CC.AUTOMATIC
     )
-    entry.add_to_hass(hass)
+    mock_session.device_helper.climate_controls = [device]
+    await _setup_climate_platform(hass, mock_config_entry, mock_session)
+    (entity_id,) = hass.states.async_entity_ids(CLIMATE_DOMAIN)
 
-    with (
-        patch(
-            "homeassistant.components.bosch_shc.SHCSession",
-            return_value=mock_session,
-        ),
-        patch(
-            "homeassistant.components.bosch_shc.async_get_instance",
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 22.0},
+        blocking=True,
+    )
 
-    assert entry.state.value == "loaded"
+    assert device.operation_mode == OM_CC.MANUAL
+    assert device.setpoint_temperature == 22.0
+
+
+async def test_climate_control_set_temperature_skips_when_off(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+) -> None:
+    """Setting a temperature is a no-op while hvac_mode is OFF."""
+    device = _make_climate_device(
+        supports_cooling=True, summer_mode=True, operation_mode=OM_CC.MANUAL
+    )
+    mock_session.device_helper.climate_controls = [device]
+    await _setup_climate_platform(hass, mock_config_entry, mock_session)
+    (entity_id,) = hass.states.async_entity_ids(CLIMATE_DOMAIN)
+    original_setpoint = device.setpoint_temperature
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 22.0},
+        blocking=True,
+    )
+
+    assert device.setpoint_temperature == original_setpoint
+
+
+@pytest.mark.parametrize(
+    ("hvac_mode", "expected_summer_mode", "expected_cooling_mode"),
+    [
+        pytest.param(HVACMode.HEAT, False, False, id="heat"),
+        pytest.param(HVACMode.OFF, True, False, id="off"),
+        pytest.param(HVACMode.COOL, False, True, id="cool"),
+    ],
+)
+async def test_climate_control_set_hvac_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    hvac_mode: HVACMode,
+    expected_summer_mode: bool,
+    expected_cooling_mode: bool,
+) -> None:
+    """set_hvac_mode writes the direction-axis fields for each target mode."""
+    device = _make_climate_device(
+        supports_cooling=True, summer_mode=False, cooling_mode=False
+    )
+    mock_session.device_helper.climate_controls = [device]
+    await _setup_climate_platform(hass, mock_config_entry, mock_session)
+    (entity_id,) = hass.states.async_entity_ids(CLIMATE_DOMAIN)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: hvac_mode},
+        blocking=True,
+    )
+
+    assert device.summer_mode is expected_summer_mode
+    assert device.cooling_mode is expected_cooling_mode
+
+
+@pytest.mark.parametrize(
+    ("preset_mode", "expect_boost", "expect_low", "expect_operation_mode"),
+    [
+        pytest.param(PRESET_BOOST, True, False, None, id="boost"),
+        pytest.param(PRESET_ECO, False, True, None, id="eco"),
+        pytest.param(PRESET_AUTO, False, False, OM_CC.AUTOMATIC, id="auto"),
+        pytest.param(PRESET_MANUAL, False, False, OM_CC.MANUAL, id="manual"),
+    ],
+)
+async def test_climate_control_set_preset_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    preset_mode: str,
+    expect_boost: bool,
+    expect_low: bool,
+    expect_operation_mode: Any,
+) -> None:
+    """set_preset_mode writes the regulation-axis fields for each preset."""
+    device = _make_climate_device(
+        supports_cooling=True,
+        boost_mode=False,
+        low=False,
+        operation_mode=OM_CC.MANUAL,
+    )
+    mock_session.device_helper.climate_controls = [device]
+    await _setup_climate_platform(hass, mock_config_entry, mock_session)
+    (entity_id,) = hass.states.async_entity_ids(CLIMATE_DOMAIN)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, "preset_mode": preset_mode},
+        blocking=True,
+    )
+
+    assert device.boost_mode is expect_boost
+    assert device.low is expect_low
+    if expect_operation_mode is not None:
+        assert device.operation_mode == expect_operation_mode
+
+
+async def test_climate_control_turn_on_from_off(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+) -> None:
+    """turn_on switches an OFF device to HEAT."""
+    device = _make_climate_device(supports_cooling=True, summer_mode=True)
+    mock_session.device_helper.climate_controls = [device]
+    await _setup_climate_platform(hass, mock_config_entry, mock_session)
+    (entity_id,) = hass.states.async_entity_ids(CLIMATE_DOMAIN)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    assert device.summer_mode is False
+
+
+async def test_climate_control_turn_off_from_heat(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+) -> None:
+    """turn_off switches a HEAT device to OFF."""
+    device = _make_climate_device(supports_cooling=True, summer_mode=False)
+    mock_session.device_helper.climate_controls = [device]
+    await _setup_climate_platform(hass, mock_config_entry, mock_session)
+    (entity_id,) = hass.states.async_entity_ids(CLIMATE_DOMAIN)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    assert device.summer_mode is True
+
+
+# ---------------------------------------------------------------------------
+# SHCHeatingCircuitEntity — service-call (write path) tests
+# ---------------------------------------------------------------------------
+
+
+async def test_heating_circuit_set_temperature(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+) -> None:
+    """Setting a temperature writes setpoint_temperature."""
+    device = _make_heating_circuit_device(setpoint_temperature=20.0)
+    mock_session.device_helper.heating_circuits = [device]
+    await _setup_climate_platform(hass, mock_config_entry, mock_session)
+    (entity_id,) = hass.states.async_entity_ids(CLIMATE_DOMAIN)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 19.0},
+        blocking=True,
+    )
+
+    assert device.setpoint_temperature == 19.0
+
+
+@pytest.mark.parametrize(
+    ("hvac_mode", "starting_operation_mode", "expected_operation_mode"),
+    [
+        pytest.param(HVACMode.AUTO, OM_HC.MANUAL, OM_HC.AUTOMATIC, id="to_auto"),
+        pytest.param(HVACMode.HEAT, OM_HC.AUTOMATIC, OM_HC.MANUAL, id="to_heat"),
+    ],
+)
+async def test_heating_circuit_set_hvac_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    hvac_mode: HVACMode,
+    starting_operation_mode: SHCHeatingCircuit.HeatingCircuitService.OperationMode,
+    expected_operation_mode: SHCHeatingCircuit.HeatingCircuitService.OperationMode,
+) -> None:
+    """set_hvac_mode maps AUTO/HEAT onto the AUTOMATIC/MANUAL operation mode."""
+    device = _make_heating_circuit_device(operation_mode=starting_operation_mode)
+    mock_session.device_helper.heating_circuits = [device]
+    await _setup_climate_platform(hass, mock_config_entry, mock_session)
+    (entity_id,) = hass.states.async_entity_ids(CLIMATE_DOMAIN)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: hvac_mode},
+        blocking=True,
+    )
+
+    assert device.operation_mode == expected_operation_mode

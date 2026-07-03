@@ -44,6 +44,21 @@
     }
   },
   "entity": {
+    "climate": {
+      "room_climate_control": {
+        "state_attributes": {
+          "preset_mode": {
+            "name": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::name%]",
+            "state": {
+              "auto": "Auto",
+              "boost": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::boost%]",
+              "eco": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
+              "manual": "Manual"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "air_quality": {
         "name": "Air quality"
