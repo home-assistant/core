@@ -54,7 +54,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.0,
-      'friendly_name': 'Device Name',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Name',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
@@ -69,7 +69,7 @@
         'high',
         'fireplace',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.0,
     }),

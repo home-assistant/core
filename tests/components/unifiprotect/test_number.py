@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from uiprotect.data import Camera, Chime, IRLEDMode, Light, RingSetting
+from uiprotect.data import Camera, Chime, DeviceState, IRLEDMode, Light, RingSetting
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.number import (
@@ -12,7 +12,13 @@ from homeassistant.components.unifiprotect.number import (
     LIGHT_NUMBERS,
     ProtectNumberEntityDescription,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, Platform
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -23,7 +29,10 @@ from .utils import (
     assert_entity_counts,
     ids_from_device_description,
     init_entry,
+    make_public_light,
+    public_device_ws_message,
     remove_entities,
+    setup_public_light,
 )
 
 
@@ -61,6 +70,7 @@ async def test_number_setup_light(
 ) -> None:
     """Test number entity setup for light devices."""
 
+    setup_public_light(ufp)
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.NUMBER, 2, 2)
 
@@ -171,8 +181,9 @@ async def test_number_light_sensitivity(
 async def test_number_light_duration(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
 ) -> None:
-    """Test auto-shutoff duration number entity for lights."""
+    """Test auto-shutoff duration number entity for lights (public API)."""
 
+    setup_public_light(ufp)
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.NUMBER, 2, 2)
 
@@ -182,7 +193,9 @@ async def test_number_light_duration(
         hass, Platform.NUMBER, light, description
     )
 
-    with patch_ufp_method(light, "set_duration", new_callable=AsyncMock) as mock_method:
+    with patch_ufp_method(
+        light, "set_duration_public", new_callable=AsyncMock
+    ) as mock_method:
         await hass.services.async_call(
             "number",
             "set_value",
@@ -191,6 +204,79 @@ async def test_number_light_duration(
         )
 
         mock_method.assert_called_once_with(timedelta(seconds=15.0))
+
+
+async def test_number_light_duration_public_value(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """Duration reads from the public object (ms) and refreshes on a public WS update."""
+
+    setup_public_light(ufp)
+    await init_entry(hass, ufp, [light])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.NUMBER, light, LIGHT_NUMBERS[1]
+    )
+
+    # A public value the private fixture (45 s) would not produce proves the source.
+    public = make_public_light(light, pir_duration_ms=30000)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "30"
+
+
+async def test_number_light_duration_unavailable_without_public(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """The migrated duration number is unavailable without a public object."""
+
+    await init_entry(hass, ufp, [light])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.NUMBER, light, LIGHT_NUMBERS[1]
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_number_light_duration_unavailable_on_public_disconnect(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """Duration availability follows the public object's connection state."""
+
+    setup_public_light(ufp)
+    await init_entry(hass, ufp, [light])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.NUMBER, light, LIGHT_NUMBERS[1]
+    )
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    public = make_public_light(light, state=DeviceState.DISCONNECTED)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_number_light_duration_none(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """A light that does not report a public duration leaves the number unknown."""
+
+    setup_public_light(ufp)
+    await init_entry(hass, ufp, [light])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.NUMBER, light, LIGHT_NUMBERS[1]
+    )
+
+    public = make_public_light(light)
+    public.light_device_settings.pir_duration = None
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize("description", CAMERA_NUMBERS)

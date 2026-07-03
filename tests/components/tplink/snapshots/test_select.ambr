@@ -96,7 +96,7 @@
 # name: test_states[select.my_device_alarm_sound-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Alarm sound',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Alarm sound',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Doorbell Ring 1',
         'Doorbell Ring 2',
@@ -173,7 +173,7 @@
 # name: test_states[select.my_device_alarm_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Alarm volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Alarm volume',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'normal',
@@ -234,7 +234,7 @@
 # name: test_states[select.my_device_light_preset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Light preset',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Light preset',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Off',
         'Preset 1',

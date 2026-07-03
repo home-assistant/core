@@ -45,7 +45,7 @@
 # name: test_setup[select.mock_aquarium_mock_classicvario_filter_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock classicVARIO Filter mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock classicVARIO Filter mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'manual',
         'pulse',
@@ -118,7 +118,7 @@
 # name: test_setup[select.mock_aquarium_mock_filter_constant_flow_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock filter Constant flow speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock filter Constant flow speed',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '400',
         '440',
@@ -136,7 +136,7 @@
         '830',
         '860',
       ]),
-      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'select.mock_aquarium_mock_filter_constant_flow_speed',
@@ -204,7 +204,7 @@
 # name: test_setup[select.mock_aquarium_mock_filter_day_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock filter Day speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock filter Day speed',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '400',
         '440',
@@ -222,7 +222,7 @@
         '830',
         '860',
       ]),
-      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'select.mock_aquarium_mock_filter_day_speed',
@@ -279,7 +279,7 @@
 # name: test_setup[select.mock_aquarium_mock_filter_filter_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock filter Filter mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock filter Filter mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'manual',
         'constant_flow',
@@ -353,7 +353,7 @@
 # name: test_setup[select.mock_aquarium_mock_filter_high_pulse_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock filter High pulse speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock filter High pulse speed',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '400',
         '440',
@@ -371,7 +371,7 @@
         '830',
         '860',
       ]),
-      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'select.mock_aquarium_mock_filter_high_pulse_speed',
@@ -439,7 +439,7 @@
 # name: test_setup[select.mock_aquarium_mock_filter_low_pulse_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock filter Low pulse speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock filter Low pulse speed',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '400',
         '440',
@@ -457,7 +457,7 @@
         '830',
         '860',
       ]),
-      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'select.mock_aquarium_mock_filter_low_pulse_speed',
@@ -525,7 +525,7 @@
 # name: test_setup[select.mock_aquarium_mock_filter_manual_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock filter Manual speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock filter Manual speed',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '35',
         '37.5',
@@ -543,7 +543,7 @@
         '69.5',
         '72',
       ]),
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'select.mock_aquarium_mock_filter_manual_speed',
@@ -611,7 +611,7 @@
 # name: test_setup[select.mock_aquarium_mock_filter_night_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock filter Night speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock filter Night speed',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '400',
         '440',
@@ -629,7 +629,7 @@
         '830',
         '860',
       ]),
-      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'select.mock_aquarium_mock_filter_night_speed',
@@ -684,7 +684,7 @@
 # name: test_setup[select.mock_aquarium_mock_reeflex_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock reeflex Operation mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock reeflex Operation mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'constant',
         'daycycle',

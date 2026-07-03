@@ -41,9 +41,9 @@
 # name: test_sensors[sensor.openuv_current_ozone_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'OpenUV Current ozone level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenUV Current ozone level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'du',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'du',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openuv_current_ozone_level',
@@ -95,9 +95,9 @@
 # name: test_sensors[sensor.openuv_current_uv_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'OpenUV Current UV index',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenUV Current UV index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'UV index',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'UV index',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openuv_current_uv_index',
@@ -155,8 +155,8 @@
 # name: test_sensors[sensor.openuv_current_uv_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'OpenUV Current UV level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenUV Current UV level',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'extreme',
         'very_high',
@@ -215,10 +215,10 @@
 # name: test_sensors[sensor.openuv_max_uv_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'OpenUV Max UV index',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenUV Max UV index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'time': datetime.datetime(2018, 7, 30, 13, 7, 11, 505000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
-      'unit_of_measurement': 'UV index',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'UV index',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openuv_max_uv_index',
@@ -270,9 +270,9 @@
 # name: test_sensors[sensor.openuv_skin_type_1_safe_exposure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'OpenUV Skin type 1 safe exposure time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenUV Skin type 1 safe exposure time',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openuv_skin_type_1_safe_exposure_time',
@@ -324,9 +324,9 @@
 # name: test_sensors[sensor.openuv_skin_type_2_safe_exposure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'OpenUV Skin type 2 safe exposure time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenUV Skin type 2 safe exposure time',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openuv_skin_type_2_safe_exposure_time',
@@ -378,9 +378,9 @@
 # name: test_sensors[sensor.openuv_skin_type_3_safe_exposure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'OpenUV Skin type 3 safe exposure time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenUV Skin type 3 safe exposure time',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openuv_skin_type_3_safe_exposure_time',
@@ -432,9 +432,9 @@
 # name: test_sensors[sensor.openuv_skin_type_4_safe_exposure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'OpenUV Skin type 4 safe exposure time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenUV Skin type 4 safe exposure time',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openuv_skin_type_4_safe_exposure_time',
@@ -486,9 +486,9 @@
 # name: test_sensors[sensor.openuv_skin_type_5_safe_exposure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'OpenUV Skin type 5 safe exposure time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenUV Skin type 5 safe exposure time',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openuv_skin_type_5_safe_exposure_time',
@@ -540,9 +540,9 @@
 # name: test_sensors[sensor.openuv_skin_type_6_safe_exposure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'OpenUV Skin type 6 safe exposure time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenUV Skin type 6 safe exposure time',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openuv_skin_type_6_safe_exposure_time',

@@ -45,7 +45,7 @@
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 204,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGB: 'rgb'>,
-      'friendly_name': 'Device with LED LED',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device with LED LED',
       <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         240.0,
         100.0,
@@ -58,7 +58,7 @@
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
       <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.136,
         0.04,

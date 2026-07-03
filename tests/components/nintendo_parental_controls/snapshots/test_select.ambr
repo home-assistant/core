@@ -44,7 +44,7 @@
 # name: test_select[select.home_assistant_test_restriction_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Home Assistant Test Restriction mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Assistant Test Restriction mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'daily',
         'each_day_of_the_week',
