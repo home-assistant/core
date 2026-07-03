@@ -4702,6 +4702,18 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
                 {"action": "test.script", "data": {"without": "entity_id"}},
                 {"scene": "scene.hello"},
                 {
+                    "domain": "light",
+                    "device_id": "abcdefgh",
+                    "entity_id": "light.device_action",
+                    "type": "turn_on",
+                },
+                {
+                    "domain": "light",
+                    "device_id": "abcdefgh",
+                    "entity_id": "1234567890abcdef1234567890abcdef",
+                    "type": "turn_on",
+                },
+                {
                     "choose": [
                         {
                             "conditions": "{{ states.light.choice_1_cond == 'on' }}",
@@ -4808,6 +4820,7 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
         "light.condition_list_2",
         "light.condition_target",
         "light.default_seq",
+        "light.device_action",
         "light.direct_entity_referenced",
         "light.entity_in_data_template",
         "light.entity_in_target",
