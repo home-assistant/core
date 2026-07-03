@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from boschshcpy import SHCLight, SHCLightSwitch, SHCLightSwitchBSM, SHCMicromoduleDimmer
+from boschshcpy import SHCLight, SHCLightSwitch, SHCMicromoduleDimmer
 from boschshcpy.services_impl import PowerSwitchService
 
 from homeassistant.components.light import (
@@ -30,23 +30,17 @@ async def async_setup_entry(
     """Set up the SHC light platform."""
     session = config_entry.runtime_data
 
+    # light_switches_bsm is intentionally not exposed here: those devices are
+    # already created as switch.* entities in switch.py, and adding them here
+    # too would control the same physical device from two separate domains.
     entities: list[LightEntity] = [
         SHCOnOffLight(
             device=device,
             parent_id=session.information.unique_id,
             entry_id=config_entry.entry_id,
         )
-        for device in session.device_helper.light_switches_bsm
-    ]
-
-    entities.extend(
-        SHCOnOffLight(
-            device=device,
-            parent_id=session.information.unique_id,
-            entry_id=config_entry.entry_id,
-        )
         for device in session.device_helper.micromodule_light_attached
-    )
+    ]
 
     entities.extend(
         SHCColorLight(
@@ -79,7 +73,7 @@ async def async_setup_entry(
 
 
 class SHCOnOffLight(SHCEntity, LightEntity):
-    """Representation of a SHC on/off-only light switch (BSM / micromodule light attached)."""
+    """Representation of a SHC on/off-only light switch (micromodule light attached)."""
 
     _attr_name = None
     _attr_color_mode = ColorMode.ONOFF
@@ -87,7 +81,7 @@ class SHCOnOffLight(SHCEntity, LightEntity):
 
     def __init__(
         self,
-        device: SHCLightSwitch | SHCLightSwitchBSM,
+        device: SHCLightSwitch,
         parent_id: str,
         entry_id: str,
     ) -> None:
@@ -101,18 +95,14 @@ class SHCOnOffLight(SHCEntity, LightEntity):
         return self._device.switchstate == PowerSwitchService.State.ON
 
     @override
-    async def async_turn_on(self, **kwargs: Any) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        await self.hass.async_add_executor_job(
-            setattr, self._device, "switchstate", True
-        )
+        self._device.switchstate = True
 
     @override
-    async def async_turn_off(self, **kwargs: Any) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self.hass.async_add_executor_job(
-            setattr, self._device, "switchstate", False
-        )
+        self._device.switchstate = False
 
 
 class SHCColorLight(SHCEntity, LightEntity):
@@ -135,10 +125,17 @@ class SHCColorLight(SHCEntity, LightEntity):
     ) -> None:
         """Initialize a SHC colour light."""
         super().__init__(device, parent_id, entry_id)
-
-    # ------------------------------------------------------------------
-    # Color mode / supported modes — derived from device capabilities
-    # ------------------------------------------------------------------
+        # boschshcpy doesn't clear rgb when a color temperature is written (and
+        # vice versa), so the active mode can't be inferred from device state
+        # alone; track the mode we last wrote instead.
+        if device.supports_color_hsb:
+            self._color_mode = ColorMode.HS if device.rgb else ColorMode.COLOR_TEMP
+        elif device.supports_color_temp:
+            self._color_mode = ColorMode.COLOR_TEMP
+        elif device.supports_brightness:
+            self._color_mode = ColorMode.BRIGHTNESS
+        else:
+            self._color_mode = ColorMode.ONOFF
 
     @property
     @override
@@ -147,7 +144,6 @@ class SHCColorLight(SHCEntity, LightEntity):
         modes: set[ColorMode] = set()
         if self._device.supports_color_hsb:
             modes.add(ColorMode.HS)
-            # HS-capable lights also support color temp via HSBColorActuator
             modes.add(ColorMode.COLOR_TEMP)
         elif self._device.supports_color_temp:
             modes.add(ColorMode.COLOR_TEMP)
@@ -160,25 +156,8 @@ class SHCColorLight(SHCEntity, LightEntity):
     @property
     @override
     def color_mode(self) -> ColorMode:
-        """Return the active color mode.
-
-        If the last-set hs_color is set, report HS; otherwise COLOR_TEMP when
-        applicable; else BRIGHTNESS or ONOFF.
-        """
-        if self._device.supports_color_hsb:
-            # Report HS when an RGB value is stored, COLOR_TEMP otherwise
-            if self._device.rgb:
-                return ColorMode.HS
-            return ColorMode.COLOR_TEMP
-        if self._device.supports_color_temp:
-            return ColorMode.COLOR_TEMP
-        if self._device.supports_brightness:
-            return ColorMode.BRIGHTNESS
-        return ColorMode.ONOFF
-
-    # ------------------------------------------------------------------
-    # State properties
-    # ------------------------------------------------------------------
+        """Return the active color mode."""
+        return self._color_mode
 
     @property
     @override
@@ -192,7 +171,6 @@ class SHCColorLight(SHCEntity, LightEntity):
         """Return brightness (0-255) converted from Bosch 0-100 scale."""
         if not self._device.supports_brightness:
             return None
-        # Bosch brightness is 0-100; HA expects 0-255
         return round(self._device.brightness * 255 / 100)
 
     @property
@@ -230,42 +208,29 @@ class SHCColorLight(SHCEntity, LightEntity):
         blue = rgb_int & 0xFF
         return color_RGB_to_hs(red, green, blue)
 
-    # ------------------------------------------------------------------
-    # Service calls (writes are sync — run via executor)
-    # ------------------------------------------------------------------
-
     @override
-    async def async_turn_on(self, **kwargs: Any) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on, optionally setting brightness / colour."""
         if not self.is_on:
-            await self.hass.async_add_executor_job(
-                setattr, self._device, "binarystate", True
-            )
+            self._device.binarystate = True
 
         if ATTR_BRIGHTNESS in kwargs and self._device.supports_brightness:
             # Convert HA 0-255 → Bosch 0-100
-            bosch_brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
-            await self.hass.async_add_executor_job(
-                setattr, self._device, "brightness", bosch_brightness
-            )
+            self._device.brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
 
-        if ATTR_COLOR_TEMP_KELVIN in kwargs:
-            if self._device.supports_color_temp or self._device.supports_color_hsb:
-                await self.hass.async_add_executor_job(
-                    setattr, self._device, "color", kwargs[ATTR_COLOR_TEMP_KELVIN]
-                )
+        if ATTR_COLOR_TEMP_KELVIN in kwargs and (
+            self._device.supports_color_temp or self._device.supports_color_hsb
+        ):
+            self._device.color = kwargs[ATTR_COLOR_TEMP_KELVIN]
+            self._color_mode = ColorMode.COLOR_TEMP
 
         if ATTR_HS_COLOR in kwargs and self._device.supports_color_hsb:
             hue, saturation = kwargs[ATTR_HS_COLOR]
             red, green, blue = color_hs_to_RGB(hue, saturation)
-            rgb_int = (red << 16) | (green << 8) | blue
-            await self.hass.async_add_executor_job(
-                setattr, self._device, "rgb", rgb_int
-            )
+            self._device.rgb = (red << 16) | (green << 8) | blue
+            self._color_mode = ColorMode.HS
 
     @override
-    async def async_turn_off(self, **kwargs: Any) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self.hass.async_add_executor_job(
-            setattr, self._device, "binarystate", False
-        )
+        self._device.binarystate = False
