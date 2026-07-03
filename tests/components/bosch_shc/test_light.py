@@ -72,7 +72,6 @@ def _make_color_device(
     device.brightness = 80
     device.color = 4000
     device.rgb = 0
-    device.hs_color = None
     device.min_color_temperature = 2700
     device.max_color_temperature = 6500
     device.supports_brightness = supports_brightness
@@ -194,10 +193,10 @@ async def test_color_light_mode_switches_between_color_temp_and_hs(
     mock_config_entry: MockConfigEntry,
     mock_session: MagicMock,
 ) -> None:
-    """color_mode reflects the last write, not boschshcpy's stale hs_color value.
+    """color_mode reflects the last write, not boschshcpy's stale rgb value.
 
-    boschshcpy doesn't clear hs_color when a color temperature is written, so
-    inferring the active mode from hs_color's truthiness would get stuck on HS
+    boschshcpy doesn't clear rgb when a color temperature is written, so
+    inferring the active mode from rgb's truthiness would get stuck on HS
     forever after the first color was ever set. Regression test for that.
     """
     device = _make_color_device(
@@ -231,8 +230,8 @@ async def test_color_light_mode_switches_between_color_temp_and_hs(
     on_state_changed()
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).attributes["color_mode"] == ColorMode.COLOR_TEMP
-    # boschshcpy's hs_color value is untouched by the color-temp write.
-    assert device.hs_color == (30.0, 100.0)
+    # boschshcpy's rgb value is untouched by the color-temp write.
+    assert device.rgb != 0
 
 
 @pytest.mark.parametrize(

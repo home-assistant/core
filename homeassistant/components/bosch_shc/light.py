@@ -14,6 +14,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.color import color_hs_to_RGB, color_RGB_to_hs
 
 from . import BoschConfigEntry
 from .entity import SHCEntity
@@ -176,10 +177,16 @@ class SHCColorLight(SHCEntity, LightEntity):
     @property
     @override
     def hs_color(self) -> tuple[float, float] | None:
-        """Return hue/saturation."""
+        """Return hue/saturation from the packed RGB integer."""
         if not self._device.supports_color_hsb:
             return None
-        return self._device.hs_color
+        rgb_int = self._device.rgb
+        if not rgb_int:
+            return None
+        red = (rgb_int >> 16) & 0xFF
+        green = (rgb_int >> 8) & 0xFF
+        blue = rgb_int & 0xFF
+        return color_RGB_to_hs(red, green, blue)
 
     @override
     def turn_on(self, **kwargs: Any) -> None:
@@ -198,7 +205,9 @@ class SHCColorLight(SHCEntity, LightEntity):
             self._attr_color_mode = ColorMode.COLOR_TEMP
 
         if ATTR_HS_COLOR in kwargs and self._device.supports_color_hsb:
-            self._device.hs_color = kwargs[ATTR_HS_COLOR]
+            hue, saturation = kwargs[ATTR_HS_COLOR]
+            red, green, blue = color_hs_to_RGB(hue, saturation)
+            self._device.rgb = (red << 16) | (green << 8) | blue
             self._attr_color_mode = ColorMode.HS
 
     @override
