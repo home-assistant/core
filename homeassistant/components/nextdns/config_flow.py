@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_init_nextdns(hass: HomeAssistant, api_key: str) -> NextDns:
-    """Check if credentials and profile_id are valid."""
+    """Check if credentials are valid."""
     websession = async_get_clientsession(hass)
 
     return await NextDns.create(websession, api_key)
