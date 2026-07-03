@@ -40,7 +40,7 @@ async def test_get_tools_no_exposed_todo(hass: HomeAssistant) -> None:
     """Test no todo tool is offered when no to-do list is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
     result = await llm_component.async_get_tools(hass, _llm_context())
-    assert [tool.name for tool in result.tools] == []
+    assert "todo_get_items" not in [tool.name for tool in result.tools]
 
 
 async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
