@@ -89,10 +89,10 @@
       },
       "receiver_name": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]"
+          "title": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
-          "name": "The name for the receiver device."
+          "title": "The name for the receiver device."
         },
         "description": "The receiver was successfully programmed. Make sure the receiver has left programming mode (the LED must no longer blink). Enter a name for the new device.",
         "title": "Name receiver"
@@ -103,10 +103,10 @@
       },
       "transmitter_confirm": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]"
+          "title": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
-          "name": "The name for this transmitter device."
+          "title": "The name for this transmitter device."
         },
         "description": "An Easywave transmitter was detected. Give it a name.",
         "title": "Transmitter Detected"

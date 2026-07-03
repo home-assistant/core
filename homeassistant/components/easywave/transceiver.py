@@ -404,16 +404,10 @@ class RX11Transceiver:
         hw_version = None
         for attempt in range(3):
             try:
-                result, hw_bytes = await self._device.query_hw_version(timeout=5.0)
-                if result == RX11ErrorCode.SUCCESS:
-                    # Find null terminator and decode
-                    null_idx = hw_bytes.find(0)
-                    if null_idx >= 0:
-                        hw_bytes = hw_bytes[:null_idx]
-                    hw_str = hw_bytes.decode("ascii", errors="ignore").strip()
-                    if hw_str:
-                        hw_version = hw_str
-                        break
+                result, hw_str = await self._device.query_hw_version(timeout=5.0)
+                if result == RX11ErrorCode.SUCCESS and hw_str:
+                    hw_version = hw_str
+                    break
             except _SERIAL_OR_OS_ERRORS:
                 pass
 
@@ -430,13 +424,9 @@ class RX11Transceiver:
         fw_version = None
         for attempt in range(3):
             try:
-                result, major, minor, incomplete = await self._device.query_fw_version(
-                    timeout=5.0
-                )
-                if result == RX11ErrorCode.SUCCESS:
-                    fw_version = f"{major}.{minor}"
-                    if incomplete:
-                        fw_version += " (incomplete)"
+                result, fw_str = await self._device.query_fw_version(timeout=5.0)
+                if result == RX11ErrorCode.SUCCESS and fw_str:
+                    fw_version = fw_str
                     break
             except _SERIAL_OR_OS_ERRORS:
                 pass

@@ -275,7 +275,7 @@ class _EasywaveDeviceMixin(_MixinBase):
             serial_hex = self._receiver_gateway_serial
             unique_id = f"receiver_{serial_hex}_{gateway_index}"
             return self._save_device(
-                title=user_input["name"],
+                title=user_input["title"],
                 unique_id=unique_id,
                 data={
                     CONF_ENTRY_TYPE: ENTRY_TYPE_RECEIVER,
@@ -290,7 +290,7 @@ class _EasywaveDeviceMixin(_MixinBase):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        "name",
+                        "title",
                         default=self._next_default_name(ENTRY_TYPE_RECEIVER),
                     ): str,
                 }
@@ -439,7 +439,7 @@ class _EasywaveDeviceMixin(_MixinBase):
         if self._is_duplicate(unique_id):
             return self.async_abort(reason="already_configured")
 
-        if user_input is not None and "name" in user_input:
+        if user_input is not None and "title" in user_input:
             data: dict[str, Any] = {
                 CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
                 CONF_TRANSMITTER_SERIAL: serial_hex,
@@ -449,7 +449,7 @@ class _EasywaveDeviceMixin(_MixinBase):
                 CONF_SWITCH_MODE: self._switch_mode,
             }
             return self._save_device(
-                title=user_input["name"],
+                title=user_input["title"],
                 unique_id=unique_id,
                 data=data,
             )
@@ -459,7 +459,7 @@ class _EasywaveDeviceMixin(_MixinBase):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        "name",
+                        "title",
                         default=self._next_default_name(ENTRY_TYPE_TRANSMITTER),
                     ): str,
                 }
@@ -476,7 +476,7 @@ class EasywaveConfigFlow(_EasywaveDeviceMixin, ConfigFlow, domain=DOMAIN):
       added to the existing gateway from the 'Add entry' button.
     """
 
-    VERSION = 2
+    VERSION = 1
 
     def __init__(self) -> None:
         """Initialize."""

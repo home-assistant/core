@@ -8,7 +8,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
-    entity_registry as er,
     issue_registry as ir,
 )
 
@@ -148,40 +147,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> 
 async def _async_reload_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> None:
     """Reload the entry when options (device list) change."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-def _purge_legacy_binary_sensor_entities(
-    hass: HomeAssistant, entry: EasywaveConfigEntry
-) -> None:
-    """Remove orphaned binary_sensor entities from a version-1 config entry.
-
-    Version 1 exposed transmitter buttons, channels and battery state as
-    binary_sensor entities.  Version 2 replaced those with enum sensor and
-    event entities, but the registry entries persist and must be purged
-    explicitly.  Channel binary sensors for type-2 transmitters are not
-    affected because they only exist in version 2+ entries.
-    """
-    entity_registry = er.async_get(hass)
-    stale = [
-        entry_entity.entity_id
-        for entry_entity in er.async_entries_for_config_entry(
-            entity_registry, entry.entry_id
-        )
-        if entry_entity.domain == "binary_sensor"
-    ]
-    for entity_id in stale:
-        entity_registry.async_remove(entity_id)
-        _LOGGER.debug("Removed legacy binary_sensor entity %s", entity_id)
-
-
-async def async_migrate_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> bool:
-    """Handle migration of config entry versions."""
-    if entry.version < 2:
-        # Version 1 → 2: Remove orphaned binary_sensor entities (transmitter
-        # buttons, channels, battery) replaced by enum sensors and event entities.
-        _purge_legacy_binary_sensor_entities(hass, entry)
-        hass.config_entries.async_update_entry(entry, version=2)
-    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> bool:

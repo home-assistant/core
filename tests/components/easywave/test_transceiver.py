@@ -15,12 +15,11 @@ from homeassistant.core import HomeAssistant
 DEVICE_PATH = "/dev/ttyACM0"
 
 # Simulated library return values
-_HW_BYTES = b"RX11 v1.0\x00\x00"
-_HW_OK = (RX11ErrorCode.SUCCESS, _HW_BYTES)
-_HW_FAIL = (RX11ErrorCode.ERR_RF_TIMEOUT, b"")
-_FW_OK = (RX11ErrorCode.SUCCESS, 2, 5, False)  # major=2, minor=5
-_FW_INCOMPLETE = (RX11ErrorCode.SUCCESS, 1, 0, True)  # incomplete firmware
-_FW_FAIL = (RX11ErrorCode.ERR_RF_TIMEOUT, 0, 0, False)
+_HW_OK = (RX11ErrorCode.SUCCESS, "RX11 v1.0")
+_HW_FAIL = (RX11ErrorCode.ERR_RF_TIMEOUT, "")
+_FW_OK = (RX11ErrorCode.SUCCESS, "2.5")
+_FW_INCOMPLETE = (RX11ErrorCode.SUCCESS, "1.0 (incomplete)")
+_FW_FAIL = (RX11ErrorCode.ERR_RF_TIMEOUT, "")
 
 # Keep a reference to the real asyncio.sleep before any patching.
 _real_sleep = asyncio.sleep

@@ -111,7 +111,7 @@ async def test_receiver_flow_full(
 
     # Submit name → device saved, flow aborts with device_added
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"name": "Living Room Switch"}
+        result["flow_id"], user_input={"title": "Living Room Switch"}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "device_added"
@@ -220,7 +220,7 @@ async def test_transmitter_flow_group_impulse(
     assert result["step_id"] == "transmitter_confirm"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"name": "Hall Remote"}
+        result["flow_id"], user_input={"title": "Hall Remote"}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "device_added"
