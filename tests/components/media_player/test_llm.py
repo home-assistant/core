@@ -9,6 +9,17 @@ from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
 ENTITY_ID = "media_player.test"
+INTENTS = {
+    "HassMediaNext",
+    "HassMediaPause",
+    "HassMediaPlayerMute",
+    "HassMediaPlayerUnmute",
+    "HassMediaPrevious",
+    "HassMediaSearchAndPlay",
+    "HassMediaUnpause",
+    "HassSetVolume",
+    "HassSetVolumeRelative",
+}
 
 
 @pytest.fixture(autouse=True)
@@ -42,10 +53,10 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
 
 async def test_intent_tool_exposed(hass: HomeAssistant) -> None:
     """Test the intent tool is offered for an exposed media_player entity."""
-    assert "HassMediaPause" in await _tool_names(hass)
+    assert await _tool_names(hass) >= INTENTS
 
 
 async def test_intent_tool_not_exposed(hass: HomeAssistant) -> None:
     """Test the intent tool is hidden when no media_player entity is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
-    assert "HassMediaPause" not in await _tool_names(hass)
+    assert not INTENTS & await _tool_names(hass)
