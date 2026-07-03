@@ -117,3 +117,29 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
             },
         ],
     }
+
+    # The "week" range searches seven days out.
+    calls.clear()
+    tool_input.tool_args["range"] = "week"
+    with freeze_time(now):
+        await tool.async_call(hass, tool_input, llm_context)
+    assert call.domain == calendar.DOMAIN
+    assert calls[0].data["end_date_time"] == (
+        dt_util.start_of_local_day() + timedelta(days=7)
+    )
+
+
+async def test_calendar_get_events_tool_not_found(hass: HomeAssistant) -> None:
+    """Test the tool reports when the requested calendar does not match."""
+    llm_context = _llm_context()
+    result = await llm_component.async_get_tools(hass, llm_context)
+    tool = next(tool for tool in result.tools if tool.name == "calendar_get_events")
+
+    response = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            "calendar_get_events", {"calendar": "Nonexistent", "range": "today"}
+        ),
+        llm_context,
+    )
+    assert response == {"success": False, "error": "Calendar not found"}
