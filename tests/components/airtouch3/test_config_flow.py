@@ -102,6 +102,41 @@ async def test_form_cannot_connect(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_rejects_empty_host(hass: HomeAssistant) -> None:
+    """Test an empty user-entered host is rejected before validation."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.airtouch3.config_flow.validate_input",
+        return_value=SYSTEM_ID,
+    ) as validate:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "  "}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    validate.assert_not_called()
+
+
+async def test_validate_input_returns_system_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test validation returns the discovered AirTouch system id."""
+    fetch_aircon = AsyncMock(return_value=_aircon())
+
+    with patch(
+        "homeassistant.components.airtouch3.config_flow.AirTouchClient"
+    ) as client:
+        client.return_value.fetch_aircon = fetch_aircon
+        result = await validate_input(hass, {CONF_HOST: "1.1.1.1"})
+
+    assert result == SYSTEM_ID
+    fetch_aircon.assert_awaited_once()
+
+
 async def test_validate_input_without_system_id_raises_cannot_connect(
     hass: HomeAssistant,
 ) -> None:

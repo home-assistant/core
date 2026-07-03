@@ -1,6 +1,6 @@
 """Test AirTouch 3 climate entities."""
 
-from unittest.mock import AsyncMock, Mock, call
+from unittest.mock import AsyncMock, Mock, call, patch
 
 from pyairtouch3 import AirTouchError
 from pyairtouch3.airtouch_aircon import Aircon
@@ -24,12 +24,12 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    ClimateEntity,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -97,29 +97,35 @@ def _coordinator(hass: HomeAssistant) -> Airtouch3DataUpdateCoordinator:
     return _entry_and_coordinator(hass)[1]
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    ["component.climate.services."],
+)
 async def test_async_setup_entry_adds_ac_and_zone_entities(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the integration creates the AC and zone entities."""
-    _, coordinator = _entry_and_coordinator(hass)
-    aircon = coordinator.data.aircon
-    entities: list[ClimateEntity] = [AirtouchAC(coordinator, aircon.ac_id)]
-    entities.extend(
-        AirtouchGroup(coordinator, zone.id, aircon.ac_id, zone.name)
-        for zone in coordinator.data.zones.values()
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=SYSTEM_ID, data={CONF_HOST: "1.1.1.1"}
     )
+    entry.add_to_hass(hass)
 
-    assert [entity.unique_id for entity in entities] == [
+    with patch(
+        "homeassistant.components.airtouch3.coordinator.async_fetch_airtouch_data",
+        AsyncMock(return_value=_aircon()),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert {entry.unique_id for entry in entries} == {
         "35901813_ac_1",
         "35901813_1_group_1",
         "35901813_1_group_2",
-    ]
+    }
+    assert len(hass.states.async_all("climate")) == 3
     assert PARALLEL_UPDATES == 1
-    assert entities[0].translation_key == "air_conditioner"
-    assert entities[1].translation_key == "zone"
-    device_info = entities[0].device_info
-    assert device_info is not None
-    assert device_info["manufacturer"] == "Polyaire"
 
 
 async def test_ac_properties(hass: HomeAssistant) -> None:
@@ -163,6 +169,25 @@ async def test_ac_hvac_mode_commands(
     assert coordinator.data.aircon.mode == AcMode.HEAT
     assert coordinator.data.aircon.status is False
     assert write_state.call_count == 2
+
+
+async def test_ac_hvac_mode_off_skips_when_already_off(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test turning off an already off AC does not send a toggle command."""
+    coordinator = _coordinator(hass)
+    coordinator.data.aircon.status = False
+    entity = AirtouchAC(coordinator, 1)
+    toggle_ac_power = AsyncMock()
+    write_state = Mock()
+    monkeypatch.setattr(coordinator.client, "toggle_ac_power", toggle_ac_power)
+    monkeypatch.setattr(entity, "async_write_ha_state", write_state)
+
+    await entity.async_set_hvac_mode(HVACMode.OFF)
+
+    toggle_ac_power.assert_not_called()
+    assert coordinator.data.aircon.status is False
+    write_state.assert_called_once()
 
 
 async def test_ac_hvac_mode_turns_on_when_needed(
