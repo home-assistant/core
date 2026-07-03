@@ -5,7 +5,7 @@ from http import HTTPStatus
 from aiohttp import web
 import pytest
 
-from homeassistant.helpers.http import MIN_COMPRESSED_SIZE, HomeAssistantView
+from homeassistant.helpers.http import MIN_COMPRESSED_RESPONSE_SIZE, HomeAssistantView
 
 from tests.typing import ClientSessionGenerator
 
@@ -14,7 +14,9 @@ from tests.typing import ClientSessionGenerator
     ("body_size", "expect_compression"),
     [
         pytest.param(8, False, id="small-body-not-compressed"),
-        pytest.param(MIN_COMPRESSED_SIZE * 2, True, id="large-body-compressed"),
+        pytest.param(
+            MIN_COMPRESSED_RESPONSE_SIZE * 2, True, id="large-body-compressed"
+        ),
     ],
 )
 @pytest.mark.usefixtures("socket_enabled")

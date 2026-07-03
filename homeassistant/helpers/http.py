@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Responses smaller than this fit within a single network packet, so
 # compressing them wastes event-loop CPU without reducing round-trips.
-MIN_COMPRESSED_SIZE: Final = 1024
+MIN_COMPRESSED_RESPONSE_SIZE: Final = 1024
 
 
 type AllowCorsType = Callable[[AbstractRoute | AbstractResource], None]
@@ -164,7 +164,7 @@ class HomeAssistantView:
             headers=headers,
             zlib_executor_size=32768,
         )
-        if len(msg) > MIN_COMPRESSED_SIZE:
+        if len(msg) > MIN_COMPRESSED_RESPONSE_SIZE:
             response.enable_compression()
         return response
 
