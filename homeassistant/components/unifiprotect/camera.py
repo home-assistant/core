@@ -135,7 +135,7 @@ def _async_camera_entities(
             _LOGGER.warning(
                 (
                     "Could not read RTSPS streams for camera %s;"
-                    " live streaming stays disabled until the next reload"
+                    " live streaming stays disabled until streams can be read again"
                 ),
                 camera.display_name,
             )
