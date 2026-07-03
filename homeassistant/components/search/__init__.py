@@ -220,6 +220,12 @@ class Searcher:
             automation.blueprint_in_automation(self.hass, automation_entity_id),
         )
 
+        # Labels referenced in this automation
+        self._add(
+            ItemType.LABEL,
+            automation.labels_in_automation(self.hass, automation_entity_id),
+        )
+
         # Floors referenced in this automation
         self._add(
             ItemType.FLOOR,
@@ -482,6 +488,9 @@ class Searcher:
             ItemType.SCRIPT_BLUEPRINT,
             script.blueprint_in_script(self.hass, script_entity_id),
         )
+
+        # Labels referenced in this script
+        self._add(ItemType.LABEL, script.labels_in_script(self.hass, script_entity_id))
 
         # Floors referenced in this script
         self._add(ItemType.FLOOR, script.floors_in_script(self.hass, script_entity_id))
