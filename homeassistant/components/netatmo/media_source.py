@@ -17,7 +17,7 @@ from homeassistant.components.media_source import (
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN, MANUFACTURER
-from .data_handler import NetatmoDataHandler
+from .data_handler import NetatmoDataHandler, async_get_loaded_entry
 
 _LOGGER = logging.getLogger(__name__)
 MIME_TYPE = "application/x-mpegURL"
@@ -45,8 +45,8 @@ class NetatmoSource(MediaSource):
     @property
     def _data_handler(self) -> NetatmoDataHandler | None:
         """Return the data handler of the loaded config entry."""
-        entries = self.hass.config_entries.async_loaded_entries(DOMAIN)
-        return entries[0].runtime_data if entries else None
+        entry = async_get_loaded_entry(self.hass)
+        return entry.runtime_data if entry else None
 
     @property
     def events(self) -> dict[str, dict]:

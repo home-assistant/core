@@ -14,6 +14,7 @@ from pyatmo.modules.device_types import (
     DeviceCategory as NetatmoDeviceCategory,
     DeviceType as NetatmoDeviceType,
 )
+from pyatmo.schedule import Schedule
 
 from homeassistant.components import cloud
 from homeassistant.config_entries import ConfigEntry
@@ -88,6 +89,12 @@ SCAN_INTERVAL = 60
 type NetatmoConfigEntry = ConfigEntry[NetatmoDataHandler]
 
 
+def async_get_loaded_entry(hass: HomeAssistant) -> NetatmoConfigEntry | None:
+    """Return the single loaded Netatmo config entry, if any."""
+    entries = hass.config_entries.async_loaded_entries(DOMAIN)
+    return entries[0] if entries else None
+
+
 @dataclass
 class NetatmoDevice:
     """Netatmo device class."""
@@ -158,7 +165,7 @@ class NetatmoDataHandler:
         self.poll_start = time()
         self.poll_count = 0
         self.persons: dict[str, dict[str, str | None]] = {}
-        self.schedules: dict[str, dict[str, Any]] = {}
+        self.schedules: dict[str, dict[str, Schedule]] = {}
         self.device_ids: dict[str, str] = {}
         self.cameras: dict[str, str] = {}
         self.events: dict[str, dict] = {}
