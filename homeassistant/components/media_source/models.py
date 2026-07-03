@@ -3,7 +3,13 @@
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
+from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaClass,
+    MediaType,
+    SearchMedia,
+    SearchMediaQuery,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.translation import async_get_cached_translations
 
@@ -101,6 +107,15 @@ class MediaSourceItem:
 
         return await self.async_media_source().async_browse_media(self)
 
+    async def async_search(self, query: SearchMediaQuery) -> SearchMedia:
+        """Search this item."""
+        # Searching the aggregate root (no specific source) is currently not supported
+        # because it would possibly returns 100s of items
+        if self.domain is None:
+            raise NotImplementedError
+
+        return await self.async_media_source().async_search_media(self, query)
+
     async def async_resolve(self) -> PlayMedia:
         """Resolve to playable item."""
         return await self.async_media_source().async_resolve_media(self)
@@ -143,4 +158,10 @@ class MediaSource:
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Browse media."""
+        raise NotImplementedError
+
+    async def async_search_media(
+        self, item: MediaSourceItem, query: SearchMediaQuery
+    ) -> SearchMedia:
+        """Search media."""
         raise NotImplementedError

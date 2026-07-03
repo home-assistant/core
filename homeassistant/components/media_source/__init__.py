@@ -20,7 +20,7 @@ from .const import (
     URI_SCHEME_REGEX,
 )
 from .error import MediaSourceError, Unresolvable
-from .helper import async_browse_media, async_resolve_media
+from .helper import async_browse_media, async_resolve_media, async_search_media
 from .models import (
     BrowseMediaSource,
     MediaSource,
@@ -42,6 +42,7 @@ __all__ = [
     "Unresolvable",
     "async_browse_media",
     "async_resolve_media",
+    "async_search_media",
     "generate_media_source_id",
     "is_media_source_id",
 ]
