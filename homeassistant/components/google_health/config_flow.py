@@ -12,7 +12,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from .api import SimpleAuth
-from .const import DOMAIN, OAUTH_SCOPES
+from .const import DEFAULT_TITLE, DOMAIN, OAUTH_SCOPE_PROFILE, OAUTH_SCOPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,16 +65,14 @@ class OAuth2FlowHandler(
         self._abort_if_unique_id_configured()
 
         display_name = None
-        if "profile" in scopes:
+        if OAUTH_SCOPE_PROFILE in scopes:
             try:
                 userinfo = await api.get_user_info()
                 display_name = userinfo.given_name or userinfo.name
             except Exception as err:  # pylint: disable=broad-except # noqa: BLE001
                 _LOGGER.warning("Error fetching user profile name: %s", err)
 
-        title = display_name or "Google Health"
-
         return self.async_create_entry(
-            title=title,
+            title=display_name or DEFAULT_TITLE,
             data=data,
         )
