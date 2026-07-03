@@ -423,7 +423,7 @@ async def test_migration_1_1(
     history_stats_entity_entry = entity_registry.async_get("sensor.my_history_stats")
     assert history_stats_entity_entry.device_id == sensor_entity_entry.device_id
 
-    assert history_stats_config_entry.version == 1
+    assert history_stats_config_entry.version == 2
     assert (
         history_stats_config_entry.minor_version
         == HistoryStatsConfigFlowHandler.MINOR_VERSION
@@ -465,7 +465,7 @@ async def test_migration_1_2(
         history_stats_config_entry.options.get(CONF_STATE_CLASS)
         == SensorStateClass.MEASUREMENT
     )
-    assert history_stats_config_entry.version == 1
+    assert history_stats_config_entry.version == 2
     assert (
         history_stats_config_entry.minor_version
         == HistoryStatsConfigFlowHandler.MINOR_VERSION
@@ -511,7 +511,7 @@ async def test_migration_1_3(
     assert history_stats_config_entry.options[SECTION_ADDITIONAL_SETTINGS] == {
         CONF_MIN_STATE_DURATION: {"seconds": 30}
     }
-    assert history_stats_config_entry.version == 1
+    assert history_stats_config_entry.version == 2
     assert (
         history_stats_config_entry.minor_version
         == HistoryStatsConfigFlowHandler.MINOR_VERSION
@@ -535,7 +535,7 @@ async def test_migration_from_future_version(
             CONF_END: "{{ utcnow() }}",
         },
         title="My history stats",
-        version=2,
+        version=3,
         minor_version=1,
     )
     config_entry.add_to_hass(hass)

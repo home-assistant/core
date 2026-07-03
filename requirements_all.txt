@@ -1942,7 +1942,7 @@ py-schluter==0.1.7
 py-sucks==0.9.11
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.10.1
+py-synologydsm-api==2.10.2
 
 # homeassistant.components.unifi_access
 py-unifi-access==1.3.0
@@ -3335,7 +3335,7 @@ waterfurnace==1.7.1
 watergate-local-api==2025.1.0
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==1.5.4
+weatherflow4py==1.5.8
 
 # homeassistant.components.cisco_webex_teams
 webexpythonsdk==2.0.6
