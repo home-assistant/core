@@ -1,5 +1,7 @@
 """Services for the Mill integration."""
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -13,6 +15,9 @@ from .const import (
     DOMAIN,
     SERVICE_SET_ROOM_TEMP,
 )
+
+if TYPE_CHECKING:
+    from .coordinator import MillConfigEntry
 
 SET_ROOM_TEMP_SCHEMA = vol.Schema(
     {
