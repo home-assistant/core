@@ -162,6 +162,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
             # Assume we can use the local api.
             update_interval=V1_LOCAL_NOT_CLEANING_INTERVAL,
         )
+        self.last_update_success = False
         self._device = device
         self.properties_api = properties_api
         self.device_info = get_device_info(device)
@@ -470,6 +471,7 @@ class RoborockDataUpdateCoordinatorA01[
             name=DOMAIN,
             update_interval=A01_UPDATE_INTERVAL,
         )
+        self.last_update_success = False
         self._device = device
         self.device_info = get_device_info(device)
         self.request_protocols: list[_V] = []
@@ -504,6 +506,7 @@ class RoborockWashingMachineUpdateCoordinator(
     ) -> None:
         """Initialize."""
         super().__init__(hass, config_entry, device)
+        self.last_update_success = False
         self.api = api
         self.request_protocols: list[RoborockZeoProtocol] = []
         # This currently only supports the washing machine protocols
@@ -554,6 +557,7 @@ class RoborockWetDryVacUpdateCoordinator(
     ) -> None:
         """Initialize."""
         super().__init__(hass, config_entry, device)
+        self.last_update_success = False
         self.api = api
         # This currenltly only supports the WetDryVac protocols
         self.request_protocols: list[RoborockDyadDataProtocol] = [
@@ -598,6 +602,7 @@ class RoborockDataUpdateCoordinatorB01(DataUpdateCoordinator[B01Props | None]):
             name=DOMAIN,
             update_interval=A01_UPDATE_INTERVAL,
         )
+        self.last_update_success = False
         self._device = device
         self.device_info = get_device_info(device)
 
@@ -629,6 +634,7 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
     ) -> None:
         """Initialize."""
         super().__init__(hass, config_entry, device)
+        self.last_update_success = False
         self.api = api
         self.request_protocols: list[RoborockB01Props] = [
             RoborockB01Props.STATUS,
@@ -696,6 +702,7 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
             name=DOMAIN,
             update_interval=Q10_UPDATE_INTERVAL,
         )
+        self.last_update_success = False
         self._device = device
         self.api = api
         self.device_info = get_device_info(device)
