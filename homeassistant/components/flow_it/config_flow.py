@@ -122,7 +122,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(info["unique_id"])
                 self._abort_if_unique_id_configured(updates=data)
-                return self.async_create_entry(title=info["title"], data=data)
+                return self.async_create_entry(title=info["title"], data= {
+                CONF_HOST: host,
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+            })
 
         data_schema = vol.Schema(
             {
