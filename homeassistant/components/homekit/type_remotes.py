@@ -237,6 +237,7 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
         self.hass.config_entries.async_update_entry(entry, options=new_options)
 
     @callback
+    @override
     def async_stop(self) -> None:
         """Flush any pending visibility persist before tearing down."""
         if self._visibility_debouncer is not None:
