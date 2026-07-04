@@ -37,8 +37,11 @@ def mock_speedtest_payload() -> list[dict[str, Any]]:
 
 async def test_speedtest_sensors(
     hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Verify that speedtest sensors are working as expected."""
+    await hass.async_block_till_done()
+
     # Verify that sensors are created based on the initial fetch for eth0
     assert (
         hass.states.get("sensor.unifi_network_speedtest_download_eth0").state == "100.0"
