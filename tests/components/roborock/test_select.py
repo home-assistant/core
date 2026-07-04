@@ -584,10 +584,7 @@ async def test_selects_coordinator_state(
     # Verify that a select from each device type is created
     state = hass.states.get("select.roborock_s7_maxv_mop_mode")
     assert state is not None
-    if expected_state == STATE_UNKNOWN:
-        assert state.state == "standard"
-    else:
-        assert state.state == expected_state
+    assert state.state == expected_state
 
     state = hass.states.get("select.zeo_one_wash_program")
     assert state is not None

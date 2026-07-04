@@ -412,15 +412,25 @@ def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
     _mop_route_mapping = {m.code: m.value for m in CleanRoutes}
     v1_properties.status.fan_speed_options = list(VacuumModes)
     v1_properties.status.fan_speed_mapping = _fan_speed_mapping
-    v1_properties.status.fan_speed_name = _fan_speed_mapping.get(STATUS.fan_power)
+    v1_properties.status.fan_speed_name = None
     v1_properties.status.water_mode_options = list(WaterModes)
     v1_properties.status.water_mode_mapping = _water_mode_mapping
-    v1_properties.status.water_mode_name = _water_mode_mapping.get(
-        STATUS.water_box_mode
-    )
+    v1_properties.status.water_mode_name = None
     v1_properties.status.mop_route_options = list(CleanRoutes)
     v1_properties.status.mop_route_mapping = _mop_route_mapping
-    v1_properties.status.mop_route_name = _mop_route_mapping.get(STATUS.mop_mode)
+    v1_properties.status.mop_route_name = None
+
+    original_refresh = v1_properties.status.refresh.side_effect
+
+    async def status_refresh() -> None:
+        await original_refresh()
+        v1_properties.status.fan_speed_name = _fan_speed_mapping.get(STATUS.fan_power)
+        v1_properties.status.water_mode_name = _water_mode_mapping.get(
+            STATUS.water_box_mode
+        )
+        v1_properties.status.mop_route_name = _mop_route_mapping.get(STATUS.mop_mode)
+
+    v1_properties.status.refresh = AsyncMock(side_effect=status_refresh)
     v1_properties.dnd = make_dnd_timer(dataclass_template=DND_TIMER)
     v1_properties.clean_summary = make_mock_trait(
         trait_spec=CleanSummaryTrait,
