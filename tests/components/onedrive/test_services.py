@@ -2,6 +2,8 @@
 
 from collections.abc import Generator
 from dataclasses import dataclass
+import glob
+from pathlib import Path
 import re
 from typing import Any, cast
 from unittest.mock import MagicMock, Mock, patch
@@ -30,6 +32,11 @@ from tests.common import MockConfigEntry
 TEST_FILENAME = "doorbell_snapshot.jpg"
 TEST_DESTINATION_PATH = "photos/snapshots/image.jpg"
 DESTINATION_FOLDER = "TestFolder"
+
+
+def _is_file(path: Path) -> bool:
+    """Return True for concrete files, False for glob patterns."""
+    return not glob.has_magic(str(path))
 
 
 @dataclass
@@ -114,7 +121,8 @@ async def test_upload_service_wildcard(
         ) as mock_glob,
         patch(
             "homeassistant.components.onedrive.services.Path.is_file",
-            return_value=True,
+            autospec=True,
+            side_effect=_is_file,
         ),
     ):
         await hass.services.async_call(
@@ -152,7 +160,8 @@ async def test_upload_service_wildcard_recursive(
         ) as mock_glob,
         patch(
             "homeassistant.components.onedrive.services.Path.is_file",
-            return_value=True,
+            autospec=True,
+            side_effect=_is_file,
         ),
     ):
         await hass.services.async_call(
