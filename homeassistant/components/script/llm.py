@@ -6,7 +6,7 @@ from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.llm import ActionTool, LLMContext, Tool
+from homeassistant.helpers.llm import LLM_API_ASSIST, ActionTool, LLMContext, Tool
 
 from .const import DOMAIN
 
@@ -36,11 +36,18 @@ class ScriptTool(ActionTool):
 
 
 @callback
-def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
+def async_get_tools(
+    hass: HomeAssistant, llm_context: LLMContext, api_id: str
+) -> LLMTools | None:
     """Return a script LLM tool for each exposed script."""
+    if api_id != LLM_API_ASSIST:
+        return None
+
     tools: list[Tool] = [
         ScriptTool(hass, state.entity_id)
         for state in sorted(hass.states.async_all(DOMAIN), key=attrgetter("name"))
         if async_should_expose(hass, llm_context.assistant, state.entity_id)
     ]
+    if not tools:
+        return None
     return LLMTools(tools=tools)
