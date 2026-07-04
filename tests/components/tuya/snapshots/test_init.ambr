@@ -5734,6 +5734,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[mjhwalv51czt]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'mjhwalv51czt',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'INTELAR IR288 (unsupported)',
+    'model_id': '5vlawhjm',
+    'name': 'INTELAR IR288',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[mpowx36sgqexmtes2gw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -7501,6 +7532,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[s5ah3novtabe4tfdhb]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        's5ah3novtabe4tfdhb',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Smart Kettle',
+    'model_id': 'dft4ebatvon3ha5s',
+    'name': 'Smart Kettle',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[sb3zdertrw50bgogkw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -8207,6 +8269,37 @@
     'model': 'WIFI Smoke alarm',
     'model_id': 'kscbebaf3s1eogvt',
     'name': 'WIFI Smoke alarm',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[u8h3bty7qgg]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'u8h3bty7qgg',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'GIEX Watering Timer (unsupported)',
+    'model_id': '7ytb3h8u',
+    'name': 'GIEX Watering Timer',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -9633,6 +9726,37 @@
     'model': 'TV (unsupported)',
     'model_id': 'lplun31mo1xaonwz',
     'name': 'TV',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[zxmrfsffcearbajpjfx]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'zxmrfsffcearbajpjfx',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'REGISTER BOOSTER FAN  (unsupported)',
+    'model_id': 'pjabraecffsfrmxz',
+    'name': 'Register booster fan',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,

@@ -1,6 +1,6 @@
 """Tests for the SolarEdge sensor platform."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
@@ -214,6 +214,24 @@ async def test_energy_details_sensor_unknown_when_no_meters(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_energy_details_sensor_keeps_unit_when_api_fails(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+) -> None:
+    """Test energy detail sensors keep their unit when the initial API call fails."""
+    solaredge_api.get_energy_details.return_value = {}
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.solaredge_produced_energy")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes["unit_of_measurement"] == "Wh"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_energy_details_filters_meters(
     recorder_mock: Recorder,
     hass: HomeAssistant,
@@ -301,13 +319,22 @@ async def test_power_flow_grid_export_storage_discharge(
     grid = hass.states.get("sensor.solaredge_grid_power")
     assert grid is not None
     assert grid.state == "-100.0"
-    assert grid.attributes["flow"] == "export"
 
     storage = hass.states.get("sensor.solaredge_storage_power")
     assert storage is not None
     assert storage.state == "400.0"
-    assert storage.attributes["flow"] == "discharge"
-    assert storage.attributes["soc"] == 60
+
+    grid_direction = hass.states.get("sensor.solaredge_grid_flow_direction")
+    assert grid_direction is not None
+    assert grid_direction.state == "export"
+
+    storage_direction = hass.states.get("sensor.solaredge_storage_flow_direction")
+    assert storage_direction is not None
+    assert storage_direction.state == "discharge"
+
+    storage_level = hass.states.get("sensor.solaredge_storage_level")
+    assert storage_level is not None
+    assert storage_level.state == "60"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -699,3 +726,147 @@ async def test_storage_service_not_retried_after_recovery_with_no_batteries(
         "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
     )
     assert charge_entry is None
+
+
+def _power_flow_payload(
+    *,
+    grid_export: bool,
+    storage_charging: bool,
+    charge_level: int = 60,
+) -> dict[str, dict]:
+    """Build a siteCurrentPowerFlow payload for the given grid/storage flows."""
+    if grid_export:
+        grid_connection = {"from": "LOAD", "to": "Grid"}
+    else:
+        grid_connection = {"from": "GRID", "to": "Load"}
+    if storage_charging:
+        storage_connection = {"from": "PV", "to": "Storage"}
+    else:
+        storage_connection = {"from": "STORAGE", "to": "Load"}
+    return {
+        "siteCurrentPowerFlow": {
+            "unit": "W",
+            "connections": [grid_connection, storage_connection],
+            "GRID": {"status": "Active", "currentPower": 1200.0},
+            "LOAD": {"status": "Active", "currentPower": 800.0},
+            "PV": {"status": "Active", "currentPower": 2000.0},
+            "STORAGE": {
+                "status": "Charging" if storage_charging else "Discharging",
+                "currentPower": 300.0,
+                "chargeLevel": charge_level,
+            },
+        }
+    }
+
+
+@pytest.mark.parametrize(
+    ("grid_export", "storage_charging", "expected_grid", "expected_storage"),
+    [
+        (True, False, "export", "discharge"),
+        (False, True, "import", "charge"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@patch("homeassistant.components.solaredge.SolarEdge")
+async def test_power_flow_direction_sensors(
+    mock_solaredge: MagicMock,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    solaredge_api: Mock,
+    mock_config_entry: MockConfigEntry,
+    grid_export: bool,
+    storage_charging: bool,
+    expected_grid: str,
+    expected_storage: str,
+) -> None:
+    """Test that grid and storage flow direction ENUM sensors are populated."""
+    solaredge_api.get_current_power_flow = AsyncMock(
+        return_value=_power_flow_payload(
+            grid_export=grid_export, storage_charging=storage_charging
+        )
+    )
+    mock_solaredge.return_value = solaredge_api
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    grid_dir = hass.states.get("sensor.solaredge_grid_flow_direction")
+    assert grid_dir is not None
+    assert grid_dir.state == expected_grid
+    assert grid_dir.attributes["options"] == ["export", "import"]
+    assert grid_dir.attributes["device_class"] == "enum"
+
+    storage_dir = hass.states.get("sensor.solaredge_storage_flow_direction")
+    assert storage_dir is not None
+    assert storage_dir.state == expected_storage
+    assert storage_dir.attributes["options"] == ["charge", "discharge"]
+    assert storage_dir.attributes["device_class"] == "enum"
+
+    # Power sensors must no longer expose flow/soc attributes
+    grid_power = hass.states.get("sensor.solaredge_grid_power")
+    assert grid_power is not None
+    assert "flow" not in grid_power.attributes
+
+    storage_power = hass.states.get("sensor.solaredge_storage_power")
+    assert storage_power is not None
+    assert "flow" not in storage_power.attributes
+    assert "soc" not in storage_power.attributes
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@patch("homeassistant.components.solaredge.SolarEdge")
+async def test_storage_level_from_power_flow(
+    mock_solaredge: MagicMock,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    solaredge_api: Mock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the storage level sensor reads chargeLevel from power-flow data."""
+    solaredge_api.get_current_power_flow = AsyncMock(
+        return_value=_power_flow_payload(
+            grid_export=False, storage_charging=True, charge_level=42
+        )
+    )
+    mock_solaredge.return_value = solaredge_api
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.solaredge_storage_level")
+    assert state is not None
+    assert state.state == "42"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@patch("homeassistant.components.solaredge.SolarEdge")
+async def test_power_flow_direction_sensors_missing_connections(
+    mock_solaredge: MagicMock,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    solaredge_api: Mock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test direction sensors stay unknown when power flow has no connections."""
+    solaredge_api.get_current_power_flow = AsyncMock(
+        return_value={"siteCurrentPowerFlow": {"unit": "W"}}
+    )
+    mock_solaredge.return_value = solaredge_api
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    grid_dir = hass.states.get("sensor.solaredge_grid_flow_direction")
+    assert grid_dir is not None
+    assert grid_dir.state == "unknown"
+
+    storage_dir = hass.states.get("sensor.solaredge_storage_flow_direction")
+    assert storage_dir is not None
+    assert storage_dir.state == "unknown"
+
+    storage_level = hass.states.get("sensor.solaredge_storage_level")
+    assert storage_level is not None
+    assert storage_level.state == "unknown"

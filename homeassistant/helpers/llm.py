@@ -8,7 +8,7 @@ from decimal import Decimal
 from enum import Enum
 from functools import cache, partial
 from operator import attrgetter
-from typing import Any, cast
+from typing import Any, cast, override
 
 import slugify as unicode_slug
 import voluptuous as vol
@@ -22,6 +22,7 @@ from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
+from homeassistant.components.sensor import async_rounded_state
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN, TodoServices
 from homeassistant.components.weather import INTENT_GET_WEATHER
 from homeassistant.const import (
@@ -69,6 +70,13 @@ Answer in plain text. Keep it simple and to the point.
 NO_ENTITIES_PROMPT = (
     "Only if the user wants to control a device, tell them to expose entities "
     "to their voice assistant in Home Assistant."
+)
+
+DEVICE_CONTROL_TOOL_USAGE_PROMPT = (
+    "When controlling Home Assistant always call the intent tools. "
+    "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
+    "When controlling a device, prefer passing just name and domain. "
+    "When controlling an area, prefer passing just area name and domain."
 )
 
 DYNAMIC_CONTEXT_PROMPT = (
@@ -183,7 +191,7 @@ class LLMContext:
     language: str | None
     """Language of the LLM request."""
 
-    assistant: str | None
+    assistant: str
     """Assistant domain that is handling the LLM request."""
 
     device_id: str | None
@@ -215,6 +223,7 @@ class Tool:
         """Call the tool."""
         raise NotImplementedError
 
+    @override
     def __repr__(self) -> str:
         """Represent a string of a Tool."""
         return f"<{self.__class__.__name__} - {self.name}>"
@@ -294,6 +303,7 @@ class IntentTool(Tool):
         if extra_slots:
             self.extra_slots = extra_slots
 
+    @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
@@ -365,6 +375,7 @@ class NamespacedTool(Tool):
         self.parameters = tool.parameters
         self.tool = tool
 
+    @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
@@ -398,6 +409,7 @@ class MergedAPI(API):
         )
         self.llm_apis = llm_apis
 
+    @override
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
         """Return the instance of the API."""
         # These usually don't do I/O and execute right away
@@ -473,6 +485,7 @@ class AssistAPI(API):
             partial(unicode_slug.slugify, separator="_", lowercase=False)
         )
 
+    @override
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
         """Return the instance of the API."""
         if llm_context.assistant:
@@ -496,27 +509,33 @@ class AssistAPI(API):
     ) -> str:
         if not exposed_entities or not exposed_entities["entities"]:
             return NO_ENTITIES_PROMPT
-        return "\n".join(
-            [
-                *self._async_get_preable(llm_context),
-                *self._async_get_exposed_entities_prompt(llm_context, exposed_entities),
-            ]
-        )
+
+        # Collect all parts, filtering out any None values
+        prompt_parts = [
+            DEVICE_CONTROL_TOOL_USAGE_PROMPT,
+            DYNAMIC_CONTEXT_PROMPT,
+            *self._async_get_exposed_entities_prompt(exposed_entities),
+            self._async_get_voice_satellite_area_prompt(llm_context),
+            self._async_get_no_timer_prompt(llm_context),
+        ]
+
+        # Filter out None and empty strings before joining
+        return "\n".join([part for part in prompt_parts if part])
 
     @callback
-    def _async_get_preable(self, llm_context: LLMContext) -> list[str]:
-        """Return the prompt for the API."""
+    def _async_get_no_timer_prompt(self, llm_context: LLMContext) -> str | None:
+        if not llm_context.device_id or not async_device_supports_timers(
+            self.hass, llm_context.device_id
+        ):
+            return "This device is not able to start timers."
+        return None
 
-        prompt = [
-            (
-                "When controlling Home Assistant always call the intent tools. "
-                "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
-                "When controlling a device, prefer passing just name and domain. "
-                "When controlling an area, prefer passing just area name and domain."
-            )
-        ]
-        area: ar.AreaEntry | None = None
+    @callback
+    def _async_get_voice_satellite_area_prompt(self, llm_context: LLMContext) -> str:
+        """Return the area prompt for the voice satellite."""
         floor: fr.FloorEntry | None = None
+        area: ar.AreaEntry | None = None
+        extra = ""
         if llm_context.device_id:
             device_reg = dr.async_get(self.hass)
             device = device_reg.async_get(llm_context.device_id)
@@ -535,28 +554,18 @@ class AssistAPI(API):
             )
 
         if floor and area:
-            prompt.append(f"You are in area {area.name} (floor {floor.name}) {extra}")
-        elif area:
-            prompt.append(f"You are in area {area.name} {extra}")
-        else:
-            prompt.append(
-                "When a user asks to turn on all devices of a specific type, "
-                "ask user to specify an area, unless there"
-                " is only one device of that type."
-            )
-
-        if not llm_context.device_id or not async_device_supports_timers(
-            self.hass, llm_context.device_id
-        ):
-            prompt.append("This device is not able to start timers.")
-
-        prompt.append(DYNAMIC_CONTEXT_PROMPT)
-
-        return prompt
+            return f"You are in area {area.name} (floor {floor.name}) {extra}".strip()
+        if area:
+            return f"You are in area {area.name} {extra}".strip()
+        return (
+            "When a user asks to turn on all devices of a specific type, "
+            "ask the user to specify an area, unless there"
+            " is only one device of that type."
+        )
 
     @callback
     def _async_get_exposed_entities_prompt(
-        self, llm_context: LLMContext, exposed_entities: dict | None
+        self, exposed_entities: dict | None
     ) -> list[str]:
         """Return the prompt for the API for exposed entities."""
         prompt = []
@@ -696,7 +705,7 @@ def _get_exposed_entities(
             ):
                 # Entity is in area
                 area_names.append(area_entry.name)
-                area_names.extend(area_entry.aliases)
+                area_names.extend(sorted(area_entry.aliases))
             elif device_entry is not None:
                 # Check device area
                 if (
@@ -707,7 +716,7 @@ def _get_exposed_entities(
                     is not None
                 ):
                     area_names.append(area_entry.name)
-                    area_names.extend(area_entry.aliases)
+                    area_names.extend(sorted(area_entry.aliases))
 
         info: dict[str, Any] = {
             "names": ", ".join(names),
@@ -716,6 +725,10 @@ def _get_exposed_entities(
 
         if include_state:
             info["state"] = state.state
+
+            # Format numeric states with configured display precision
+            if state.domain == "sensor":
+                info["state"] = async_rounded_state(hass, state.entity_id, state)
 
             # Convert timestamp device_class states from UTC to local time
             if state.attributes.get("device_class") == "timestamp" and state.state:
@@ -727,7 +740,7 @@ def _get_exposed_entities(
 
         if include_state and (
             attributes := {
-                attr_name: (
+                str(attr_name): (
                     str(attr_value)
                     if isinstance(attr_value, (Enum, Decimal, int))
                     else attr_value
@@ -954,9 +967,9 @@ def _get_cached_action_parameters(
                 aliases = er.async_get_entity_aliases(hass, entity_entry)
                 if aliases:
                     if description:
-                        description = description + ". Aliases: " + str(list(aliases))
+                        description = description + ". Aliases: " + str(sorted(aliases))
                     else:
-                        description = "Aliases: " + str(list(aliases))
+                        description = "Aliases: " + str(sorted(aliases))
 
         parameters_cache.setdefault(domain, {})[action] = (description, parameters)
 
@@ -986,6 +999,7 @@ class ActionTool(Tool):
             hass, domain, action
         )
 
+    @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
@@ -1075,6 +1089,7 @@ class CalendarGetEventsTool(Tool):
             }
         )
 
+    @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
@@ -1151,6 +1166,7 @@ class TodoGetItemsTool(Tool):
             }
         )
 
+    @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
@@ -1254,6 +1270,7 @@ class GetLiveContextTool(Tool):
         }
     )
 
+    @override
     async def async_call(
         self,
         hass: HomeAssistant,
@@ -1261,11 +1278,6 @@ class GetLiveContextTool(Tool):
         llm_context: LLMContext,
     ) -> JsonObjectType:
         """Get the current state of exposed entities."""
-        if llm_context.assistant is None:
-            # Note this doesn't happen in practice since this tool won't be
-            # exposed if no assistant is configured.
-            return {"success": False, "error": "No assistant configured"}
-
         args = self.parameters(tool_input.tool_args)
         exposed_entities = _get_exposed_entities(hass, llm_context.assistant)
 
@@ -1298,6 +1310,10 @@ class GetLiveContextTool(Tool):
                     name=name_filter,
                     area_name=area_filter,
                     domains=domain_filter,
+                    # This tool only returns context, so multiple entities
+                    # sharing a name (e.g. "AC" in two areas) should all be
+                    # returned rather than failing as an ambiguous match.
+                    allow_duplicate_names=True,
                 ),
                 states=exposed_states,
             )
@@ -1336,6 +1352,7 @@ class GetDateTimeTool(Tool):
     name = "GetDateTime"
     description = "Provides the current date and time."
 
+    @override
     async def async_call(
         self,
         hass: HomeAssistant,

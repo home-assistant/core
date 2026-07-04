@@ -1,6 +1,6 @@
 """Support for Victron GX switches."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
@@ -63,16 +63,19 @@ class VictronSwitch(VictronBaseEntity, SwitchEntity):
         )
 
     @callback
+    @override
     def _on_update_cb(self, value: Any) -> None:
         self._attr_is_on = VictronBinarySensor.convert_metric_value_to_is_on(value)
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if TYPE_CHECKING:
             assert isinstance(self._metric, VictronVenusWritableMetric)
         self._metric.set(BINARY_SENSOR_ON_ID)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         if TYPE_CHECKING:

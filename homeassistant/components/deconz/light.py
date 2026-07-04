@@ -1,6 +1,6 @@
 """Support for deCONZ lights."""
 
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict, cast, override
 
 from pydeconz.interfaces.groups import GroupHandler
 from pydeconz.interfaces.lights import LightHandler
@@ -121,7 +121,7 @@ class SetStateAttributes(TypedDict, total=False):
 
 
 def update_color_state(
-    group: Group, lights: list[Light], override: bool = False
+    group: Group, lights: list[Light], override_raw: bool = False
 ) -> None:
     """Sync group color state with light."""
     data = {
@@ -131,7 +131,7 @@ def update_color_state(
         if (light_attribute := light.raw["state"].get(attribute)) is not None
     }
 
-    if override:
+    if override_raw:
         group.raw["action"] = cast(TypedGroupAction, data)
     else:
         group.update(cast(dict[str, dict[str, Any]], {"action": data}))
@@ -242,6 +242,7 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
                     self._attr_effect_list = XMAS_LIGHT_EFFECTS
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._device.color_mode in DECONZ_TO_COLOR_MODE:
@@ -257,11 +258,13 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
         return color_mode
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         return self._device.brightness
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the CT color value."""
         if self._device.color_temp is None or self._device.color_temp == 0:
@@ -269,6 +272,7 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
         return color_temperature_mired_to_kelvin(self._device.color_temp)
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hs color value."""
         if (hue := self._device.hue) and (sat := self._device.saturation):
@@ -276,15 +280,18 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
         return None
 
     @property
+    @override
     def xy_color(self) -> tuple[float, float] | None:
         """Return the XY color value."""
         return self._device.xy
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if light is on."""
         return self._device.state
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         data: SetStateAttributes = {"on": True}
@@ -321,6 +328,7 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
 
         await self.api.set_state(id=self._device.resource_id, **data)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         if not self._device.state:
@@ -339,6 +347,7 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
         await self.api.set_state(id=self._device.resource_id, **data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, bool]:
         """Return the device state attributes."""
         return {DECONZ_GROUP: isinstance(self._device, Group)}
@@ -348,6 +357,7 @@ class DeconzLight(DeconzBaseLight[Light]):
     """Representation of a deCONZ light."""
 
     @property
+    @override
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
         if max_color_temp_mireds := self._device.max_color_temp:
@@ -355,6 +365,7 @@ class DeconzLight(DeconzBaseLight[Light]):
         return super().min_color_temp_kelvin
 
     @property
+    @override
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
         if min_color_temp_mireds := self._device.min_color_temp:
@@ -362,6 +373,7 @@ class DeconzLight(DeconzBaseLight[Light]):
         return super().max_color_temp_kelvin
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Light state will also reflect in relevant groups."""
         super().async_update_callback()
@@ -385,11 +397,13 @@ class DeconzGroup(DeconzBaseLight[Group]):
         self._attr_name = None
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
         return self._unique_id
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         return DeviceInfo(
@@ -401,6 +415,7 @@ class DeconzGroup(DeconzBaseLight[Group]):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, bool]:
         """Return the device state attributes."""
         attributes = dict(super().extra_state_attributes)

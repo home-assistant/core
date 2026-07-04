@@ -1,5 +1,7 @@
 """Support for Satel Integra zone states- represented as binary sensors."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -93,6 +95,7 @@ class SatelIntegraBinarySensor[_CoordinatorT: SatelIntegraBaseCoordinator](
         self._attr_is_on = self._get_state_from_coordinator()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_is_on = self._get_state_from_coordinator()

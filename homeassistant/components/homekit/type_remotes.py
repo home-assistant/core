@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.const import CATEGORY_TELEVISION
 
@@ -329,6 +329,7 @@ class ActivityRemote(RemoteInputSelectAccessory):
         assert state
         self.async_update_state(state)
 
+    @override
     def set_on_off(self, value: bool) -> None:
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state for "on_off" to %s', self.entity_id, value)
@@ -336,6 +337,7 @@ class ActivityRemote(RemoteInputSelectAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         self.async_call_service(REMOTE_DOMAIN, service, params)
 
+    @override
     def set_input_source(self, value: int) -> None:
         """Send input set value if call came from HomeKit."""
         _LOGGER.debug("%s: Set current input to %s", self.entity_id, value)
@@ -343,6 +345,7 @@ class ActivityRemote(RemoteInputSelectAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_ACTIVITY: source}
         self.async_call_service(REMOTE_DOMAIN, SERVICE_TURN_ON, params)
 
+    @override
     def set_remote_key(self, value: int) -> None:
         """Send remote key value if call came from HomeKit."""
         _LOGGER.debug("%s: Set remote key to %s", self.entity_id, value)
@@ -355,6 +358,7 @@ class ActivityRemote(RemoteInputSelectAccessory):
         )
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update Television remote state after state changed."""
         current_state = new_state.state

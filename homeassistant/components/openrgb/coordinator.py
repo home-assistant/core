@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from typing import override
 
 from openrgb import OpenRGBClient
 from openrgb.orgb import Device
@@ -54,6 +55,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
         config_entry.async_on_unload(self.async_client_disconnect)
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator by connecting to the OpenRGB SDK server."""
         try:
@@ -64,6 +66,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 DEFAULT_CLIENT_NAME,
             )
         except CONNECTION_ERRORS as err:
+            # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
@@ -73,6 +76,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 },
             ) from err
 
+    @override
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch data from OpenRGB."""
         async with self.client_lock:

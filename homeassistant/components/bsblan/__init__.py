@@ -1,14 +1,15 @@
 """The BSB-LAN integration."""
 
-import asyncio
 import dataclasses
 
+from awesomeversion import AwesomeVersion
 from bsblan import (
     BSBLAN,
     BSBLANAuthError,
     BSBLANConfig,
     BSBLANConnectionError,
     BSBLANError,
+    BSBLANVersionError,
     Device,
     Info,
     StaticState,
@@ -29,13 +30,13 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -50,6 +51,12 @@ from .coordinator import BSBLanFastCoordinator, BSBLanSlowCoordinator
 from .services import async_setup_services
 
 PLATFORMS = [Platform.BUTTON, Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
+ISSUE_OUTDATED_FIRMWARE = "outdated_firmware"
+
+# JSON-API version (reported by /JV) at or above which the device exposes the
+# full feature set. Below this, the library operates in a reduced
+# single-circuit mode and we surface a repair issue recommending an upgrade.
+MINIMUM_FULL_API_VERSION = AwesomeVersion("2.0")
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -75,7 +82,7 @@ def get_bsblan_device_info(
     """Build DeviceInfo for the main BSB-LAN controller device."""
     return DeviceInfo(
         identifiers={(DOMAIN, device.MAC)},
-        connections={(CONNECTION_NETWORK_MAC, format_mac(device.MAC))},
+        connections={(CONNECTION_NETWORK_MAC, device.MAC)},
         name=device.name,
         manufacturer="BSBLAN Inc.",
         model=(
@@ -102,6 +109,50 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+def _issue_id_for_entry(entry_id: str) -> str:
+    """Build issue id for a config entry."""
+    return f"{ISSUE_OUTDATED_FIRMWARE}_{entry_id}"
+
+
+def _is_reduced_api_mode(json_api_version: str | None) -> bool:
+    """Return whether the device runs in reduced (single-circuit) JSON-API mode.
+
+    Devices reporting a JSON-API version below v2 expose only a reduced feature
+    set limited to a single heating circuit.
+    """
+    return (
+        json_api_version is not None
+        and AwesomeVersion(json_api_version) < MINIMUM_FULL_API_VERSION
+    )
+
+
+def _async_manage_outdated_firmware_issue(
+    hass: HomeAssistant,
+    entry: BSBLanConfigEntry,
+    firmware_version: str,
+    json_api_version: str | None,
+) -> None:
+    """Create or remove the outdated firmware repair issue for an entry.
+
+    Devices reporting a JSON-API version below v2 run with a reduced feature
+    set, so we recommend the user upgrades the firmware for full support.
+    """
+    issue_id = _issue_id_for_entry(entry.entry_id)
+    if _is_reduced_api_mode(json_api_version):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=ISSUE_OUTDATED_FIRMWARE,
+            translation_placeholders={"firmware_version": firmware_version},
+            learn_more_url="https://github.com/fredlcore/BSB-LAN/releases",
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bool:
     """Set up BSB-LAN from a config entry."""
 
@@ -119,8 +170,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
     bsblan = BSBLAN(config=config, session=session)
 
     try:
-        # Initialize the client first - this sets up internal caches and validates
-        # the connection by fetching firmware version
+        # Initialize the client. This validates the connection and fetches the
+        # firmware and JSON-API versions. The library selects the full or the
+        # reduced (single-circuit) feature set from the JSON-API version, and
+        # raises BSBLANVersionError when no supported version is available.
         await bsblan.initialize()
 
         # Read available heating circuits from config entry data
@@ -129,11 +182,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
             DEFAULT_HEATING_CIRCUITS
         )
 
-        # Fetch required device metadata in parallel for faster startup
-        device, info = await asyncio.gather(
-            bsblan.device(),
-            bsblan.info(),
-        )
+        # Devices reporting a JSON-API version below v2 operate in a reduced
+        # single-circuit mode. A previously configured entry may still list
+        # additional circuits from when the device ran newer firmware, which
+        # would make setup fail when fetching those now-unsupported circuits.
+        # Restrict to the default single circuit so the integration still loads.
+        if _is_reduced_api_mode(bsblan.json_api_version):
+            circuits = list(DEFAULT_HEATING_CIRCUITS)
+
+        # Fetch device metadata
+        device = await bsblan.device()
+        info = await bsblan.info()
     except BSBLANConnectionError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -151,11 +210,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
             translation_key="setup_connection_error",
             translation_placeholders={"host": entry.data[CONF_HOST]},
         ) from err
+    except BSBLANVersionError as err:
+        # The device does not report a supported JSON-API version, so the
+        # integration cannot operate. Surface a clear, actionable error.
+        firmware_version = bsblan.device_info.version if bsblan.device_info else None
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="setup_outdated_firmware",
+            translation_placeholders={
+                "firmware_version": firmware_version or "unknown"
+            },
+        ) from err
     except BSBLANError as err:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="setup_general_error",
         ) from err
+
+    # Devices below JSON-API v2 operate with a reduced single-circuit feature
+    # set. Surface (or clear) the repair issue recommending a firmware upgrade.
+    _async_manage_outdated_firmware_issue(
+        hass, entry, device.version, bsblan.json_api_version
+    )
 
     # Fetch static values per configured circuit.
     # BSB-LAN is a serial bus — it processes one parameter at a time,
@@ -219,6 +295,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
 
 async def async_unload_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bool:
     """Unload BSBLAN config entry."""
+    ir.async_delete_issue(hass, DOMAIN, _issue_id_for_entry(entry.entry_id))
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
@@ -229,10 +306,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> 
         entry.version,
         entry.minor_version,
     )
-
-    if entry.version > 1:
-        # Downgraded from a future version; cannot migrate.
-        return False
 
     # 1.1 -> 1.2: Add CONF_HEATING_CIRCUITS. Attempt to discover available
     # heating circuits from the device; fall back to [1] (pre-multi-circuit

@@ -9,6 +9,7 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_host": "The host entry was not in full URL format, e.g., {sample_ip}",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "ssl_error": "TLS handshake failed. The controller may require a newer TLS version, or SSL verification may be failing due to a self-signed certificate.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{name} ({host})",
@@ -25,8 +26,11 @@
         "data": {
           "host": "[%key:common::config_flow::data::url%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "tls": "The TLS version of the ISY controller.",
-          "username": "[%key:common::config_flow::data::username%]"
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "verify_ssl": "Verify the controller's TLS certificate. Leave disabled for ISY-994/eisy/Polisy controllers using their default self-signed certificate."
         },
         "description": "The host entry must be in full URL format, e.g., {sample_ip}",
         "title": "Connect to your ISY"

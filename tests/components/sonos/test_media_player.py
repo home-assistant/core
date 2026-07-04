@@ -1,7 +1,7 @@
 """Tests for the Sonos Media Player platform."""
 
 from collections.abc import Generator
-from datetime import UTC, datetime
+import logging
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -40,6 +40,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     MediaPlayerEnqueue,
+    MediaPlayerEntityFeature,
     RepeatMode,
 )
 from homeassistant.components.sonos.const import (
@@ -87,6 +88,7 @@ from homeassistant.helpers.device_registry import (
     DeviceRegistry,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
 
@@ -722,6 +724,7 @@ async def test_play_sonos_playlist(
         ),
     ],
 )
+@pytest.mark.parametrize("speaker_model", ["Sonos Amp"], indirect=True)
 async def test_select_source_line_in_tv(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -824,6 +827,7 @@ async def test_select_source_line_in_tv(
         ),
     ],
 )
+@pytest.mark.parametrize("speaker_model", ["Sonos Amp"], indirect=True)
 async def test_select_source_play_uri(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -865,6 +869,7 @@ async def test_select_source_play_uri(
         ),
     ],
 )
+@pytest.mark.parametrize("speaker_model", ["Sonos Amp"], indirect=True)
 async def test_select_source_play_queue(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -896,6 +901,7 @@ async def test_select_source_play_queue(
     soco_mock.play_from_queue.assert_called_with(0)
 
 
+@pytest.mark.parametrize("speaker_model", ["Sonos Amp"], indirect=True)
 async def test_select_source_error(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -1347,6 +1353,61 @@ async def test_play_media_announce(
     soco.play_uri.assert_called_with(content_id, force_radio=False)
 
 
+@pytest.mark.parametrize(
+    ("content_id", "expect_warning"),
+    [
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123.mp3",
+            False,
+            id="mp3_no_warning",
+        ),
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123.wav",
+            False,
+            id="wav_no_warning",
+        ),
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123.flac",
+            True,
+            id="flac_warns_and_plays",
+        ),
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123",
+            False,
+            id="no_extension_no_warning",
+        ),
+    ],
+)
+async def test_play_media_announce_format_warning(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    sonos_websocket,
+    content_id: str,
+    expect_warning: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that announce logs a warning for unsupported file formats."""
+    caplog.clear()
+    caplog.set_level(
+        logging.WARNING, logger="homeassistant.components.sonos.media_player"
+    )
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+            ATTR_MEDIA_CONTENT_ID: content_id,
+            ATTR_MEDIA_ANNOUNCE: True,
+        },
+        blocking=True,
+    )
+    assert sonos_websocket.play_clip.call_count == 1
+    warning_logged = "only supports MP3 and WAV" in caplog.text
+    assert warning_logged == expect_warning
+
+
 async def test_media_get_queue(
     hass: HomeAssistant,
     soco: MockSoCo,
@@ -1369,16 +1430,26 @@ async def test_media_get_queue(
     assert result == snapshot
 
 
+FAVORITE_TITLES = [
+    "66 - Watercolors",
+    "Les P'tits Bateaux",
+    "James Taylor Radio",
+    "1984",
+    "American Tall Tales",
+    "sample playlist",
+]
+
+
 @pytest.mark.parametrize(
     ("speaker_model", "source_list"),
     [
-        ("Sonos Arc Ultra", [SOURCE_TV]),
-        ("Sonos Arc", [SOURCE_TV]),
-        ("Sonos Playbar", [SOURCE_TV]),
-        ("Sonos Connect", [SOURCE_LINEIN]),
-        ("Sonos Play:5", [SOURCE_LINEIN]),
-        ("Sonos Amp", [SOURCE_LINEIN, SOURCE_TV]),
-        ("Sonos Era", None),
+        ("Sonos Arc Ultra", [SOURCE_TV, *FAVORITE_TITLES]),
+        ("Sonos Arc", [SOURCE_TV, *FAVORITE_TITLES]),
+        ("Sonos Playbar", [SOURCE_TV, *FAVORITE_TITLES]),
+        ("Sonos Connect", [SOURCE_LINEIN, *FAVORITE_TITLES]),
+        ("Sonos Play:5", [SOURCE_LINEIN, *FAVORITE_TITLES]),
+        ("Sonos Amp", [SOURCE_LINEIN, SOURCE_TV, *FAVORITE_TITLES]),
+        ("Sonos Era", FAVORITE_TITLES),
     ],
     indirect=["speaker_model"],
 )
@@ -1386,11 +1457,69 @@ async def test_media_source_list(
     hass: HomeAssistant,
     async_autosetup_sonos,
     speaker_model: str,
-    source_list: list[str] | None,
+    source_list: list[str],
 ) -> None:
     """Test the mapping between the speaker model name and source_list."""
     state = hass.states.get("media_player.zone_a")
     assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == source_list
+    features = MediaPlayerEntityFeature(state.attributes["supported_features"])
+    assert features & MediaPlayerEntityFeature.SELECT_SOURCE
+
+
+@pytest.mark.parametrize(
+    ("speaker_model", "expected_sources", "expected_after_clear"),
+    [
+        ("Model Name", FAVORITE_TITLES, None),
+        ("Sonos Arc Ultra", [SOURCE_TV, *FAVORITE_TITLES], [SOURCE_TV]),
+        (
+            "Sonos Amp",
+            [SOURCE_LINEIN, SOURCE_TV, *FAVORITE_TITLES],
+            [SOURCE_LINEIN, SOURCE_TV],
+        ),
+    ],
+    indirect=["speaker_model"],
+)
+async def test_source_list_favorites_cleared(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    speaker_model: str,
+    expected_sources: list[str],
+    expected_after_clear: list[str] | None,
+) -> None:
+    """Test source_list and SELECT_SOURCE update when favorites are cleared."""
+    entity_id = "media_player.zone_a"
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == expected_sources
+    features = MediaPlayerEntityFeature(state.attributes["supported_features"])
+    assert features & MediaPlayerEntityFeature.SELECT_SOURCE
+
+    # Clear favorites via the music library mock
+    empty_favorites = SearchResult([], "favorites", 0, 0, 2)
+    soco.music_library.get_sonos_favorites.return_value = empty_favorites
+    soco.music_library.get_music_library_information.side_effect = None
+    soco.music_library.get_music_library_information.return_value = SearchResult(
+        [], "sonos_playlists", 0, 0, 0
+    )
+
+    # Trigger a favorites cache update via the content directory event
+    service = soco.contentDirectory
+    subscription = service.subscribe.return_value
+    favorites_event = SonosMockEvent(
+        soco,
+        service,
+        {"favorites_update_id": "2", "container_update_i_ds": "FV:2,2"},
+    )
+    subscription.callback(event=favorites_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == expected_after_clear
+    features = MediaPlayerEntityFeature(state.attributes["supported_features"])
+    assert bool(features & MediaPlayerEntityFeature.SELECT_SOURCE) == (
+        expected_after_clear is not None
+    )
 
 
 async def test_service_update_alarm(
@@ -1477,7 +1606,7 @@ async def test_position_updates(
     assert state.attributes[ATTR_MEDIA_POSITION] == 42
     # updated_at should be recent
     updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
-    assert updated_at == datetime.now(UTC)
+    assert updated_at == dt_util.utcnow()
 
     # Position only updated by 1 second; should not update attributes
     new_track_info = current_track_info.copy()
@@ -1507,7 +1636,7 @@ async def test_position_updates(
         await hass.async_block_till_done(wait_background_tasks=True)
         state = hass.states.get(entity_id)
         assert state.attributes[ATTR_MEDIA_POSITION] == 70
-        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == datetime.now(UTC)
+        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
 
 
 @pytest.mark.parametrize(

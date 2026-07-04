@@ -119,7 +119,7 @@ async def test_sensor(
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
-            "hassio",
+            DOMAIN,
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
@@ -170,7 +170,7 @@ async def test_stats_addon_sensor(
 
     assert await async_setup_component(
         hass,
-        "hassio",
+        DOMAIN,
         {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
     )
     await hass.async_block_till_done()

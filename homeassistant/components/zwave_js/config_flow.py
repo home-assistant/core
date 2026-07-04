@@ -6,7 +6,7 @@ from contextlib import suppress
 from datetime import datetime
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -382,7 +382,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if new_addon_config == addon_config:
             return
 
-        if addon_info.state == AddonState.RUNNING:
+        if addon_info.state is AddonState.RUNNING:
             self.restart_addon = True
         # Copy the add-on config to keep the objects separate.
         self.original_addon_config = dict(addon_config)
@@ -411,6 +411,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return discovery_info_config
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -445,6 +446,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             ],
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -484,6 +486,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB Discovery."""
         if not is_hassio(self.hass):
@@ -630,6 +633,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -732,7 +736,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         addon_info = await self._async_get_addon_info()
 
-        if addon_info.state == AddonState.RUNNING:
+        if addon_info.state is AddonState.RUNNING:
             addon_config = addon_info.options
             # Use the options set by USB/ESPHome discovery
             if not self._adapter_discovered:
@@ -757,7 +761,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return await self.async_step_finish_addon_setup_user()
 
-        if addon_info.state == AddonState.NOT_RUNNING:
+        if addon_info.state is AddonState.NOT_RUNNING:
             return await self.async_step_configure_addon_user()
 
         return await self.async_step_install_addon()
@@ -1230,7 +1234,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         addon_info = await self._async_get_addon_info()
 
-        if addon_info.state == AddonState.NOT_INSTALLED:
+        if addon_info.state is AddonState.NOT_INSTALLED:
             return await self.async_step_install_addon()
 
         return await self.async_step_configure_addon_reconfigure()
@@ -1268,7 +1272,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
             await self._async_set_addon_config(addon_config_updates)
 
-            if addon_info.state == AddonState.RUNNING and not self.restart_addon:
+            if addon_info.state is AddonState.RUNNING and not self.restart_addon:
                 return await self.async_step_finish_addon_setup_reconfigure()
 
             if (
@@ -1624,7 +1628,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         # save the backup to a file just in case
         self.backup_filepath = Path(
             self.hass.config.path(
-                f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"
+                f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"  # pylint: disable=home-assistant-enforce-naive-now
             )
         )
         try:
@@ -1719,7 +1723,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the driver from the config entry."""
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
-        if config_entry.state != ConfigEntryState.LOADED:
+        if config_entry.state is not ConfigEntryState.LOADED:
             raise AbortFlow("Configuration entry is not loaded")
         client: Client = config_entry.runtime_data.client
         assert client.driver is not None

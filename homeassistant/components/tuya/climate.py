@@ -1,7 +1,7 @@
 """Support for Tuya Climate."""
 
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from tuya_device_handlers.definition.climate import (
     ClimateDefinition,
@@ -202,9 +202,10 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         # Determine preset modes (ignore if empty options)
         if definition.preset_wrapper and definition.preset_wrapper.options:
-            self._attr_hvac_modes.append(description.switch_only_hvac_mode)
             self._attr_preset_modes = definition.preset_wrapper.options
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+            if description.switch_only_hvac_mode not in self._attr_hvac_modes:
+                self._attr_hvac_modes.append(description.switch_only_hvac_mode)
 
         # Determine dpcode to use for setting the humidity
         if definition.target_humidity_wrapper:
@@ -237,6 +238,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         commands = []
@@ -256,23 +258,28 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             )
         await self._async_send_commands(commands)
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         await self._async_send_wrapper_updates(self._preset_wrapper, preset_mode)
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         await self._async_send_wrapper_updates(self._fan_mode_wrapper, fan_mode)
 
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         await self._async_send_wrapper_updates(self._target_humidity_wrapper, humidity)
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
         if tuya_mode := _HA_TO_TUYA_SWING_MAPPINGS.get(swing_mode):
             await self._async_send_wrapper_updates(self._swing_wrapper, tuya_mode)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         value = kwargs[ATTR_TEMPERATURE]
@@ -283,6 +290,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         await self._async_send_wrapper_updates(self._set_temperature, value)
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         value = self._read_wrapper(self._current_temperature)
@@ -297,11 +305,13 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         return value
 
     @property
+    @override
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self._read_wrapper(self._current_humidity_wrapper)
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature currently set to be reached."""
         value = self._read_wrapper(self._set_temperature)
@@ -316,11 +326,13 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         return value
 
     @property
+    @override
     def target_humidity(self) -> int | None:
         """Return the humidity currently set to be reached."""
         return self._read_wrapper(self._target_humidity_wrapper)
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac mode."""
         # If the switch is off, hvac mode is off.
@@ -339,25 +351,30 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         return _TUYA_TO_HA_HVACMODE_MAPPINGS.get(tuya_mode) if tuya_mode else None
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return preset mode."""
         return self._read_wrapper(self._preset_wrapper)
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return fan mode."""
         return self._read_wrapper(self._fan_mode_wrapper)
 
     @property
+    @override
     def swing_mode(self) -> str | None:
         """Return swing mode."""
         tuya_value = self._read_wrapper(self._swing_wrapper)
         return _TUYA_TO_HA_SWING_MAPPINGS.get(tuya_value) if tuya_value else None
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the device on, retaining current HVAC (if supported)."""
         await self._async_send_wrapper_updates(self._switch_wrapper, True)
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the device on, retaining current HVAC (if supported)."""
         await self._async_send_wrapper_updates(self._switch_wrapper, False)

@@ -2,7 +2,7 @@
 
 from json import JSONDecodeError
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components import ai_task, conversation
 from homeassistant.core import HomeAssistant
@@ -15,6 +15,8 @@ from .entity import AnthropicBaseLLMEntity
 
 if TYPE_CHECKING:
     from . import AnthropicConfigEntry
+
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +49,7 @@ class AnthropicTaskEntity(
     )
     _attr_translation_key = "ai_task_data"
 
+    @override
     async def _async_generate_data(
         self,
         task: ai_task.GenDataTask,

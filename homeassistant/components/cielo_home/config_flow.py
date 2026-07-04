@@ -1,6 +1,6 @@
 """Config Flow for Cielo integration."""
 
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohttp import ClientError
 from cieloconnectapi import CieloClient
@@ -61,6 +61,7 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return client.user_id, {CONF_TOKEN: token}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

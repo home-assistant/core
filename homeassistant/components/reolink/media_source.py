@@ -2,6 +2,7 @@
 
 import datetime as dt
 import logging
+from typing import override
 
 from reolink_aio.api import DUAL_LENS_MODELS
 from reolink_aio.enums import VodRequestType
@@ -57,12 +58,14 @@ class ReolinkVODMediaSource(MediaSource):
         super().__init__(DOMAIN)
         self.hass = hass
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         identifier = ["UNKNOWN"]
         if item.identifier is not None:
             identifier = item.identifier.split("|", 6)
         if identifier[0] != "FILE":
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise Unresolvable(f"Unknown media item '{item.identifier}'.")
 
         _, config_entry_id, channel_str, stream_res, filename, start_time, end_time = (
@@ -83,7 +86,7 @@ class ReolinkVODMediaSource(MediaSource):
 
         vod_type = get_vod_type()
 
-        if vod_type == VodRequestType.NVR_DOWNLOAD:
+        if vod_type is VodRequestType.NVR_DOWNLOAD:
             filename = f"{start_time}_{end_time}"
 
         if vod_type in {
@@ -112,6 +115,7 @@ class ReolinkVODMediaSource(MediaSource):
         stream_url = stream_url.replace("master_", "")
         return PlayMedia(stream_url, mime_type)
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,
@@ -172,6 +176,7 @@ class ReolinkVODMediaSource(MediaSource):
                 event,
             )
 
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise Unresolvable(f"Unknown media item '{item.identifier}' during browsing.")
 
     async def _async_generate_root(self) -> BrowseMediaSource:
