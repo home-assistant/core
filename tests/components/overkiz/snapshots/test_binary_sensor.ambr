@@ -345,8 +345,8 @@
 # name: test_binary_sensor_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][binary_sensor.living_room_balcony_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Balcony Window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balcony Window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.living_room_balcony_window',
@@ -396,8 +396,8 @@
 # name: test_binary_sensor_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][binary_sensor.living_room_balcony_window_tilt-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Balcony Window Tilt',
-      'icon': 'mdi:angle-acute',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Balcony Window Tilt',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:angle-acute',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.living_room_balcony_window_tilt',
@@ -447,8 +447,8 @@
 # name: test_binary_sensor_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][binary_sensor.living_room_garage_sliding_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Garage Sliding Window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Sliding Window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.living_room_garage_sliding_window',
