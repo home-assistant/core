@@ -28,6 +28,26 @@ def get_clean_name(name: str | None) -> str | None:
     return name.strip() or None
 
 
+def _get_mac_address(node: MatterNode) -> str | None:
+    """Return the MAC address of the node's operational network interface, if any."""
+    interfaces = node.get_attribute_value(
+        0,
+        clusters.GeneralDiagnostics,
+        clusters.GeneralDiagnostics.Attributes.NetworkInterfaces,
+    )
+    for interface in interfaces or []:
+        if not interface.isOperational:
+            continue
+        # Only 6-byte (WiFi/Ethernet) addresses are MAC addresses; Thread
+        # interfaces report an 8-byte EUI-64 with no matching connection type.
+        if len(interface.hardwareAddress) != 6:
+            continue
+        if interface.hardwareAddress == b"\x00" * 6:
+            continue
+        return dr.format_mac(interface.hardwareAddress.hex())
+    return None
+
+
 class MatterAdapter:
     """Connect Matter into Home Assistant."""
 
@@ -212,10 +232,17 @@ class MatterAdapter:
         else:
             model_id = str(product_id) if (product_id := basic_info.productID) else None
 
+        connections: set[tuple[str, str]] = set()
+        if not endpoint.is_bridged_device and (
+            mac_address := _get_mac_address(endpoint.node)
+        ):
+            connections.add((dr.CONNECTION_NETWORK_MAC, mac_address))
+
         dr.async_get(self.hass).async_get_or_create(
             name=name,
             config_entry_id=self.config_entry.entry_id,
             identifiers=identifiers,
+            connections=connections,
             hw_version=basic_info.hardwareVersionString,
             sw_version=basic_info.softwareVersionString,
             manufacturer=basic_info.vendorName or endpoint.node.device_info.vendorName,

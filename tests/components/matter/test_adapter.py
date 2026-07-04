@@ -48,6 +48,24 @@ async def test_device_registry_single_node_device(
     assert entry.hw_version == "v1.0"
     assert entry.sw_version == "v1.0"
     assert entry.serial_number == "12345678"
+    # no valid network interface MAC address is present in this fixture
+    assert entry.connections == set()
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["color_temperature_light"])
+async def test_device_registry_mac_address(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the device's MAC address is added as a connection."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000005-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+    assert entry.connections == {(dr.CONNECTION_NETWORK_MAC, "00:17:88:2c:8c:b8")}
 
 
 @pytest.mark.usefixtures("matter_node")
