@@ -1274,6 +1274,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/ohmconnect/ @robbiet480
 /homeassistant/components/ohme/ @dan-r
 /tests/components/ohme/ @dan-r
+/homeassistant/components/okokscale/ @rrooggiieerr
 /homeassistant/components/ollama/ @synesthesiam
 /tests/components/ollama/ @synesthesiam
 /homeassistant/components/ombi/ @larssont

@@ -686,6 +686,9 @@ bluetooth-auto-recovery==1.6.4
 # homeassistant.components.private_ble_device
 bluetooth-data-tools==1.29.18
 
+# homeassistant.components.okokscale
+bluetooth_sensor_state_data==1.9.0
+
 # homeassistant.components.bond
 bond-async==0.2.1
 
@@ -1725,6 +1728,9 @@ oemthermostat==1.1.1
 
 # homeassistant.components.ohme
 ohme==1.9.1
+
+# homeassistant.components.okokscale
+okokscale==0.0.1
 
 # homeassistant.components.ollama
 ollama==0.6.2
