@@ -103,7 +103,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 core_behavior=frame.ReportBehavior.ERROR,
                 core_integration_behavior=frame.ReportBehavior.ERROR,
                 custom_integration_behavior=frame.ReportBehavior.IGNORE,
-                breaks_in_ha_version="2026.8",
             )
 
             self.config_entry = config_entries.current_entry.get()

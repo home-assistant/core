@@ -1099,7 +1099,7 @@ async def test_config_entry(
 
     # Default without context should raise
     caplog.clear()
-    core_crd = None
+    crd = None
     with pytest.raises(
         RuntimeError,
         match=(
@@ -1107,10 +1107,8 @@ async def test_config_entry(
             "but should pass the config entry explicitly."
         ),
     ):
-        core_crd = update_coordinator.DataUpdateCoordinator[int](
-            hass, _LOGGER, name="test"
-        )
-    assert not core_crd
+        crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+    assert crd is None
 
     # Default with context should raise
     caplog.clear()
@@ -1123,10 +1121,8 @@ async def test_config_entry(
             "but should pass the config entry explicitly."
         ),
     ):
-        core_crd = update_coordinator.DataUpdateCoordinator[int](
-            hass, _LOGGER, name="test"
-        )
-    assert not core_crd
+        crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+    assert crd is None
 
 
 @pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
