@@ -51,7 +51,7 @@ async def test_infrared_setup_ultima(
     state = hass.states.get("infrared.mock_title_ir_emitter")
     assert state is not None
 
-    state = hass.states.get("infrared.mock_title_ir_receiver")
+    state = hass.states.get("infrared.mock_title_infrared_receiver")
     assert state is not None
 
 
@@ -66,7 +66,7 @@ async def test_infrared_not_created_non_ultima(
     state = hass.states.get("infrared.mock_title_ir_emitter")
     assert state is None
 
-    state = hass.states.get("infrared.mock_title_ir_receiver")
+    state = hass.states.get("infrared.mock_title_infrared_receiver")
     assert state is None
 
 
@@ -168,7 +168,7 @@ async def test_infrared_receiver_event(
     """Test infrared receiver receives event and updates state."""
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "infrared.mock_title_ir_receiver"
+    entity_id = "infrared.mock_title_infrared_receiver"
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNKNOWN

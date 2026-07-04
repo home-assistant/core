@@ -75,8 +75,6 @@ class SmInfraredEntity(SmEntity, InfraredEmitterEntity):
 class SmInfraredReceiverEntity(SmEntity, InfraredReceiverEntity):
     """Representation of a SLZB-Ultima infrared receiver."""
 
-    _attr_translation_key = "infrared_receiver"
-
     def __init__(self, coordinator: SmDataUpdateCoordinator) -> None:
         """Initialize the SLZB-Ultima infrared receiver."""
         super().__init__(coordinator)
