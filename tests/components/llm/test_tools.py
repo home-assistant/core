@@ -32,7 +32,7 @@ def _llm_context() -> llm.LLMContext:
 async def test_get_datetime_tool(hass: HomeAssistant) -> None:
     """Test the GetDateTime tool is always offered and returns the current time."""
     llm_context = _llm_context()
-    result = await llm_component.async_get_tools(hass, llm_context)
+    result = await llm_component.async_get_tools(hass, llm_context, "assist")
     tool = next((tool for tool in result.tools if tool.name == "GetDateTime"), None)
     assert tool is not None
 
