@@ -58,11 +58,6 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator[None]):
         _LOGGER.debug("Closing connection to %s", self.host)
         await self.api_client.close()
 
-    async def connect(self) -> None:
-        """Connect client."""
-        _LOGGER.debug("Connecting to %s", self.host)
-        await self.api_client.connect()
-
     @property
     def is_connected(self) -> bool:
         """Check modbus client connection status."""

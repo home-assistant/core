@@ -89,19 +89,3 @@ async def test_async_setup_entry_coordinator_update_fails(
 
     assert result is False
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_coordinator_connect(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_lwz_api: MagicMock,
-) -> None:
-    """Test coordinator connect method."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    coordinator = mock_config_entry.runtime_data
-    mock_lwz_api.connect.reset_mock()
-    await coordinator.connect()
-    mock_lwz_api.connect.assert_awaited_once()
