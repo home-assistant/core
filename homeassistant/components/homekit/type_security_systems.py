@@ -84,12 +84,7 @@ DEFAULT_SUPPORTED_FEATURES = (
 
 
 def _supported_states(supported_features: int) -> tuple[list[int], list[int]]:
-    """Return the supported (current_states, target_services) for the features.
-
-    Mirrors how HomeKit's valid values are derived from the alarm entity's
-    supported_features, so the accessory build and the runtime staleness check
-    stay in sync.
-    """
+    """Return the supported (current_states, target_services) for the features."""
     current_supported_states = [HK_ALARM_DISARMED, HK_ALARM_TRIGGERED]
     target_supported_services = [HK_ALARM_DISARMED]
 
@@ -198,10 +193,7 @@ class SecuritySystem(HomeAccessory):
         if hass_state in {"None", STATE_UNKNOWN, STATE_UNAVAILABLE}:
             # Bail out early for no state, unknown or unavailable
             return
-        if hass_state is not None:
-            hass_state = AlarmControlPanelState(hass_state)
-        if not hass_state:
-            return
+        hass_state = AlarmControlPanelState(hass_state)
         current_state = HASS_TO_HOMEKIT_CURRENT.get(hass_state)
         target_state = HASS_TO_HOMEKIT_TARGET.get(hass_state)
         if current_state is None and target_state is None:
