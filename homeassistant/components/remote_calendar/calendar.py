@@ -109,6 +109,7 @@ class RemoteCalendarEntity(
 
         self._timeline = await self.hass.async_add_executor_job(_get_timeline)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -116,6 +117,7 @@ class RemoteCalendarEntity(
         self.async_write_ha_state()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.coordinator.config_entry.async_create_task(
