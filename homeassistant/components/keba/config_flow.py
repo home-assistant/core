@@ -1,5 +1,6 @@
 """Config flow for the KEBA charging station integration."""
 
+import asyncio
 import logging
 from typing import Any, override
 
@@ -63,11 +64,14 @@ class KebaConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             connected = await keba.setup()
         except OSError:
+            keba.stop_periodic_request()
             return None, {"base": "cannot_connect"}
         except Exception:
             _LOGGER.exception("Unexpected error connecting to KEBA wallbox")
+            keba.stop_periodic_request()
             return None, {"base": "unknown"}
         if not connected:
+            keba.stop_periodic_request()
             return None, {"base": "cannot_connect"}
         return keba, {}
 
@@ -85,9 +89,12 @@ class KebaConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=errors["base"])
 
         await self.async_set_unique_id(str(keba.get_value("Serial")))
+        title = keba.device_name
+        keba.stop_periodic_request()
+        await asyncio.sleep(0)
         self._abort_if_unique_id_configured()
 
-        return self.async_create_entry(title=keba.device_name, data=import_data)
+        return self.async_create_entry(title=title, data=import_data)
 
     @override
     async def async_step_user(
@@ -102,11 +109,11 @@ class KebaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if keba is not None:
                 await self.async_set_unique_id(str(keba.get_value("Serial")))
+                title = keba.device_name
+                keba.stop_periodic_request()
+                await asyncio.sleep(0)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=keba.device_name,
-                    data=user_input,
-                )
+                return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="user",
