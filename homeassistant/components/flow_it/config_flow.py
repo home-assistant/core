@@ -78,7 +78,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured(updates=user_input)
                 return self.async_create_entry(title=info["title"], data=user_input)
 
-        data_schema = vol.Schema(
+        return self.async_show_form(
+            step_id="user", data_schema=vol.Schema(
             {
                 vol.Required(CONF_HOST): str,
                 vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): TextSelector(
@@ -92,10 +93,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                 ),
             }
-        )
-
-        return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+        ), errors=errors
         )
 
     async def async_step_zeroconf_confirm(
