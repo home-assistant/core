@@ -135,20 +135,12 @@ async def test_migrate_entry_v1_to_v2(
     assert subentry.data[CONF_PROFILE_ID] == "xyz12"
     assert subentry.unique_id == "xyz12"
 
-    # Verify device was migrated to new identifiers and subentry
-    device = device_registry.async_get_device(
-        identifiers={
-            (DOMAIN, f"{mock_config_entry_v1.entry_id}_{subentry.subentry_id}")
-        }
-    )
+    # Verify device was migrated and linked to subentry
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "xyz12")})
     assert device is not None
     assert device.config_entries_subentries == {
         mock_config_entry_v1.entry_id: {subentry.subentry_id}
     }
-
-    # Verify old device no longer exists
-    old_device = device_registry.async_get_device(identifiers={(DOMAIN, "xyz12")})
-    assert old_device is None
 
 
 async def test_migrate_entry_v1_to_v2_merge_same_api_key(
@@ -222,17 +214,14 @@ async def test_migrate_entry_v1_to_v2_merge_same_api_key(
     titles = {s.title for s in subentries}
     assert titles == {"Profile One", "Profile Two"}
 
-    # Verify devices were migrated to new identifiers under entry1
-    for sub in subentries:
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{entry1.entry_id}_{sub.subentry_id}")}
-        )
-        assert device is not None
-        assert entry1.entry_id in device.config_entries
+    # Verify devices were migrated to entry1 with existing identifiers
+    device_abc = device_registry.async_get_device(identifiers={(DOMAIN, "abc11")})
+    assert device_abc is not None
+    assert entry1.entry_id in device_abc.config_entries
 
-    # Verify old devices no longer exist
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "abc11")}) is None
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "def22")}) is None
+    device_def = device_registry.async_get_device(identifiers={(DOMAIN, "def22")})
+    assert device_def is not None
+    assert entry1.entry_id in device_def.config_entries
 
     # Verify entity from entry2 was migrated to entry1
     entity_entry = entity_registry.async_get("sensor.nextdns_profile_two_dns_queries")
@@ -311,9 +300,7 @@ async def test_migrate_entry_v1_to_v2_disabled_entry(
     )
 
     # Verify device disabled_by was changed from CONFIG_ENTRY to USER
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{entry1.entry_id}_{subentry2.subentry_id}")}
-    )
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "def22")})
     assert device is not None
     assert device.disabled_by is dr.DeviceEntryDisabler.USER
 

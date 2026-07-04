@@ -171,9 +171,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             device_registry.async_update_device(
                 device.id,
                 disabled_by=device_disabled_by,
-                new_identifiers={
-                    (DOMAIN, f"{parent_entry.entry_id}_{subentry.subentry_id}")
-                },
+                new_identifiers={(DOMAIN, profile_id)},
                 add_config_subentry_id=subentry.subentry_id,
                 add_config_entry_id=parent_entry.entry_id,
             )
