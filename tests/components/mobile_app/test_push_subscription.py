@@ -55,7 +55,9 @@ GET_SESSION = (
 
 
 def _mock_session_post(
-    *, status: HTTPStatus | None = None, side_effect: type[Exception] | None = None
+    *,
+    status: HTTPStatus | None = None,
+    side_effect: Exception | type[Exception] | None = None,
 ) -> MagicMock:
     """Return a session whose .post() behaves as an async context manager.
 
@@ -127,6 +129,26 @@ async def test_register_stores_subscription(
     assert stored[PUSH_SUBSCRIPTION_ENTITY_IDS] == [TRACKED_ENTITY]
     assert stored[PUSH_SUBSCRIPTION_TARGET] == "lock_screen"
     assert SUB_ID in hass.data[DOMAIN][DATA_PUSH_SUBSCRIPTION_UNSUBS][push_webhook_id]
+
+
+async def test_no_listener_without_push_url(
+    hass: HomeAssistant, webhook_client: TestClient
+) -> None:
+    """A registration with no cloud push URL stores the sub but arms no listener."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    resp = await webhook_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+    assert resp.status == HTTPStatus.CREATED
+    webhook_id = (await resp.json())[CONF_WEBHOOK_ID]
+    await hass.async_block_till_done()
+
+    await _register_subscription(webhook_client, webhook_id)
+
+    # Mapping is stored, but no state-change listener is armed since this
+    # registration can never send a push.
+    assert SUB_ID in hass.data[DOMAIN][DATA_PUSH_SUBSCRIPTIONS][webhook_id]
+    assert webhook_id not in hass.data[DOMAIN][DATA_PUSH_SUBSCRIPTION_UNSUBS]
 
 
 async def test_register_is_idempotent(
@@ -401,7 +423,7 @@ async def test_send_push_swallows_client_error(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     sub = hass.data[DOMAIN][DATA_PUSH_SUBSCRIPTIONS][push_webhook_id][SUB_ID]
 
-    session = _mock_session_post(side_effect=ClientError)
+    session = _mock_session_post(side_effect=ClientError())
 
     with patch(GET_SESSION, return_value=session):
         # Must not raise.

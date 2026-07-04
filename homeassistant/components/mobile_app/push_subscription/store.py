@@ -29,6 +29,8 @@ from homeassistant.core import Event, EventStateChangedData, HomeAssistant, call
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event
 
 from ..const import (
+    ATTR_APP_DATA,
+    ATTR_PUSH_URL,
     DATA_CONFIG_ENTRIES,
     DATA_PUSH_SUBSCRIPTION_DEBOUNCE,
     DATA_PUSH_SUBSCRIPTION_UNSUBS,
@@ -105,6 +107,12 @@ def _async_setup_tracker(
     """Start (or restart) the state-change listener for one subscription."""
     # Replace any existing listener so an updated entity set takes effect.
     _async_unsub_tracker(hass, webhook_id, sub_id)
+
+    # Only arm a listener for registrations that can send a cloud push; others
+    # would schedule a debounce timer on every state change that never sends.
+    entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES].get(webhook_id)
+    if entry is None or ATTR_PUSH_URL not in entry.data.get(ATTR_APP_DATA, {}):
+        return
 
     @callback
     def _handle_state_change(event: Event[EventStateChangedData]) -> None:
