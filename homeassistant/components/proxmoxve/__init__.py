@@ -2,36 +2,17 @@
 
 import logging
 
-import voluptuous as vol
-
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_TOKEN,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-    Platform,
-)
+from homeassistant.const import CONF_TOKEN, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     AUTH_OTHER,
     AUTH_PAM,
     AUTH_PVE,
     CONF_AUTH_METHOD,
-    CONF_CONTAINERS,
-    CONF_NODE,
-    CONF_NODES,
     CONF_REALM,
-    CONF_TOKEN_ID,
-    CONF_TOKEN_SECRET,
-    CONF_VMS,
-    DEFAULT_PORT,
     DEFAULT_REALM,
-    DEFAULT_VERIFY_SSL,
-    DOMAIN,
 )
 from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator
 
@@ -41,51 +22,6 @@ PLATFORMS = [
     Platform.SENSOR,
 ]
 
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Required(CONF_USERNAME): cv.string,
-                        vol.Optional(CONF_PASSWORD): cv.string,
-                        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                        vol.Required(
-                            CONF_AUTH_METHOD, default=DEFAULT_REALM
-                        ): cv.string,
-                        vol.Optional(CONF_REALM, default=DEFAULT_REALM): cv.string,
-                        vol.Optional(CONF_TOKEN, default=False): cv.boolean,
-                        vol.Optional(CONF_TOKEN_ID): cv.string,
-                        vol.Optional(CONF_TOKEN_SECRET): cv.string,
-                        vol.Optional(
-                            CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
-                        ): cv.boolean,
-                        vol.Required(CONF_NODES): vol.All(
-                            cv.ensure_list,
-                            [
-                                vol.Schema(
-                                    {
-                                        vol.Required(CONF_NODE): cv.string,
-                                        vol.Optional(CONF_VMS, default=[]): [
-                                            cv.positive_int
-                                        ],
-                                        vol.Optional(CONF_CONTAINERS, default=[]): [
-                                            cv.positive_int
-                                        ],
-                                    }
-                                )
-                            ],
-                        ),
-                    }
-                )
-            ],
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
