@@ -490,3 +490,96 @@ async def test_reconfiguring_conversation_subentry(
     assert updated_subentry.data[CONF_CHAT_MODEL] == "gpt-4"
     assert updated_subentry.data[CONF_PROMPT] == "New prompt"
     assert CONF_STREAMING not in updated_subentry.data
+
+
+async def test_subentry_options_entry_not_loaded(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow aborts if config entry is not loaded."""
+    subentry = list(mock_config_entry.subentries.values())[0]
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": "reconfigure", "subentry_id": subentry.subentry_id},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
+
+
+async def test_reconfiguring_conversation_subentry_connection_error(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring subentry aborts if model listing fails."""
+    subentry = list(mock_config_entry.subentries.values())[0]
+
+    with patch(
+        "openai.resources.models.AsyncModels.list",
+        side_effect=openai.APIConnectionError(request=None),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "conversation"),
+            context={"source": "reconfigure", "subentry_id": subentry.subentry_id},
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "cannot_connect"
+
+
+async def test_reconfiguring_conversation_subentry_validation_error(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring subentry shows form with error if model validation fails."""
+    subentry = list(mock_config_entry.subentries.values())[0]
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": "reconfigure", "subentry_id": subentry.subentry_id},
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "openai.resources.chat.completions.AsyncCompletions.create",
+        side_effect=openai.OpenAIError("generic error"),
+    ):
+        result2 = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {
+                CONF_RECOMMENDED: False,
+                CONF_CHAT_MODEL: "gpt-4",
+                CONF_PROMPT: "New prompt",
+            },
+        )
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["errors"] == {"base": "api_error"}
+
+
+async def test_config_flow_unexpected_exception(
+    hass: HomeAssistant,
+) -> None:
+    """Test user step handles unexpected exception by showing unknown error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.llama_cpp.config_flow.async_create_client",
+        side_effect=RuntimeError("Unexpected error"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_BASE_URL: "http://localhost:8080/v1",
+            },
+        )
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["errors"] == {"base": "unknown"}
