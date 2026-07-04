@@ -90,6 +90,7 @@ async def test_sensors_before_first_update(
     fake_devices: list[FakeDevice],
 ) -> None:
     """Test sensors state before the first background coordinator update finishes."""
+    from unittest.mock import patch
 
     with patch(
         "homeassistant.helpers.update_coordinator.DataUpdateCoordinator.async_refresh"
@@ -97,26 +98,28 @@ async def test_sensors_before_first_update(
         await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
         await hass.async_block_till_done()
 
-    # V1 sensors
+    # V1 sensors: available=True, state=STATE_UNKNOWN
+    from homeassistant.const import STATE_UNKNOWN
+
     state = hass.states.get("sensor.roborock_s7_maxv_battery")
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
 
-    # A01 (Dyad/Zeo) sensors
+    # A01 (Dyad/Zeo) sensors: available=True, state=STATE_UNKNOWN
     state = hass.states.get("sensor.dyad_pro_battery")
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
 
     state = hass.states.get("sensor.zeo_one_washing_left")
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
 
-    # B01 Q7 sensors
+    # B01 Q7 sensors: available=True, state=STATE_UNKNOWN
     state = hass.states.get("sensor.roborock_q7_battery")
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
 
-    # B01 Q10 sensors
+    # B01 Q10 sensors: Q10 status api has mocked data initially, so it reports value
     state = hass.states.get("sensor.roborock_q10_s5_battery")
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == "100"
