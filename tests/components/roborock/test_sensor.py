@@ -6,7 +6,7 @@ import pytest
 from roborock.exceptions import RoborockException
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -90,7 +90,6 @@ async def test_sensors_before_first_update(
     fake_devices: list[FakeDevice],
 ) -> None:
     """Test sensors state before the first background coordinator update finishes."""
-    from unittest.mock import patch
 
     with patch(
         "homeassistant.helpers.update_coordinator.DataUpdateCoordinator.async_refresh"
@@ -99,7 +98,6 @@ async def test_sensors_before_first_update(
         await hass.async_block_till_done()
 
     # V1 sensors: available=True, state=STATE_UNKNOWN
-    from homeassistant.const import STATE_UNKNOWN
 
     state = hass.states.get("sensor.roborock_s7_maxv_battery")
     assert state is not None
