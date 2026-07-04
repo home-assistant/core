@@ -1,6 +1,7 @@
 """Test Roborock Sensors."""
 
-from unittest.mock import patch
+import asyncio
+from typing import Any
 
 import pytest
 from roborock.exceptions import RoborockException
@@ -31,93 +32,64 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, setup_entry.entry_id)
 
 
-async def test_sensors_unavailable(
+async def mock_delay(*args: Any, **kwargs: Any) -> None:
+    """Delay the update to simulate before first update completes."""
+    await asyncio.sleep(10)
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        (RoborockException("Simulated failure"), STATE_UNAVAILABLE),
+        (mock_delay, STATE_UNKNOWN),
+    ],
+)
+async def test_sensors_coordinator_state(
     hass: HomeAssistant,
     mock_roborock_entry: MockConfigEntry,
     fake_devices: list[FakeDevice],
+    side_effect: Any,
+    expected_state: str,
 ) -> None:
-    """Test sensors are still created when the coordinator data is unavailable."""
+    """Test sensors state based on coordinator update success or delay."""
     for device in fake_devices:
         if device.v1_properties is not None:
-            device.v1_properties.status.refresh.side_effect = RoborockException(
-                "Simulated V1 failure"
-            )
+            device.v1_properties.status.refresh.side_effect = side_effect
         if device.dyad is not None:
-            device.dyad.query_values.side_effect = RoborockException(
-                "Simulated Dyad failure"
-            )
+            device.dyad.query_values.side_effect = side_effect
         if device.zeo is not None:
-            device.zeo.query_values.side_effect = RoborockException(
-                "Simulated Zeo failure"
-            )
+            device.zeo.query_values.side_effect = side_effect
         if device.b01_q10_properties is not None:
-            device.b01_q10_properties.refresh.side_effect = RoborockException(
-                "Simulated Q10 failure"
-            )
+            device.b01_q10_properties.refresh.side_effect = side_effect
         if device.b01_q7_properties is not None:
-            device.b01_q7_properties.query_values.side_effect = RoborockException(
-                "Simulated Q7 failure"
-            )
+            device.b01_q7_properties.query_values.side_effect = side_effect
 
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Verify that a sensor from each device type is created but reports STATE_UNAVAILABLE
+    # V1 sensors
     state = hass.states.get("sensor.roborock_s7_maxv_battery")
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == expected_state
 
+    # A01 (Dyad/Zeo) sensors
     state = hass.states.get("sensor.dyad_pro_battery")
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == expected_state
 
     state = hass.states.get("sensor.zeo_one_washing_left")
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == expected_state
 
-    state = hass.states.get("sensor.roborock_q10_s5_battery")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
+    # B01 Q7 sensors
     state = hass.states.get("sensor.roborock_q7_battery")
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == expected_state
 
-
-async def test_sensors_before_first_update(
-    hass: HomeAssistant,
-    mock_roborock_entry: MockConfigEntry,
-    fake_devices: list[FakeDevice],
-) -> None:
-    """Test sensors state before the first background coordinator update finishes."""
-
-    with patch(
-        "homeassistant.helpers.update_coordinator.DataUpdateCoordinator.async_refresh"
-    ):
-        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
-        await hass.async_block_till_done()
-
-    # V1 sensors: available=True, state=STATE_UNKNOWN
-
-    state = hass.states.get("sensor.roborock_s7_maxv_battery")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
-
-    # A01 (Dyad/Zeo) sensors: available=True, state=STATE_UNKNOWN
-    state = hass.states.get("sensor.dyad_pro_battery")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
-
-    state = hass.states.get("sensor.zeo_one_washing_left")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
-
-    # B01 Q7 sensors: available=True, state=STATE_UNKNOWN
-    state = hass.states.get("sensor.roborock_q7_battery")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
-
-    # B01 Q10 sensors: Q10 status api has mocked data initially, so it reports value
+    # B01 Q10 sensors: Q10 status api has mocked data initially, so it reports value when available
     state = hass.states.get("sensor.roborock_q10_s5_battery")
     assert state is not None
-    assert state.state == "100"
+    if expected_state == STATE_UNKNOWN:
+        assert state.state == "100"
+    else:
+        assert state.state == expected_state
