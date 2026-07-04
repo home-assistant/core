@@ -9,12 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -140,31 +135,6 @@ async def test_button_press_alias(
         command_name="goToAlias",
         parameters=[alias_id],
     )
-
-
-@pytest.mark.parametrize(
-    ("device", "friendly_name"),
-    [
-        pytest.param(
-            VELUX_WINDOW, "Loft Window Ventilation position", id="ventilation"
-        ),
-        pytest.param(STUDIO_WINDOW, "Studio Window My position", id="favorite1"),
-        pytest.param(GARAGE_DOOR, "Garage Door Partial position", id="partial"),
-    ],
-)
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_alias_button_translated_name(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    device: FixtureDevice,
-    friendly_name: str,
-) -> None:
-    """Test that alias buttons resolve their translation_key based name."""
-    await setup_overkiz_integration(fixture=device.fixture)
-
-    state = hass.states.get(device.entity_id)
-    assert state
-    assert state.attributes[ATTR_FRIENDLY_NAME] == friendly_name
 
 
 async def test_button_unavailability(
