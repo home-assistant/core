@@ -152,7 +152,11 @@ async def test_entity_and_device_data(
     if site_payload[0]["role"] == "admin":
         await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
     else:
-        assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 0
+        # Speedtest button is always created even for non-admin accounts
+        assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 1
+        assert "button.unifi_network_speedtest" in hass.states.async_entity_ids(
+            BUTTON_DOMAIN
+        )
 
 
 async def _test_button_entity(
@@ -286,7 +290,11 @@ async def test_wlan_button_entities(
     call: dict[str, str],
 ) -> None:
     """Test button entities based on WLAN sources."""
-    assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 0
+    # Speedtest button is always created, so expect 1 button
+    assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 1
+    assert "button.unifi_network_speedtest" in hass.states.async_entity_ids(
+        BUTTON_DOMAIN
+    )
 
     ent_reg_entry = entity_registry.async_get(entity_id)
     assert ent_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION

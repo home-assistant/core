@@ -120,7 +120,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
     UnifiButtonEntityDescription[Wlans, Wlan](
         key="WLAN regenerate password",
         translation_key="wlan_regenerate_password",
-        device_class=ButtonDeviceClass.UPDATE,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         api_handler_fn=lambda api: api.wlans,
@@ -186,6 +185,7 @@ class UnifiSpeedtestButton(ButtonEntity):
         self._attr_device_info = self.hub.device_info
         self._attr_unique_id = f"speedtest_trigger-{self.hub.config.entry.unique_id}"
 
+    @override
     async def async_press(self) -> None:
         """Press the button to trigger speedtest."""
         await self.coordinator.async_request_refresh()

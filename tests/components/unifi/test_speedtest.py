@@ -22,50 +22,48 @@ def mock_speedtest_payload() -> list[dict[str, Any]]:
             "download_mbps": 100.0,
             "upload_mbps": 50.0,
             "latency_ms": 10.0,
-            "time": 1600000000,
+            "time": 1600000000000,
             "interface_name": "eth0",
         },
         {
             "download_mbps": 200.0,
             "upload_mbps": 100.0,
             "latency_ms": 5.0,
-            "time": 1600000000,
+            "time": 1600000000000,
             "interface_name": "eth2",
         },
     ]
 
 
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_speedtest_sensors(
     hass: HomeAssistant,
 ) -> None:
     """Verify that speedtest sensors are working as expected."""
     # Verify that sensors are created based on the initial fetch for eth0
     assert (
-        hass.states.get("sensor.unifi_network_speedtest_eth0_download").state == "100.0"
+        hass.states.get("sensor.unifi_network_speedtest_download_eth0").state == "100.0"
     )
-    assert hass.states.get("sensor.unifi_network_speedtest_eth0_upload").state == "50.0"
-    assert hass.states.get("sensor.unifi_network_speedtest_eth0_ping").state == "10.0"
+    assert hass.states.get("sensor.unifi_network_speedtest_upload_eth0").state == "50.0"
+    assert hass.states.get("sensor.unifi_network_speedtest_ping_eth0").state == "10.0"
     assert (
-        hass.states.get("sensor.unifi_network_speedtest_eth0_last_run").state
+        hass.states.get("sensor.unifi_network_speedtest_last_run_eth0").state
         == "2020-09-13T12:26:40+00:00"
     )
 
     # Verify that sensors are created based on the initial fetch for eth2
     assert (
-        hass.states.get("sensor.unifi_network_speedtest_eth2_download").state == "200.0"
+        hass.states.get("sensor.unifi_network_speedtest_download_eth2").state == "200.0"
     )
     assert (
-        hass.states.get("sensor.unifi_network_speedtest_eth2_upload").state == "100.0"
+        hass.states.get("sensor.unifi_network_speedtest_upload_eth2").state == "100.0"
     )
-    assert hass.states.get("sensor.unifi_network_speedtest_eth2_ping").state == "5.0"
+    assert hass.states.get("sensor.unifi_network_speedtest_ping_eth2").state == "5.0"
     assert (
-        hass.states.get("sensor.unifi_network_speedtest_eth2_last_run").state
+        hass.states.get("sensor.unifi_network_speedtest_last_run_eth2").state
         == "2020-09-13T12:26:40+00:00"
     )
 
 
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_speedtest_button(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -103,14 +101,14 @@ async def test_speedtest_button(
                         "download_mbps": 100.0,
                         "upload_mbps": 50.0,
                         "latency_ms": 10.0,
-                        "time": 1600000000,
+                        "time": 1600000000000,
                         "interface_name": "eth0",
                     },
                     {
                         "download_mbps": 200.0,
                         "upload_mbps": 100.0,
                         "latency_ms": 5.0,
-                        "time": 1600000000,
+                        "time": 1600000000000,
                         "interface_name": "eth2",
                     },
                 ],
@@ -125,14 +123,14 @@ async def test_speedtest_button(
                     "download_mbps": 110.0,
                     "upload_mbps": 60.0,
                     "latency_ms": 9.0,
-                    "time": 1600000030,  # Greater than 1600000000
+                    "time": 1600000030000,  # Greater than 1600000000000
                     "interface_name": "eth0",
                 },
                 {
                     "download_mbps": 220.0,
                     "upload_mbps": 120.0,
                     "latency_ms": 4.0,
-                    "time": 1600000030,  # Greater than 1600000000
+                    "time": 1600000030000,  # Greater than 1600000000000
                     "interface_name": "eth2",
                 },
             ],
@@ -156,29 +154,28 @@ async def test_speedtest_button(
 
     # Assert new states are updated!
     assert (
-        hass.states.get("sensor.unifi_network_speedtest_eth0_download").state == "110.0"
+        hass.states.get("sensor.unifi_network_speedtest_download_eth0").state == "110.0"
     )
-    assert hass.states.get("sensor.unifi_network_speedtest_eth0_upload").state == "60.0"
-    assert hass.states.get("sensor.unifi_network_speedtest_eth0_ping").state == "9.0"
+    assert hass.states.get("sensor.unifi_network_speedtest_upload_eth0").state == "60.0"
+    assert hass.states.get("sensor.unifi_network_speedtest_ping_eth0").state == "9.0"
     assert (
-        hass.states.get("sensor.unifi_network_speedtest_eth0_last_run").state
+        hass.states.get("sensor.unifi_network_speedtest_last_run_eth0").state
         == "2020-09-13T12:27:10+00:00"
     )
 
     assert (
-        hass.states.get("sensor.unifi_network_speedtest_eth2_download").state == "220.0"
+        hass.states.get("sensor.unifi_network_speedtest_download_eth2").state == "220.0"
     )
     assert (
-        hass.states.get("sensor.unifi_network_speedtest_eth2_upload").state == "120.0"
+        hass.states.get("sensor.unifi_network_speedtest_upload_eth2").state == "120.0"
     )
-    assert hass.states.get("sensor.unifi_network_speedtest_eth2_ping").state == "4.0"
+    assert hass.states.get("sensor.unifi_network_speedtest_ping_eth2").state == "4.0"
     assert (
-        hass.states.get("sensor.unifi_network_speedtest_eth2_last_run").state
+        hass.states.get("sensor.unifi_network_speedtest_last_run_eth2").state
         == "2020-09-13T12:27:10+00:00"
     )
 
 
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_speedtest_options_update(
     hass: HomeAssistant,
     config_entry_setup: MockConfigEntry,
@@ -234,7 +231,6 @@ async def test_speedtest_button_empty_result(
     assert config_entry_setup.runtime_data.speedtest_coordinator.data is not None
 
 
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_speedtest_sensor_empty_data(
     hass: HomeAssistant,
     config_entry_setup: MockConfigEntry,
@@ -245,17 +241,17 @@ async def test_speedtest_sensor_empty_data(
 
     # Verify native_value returns None when coordinator.data is None
     coordinator.data = None
-    sensor_state = hass.states.get("sensor.unifi_network_speedtest_eth0_download")
+    sensor_state = hass.states.get("sensor.unifi_network_speedtest_download_eth0")
     # Actually wait, sensor is already updated. Let's force an update
     coordinator.async_set_updated_data(None)
     await hass.async_block_till_done()
 
-    sensor_state = hass.states.get("sensor.unifi_network_speedtest_eth0_download")
-    assert sensor_state.state == "unknown"
+    sensor_state = hass.states.get("sensor.unifi_network_speedtest_download_eth0")
+    assert sensor_state.state == "unavailable"
 
     # Verify native_value returns None when status for interface is missing
     coordinator.async_set_updated_data({})
     await hass.async_block_till_done()
 
-    sensor_state = hass.states.get("sensor.unifi_network_speedtest_eth0_download")
-    assert sensor_state.state == "unknown"
+    sensor_state = hass.states.get("sensor.unifi_network_speedtest_download_eth0")
+    assert sensor_state.state == "unavailable"
