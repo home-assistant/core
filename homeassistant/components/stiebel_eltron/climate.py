@@ -24,8 +24,7 @@ from .entity import StiebelEltronEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-# Serialize write calls: concurrent Modbus writes to the device can cause errors.
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 CLIMATE_HK_1 = "climate_hk_1"
 
@@ -82,7 +81,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up STIEBEL ELTRON climate platform."""
 
-    async_add_entities([StiebelEltron(entry.entry_id, entry.runtime_data)])
+    async_add_entities([StiebelEltron(entry.runtime_data)])
 
 
 class StiebelEltron(StiebelEltronEntity, ClimateEntity):
@@ -102,11 +101,11 @@ class StiebelEltron(StiebelEltronEntity, ClimateEntity):
     _attr_min_temp = 10.0
     _attr_max_temp = 30.0
 
-    def __init__(
-        self, unique_id: str, coordinator: StiebelEltronDataCoordinator
-    ) -> None:
+    def __init__(self, coordinator: StiebelEltronDataCoordinator) -> None:
         """Initialize the unit."""
-        super().__init__(coordinator, f"{unique_id}-{CLIMATE_HK_1}")
+        super().__init__(
+            coordinator, f"{coordinator.config_entry.entry_id}-{CLIMATE_HK_1}"
+        )
         self._set_attr()
 
     @override
