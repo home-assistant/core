@@ -61,11 +61,6 @@ async def test_sensors_coordinator_state(
             device.zeo.query_values.side_effect = side_effect
         if device.b01_q10_properties is not None:
             device.b01_q10_properties.refresh.side_effect = side_effect
-            # Clear all non-private attributes of the Q10 status to simulate uninitialized/empty status
-            status = device.b01_q10_properties.status
-            for attr in list(vars(status)):
-                if not attr.startswith("_"):
-                    setattr(status, attr, None)
         if device.b01_q7_properties is not None:
             device.b01_q7_properties.query_values.side_effect = side_effect
 

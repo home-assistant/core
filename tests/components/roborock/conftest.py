@@ -178,16 +178,19 @@ def create_b01_q10_trait() -> Mock:
 
     # Use the real StatusTrait so listeners and update_from_dps work natively
     status = Q10StatusTrait()
-    status_data = deepcopy(Q10_STATUS)
-    for attr_name, value in vars(status_data).items():
-        if not attr_name.startswith("_"):
-            setattr(status, attr_name, value)
-    status.not_disturb = True
     q10_trait.status = status
 
     q10_trait.vacuum = AsyncMock()
     q10_trait.command = AsyncMock()
-    q10_trait.refresh = AsyncMock()
+
+    async def refresh() -> None:
+        status_data = deepcopy(Q10_STATUS)
+        for attr_name, value in vars(status_data).items():
+            if not attr_name.startswith("_"):
+                setattr(status, attr_name, value)
+        status.not_disturb = True
+
+    q10_trait.refresh = AsyncMock(side_effect=refresh)
     q10_trait.do_not_disturb = AsyncMock()
     q10_trait.do_not_disturb.is_on = True
     _dnd_listeners: list[Callable[[], None]] = []
