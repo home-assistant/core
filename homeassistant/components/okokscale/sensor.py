@@ -75,8 +75,6 @@ SENSOR_DESCRIPTIONS = {
     ),
     (OKOKScaleSensorDeviceClass.IMPEDANCE, Units.OHM): SensorEntityDescription(
         key=OKOKScaleSensorDeviceClass.IMPEDANCE,
-        icon="mdi:omega",
-        translation_key=OKOKScaleSensorDeviceClass.IMPEDANCE,
         native_unit_of_measurement="Ω",
         state_class=SensorStateClass.MEASUREMENT,
     ),

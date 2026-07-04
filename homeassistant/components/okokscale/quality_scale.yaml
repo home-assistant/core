@@ -30,9 +30,7 @@ rules:
     comment: Subscriptions are handled by the PassiveBluetoothProcessorEntity base class.
   entity-unique-id: done
   has-entity-name: done
-  runtime-data:
-    status: exempt
-    comment: This integration does not store runtime data.
+  runtime-data: done
   test-before-configure:
     status: exempt
     comment: Presence is confirmed by the discovered advertisement
@@ -43,7 +41,7 @@ rules:
 
   # Silver
   action-exceptions: todo
-  config-entry-unloading: todo
+  config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
   entity-unavailable: todo
