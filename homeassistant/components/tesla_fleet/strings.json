@@ -19,7 +19,7 @@
     },
     "error": {
       "invalid_domain": "Invalid domain format. Please enter a valid domain name.",
-      "invalid_response": "The registration was rejected by Tesla",
+      "invalid_response": "Tesla returned an empty or malformed response for your account's home region. Check that the hosted public key is reachable, then try again.",
       "origin_mismatch": "Tesla rejected the registration because the domain does not match your Tesla developer app's allowed origin. Check that the entered domain matches the allowed origin, then try again.",
       "public_key_mismatch": "The public key hosted at your domain does not match the expected key. Please ensure the correct public key is hosted at the specified location.",
       "registration_failed": "Tesla rejected the registration in your account's home region. Check that the hosted public key and your Tesla developer app configuration are correct, then try again.",
