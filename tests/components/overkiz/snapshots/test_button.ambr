@@ -1793,57 +1793,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_button_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][button.loft_loft_window-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.loft_loft_window',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:star',
-    'original_name': None,
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'go_to_alias_ventilation',
-    'unique_id': 'io://1234-5678-5010/13522671-goToAlias_55299',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_button_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][button.loft_loft_window-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Loft Window',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.loft_loft_window',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][button.loft_loft_window_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1998,7 +1947,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_button_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][button.loft_studio_window-entry]
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][button.loft_loft_window_ventilation_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2012,7 +1961,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.loft_studio_window',
+    'entity_id': 'button.loft_loft_window_ventilation_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2020,29 +1969,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Ventilation position',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:star',
-    'original_name': None,
+    'original_name': 'Ventilation position',
     'platform': 'overkiz',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'go_to_alias_favorite1',
-    'unique_id': 'io://1234-5678-5010/3912866-goToAlias_1',
+    'translation_key': 'go_to_alias_ventilation',
+    'unique_id': 'io://1234-5678-5010/13522671-goToAlias_55299',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][button.loft_studio_window-state]
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][button.loft_loft_window_ventilation_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Studio Window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Loft Window Ventilation position',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
-    'entity_id': 'button.loft_studio_window',
+    'entity_id': 'button.loft_loft_window_ventilation_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2095,6 +2044,57 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.loft_studio_window_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][button.loft_studio_window_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.loft_studio_window_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:star',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'go_to_alias_favorite1',
+    'unique_id': 'io://1234-5678-5010/3912866-goToAlias_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][button.loft_studio_window_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Studio Window My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.loft_studio_window_my_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5791,7 +5791,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_garage_door-entry]
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_garage_door_partial_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -5805,7 +5805,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.living_room_garage_door',
+    'entity_id': 'button.living_room_garage_door_partial_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5813,12 +5813,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Partial position',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:star',
-    'original_name': None,
+    'original_name': 'Partial position',
     'platform': 'overkiz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -5828,14 +5828,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_garage_door-state]
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_garage_door_partial_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Door Partial position',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
-    'entity_id': 'button.living_room_garage_door',
+    'entity_id': 'button.living_room_garage_door_partial_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -7022,7 +7022,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind-entry]
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_my_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7036,7 +7036,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.main_bedroom_bedroom_venetian_blind',
+    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_my_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7044,12 +7044,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'My position',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:star',
-    'original_name': None,
+    'original_name': 'My position',
     'platform': 'overkiz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7059,21 +7059,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind-state]
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_my_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind My position',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
-    'entity_id': 'button.main_bedroom_bedroom_venetian_blind',
+    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_my_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_2-entry]
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_my_position_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7087,7 +7087,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_2',
+    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_my_position_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7095,12 +7095,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'My position',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:star',
-    'original_name': None,
+    'original_name': 'My position',
     'platform': 'overkiz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7110,21 +7110,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_2-state]
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_my_position_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind My position',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
-    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_2',
+    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_my_position_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_3-entry]
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_my_position_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7138,7 +7138,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_3',
+    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_my_position_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7146,12 +7146,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'My position',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:star',
-    'original_name': None,
+    'original_name': 'My position',
     'platform': 'overkiz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7161,21 +7161,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_3-state]
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_my_position_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind My position',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
-    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_3',
+    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_my_position_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_4-entry]
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_my_position_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7189,7 +7189,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_4',
+    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_my_position_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7197,12 +7197,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'My position',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:star',
-    'original_name': None,
+    'original_name': 'My position',
     'platform': 'overkiz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7212,21 +7212,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_4-state]
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_my_position_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind My position',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
-    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_4',
+    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_my_position_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_5-entry]
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_my_position_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7240,7 +7240,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_5',
+    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_my_position_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7248,12 +7248,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'My position',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:star',
-    'original_name': None,
+    'original_name': 'My position',
     'platform': 'overkiz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7263,21 +7263,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_5-state]
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_my_position_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind My position',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
-    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_5',
+    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_my_position_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_6-entry]
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_my_position_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7291,7 +7291,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_6',
+    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_my_position_6',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7299,12 +7299,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'My position',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:star',
-    'original_name': None,
+    'original_name': 'My position',
     'platform': 'overkiz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7314,14 +7314,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_6-state]
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_my_position_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind My position',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
-    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_6',
+    'entity_id': 'button.main_bedroom_bedroom_venetian_blind_my_position_6',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

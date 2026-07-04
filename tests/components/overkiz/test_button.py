@@ -9,7 +9,12 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -36,17 +41,17 @@ CHECK_EVENT_TRIGGER = FixtureDevice(
 VELUX_WINDOW = FixtureDevice(
     "setup/cloud_somfy_tahoma_switch_sc_europe.json",
     "io://1234-5678-5010/13522671",
-    "button.loft_loft_window",
+    "button.loft_loft_window_ventilation_position",
 )
 STUDIO_WINDOW = FixtureDevice(
     "setup/cloud_somfy_tahoma_switch_sc_europe.json",
     "io://1234-5678-5010/3912866",
-    "button.loft_studio_window",
+    "button.loft_studio_window_my_position",
 )
 GARAGE_DOOR = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
     "io://1234-1234-6233/16730050",
-    "button.living_room_garage_door",
+    "button.living_room_garage_door_partial_position",
 )
 
 SNAPSHOT_FIXTURES = [
@@ -137,6 +142,31 @@ async def test_button_press_alias(
     )
 
 
+@pytest.mark.parametrize(
+    ("device", "friendly_name"),
+    [
+        pytest.param(
+            VELUX_WINDOW, "Loft Window Ventilation position", id="ventilation"
+        ),
+        pytest.param(STUDIO_WINDOW, "Studio Window My position", id="favorite1"),
+        pytest.param(GARAGE_DOOR, "Garage Door Partial position", id="partial"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_alias_button_translated_name(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    device: FixtureDevice,
+    friendly_name: str,
+) -> None:
+    """Test that alias buttons resolve their translation_key based name."""
+    await setup_overkiz_integration(fixture=device.fixture)
+
+    state = hass.states.get(device.entity_id)
+    assert state
+    assert state.attributes[ATTR_FRIENDLY_NAME] == friendly_name
+
+
 async def test_button_unavailability(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
@@ -164,15 +194,15 @@ async def test_button_unavailability(
     assert hass.states.get(MY_POSITION.entity_id).state == STATE_UNAVAILABLE
 
 
-async def test_no_button_without_supported_aliases_state(
+async def test_no_button_without_supported_aliases_attribute(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
 ) -> None:
-    """Test that no goToAlias button is created when SupportedAliases state is missing."""
+    """Test that no goToAlias button is created when SupportedAliases attribute is missing."""
     await setup_overkiz_integration(
         fixture="setup/local_somfy_tahoma_switch_europe_2.json"
     )
 
     # The Roof Window device in this fixture has a goToAlias command but no
-    # core:SupportedAliases state, so it should not get an alias button.
+    # core:SupportedAliases attribute, so it should not get an alias button.
     assert hass.states.get("button.roof_window_my_position") is None

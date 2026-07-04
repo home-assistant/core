@@ -166,6 +166,10 @@ class OverkizAliasButton(OverkizEntity, ButtonEntity):
         """Initialize the alias button."""
         super().__init__(device_url, coordinator)
         self._alias_id = alias_id
+        self._attr_unique_id = (
+            f"{self.device_url}-{OverkizCommand.GO_TO_ALIAS}_{alias_id}"
+        )
+
         if alias_type in ALIAS_TYPES_WITH_TRANSLATION:
             self._attr_translation_key = f"go_to_alias_{alias_type}"
         else:
@@ -176,9 +180,6 @@ class OverkizAliasButton(OverkizEntity, ButtonEntity):
                 device_url,
             )
             self._attr_name = f"{alias_type.capitalize()} position"
-        self._attr_unique_id = (
-            f"{self.device_url}-{OverkizCommand.GO_TO_ALIAS}_{alias_id}"
-        )
 
     @override
     async def async_press(self) -> None:
