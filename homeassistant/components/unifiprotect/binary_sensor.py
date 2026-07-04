@@ -26,7 +26,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -41,6 +41,7 @@ from .entity import (
     ProtectIsOnEntity,
     ProtectNVREntity,
     async_all_device_entities,
+    async_remove_unsupported_sense_entities,
 )
 
 _KEY_DOOR = "door"
@@ -341,6 +342,7 @@ MOUNTABLE_SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.DOOR,
         ufp_public_value="is_opened",
         ufp_public_enabled_fn=_async_contact_sensor_enabled_public,
+        ufp_capability=SensorFeatureCapability.OPEN,
     ),
 )
 
@@ -350,6 +352,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.MOISTURE,
         ufp_public_value="is_leak_detected",
         ufp_public_enabled_fn=_async_leak_sensor_enabled_public,
+        ufp_capability=SensorFeatureCapability.WATER_LEAK,
     ),
     ProtectBinaryEntityDescription(
         key="battery_low",
@@ -362,11 +365,13 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.MOTION,
         ufp_public_value="is_motion_detected",
         ufp_public_enabled_fn=_async_motion_sensor_enabled_public,
+        ufp_capability=SensorFeatureCapability.MOTION,
     ),
     ProtectBinaryEntityDescription(
         key="tampering",
         device_class=BinarySensorDeviceClass.TAMPER,
         ufp_public_value="is_tampering_detected",
+        ufp_capability=SensorFeatureCapability.TAMPER,
     ),
     ProtectBinaryEntityDescription(
         key="status_light",
@@ -380,6 +385,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="motion_detection_enabled",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="motion_settings.is_enabled",
+        ufp_capability=SensorFeatureCapability.MOTION,
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -762,6 +768,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary sensors for UniFi Protect integration."""
     data = entry.runtime_data
+    async_remove_unsupported_sense_entities(
+        hass, Platform.BINARY_SENSOR, data, (*SENSE_SENSORS, *MOUNTABLE_SENSE_SENSORS)
+    )
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
