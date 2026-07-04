@@ -52,8 +52,14 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info: todo
-  discovery: todo
+  discovery-update-info:
+    status: exempt
+    comment: The device is not discoverable, so there is no discovery data to update.
+  discovery:
+    status: exempt
+    comment: >-
+      The CCM15 is a local-polling hub configured by host/IP; it is not
+      discoverable on the network (no mDNS/SSDP/DHCP).
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
@@ -74,7 +80,11 @@ rules:
   entity-translations:
     status: exempt
     comment: The climate entity uses the device name; no entity names to translate.
-  exception-translations: todo
+  exception-translations:
+    status: exempt
+    comment: >-
+      The integration raises no user-facing exceptions; the only failure path is
+      an internal UpdateFailed from the coordinator.
   icon-translations:
     status: exempt
     comment: The integration uses default entity icons.
