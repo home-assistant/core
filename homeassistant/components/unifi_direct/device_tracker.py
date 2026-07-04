@@ -115,6 +115,7 @@ class UniFiScannerEntity(
         self._mac = mac
         device = coordinator.data.get(mac, {})
         self._attr_name = device.get("hostname") or mac
+        self._attr_has_entity_name = True
 
     @property
     @override
