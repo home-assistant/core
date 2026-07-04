@@ -320,7 +320,6 @@ class ModelContextProtocolStreamableApiView(HomeAssistantView):
     async def post(self, request: web.Request, api_id: str) -> web.StreamResponse:
         """Process JSON-RPC messages for the LLM API identified by api_id."""
         hass = request.app[KEY_HASS]
-        async_get_config_entry(hass)
         if api_id != llm.LLM_API_ASSIST and not request["hass_user"].is_admin:
             raise Unauthorized
         if api_id not in {api.id for api in llm.async_get_apis(hass)}:
