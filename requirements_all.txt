@@ -1591,6 +1591,9 @@ moehlenhoff-alpha2==1.4.0
 # homeassistant.components.route_b_smart_meter
 momonga==0.3.0
 
+# homeassistant.components.monarch_money
+monarchmoneycommunity==1.5.0
+
 # homeassistant.components.monzo
 monzopy==1.5.1
 
@@ -3226,9 +3229,6 @@ twilio==6.32.0
 
 # homeassistant.components.twitch
 twitchAPI==4.2.1
-
-# homeassistant.components.monarch_money
-monarchmoneycommunity==1.5.0
 
 # homeassistant.components.ukraine_alarm
 uasiren==0.0.1
