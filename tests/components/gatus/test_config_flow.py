@@ -14,9 +14,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_form_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_gatus_client: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_gatus_client")
+async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form, validate the client, and create a successful entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
