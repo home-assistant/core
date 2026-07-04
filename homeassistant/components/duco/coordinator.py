@@ -83,8 +83,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         ):
             return
 
-        self._last_node_name_refresh = now
-
         try:
             configured_node_names = await self.client.async_get_node_configs(
                 parameter="Name"
@@ -98,6 +96,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             for node in configured_node_names.nodes
             if node.name is not None
         }
+        self._last_node_name_refresh = now
 
     @callback
     def async_add_node_name_listener(
