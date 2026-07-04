@@ -2773,54 +2773,6 @@ async def test_reload_service_helper(hass: HomeAssistant) -> None:
     assert reloaded == unordered(["target1"])
 
 
-async def test_deprecated_service_target_selector_class(hass: HomeAssistant) -> None:
-    """Test that the deprecated ServiceTargetSelector class forwards correctly."""
-    call = ServiceCall(
-        hass,
-        "test",
-        "test",
-        {
-            "entity_id": ["light.test", "switch.test"],
-            "area_id": "kitchen",
-            "device_id": ["device1", "device2"],
-            "floor_id": "first_floor",
-            "label_id": ["label1", "label2"],
-        },
-    )
-    selector = service.ServiceTargetSelector(call)
-
-    assert selector.entity_ids == {"light.test", "switch.test"}
-    assert selector.area_ids == {"kitchen"}
-    assert selector.device_ids == {"device1", "device2"}
-    assert selector.floor_ids == {"first_floor"}
-    assert selector.label_ids == {"label1", "label2"}
-    assert selector.has_any_target is True
-
-
-async def test_deprecated_selected_entities_class(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test that the deprecated SelectedEntities class forwards correctly."""
-    selected = service.SelectedEntities(
-        referenced={"entity.test"},
-        indirectly_referenced=set(),
-        referenced_devices=set(),
-        referenced_areas=set(),
-        missing_devices={"missing_device"},
-        missing_areas={"missing_area"},
-        missing_floors={"missing_floor"},
-        missing_labels={"missing_label"},
-    )
-
-    missing_entities = {"entity.missing"}
-    selected.log_missing(missing_entities)
-    assert (
-        "Referenced floors missing_floor, areas missing_area, "
-        "devices missing_device, entities entity.missing, "
-        "labels missing_label are missing or not currently available" in caplog.text
-    )
-
-
 async def test_deprecated_async_extract_referenced_entity_ids(
     hass: HomeAssistant,
 ) -> None:
