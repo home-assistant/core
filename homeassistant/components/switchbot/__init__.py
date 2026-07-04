@@ -97,6 +97,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.HUBMINI_MATTER.value: [Platform.SENSOR],
     SupportedModels.CIRCULATOR_FAN.value: [Platform.FAN, Platform.SENSOR],
     SupportedModels.STANDING_FAN.value: [
+        Platform.FAN,
         Platform.SELECT,
         Platform.NUMBER,
         Platform.SWITCH,
@@ -425,9 +426,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) 
     version = entry.version
     minor_version = entry.minor_version
     _LOGGER.debug("Migrating from version %s.%s", version, minor_version)
-
-    if version > 1:
-        return False
 
     if version == 1 and minor_version < 2:
         new_options: dict[str, Any] = {**entry.options}
