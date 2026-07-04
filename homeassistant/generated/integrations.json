@@ -3883,6 +3883,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "llama_cpp": {
+      "name": "llama.cpp",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "llamalab_automate": {
       "name": "LlamaLab Automate",
       "integration_type": "hub",
