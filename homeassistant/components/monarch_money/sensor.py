@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import override
 
-from typedmonarchmoney.models import MonarchAccount, MonarchCashflowSummary
+from monarchmoney import MonarchAccount, MonarchCashflowSummary
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,

@@ -2,7 +2,7 @@
 
 from typing import override
 
-from typedmonarchmoney.models import MonarchAccount, MonarchCashflowSummary
+from monarchmoney import MonarchAccount, MonarchCashflowSummary
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription

@@ -3,10 +3,13 @@
 import logging
 from typing import Any, override
 
-from monarchmoney import LoginFailedException, RequireMFAException
+from monarchmoney import (
+    LoginFailedException,
+    MonarchMoneyTyped,
+    MonarchSubscription,
+    RequireMFAException,
+)
 from monarchmoney.monarchmoney import SESSION_FILE
-from typedmonarchmoney import TypedMonarchMoney
-from typedmonarchmoney.models import MonarchSubscription
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -62,7 +65,7 @@ async def validate_login(
         email = data[CONF_EMAIL]
     if not password:
         password = data[CONF_PASSWORD]
-    monarch_client = TypedMonarchMoney()
+    monarch_client = MonarchMoneyTyped()
     if CONF_MFA_CODE in data:
         mfa_code = data[CONF_MFA_CODE]
         LOGGER.debug("Attempting to authenticate with MFA code")

@@ -1141,8 +1141,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/moehlenhoff_alpha2/ @j-a-n
 /homeassistant/components/moisture/ @home-assistant/core
 /tests/components/moisture/ @home-assistant/core
-/homeassistant/components/monarch_money/ @jeeftor
-/tests/components/monarch_money/ @jeeftor
+/homeassistant/components/monarch_money/ @jeeftor @bradleyseanf
+/tests/components/monarch_money/ @jeeftor @bradleyseanf
 /homeassistant/components/monoprice/ @etsinko @OnFreund
 /tests/components/monoprice/ @etsinko @OnFreund
 /homeassistant/components/monzo/ @jakemartin-icl
