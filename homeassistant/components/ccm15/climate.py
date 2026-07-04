@@ -29,6 +29,8 @@ from .coordinator import CCM15ConfigEntry, CCM15Coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -146,7 +148,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     @override
     def available(self) -> bool:
         """Return the availability of the entity."""
-        return self.data is not None
+        return super().available and self.data is not None
 
     @property
     @override
