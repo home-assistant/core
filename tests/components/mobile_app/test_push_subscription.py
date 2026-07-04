@@ -18,6 +18,7 @@ from homeassistant.components.mobile_app.const import (
     PUSH_SUBSCRIPTION_DEBOUNCE_SECONDS,
     PUSH_SUBSCRIPTION_ENTITY_IDS,
     PUSH_SUBSCRIPTION_ID,
+    PUSH_SUBSCRIPTION_MAX_PER_DEVICE,
     PUSH_SUBSCRIPTION_TARGET,
     PUSH_SUBSCRIPTION_TOKEN,
     PUSH_SUBSCRIPTION_TRIGGER,
@@ -158,6 +159,28 @@ async def test_register_dedupes_entity_ids(
 
     stored = hass.data[DOMAIN][DATA_PUSH_SUBSCRIPTIONS][push_webhook_id][SUB_ID]
     assert stored[PUSH_SUBSCRIPTION_ENTITY_IDS] == [TRACKED_ENTITY, "switch.fan"]
+
+
+async def test_subscription_count_capped_per_device(
+    hass: HomeAssistant, webhook_client: TestClient, push_webhook_id: str
+) -> None:
+    """Registering past the per-device cap evicts the oldest subscription."""
+    for i in range(PUSH_SUBSCRIPTION_MAX_PER_DEVICE + 1):
+        await _register_subscription(
+            webhook_client,
+            push_webhook_id,
+            sub_id=f"sub-{i}",
+            entity_ids=[f"light.l{i}"],
+        )
+
+    device_subs = hass.data[DOMAIN][DATA_PUSH_SUBSCRIPTIONS][push_webhook_id]
+    device_unsubs = hass.data[DOMAIN][DATA_PUSH_SUBSCRIPTION_UNSUBS][push_webhook_id]
+    # Count stays at the cap; the oldest was evicted and the newest kept.
+    assert len(device_subs) == PUSH_SUBSCRIPTION_MAX_PER_DEVICE
+    assert len(device_unsubs) == PUSH_SUBSCRIPTION_MAX_PER_DEVICE
+    assert "sub-0" not in device_subs
+    assert "sub-0" not in device_unsubs
+    assert f"sub-{PUSH_SUBSCRIPTION_MAX_PER_DEVICE}" in device_subs
 
 
 async def test_state_change_sends_push_after_debounce(

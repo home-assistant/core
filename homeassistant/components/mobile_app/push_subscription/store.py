@@ -23,6 +23,7 @@ Two lifecycle paths:
 from collections.abc import Iterable
 from datetime import datetime
 from functools import partial
+import logging
 
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event
@@ -36,11 +37,14 @@ from ..const import (
     DOMAIN,
     PUSH_SUBSCRIPTION_DEBOUNCE_SECONDS,
     PUSH_SUBSCRIPTION_ENTITY_IDS,
+    PUSH_SUBSCRIPTION_MAX_PER_DEVICE,
     PUSH_SUBSCRIPTION_TARGET,
     PUSH_SUBSCRIPTION_TOKEN,
     STORAGE_SAVE_DELAY_SECONDS,
 )
 from ..helpers import savable_state
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -127,9 +131,26 @@ def store_push_subscription(
     entity_ids: list[str],
     target: str | None,
 ) -> None:
-    """Persist a subscription and (re)arm its state listener."""
-    subscriptions = hass.data[DOMAIN][DATA_PUSH_SUBSCRIPTIONS]
-    subscriptions.setdefault(webhook_id, {})[sub_id] = {
+    """Persist a subscription and (re)arm its state listener.
+
+    The number of subscriptions retained per device is capped at
+    PUSH_SUBSCRIPTION_MAX_PER_DEVICE; registering a new one past the cap evicts
+    the oldest (FIFO), so the listener count a device can arm stays bounded.
+    """
+    device_subs = hass.data[DOMAIN][DATA_PUSH_SUBSCRIPTIONS].setdefault(webhook_id, {})
+    if (
+        sub_id not in device_subs
+        and len(device_subs) >= PUSH_SUBSCRIPTION_MAX_PER_DEVICE
+    ):
+        oldest_sub_id = next(iter(device_subs))
+        _LOGGER.debug(
+            "Push subscription cap reached for %s; evicting oldest %s",
+            webhook_id,
+            oldest_sub_id,
+        )
+        del device_subs[oldest_sub_id]
+        _async_unsub_tracker(hass, webhook_id, oldest_sub_id)
+    device_subs[sub_id] = {
         PUSH_SUBSCRIPTION_TOKEN: token,
         PUSH_SUBSCRIPTION_ENTITY_IDS: entity_ids,
         PUSH_SUBSCRIPTION_TARGET: target,

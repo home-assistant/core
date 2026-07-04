@@ -119,6 +119,10 @@ PUSH_SUBSCRIPTION_TRIGGER = "push_subscription"
 # seconds collapses to a single push.
 PUSH_SUBSCRIPTION_DEBOUNCE_SECONDS = 5.0
 
+# Maximum push subscriptions retained per device. Registering beyond this evicts
+# the oldest, bounding the number of state listeners a single device can arm.
+PUSH_SUBSCRIPTION_MAX_PER_DEVICE = 50
+
 SCHEMA_APP_DATA = vol.Schema(
     {
         vol.Inclusive(ATTR_PUSH_TOKEN, "push_cloud"): cv.string,
