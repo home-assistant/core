@@ -47,6 +47,15 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
 
+    # A heat pump exposes each heating zone as its own device, carrying only
+    # that zone's states and command. Zone 1 is the default; zone 2 overrides.
+    _auto_manu_mode_state = OverkizState.MODBUS_AUTO_MANU_MODE_ZONE_1
+    _room_temperature_state = OverkizState.MODBUS_ROOM_AMBIENT_TEMPERATURE_STATUS_ZONE_1
+    _thermostat_setting_state = OverkizState.MODBUS_THERMOSTAT_SETTING_CONTROL_ZONE_1
+    _set_thermostat_setting_command = (
+        OverkizCommand.SET_THERMOSTAT_SETTING_CONTROL_ZONE_1
+    )
+
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
     ) -> None:
@@ -56,8 +65,6 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
         if self._attr_device_info:
             self._attr_device_info["manufacturer"] = "Hitachi"
 
-        # A second heating circuit is exposed as a separate device carrying
-        # only its own Zone2 states/command, so select the matching enums.
         if "Zone2" in self.device.controllable_name:
             self._auto_manu_mode_state = OverkizState.MODBUS_AUTO_MANU_MODE_ZONE2
             self._room_temperature_state = (
@@ -68,17 +75,6 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
             )
             self._set_thermostat_setting_command = (
                 OverkizCommand.SET_THERMOSTAT_SETTING_CONTROL_ZONE_2
-            )
-        else:
-            self._auto_manu_mode_state = OverkizState.MODBUS_AUTO_MANU_MODE_ZONE_1
-            self._room_temperature_state = (
-                OverkizState.MODBUS_ROOM_AMBIENT_TEMPERATURE_STATUS_ZONE_1
-            )
-            self._thermostat_setting_state = (
-                OverkizState.MODBUS_THERMOSTAT_SETTING_CONTROL_ZONE_1
-            )
-            self._set_thermostat_setting_command = (
-                OverkizCommand.SET_THERMOSTAT_SETTING_CONTROL_ZONE_1
             )
 
     @property
