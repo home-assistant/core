@@ -17,7 +17,13 @@ from homeassistant.helpers import (
     entity_registry as er,
     intent,
 )
-from homeassistant.helpers.llm import NO_ENTITIES_PROMPT, LLMContext, Tool, ToolInput
+from homeassistant.helpers.llm import (
+    LLM_API_ASSIST,
+    NO_ENTITIES_PROMPT,
+    LLMContext,
+    Tool,
+    ToolInput,
+)
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 from homeassistant.util.json import JsonObjectType
 
@@ -276,9 +282,13 @@ class GetLiveContextTool(Tool):
 
 
 @callback
-def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
+def async_get_tools(
+    hass: HomeAssistant, llm_context: LLMContext, api_id: str
+) -> LLMTools | None:
     """Return the GetLiveContext tool.
 
     The tool is always offered; it reports when nothing is exposed at call time.
     """
+    if api_id != LLM_API_ASSIST:
+        return None
     return LLMTools(tools=[GetLiveContextTool()])

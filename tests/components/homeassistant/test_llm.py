@@ -3,6 +3,7 @@
 import pytest
 
 from homeassistant.components import llm as llm_component
+from homeassistant.components.homeassistant import llm as ha_llm
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.homeassistant.llm import async_get_exposed_entities
 from homeassistant.core import Context, HomeAssistant
@@ -43,15 +44,20 @@ def _llm_context() -> llm.LLMContext:
 async def test_live_context_always_offered(hass: HomeAssistant) -> None:
     """Test GetLiveContext is offered even when nothing is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
-    result = await llm_component.async_get_tools(hass, _llm_context())
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
     assert "GetLiveContext" in [tool.name for tool in result.tools]
+
+
+async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:
+    """Test the platform returns None for an unsupported API."""
+    assert ha_llm.async_get_tools(hass, _llm_context(), "other") is None
 
 
 async def test_get_live_context_no_exposed_entities(hass: HomeAssistant) -> None:
     """Test GetLiveContext reports an error when nothing is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
     llm_context = _llm_context()
-    result = await llm_component.async_get_tools(hass, llm_context)
+    result = await llm_component.async_get_tools(hass, llm_context, "assist")
     tool = next(tool for tool in result.tools if tool.name == "GetLiveContext")
 
     response = await tool.async_call(
@@ -63,7 +69,7 @@ async def test_get_live_context_no_exposed_entities(hass: HomeAssistant) -> None
 async def test_get_live_context_tool(hass: HomeAssistant) -> None:
     """Test GetLiveContext returns exposed entity state."""
     llm_context = _llm_context()
-    result = await llm_component.async_get_tools(hass, llm_context)
+    result = await llm_component.async_get_tools(hass, llm_context, "assist")
     tool = next((tool for tool in result.tools if tool.name == "GetLiveContext"), None)
     assert tool is not None
 
@@ -229,7 +235,7 @@ async def test_get_live_context_tool_filter(
     hass.states.async_set(kitchen_ac.entity_id, "heat")
 
     await hass.async_block_till_done()
-    tools = await llm_component.async_get_tools(hass, llm_context)
+    tools = await llm_component.async_get_tools(hass, llm_context, "assist")
     tool = next(t for t in tools.tools if t.name == "GetLiveContext")
 
     async def _get_live_context(tool_args: dict) -> dict:
