@@ -1,6 +1,5 @@
 """Test Roborock Switch platform."""
 
-import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 from typing import Any
@@ -18,7 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .conftest import FakeDevice, setup_coordinator_side_effect
+from .conftest import FakeDevice, mock_delay, setup_coordinator_side_effect
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -318,11 +317,6 @@ async def test_q10_do_not_disturb_switch_failure(
             blocking=True,
             target={"entity_id": entity_id},
         )
-
-
-async def mock_delay(*args: Any, **kwargs: Any) -> None:
-    """Delay the update to simulate before first update completes."""
-    await asyncio.sleep(15)
 
 
 @pytest.mark.parametrize(

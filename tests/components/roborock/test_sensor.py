@@ -1,6 +1,5 @@
 """Test Roborock Sensors."""
 
-import asyncio
 from typing import Any
 
 import pytest
@@ -11,7 +10,7 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import FakeDevice, setup_coordinator_side_effect
+from .conftest import FakeDevice, mock_delay, setup_coordinator_side_effect
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -30,11 +29,6 @@ async def test_sensors(
 ) -> None:
     """Test sensors and check test values are correctly set."""
     await snapshot_platform(hass, entity_registry, snapshot, setup_entry.entry_id)
-
-
-async def mock_delay(*args: Any, **kwargs: Any) -> None:
-    """Delay the update to simulate before first update completes."""
-    await asyncio.sleep(15)
 
 
 @pytest.mark.parametrize(

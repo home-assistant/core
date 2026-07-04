@@ -1,6 +1,5 @@
 """Test Roborock Image platform."""
 
-import asyncio
 import copy
 from datetime import timedelta
 from http import HTTPStatus
@@ -18,7 +17,12 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .conftest import FakeDevice, make_home_trait, setup_coordinator_side_effect
+from .conftest import (
+    FakeDevice,
+    make_home_trait,
+    mock_delay,
+    setup_coordinator_side_effect,
+)
 from .mock_data import (
     HOME_DATA,
     MAP_DATA,
@@ -224,11 +228,6 @@ async def test_image_entity_naming(
     assert {
         state.entity_id for state in hass.states.async_all("image")
     } == expected_entity_ids
-
-
-async def mock_delay(*args: Any, **kwargs: Any) -> None:
-    """Delay the update to simulate before first update completes."""
-    await asyncio.sleep(15)
 
 
 @pytest.mark.parametrize(

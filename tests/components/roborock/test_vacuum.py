@@ -1,6 +1,5 @@
 """Tests for Roborock vacuums."""
 
-import asyncio
 from typing import Any
 from unittest.mock import Mock, call
 
@@ -52,7 +51,12 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from .conftest import FakeDevice, set_trait_attributes, setup_coordinator_side_effect
+from .conftest import (
+    FakeDevice,
+    mock_delay,
+    set_trait_attributes,
+    setup_coordinator_side_effect,
+)
 from .mock_data import STATUS
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -1076,11 +1080,6 @@ async def test_q10_ha_refresh(
 
     # Verify that refresh was called
     fake_q10_vacuum.b01_q10_properties.refresh.assert_called()
-
-
-async def mock_delay(*args: Any, **kwargs: Any) -> None:
-    """Delay the update to simulate before first update completes."""
-    await asyncio.sleep(15)
 
 
 @pytest.mark.parametrize(

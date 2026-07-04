@@ -1,6 +1,5 @@
 """Test Roborock Select platform."""
 
-import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, Mock, call
 
@@ -32,7 +31,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import FakeDevice, setup_coordinator_side_effect
+from .conftest import FakeDevice, mock_delay, setup_coordinator_side_effect
 
 from tests.common import MockConfigEntry
 
@@ -544,11 +543,6 @@ async def test_q10_cleaning_mode_select_invalid_option(
 
     assert fake_q10_vacuum.b01_q10_properties
     fake_q10_vacuum.b01_q10_properties.vacuum.set_clean_mode.assert_not_called()
-
-
-async def mock_delay(*args: Any, **kwargs: Any) -> None:
-    """Delay the update to simulate before first update completes."""
-    await asyncio.sleep(15)
 
 
 @pytest.mark.parametrize(

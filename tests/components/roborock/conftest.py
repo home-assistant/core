@@ -275,6 +275,11 @@ def setup_coordinator_side_effect(
             device.b01_q7_properties.query_values.side_effect = side_effect
 
 
+async def mock_delay(*args: Any, **kwargs: Any) -> None:
+    """Delay the update to simulate before first update completes."""
+    await asyncio.sleep(15)
+
+
 def set_trait_attributes(
     trait: AsyncMock,
     dataclass_template: RoborockBase,
