@@ -32,6 +32,7 @@ from homeassistant.components.camera import (
     WebRTCMessage,
     WebRTCSendMessage,
     async_register_webrtc_provider,
+    get_camera_from_entity_id,
     get_dynamic_camera_stream_settings,
 )
 from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
@@ -62,6 +63,7 @@ from .const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
     DOMAIN,
+    HA_MANAGED_RTSP_PORT,
     HA_MANAGED_URL,
     RECOMMENDED_VERSION,
 )
@@ -205,6 +207,29 @@ async def _remove_go2rtc_entries(hass: HomeAssistant) -> None:
         await hass.config_entries.async_remove(entry.entry_id)
 
 
+async def async_get_rtsp_stream_url(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Return the local RTSP restream URL for a camera.
+
+    Registers the camera's stream with the Home Assistant managed go2rtc server
+    when needed, so every consumer of the returned URL shares go2rtc's single
+    upstream connection to the camera. Returns None when go2rtc is not set up,
+    the server is not managed by Home Assistant (its RTSP endpoint is unknown),
+    or the camera's stream source is unsupported.
+    """
+    if (config := hass.data.get(_DATA_GO2RTC)) is None or config.url != HA_MANAGED_URL:
+        return None
+    if not (entries := hass.config_entries.async_loaded_entries(DOMAIN)):
+        return None
+    provider = entries[0].runtime_data
+    camera = get_camera_from_entity_id(hass, entity_id)
+    try:
+        await provider.async_update_stream_source(camera)
+    except HomeAssistantError as err:
+        _LOGGER.debug("Not providing RTSP restream URL for %s: %s", entity_id, err)
+        return None
+    return f"rtsp://127.0.0.1:{HA_MANAGED_RTSP_PORT}/{get_camera_identifier(camera)}"
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bool:
     """Set up go2rtc from a config entry."""
 
@@ -305,7 +330,7 @@ class WebRTCProvider(CameraWebRTCProvider):
     ) -> None:
         """Handle the WebRTC offer and return the answer via the provided callback."""
         try:
-            await self._update_stream_source(camera)
+            await self.async_update_stream_source(camera)
         except HomeAssistantError as err:
             send_message(WebRTCError("go2rtc_webrtc_offer_failed", str(err)))
             return
@@ -358,13 +383,13 @@ class WebRTCProvider(CameraWebRTCProvider):
         height: int | None = None,
     ) -> bytes | None:
         """Get an image from the camera."""
-        await self._update_stream_source(camera)
+        await self.async_update_stream_source(camera)
         return await self._rest_client.get_jpeg_snapshot(
             get_camera_identifier(camera), width, height
         )
 
-    async def _update_stream_source(self, camera: Camera) -> None:
-        """Update the stream source in go2rtc config if needed."""
+    async def async_update_stream_source(self, camera: Camera) -> None:
+        """Register or update the camera's stream source in go2rtc if needed."""
         if not (stream_source := await camera.stream_source()):
             await self.teardown()
             raise HomeAssistantError("Camera has no stream source")
