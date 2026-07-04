@@ -1,7 +1,5 @@
 """Tests for the KEBA charging station sensor platform."""
 
-from unittest.mock import MagicMock
-
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -9,9 +7,7 @@ from homeassistant.core import HomeAssistant
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_sensor_entities_created(
-    hass: HomeAssistant, mock_keba: MagicMock
-) -> None:
+async def test_sensor_entities_created(hass: HomeAssistant) -> None:
     """Test that all expected sensor entities are created."""
     entity_ids = [
         "sensor.kc_p30_max_current",
