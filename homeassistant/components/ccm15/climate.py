@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from ccm15 import CCM15DeviceState, CCM15SlaveDevice
+from ccm15 import CCM15SlaveDevice
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -37,15 +37,22 @@ async def async_setup_entry(
     config_entry: CCM15ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up all climate."""
+    """Set up climate entities, adding new AC slots as they appear."""
     coordinator = config_entry.runtime_data
+    known: set[int] = set()
 
-    ac_data: CCM15DeviceState = coordinator.data
-    entities = [
-        CCM15Climate(coordinator.get_host(), ac_index, coordinator)
-        for ac_index in ac_data.devices
-    ]
-    async_add_entities(entities)
+    @callback
+    def _add_new_entities() -> None:
+        new_indices = coordinator.data.devices.keys() - known
+        if new_indices:
+            known.update(new_indices)
+            async_add_entities(
+                CCM15Climate(coordinator.get_host(), ac_index, coordinator)
+                for ac_index in new_indices
+            )
+
+    _add_new_entities()
+    config_entry.async_on_unload(coordinator.async_add_listener(_add_new_entities))
 
 
 class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
