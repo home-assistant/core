@@ -582,7 +582,7 @@ async def test_selects_coordinator_state(
     await hass.async_block_till_done()
 
     # Verify that a select from each device type is created
-    state = hass.states.get("select.roborock_s7_maxv_mop_mode")
+    state = hass.states.get("select.roborock_s7_maxv_dock_empty_mode")
     assert state is not None
     assert state.state == expected_state
 
