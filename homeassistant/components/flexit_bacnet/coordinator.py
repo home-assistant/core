@@ -3,6 +3,7 @@
 import asyncio.exceptions
 from datetime import timedelta
 import logging
+from typing import override
 
 from flexit_bacnet import FlexitBACnet
 from flexit_bacnet.bacnet import DecodingError
@@ -40,6 +41,7 @@ class FlexitCoordinator(DataUpdateCoordinator[FlexitBACnet]):
             self.config_entry.data[CONF_DEVICE_ID],
         )
 
+    @override
     async def _async_update_data(self) -> FlexitBACnet:
         """Fetch data from the device."""
 

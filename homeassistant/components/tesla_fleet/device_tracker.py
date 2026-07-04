@@ -1,5 +1,7 @@
 """Device Tracker platform for Tesla Fleet integration."""
 
+from typing import override
+
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -41,6 +43,7 @@ class TeslaFleetDeviceTrackerEntity(
         """Initialize the device tracker."""
         super().__init__(vehicle, self.key)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -58,6 +61,7 @@ class TeslaFleetDeviceTrackerLocationEntity(TeslaFleetDeviceTrackerEntity):
 
     key = "location"
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
 
@@ -74,6 +78,7 @@ class TeslaFleetDeviceTrackerRouteEntity(TeslaFleetDeviceTrackerEntity):
 
     key = "route"
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the device tracker."""
         self._attr_latitude = self.get("drive_state_active_route_latitude")

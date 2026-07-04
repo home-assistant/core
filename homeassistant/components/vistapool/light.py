@@ -1,6 +1,6 @@
 """Vistapool Light entities."""
 
-from typing import Any
+from typing import Any, override
 
 from aioaquarite import AquariteError
 
@@ -41,9 +41,10 @@ class VistapoolLight(VistapoolEntity, LightEntity):
     def __init__(self, coordinator: VistapoolDataUpdateCoordinator) -> None:
         """Initialize the light entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = self.build_unique_id("pool_light")
+        self._attr_unique_id = self.build_unique_id("pool_light")  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the light is on."""
         value = self.coordinator.get_value(_VALUE_PATH)
@@ -51,10 +52,12 @@ class VistapoolLight(VistapoolEntity, LightEntity):
             return None
         return value in (True, "1")
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         await self._async_set_value(1)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._async_set_value(0)

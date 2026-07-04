@@ -1,7 +1,7 @@
 """Switch platform for Qube Heat Pump."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -79,6 +79,7 @@ class QubeSwitch(QubeEntity, SwitchEntity):
         self._attr_unique_id = f"{entry.entry_id}-{description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -87,6 +88,7 @@ class QubeSwitch(QubeEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
         return self.coordinator.data.switches.get(self.entity_description.register_key)
@@ -108,10 +110,12 @@ class QubeSwitch(QubeEntity, SwitchEntity):
             )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_write_switch(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_write_switch(False)

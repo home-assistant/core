@@ -1,7 +1,8 @@
 """Config flow for the WattWächter Plus integration."""
 
+from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aio_wattwaechter import (
     Wattwaechter,
@@ -76,6 +77,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -128,6 +130,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self._create_entry()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -206,5 +209,41 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_TOKEN): str,
                 }
             ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication when the stored token is no longer valid."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with a new token."""
+        reauth_entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            errors, system_info, _ = await self._async_test_connection(
+                reauth_entry.data[CONF_HOST], user_input[CONF_TOKEN]
+            )
+            if not errors:
+                assert system_info is not None
+                await self.async_set_unique_id(system_info.get_value("esp", "esp_id"))
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates={CONF_TOKEN: user_input[CONF_TOKEN]}
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_TOKEN): str,
+                }
+            ),
+            description_placeholders={"host": reauth_entry.data[CONF_HOST]},
             errors=errors,
         )

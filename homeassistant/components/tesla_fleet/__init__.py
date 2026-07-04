@@ -40,6 +40,7 @@ from .coordinator import (
     TeslaFleetEnergySiteInfoCoordinator,
     TeslaFleetEnergySiteLiveCoordinator,
     TeslaFleetVehicleDataCoordinator,
+    _stale_site_info_error,
     _statistic_id,
 )
 from .models import TeslaFleetData, TeslaFleetEnergyData, TeslaFleetVehicleData
@@ -211,6 +212,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 continue
 
             api_energy = tesla.energySites.create(site_id)
+            info_coordinator = TeslaFleetEnergySiteInfoCoordinator(
+                hass, entry, api_energy, product
+            )
+            try:
+                await info_coordinator.async_config_entry_first_refresh()
+            except ConfigEntryNotReady as err:
+                if (stale_err := _stale_site_info_error(err)) is None:
+                    raise
+                LOGGER.warning(
+                    "Skipping stale Tesla energy site %s because site info failed: %s",
+                    site_id,
+                    stale_err,
+                )
+                await info_coordinator.async_shutdown()
+                continue
 
             live_coordinator = TeslaFleetEnergySiteLiveCoordinator(
                 hass, entry, api_energy
@@ -218,12 +234,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             history_coordinator = TeslaFleetEnergySiteHistoryCoordinator(
                 hass, entry, api_energy
             )
-            info_coordinator = TeslaFleetEnergySiteInfoCoordinator(
-                hass, entry, api_energy, product
-            )
 
             await live_coordinator.async_config_entry_first_refresh()
-            await info_coordinator.async_config_entry_first_refresh()
 
             # Create energy site model
             model = None

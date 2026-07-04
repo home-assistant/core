@@ -1,7 +1,7 @@
 """Config flow for pushover integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from pushover_complete import BadAPIRequestError, PushoverAPI
 import voluptuous as vol
@@ -84,6 +84,7 @@ class PushBulletConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

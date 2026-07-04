@@ -1,7 +1,7 @@
 """Provides a switch for switchable NUT outlets."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -64,6 +64,7 @@ class NUTSwitch(NUTBaseEntity, SwitchEntity):
     """Representation of a switch entity for NUT status values."""
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the switch."""
         status = self.coordinator.data
@@ -72,6 +73,7 @@ class NUTSwitch(NUTBaseEntity, SwitchEntity):
             return None
         return bool(state == "on")
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
 
@@ -79,6 +81,7 @@ class NUTSwitch(NUTBaseEntity, SwitchEntity):
         command_name = f"{outlet}.{outlet_num_str}.load.on"
         await self.pynut_data.async_run_command(command_name)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
 
