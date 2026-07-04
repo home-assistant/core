@@ -863,6 +863,7 @@ class UnifiSpeedtestSensor(CoordinatorEntity[UnifiSpeedtestCoordinator], SensorE
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         if not self.coordinator.last_update_success:
@@ -872,6 +873,7 @@ class UnifiSpeedtestSensor(CoordinatorEntity[UnifiSpeedtestCoordinator], SensorE
         return self.interface_name in self.coordinator.data
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         if self.coordinator.data is None:

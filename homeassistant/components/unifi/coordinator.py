@@ -1,12 +1,10 @@
 """UniFi Network data update coordinator."""
 
+import asyncio
 from datetime import timedelta
 from typing import TYPE_CHECKING, override
 
 from aiounifi.interfaces.api_handlers import APIHandler
-
-import asyncio
-
 from aiounifi.models.speedtest import SpeedtestStatus
 
 from homeassistant.core import HomeAssistant, callback
@@ -83,6 +81,7 @@ class UnifiSpeedtestCoordinator(
             self.update_interval = self.hub.config.option_speedtest_interval
             self.async_set_updated_data(self.data)  # trigger reschedule
 
+    @override
     async def _async_update_data(self) -> dict[str, SpeedtestStatus] | None:
         """Trigger a speedtest and wait for it to finish."""
         if self._first_refresh:
