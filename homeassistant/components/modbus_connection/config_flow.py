@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.helpers.selector import (
-    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -49,11 +48,8 @@ STEP_SERIAL = vol.Schema(
         ),
         vol.Required(CONF_PARITY, default=DEFAULT_PARITY): SelectSelector(
             SelectSelectorConfig(
-                options=[
-                    SelectOptionDict(value="N", label="None"),
-                    SelectOptionDict(value="E", label="Even"),
-                    SelectOptionDict(value="O", label="Odd"),
-                ],
+                options=["n", "e", "o"],
+                translation_key="parity",
                 mode=SelectSelectorMode.DROPDOWN,
             )
         ),

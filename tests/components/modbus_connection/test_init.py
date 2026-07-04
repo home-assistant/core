@@ -56,7 +56,7 @@ async def test_setup_and_unload(
                 CONF_TYPE: CONNECTION_SERIAL,
                 CONF_DEVICE: "/dev/ttyUSB0",
                 CONF_BAUDRATE: 9600,
-                CONF_PARITY: "N",
+                CONF_PARITY: "n",
                 CONF_STOPBITS: 1,
                 CONF_BYTESIZE: 8,
             },

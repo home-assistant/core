@@ -26,7 +26,7 @@ from tests.common import MockConfigEntry
 SERIAL_INPUT = {
     CONF_DEVICE: "/dev/ttyUSB0",
     CONF_BAUDRATE: 9600,
-    CONF_PARITY: "N",
+    CONF_PARITY: "n",
     CONF_STOPBITS: 1,
     CONF_BYTESIZE: 8,
 }

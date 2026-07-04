@@ -37,7 +37,7 @@ async def _async_open(data: Mapping[str, Any]) -> ModbusConnection:
             data[CONF_DEVICE],
             baudrate=data[CONF_BAUDRATE],
             bytesize=data[CONF_BYTESIZE],
-            parity=data[CONF_PARITY],
+            parity=data[CONF_PARITY].upper(),
             stopbits=data[CONF_STOPBITS],
         )
     return await connect_tcp(data[CONF_HOST], port=data[CONF_PORT])

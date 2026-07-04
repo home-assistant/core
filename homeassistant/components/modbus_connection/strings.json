@@ -49,5 +49,14 @@
     "connection_not_ready": {
       "message": "Modbus connection not ready"
     }
+  },
+  "selector": {
+    "parity": {
+      "options": {
+        "e": "Even",
+        "n": "None",
+        "o": "Odd"
+      }
+    }
   }
 }
