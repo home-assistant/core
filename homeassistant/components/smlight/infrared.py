@@ -78,7 +78,7 @@ class SmInfraredReceiverEntity(SmEntity, InfraredReceiverEntity):
     def __init__(self, coordinator: SmDataUpdateCoordinator) -> None:
         """Initialize the SLZB-Ultima infrared receiver."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.unique_id}-infrared-receiver"
+        self._attr_unique_id = f"{coordinator.unique_id}-receiver"
 
     @override
     async def async_added_to_hass(self) -> None:
