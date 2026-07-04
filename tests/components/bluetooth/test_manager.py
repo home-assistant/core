@@ -12,6 +12,9 @@ from habluetooth import BluetoothScanningMode, HaScanner
 
 # pylint: disable-next=no-name-in-module
 from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
+
+# pylint: disable-next=no-name-in-module
+from habluetooth.const import STALE_ROAM_FACTOR
 import pytest
 
 from homeassistant import config_entries
@@ -402,9 +405,26 @@ async def test_switching_adapters_based_on_stale_with_discovered_interval(
         start_time_monotonic + 10 + TRACKER_BUFFERING_WOBBLE_SECONDS + 1,
         HCI1_SOURCE_ADDRESS,
     )
-    # Should switch to hci1 since the previous advertisement is stale
-    # even though the signal is poor because the device is now
-    # likely unreachable via hci0
+    # Should not roam yet: a single missed reception interval must not hand a
+    # stationary device to a comparable scanner before the roam gate
+    # (STALE_ROAM_FACTOR stale windows)
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_poor_signal_hci0
+    )
+
+    inject_advertisement_with_time_and_source(
+        hass,
+        switchbot_device_poor_signal_hci1,
+        switchbot_adv_poor_signal_hci1,
+        start_time_monotonic
+        + (10 + TRACKER_BUFFERING_WOBBLE_SECONDS) * STALE_ROAM_FACTOR
+        + 1,
+        HCI1_SOURCE_ADDRESS,
+    )
+    # Past the roam gate (STALE_ROAM_FACTOR stale windows): switch to hci1
+    # since the previous advertisement is stale even though the signal is poor
+    # because the device is now likely unreachable via hci0
     assert (
         bluetooth.async_ble_device_from_address(hass, address)
         is switchbot_device_poor_signal_hci1
