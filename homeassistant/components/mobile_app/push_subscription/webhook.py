@@ -22,13 +22,24 @@ from ..webhook import WEBHOOK_COMMANDS, validate_schema
 from .store import remove_push_subscription, store_push_subscription
 
 
+def _unique_entity_ids(entity_ids: list[str]) -> list[str]:
+    """Remove duplicate entity_ids while preserving order.
+
+    Duplicates would otherwise arm the same state-change listener more than once.
+    """
+    return list(dict.fromkeys(entity_ids))
+
+
 @WEBHOOK_COMMANDS.register("register_push_subscription")
 @validate_schema(
     {
         vol.Required(PUSH_SUBSCRIPTION_ID): cv.string,
         vol.Required(PUSH_SUBSCRIPTION_TOKEN): cv.string,
         vol.Required(PUSH_SUBSCRIPTION_ENTITY_IDS): vol.All(
-            cv.ensure_list, [cv.entity_id], vol.Length(min=1, max=50)
+            cv.ensure_list,
+            [cv.entity_id],
+            vol.Length(min=1, max=50),
+            _unique_entity_ids,
         ),
         vol.Optional(PUSH_SUBSCRIPTION_TARGET): cv.string,
     }
@@ -39,8 +50,8 @@ async def webhook_register_push_subscription(
     """Register/update a push subscription tied to entity state changes.
 
     Re-sending the same subscription_id with a new token or entity list updates
-    the existing subscription in place (the common case when a WidgetKit push
-    token rotates), so apps can call this idempotently.
+    the existing subscription in place (the common case when a push token
+    rotates), so apps can call this idempotently.
     """
     store_push_subscription(
         hass,

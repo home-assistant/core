@@ -2,8 +2,7 @@
 
 A push subscription maps a push token to a set of entity_ids. The integration
 owns the mapping and the state tracking; it has no knowledge of what the app
-does with the resulting push (WidgetKit timeline reload on iOS, App Widget
-update on Android, etc.).
+does with the resulting push.
 
 State changes are debounced per subscription: a burst of rapid changes within
 PUSH_SUBSCRIPTION_DEBOUNCE_SECONDS collapses to a single push (trailing edge),

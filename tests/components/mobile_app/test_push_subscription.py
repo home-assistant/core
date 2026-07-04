@@ -1,9 +1,9 @@
-"""Tests for mobile_app push subscriptions (WidgetKit push)."""
+"""Tests for mobile_app push subscriptions."""
 
 from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError
 from aiohttp.test_utils import TestClient
@@ -36,8 +36,8 @@ from tests.common import async_fire_time_changed
 
 PUSH_URL = "https://mobile-push.home-assistant.dev/push"
 TRACKED_ENTITY = "light.living_room"
-SUB_ID = "widget-1"
-WIDGET_TOKEN = "widget-push-token-abc"
+SUB_ID = "sub-1"
+SUB_TOKEN = "push-token-abc"
 
 # The inner coroutine that performs the actual HTTP POST. Patching it here lets
 # the debounce/scheduling logic run for real while avoiding the network (which
@@ -52,6 +52,27 @@ GET_SESSION = (
     "homeassistant.components.mobile_app.push_subscription"
     ".notify.async_get_clientsession"
 )
+
+
+def _mock_session_post(
+    *, status: HTTPStatus | None = None, side_effect: type[Exception] | None = None
+) -> MagicMock:
+    """Return a session whose .post() behaves as an async context manager.
+
+    Mirrors aiohttp's ClientSession.post, which returns a context manager the
+    caller enters with ``async with`` to obtain (and later release) the response.
+    """
+    cm = MagicMock()
+    if side_effect is not None:
+        cm.__aenter__ = AsyncMock(side_effect=side_effect)
+    else:
+        response = MagicMock()
+        response.status = status
+        cm.__aenter__ = AsyncMock(return_value=response)
+    cm.__aexit__ = AsyncMock(return_value=False)
+    session = MagicMock()
+    session.post = MagicMock(return_value=cm)
+    return session
 
 
 @pytest.fixture
@@ -76,7 +97,7 @@ async def _register_subscription(
     webhook_id: str,
     *,
     sub_id: str = SUB_ID,
-    token: str = WIDGET_TOKEN,
+    token: str = SUB_TOKEN,
     entity_ids: list[str] | None = None,
     target: str | None = "lock_screen",
 ) -> None:
@@ -102,7 +123,7 @@ async def test_register_stores_subscription(
     await _register_subscription(webhook_client, push_webhook_id)
 
     stored = hass.data[DOMAIN][DATA_PUSH_SUBSCRIPTIONS][push_webhook_id][SUB_ID]
-    assert stored[PUSH_SUBSCRIPTION_TOKEN] == WIDGET_TOKEN
+    assert stored[PUSH_SUBSCRIPTION_TOKEN] == SUB_TOKEN
     assert stored[PUSH_SUBSCRIPTION_ENTITY_IDS] == [TRACKED_ENTITY]
     assert stored[PUSH_SUBSCRIPTION_TARGET] == "lock_screen"
     assert SUB_ID in hass.data[DOMAIN][DATA_PUSH_SUBSCRIPTION_UNSUBS][push_webhook_id]
@@ -124,6 +145,20 @@ async def test_register_is_idempotent(
     assert len(device_subs) == 1
     assert device_subs[SUB_ID][PUSH_SUBSCRIPTION_TOKEN] == "rotated-token"
     assert device_subs[SUB_ID][PUSH_SUBSCRIPTION_ENTITY_IDS] == ["switch.fan"]
+
+
+async def test_register_dedupes_entity_ids(
+    hass: HomeAssistant, webhook_client: TestClient, push_webhook_id: str
+) -> None:
+    """Duplicate entity_ids collapse so a listener is not armed twice."""
+    await _register_subscription(
+        webhook_client,
+        push_webhook_id,
+        entity_ids=[TRACKED_ENTITY, TRACKED_ENTITY, "switch.fan"],
+    )
+
+    stored = hass.data[DOMAIN][DATA_PUSH_SUBSCRIPTIONS][push_webhook_id][SUB_ID]
+    assert stored[PUSH_SUBSCRIPTION_ENTITY_IDS] == [TRACKED_ENTITY, "switch.fan"]
 
 
 async def test_state_change_sends_push_after_debounce(
@@ -150,7 +185,7 @@ async def test_state_change_sends_push_after_debounce(
     # _send_subscription_push(hass, entry, sub_id, sub)
     _, _, sub_id, sub = mock_send.call_args.args
     assert sub_id == SUB_ID
-    assert sub[PUSH_SUBSCRIPTION_TOKEN] == WIDGET_TOKEN
+    assert sub[PUSH_SUBSCRIPTION_TOKEN] == SUB_TOKEN
     assert sub[PUSH_SUBSCRIPTION_TARGET] == "lock_screen"
 
 
@@ -318,10 +353,7 @@ async def test_send_push_posts_payload(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     sub = hass.data[DOMAIN][DATA_PUSH_SUBSCRIPTIONS][push_webhook_id][SUB_ID]
 
-    response = AsyncMock()
-    response.status = HTTPStatus.CREATED
-    session = AsyncMock()
-    session.post = AsyncMock(return_value=response)
+    session = _mock_session_post(status=HTTPStatus.CREATED)
 
     with patch(GET_SESSION, return_value=session):
         await _send_subscription_push(hass, entry, SUB_ID, sub)
@@ -330,7 +362,7 @@ async def test_send_push_posts_payload(
     url = session.post.call_args.args[0]
     payload = session.post.call_args.kwargs["json"]
     assert url == PUSH_URL
-    assert payload[PUSH_SUBSCRIPTION_TOKEN] == WIDGET_TOKEN
+    assert payload[PUSH_SUBSCRIPTION_TOKEN] == SUB_TOKEN
     assert payload[PUSH_SUBSCRIPTION_TRIGGER][PUSH_SUBSCRIPTION_ID] == SUB_ID
     assert payload[PUSH_SUBSCRIPTION_TRIGGER][PUSH_SUBSCRIPTION_TARGET] == "lock_screen"
     assert payload["registration_info"]["webhook_id"] == push_webhook_id
@@ -347,8 +379,7 @@ async def test_send_push_swallows_client_error(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     sub = hass.data[DOMAIN][DATA_PUSH_SUBSCRIPTIONS][push_webhook_id][SUB_ID]
 
-    session = AsyncMock()
-    session.post = AsyncMock(side_effect=ClientError)
+    session = _mock_session_post(side_effect=ClientError)
 
     with patch(GET_SESSION, return_value=session):
         # Must not raise.

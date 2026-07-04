@@ -104,14 +104,14 @@ SIGNAL_LOCATION_UPDATE = DOMAIN + "_location_update_{}"
 SIGNAL_RECORD_NOTIFICATION = f"{DOMAIN}_record_notification"
 
 ATTR_CAMERA_ENTITY_ID = "camera_entity_id"
-# Push-subscription payload keys (platform-agnostic widget/surface refresh).
+# Push-subscription payload keys (platform-agnostic surface refresh).
 PUSH_SUBSCRIPTION_ID = "subscription_id"
 PUSH_SUBSCRIPTION_TOKEN = "push_token"
 PUSH_SUBSCRIPTION_ENTITY_IDS = "entity_ids"
 # Opaque, app-defined hint echoed back in the push so the app knows which
-# surface/widget to reload. Core treats it as an opaque string.
+# surface to reload. Core treats it as an opaque string.
 PUSH_SUBSCRIPTION_TARGET = "target"
-# Marker in the outgoing push so the mobile-fcm relay formats this as a silent
+# Marker in the outgoing push so the push relay formats this as a silent
 # background push rather than a user-visible notification.
 PUSH_SUBSCRIPTION_TRIGGER = "push_subscription"
 

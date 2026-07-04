@@ -1,9 +1,9 @@
 """Outgoing silent push for a triggered subscription.
 
 Sends a minimal data-only payload to the same push proxy URL the device
-registered (entry.data[app_data][push_url]) so the mobile-fcm relay can format
-it as a background/silent push. No message/title is included, so it never
-surfaces as a user-visible notification.
+registered (entry.data[app_data][push_url]) so the push relay can format it as
+a background/silent push. No message/title is included, so it never surfaces as
+a user-visible notification.
 """
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
@@ -78,32 +78,34 @@ async def _send_subscription_push(
         reg_info[ATTR_OS_VERSION] = entry.data[ATTR_OS_VERSION]
 
     # Deliberately minimal + generic. The relay sees PUSH_SUBSCRIPTION_TRIGGER
-    # and knows to build a silent background push (APNs push-type: background,
-    # content-available, no alert/sound). `target` is the app's opaque hint for
-    # which surface/widget to reload.
+    # and knows to build a silent background push (no alert or sound). `target`
+    # is the app's opaque hint for which surface to reload.
     payload = {
         PUSH_SUBSCRIPTION_TRIGGER: {
             PUSH_SUBSCRIPTION_ID: sub_id,
-            PUSH_SUBSCRIPTION_TARGET: sub.get(PUSH_SUBSCRIPTION_TARGET),
+            PUSH_SUBSCRIPTION_TARGET: sub[PUSH_SUBSCRIPTION_TARGET],
         },
         ATTR_PUSH_TOKEN: sub[PUSH_SUBSCRIPTION_TOKEN],
         "registration_info": reg_info,
     }
 
     try:
-        async with asyncio.timeout(10):
-            response = await session.post(
+        async with (
+            asyncio.timeout(10),
+            session.post(
                 entry.data[ATTR_APP_DATA][ATTR_PUSH_URL], json=payload
-            )
-            if response.status in (
+            ) as response,
+        ):
+            if response.status not in (
                 HTTPStatus.OK,
                 HTTPStatus.CREATED,
                 HTTPStatus.ACCEPTED,
             ):
-                return
-            _LOGGER.debug(
-                "Subscription push to %s returned %s", entry.title, response.status
-            )
+                _LOGGER.debug(
+                    "Subscription push to %s returned %s",
+                    entry.title,
+                    response.status,
+                )
     except TimeoutError, ClientError:
         # Silent pushes are best-effort; the next state change retries.
         _LOGGER.debug(
