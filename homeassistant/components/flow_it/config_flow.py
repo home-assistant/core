@@ -109,11 +109,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not URL(host).scheme:
                 host = str(URL.build(scheme="http", host=host))
 
-            data = {
-                CONF_HOST: host,
-                CONF_USERNAME: username,
-                CONF_PASSWORD: password,
-            }
 
             try:
                 info = await validate_input(self.hass, data)
