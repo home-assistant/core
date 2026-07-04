@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from linkplay.bridge import LinkPlayBridge
+from linkplay.bridge import LinkPlayBridge, LinkPlayPlayer
 from linkplay.consts import EqualizerMode, LoopMode, PlayingMode, PlayingStatus
 from linkplay.controller import LinkPlayController, LinkPlayMultiroom
 from linkplay.exceptions import LinkPlayRequestException
@@ -327,11 +327,24 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         return [leader_id, *followers]
 
     @property
+    def _active_player(self) -> LinkPlayPlayer:
+        """Return the player that holds the active media info.
+
+        A follower in a multiroom group does not expose the media info of the
+        stream it is playing; that info is only available on the group leader.
+        """
+        multiroom = self._bridge.multiroom
+        if multiroom is not None and multiroom.leader is not self._bridge:
+            return multiroom.leader.player
+        return self._bridge.player
+
+    @property
     @override
     def media_image_url(self) -> str | None:
         """Image url of playing media."""
-        if self._bridge.player.status in [PlayingStatus.PLAYING, PlayingStatus.PAUSED]:
-            return str(self._bridge.player.album_art)
+        player = self._active_player
+        if player.status in [PlayingStatus.PLAYING, PlayingStatus.PAUSED]:
+            return str(player.album_art)
         return None
 
     @exception_wrap
@@ -358,18 +371,20 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         self._attr_supported_features = DEFAULT_FEATURES
 
         if self._bridge.player.status == PlayingStatus.PLAYING:
-            if self._bridge.player.total_length != 0:
+            # A follower mirrors the media info from the group leader.
+            player = self._active_player
+            if player.total_length != 0:
                 self._attr_supported_features = (
                     self._attr_supported_features | SEEKABLE_FEATURES
                 )
 
             self._attr_source = SOURCE_MAP.get(self._bridge.player.play_mode, "other")
-            self._attr_media_position = self._bridge.player.current_position_in_seconds
+            self._attr_media_position = player.current_position_in_seconds
             self._attr_media_position_updated_at = utcnow()
-            self._attr_media_duration = self._bridge.player.total_length_in_seconds
-            self._attr_media_artist = self._bridge.player.artist
-            self._attr_media_title = self._bridge.player.title
-            self._attr_media_album_name = self._bridge.player.album
+            self._attr_media_duration = player.total_length_in_seconds
+            self._attr_media_artist = player.artist
+            self._attr_media_title = player.title
+            self._attr_media_album_name = player.album
         elif self._bridge.player.status == PlayingStatus.STOPPED:
             self._attr_media_position = None
             self._attr_media_position_updated_at = None
