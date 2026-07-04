@@ -39,9 +39,8 @@ TRACKED_ENTITY = "light.living_room"
 SUB_ID = "sub-1"
 SUB_TOKEN = "push-token-abc"
 
-# The inner coroutine that performs the actual HTTP POST. Patching it here lets
-# the debounce/scheduling logic run for real while avoiding the network (which
-# aioclient_mock cannot intercept through the SSRF-protected client session).
+# Patch target for the inner coroutine that performs the HTTP POST, letting the
+# debounce/scheduling logic run under test while the network call is stubbed.
 SEND_PUSH = (
     "homeassistant.components.mobile_app.push_subscription"
     ".notify._send_subscription_push"
