@@ -379,10 +379,7 @@ async def test_park_and_ride_sensor_disabled_by_default(
     await hass.config_entries.async_setup(mock_park_and_ride_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    for unique_id in (
-        "park_and_ride_P+R Gorge de Loup-accessible_spaces",
-        "park_and_ride_P+R Gorge de Loup-opening_hours",
-    ):
+    for unique_id in ("park_and_ride_P+R Gorge de Loup-accessible_spaces",):
         entry = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
         assert entry is not None, unique_id
         reg_entry = entity_registry.async_get(entry)

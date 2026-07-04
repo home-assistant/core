@@ -200,13 +200,6 @@ PARK_AND_RIDE_SENSOR_DESCRIPTIONS: tuple[
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    DataGrandLyonParkAndRideSensorEntityDescription(
-        key="opening_hours",
-        translation_key="opening_hours",
-        value_fn=lambda p: p.horaires,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
 )
 
 

@@ -72,9 +72,6 @@
           "estimated": "mdi:clock-check-outline"
         }
       },
-      "opening_hours": {
-        "default": "mdi:clock-outline"
-      },
       "park_and_ride_capacity": {
         "default": "mdi:counter"
       }
