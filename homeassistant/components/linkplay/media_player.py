@@ -371,9 +371,11 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         self._attr_supported_features = DEFAULT_FEATURES
 
         if self._bridge.player.status == PlayingStatus.PLAYING:
-            # A follower mirrors the media info from the group leader.
+            # A follower mirrors the media info from the group leader, but the
+            # transport controls act on its own device, so the seekable features
+            # stay gated on the follower's own player.
             player = self._active_player
-            if player.total_length != 0:
+            if self._bridge.player.total_length != 0:
                 self._attr_supported_features = (
                     self._attr_supported_features | SEEKABLE_FEATURES
                 )
