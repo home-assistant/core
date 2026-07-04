@@ -424,6 +424,7 @@ FLOWS = {
         "litejet",
         "litterrobot",
         "livisi",
+        "llama_cpp",
         "local_calendar",
         "local_file",
         "local_ip",
