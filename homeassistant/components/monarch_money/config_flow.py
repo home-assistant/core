@@ -3,13 +3,9 @@
 import logging
 from typing import Any, override
 
-from monarchmoney import (
-    LoginFailedException,
-    MonarchMoneyTyped,
-    MonarchSubscription,
-    RequireMFAException,
-)
+from monarchmoney import LoginFailedException, RequireMFAException
 from monarchmoney.monarchmoney import SESSION_FILE
+from monarchmoney.monarchmoney_typed import MonarchMoneyTyped, MonarchSubscription
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult

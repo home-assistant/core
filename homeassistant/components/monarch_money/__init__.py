@@ -1,6 +1,6 @@
 """The Monarch Money integration."""
 
-from monarchmoney import MonarchMoneyTyped
+from monarchmoney.monarchmoney_typed import MonarchMoneyTyped
 
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant

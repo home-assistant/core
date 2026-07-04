@@ -8,7 +8,7 @@ from typing import override
 from aiohttp import ClientResponseError
 from gql.transport.exceptions import TransportServerError
 from monarchmoney import LoginFailedException
-from monarchmoney import (
+from monarchmoney.monarchmoney_typed import (
     MonarchAccount,
     MonarchCashflowSummary,
     MonarchMoneyTyped,
