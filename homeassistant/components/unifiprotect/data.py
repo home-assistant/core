@@ -245,23 +245,34 @@ class ProtectData:
 
         Only the start of an event is dispatched, routed to the subscribers that
         registered for this device and event type; an entity that cares about a
-        sub-type (e.g. a smart-detect object type) filters further itself. The
-        device is resolved by ``device_id`` (the stable cross-API join key), not
-        the public ``device_mac``, so the key comes from the same store the
-        entities derive ``self.device.mac`` from and matches without assuming
-        both mac strings are byte-identical.
+        sub-type (e.g. a smart-detect object type) filters further itself.
         """
         if change is not EventChange.STARTED:
             return
-        device = self.api.bootstrap.get_device_from_id(event.device_id)
-        if device is None or not (
-            subscriptions := self._public_event_subscriptions.get(
-                (device.mac, event.type)
-            )
-        ):
-            return
-        for update_callback in subscriptions:
-            update_callback(event)
+        for mac in self._async_public_event_macs(event):
+            if subscriptions := self._public_event_subscriptions.get((mac, event.type)):
+                for update_callback in subscriptions:
+                    update_callback(event)
+
+    @callback
+    def _async_public_event_macs(self, event: ProtectEvent) -> Iterable[str]:
+        """Resolve the device mac(s) a public event should be dispatched to.
+
+        Camera-attached events (ring/NFC/fingerprint/...) resolve through the
+        private bootstrap so the key comes from the same store the entities
+        derive ``self.device.mac`` from and matches without assuming both mac
+        strings are byte-identical. A public-only device (e.g. a key fob) is
+        absent from the private bootstrap; for those the library has already
+        resolved ``event.device_mac`` from the public bootstrap (a real USL-FOB
+        button press carries the fob itself as the event ``device``).
+        """
+        if (
+            device := self.api.bootstrap.get_device_from_id(event.device_id)
+        ) is not None:
+            return (device.mac,)
+        if event.device_mac is not None:
+            return (event.device_mac,)
+        return ()
 
     @callback
     def _async_websocket_state_changed(self, state: WebsocketState) -> None:

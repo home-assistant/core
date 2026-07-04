@@ -14,6 +14,7 @@ from uiprotect.data import (
     NVR,
     DeviceState,
     Event,
+    Fob,
     ModelType,
     ProtectAdoptableDeviceModel,
     PublicDeviceModel,
@@ -375,6 +376,79 @@ class ProtectNVREntity(BaseProtectEntity):
             sw_version=str(self.device.version),
             configuration_url=self.device.api.base_url,
         )
+
+
+class ProtectFobEntity(Entity):
+    """Base class for UniFi Protect key fob (Public API) entities.
+
+    A key fob is a public-only device: it lives in
+    ``ProtectApiClient.public_bootstrap.fobs`` and is refreshed over the public
+    devices websocket, so it does not use the private-device machinery in
+    :class:`BaseProtectEntity`. Availability follows the public websocket health
+    and the fob's presence in the bootstrap, mirroring the relay switch.
+    """
+
+    _attr_should_poll = False
+    _attr_attribution = DEFAULT_ATTRIBUTION
+    _attr_has_entity_name = True
+    _fob_state_attrs: tuple[str, ...] = ("_attr_available",)
+
+    def __init__(self, data: ProtectData, fob: Fob) -> None:
+        """Initialize the fob entity and prime its state from the bootstrap."""
+        self.data = data
+        self._fob_id = fob.id
+        self._fob_mac = fob.mac
+        nvr = data.api.bootstrap.nvr
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, fob.mac)},
+            identifiers={(DOMAIN, fob.mac)},
+            manufacturer=DEFAULT_BRAND,
+            name=fob.name,
+            model="Key Fob",
+            via_device=(DOMAIN, nvr.mac),
+        )
+        self._attr_available = data.last_public_update_success
+        self._async_update_from_fob(fob)
+
+    @property
+    def _fob(self) -> Fob | None:
+        """Return the cached fob from the public bootstrap, if still present."""
+        api = self.data.api
+        if not api.has_public_bootstrap:
+            return None
+        return api.public_bootstrap.fobs.get(self._fob_id)
+
+    @callback
+    def _async_update_from_fob(self, fob: Fob) -> None:
+        """Refresh entity state from the fob. Overridden by subclasses."""
+
+    @callback
+    def _async_updated(self, _obj: PublicDeviceModel | None) -> None:
+        """Handle a public devices WS update for this fob.
+
+        The state is always re-read from the public bootstrap: the library
+        merges WS updates into it before dispatching, and ``None`` (a websocket
+        state change or a delete) carries no object to read.
+        """
+        prev = [getattr(self, attr, None) for attr in self._fob_state_attrs]
+        if (fob := self._fob) is None:
+            self._attr_available = False
+        else:
+            self._attr_available = self.data.last_public_update_success
+            self._async_update_from_fob(fob)
+        if [getattr(self, attr, None) for attr in self._fob_state_attrs] != prev:
+            self.async_write_ha_state()
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to public devices WS updates dispatched by ProtectData."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.data.async_subscribe_public(self._fob_mac, self._async_updated)
+        )
+        # Refresh from the bootstrap: an update or delete that landed between
+        # construction and this subscription would otherwise be missed.
+        self._async_updated(None)
 
 
 class EventEntityMixin(ProtectDeviceEntity):

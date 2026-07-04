@@ -181,6 +181,9 @@
       "fingerprint": {
         "default": "mdi:fingerprint"
       },
+      "keyfob": {
+        "default": "mdi:remote"
+      },
       "nfc": {
         "default": "mdi:nfc"
       },
@@ -264,6 +267,9 @@
       },
       "doorbell_text": {
         "default": "mdi:card-text"
+      },
+      "fob_status": {
+        "default": "mdi:remote"
       },
       "infrared_mode": {
         "default": "mdi:circle-opacity"

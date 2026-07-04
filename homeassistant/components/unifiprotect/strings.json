@@ -289,6 +289,25 @@
           }
         }
       },
+      "keyfob": {
+        "name": "Button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "alarm_hub_button": "Alarm hub button",
+              "arm": "Arm",
+              "disarm": "Disarm",
+              "function": "Function",
+              "input1": "Input 1",
+              "input2": "Input 2",
+              "left": "Left",
+              "night": "Night",
+              "panic": "Panic",
+              "right": "Right"
+            }
+          }
+        }
+      },
       "nfc": {
         "name": "NFC",
         "state_attributes": {
@@ -456,6 +475,15 @@
       },
       "doorbell_text": {
         "name": "[%key:component::unifiprotect::entity::select::doorbell_text::name%]"
+      },
+      "fob_status": {
+        "name": "Status",
+        "state": {
+          "device_lost": "Device lost",
+          "no_recent_heartbeat": "No recent heartbeat",
+          "online": "Online",
+          "recently_seen": "Recently seen"
+        }
       },
       "infrared_mode": {
         "name": "[%key:component::unifiprotect::entity::select::infrared_mode::name%]"

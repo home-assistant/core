@@ -4,7 +4,7 @@ import dataclasses
 from typing import Any, override
 
 from uiprotect import ProtectEvent
-from uiprotect.data import ModelType, SmartDetectObjectType
+from uiprotect.data import Fob, FobButton, ModelType, SmartDetectObjectType
 from uiprotect.data.nvr import Event, EventDetectedThumbnail
 
 from homeassistant.components.event import (
@@ -38,7 +38,12 @@ from .data import (
     ProtectDeviceType,
     UFPConfigEntry,
 )
-from .entity import EventEntityMixin, ProtectDeviceEntity, ProtectEventMixin
+from .entity import (
+    EventEntityMixin,
+    ProtectDeviceEntity,
+    ProtectEventMixin,
+    ProtectFobEntity,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -395,6 +400,66 @@ class ProtectDeviceSmartDetectEventEntity(
             self.async_write_ha_state()
 
 
+# A key-fob button press is delivered over the public events websocket. Captured
+# from real USL-FOB hardware (paired via a LinkStation bridge): the event type is
+# ``sensorButtonPressed``, the event's ``device`` is the fob itself, and the
+# pressed button is in ``metadata.button``. ``alarmHubButtonPress`` is also
+# accepted, since a fob paired to an alarm hub is expected to route through it.
+_FOB_BUTTON_EVENT_TYPES = (
+    EventType.SENSOR_BUTTON_PRESSED,
+    EventType.ALARM_HUB_BUTTON_PRESS,
+)
+
+# Real hardware reports an empty ``feature_flags.buttons`` (the fob does not
+# advertise which buttons it has), so the event entity declares the full
+# ``FobButton`` vocabulary. Each type is the button's snake_case enum name (e.g.
+# ``alarm_hub_button``) so it is a valid HA translation key; ``EventButtonType``
+# shares its member names 1:1 with ``FobButton``, so a press resolves to the
+# same key.
+_FOB_EVENT_TYPES: list[str] = [
+    button.name.lower() for button in FobButton if button is not FobButton.UNKNOWN
+]
+
+
+class ProtectFobButtonEventEntity(ProtectFobEntity, EventEntity):
+    """A UniFi Protect key fob button-press event entity.
+
+    Each fob exposes one event entity that fires the pressed button (from a
+    public ``sensorButtonPressed`` / ``alarmHubButtonPress`` event's
+    ``metadata.button``) as its event type.
+    """
+
+    _attr_translation_key = "keyfob"
+    _attr_event_types = _FOB_EVENT_TYPES
+
+    def __init__(self, data: ProtectData, fob: Fob) -> None:
+        """Initialize the key fob button event entity."""
+        self._attr_unique_id = f"{fob.mac}_keyfob"
+        super().__init__(data, fob)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to public key-fob button-press events."""
+        await super().async_added_to_hass()
+        for event_type in _FOB_BUTTON_EVENT_TYPES:
+            self.async_on_remove(
+                self.data.async_subscribe_public_event(
+                    self._fob_mac, event_type, self._async_button_event
+                )
+            )
+
+    @callback
+    def _async_button_event(self, event: ProtectEvent) -> None:
+        if (metadata := event.metadata) is None or (button := metadata.button) is None:
+            return
+        # Skip a button added by newer firmware that coerces to
+        # ``EventButtonType.UNKNOWN`` (not among the declared event types).
+        if (button_type := button.name.lower()) not in self.event_types:
+            return
+        self._trigger_event(button_type, {ATTR_EVENT_ID: event.id})
+        self.async_write_ha_state()
+
+
 EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
         key="doorbell",
@@ -471,3 +536,12 @@ async def async_setup_entry(
 
     data.async_subscribe_adopt(_add_new_device)
     async_add_entities(_async_event_entities(data))
+
+    # Public API: key fob button-press event entities. Only available when the
+    # public bootstrap has been primed (requires API key + supported firmware).
+    api = data.api
+    if api.has_public_bootstrap:
+        async_add_entities(
+            ProtectFobButtonEventEntity(data, fob)
+            for fob in api.public_bootstrap.fobs.values()
+        )

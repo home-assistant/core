@@ -1,6 +1,6 @@
 """Component providing binary sensors for UniFi Protect."""
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 import dataclasses
 from typing import cast, override
 
@@ -8,6 +8,7 @@ from uiprotect.data import (
     NVR,
     Camera,
     Event,
+    Fob,
     ModelType,
     MountType,
     ProtectAdoptableDeviceModel,
@@ -34,6 +35,7 @@ from .entity import (
     ProtectDeviceEntity,
     ProtectEntityDescription,
     ProtectEventMixin,
+    ProtectFobEntity,
     ProtectIsOnEntity,
     ProtectNVREntity,
     async_all_device_entities,
@@ -726,6 +728,53 @@ def _async_nvr_entities(
     ]
 
 
+def _fob_battery_low(fob: Fob) -> bool | None:
+    """Return whether the key fob battery is low, if it has been reported."""
+    if (battery := fob.wireless_connection_state.battery_status) is not None:
+        return battery.is_low
+    return None
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ProtectFobBinaryEntityDescription(BinarySensorEntityDescription):
+    """Describes a UniFi Protect key fob binary sensor entity."""
+
+    value_fn: Callable[[Fob], bool | None]
+
+
+FOB_BINARY_SENSORS: tuple[ProtectFobBinaryEntityDescription, ...] = (
+    ProtectFobBinaryEntityDescription(
+        key="battery_low",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_fob_battery_low,
+    ),
+)
+
+
+class ProtectFobBinarySensor(ProtectFobEntity, BinarySensorEntity):
+    """A binary sensor entity for a UniFi Protect key fob (Public API)."""
+
+    entity_description: ProtectFobBinaryEntityDescription
+    _fob_state_attrs = ("_attr_available", "_attr_is_on")
+
+    def __init__(
+        self,
+        data: ProtectData,
+        fob: Fob,
+        description: ProtectFobBinaryEntityDescription,
+    ) -> None:
+        """Initialize the key fob binary sensor."""
+        self.entity_description = description
+        self._attr_unique_id = f"{fob.mac}_{description.key}"
+        super().__init__(data, fob)
+
+    @callback
+    @override
+    def _async_update_from_fob(self, fob: Fob) -> None:
+        self._attr_is_on = self.entity_description.value_fn(fob)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
@@ -755,3 +804,13 @@ async def async_setup_entry(
     entities += _async_event_entities(data)
     entities += _async_nvr_entities(data)
     async_add_entities(entities)
+
+    # Public API: key fob battery-low binary sensor. Only available when the
+    # public bootstrap has been primed (requires API key + supported firmware).
+    api = data.api
+    if api.has_public_bootstrap:
+        async_add_entities(
+            ProtectFobBinarySensor(data, fob, description)
+            for fob in api.public_bootstrap.fobs.values()
+            for description in FOB_BINARY_SENSORS
+        )
