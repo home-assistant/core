@@ -1,8 +1,9 @@
-"""Support for binary_sensor entities of the Evohome integration."""
+"""Support for Binary Sensor entities of the Evohome integration."""
 
 from typing import override
 
 import evohomeasync2 as evo
+from evohomeasync2.const import SZ_FAULT_TYPE
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -16,16 +17,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import EVOHOME_DATA
 from .coordinator import EvoDataUpdateCoordinator
-from .entity import unique_zone_id
-
-type EvoDevice = evo.ControlSystem | evo.HotWater | evo.Zone
-
-
-def _has_battery_fault(device: EvoDevice) -> bool:
-    """Return True if the device has an active low-battery fault."""
-    return any(
-        str(f["fault_type"]).endswith("low_battery") for f in device.active_faults
-    )
+from .entity import is_valid_zone, unique_zone_id
 
 
 async def async_setup_platform(
@@ -34,7 +26,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Create battery binary sensors for the active Evohome installation."""
+    """Set up the binary sensor platform for Evohome."""
 
     if discovery_info is None:
         return
@@ -44,7 +36,9 @@ async def async_setup_platform(
 
     entities: list[EvoBatterySensorBase] = [EvoTcsBatterySensor(coordinator, tcs)]
 
-    entities.extend(EvoZoneBatterySensor(coordinator, z) for z in tcs.zones)
+    entities.extend(
+        EvoZoneBatterySensor(coordinator, z) for z in tcs.zones if is_valid_zone(z)
+    )
 
     if tcs.hotwater:
         entities.append(EvoDhwBatterySensor(coordinator, tcs.hotwater))
@@ -55,19 +49,19 @@ async def async_setup_platform(
 class EvoBatterySensorBase(
     CoordinatorEntity[EvoDataUpdateCoordinator], BinarySensorEntity
 ):
-    """Binary sensor exposing low-battery faults for one Evohome device."""
+    """Base for Evohome's low battery sensors."""
 
     _attr_device_class = BinarySensorDeviceClass.BATTERY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    _evo_device: EvoDevice
+    _evo_device: evo.ControlSystem | evo.HotWater | evo.Zone
 
     def __init__(
         self,
         coordinator: EvoDataUpdateCoordinator,
-        evo_device: EvoDevice,
+        evo_device: evo.ControlSystem | evo.HotWater | evo.Zone,
     ) -> None:
-        """Initialize the battery sensor."""
+        """Initialize an Evohome battery sensor."""
         super().__init__(coordinator, context=evo_device.id)
 
         self._evo_device = evo_device
@@ -77,8 +71,11 @@ class EvoBatterySensorBase(
     @property
     @override
     def is_on(self) -> bool:
-        """Return True when there is an active low-battery fault."""
-        return _has_battery_fault(self._evo_device)
+        """Return True when the Evohome device has an active low-battery fault."""
+        return any(
+            str(f[SZ_FAULT_TYPE]).endswith("low_battery")
+            for f in self._evo_device.active_faults
+        )
 
 
 class EvoTcsBatterySensor(EvoBatterySensorBase):
@@ -90,7 +87,7 @@ class EvoTcsBatterySensor(EvoBatterySensorBase):
     @override
     def name(self) -> str:
         """Return the entity name (follows location renames)."""
-        return f"{self._evo_device.location.name} controller"
+        return f"{self._evo_device.location.name} controller battery"
 
 
 class EvoDhwBatterySensor(EvoBatterySensorBase):
@@ -102,7 +99,7 @@ class EvoDhwBatterySensor(EvoBatterySensorBase):
     @override
     def name(self) -> str:
         """Return the entity name (follows location renames)."""
-        return f"{self._evo_device.location.name} DHW"
+        return f"{self._evo_device.location.name} DHW battery"
 
 
 class EvoZoneBatterySensor(EvoBatterySensorBase):
@@ -115,7 +112,7 @@ class EvoZoneBatterySensor(EvoBatterySensorBase):
         coordinator: EvoDataUpdateCoordinator,
         evo_device: evo.Zone,
     ) -> None:
-        """Initialize the zone battery sensor."""
+        """Initialize the zone actuator battery sensor."""
         super().__init__(coordinator, evo_device)
 
         self._attr_unique_id = (
@@ -126,4 +123,4 @@ class EvoZoneBatterySensor(EvoBatterySensorBase):
     @override
     def name(self) -> str:
         """Return the entity name (follows zone renames)."""
-        return self._evo_device.name
+        return f"{self._evo_device.name} battery"
