@@ -29,8 +29,8 @@
       'unique_id': None,
       'version': 2,
     }),
-    'profiles': dict({
-      'Fake Profile': dict({
+    'profiles': list([
+      dict({
         'dnssec_coordinator_data': dict({
           'not_validated_queries': 25,
           'validated_queries': 75,
@@ -146,7 +146,8 @@
           'default_queries': 40,
           'relayed_queries': 10,
         }),
+        'subentry_title': 'Fake Profile',
       }),
-    }),
+    ]),
   })
 # ---
