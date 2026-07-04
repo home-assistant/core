@@ -9,7 +9,7 @@ from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import intent
-from homeassistant.helpers.llm import IntentTool, LLMContext, Tool
+from homeassistant.helpers.llm import LLM_API_ASSIST, IntentTool, LLMContext, Tool
 
 from .timers import async_device_supports_timers
 
@@ -35,8 +35,13 @@ TIMER_INTENTS = (
 
 
 @callback
-def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
+def async_get_tools(
+    hass: HomeAssistant, llm_context: LLMContext, api_id: str
+) -> LLMTools | None:
     """Return LLM tools for the generic intents."""
+    if api_id != LLM_API_ASSIST:
+        return None
+
     wanted = set(LLM_INTENTS)
     if llm_context.device_id and async_device_supports_timers(
         hass, llm_context.device_id
@@ -58,4 +63,6 @@ def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
     tools: list[Tool] = [
         IntentTool(handler.intent_type, handler) for handler in handlers
     ]
+    if not tools:
+        return None
     return LLMTools(tools=tools)

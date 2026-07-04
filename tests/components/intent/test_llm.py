@@ -4,6 +4,7 @@ import pytest
 
 from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
+from homeassistant.components.intent import llm as intent_llm
 from homeassistant.components.intent.timers import async_register_timer_handler
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import llm
@@ -36,7 +37,7 @@ def _llm_context(device_id: str | None = None) -> llm.LLMContext:
 
 async def _tool_names(hass: HomeAssistant) -> set[str]:
     """Return the names of the tools offered by the intent platform."""
-    result = await llm_component.async_get_tools(hass, _llm_context())
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
     return {tool.name for tool in result.tools}
 
 
@@ -62,7 +63,7 @@ async def test_timer_intents_offered_for_timer_device(hass: HomeAssistant) -> No
     async_register_timer_handler(hass, "test_device", handle_timer)
 
     result = await llm_component.async_get_tools(
-        hass, _llm_context(device_id="test_device")
+        hass, _llm_context(device_id="test_device"), "assist"
     )
     names = {tool.name for tool in result.tools}
     assert "HassStartTimer" in names
@@ -75,3 +76,8 @@ async def test_set_position_requires_exposed_cover(hass: HomeAssistant) -> None:
 
     async_expose_entity(hass, "conversation", COVER_ENTITY_ID, False)
     assert "HassSetPosition" not in await _tool_names(hass)
+
+
+async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:
+    """Test the platform returns None for an unsupported API."""
+    assert intent_llm.async_get_tools(hass, _llm_context(), "other") is None
