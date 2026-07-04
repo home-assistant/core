@@ -269,8 +269,11 @@ async def _async_migrate_go_to_alias_button_unique_ids(
             else None
         )
 
-        # Legacy entities were hardcoded to alias id "1".
-        if aliases and any(alias["id"] == "1" for alias in cast(list, aliases.value)):
+        # Legacy entities were hardcoded to alias id "1". Normalize with str()
+        # to match the unique_id built in button.py's setup.
+        if aliases and any(
+            str(alias["id"]) == "1" for alias in cast(list, aliases.value)
+        ):
             new_unique_id = f"{entry.unique_id}_1"
             LOGGER.debug(
                 "Migrating entity '%s' unique_id from '%s' to '%s'",
