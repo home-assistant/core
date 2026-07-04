@@ -11,6 +11,7 @@ from uiprotect.data import (
     NVR,
     Camera,
     Fob,
+    FobAwayState,
     Light,
     ModelType,
     ProtectAdoptableDeviceModel,
@@ -585,6 +586,18 @@ def _fob_signal_strength(fob: Fob) -> int | None:
     return None
 
 
+def _fob_status(fob: Fob) -> str | None:
+    """Return the key fob presence state.
+
+    ``FobAwayState`` carries an ``UNKNOWN`` member that the library coerces
+    unrecognized wire values into; map it to ``None`` (unknown state) rather
+    than a value the enum sensor's ``options`` do not list.
+    """
+    if (away_state := fob.away_state) is FobAwayState.UNKNOWN:
+        return None
+    return away_state.value.lower()
+
+
 @dataclass(frozen=True, kw_only=True)
 class ProtectFobSensorEntityDescription(SensorEntityDescription):
     """Describes a UniFi Protect key fob sensor entity."""
@@ -616,7 +629,7 @@ FOB_SENSORS: tuple[ProtectFobSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=["online", "recently_seen", "no_recent_heartbeat", "device_lost"],
-        value_fn=lambda fob: fob.away_state.value.lower(),
+        value_fn=_fob_status,
     ),
 )
 

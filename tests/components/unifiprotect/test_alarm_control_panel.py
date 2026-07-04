@@ -43,6 +43,7 @@ def _make_public_bootstrap(arm_mode: Mock | None) -> Mock:
     pb.arm_profiles = {}
     pb.relays = {}
     pb.sirens = {}
+    pb.fobs = {}
     return pb
 
 

@@ -191,6 +191,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.public_bootstrap.cameras = {}
     client.public_bootstrap.relays = {}
     client.public_bootstrap.sirens = {}
+    client.public_bootstrap.fobs = {}
     client.public_bootstrap.arm_profiles = {}
     client.public_bootstrap.arm_mode = None
     # No paired public device by default; tests opt in via setup_public_* helpers.

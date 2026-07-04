@@ -79,6 +79,7 @@ def _make_public_bootstrap(relay: Mock | None) -> Mock:
     pb.arm_mode = None
     pb.arm_profiles = {}
     pb.sirens = {}
+    pb.fobs = {}
     return pb
 
 

@@ -312,6 +312,7 @@ def setup_public_sensor(ufp: MockUFPFixture) -> None:
     pb.sensors = public_bootstrap.sensors
     pb.relays = {}
     pb.sirens = {}
+    pb.fobs = {}
     pb.arm_mode = None
     pb.arm_profiles = {}
 
@@ -339,6 +340,7 @@ def setup_public_light(ufp: MockUFPFixture) -> None:
     pb.lights = public_bootstrap.lights
     pb.relays = {}
     pb.sirens = {}
+    pb.fobs = {}
     pb.arm_mode = None
     pb.arm_profiles = {}
 

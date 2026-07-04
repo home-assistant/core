@@ -454,6 +454,22 @@ async def test_fob_status_reflects_away_state(
     assert state.state == "device_lost"
 
 
+async def test_fob_unknown_away_state_is_unknown(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+) -> None:
+    """An unrecognized away state maps to an unknown status, not a ValueError."""
+    fob = _make_fob(away_state=FobAwayState.UNKNOWN)
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = _make_public_bootstrap(fob)
+
+    await init_entry(hass, ufp, [])
+
+    state = hass.states.get(STATUS_SENSOR)
+    assert state is not None
+    assert state.state == "unknown"
+
+
 async def test_fob_unavailable_when_removed_from_bootstrap(
     hass: HomeAssistant,
     ufp_with_fob: tuple[MockUFPFixture, Mock],
