@@ -17,6 +17,7 @@ from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components import camera
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
+from homeassistant.components.go2rtc import async_get_rtsp_stream_url
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import (
     Event,
@@ -304,10 +305,19 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
 
     async def _async_get_stream_source(self) -> str | None:
         """Find the camera stream source url."""
+        # A manually configured source always wins so users can keep pointing
+        # HomeKit at a substream or an external restream.
         stream_source: str | None = self.config.get(CONF_STREAM_SOURCE)
         if stream_source:
             return stream_source
         try:
+            # The go2rtc restream multiplexes every consumer onto a single
+            # upstream connection, while the raw source would open one camera
+            # connection per HomeKit session.
+            if stream_source := await async_get_rtsp_stream_url(
+                self.hass, self.entity_id
+            ):
+                return stream_source
             stream_source = await camera.async_get_stream_source(
                 self.hass, self.entity_id
             )
