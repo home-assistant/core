@@ -103,6 +103,7 @@ class StiebelEltron(StiebelEltronEntity, ClimateEntity):
 
     def __init__(self, coordinator: StiebelEltronDataCoordinator) -> None:
         """Initialize the unit."""
+        assert coordinator.config_entry is not None
         super().__init__(
             coordinator, f"{coordinator.config_entry.entry_id}-{CLIMATE_HK_1}"
         )
