@@ -1,11 +1,9 @@
 """Representation of Z-Wave binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import DOOR_STATUS_PROPERTY
@@ -137,7 +135,7 @@ class NewNotificationZWaveJSEntityDescription(BinarySensorEntityDescription):
 
 @dataclass(frozen=True, kw_only=True)
 class OpeningStateZWaveJSEntityDescription(BinarySensorEntityDescription):
-    """Describe an Access Control binary sensor that derives state from Opening state."""
+    """Describe an Access Control binary sensor from Opening state."""
 
     state_key: int
     parse_opening_state: Callable[[OpeningState], bool]
@@ -705,6 +703,7 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
             self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return if the sensor is on or off."""
         if self.info.primary_value.value is None:
@@ -736,6 +735,7 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self._attr_unique_id}.{self.state_key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return if the sensor is on or off."""
         if self.info.primary_value.value is None:
@@ -774,6 +774,7 @@ class ZWaveLegacyDoorStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return if the sensor is on or off."""
         value = self.info.node.values.get(self._opening_state_value_id)
@@ -810,6 +811,7 @@ class ZWaveOpeningStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         )
 
     @callback
+    @override
     def should_rediscover_on_metadata_update(self) -> bool:
         """Check if metadata states require adding the Tilt entity."""
         return (
@@ -823,6 +825,7 @@ class ZWaveOpeningStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
             and self.entity_description.state_key == OpeningState.OPEN
         )
 
+    @override
     async def _async_remove_and_rediscover(self, value: ZwaveValue) -> None:
         """Trigger re-discovery while preserving the main Opening state entity."""
         assert self.device_entry is not None
@@ -842,6 +845,7 @@ class ZWaveOpeningStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         node_events.async_on_value_added(value_updates_disc_info, value)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return if the sensor is on or off."""
         value = self.info.primary_value.value
@@ -871,6 +875,7 @@ class ZWavePropertyBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         self._attr_name = self.generate_name(include_value_name=True)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return if the sensor is on or off."""
         if self.info.primary_value.value is None:
@@ -1309,7 +1314,8 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             entity_category=EntityCategory.DIAGNOSTIC,
             not_states={
                 0,
-                # Lock state values (Lock state schemas consume the value when state 11 is
+                # Lock state values (Lock state schemas
+                # consume the value when state 11 is
                 # available, but may not when state 11 is absent)
                 1,
                 2,
@@ -1328,7 +1334,8 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
     # -------------------------------------------------------------------
     NewZWaveDiscoverySchema(
         # Hoppe eHandle ConnectSense (0x0313:0x0701:0x0002) - window tilt sensor.
-        # The window tilt state is exposed as a binary sensor that is disabled by default
+        # The window tilt state is exposed as a binary
+        # sensor that is disabled by default
         # instead of a notification sensor. We enable that sensor and give it a name
         # that is more consistent with the other window related entities.
         platform=Platform.BINARY_SENSOR,

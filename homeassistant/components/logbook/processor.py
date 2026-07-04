@@ -1,8 +1,6 @@
 """Event parser and human readable log generator."""
 
-from __future__ import annotations
-
-from collections.abc import Callable, Collection, Generator, Sequence
+from collections.abc import Callable, Collection, Generator, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime as dt
 import logging
@@ -18,6 +16,7 @@ from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
     bytes_to_uuid_hex_or_none,
+    decode_attributes_from_source,
     extract_event_type_ids,
     extract_metadata_ids,
     process_timestamp_to_utc_isoformat,
@@ -55,6 +54,8 @@ from .const import (
     CONTEXT_STATE,
     CONTEXT_USER_ID,
     DOMAIN,
+    EXPOSED_STATE_ATTRIBUTES,
+    LOGBOOK_ENTRY_ATTRIBUTES,
     LOGBOOK_ENTRY_DOMAIN,
     LOGBOOK_ENTRY_ENTITY_ID,
     LOGBOOK_ENTRY_ICON,
@@ -66,6 +67,7 @@ from .const import (
 )
 from .helpers import is_sensor_continuous
 from .models import (
+    ATTRIBUTES_POS,
     CONTEXT_ID_BIN_POS,
     CONTEXT_ONLY_POS,
     CONTEXT_PARENT_ID_BIN_POS,
@@ -275,6 +277,24 @@ class EventProcessor:
         )
 
 
+def _exposed_state_attributes(
+    row: Row | EventAsRow, attr_cache: dict[str, dict[str, Any]]
+) -> dict[str, Any]:
+    """Return the allowlisted state attributes for a state change row."""
+    attributes: Mapping[str, Any] | None
+    if type(row) is EventAsRow:
+        attributes = row[ATTRIBUTES_POS]
+    else:
+        attributes = decode_attributes_from_source(row[ATTRIBUTES_POS], attr_cache)
+    if not attributes:
+        return {}
+    return {
+        name: attributes[name]
+        for name in EXPOSED_STATE_ATTRIBUTES
+        if name in attributes
+    }
+
+
 def _humanify(
     hass: HomeAssistant,
     rows: Generator[EventAsRow] | Sequence[Row] | Result,
@@ -296,6 +316,8 @@ def _humanify(
     get_context = context_augmenter.get_context
     context_id_bin: bytes
     data: dict[str, Any]
+    # Decode each shared attribute set only once per run.
+    attr_cache: dict[str, dict[str, Any]] = {}
 
     context_user_ids = logbook_run.context_user_ids
     # Skip the LRU write on one-shot runs — the LogbookRun is discarded.
@@ -339,6 +361,8 @@ def _humanify(
                 data[LOGBOOK_ENTRY_NAME] = entity_name_cache_get(entity_id)
             if icon := row[ICON_POS]:
                 data[LOGBOOK_ENTRY_ICON] = icon
+            if exposed := _exposed_state_attributes(row, attr_cache):
+                data[LOGBOOK_ENTRY_ATTRIBUTES] = exposed
 
         elif event_type in external_events:
             domain, describe_event = external_events[event_type]

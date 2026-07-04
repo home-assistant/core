@@ -1,7 +1,5 @@
 """Diagnostics support for Indevolt integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from indevolt_api import IndevoltBattery, IndevoltSystem
@@ -27,6 +25,15 @@ TO_REDACT = {
 }
 
 
+def _redact_mac(mac_address: str) -> str:
+    """Redact the device-specific part of a MAC address.
+
+    Keeps the OUI, which is used for discovery.
+    """
+    parts = mac_address.split(":")
+    return ":".join([*parts[:3], "XX", "XX", "XX"])
+
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: IndevoltConfigEntry
 ) -> dict[str, Any]:
@@ -38,6 +45,9 @@ async def async_get_config_entry_diagnostics(
         "generation": coordinator.generation,
         "serial_number": coordinator.serial_number,
         "firmware_version": coordinator.firmware_version,
+        "mac_address": _redact_mac(coordinator.mac_address)
+        if coordinator.mac_address
+        else None,
     }
 
     return {

@@ -635,7 +635,7 @@ async def test_filter_invalid_llms(
     mock_init_component,
     mock_config_entry_with_assist_invalid_api: MockConfigEntry,
 ) -> None:
-    """Test reconfiguring subentry when one of the configured LLM APIs has been removed."""
+    """Test reconfiguring subentry when a configured LLM API is removed."""
     subentry = next(iter(mock_config_entry_with_assist_invalid_api.subentries.values()))
 
     assert len(subentry.data.get(CONF_LLM_HASS_API)) == 2

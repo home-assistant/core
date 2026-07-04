@@ -1,10 +1,8 @@
 """Blink Coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from blinkpy.auth import BlinkTwoFARequiredError, UnauthorizedError
@@ -45,6 +43,7 @@ class BlinkUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
 
+    @override
     async def _async_setup(self):
         """Set up the coordinator."""
         try:
@@ -59,6 +58,7 @@ class BlinkUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not self.api.available:
             raise ConfigEntryNotReady
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Async update wrapper."""
         try:

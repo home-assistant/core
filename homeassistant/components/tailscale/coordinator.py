@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for the Tailscale integration."""
 
-from __future__ import annotations
+from typing import override
 
 from tailscale import Device, Tailscale, TailscaleAuthenticationError
 
@@ -40,6 +40,7 @@ class TailscaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch devices from Tailscale and remove stale devices from HA."""
         try:

@@ -1,7 +1,5 @@
 """Helper to deal with YAML + storage."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
@@ -11,7 +9,7 @@ from hashlib import md5
 from itertools import groupby
 import logging
 from operator import attrgetter
-from typing import Any, TypedDict
+from typing import Any, TypedDict, override
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -393,19 +391,23 @@ class StorageCollection[_ItemT, _StoreT: SerializedStorageCollection](
 class DictStorageCollection(StorageCollection[dict, SerializedStorageCollection]):
     """A specialized StorageCollection where the items are untyped dicts."""
 
+    @override
     def _create_item(self, item_id: str, data: dict) -> dict:
         """Create an item from its validated, serialized representation."""
         return {CONF_ID: item_id} | data
 
+    @override
     def _deserialize_item(self, data: dict) -> dict:
         """Create an item from its validated, serialized representation."""
         return data
 
+    @override
     def _serialize_item(self, item_id: str, item: dict) -> dict:
         """Return the serialized representation of an item for storing."""
         return item
 
     @callback
+    @override
     def _data_to_save(self) -> SerializedStorageCollection:
         """Return JSON-compatible date for storing to file."""
         return self._base_data_to_save()
@@ -416,6 +418,7 @@ class IDLessCollection(YamlCollection):
 
     counter = 0
 
+    @override
     async def async_load(self, data: list[dict]) -> None:
         """Load the collection. Overrides existing data."""
         await self.notify_changes(

@@ -1,10 +1,13 @@
 """Tests for Synology DSM USB."""
 
+from datetime import timedelta
 from itertools import chain
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.synology_dsm.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -21,13 +24,14 @@ from .common import (
     mock_dsm_external_usb_devices_usb0,
     mock_dsm_external_usb_devices_usb1,
     mock_dsm_external_usb_devices_usb2,
+    mock_dsm_hardware,
     mock_dsm_information,
     mock_dsm_storage_get_disk,
     mock_dsm_storage_get_volume,
 )
 from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -46,6 +50,7 @@ def mock_dsm_with_usb():
         dsm.network = Mock(
             update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
         )
+        dsm.hardware = mock_dsm_hardware()
         dsm.information = mock_dsm_information()
         dsm.storage = Mock(
             get_disk=mock_dsm_storage_get_disk,
@@ -80,6 +85,7 @@ def mock_dsm_without_usb():
         dsm.network = Mock(
             update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
         )
+        dsm.hardware = mock_dsm_hardware()
         dsm.information = mock_dsm_information()
         dsm.file = Mock(get_shared_folders=AsyncMock(return_value=None))
         dsm.logout = AsyncMock(return_value=True)
@@ -270,7 +276,8 @@ async def test_external_usb_new_device(
     # Mock the get_devices method to simulate a USB disk being added
     setup_dsm_with_usb.external_usb.get_devices = mock_dsm_external_usb_devices_usb2()
     # Coordinator refresh
-    await setup_dsm_with_usb.mock_entry.runtime_data.coordinator_central.async_request_refresh()
+    coordinator = setup_dsm_with_usb.mock_entry.runtime_data.coordinator_central
+    await coordinator.async_request_refresh()
     await hass.async_block_till_done()
 
     for sensor_id, (expected_state, expected_attrs) in chain(
@@ -335,7 +342,8 @@ async def test_external_usb_availability(
     # Mock the get_devices method to simulate no USB devices being connected
     setup_dsm_with_usb.external_usb.get_devices = mock_dsm_external_usb_devices_usb0()
     # Coordinator refresh
-    await setup_dsm_with_usb.mock_entry.runtime_data.coordinator_central.async_request_refresh()
+    coordinator = setup_dsm_with_usb.mock_entry.runtime_data.coordinator_central
+    await coordinator.async_request_refresh()
     await hass.async_block_till_done()
 
     for sensor_id, (
@@ -356,6 +364,34 @@ async def test_no_external_usb(
     """Test Synology DSM without USB."""
     sensor = hass.states.get("sensor.nas_meontheinternet_com_usb_disk_1_device_size")
     assert sensor is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.freeze_time("2024-01-01T12:00:00+00:00")
+async def test_uptime_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    setup_dsm_with_usb: MagicMock,
+) -> None:
+    """Test Synology DSM uptime sensor."""
+    entity_id = "sensor.nas_meontheinternet_com_uptime"
+    uptime = "2023-12-31T01:42:24+00:00"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == uptime
+    assert state.attributes["device_class"] == SensorDeviceClass.UPTIME
+
+    # Simulate uptime increase by 50s
+    base_uptime = setup_dsm_with_usb.information.uptime
+    setup_dsm_with_usb.information.uptime = base_uptime + 50
+
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == uptime
 
 
 async def test_hub_device_info_mac_connections(

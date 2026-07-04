@@ -39,9 +39,9 @@
 # name: test_sensor[sensor.energyzero_today_energy_average_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by EnergyZero',
-      'friendly_name': 'Energy market price Average - today',
-      'unit_of_measurement': '€/kWh',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Average - today',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_energy_average_price',
@@ -58,7 +58,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -93,10 +93,10 @@
 # name: test_sensor[sensor.energyzero_today_energy_current_hour_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by EnergyZero',
-      'friendly_name': 'Energy market price Current hour',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/kWh',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Current hour',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_energy_current_hour_price',
@@ -146,9 +146,9 @@
 # name: test_sensor[sensor.energyzero_today_energy_highest_price_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by EnergyZero',
-      'device_class': 'timestamp',
-      'friendly_name': 'Energy market price Time of highest price - today',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Time of highest price - today',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_energy_highest_price_time',
@@ -198,9 +198,9 @@
 # name: test_sensor[sensor.energyzero_today_energy_hours_priced_equal_or_lower-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by EnergyZero',
-      'friendly_name': 'Energy market price Hours priced equal or lower than current - today',
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Hours priced equal or lower than current - today',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_energy_hours_priced_equal_or_lower',
@@ -250,9 +250,9 @@
 # name: test_sensor[sensor.energyzero_today_energy_lowest_price_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by EnergyZero',
-      'device_class': 'timestamp',
-      'friendly_name': 'Energy market price Time of lowest price - today',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Time of lowest price - today',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_energy_lowest_price_time',
@@ -302,9 +302,9 @@
 # name: test_sensor[sensor.energyzero_today_energy_max_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by EnergyZero',
-      'friendly_name': 'Energy market price Highest price - today',
-      'unit_of_measurement': '€/kWh',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Highest price - today',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_energy_max_price',
@@ -354,9 +354,9 @@
 # name: test_sensor[sensor.energyzero_today_energy_min_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by EnergyZero',
-      'friendly_name': 'Energy market price Lowest price - today',
-      'unit_of_measurement': '€/kWh',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Lowest price - today',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_energy_min_price',
@@ -406,9 +406,9 @@
 # name: test_sensor[sensor.energyzero_today_energy_next_hour_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by EnergyZero',
-      'friendly_name': 'Energy market price Next hour',
-      'unit_of_measurement': '€/kWh',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Next hour',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_energy_next_hour_price',
@@ -458,9 +458,9 @@
 # name: test_sensor[sensor.energyzero_today_energy_percentage_of_max-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by EnergyZero',
-      'friendly_name': 'Energy market price Current percentage of highest price - today',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy market price Current percentage of highest price - today',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_energy_percentage_of_max',
@@ -477,7 +477,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -512,10 +512,10 @@
 # name: test_sensor[sensor.energyzero_today_gas_current_hour_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by EnergyZero',
-      'friendly_name': 'Gas market price Current hour',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/m³',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gas market price Current hour',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_gas_current_hour_price',
@@ -565,9 +565,9 @@
 # name: test_sensor[sensor.energyzero_today_gas_next_hour_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by EnergyZero',
-      'friendly_name': 'Gas market price Next hour',
-      'unit_of_measurement': '€/m³',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by EnergyZero',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gas market price Next hour',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energyzero_today_gas_next_hour_price',

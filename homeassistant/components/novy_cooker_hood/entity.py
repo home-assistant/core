@@ -1,8 +1,7 @@
 """Common entity for the Novy Cooker Hood integration."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE
@@ -33,6 +32,7 @@ class NovyCookerHoodEntity(Entity):
             model="Cooker Hood",
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to transmitter entity state changes."""
         await super().async_added_to_hass()

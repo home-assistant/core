@@ -1,9 +1,7 @@
 """Support for HomematicIP Cloud lights."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from homematicip.base.enums import (
     DeviceType,
@@ -129,14 +127,17 @@ class HomematicipLight(HomematicipGenericEntity, LightEntity):
         super().__init__(hap, device, feature_id="light")
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self._device.on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         await self._device.turn_on_async()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._device.turn_off_async()
@@ -161,6 +162,7 @@ class HomematicipColorLight(HomematicipGenericEntity, LightEntity):
         return channel.hue is not None and channel.saturationLevel is not None
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._supports_color():
@@ -168,6 +170,7 @@ class HomematicipColorLight(HomematicipGenericEntity, LightEntity):
         return ColorMode.BRIGHTNESS
 
     @property
+    @override
     def supported_color_modes(self) -> set[ColorMode]:
         """Return the supported color modes."""
         if self._supports_color():
@@ -175,18 +178,21 @@ class HomematicipColorLight(HomematicipGenericEntity, LightEntity):
         return {ColorMode.BRIGHTNESS}
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         channel = self.get_channel_or_raise()
         return channel.on
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the current brightness."""
         channel = self.get_channel_or_raise()
         return int(channel.dimLevel * 255.0)
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         channel = self.get_channel_or_raise()
@@ -197,6 +203,7 @@ class HomematicipColorLight(HomematicipGenericEntity, LightEntity):
             channel.saturationLevel * 100.0,
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         channel = self.get_channel_or_raise()
@@ -224,6 +231,7 @@ class HomematicipColorLight(HomematicipGenericEntity, LightEntity):
             hue=hue, saturation_level=saturation, dim_level=dim_level
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         channel = self.get_channel_or_raise()
@@ -257,18 +265,21 @@ class HomematicipMultiDimmer(HomematicipGenericEntity, LightEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if dimmer is on."""
         func_channel = self._device.functionalChannels[self._channel]
         return func_channel.dimLevel is not None and func_channel.dimLevel > 0.0
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return int(
             (self._device.functionalChannels[self._channel].dimLevel or 0.0) * 255
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the dimmer on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -278,6 +289,7 @@ class HomematicipMultiDimmer(HomematicipGenericEntity, LightEntity):
         else:
             await self._device.set_dim_level_async(1, self._channel)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the dimmer off."""
         await self._device.set_dim_level_async(0, self._channel)
@@ -324,6 +336,7 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
         return self._device.functionalChannels[self._channel]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return (
@@ -332,17 +345,20 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
         )
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return int((self._func_channel.dimLevel or 0.0) * 255)
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float]:
         """Return the hue and saturation color value [float, float]."""
         simple_rgb_color = self._func_channel.simpleRGBColorState
         return self._color_switcher.get(simple_rgb_color, (0.0, 0.0))
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the notification light sensor."""
         state_attr = super().extra_state_attributes
@@ -352,6 +368,7 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
 
         return state_attr
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         # Use hs_color from kwargs,
@@ -380,6 +397,7 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
             rampTime=transition,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         simple_rgb_color = self._func_channel.simpleRGBColorState
@@ -411,20 +429,24 @@ class HomematicipNotificationLightV2(HomematicipNotificationLight, LightEntity):
         self._attr_supported_features |= LightEntityFeature.EFFECT
 
     @property
+    @override
     def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         return self._effect_list
 
     @property
+    @override
     def effect(self) -> str | None:
         """Return the current effect."""
         return self._func_channel.opticalSignalBehaviour
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self._func_channel.on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         # Use hs_color from kwargs,
@@ -449,6 +471,7 @@ class HomematicipNotificationLightV2(HomematicipNotificationLight, LightEntity):
             opticalSignalBehaviour=effect, rgb=simple_rgb_color, dimLevel=dim_level
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._func_channel.async_turn_off()
@@ -529,18 +552,21 @@ class HomematicipOpticalSignalLight(HomematicipGenericEntity, LightEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         channel = self.get_channel_or_raise()
         return channel.on is True
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         channel = self.get_channel_or_raise()
         return int((channel.dimLevel or 0.0) * 255)
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float]:
         """Return the hue and saturation color value [float, float]."""
         channel = self.get_channel_or_raise()
@@ -548,12 +574,14 @@ class HomematicipOpticalSignalLight(HomematicipGenericEntity, LightEntity):
         return self._color_switcher.get(simple_rgb_color, (0.0, 0.0))
 
     @property
+    @override
     def effect(self) -> str | None:
         """Return the current effect."""
         channel = self.get_channel_or_raise()
         return self._behaviour_to_effect.get(channel.opticalSignalBehaviour)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the optical signal light."""
         state_attr = super().extra_state_attributes
@@ -564,6 +592,7 @@ class HomematicipOpticalSignalLight(HomematicipGenericEntity, LightEntity):
 
         return state_attr
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         # Use hs_color from kwargs, if not applicable use current hs_color.
@@ -594,6 +623,7 @@ class HomematicipOpticalSignalLight(HomematicipGenericEntity, LightEntity):
             dimLevel=dim_level,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         channel = self.get_channel_or_raise()
@@ -608,7 +638,7 @@ class HomematicipOpticalSignalLight(HomematicipGenericEntity, LightEntity):
 
 
 class HomematicipCombinationSignallingLight(HomematicipGenericEntity, LightEntity):
-    """Representation of the HomematicIP combination signalling device light (HmIP-MP3P)."""
+    """Representation of the HomematicIP combination signalling device light."""
 
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
@@ -640,21 +670,25 @@ class HomematicipCombinationSignallingLight(HomematicipGenericEntity, LightEntit
         return self._device.functionalChannels[self._channel]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self._func_channel.on
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return int((self._func_channel.dimLevel or 0.0) * 255)
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float]:
         """Return the hue and saturation color value [float, float]."""
         simple_rgb_color = self._func_channel.simpleRGBColorState
         return self._color_switcher.get(simple_rgb_color, (0.0, 0.0))
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         hs_color = kwargs.get(ATTR_HS_COLOR, self.hs_color)
@@ -675,6 +709,7 @@ class HomematicipCombinationSignallingLight(HomematicipGenericEntity, LightEntit
             dim_level=dim_level,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._func_channel.turn_off_async()

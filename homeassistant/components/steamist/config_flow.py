@@ -1,9 +1,7 @@
 """Config flow for Steamist integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 from aiosteamist import Steamist
 from discovery30303 import Device30303, normalize_mac
@@ -40,6 +38,7 @@ class SteamistConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, Device30303] = {}
         self._discovered_device: Device30303 | None = None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -52,6 +51,7 @@ class SteamistConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await self._async_handle_discovery()
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
@@ -93,6 +93,7 @@ class SteamistConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_steamist_device")
         return await self.async_step_discovery_confirm()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return other_flow.host == self.host
@@ -159,6 +160,7 @@ class SteamistConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

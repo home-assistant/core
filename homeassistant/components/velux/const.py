@@ -2,7 +2,10 @@
 
 from logging import getLogger
 
+from pyvlx import PyVLX
+
 from homeassistant.const import Platform
+from homeassistant.util.hass_dict import HassKey
 
 DOMAIN = "velux"
 PLATFORMS = [
@@ -15,3 +18,7 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 LOGGER = getLogger(__package__)
+
+PYVLX_FROM_CONFIG_FLOW: HassKey[dict[str, PyVLX]] = HassKey(
+    "velux_pyvlx_from_config_flow"
+)

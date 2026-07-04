@@ -1,8 +1,7 @@
 """ESPHome serial proxy URI handler stub for serialx."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
+from typing import override
 
 from serialx import register_uri_handler
 from serialx.platforms.serial_esphome import ESPHomeSerial, ESPHomeSerialTransport
@@ -14,6 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 class HassESPHomeSerialStub(ESPHomeSerial):
     """ESPHomeSerial that throws `ConfigEntryNotReady` until ESPHome itself loads."""
 
+    @override
     async def _async_open(self) -> None:
         """Open a connection."""
         raise ConfigEntryNotReady("ESPHome has not loaded yet")

@@ -1,12 +1,28 @@
 """The Netatmo integration."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
+
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
+import secrets
 
 from aiohttp.web import Request
+import pyatmo
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.components import cloud
+from homeassistant.components.webhook import (
+    async_generate_url as webhook_generate_url,
+    async_register as webhook_register,
+    async_unregister as webhook_unregister,
+)
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_ID,
+    ATTR_NAME,
+    ATTR_PERSONS,
+    CONF_WEBHOOK_ID,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
@@ -14,14 +30,17 @@ from .const import (
     ATTR_FACE_URL,
     ATTR_HOME_ID,
     ATTR_IS_KNOWN,
-    ATTR_PERSONS,
+    CONF_CLOUDHOOK_URL,
     DATA_DEVICE_IDS,
     DATA_PERSONS,
     DEFAULT_PERSON,
     DOMAIN,
     EVENT_ID_MAP,
     NETATMO_EVENT,
+    WEBHOOK_DEACTIVATION,
+    WEBHOOK_PUSH_TYPE,
 )
+from .data_handler import NetatmoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,3 +118,82 @@ def async_send_event(hass: HomeAssistant, event_type: str, data: dict) -> None:
         event_type=NETATMO_EVENT,
         event_data=event_data,
     )
+
+
+async def async_cloudhook_generate_url(
+    hass: HomeAssistant, entry: NetatmoConfigEntry
+) -> str:
+    """Generate the full URL for a webhook_id."""
+    if CONF_CLOUDHOOK_URL not in entry.data:
+        webhook_url = await cloud.async_create_cloudhook(
+            hass, entry.data[CONF_WEBHOOK_ID]
+        )
+        data = {**entry.data, CONF_CLOUDHOOK_URL: webhook_url}
+        hass.config_entries.async_update_entry(entry, data=data)
+        return webhook_url
+    return str(entry.data[CONF_CLOUDHOOK_URL])
+
+
+async def async_unregister_webhook(
+    hass: HomeAssistant, entry: NetatmoConfigEntry
+) -> None:
+    """Unregister the webhook from the Netatmo backend."""
+    if CONF_WEBHOOK_ID not in entry.data:
+        return
+    _LOGGER.debug("Unregister Netatmo webhook (%s)", entry.data[CONF_WEBHOOK_ID])
+    async_dispatcher_send(
+        hass,
+        f"signal-{DOMAIN}-webhook-None",
+        {"type": "None", "data": {WEBHOOK_PUSH_TYPE: WEBHOOK_DEACTIVATION}},
+    )
+    webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+    try:
+        await entry.runtime_data.auth.async_dropwebhook()
+    except pyatmo.ApiError:
+        _LOGGER.debug("No webhook to be dropped for %s", entry.data[CONF_WEBHOOK_ID])
+
+
+async def async_register_webhook(
+    hass: HomeAssistant, entry: NetatmoConfigEntry
+) -> None:
+    """Register the webhook with the Netatmo backend."""
+    if CONF_WEBHOOK_ID not in entry.data:
+        data = {**entry.data, CONF_WEBHOOK_ID: secrets.token_hex()}
+        hass.config_entries.async_update_entry(entry, data=data)
+
+    if cloud.async_active_subscription(hass):
+        webhook_url = await async_cloudhook_generate_url(hass, entry)
+    else:
+        webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
+
+    if entry.data["auth_implementation"] == cloud.DOMAIN and not webhook_url.startswith(
+        "https://"
+    ):
+        _LOGGER.warning(
+            "Webhook not registered - "
+            "https and port 443 is required to register the webhook"
+        )
+        return
+
+    webhook_register(
+        hass,
+        DOMAIN,
+        "Netatmo",
+        entry.data[CONF_WEBHOOK_ID],
+        async_handle_webhook,
+    )
+
+    async def _handle_stop(_: Event) -> None:
+        await async_unregister_webhook(hass, entry)
+
+    try:
+        await entry.runtime_data.auth.async_addwebhook(webhook_url)
+        _LOGGER.debug("Register Netatmo webhook: %s", webhook_url)
+    # pylint: disable-next=home-assistant-action-swallowed-exception
+    except pyatmo.ApiError as err:
+        webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+        _LOGGER.error("Error during webhook registration - %s", err)
+    else:
+        entry.async_on_unload(
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _handle_stop)
+        )

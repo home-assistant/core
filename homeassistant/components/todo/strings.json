@@ -23,6 +23,9 @@
         "behavior": {
           "name": "[%key:component::todo::common::condition_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::todo::common::condition_for_name%]"
+        },
         "threshold": {
           "name": "[%key:component::todo::common::condition_threshold_name%]"
         }
@@ -44,12 +47,6 @@
     }
   },
   "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
     "status": {
       "options": {
         "completed": "Completed",
@@ -128,7 +125,7 @@
           "name": "Rename item"
         },
         "status": {
-          "description": "A status or confirmation of the to-do item.",
+          "description": "A status for the to-do item.",
           "name": "Set status"
         }
       },
@@ -138,15 +135,15 @@
   "title": "To-do list",
   "triggers": {
     "item_added": {
-      "description": "Triggers when a to-do item is added to a list.",
+      "description": "Triggers when one or more to-do items are added to a list.",
       "name": "To-do item added"
     },
     "item_completed": {
-      "description": "Triggers when a to-do item is marked as done.",
+      "description": "Triggers when one or more to-do items are marked as done.",
       "name": "To-do item completed"
     },
     "item_removed": {
-      "description": "Triggers when a to-do item is removed from a list.",
+      "description": "Triggers when one or more to-do items are removed from a list.",
       "name": "To-do item removed"
     }
   }

@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_speed_list': list([
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'normal',
         'maximum',
         'smart',
@@ -46,15 +46,15 @@
 # name: test_all_entities[da_rvc_map_01011][vacuum.robot_vacuum-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'fan_speed': 'maximum',
-      'fan_speed_list': list([
+      <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: 'maximum',
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'normal',
         'maximum',
         'smart',
         'quiet',
       ]),
-      'friendly_name': 'Robot Vacuum',
-      'supported_features': <VacuumEntityFeature: 12340>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robot Vacuum',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <VacuumEntityFeature: 12340>,
     }),
     'context': <ANY>,
     'entity_id': 'vacuum.robot_vacuum',
@@ -64,14 +64,14 @@
     'state': 'docked',
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][vacuum.robot_vacuum_1-entry]
+# name: test_all_entities[da_rvc_normal_000001][vacuum.theater_robot_vacuum_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_speed_list': list([
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'normal',
         'maximum',
         'smart',
@@ -85,7 +85,7 @@
     'disabled_by': None,
     'domain': 'vacuum',
     'entity_category': None,
-    'entity_id': 'vacuum.robot_vacuum_1',
+    'entity_id': 'vacuum.theater_robot_vacuum_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -108,21 +108,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][vacuum.robot_vacuum_1-state]
+# name: test_all_entities[da_rvc_normal_000001][vacuum.theater_robot_vacuum_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'fan_speed': 'smart',
-      'fan_speed_list': list([
+      <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: 'smart',
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'normal',
         'maximum',
         'smart',
         'quiet',
       ]),
-      'friendly_name': 'Robot vacuum 1',
-      'supported_features': <VacuumEntityFeature: 12340>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robot vacuum 1',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <VacuumEntityFeature: 12340>,
     }),
     'context': <ANY>,
-    'entity_id': 'vacuum.robot_vacuum_1',
+    'entity_id': 'vacuum.theater_robot_vacuum_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

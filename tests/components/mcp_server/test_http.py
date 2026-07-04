@@ -19,7 +19,7 @@ import pytest
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.mcp_server.const import STATELESS_LLM_API
+from homeassistant.components.mcp_server.const import DOMAIN, STATELESS_LLM_API
 from homeassistant.components.mcp_server.http import (
     MESSAGES_API,
     SSE_API,
@@ -61,7 +61,7 @@ INITIALIZE_MESSAGE = {
 }
 EVENT_PREFIX = "event: "
 DATA_PREFIX = "data: "
-EXPECTED_PROMPT_SUFFIX = """
+EXPECTED_PROMPT_ENTITY_DEFINITION = """
 - names: Kitchen Light
   domain: light
   areas: Kitchen
@@ -219,7 +219,7 @@ async def test_http_sse_multiple_config_entries(
     """
 
     config_entry = MockConfigEntry(
-        domain="mcp_server", data={CONF_LLM_HASS_API: ["llm-api-id"]}
+        domain=DOMAIN, data={CONF_LLM_HASS_API: ["llm-api-id"]}
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -481,7 +481,7 @@ async def test_prompt_get(
     assert result.messages[0].role == "assistant"
     assert result.messages[0].content.type == "text"
     assert "When controlling Home Assistant" in result.messages[0].content.text
-    assert result.messages[0].content.text.endswith(EXPECTED_PROMPT_SUFFIX)
+    assert EXPECTED_PROMPT_ENTITY_DEFINITION in result.messages[0].content.text
 
 
 async def test_get_unknown_prompt(

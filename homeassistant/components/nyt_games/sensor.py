@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
+from typing import override
 
 from nyt_games import Connections, SpellingBee, Wordle
 
@@ -187,6 +188,7 @@ class NYTGamesWordleSensor(WordleEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data.wordle)
@@ -210,6 +212,7 @@ class NYTGamesSpellingBeeSensor(SpellingBeeEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         assert self.coordinator.data.spelling_bee is not None
@@ -234,6 +237,7 @@ class NYTGamesConnectionsSensor(ConnectionsEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType | date:
         """Return the state of the sensor."""
         assert self.coordinator.data.connections is not None

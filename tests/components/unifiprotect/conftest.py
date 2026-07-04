@@ -1,18 +1,18 @@
 """Fixtures and test data for UniFi Protect methods."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator
 from datetime import datetime, timedelta
 from functools import partial
 from ipaddress import IPv4Address
 from pathlib import Path
 from tempfile import gettempdir
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from uiprotect import ProtectApiClient
+from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
     NVR,
     AiPort,
@@ -20,11 +20,11 @@ from uiprotect.data import (
     Camera,
     Chime,
     CloudAccount,
-    Doorlock,
     Light,
     Liveview,
     Sensor,
     SmartDetectObjectType,
+    StateType,
     VideoMode,
     Viewer,
     WSSubscriptionMessage,
@@ -48,6 +48,22 @@ from . import _patch_discovery
 from .utils import MockUFPFixture
 
 from tests.common import MockConfigEntry, load_json_object_fixture
+
+
+def _public_rtsps_for(camera: Any) -> RTSPSStreams | None:
+    """Build a camera's primed RTSPS streams from its RTSP-enabled channels.
+
+    Mirrors what the library writes onto ``PublicCamera.rtsps_streams`` during
+    ``update_public()`` — only RTSP-enabled channels carry an active URL, and a
+    camera with none is left streamless (``None``).
+    """
+    urls = {
+        channel.rtsps_quality: channel.rtsps_url
+        for channel in camera.channels
+        if channel.is_rtsp_enabled and channel.rtsps_quality is not None
+    }
+    return RTSPSStreams(**urls) if urls else None
+
 
 MAC_ADDR = "aa:bb:cc:dd:ee:ff"
 
@@ -82,8 +98,17 @@ def mock_nvr():
     NVR.model_config["validate_assignment"] = True
 
 
+@pytest.fixture(name="ufp_options")
+def mock_ufp_options(request: pytest.FixtureRequest) -> dict[str, Any]:
+    """Options for the mock config entry (override per-test via indirect param)."""
+    options: dict[str, Any] = {}
+    if hasattr(request, "param"):
+        options.update(request.param)
+    return options
+
+
 @pytest.fixture(name="ufp_config_entry")
-def mock_ufp_config_entry():
+def mock_ufp_config_entry(ufp_options: dict[str, Any]):
     """Mock the unifiprotect config entry."""
 
     return MockConfigEntry(
@@ -97,6 +122,7 @@ def mock_ufp_config_entry():
             CONF_PORT: DEFAULT_PORT,
             CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
         },
+        options=ufp_options,
         version=2,
         unique_id="A1E00C826924",
     )
@@ -122,7 +148,6 @@ def bootstrap_fixture(nvr: NVR):
     data["viewers"] = []
     data["liveviews"] = []
     data["events"] = []
-    data["doorlocks"] = []
     data["chimes"] = []
     data["aiports"] = []
 
@@ -154,8 +179,32 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.get_nvr = get_nvr
     client.get_bootstrap = AsyncMock(return_value=bootstrap)
     client.update = AsyncMock(return_value=bootstrap)
+    client.update_public = AsyncMock()
     client.async_disconnect_ws = AsyncMock()
-    client.has_public_bootstrap = False
+    client.has_public_bootstrap = True
+
+    # The library owns RTSPS streams on ``PublicCamera.rtsps_streams`` and primes
+    # them in ``update_public()``; the integration reads them synchronously. Start
+    # with empty collections; the ``update_public`` side effect (see ``mock_entry``)
+    # primes the cameras from the private bootstrap.
+    client.public_bootstrap = Mock()
+    client.public_bootstrap.cameras = {}
+    client.public_bootstrap.relays = {}
+    client.public_bootstrap.sirens = {}
+    client.public_bootstrap.arm_profiles = {}
+    client.public_bootstrap.arm_mode = None
+    # No paired public device by default; tests opt in via setup_public_* helpers.
+    client.public_bootstrap.get = Mock(return_value=None)
+
+    async def get_camera_rtsps_streams(
+        camera_id: str, *args: Any, **kwargs: Any
+    ) -> RTSPSStreams | None:
+        """Fetch a camera's RTSPS streams (used by the repair flow)."""
+        camera = client.bootstrap.cameras.get(camera_id)
+        return _public_rtsps_for(camera) if camera is not None else None
+
+    client.get_camera_rtsps_streams = AsyncMock(side_effect=get_camera_rtsps_streams)
+    client.create_camera_rtsps_streams = AsyncMock(return_value=None)
     return client
 
 
@@ -192,11 +241,51 @@ def mock_entry(
             ufp.devices_ws_subscription = ws_callback
             return Mock()
 
+        def subscribe_events(events_callback: Callable[..., None]) -> Any:
+            # Mirror uiprotect: subscribe_events() requires update_public() to
+            # have primed the public bootstrap first, otherwise it raises.
+            if not ufp_client.has_public_bootstrap:
+                raise RuntimeError(
+                    "subscribe_events() requires update_public() to have been"
+                    " called at least once"
+                )
+            ufp.events_subscription = events_callback
+            return Mock()
+
+        def subscribe_devices_websocket_state(
+            ws_state_subscription: Callable[[WebsocketState], None],
+        ) -> Any:
+            ufp.devices_ws_state_subscription = ws_state_subscription
+            return Mock()
+
         ufp_client.subscribe_websocket = subscribe
         ufp_client.subscribe_websocket_state = subscribe_websocket_state
         ufp_client.subscribe_devices_websocket = subscribe_devices_websocket
-        ufp_client.update_public = AsyncMock()
-        ufp_client.has_public_bootstrap = False
+        ufp_client.subscribe_events = subscribe_events
+        ufp_client.subscribe_devices_websocket_state = subscribe_devices_websocket_state
+
+        async def update_public() -> Any:
+            # Mirror the library prime: populate PublicCamera.rtsps_streams for
+            # every camera from the private bootstrap (connected cameras only, so
+            # a disconnected camera stays streamless), keyed by id.
+            pb = ufp_client.public_bootstrap
+            pb.cameras = {
+                camera.id: SimpleNamespace(
+                    id=camera.id,
+                    name=camera.display_name,
+                    state=camera.state,
+                    rtsps_streams=(
+                        _public_rtsps_for(camera)
+                        if camera.state is StateType.CONNECTED
+                        else None
+                    ),
+                )
+                for camera in ufp_client.bootstrap.cameras.values()
+            }
+            return pb
+
+        ufp_client.update_public = AsyncMock(side_effect=update_public)
+        ufp_client.has_public_bootstrap = True
         yield ufp
 
 
@@ -397,29 +486,6 @@ def sensor_all_fixture(sensor: Sensor):
     return all_sensor
 
 
-@pytest.fixture(name="doorlock")
-def doorlock_fixture():
-    """Mock UniFi Protect Doorlock device."""
-
-    # disable pydantic validation so mocking can happen
-    Doorlock.model_config["validate_assignment"] = False
-
-    data = load_json_object_fixture("sample_doorlock.json", DOMAIN)
-    yield Doorlock.from_unifi_dict(**data)
-
-    Doorlock.model_config["validate_assignment"] = True
-
-
-@pytest.fixture
-def unadopted_doorlock(doorlock: Doorlock):
-    """Mock UniFi Protect Light device (unadopted)."""
-
-    no_doorlock = doorlock.model_copy()
-    no_doorlock.name = "Unadopted Lock"
-    no_doorlock.is_adopted = False
-    return no_doorlock
-
-
 @pytest.fixture
 def chime():
     """Mock UniFi Protect Chime device."""
@@ -472,7 +538,7 @@ def mock_ufp_reauth_entry():
 
 @pytest.fixture(name="ufp_reauth_entry_alt")
 def mock_ufp_reauth_entry_alt():
-    """Mock the unifiprotect config entry with alternate port/SSL for reauth/reconfigure tests."""
+    """Mock the unifiprotect config entry with alt port/SSL for reauth tests."""
     return MockConfigEntry(
         domain=DOMAIN,
         data={

@@ -1,10 +1,8 @@
 """Adds config flow for AccuWeather."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp import ClientError
@@ -26,6 +24,7 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
     _latitude: float | None = None
     _longitude: float | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

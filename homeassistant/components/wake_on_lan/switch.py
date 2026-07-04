@@ -1,10 +1,8 @@
 """Support for wake on lan."""
 
-from __future__ import annotations
-
 import logging
 import subprocess as sp
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 import wakeonlan
@@ -100,10 +98,12 @@ class WolSwitch(SwitchEntity):
         self._attr_unique_id = dr.format_mac(mac_address)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._state
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         service_kwargs: dict[str, Any] = {}
@@ -125,12 +125,18 @@ class WolSwitch(SwitchEntity):
             self._state = True
             self.schedule_update_ha_state()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up script when removing from Home Assistant."""
-        if self._off_script is not None:
+        if self._off_script is None:
+            return
+        if self.registry_entry and self.registry_entry.entity_id != self.entity_id:
+            # Entity ID change, do not unload the script as it will be reused.
             await self._off_script.async_stop()
-            self._off_script.async_unload()
+            return
+        await self._off_script.async_unload()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off if an off action is present."""
         if self._off_script is not None:
@@ -141,7 +147,7 @@ class WolSwitch(SwitchEntity):
             self.schedule_update_ha_state()
 
     def update(self) -> None:
-        """Check if device is on and update the state. Only called if assumed state is false."""
+        """Check if device is on and update the state."""
         ping_cmd = [
             "ping",
             "-c",

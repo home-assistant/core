@@ -37,10 +37,9 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 3
-  UV_CACHE_VERSION: 1
+  CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2026.5"
+  HA_SHORT_VERSION: "2026.8"
   ADDITIONAL_PYTHON_VERSIONS: "[]"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
@@ -61,9 +60,7 @@ env:
   # - 15.2 is the latest (as of 9 Feb 2023)
   POSTGRESQL_VERSIONS: "['postgres:12.14','postgres:15.2']"
   UV_CACHE_DIR: /tmp/uv-cache
-  APT_CACHE_BASE: /home/runner/work/apt
-  APT_CACHE_DIR: /home/runner/work/apt/cache
-  APT_LIST_CACHE_DIR: /home/runner/work/apt/lists
+  APT_CACHE_VERSION: 1
   SQLALCHEMY_WARN_20: 1
   PYTHONASYNCIODEBUG: 1
   HASS_CI: 1
@@ -87,12 +84,13 @@ jobs:
       core: ${{ steps.core.outputs.changes }}
       integrations_glob: ${{ steps.info.outputs.integrations_glob }}
       integrations: ${{ steps.integrations.outputs.changes }}
-      apt_cache_key: ${{ steps.generate_apt_cache_key.outputs.key }}
       python_cache_key: ${{ steps.generate_python_cache_key.outputs.key }}
       requirements: ${{ steps.core.outputs.requirements }}
       mariadb_groups: ${{ steps.info.outputs.mariadb_groups }}
       postgresql_groups: ${{ steps.info.outputs.postgresql_groups }}
       python_versions: ${{ steps.info.outputs.python_versions }}
+      default_python: ${{ steps.info.outputs.default_python }}
+      uv_version: ${{ steps.info.outputs.uv_version }}
       test_full_suite: ${{ steps.info.outputs.test_full_suite }}
       test_group_count: ${{ steps.info.outputs.test_group_count }}
       test_groups: ${{ steps.info.outputs.test_groups }}
@@ -102,7 +100,7 @@ jobs:
       skip_coverage: ${{ steps.info.outputs.skip_coverage }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Generate partial Python venv restore key
@@ -117,10 +115,6 @@ jobs:
           # Include HA_SHORT_VERSION to force the immediate creation
           # of a new uv cache entry after a version bump.
           echo "key=venv-${CACHE_VERSION}-${HA_SHORT_VERSION}-${HASH_REQUIREMENTS_TEST}-${HASH_REQUIREMENTS}-${HASH_REQUIREMENTS_ALL}-${HASH_PACKAGE_CONSTRAINTS}-${HASH_GEN_REQUIREMENTS}" >> $GITHUB_OUTPUT
-      - name: Generate partial apt restore key
-        id: generate_apt_cache_key
-        run: |
-          echo "key=$(lsb_release -rs)-apt-${CACHE_VERSION}-${HA_SHORT_VERSION}" >> $GITHUB_OUTPUT
       - name: Filter for core changes
         uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
         id: core
@@ -243,6 +237,11 @@ jobs:
           echo "postgresql_groups=${postgresql_groups}" >> $GITHUB_OUTPUT
           echo "python_versions: ${all_python_versions}"
           echo "python_versions=${all_python_versions}" >> $GITHUB_OUTPUT
+          echo "default_python: ${default_python}"
+          echo "default_python=${default_python}" >> $GITHUB_OUTPUT
+          uv_version=$(grep '^uv==' requirements.txt | cut -d'=' -f3)
+          echo "uv_version: ${uv_version}"
+          echo "uv_version=${uv_version}" >> $GITHUB_OUTPUT
           echo "test_full_suite: ${test_full_suite}"
           echo "test_full_suite=${test_full_suite}" >> $GITHUB_OUTPUT
           echo "integrations_glob: ${integrations_glob}"
@@ -272,7 +271,7 @@ jobs:
       && github.event.inputs.audit-licenses-only != 'true'
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Register problem matchers
@@ -282,7 +281,7 @@ jobs:
           echo "::add-matcher::.github/workflows/matchers/check-executables-have-shebangs.json"
           echo "::add-matcher::.github/workflows/matchers/codespell.json"
       - name: Run prek
-        uses: j178/prek-action@cbc2f23eb5539cf20d82d1aabd0d0ecbcc56f4e3 # v2.0.2
+        uses: j178/prek-action@bdca6f102f98e2b4c7029491a53dfd366469e33d # v2.0.4
         env:
           PREK_SKIP: no-commit-to-branch,mypy,pylint,gen_requirements_all,hassfest,hassfest-metadata,hassfest-mypy-config,zizmor
           RUFF_OUTPUT_FORMAT: github
@@ -299,11 +298,11 @@ jobs:
       && github.event.inputs.audit-licenses-only != 'true'
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Run zizmor
-        uses: j178/prek-action@cbc2f23eb5539cf20d82d1aabd0d0ecbcc56f4e3 # v2.0.2
+        uses: j178/prek-action@bdca6f102f98e2b4c7029491a53dfd366469e33d # v2.0.4
         with:
           extra-args: --all-files zizmor
 
@@ -326,7 +325,7 @@ jobs:
           - script/hassfest/docker/Dockerfile
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Register hadolint problem matcher
@@ -349,111 +348,21 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }} and build venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Generate partial uv restore key
-        id: generate-uv-key
-        run: |
-          uv_version=$(cat requirements.txt | grep uv | cut -d '=' -f 3)
-          echo "version=${uv_version}" >> $GITHUB_OUTPUT
-          echo "key=uv-${UV_CACHE_VERSION}-${uv_version}-${HA_SHORT_VERSION}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
-      - name: Restore base Python virtual environment
-        id: cache-venv
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
-      - name: Restore uv wheel cache
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: ${{ env.UV_CACHE_DIR }}
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            steps.generate-uv-key.outputs.key }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-uv-${{
-            env.UV_CACHE_VERSION }}-${{ steps.generate-uv-key.outputs.version }}-${{
-            env.HA_SHORT_VERSION }}-
-      - name: Check if apt cache exists
-        id: cache-apt-check
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          lookup-only: ${{ steps.cache-venv.outputs.cache-hit == 'true' }}
-          path: |
-            ${{ env.APT_CACHE_DIR }}
-            ${{ env.APT_LIST_CACHE_DIR }}
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
-      - name: Install additional OS dependencies
-        if: |
-          steps.cache-venv.outputs.cache-hit != 'true'
-          || steps.cache-apt-check.outputs.cache-hit != 'true'
-        timeout-minutes: 10
-        env:
-          APT_CACHE_HIT: ${{ steps.cache-apt-check.outputs.cache-hit }}
-        run: |
-          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          if [[ "${APT_CACHE_HIT}" != 'true' ]]; then
-            mkdir -p ${APT_CACHE_DIR}
-            mkdir -p ${APT_LIST_CACHE_DIR}
-          fi
-
-          sudo apt-get update \
-            -o Dir::Cache=${APT_CACHE_DIR} \
-            -o Dir::State::Lists=${APT_LIST_CACHE_DIR}
-          sudo apt-get -y install \
-            -o Dir::Cache=${APT_CACHE_DIR} \
-            -o Dir::State::Lists=${APT_LIST_CACHE_DIR} \
-            bluez \
-            ffmpeg \
-            libturbojpeg \
-            libxml2-utils \
-            libavcodec-dev \
-            libavdevice-dev \
-            libavfilter-dev \
-            libavformat-dev \
-            libavutil-dev \
-            libswresample-dev \
-            libswscale-dev \
-            libudev-dev
-
-          if [[ "${APT_CACHE_HIT}" != 'true' ]]; then
-            sudo chmod -R 755 ${APT_CACHE_BASE}
-          fi
-      - name: Save apt cache
-        if: steps.cache-apt-check.outputs.cache-hit != 'true'
-        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: |
-            ${{ env.APT_CACHE_DIR }}
-            ${{ env.APT_LIST_CACHE_DIR }}
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
-      - name: Create Python virtual environment
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: |
-          python -m venv venv
-          . venv/bin/activate
-          python --version
-          pip install "$(grep '^uv' < requirements.txt)"
-          uv pip install -U "pip>=25.2"
-          uv pip install -r requirements.txt
-          python -m script.gen_requirements_all ci
-          uv pip install -r requirements_all_pytest.txt -r requirements_test.txt
-          uv pip install -e . --config-settings editable_mode=compat
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
+          save: "true"
       - name: Dump pip freeze
         run: |
-          python -m venv venv
           . venv/bin/activate
           python --version
           uv pip freeze >> pip_freeze.txt
@@ -465,9 +374,6 @@ jobs:
           overwrite: true
       - name: Remove pip_freeze
         run: rm pip_freeze.txt
-      - name: Remove generated requirements_all
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: rm requirements_all_pytest.txt requirements_all_wheels_*.txt
       - name: Check dirty
         run: |
           ./script/check_dirty
@@ -485,45 +391,25 @@ jobs:
       && github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
     steps:
-      - name: Restore apt cache
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: |
-            ${{ env.APT_CACHE_DIR }}
-            ${{ env.APT_LIST_CACHE_DIR }}
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
-      - name: Install additional OS dependencies
-        timeout-minutes: 10
-        run: |
-          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update \
-            -o Dir::Cache=${APT_CACHE_DIR} \
-            -o Dir::State::Lists=${APT_LIST_CACHE_DIR}
-          sudo apt-get -y install \
-            -o Dir::Cache=${APT_CACHE_DIR} \
-            -o Dir::State::Lists=${APT_LIST_CACHE_DIR} \
-            libturbojpeg
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up Python
+      - name: Install additional OS dependencies
+        timeout-minutes: 10
+        uses: ./.github/actions/cache-apt-packages
+        with:
+          packages: libturbojpeg
+          version: ${{ env.APT_CACHE_VERSION }}
+      - name: Set up Python and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
-          python-version-file: ".python-version"
-          check-latest: true
-      - name: Restore full Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Run hassfest
         run: |
           . venv/bin/activate
@@ -543,24 +429,18 @@ jobs:
       && github.event.inputs.audit-licenses-only != 'true'
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up Python
+      - name: Set up Python and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
-          python-version-file: ".python-version"
-          check-latest: true
-      - name: Restore full Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Run gen_requirements_all.py
         run: |
           . venv/bin/activate
@@ -579,18 +459,18 @@ jobs:
       && github.event.inputs.audit-licenses-only != 'true'
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Set up Python
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/setup-uv-python
         with:
-          python-version-file: ".python-version"
-          check-latest: true
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
       - name: Run gen_copilot_instructions.py
         run: |
-          python -m script.gen_copilot_instructions validate
+          uv run --no-project python -m script.gen_copilot_instructions validate
 
   dependency-review:
     name: Dependency review
@@ -607,11 +487,11 @@ jobs:
       && github.event_name == 'pull_request'
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Dependency review
-        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           license-check: false # We use our own license audit checks
 
@@ -634,24 +514,18 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }} and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Extract license data
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
@@ -685,24 +559,18 @@ jobs:
       || github.event.inputs.pylint-only == 'true'
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up Python
+      - name: Set up Python and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
-          python-version-file: ".python-version"
-          check-latest: true
-      - name: Restore full Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Register pylint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pylint.json"
@@ -738,24 +606,18 @@ jobs:
       && (needs.info.outputs.tests_glob || needs.info.outputs.test_full_suite == 'true')
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up Python
+      - name: Set up Python and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
-          python-version-file: ".python-version"
-          check-latest: true
-      - name: Restore full Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Register pylint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pylint.json"
@@ -789,32 +651,26 @@ jobs:
       || github.event.inputs.mypy-only == 'true'
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up Python
-        id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with:
-          python-version-file: ".python-version"
-          check-latest: true
       - name: Generate partial mypy restore key
         id: generate-mypy-key
         run: |
           mypy_version=$(cat requirements_test.txt | grep 'mypy.*=' | cut -d '=' -f 3)
           echo "version=${mypy_version}" >> $GITHUB_OUTPUT
           echo "key=mypy-${MYPY_CACHE_VERSION}-${mypy_version}-${HA_SHORT_VERSION}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
-      - name: Restore full Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - name: Set up Python and restore venv
+        id: python
+        uses: ./.github/actions/restore-or-build-venv
         with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Restore mypy cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .mypy_cache
           key: >-
@@ -832,7 +688,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          mypy homeassistant pylint
+          mypy --num-workers=4 homeassistant pylint
       - name: Run mypy (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
@@ -841,7 +697,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          mypy $(printf "homeassistant/components/%s " ${INTEGRATIONS_GLOB})
+          mypy --num-workers=4 $(printf "homeassistant/components/%s " ${INTEGRATIONS_GLOB})
 
   prepare-pytest-full:
     name: Split tests for full run
@@ -855,47 +711,29 @@ jobs:
       - info
       - base
     steps:
-      - name: Restore apt cache
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: |
-            ${{ env.APT_CACHE_DIR }}
-            ${{ env.APT_LIST_CACHE_DIR }}
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
-      - name: Install additional OS dependencies
-        timeout-minutes: 10
-        run: |
-          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update \
-            -o Dir::Cache=${APT_CACHE_DIR} \
-            -o Dir::State::Lists=${APT_LIST_CACHE_DIR}
-          sudo apt-get -y install \
-            -o Dir::Cache=${APT_CACHE_DIR} \
-            -o Dir::State::Lists=${APT_LIST_CACHE_DIR} \
-            bluez \
-            ffmpeg \
-            libturbojpeg
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up Python
+      - name: Install additional OS dependencies
+        timeout-minutes: 10
+        uses: ./.github/actions/cache-apt-packages
+        with:
+          packages: >-
+            bluez
+            ffmpeg
+            libturbojpeg
+          version: ${{ env.APT_CACHE_VERSION }}
+          execute_install_scripts: true
+      - name: Set up Python and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
-          python-version-file: ".python-version"
-          check-latest: true
-      - name: Restore full Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Run split_tests.py
         env:
           TEST_GROUP_COUNT: ${{ needs.info.outputs.test_group_count }}
@@ -931,48 +769,30 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
         group: ${{ fromJson(needs.info.outputs.test_groups) }}
     steps:
-      - name: Restore apt cache
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: |
-            ${{ env.APT_CACHE_DIR }}
-            ${{ env.APT_LIST_CACHE_DIR }}
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
-      - name: Install additional OS dependencies
-        timeout-minutes: 10
-        run: |
-          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update \
-            -o Dir::Cache=${APT_CACHE_DIR} \
-            -o Dir::State::Lists=${APT_LIST_CACHE_DIR}
-          sudo apt-get -y install \
-            -o Dir::Cache=${APT_CACHE_DIR} \
-            -o Dir::State::Lists=${APT_LIST_CACHE_DIR} \
-            bluez \
-            ffmpeg \
-            libturbojpeg \
-            libxml2-utils
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Install additional OS dependencies
+        timeout-minutes: 10
+        uses: ./.github/actions/cache-apt-packages
+        with:
+          packages: >-
+            bluez
+            ffmpeg
+            libturbojpeg
+            libxml2-utils
+          version: ${{ env.APT_CACHE_VERSION }}
+          execute_install_scripts: true
+      - name: Set up Python ${{ matrix.python-version }} and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
@@ -1067,6 +887,7 @@ jobs:
         options: >-
           --health-cmd="if command -v mariadb-admin >/dev/null; then mariadb-admin ping -uroot -ppassword; else mysqladmin ping -uroot -ppassword; fi"
           --health-interval=5s --health-timeout=2s --health-retries=3
+          --tmpfs /var/lib/mysql:size=2g,mode=0750
     needs:
       - info
       - base
@@ -1083,49 +904,31 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
         mariadb-group: ${{ fromJson(needs.info.outputs.mariadb_groups) }}
     steps:
-      - name: Restore apt cache
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: |
-            ${{ env.APT_CACHE_DIR }}
-            ${{ env.APT_LIST_CACHE_DIR }}
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
-      - name: Install additional OS dependencies
-        timeout-minutes: 10
-        run: |
-          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update \
-            -o Dir::Cache=${APT_CACHE_DIR} \
-            -o Dir::State::Lists=${APT_LIST_CACHE_DIR}
-          sudo apt-get -y install \
-            -o Dir::Cache=${APT_CACHE_DIR} \
-            -o Dir::State::Lists=${APT_LIST_CACHE_DIR} \
-            bluez \
-            ffmpeg \
-            libturbojpeg \
-            libmariadb-dev-compat \
-            libxml2-utils
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Install additional OS dependencies
+        timeout-minutes: 10
+        uses: ./.github/actions/cache-apt-packages
+        with:
+          packages: >-
+            bluez
+            ffmpeg
+            libturbojpeg
+            libmariadb-dev-compat
+            libxml2-utils
+          version: ${{ env.APT_CACHE_VERSION }}
+          execute_install_scripts: true
+      - name: Set up Python ${{ matrix.python-version }} and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
@@ -1224,7 +1027,10 @@ jobs:
           - 5432:5432
         env:
           POSTGRES_PASSWORD: password
-        options: --health-cmd="pg_isready -hlocalhost -Upostgres" --health-interval=5s --health-timeout=2s --health-retries=3
+        options: >-
+          --health-cmd="pg_isready -hlocalhost -Upostgres"
+          --health-interval=5s --health-timeout=2s --health-retries=3
+          --tmpfs /var/lib/postgresql/data:size=2g,mode=0700
     needs:
       - info
       - base
@@ -1241,51 +1047,38 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
         postgresql-group: ${{ fromJson(needs.info.outputs.postgresql_groups) }}
     steps:
-      - name: Restore apt cache
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: |
-            ${{ env.APT_CACHE_DIR }}
-            ${{ env.APT_LIST_CACHE_DIR }}
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
-      - name: Install additional OS dependencies
-        timeout-minutes: 10
-        run: |
-          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update \
-            -o Dir::Cache=${APT_CACHE_DIR} \
-            -o Dir::State::Lists=${APT_LIST_CACHE_DIR}
-          sudo apt-get -y install \
-            -o Dir::Cache=${APT_CACHE_DIR} \
-            -o Dir::State::Lists=${APT_LIST_CACHE_DIR} \
-            bluez \
-            ffmpeg \
-            libturbojpeg \
-            libxml2-utils
-          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
-          sudo apt-get -y install \
-            postgresql-server-dev-14
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Install additional OS dependencies
+        timeout-minutes: 10
+        uses: ./.github/actions/cache-apt-packages
+        with:
+          packages: >-
+            bluez
+            ffmpeg
+            libturbojpeg
+            libxml2-utils
+          version: ${{ env.APT_CACHE_VERSION }}
+          execute_install_scripts: true
+      - name: Set up PostgreSQL apt repository
+        run: sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+      - name: Cache PostgreSQL development headers
+        timeout-minutes: 10
+        uses: ./.github/actions/cache-apt-packages
+        with:
+          packages: postgresql-server-dev-14
+          version: ${{ env.APT_CACHE_VERSION }}
+      - name: Set up Python ${{ matrix.python-version }} and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
@@ -1387,7 +1180,7 @@ jobs:
     if: needs.info.outputs.skip_coverage != 'true'
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Download all coverage artifacts
@@ -1396,7 +1189,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           fail_ci_if_error: true
           flags: full-suite
@@ -1424,48 +1217,30 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
         group: ${{ fromJson(needs.info.outputs.test_groups) }}
     steps:
-      - name: Restore apt cache
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: |
-            ${{ env.APT_CACHE_DIR }}
-            ${{ env.APT_LIST_CACHE_DIR }}
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
-      - name: Install additional OS dependencies
-        timeout-minutes: 10
-        run: |
-          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update \
-            -o Dir::Cache=${APT_CACHE_DIR} \
-            -o Dir::State::Lists=${APT_LIST_CACHE_DIR}
-          sudo apt-get -y install \
-            -o Dir::Cache=${APT_CACHE_DIR} \
-            -o Dir::State::Lists=${APT_LIST_CACHE_DIR} \
-            bluez \
-            ffmpeg \
-            libturbojpeg \
-            libxml2-utils
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Install additional OS dependencies
+        timeout-minutes: 10
+        uses: ./.github/actions/cache-apt-packages
+        with:
+          packages: >-
+            bluez
+            ffmpeg
+            libturbojpeg
+            libxml2-utils
+          version: ${{ env.APT_CACHE_VERSION }}
+          execute_install_scripts: true
+      - name: Set up Python ${{ matrix.python-version }} and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
@@ -1558,7 +1333,7 @@ jobs:
       - pytest-partial
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Download all coverage artifacts
@@ -1567,7 +1342,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }} # zizmor: ignore[secrets-outside-env]
@@ -1595,7 +1370,7 @@ jobs:
         with:
           pattern: test-results-*
       - name: Upload test results to Codecov
-        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           report_type: test_results
           fail_ci_if_error: true
