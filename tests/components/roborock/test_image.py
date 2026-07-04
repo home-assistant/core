@@ -1,9 +1,11 @@
 """Test Roborock Image platform."""
 
+import asyncio
 import copy
 from datetime import timedelta
 from http import HTTPStatus
 import logging
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -12,7 +14,7 @@ from roborock.data import RoborockStateCode
 from roborock.devices.traits.v1.map_content import MapContent
 
 from homeassistant.components.roborock.const import V1_LOCAL_NOT_CLEANING_INTERVAL
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -222,3 +224,44 @@ async def test_image_entity_naming(
     assert {
         state.entity_id for state in hass.states.async_all("image")
     } == expected_entity_ids
+
+
+async def mock_delay(*args: Any, **kwargs: Any) -> None:
+    """Delay the update to simulate before first update completes."""
+    await asyncio.sleep(15)
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        (RoborockException("Simulated failure"), STATE_UNAVAILABLE),
+        (mock_delay, STATE_UNKNOWN),
+    ],
+)
+async def test_images_coordinator_state(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+    side_effect: Any,
+    expected_state: str,
+) -> None:
+    """Test image state based on coordinator update success or delay."""
+    for device in fake_devices:
+        if device.v1_properties is not None:
+            device.v1_properties.status.refresh.side_effect = side_effect
+        if device.dyad is not None:
+            device.dyad.query_values.side_effect = side_effect
+        if device.zeo is not None:
+            device.zeo.query_values.side_effect = side_effect
+        if device.b01_q10_properties is not None:
+            device.b01_q10_properties.refresh.side_effect = side_effect
+        if device.b01_q7_properties is not None:
+            device.b01_q7_properties.query_values.side_effect = side_effect
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # V1 image (coordinated)
+    state = hass.states.get("image.roborock_s7_maxv_upstairs")
+    assert state is not None
+    assert state.state == expected_state

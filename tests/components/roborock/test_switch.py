@@ -1,16 +1,18 @@
 """Test Roborock Switch platform."""
 
+import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 from typing import Any
 
 import pytest
 import roborock
+from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockZeoProtocol
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -316,3 +318,50 @@ async def test_q10_do_not_disturb_switch_failure(
             blocking=True,
             target={"entity_id": entity_id},
         )
+
+
+async def mock_delay(*args: Any, **kwargs: Any) -> None:
+    """Delay the update to simulate before first update completes."""
+    await asyncio.sleep(15)
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state", "expected_v1_state"),
+    [
+        (RoborockException("Simulated failure"), STATE_UNAVAILABLE, STATE_UNAVAILABLE),
+        (mock_delay, STATE_UNKNOWN, "on"),
+    ],
+)
+async def test_switches_coordinator_state(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+    side_effect: Any,
+    expected_state: str,
+    expected_v1_state: str,
+) -> None:
+    """Test switches state based on coordinator update success or delay."""
+    for device in fake_devices:
+        if device.v1_properties is not None:
+            device.v1_properties.status.refresh.side_effect = side_effect
+        if device.dyad is not None:
+            device.dyad.query_values.side_effect = side_effect
+        if device.zeo is not None:
+            device.zeo.query_values.side_effect = side_effect
+        if device.b01_q10_properties is not None:
+            device.b01_q10_properties.refresh.side_effect = side_effect
+        if device.b01_q7_properties is not None:
+            device.b01_q7_properties.query_values.side_effect = side_effect
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # V1 switches (uncoordinated, so they remain available / 'on')
+    state = hass.states.get("switch.roborock_s7_maxv_dock_child_lock")
+    assert state is not None
+    assert state.state == "on"
+
+    # A01 (Dyad/Zeo) switches (coordinated)
+    state = hass.states.get("switch.zeo_one_sound_setting")
+    assert state is not None
+    assert state.state == expected_state

@@ -273,6 +273,8 @@ class RoborockSwitchA01(RoborockCoordinatedEntityA01, SwitchEntity):
     @override
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
+        if self.coordinator.data is None:
+            return None
         status = self.coordinator.data.get(self.entity_description.data_protocol)
         if status is None:
             return None
