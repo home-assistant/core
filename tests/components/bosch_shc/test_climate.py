@@ -1,5 +1,6 @@
 """Tests for the Bosch SHC climate platform."""
 
+from typing import Any
 from unittest.mock import MagicMock, create_autospec, patch
 
 from boschshcpy import SHCClimateControl, SHCHeatingCircuit
@@ -7,14 +8,14 @@ from boschshcpy.services_impl import RoomClimateControlService
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bosch_shc.climate import (
-    PRESET_AUTO,
-    PRESET_MANUAL,
-    SHCClimateControlEntity,
-    SHCHeatingCircuitEntity,
-)
+from homeassistant.components.bosch_shc.climate import PRESET_AUTO, PRESET_MANUAL
 from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
+    ATTR_HVAC_MODES,
+    ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_BOOST,
     PRESET_ECO,
@@ -27,8 +28,13 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -120,16 +126,51 @@ async def _setup_climate_platform(
         await hass.async_block_till_done()
 
 
-# The computed-property tests below construct the entity directly (no hass
-# setup) since they only exercise pure property logic with no I/O.
-def test_climate_current_and_target_temperature() -> None:
+async def _setup_single_climate_control(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    **device_kwargs: Any,
+) -> State:
+    """Set up a single climate-control device and return its state."""
+    mock_session.device_helper.climate_controls = [
+        _make_climate_device(**device_kwargs)
+    ]
+    await _setup_climate_platform(hass, mock_config_entry, mock_session)
+    state = hass.states.get("climate.test_room")
+    assert state is not None
+    return state
+
+
+async def _setup_single_heating_circuit(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    **device_kwargs: Any,
+) -> State:
+    """Set up a single heating-circuit device and return its state."""
+    mock_session.device_helper.heating_circuits = [
+        _make_heating_circuit_device(**device_kwargs)
+    ]
+    await _setup_climate_platform(hass, mock_config_entry, mock_session)
+    state = hass.states.get("climate.heating_circuit")
+    assert state is not None
+    return state
+
+
+async def test_climate_current_and_target_temperature(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+) -> None:
     """Temperatures are read straight from the device."""
-    device = _make_climate_device(temperature=21.0, setpoint_temperature=22.0)
-    entity = SHCClimateControlEntity(
-        device=device, parent_id="shc-test-uid", entry_id="e"
+    state = await _setup_single_climate_control(
+        hass,
+        mock_config_entry,
+        mock_session,
+        temperature=21.0,
+        setpoint_temperature=22.0,
     )
-    assert entity.current_temperature == 21.0
-    assert entity.target_temperature == 22.0
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.0
+    assert state.attributes[ATTR_TEMPERATURE] == 22.0
 
 
 @pytest.mark.parametrize(
@@ -143,22 +184,25 @@ def test_climate_current_and_target_temperature() -> None:
         ),
     ],
 )
-def test_climate_hvac_mode(
+async def test_climate_hvac_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
     supports_cooling: bool,
     summer_mode: bool,
     cooling_mode: bool,
     expected: HVACMode,
 ) -> None:
     """hvac_mode reflects the direction axis (summer_mode, then cooling_mode)."""
-    device = _make_climate_device(
+    state = await _setup_single_climate_control(
+        hass,
+        mock_config_entry,
+        mock_session,
         supports_cooling=supports_cooling,
         summer_mode=summer_mode,
         cooling_mode=cooling_mode,
     )
-    entity = SHCClimateControlEntity(
-        device=device, parent_id="shc-test-uid", entry_id="e"
-    )
-    assert entity.hvac_mode == expected
+    assert state.state == expected
 
 
 @pytest.mark.parametrize(
@@ -170,15 +214,18 @@ def test_climate_hvac_mode(
         ),
     ],
 )
-def test_climate_hvac_modes(
-    supports_cooling: bool, expected_modes: set[HVACMode]
+async def test_climate_hvac_modes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    supports_cooling: bool,
+    expected_modes: set[HVACMode],
 ) -> None:
     """COOL only appears in hvac_modes when the device supports it."""
-    device = _make_climate_device(supports_cooling=supports_cooling)
-    entity = SHCClimateControlEntity(
-        device=device, parent_id="shc-test-uid", entry_id="e"
+    state = await _setup_single_climate_control(
+        hass, mock_config_entry, mock_session, supports_cooling=supports_cooling
     )
-    assert set(entity.hvac_modes) == expected_modes
+    assert set(state.attributes[ATTR_HVAC_MODES]) == expected_modes
 
 
 @pytest.mark.parametrize(
@@ -190,7 +237,10 @@ def test_climate_hvac_modes(
         pytest.param(False, False, False, False, HVACAction.IDLE, id="idle"),
     ],
 )
-def test_climate_hvac_action(
+async def test_climate_hvac_action(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
     summer_mode: bool,
     cooling_mode: bool,
     supports_cooling: bool,
@@ -198,16 +248,16 @@ def test_climate_hvac_action(
     expected: HVACAction,
 ) -> None:
     """hvac_action follows OFF > COOLING > HEATING/IDLE precedence."""
-    device = _make_climate_device(
+    state = await _setup_single_climate_control(
+        hass,
+        mock_config_entry,
+        mock_session,
         summer_mode=summer_mode,
         cooling_mode=cooling_mode,
         supports_cooling=supports_cooling,
         has_demand=has_demand,
     )
-    entity = SHCClimateControlEntity(
-        device=device, parent_id="shc-test-uid", entry_id="e"
-    )
-    assert entity.hvac_action == expected
+    assert state.attributes[ATTR_HVAC_ACTION] == expected
 
 
 @pytest.mark.parametrize(
@@ -219,20 +269,25 @@ def test_climate_hvac_action(
         pytest.param(False, False, OM_CC.MANUAL, PRESET_MANUAL, id="manual"),
     ],
 )
-def test_climate_preset_mode(
+async def test_climate_preset_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
     boost_mode: bool,
     low: bool,
     operation_mode: RoomClimateControlService.OperationMode,
     expected: str,
 ) -> None:
     """preset_mode follows boost > eco > auto/manual precedence."""
-    device = _make_climate_device(
-        boost_mode=boost_mode, low=low, operation_mode=operation_mode
+    state = await _setup_single_climate_control(
+        hass,
+        mock_config_entry,
+        mock_session,
+        boost_mode=boost_mode,
+        low=low,
+        operation_mode=operation_mode,
     )
-    entity = SHCClimateControlEntity(
-        device=device, parent_id="shc-test-uid", entry_id="e"
-    )
-    assert entity.preset_mode == expected
+    assert state.attributes[ATTR_PRESET_MODE] == expected
 
 
 @pytest.mark.parametrize(
@@ -247,48 +302,55 @@ def test_climate_preset_mode(
         pytest.param(False, False, {PRESET_AUTO, PRESET_MANUAL}, id="none_supported"),
     ],
 )
-def test_climate_preset_modes(
-    supports_boost_mode: bool, supports_low: bool, expected: set[str]
+async def test_climate_preset_modes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    supports_boost_mode: bool,
+    supports_low: bool,
+    expected: set[str],
 ) -> None:
     """preset_modes only lists boost/eco when the device supports them."""
-    device = _make_climate_device(
-        supports_boost_mode=supports_boost_mode, supports_low=supports_low
+    state = await _setup_single_climate_control(
+        hass,
+        mock_config_entry,
+        mock_session,
+        supports_boost_mode=supports_boost_mode,
+        supports_low=supports_low,
     )
-    entity = SHCClimateControlEntity(
-        device=device, parent_id="shc-test-uid", entry_id="e"
-    )
-    assert set(entity.preset_modes) == expected
+    assert set(state.attributes[ATTR_PRESET_MODES]) == expected
 
 
-def test_climate_supported_features() -> None:
+async def test_climate_supported_features(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+) -> None:
     """Supported features include temperature, preset, turn on/off."""
-    device = _make_climate_device()
-    entity = SHCClimateControlEntity(
-        device=device, parent_id="shc-test-uid", entry_id="e"
-    )
-    features = entity.supported_features
+    state = await _setup_single_climate_control(hass, mock_config_entry, mock_session)
+    features = state.attributes[ATTR_SUPPORTED_FEATURES]
     assert features & ClimateEntityFeature.TARGET_TEMPERATURE
     assert features & ClimateEntityFeature.PRESET_MODE
     assert features & ClimateEntityFeature.TURN_OFF
     assert features & ClimateEntityFeature.TURN_ON
 
 
-def test_heating_circuit_current_temperature_is_none() -> None:
+async def test_heating_circuit_current_temperature_is_none(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+) -> None:
     """Heating circuits have no measured temperature."""
-    device = _make_heating_circuit_device()
-    entity = SHCHeatingCircuitEntity(
-        device=device, parent_id="shc-test-uid", entry_id="e"
+    state = await _setup_single_heating_circuit(hass, mock_config_entry, mock_session)
+    assert ATTR_CURRENT_TEMPERATURE not in state.attributes or (
+        state.attributes[ATTR_CURRENT_TEMPERATURE] is None
     )
-    assert entity.current_temperature is None
 
 
-def test_heating_circuit_target_temperature() -> None:
+async def test_heating_circuit_target_temperature(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+) -> None:
     """Target temperature is read from the device."""
-    device = _make_heating_circuit_device(setpoint_temperature=20.0)
-    entity = SHCHeatingCircuitEntity(
-        device=device, parent_id="shc-test-uid", entry_id="e"
+    state = await _setup_single_heating_circuit(
+        hass, mock_config_entry, mock_session, setpoint_temperature=20.0
     )
-    assert entity.target_temperature == 20.0
+    assert state.attributes[ATTR_TEMPERATURE] == 20.0
 
 
 @pytest.mark.parametrize(
@@ -298,16 +360,18 @@ def test_heating_circuit_target_temperature() -> None:
         pytest.param(OM_HC.AUTOMATIC, HVACMode.AUTO, id="automatic_is_auto"),
     ],
 )
-def test_heating_circuit_hvac_mode(
+async def test_heating_circuit_hvac_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
     operation_mode: SHCHeatingCircuit.HeatingCircuitService.OperationMode,
     expected: HVACMode,
 ) -> None:
     """hvac_mode is derived from the operation mode."""
-    device = _make_heating_circuit_device(operation_mode=operation_mode)
-    entity = SHCHeatingCircuitEntity(
-        device=device, parent_id="shc-test-uid", entry_id="e"
+    state = await _setup_single_heating_circuit(
+        hass, mock_config_entry, mock_session, operation_mode=operation_mode
     )
-    assert entity.hvac_mode == expected
+    assert state.state == expected
 
 
 @pytest.mark.parametrize(
@@ -317,23 +381,29 @@ def test_heating_circuit_hvac_mode(
         pytest.param(False, HVACAction.IDLE, id="off_is_idle"),
     ],
 )
-def test_heating_circuit_hvac_action(on: bool, expected: HVACAction) -> None:
+async def test_heating_circuit_hvac_action(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    on: bool,
+    expected: HVACAction,
+) -> None:
     """hvac_action reflects whether the circuit currently has demand."""
-    device = _make_heating_circuit_device(on=on)
-    entity = SHCHeatingCircuitEntity(
-        device=device, parent_id="shc-test-uid", entry_id="e"
+    state = await _setup_single_heating_circuit(
+        hass, mock_config_entry, mock_session, on=on
     )
-    assert entity.hvac_action == expected
+    assert state.attributes[ATTR_HVAC_ACTION] == expected
 
 
-def test_heating_circuit_hvac_modes_and_features() -> None:
+async def test_heating_circuit_hvac_modes_and_features(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+) -> None:
     """Only AUTO/HEAT and TARGET_TEMPERATURE (no presets) are exposed."""
-    device = _make_heating_circuit_device()
-    entity = SHCHeatingCircuitEntity(
-        device=device, parent_id="shc-test-uid", entry_id="e"
+    state = await _setup_single_heating_circuit(hass, mock_config_entry, mock_session)
+    assert set(state.attributes[ATTR_HVAC_MODES]) == {HVACMode.AUTO, HVACMode.HEAT}
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
+        ClimateEntityFeature.TARGET_TEMPERATURE
     )
-    assert entity.hvac_modes == [HVACMode.AUTO, HVACMode.HEAT]
-    assert entity.supported_features == ClimateEntityFeature.TARGET_TEMPERATURE
 
 
 async def test_climate_entities(

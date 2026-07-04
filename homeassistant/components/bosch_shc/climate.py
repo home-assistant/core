@@ -80,7 +80,6 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_max_temp = 30.0
     _attr_min_temp = 5.0
-    _enable_turn_on_off_backwards_compatibility = False
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.PRESET_MODE
