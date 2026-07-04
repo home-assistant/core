@@ -391,7 +391,7 @@ class UnifiOptionsFlowHandler(OptionsFlow):
         """Manage the statistics sensors options."""
         if user_input is not None:
             self.options.update(user_input)
-            return await self._update_options()
+            return self.async_create_entry(title="", data=self.options)
 
         return self.async_show_form(
             step_id="statistics_sensors",
