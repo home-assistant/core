@@ -63,10 +63,10 @@
       "step": {
         "user": {
           "data": {
-            "profile_name": "[%key:component::nextdns::config::step::profiles::data::profile_name%]"
+            "profile_id": "[%key:component::nextdns::config::step::profiles::data::profile_name%]"
           },
           "data_description": {
-            "profile_name": "[%key:component::nextdns::config::step::profiles::data_description::profile_name%]"
+            "profile_id": "[%key:component::nextdns::config::step::profiles::data_description::profile_name%]"
           },
           "description": "Select the NextDNS profile you want to add.",
           "title": "Add NextDNS profile"

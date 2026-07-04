@@ -20,6 +20,12 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_KEY, CONF_PROFILE_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import CONF_PROFILE_ID, DOMAIN, SUBENTRY_TYPE_PROFILE
 
@@ -229,8 +235,12 @@ class ProfileSubentryFlowHandler(ConfigSubentryFlow):
         self.nextdns = entry.runtime_data.client
 
         if user_input is not None:
-            profile_name = user_input[CONF_PROFILE_NAME]
-            profile_id = self.nextdns.get_profile_id(profile_name)
+            profile_id = user_input[CONF_PROFILE_ID]
+            profile_name = next(
+                profile.name
+                for profile in self.nextdns.profiles
+                if profile.id == profile_id
+            )
 
             if any(
                 subentry.unique_id == profile_id
@@ -249,7 +259,7 @@ class ProfileSubentryFlowHandler(ConfigSubentryFlow):
             subentry.data[CONF_PROFILE_ID] for subentry in entry.subentries.values()
         }
         available_profiles = [
-            profile.name
+            profile
             for profile in self.nextdns.profiles
             if profile.id not in configured_profiles
         ]
@@ -260,7 +270,20 @@ class ProfileSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {vol.Required(CONF_PROFILE_NAME): vol.In(available_profiles)}
+                {
+                    vol.Required(CONF_PROFILE_ID): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(
+                                    value=profile.id,
+                                    label=profile.name,
+                                )
+                                for profile in available_profiles
+                            ],
+                            mode=SelectSelectorMode.LIST,
+                        )
+                    )
+                }
             ),
             errors=errors,
         )

@@ -342,9 +342,6 @@ async def test_subentry_flow(
         ProfileInfo(id="xyz12", fingerprint="xyz12", name="Fake Profile"),
         ProfileInfo(id="abc34", fingerprint="abc34", name="Second Profile"),
     ]
-    mock_nextdns_client.get_profile_id = lambda name: (
-        "abc34" if name == "Second Profile" else "xyz12"
-    )
 
     await init_integration(hass, mock_config_entry)
 
@@ -358,7 +355,7 @@ async def test_subentry_flow(
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_PROFILE_NAME: "Second Profile"},
+        {CONF_PROFILE_ID: "abc34"},
     )
     await hass.async_block_till_done()
 
@@ -386,9 +383,6 @@ async def test_subentry_flow_already_configured(
         second_profile,
         third_profile,
     ]
-    mock_nextdns_client.get_profile_id = lambda name: (
-        "abc34" if name == "Second Profile" else "xyz12"
-    )
 
     await init_integration(hass, mock_config_entry)
 
@@ -415,7 +409,7 @@ async def test_subentry_flow_already_configured(
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_PROFILE_NAME: "Second Profile"},
+        {CONF_PROFILE_ID: "abc34"},
     )
 
     # The form should be shown again with an error, and only "Third Profile" available
