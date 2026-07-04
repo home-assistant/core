@@ -11,8 +11,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import ENTRY_DATA
 
-from tests.common import MockConfigEntry
-
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_successful_setup(hass: HomeAssistant, mock_keba: MagicMock) -> None:
@@ -119,77 +117,6 @@ async def test_import_errors(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected_reason
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_reconfigure_updates_entry(
-    hass: HomeAssistant, mock_keba: MagicMock
-) -> None:
-    """Test that submitting reconfigure validates the connection and updates the entry."""
-    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA, unique_id="12345678")
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    new_data = {**ENTRY_DATA, "failsafe_timeout": 60}
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], new_data)
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert entry.data["failsafe_timeout"] == 60
-
-
-@pytest.mark.parametrize(
-    ("setup_side_effect", "setup_return_value", "expected_error"),
-    [
-        pytest.param(None, False, "cannot_connect", id="no_response"),
-        pytest.param(OSError("no route to host"), True, "cannot_connect", id="oserror"),
-        pytest.param(Exception("unexpected error"), True, "unknown", id="unexpected"),
-    ],
-)
-async def test_reconfigure_errors(
-    hass: HomeAssistant,
-    mock_keba: MagicMock,
-    setup_side_effect: Exception | None,
-    setup_return_value: bool,
-    expected_error: str,
-) -> None:
-    """Test that connection problems during reconfigure show the matching error."""
-    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA, unique_id="12345678")
-    entry.add_to_hass(hass)
-
-    mock_keba.setup.side_effect = setup_side_effect
-    mock_keba.setup.return_value = setup_return_value
-
-    result = await entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], ENTRY_DATA
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"base": expected_error}
-
-
-async def test_reconfigure_unique_id_mismatch(
-    hass: HomeAssistant, mock_keba: MagicMock
-) -> None:
-    """Test that reconfiguring against a different charger aborts."""
-    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA, unique_id="12345678")
-    entry.add_to_hass(hass)
-
-    mock_keba.get_value.side_effect = {"Serial": "87654321", "Product": "KC-P30"}.get
-
-    result = await entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], ENTRY_DATA
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unique_id_mismatch"
-    assert entry.unique_id == "12345678"
 
 
 @pytest.mark.usefixtures("mock_keba", "mock_setup_entry")

@@ -42,7 +42,6 @@ PLATFORMS = (
     Platform.LOCK,
     Platform.NOTIFY,
     Platform.SENSOR,
-    Platform.SWITCH,
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -81,8 +80,6 @@ _SERVICE_MAP = {
     "set_failsafe": "async_set_failsafe",
 }
 
-_DEPRECATED_SERVICES = {"enable", "disable"}
-
 type KebaConfigEntry = ConfigEntry[KebaHandler]
 
 
@@ -98,16 +95,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if not entries:
             return
         keba: KebaHandler = entries[0].runtime_data
-        if call.service in _DEPRECATED_SERVICES:
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                f"deprecated_service_{call.service}",
-                breaks_in_ha_version=None,
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key=f"deprecated_service_{call.service}",
-            )
         function_name = _SERVICE_MAP[call.service]
         await getattr(keba, function_name)(call.data)
 
@@ -134,7 +121,7 @@ async def _async_import_yaml(hass: HomeAssistant, config: ConfigType) -> None:
             hass,
             DOMAIN,
             f"deprecated_yaml_import_issue_{result['reason']}",
-            breaks_in_ha_version=None,
+            breaks_in_ha_version="2027.1.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
@@ -150,7 +137,7 @@ async def _async_import_yaml(hass: HomeAssistant, config: ConfigType) -> None:
         hass,
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version=None,
+        breaks_in_ha_version="2027.1.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,

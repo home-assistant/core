@@ -281,34 +281,6 @@ async def test_service_deauthorize(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_service_enable_deprecated(
-    hass: HomeAssistant,
-    mock_keba: MagicMock,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test the deprecated enable service creates an issue."""
-    await hass.services.async_call(DOMAIN, "enable", {}, blocking=True)
-    mock_keba.async_enable_ev.assert_called_once()
-    assert (
-        issue_registry.async_get_issue(DOMAIN, "deprecated_service_enable") is not None
-    )
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_service_disable_deprecated(
-    hass: HomeAssistant,
-    mock_keba: MagicMock,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test the deprecated disable service creates an issue."""
-    await hass.services.async_call(DOMAIN, "disable", {}, blocking=True)
-    mock_keba.async_disable_ev.assert_called_once()
-    assert (
-        issue_registry.async_get_issue(DOMAIN, "deprecated_service_disable") is not None
-    )
-
-
-@pytest.mark.usefixtures("init_integration")
 async def test_service_set_failsafe(
     hass: HomeAssistant,
     mock_keba: MagicMock,
