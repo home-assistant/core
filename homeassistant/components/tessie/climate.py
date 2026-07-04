@@ -199,6 +199,7 @@ class TessieCabinOverheatProtectionClimateEntity(TessieEntity, ClimateEntity):
         super().__init__(vehicle, "climate_state_cabin_overheat_protection")
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return current cabin overheat protection mode."""
         if (state := self._value) is None:
@@ -206,25 +207,30 @@ class TessieCabinOverheatProtectionClimateEntity(TessieEntity, ClimateEntity):
         return COP_MODES.get(state)
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the inside temperature."""
         return self.get("climate_state_inside_temp")
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the activation temperature."""
         if (level := self.get("climate_state_cop_activation_temperature")) is None:
             return None
         return COP_LEVELS.get(level)
 
+    @override
     async def async_turn_on(self) -> None:
         """Set the cabin overheat protection state to on."""
         await self.async_set_hvac_mode(HVACMode.COOL)
 
+    @override
     async def async_turn_off(self) -> None:
         """Set the cabin overheat protection state to off."""
         await self.async_set_hvac_mode(HVACMode.OFF)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the cabin overheat protection mode."""
         if hvac_mode == HVACMode.OFF:

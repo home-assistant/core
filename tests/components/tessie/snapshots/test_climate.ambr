@@ -6,13 +6,13 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
       ]),
-      'max_temp': 40,
-      'min_temp': 30,
-      'target_temp_step': 5,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 40,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 30,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -47,16 +47,16 @@
 # name: test_climate[climate.test_cabin_overheat_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 30,
-      'friendly_name': 'Test Cabin overheat protection',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 30,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Cabin overheat protection',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
       ]),
-      'max_temp': 40,
-      'min_temp': 30,
-      'supported_features': <ClimateEntityFeature: 384>,
-      'target_temp_step': 5,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 40,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 30,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 384>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 5,
     }),
     'context': <ANY>,
     'entity_id': 'climate.test_cabin_overheat_protection',
