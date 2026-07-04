@@ -258,6 +258,23 @@ class FakeDevice(RoborockDevice):
         """Close the device."""
 
 
+def setup_coordinator_side_effect(
+    fake_devices: list[FakeDevice], side_effect: Any
+) -> None:
+    """Set the query/refresh side effect on all fake devices to simulate failure or delay."""
+    for device in fake_devices:
+        if device.v1_properties is not None:
+            device.v1_properties.status.refresh.side_effect = side_effect
+        if device.dyad is not None:
+            device.dyad.query_values.side_effect = side_effect
+        if device.zeo is not None:
+            device.zeo.query_values.side_effect = side_effect
+        if device.b01_q10_properties is not None:
+            device.b01_q10_properties.refresh.side_effect = side_effect
+        if device.b01_q7_properties is not None:
+            device.b01_q7_properties.query_values.side_effect = side_effect
+
+
 def set_trait_attributes(
     trait: AsyncMock,
     dataclass_template: RoborockBase,

@@ -18,7 +18,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .conftest import FakeDevice
+from .conftest import FakeDevice, setup_coordinator_side_effect
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -341,17 +341,7 @@ async def test_switches_coordinator_state(
     expected_v1_state: str,
 ) -> None:
     """Test switches state based on coordinator update success or delay."""
-    for device in fake_devices:
-        if device.v1_properties is not None:
-            device.v1_properties.status.refresh.side_effect = side_effect
-        if device.dyad is not None:
-            device.dyad.query_values.side_effect = side_effect
-        if device.zeo is not None:
-            device.zeo.query_values.side_effect = side_effect
-        if device.b01_q10_properties is not None:
-            device.b01_q10_properties.refresh.side_effect = side_effect
-        if device.b01_q7_properties is not None:
-            device.b01_q7_properties.query_values.side_effect = side_effect
+    setup_coordinator_side_effect(fake_devices, side_effect)
 
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     await hass.async_block_till_done()

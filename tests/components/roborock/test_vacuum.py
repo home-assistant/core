@@ -52,7 +52,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from .conftest import FakeDevice, set_trait_attributes
+from .conftest import FakeDevice, set_trait_attributes, setup_coordinator_side_effect
 from .mock_data import STATUS
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -1098,13 +1098,7 @@ async def test_vacuums_coordinator_state(
     expected_state: str,
 ) -> None:
     """Test vacuums state based on coordinator update success or delay."""
-    for device in fake_devices:
-        if device.v1_properties is not None:
-            device.v1_properties.status.refresh.side_effect = side_effect
-        if device.b01_q10_properties is not None:
-            device.b01_q10_properties.refresh.side_effect = side_effect
-        if device.b01_q7_properties is not None:
-            device.b01_q7_properties.query_values.side_effect = side_effect
+    setup_coordinator_side_effect(fake_devices, side_effect)
 
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     await hass.async_block_till_done()
