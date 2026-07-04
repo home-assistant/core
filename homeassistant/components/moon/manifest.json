@@ -1,0 +1,11 @@
+{
+  "domain": "moon",
+  "name": "Moon",
+  "codeowners": ["@fabaff", "@frenck"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/moon",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "quality_scale": "internal",
+  "single_config_entry": true
+}

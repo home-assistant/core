@@ -1,0 +1,224 @@
+"""Test vacuum triggers."""
+
+from typing import Any
+
+import pytest
+
+from homeassistant.components.vacuum import VacuumActivity
+from homeassistant.core import HomeAssistant
+
+from tests.components.common import (
+    TriggerStateDescription,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
+    assert_trigger_behavior_first,
+    assert_trigger_options_supported,
+    other_states,
+    parametrize_target_entities,
+    parametrize_trigger_states,
+    target_entities,
+)
+
+
+@pytest.fixture
+async def target_vacuums(hass: HomeAssistant) -> dict[str, list[str]]:
+    """Create multiple vacuum entities associated with different targets."""
+    return await target_entities(hass, "vacuum")
+
+
+@pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("vacuum.returned_to_dock", {}, True, True),
+        ("vacuum.errored", {}, True, True),
+        ("vacuum.paused_cleaning", {}, True, True),
+        ("vacuum.started_cleaning", {}, True, True),
+        ("vacuum.started_returning", {}, True, True),
+    ],
+)
+async def test_vacuum_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that vacuum triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("vacuum"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_trigger_states(
+            trigger="vacuum.returned_to_dock",
+            target_states=[VacuumActivity.DOCKED],
+            other_states=other_states(VacuumActivity.DOCKED),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.errored",
+            target_states=[VacuumActivity.ERROR],
+            other_states=other_states(VacuumActivity.ERROR),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.paused_cleaning",
+            target_states=[VacuumActivity.PAUSED],
+            other_states=other_states(VacuumActivity.PAUSED),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.started_cleaning",
+            target_states=[VacuumActivity.CLEANING],
+            other_states=other_states(VacuumActivity.CLEANING),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.started_returning",
+            target_states=[VacuumActivity.RETURNING],
+            other_states=other_states(VacuumActivity.RETURNING),
+        ),
+    ],
+)
+async def test_vacuum_state_trigger_behavior_each(
+    hass: HomeAssistant,
+    target_vacuums: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test vacuum state trigger fires when any vacuum changes to a specific state."""
+    await assert_trigger_behavior_each(
+        hass,
+        target_entities=target_vacuums,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("vacuum"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_trigger_states(
+            trigger="vacuum.returned_to_dock",
+            target_states=[VacuumActivity.DOCKED],
+            other_states=other_states(VacuumActivity.DOCKED),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.errored",
+            target_states=[VacuumActivity.ERROR],
+            other_states=other_states(VacuumActivity.ERROR),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.paused_cleaning",
+            target_states=[VacuumActivity.PAUSED],
+            other_states=other_states(VacuumActivity.PAUSED),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.started_cleaning",
+            target_states=[VacuumActivity.CLEANING],
+            other_states=other_states(VacuumActivity.CLEANING),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.started_returning",
+            target_states=[VacuumActivity.RETURNING],
+            other_states=other_states(VacuumActivity.RETURNING),
+        ),
+    ],
+)
+async def test_vacuum_state_trigger_behavior_first(
+    hass: HomeAssistant,
+    target_vacuums: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test vacuum state trigger fires when first vacuum changes to a specific state."""
+    await assert_trigger_behavior_first(
+        hass,
+        target_entities=target_vacuums,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("vacuum"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_trigger_states(
+            trigger="vacuum.returned_to_dock",
+            target_states=[VacuumActivity.DOCKED],
+            other_states=other_states(VacuumActivity.DOCKED),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.errored",
+            target_states=[VacuumActivity.ERROR],
+            other_states=other_states(VacuumActivity.ERROR),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.paused_cleaning",
+            target_states=[VacuumActivity.PAUSED],
+            other_states=other_states(VacuumActivity.PAUSED),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.started_cleaning",
+            target_states=[VacuumActivity.CLEANING],
+            other_states=other_states(VacuumActivity.CLEANING),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.started_returning",
+            target_states=[VacuumActivity.RETURNING],
+            other_states=other_states(VacuumActivity.RETURNING),
+        ),
+    ],
+)
+async def test_vacuum_state_trigger_behavior_all(
+    hass: HomeAssistant,
+    target_vacuums: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test vacuum state trigger fires when last vacuum changes to a specific state."""
+    await assert_trigger_behavior_all(
+        hass,
+        target_entities=target_vacuums,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )

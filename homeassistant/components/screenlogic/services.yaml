@@ -1,0 +1,57 @@
+# ScreenLogic Services
+set_color_mode:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: screenlogic
+    color_mode:
+      required: true
+      selector:
+        select:
+          options:
+            - all_off
+            - all_on
+            - american
+            - blue
+            - caribbean
+            - color_set
+            - color_swim
+            - color_sync
+            - green
+            - hold
+            - magenta
+            - next_mode
+            - party
+            - recall
+            - red
+            - reset
+            - romance
+            - royal
+            - save
+            - sunset
+            - thumper
+            - white
+start_super_chlorination:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: screenlogic
+    runtime:
+      default: 24
+      selector:
+        number:
+          min: 0
+          max: 72
+          unit_of_measurement: hours
+          mode: slider
+stop_super_chlorination:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: screenlogic

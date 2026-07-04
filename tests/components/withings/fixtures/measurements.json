@@ -1,0 +1,806 @@
+[
+  {
+    "grpid": 1,
+    "attrib": 0,
+    "date": 1564660800,
+    "created": 1564660800,
+    "modified": 1564660800,
+    "category": 1,
+    "deviceid": "91a7e556c2022ef54dca6e07a853c3193734d148",
+    "hash_deviceid": "91a7e556c2022ef54dca6e07a853c3193734d148",
+    "measures": [
+      {
+        "type": 1,
+        "unit": 0,
+        "value": 70
+      },
+      {
+        "type": 8,
+        "unit": 0,
+        "value": 5
+      },
+      {
+        "type": 5,
+        "unit": 0,
+        "value": 60
+      },
+      {
+        "type": 76,
+        "unit": 0,
+        "value": 50
+      },
+      {
+        "type": 88,
+        "unit": 0,
+        "value": 10
+      },
+      {
+        "type": 4,
+        "unit": 0,
+        "value": 2
+      },
+      {
+        "type": 12,
+        "unit": 0,
+        "value": 40
+      },
+      {
+        "type": 71,
+        "unit": 0,
+        "value": 40
+      },
+      {
+        "type": 73,
+        "unit": 0,
+        "value": 20
+      },
+      {
+        "type": 6,
+        "unit": -3,
+        "value": 70
+      },
+      {
+        "type": 9,
+        "unit": 0,
+        "value": 70
+      },
+      {
+        "type": 10,
+        "unit": 0,
+        "value": 100
+      },
+      {
+        "type": 11,
+        "unit": 0,
+        "value": 60
+      },
+      {
+        "type": 54,
+        "unit": -2,
+        "value": 95
+      },
+      {
+        "type": 77,
+        "unit": -2,
+        "value": 95
+      },
+      {
+        "type": 91,
+        "unit": 0,
+        "value": 100
+      },
+      {
+        "type": 123,
+        "unit": 0,
+        "value": 100
+      },
+      {
+        "type": 155,
+        "unit": 0,
+        "value": 100
+      },
+      {
+        "type": 168,
+        "unit": 0,
+        "value": 100
+      },
+      {
+        "type": 169,
+        "unit": 0,
+        "value": 100
+      },
+      {
+        "type": 198,
+        "unit": 0,
+        "value": 102
+      },
+      {
+        "type": 197,
+        "unit": 0,
+        "value": 102
+      },
+      {
+        "type": 196,
+        "unit": 0,
+        "value": 102
+      },
+      {
+        "type": 170,
+        "unit": 0,
+        "value": 102
+      }
+    ],
+    "modelid": 45,
+    "model": "BPM Connect",
+    "comment": null
+  },
+  {
+    "grpid": 1,
+    "attrib": 0,
+    "date": 1564657200,
+    "created": 1564657200,
+    "modified": 1564657200,
+    "category": 1,
+    "deviceid": "91a7e556c2022ef54dca6e07a853c3193734d148",
+    "hash_deviceid": "91a7e556c2022ef54dca6e07a853c3193734d148",
+    "measures": [
+      {
+        "type": 1,
+        "unit": 0,
+        "value": 71
+      },
+      {
+        "type": 8,
+        "unit": 0,
+        "value": 51
+      },
+      {
+        "type": 5,
+        "unit": 0,
+        "value": 61
+      },
+      {
+        "type": 76,
+        "unit": 0,
+        "value": 51
+      },
+      {
+        "type": 88,
+        "unit": 0,
+        "value": 11
+      },
+      {
+        "type": 4,
+        "unit": 0,
+        "value": 21
+      },
+      {
+        "type": 12,
+        "unit": 0,
+        "value": 41
+      },
+      {
+        "type": 71,
+        "unit": 0,
+        "value": 41
+      },
+      {
+        "type": 73,
+        "unit": 0,
+        "value": 21
+      },
+      {
+        "type": 6,
+        "unit": -3,
+        "value": 71
+      },
+      {
+        "type": 9,
+        "unit": 0,
+        "value": 71
+      },
+      {
+        "type": 10,
+        "unit": 0,
+        "value": 101
+      },
+      {
+        "type": 11,
+        "unit": 0,
+        "value": 61
+      },
+      {
+        "type": 54,
+        "unit": -2,
+        "value": 96
+      },
+      {
+        "type": 77,
+        "unit": -2,
+        "value": 96
+      },
+      {
+        "type": 91,
+        "unit": 0,
+        "value": 101
+      }
+    ],
+    "modelid": 45,
+    "model": "BPM Connect",
+    "comment": null
+  },
+  {
+    "grpid": 1,
+    "attrib": 1,
+    "date": 1564664400,
+    "created": 1564664400,
+    "modified": 1564664400,
+    "category": 1,
+    "deviceid": "91a7e556c2022ef54dca6e07a853c3193734d148",
+    "hash_deviceid": "91a7e556c2022ef54dca6e07a853c3193734d148",
+    "measures": [
+      {
+        "type": 1,
+        "unit": 0,
+        "value": 71
+      },
+      {
+        "type": 8,
+        "unit": 0,
+        "value": 4
+      },
+      {
+        "type": 5,
+        "unit": 0,
+        "value": 40
+      },
+      {
+        "type": 76,
+        "unit": 0,
+        "value": 51
+      },
+      {
+        "type": 88,
+        "unit": 0,
+        "value": 11
+      },
+      {
+        "type": 4,
+        "unit": 0,
+        "value": 201
+      },
+      {
+        "type": 12,
+        "unit": 0,
+        "value": 41
+      },
+      {
+        "type": 71,
+        "unit": 0,
+        "value": 34
+      },
+      {
+        "type": 73,
+        "unit": 0,
+        "value": 21
+      },
+      {
+        "type": 6,
+        "unit": -3,
+        "value": 71
+      },
+      {
+        "type": 9,
+        "unit": 0,
+        "value": 71
+      },
+      {
+        "type": 10,
+        "unit": 0,
+        "value": 101
+      },
+      {
+        "type": 11,
+        "unit": 0,
+        "value": 61
+      },
+      {
+        "type": 54,
+        "unit": -2,
+        "value": 98
+      },
+      {
+        "type": 77,
+        "unit": -2,
+        "value": 96
+      },
+      {
+        "type": 91,
+        "unit": 0,
+        "value": 102
+      }
+    ],
+    "modelid": 45,
+    "model": "BPM Connect",
+    "comment": null
+  },
+
+  {
+    "grpid": 5149666502,
+    "attrib": 0,
+    "date": 1560000000,
+    "created": 1560000000,
+    "modified": 1560000000,
+    "category": 1,
+    "deviceid": "51e8d0e7d16da9ff673accf10958ca94fea55d6e",
+    "hash_deviceid": "51e8d0e7d16da9ff673accf10958ca94fea55d6e",
+    "measures": [
+      {
+        "value": 95854,
+        "type": 1,
+        "unit": -3,
+        "algo": 218235904,
+        "fm": 3
+      },
+      {
+        "value": 7718,
+        "type": 5,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 7718,
+        "type": 5,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 1866,
+        "type": 8,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 1866,
+        "type": 8,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 7338,
+        "type": 76,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 5205,
+        "type": 77,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 380,
+        "type": 88,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 2162,
+        "type": 168,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 3043,
+        "type": 169,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 32,
+        "type": 170,
+        "unit": -1,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 4000,
+        "type": 173,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 12
+      },
+      {
+        "value": 1350,
+        "type": 173,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 10
+      },
+      {
+        "value": 469,
+        "type": 173,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 3
+      },
+      {
+        "value": 1406,
+        "type": 173,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 11
+      },
+      {
+        "value": 491,
+        "type": 173,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 2
+      },
+      {
+        "value": 1209,
+        "type": 174,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 12
+      },
+      {
+        "value": 241,
+        "type": 174,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 10
+      },
+      {
+        "value": 107,
+        "type": 174,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 3
+      },
+      {
+        "value": 207,
+        "type": 174,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 11
+      },
+      {
+        "value": 99,
+        "type": 174,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 2
+      },
+      {
+        "value": 3823,
+        "type": 175,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 12
+      },
+      {
+        "value": 1277,
+        "type": 175,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 10
+      },
+      {
+        "value": 442,
+        "type": 175,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 3
+      },
+      {
+        "value": 1330,
+        "type": 175,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 11
+      },
+      {
+        "value": 463,
+        "type": 175,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 2
+      },
+      {
+        "value": 2263,
+        "type": 226,
+        "unit": 0,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 19467,
+        "type": 6,
+        "unit": -3
+      }
+    ],
+    "modelid": 10,
+    "model": "Body Scan",
+    "comment": null
+  },
+  {
+    "grpid": 5156052100,
+    "attrib": 0,
+    "date": 1560000000,
+    "created": 1560000000,
+    "modified": 1560000000,
+    "category": 1,
+    "deviceid": "51e8d0e7d16da9ff673accf10958ca94fea55d6e",
+    "hash_deviceid": "51e8d0e7d16da9ff673accf10958ca94fea55d6e",
+    "measures": [
+      {
+        "value": 96440,
+        "type": 1,
+        "unit": -3,
+        "algo": 218235904,
+        "fm": 3
+      },
+      {
+        "value": 7863,
+        "type": 5,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 7863,
+        "type": 5,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 1780,
+        "type": 8,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 1780,
+        "type": 8,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 7475,
+        "type": 76,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 5296,
+        "type": 77,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 387,
+        "type": 88,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 2175,
+        "type": 168,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 3120,
+        "type": 169,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 31,
+        "type": 170,
+        "unit": -1,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 4049,
+        "type": 173,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 12
+      },
+      {
+        "value": 1384,
+        "type": 173,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 10
+      },
+      {
+        "value": 505,
+        "type": 173,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 3
+      },
+      {
+        "value": 1405,
+        "type": 173,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 11
+      },
+      {
+        "value": 518,
+        "type": 173,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 2
+      },
+      {
+        "value": 1099,
+        "type": 174,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 12
+      },
+      {
+        "value": 245,
+        "type": 174,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 10
+      },
+      {
+        "value": 103,
+        "type": 174,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 3
+      },
+      {
+        "value": 233,
+        "type": 174,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 11
+      },
+      {
+        "value": 99,
+        "type": 174,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 2
+      },
+      {
+        "value": 3870,
+        "type": 175,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 12
+      },
+      {
+        "value": 1309,
+        "type": 175,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 10
+      },
+      {
+        "value": 477,
+        "type": 175,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 3
+      },
+      {
+        "value": 1329,
+        "type": 175,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 11
+      },
+      {
+        "value": 489,
+        "type": 175,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 2
+      },
+      {
+        "value": 489,
+        "type": 175,
+        "unit": -2,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 1
+      },
+      {
+        "value": 2308,
+        "type": 226,
+        "unit": 0,
+        "algo": 218235904,
+        "fm": 3,
+        "position": 7
+      },
+      {
+        "value": 18457,
+        "type": 6,
+        "unit": -3
+      }
+    ],
+    "modelid": 10,
+    "model": "Body Scan",
+    "comment": null
+  }
+]

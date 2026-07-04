@@ -1,0 +1,31 @@
+{
+  "providedAt": "2026-04-19T22:16:43.4740091Z",
+  "prices": [
+    {
+      "from": "2026-04-19T00:00:00.0000000",
+      "until": "2026-04-20T00:00:00.0000000",
+      "price": 0.50983,
+      "unit": "m3",
+      "priceIncVat": 0.6169,
+      "energyTax": 0.7268,
+      "purchasePrice": 0.079,
+      "invoicePrice": 1.4227,
+      "average": 0.49402,
+      "averageInc": 0.59776,
+      "granularity": "day"
+    },
+    {
+      "from": "2026-04-20T00:00:00.0000000",
+      "until": "2026-04-21T00:00:00.0000000",
+      "price": 0.4782,
+      "unit": "m3",
+      "priceIncVat": 0.57862,
+      "energyTax": 0.7268,
+      "purchasePrice": 0.079,
+      "invoicePrice": 1.38442,
+      "average": 0.49402,
+      "averageInc": 0.59776,
+      "granularity": "day"
+    }
+  ]
+}

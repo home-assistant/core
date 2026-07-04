@@ -1,0 +1,30 @@
+{
+  "id": "12345abcde",
+  "email": "email@address.com",
+  "isActive": true,
+  "firstName": "Tom",
+  "lastName": "Jones",
+  "unitSystem": "imperial_us",
+  "phoneMobile": "+1 123-456-7890",
+  "locale": "en-US",
+  "locations": [
+    {
+      "id": "mmnnoopp"
+    }
+  ],
+  "alarmSettings": [],
+  "locationRoles": [
+    {
+      "locationId": "mmnnoopp",
+      "roles": ["owner"]
+    }
+  ],
+  "accountRole": {
+    "accountId": "aabbccdd",
+    "roles": ["owner"]
+  },
+  "account": {
+    "id": "aabbccdd"
+  },
+  "enabledFeatures": []
+}

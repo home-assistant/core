@@ -1,0 +1,10 @@
+{
+  "domain": "horizon",
+  "name": "Unitymedia Horizon HD Recorder",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/horizon",
+  "iot_class": "local_polling",
+  "loggers": ["horimote"],
+  "quality_scale": "legacy",
+  "requirements": ["horimote==0.4.1"]
+}

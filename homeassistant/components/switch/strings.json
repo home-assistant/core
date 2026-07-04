@@ -1,0 +1,117 @@
+{
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
+  },
+  "conditions": {
+    "is_off": {
+      "description": "Tests if one or more switches are off.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::switch::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::switch::common::condition_for_name%]"
+        }
+      },
+      "name": "Switch is off"
+    },
+    "is_on": {
+      "description": "Tests if one or more switches are on.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::switch::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::switch::common::condition_for_name%]"
+        }
+      },
+      "name": "Switch is on"
+    }
+  },
+  "device_automation": {
+    "action_type": {
+      "toggle": "[%key:common::device_automation::action_type::toggle%]",
+      "turn_off": "[%key:common::device_automation::action_type::turn_off%]",
+      "turn_on": "[%key:common::device_automation::action_type::turn_on%]"
+    },
+    "condition_type": {
+      "is_off": "[%key:common::device_automation::condition_type::is_off%]",
+      "is_on": "[%key:common::device_automation::condition_type::is_on%]"
+    },
+    "extra_fields": {
+      "for": "[%key:common::device_automation::extra_fields::for%]"
+    },
+    "trigger_type": {
+      "changed_states": "[%key:common::device_automation::trigger_type::changed_states%]",
+      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]",
+      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]"
+    }
+  },
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::switch::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      }
+    },
+    "outlet": {
+      "name": "Outlet",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      }
+    },
+    "switch": {
+      "name": "[%key:component::switch::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      }
+    }
+  },
+  "services": {
+    "toggle": {
+      "description": "Toggles a switch on/off.",
+      "name": "Toggle switch"
+    },
+    "turn_off": {
+      "description": "Turns off a switch.",
+      "name": "Turn off switch"
+    },
+    "turn_on": {
+      "description": "Turns on a switch.",
+      "name": "Turn on switch"
+    }
+  },
+  "title": "Switch",
+  "triggers": {
+    "turned_off": {
+      "description": "Triggers when one or more switches turn off.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::switch::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::switch::common::trigger_for_name%]"
+        }
+      },
+      "name": "Switch turned off"
+    },
+    "turned_on": {
+      "description": "Triggers when one or more switches turn on.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::switch::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::switch::common::trigger_for_name%]"
+        }
+      },
+      "name": "Switch turned on"
+    }
+  }
+}

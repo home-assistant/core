@@ -1,0 +1,11 @@
+refresh_library:
+  fields:
+    server_name:
+      example: "My Plex Server"
+      selector:
+        text:
+    library_name:
+      required: true
+      example: "TV Shows"
+      selector:
+        text:

@@ -1,0 +1,11 @@
+{
+  "domain": "cync",
+  "name": "Cync",
+  "codeowners": ["@Kinachi249"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/cync",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "quality_scale": "bronze",
+  "requirements": ["pycync==0.5.0"]
+}

@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "police": {
+        "default": "mdi:police-badge-outline",
+        "state": {
+          "on": "mdi:police-badge"
+        }
+      }
+    }
+  },
+  "services": {
+    "arm_away_instant": {
+      "service": "mdi:shield-lock"
+    },
+    "arm_home_instant": {
+      "service": "mdi:shield-home"
+    }
+  }
+}

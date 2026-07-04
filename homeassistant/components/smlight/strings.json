@@ -1,0 +1,227 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reauth_failed": "[%key:common::config_flow::error::invalid_auth%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please ensure you reconfigure against the same device.",
+      "unsupported_device": "This device is not yet supported by the SMLIGHT integration"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "auth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Password for the device's web login.",
+          "username": "Username for the device's web login."
+        },
+        "description": "Please enter the username and password"
+      },
+      "confirm_discovery": {
+        "description": "Do you want to set up SMLIGHT at {host}?"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::smlight::config::step::auth::data_description::password%]",
+          "username": "[%key:component::smlight::config::step::auth::data_description::username%]"
+        },
+        "description": "Please enter the correct username and password",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::smlight::config::step::user::data_description::host%]"
+        },
+        "description": "Please enter the new hostname or IP address of the SMLIGHT device.",
+        "title": "Reconfigure SMLIGHT device"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the SMLIGHT SLZB device"
+        },
+        "description": "Set up SMLIGHT Zigbee integration"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ethernet": {
+        "name": "Ethernet"
+      },
+      "internet": {
+        "name": "Internet"
+      },
+      "vpn": {
+        "name": "VPN"
+      },
+      "wifi": {
+        "name": "Wi-Fi"
+      }
+    },
+    "button": {
+      "core_restart": {
+        "name": "Core restart"
+      },
+      "reconnect_zigbee_router": {
+        "name": "Reconnect Zigbee router"
+      },
+      "zigbee_flash_mode": {
+        "name": "Zigbee flash mode"
+      },
+      "zigbee_restart": {
+        "name": "Zigbee restart"
+      }
+    },
+    "infrared": {
+      "infrared_emitter": {
+        "name": "IR emitter"
+      }
+    },
+    "light": {
+      "ambilight": {
+        "name": "Ambilight"
+      }
+    },
+    "sensor": {
+      "core_temperature": {
+        "name": "Core chip temp"
+      },
+      "core_uptime": {
+        "name": "Core uptime"
+      },
+      "device_mode": {
+        "name": "Connection mode",
+        "state": {
+          "eth": "Ethernet",
+          "usb": "USB",
+          "wifi": "Wi-Fi"
+        }
+      },
+      "firmware_channel": {
+        "name": "Firmware channel",
+        "state": {
+          "dev": "Development",
+          "release": "Stable"
+        }
+      },
+      "fs_usage": {
+        "name": "Filesystem usage"
+      },
+      "psram_usage": {
+        "name": "PSRAM usage"
+      },
+      "ram_usage": {
+        "name": "RAM usage"
+      },
+      "socket_uptime": {
+        "name": "Zigbee uptime"
+      },
+      "zigbee_temperature": {
+        "name": "Zigbee chip temp"
+      },
+      "zigbee_type": {
+        "name": "Zigbee type",
+        "state": {
+          "coordinator": "Coordinator",
+          "router": "Router",
+          "thread": "Thread"
+        }
+      }
+    },
+    "switch": {
+      "auto_zigbee_update": {
+        "name": "Auto Zigbee update"
+      },
+      "disable_led": {
+        "name": "Disable LEDs"
+      },
+      "night_mode": {
+        "name": "LED night mode"
+      },
+      "vpn_enabled": {
+        "name": "VPN enabled"
+      }
+    },
+    "update": {
+      "core_update": {
+        "name": "Core firmware"
+      },
+      "zigbee_update": {
+        "name": "Zigbee firmware"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect_device": {
+      "message": "An error occurred while connecting to the SMLIGHT device: {error}."
+    },
+    "firmware_update_failed": {
+      "message": "Firmware update failed for {device_name}."
+    },
+    "no_device_found": {
+      "message": "No valid SMLIGHT device found for the given targets."
+    },
+    "not_supported_buzzer": {
+      "message": "The selected SMLIGHT device does not support the buzzer feature. This feature is only available on Ultima models."
+    },
+    "play_tone_failed": {
+      "message": "Failed to play tone on {device_name}: {error}."
+    },
+    "send_ir_code_failed": {
+      "message": "Failed to send IR code: {error}."
+    }
+  },
+  "issues": {
+    "unsupported_firmware": {
+      "description": "Your SMLIGHT SLZB-06x device is running an unsupported core firmware version. Please update it to the latest version to enjoy all the features of this integration.",
+      "title": "SLZB core firmware update required"
+    }
+  },
+  "services": {
+    "play_rtttl": {
+      "description": "Play an RTTTL melody on the SMLIGHT device buzzer.",
+      "fields": {
+        "bpm": {
+          "description": "Tempo in beats per minute. Omit to use the RTTTL default of 63.",
+          "name": "BPM"
+        },
+        "device_id": {
+          "description": "The SMLIGHT device.",
+          "name": "Device"
+        },
+        "duration": {
+          "description": "Default note duration (1, 2, 4, 8, 16 or 32). Omit to use the RTTTL default of 4.",
+          "name": "Duration"
+        },
+        "notes": {
+          "description": "The note sequence in RTTTL format, e.g. 8d,8d#,8e,c6.",
+          "name": "Notes"
+        },
+        "octave": {
+          "description": "Default octave (4–7).",
+          "name": "Octave"
+        }
+      },
+      "name": "Play RTTTL tone"
+    }
+  }
+}

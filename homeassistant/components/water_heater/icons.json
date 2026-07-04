@@ -1,0 +1,72 @@
+{
+  "conditions": {
+    "is_off": {
+      "condition": "mdi:water-boiler-off"
+    },
+    "is_on": {
+      "condition": "mdi:water-boiler"
+    },
+    "is_operation_mode": {
+      "condition": "mdi:water-boiler"
+    },
+    "is_target_temperature": {
+      "condition": "mdi:thermometer"
+    }
+  },
+  "entity_component": {
+    "_": {
+      "default": "mdi:water-boiler",
+      "state": {
+        "off": "mdi:water-boiler-off"
+      },
+      "state_attributes": {
+        "operation_mode": {
+          "default": "mdi:circle-medium",
+          "state": {
+            "eco": "mdi:leaf",
+            "electric": "mdi:lightning-bolt",
+            "gas": "mdi:fire-circle",
+            "heat_pump": "mdi:heat-wave",
+            "high_demand": "mdi:finance",
+            "off": "mdi:power",
+            "performance": "mdi:rocket-launch"
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "set_away_mode": {
+      "service": "mdi:account-arrow-right"
+    },
+    "set_operation_mode": {
+      "service": "mdi:water-boiler"
+    },
+    "set_temperature": {
+      "service": "mdi:thermometer"
+    },
+    "turn_off": {
+      "service": "mdi:water-boiler-off"
+    },
+    "turn_on": {
+      "service": "mdi:water-boiler"
+    }
+  },
+  "triggers": {
+    "operation_mode_changed": {
+      "trigger": "mdi:water-boiler"
+    },
+    "target_temperature_changed": {
+      "trigger": "mdi:thermometer"
+    },
+    "target_temperature_crossed_threshold": {
+      "trigger": "mdi:thermometer"
+    },
+    "turned_off": {
+      "trigger": "mdi:water-boiler-off"
+    },
+    "turned_on": {
+      "trigger": "mdi:water-boiler"
+    }
+  }
+}

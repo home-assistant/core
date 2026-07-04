@@ -1,0 +1,13 @@
+{
+  "services": {
+    "toggle": {
+      "service": "mdi:bell-ring"
+    },
+    "turn_off": {
+      "service": "mdi:bell-off"
+    },
+    "turn_on": {
+      "service": "mdi:bell-alert"
+    }
+  }
+}

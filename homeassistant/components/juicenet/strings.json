@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "integration_removed": {
+      "description": "Enel X has dropped support for JuiceNet in favor of JuicePass, and the JuiceNet integration has been removed from Home Assistant as it was no longer working.\n\nTo resolve this issue, please remove the (now defunct) integration entries from your Home Assistant setup. [Click here to see your existing JuiceNet integration entries]({entries}).",
+      "title": "The JuiceNet integration has been removed"
+    }
+  }
+}

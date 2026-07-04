@@ -1,0 +1,9 @@
+{
+  "domain": "switch",
+  "name": "Switch",
+  "after_dependencies": ["switch_as_x"],
+  "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/switch",
+  "integration_type": "entity",
+  "quality_scale": "internal"
+}

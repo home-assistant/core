@@ -1,0 +1,226 @@
+{
+  "items": [
+    {
+      "deviceId": "1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977",
+      "name": "Samsung Room A/C",
+      "label": "Clim Salon",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-AC-RAC-000003",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "460f8f20-0428-491d-8ead-8d901cc9f7eb",
+      "ownerId": "88597a89-5117-0b3c-264f-396fbc9072a4",
+      "roomId": "e7a14810-8688-4d37-bf02-72a2c673c0d7",
+      "deviceTypeName": "Samsung OCF Air Conditioner",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "airConditionerMode",
+              "version": 1
+            },
+            {
+              "id": "airConditionerFanMode",
+              "version": 1
+            },
+            {
+              "id": "fanOscillationMode",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "relativeHumidityMeasurement",
+              "version": 1
+            },
+            {
+              "id": "airQualitySensor",
+              "version": 1
+            },
+            {
+              "id": "odorSensor",
+              "version": 1
+            },
+            {
+              "id": "dustSensor",
+              "version": 1
+            },
+            {
+              "id": "veryFineDustSensor",
+              "version": 1
+            },
+            {
+              "id": "audioVolume",
+              "version": 1
+            },
+            {
+              "id": "remoteControlStatus",
+              "version": 1
+            },
+            {
+              "id": "powerConsumptionReport",
+              "version": 1
+            },
+            {
+              "id": "demandResponseLoadControl",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "custom.spiMode",
+              "version": 1
+            },
+            {
+              "id": "custom.thermostatSetpointControl",
+              "version": 1
+            },
+            {
+              "id": "custom.airConditionerOptionalMode",
+              "version": 1
+            },
+            {
+              "id": "custom.airConditionerTropicalNightMode",
+              "version": 1
+            },
+            {
+              "id": "custom.autoCleaningMode",
+              "version": 1
+            },
+            {
+              "id": "custom.deviceReportStateConfiguration",
+              "version": 1
+            },
+            {
+              "id": "custom.energyType",
+              "version": 1
+            },
+            {
+              "id": "custom.dustFilter",
+              "version": 1
+            },
+            {
+              "id": "custom.veryFineDustFilter",
+              "version": 1
+            },
+            {
+              "id": "custom.deodorFilter",
+              "version": 1
+            },
+            {
+              "id": "custom.electricHepaFilter",
+              "version": 1
+            },
+            {
+              "id": "custom.doNotDisturbMode",
+              "version": 1
+            },
+            {
+              "id": "custom.periodicSensing",
+              "version": 1
+            },
+            {
+              "id": "custom.airConditionerOdorController",
+              "version": 1
+            },
+            {
+              "id": "custom.ocfResourceVersion",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "samsungce.alwaysOnSensing",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dustFilterAlarm",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.selfCheck",
+              "version": 1
+            },
+            {
+              "id": "samsungce.individualControlLock",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "AirConditioner",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2021-05-28T08:51:37.616Z",
+      "profile": {
+        "id": "bb4a6df4-6e0f-303a-ac35-445ea78a41fe"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.airconditioner",
+        "name": "Samsung Room A/C",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "ARTIK051_PRAC_20K|10217841|60010523001411010200001000000000",
+        "platformVersion": "DAWIT 2.0",
+        "platformOS": "TizenRT 1.0 + IPv6",
+        "hwVersion": "ARTIK051",
+        "firmwareVersion": "ARTIK051_PRAC_20K_11230313",
+        "vendorId": "DA-AC-RAC-000003",
+        "vendorResourceClientServerVersion": "ARTIK051 Release 2.211222.1",
+        "lastSignupTime": "2021-05-28T08:51:30.356392Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

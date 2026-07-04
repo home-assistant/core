@@ -1,0 +1,62 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Please re-enter the password for {username}:",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "Input your username and password:"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "next_pickup": {
+        "name": "Next pickup"
+      }
+    },
+    "switch": {
+      "opt_in": {
+        "name": "Opt-in to next pickup"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "conf_calendar_title": "Event summary details"
+        },
+        "data_description": {
+          "conf_calendar_title": "Details included (in parentheses) after the event summary/title can be the pickup state, the name of the next rotating category, or no details at all."
+        },
+        "description": "Customize how Ridwell events appear in Home Assistant."
+      }
+    }
+  },
+  "selector": {
+    "conf_calendar_title": {
+      "options": {
+        "no_detail": "No details",
+        "pickup_status": "Pickup status",
+        "rotating_category": "Rotating category"
+      }
+    }
+  }
+}

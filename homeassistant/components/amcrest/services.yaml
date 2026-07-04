@@ -1,0 +1,134 @@
+enable_recording:
+  fields:
+    entity_id:
+      example: "camera.house_front"
+      selector:
+        entity:
+          integration: amcrest
+          domain: camera
+
+disable_recording:
+  fields:
+    entity_id:
+      example: "camera.house_front"
+      selector:
+        entity:
+          integration: amcrest
+          domain: camera
+
+enable_audio:
+  fields:
+    entity_id:
+      example: "camera.house_front"
+      selector:
+        entity:
+          integration: amcrest
+          domain: camera
+
+disable_audio:
+  fields:
+    entity_id:
+      example: "camera.house_front"
+      selector:
+        entity:
+          integration: amcrest
+          domain: camera
+
+enable_motion_recording:
+  fields:
+    entity_id:
+      example: "camera.house_front"
+      selector:
+        entity:
+          integration: amcrest
+          domain: camera
+
+disable_motion_recording:
+  fields:
+    entity_id:
+      example: "camera.house_front"
+      selector:
+        entity:
+          integration: amcrest
+          domain: camera
+
+goto_preset:
+  fields:
+    entity_id:
+      example: "camera.house_front"
+      selector:
+        entity:
+          integration: amcrest
+          domain: camera
+    preset:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 1000
+
+set_color_bw:
+  fields:
+    entity_id:
+      example: "camera.house_front"
+      selector:
+        entity:
+          integration: amcrest
+          domain: camera
+    color_bw:
+      selector:
+        select:
+          options:
+            - "auto"
+            - "bw"
+            - "color"
+
+start_tour:
+  fields:
+    entity_id:
+      example: "camera.house_front"
+      selector:
+        entity:
+          integration: amcrest
+          domain: camera
+
+stop_tour:
+  fields:
+    entity_id:
+      example: "camera.house_front"
+      selector:
+        entity:
+          integration: amcrest
+          domain: camera
+
+ptz_control:
+  fields:
+    entity_id:
+      example: "camera.house_front"
+      selector:
+        entity:
+          integration: amcrest
+          domain: camera
+    movement:
+      required: true
+      selector:
+        select:
+          options:
+            - "down"
+            - "left"
+            - "left_down"
+            - "left_up"
+            - "right"
+            - "right_down"
+            - "right_up"
+            - "up"
+            - "zoom_in"
+            - "zoom_out"
+    travel_time:
+      default: .2
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.01
+          unit_of_measurement: seconds

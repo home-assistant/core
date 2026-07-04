@@ -1,0 +1,13 @@
+{
+  "domain": "escea",
+  "name": "Escea",
+  "codeowners": ["@lazdavila"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/escea",
+  "homekit": {
+    "models": ["Escea"]
+  },
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "requirements": ["pescea==1.0.12"]
+}

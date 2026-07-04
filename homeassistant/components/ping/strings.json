@@ -1,0 +1,59 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_ip_address": "Invalid IP address."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the device you want to ping."
+        },
+        "description": "Ping allows you to check the availability of a host.",
+        "title": "Add Ping"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "jitter": {
+        "name": "Jitter"
+      },
+      "loss": {
+        "name": "Packet loss"
+      },
+      "round_trip_time_avg": {
+        "name": "Round-trip time average"
+      },
+      "round_trip_time_max": {
+        "name": "Round-trip time maximum"
+      },
+      "round_trip_time_mdev": {
+        "name": "Round-trip time mean deviation"
+      },
+      "round_trip_time_min": {
+        "name": "Round-trip time minimum"
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "invalid_ip_address": "[%key:component::ping::config::abort::invalid_ip_address%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "consider_home": "Consider home interval",
+          "count": "Ping count",
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "consider_home": "Seconds to wait till marking a device tracker as not home after not being seen."
+        }
+      }
+    }
+  }
+}

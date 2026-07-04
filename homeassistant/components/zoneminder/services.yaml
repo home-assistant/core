@@ -1,0 +1,7 @@
+set_run_state:
+  fields:
+    name:
+      required: true
+      example: "Home"
+      selector:
+        text:

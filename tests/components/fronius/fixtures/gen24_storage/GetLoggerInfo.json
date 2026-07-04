@@ -1,0 +1,14 @@
+{
+  "Body": {
+    "Data": {}
+  },
+  "Head": {
+    "RequestArguments": {},
+    "Status": {
+      "Code": 11,
+      "Reason": "v1/GetLoggerInfo.cgi request is not supported.",
+      "UserMessage": ""
+    },
+    "Timestamp": "2021-11-28T13:17:43+00:00"
+  }
+}

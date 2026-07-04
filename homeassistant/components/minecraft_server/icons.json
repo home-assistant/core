@@ -1,0 +1,42 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "default": "mdi:lan",
+        "state": {
+          "off": "mdi:lan-disconnect",
+          "on": "mdi:lan-connect"
+        }
+      }
+    },
+    "sensor": {
+      "edition": {
+        "default": "mdi:minecraft"
+      },
+      "game_mode": {
+        "default": "mdi:cog"
+      },
+      "latency": {
+        "default": "mdi:signal"
+      },
+      "map_name": {
+        "default": "mdi:map"
+      },
+      "motd": {
+        "default": "mdi:minecraft"
+      },
+      "players_max": {
+        "default": "mdi:account-multiple"
+      },
+      "players_online": {
+        "default": "mdi:account-multiple"
+      },
+      "protocol_version": {
+        "default": "mdi:numeric"
+      },
+      "version": {
+        "default": "mdi:numeric"
+      }
+    }
+  }
+}

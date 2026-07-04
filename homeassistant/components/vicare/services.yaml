@@ -1,0 +1,18 @@
+set_vicare_mode:
+  target:
+    entity:
+      integration: vicare
+      domain: climate
+  fields:
+    vicare_mode:
+      required: true
+      selector:
+        select:
+          options:
+            - "dhw"
+            - "dhwAndHeating"
+            - "dhwAndHeatingCooling"
+            - "forcedNormal"
+            - "forcedReduced"
+            - "heating"
+            - "standby"

@@ -1,0 +1,221 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "tip_connected": {
+        "default": "mdi:pencil-outline",
+        "state": {
+          "off": "mdi:pencil-off-outline"
+        }
+      }
+    },
+    "button": {
+      "settings_reset": {
+        "default": "mdi:refresh"
+      },
+      "settings_save": {
+        "default": "mdi:content-save-cog"
+      }
+    },
+    "number": {
+      "accel_sensitivity": {
+        "default": "mdi:motion"
+      },
+      "boost_temp": {
+        "default": "mdi:thermometer-high"
+      },
+      "calibration_offset": {
+        "default": "mdi:contrast"
+      },
+      "display_brightness": {
+        "default": "mdi:brightness-6"
+      },
+      "hall_effect_sleep_time": {
+        "default": "mdi:timer-sand"
+      },
+      "hall_sensitivity": {
+        "default": "mdi:leak"
+      },
+      "keep_awake_pulse_delay": {
+        "default": "mdi:clock-end"
+      },
+      "keep_awake_pulse_duration": {
+        "default": "mdi:clock-start"
+      },
+      "keep_awake_pulse_power": {
+        "default": "mdi:waves-arrow-up"
+      },
+      "min_voltage_per_cell": {
+        "default": "mdi:fuel-cell"
+      },
+      "pd_timeout": {
+        "default": "mdi:timer-alert-outline"
+      },
+      "power_limit": {
+        "default": "mdi:flash-alert"
+      },
+      "qc_max_voltage": {
+        "default": "mdi:flash-alert-outline"
+      },
+      "setpoint_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "shutdown_timeout": {
+        "default": "mdi:thermometer-off"
+      },
+      "sleep_temperature": {
+        "default": "mdi:thermometer-low"
+      },
+      "sleep_timeout": {
+        "default": "mdi:timer-sand"
+      },
+      "temp_increment_long": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "temp_increment_short": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "voltage_div": {
+        "default": "mdi:call-split"
+      }
+    },
+    "select": {
+      "animation_speed": {
+        "default": "mdi:image-refresh"
+      },
+      "autostart_mode": {
+        "default": "mdi:power-standby"
+      },
+      "desc_scroll_speed": {
+        "default": "mdi:message-text-fast"
+      },
+      "locking_mode": {
+        "default": "mdi:download-lock"
+      },
+      "logo_duration": {
+        "default": "mdi:clock-digital"
+      },
+      "min_dc_voltage_cells": {
+        "default": "mdi:fuel-cell"
+      },
+      "orientation_mode": {
+        "default": "mdi:screen-rotation"
+      },
+      "temp_unit": {
+        "default": "mdi:temperature-celsius",
+        "state": {
+          "fahrenheit": "mdi:temperature-fahrenheit"
+        }
+      },
+      "tip_type": {
+        "default": "mdi:pencil-outline"
+      },
+      "usb_pd_mode": {
+        "default": "mdi:meter-electric-outline"
+      }
+    },
+    "sensor": {
+      "estimated_power": {
+        "default": "mdi:flash"
+      },
+      "hall_sensor": {
+        "default": "mdi:leak"
+      },
+      "handle_temperature": {
+        "default": "mdi:grease-pencil"
+      },
+      "live_temperature": {
+        "default": "mdi:soldering-iron"
+      },
+      "max_tip_temp_ability": {
+        "default": "mdi:thermometer-chevron-up"
+      },
+      "movement_time": {
+        "default": "mdi:clock-fast"
+      },
+      "operating_mode": {
+        "default": "mdi:format-list-bulleted",
+        "state": {
+          "boost": "mdi:rocket-launch",
+          "cjc_calibration": "mdi:tune-vertical",
+          "debug": "mdi:bug-play",
+          "hibernating": "mdi:sleep",
+          "initialisation_done": "mdi:check-circle",
+          "settings": "mdi:menu-open",
+          "sleeping": "mdi:sleep",
+          "soldering": "mdi:soldering-iron",
+          "soldering_profile": "mdi:chart-box-outline",
+          "startup_logo": "mdi:dots-circle",
+          "startup_warnings": "mdi:alert",
+          "temperature_adjust": "mdi:thermostat-box",
+          "thermal_runaway": "mdi:fire-alert",
+          "usb_pd_debug": "mdi:bug-play"
+        }
+      },
+      "power_pwm_level": {
+        "default": "mdi:square-wave"
+      },
+      "power_source": {
+        "default": "mdi:power-plug",
+        "state": {
+          "dc": "mdi:record-circle-outline",
+          "pd": "mdi:usb-c-port",
+          "pd_vbus": "mdi:usb-c-port",
+          "qc": "mdi:usb-port"
+        }
+      },
+      "tip_resistance": {
+        "default": "mdi:omega"
+      },
+      "tip_voltage": {
+        "default": "mdi:sine-wave"
+      },
+      "uptime": {
+        "default": "mdi:progress-clock"
+      },
+      "voltage": {
+        "default": "mdi:current-dc"
+      }
+    },
+    "switch": {
+      "animation_loop": {
+        "default": "mdi:play-box",
+        "state": {
+          "on": "mdi:animation-play"
+        }
+      },
+      "boost": {
+        "default": "mdi:thermometer-high",
+        "state": {
+          "off": "mdi:thermometer-off"
+        }
+      },
+      "calibrate_cjc": {
+        "default": "mdi:tune-vertical"
+      },
+      "cooling_temp_blink": {
+        "default": "mdi:alarm-light-outline",
+        "state": {
+          "off": "mdi:alarm-light-off-outline"
+        }
+      },
+      "display_invert": {
+        "default": "mdi:invert-colors"
+      },
+      "idle_screen_details": {
+        "default": "mdi:card-bulleted-outline",
+        "state": {
+          "off": "mdi:card-bulleted-off-outline"
+        }
+      },
+      "invert_buttons": {
+        "default": "mdi:plus-minus-variant"
+      },
+      "solder_screen_details": {
+        "default": "mdi:card-bulleted-outline",
+        "state": {
+          "off": "mdi:card-bulleted-off-outline"
+        }
+      }
+    }
+  }
+}

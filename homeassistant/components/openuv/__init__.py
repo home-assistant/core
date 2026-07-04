@@ -1,0 +1,108 @@
+"""Support for UV data from openuv.io."""
+
+import asyncio
+from typing import Any
+
+from pyopenuv import Client
+
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_BINARY_SENSORS,
+    CONF_ELEVATION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_SENSORS,
+    Platform,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import aiohttp_client
+
+from .const import (
+    CONF_FROM_WINDOW,
+    CONF_TO_WINDOW,
+    DATA_PROTECTION_WINDOW,
+    DATA_UV,
+    DEFAULT_FROM_WINDOW,
+    DEFAULT_TO_WINDOW,
+    LOGGER,
+)
+from .coordinator import (
+    OpenUvConfigEntry,
+    OpenUvCoordinator,
+    OpenUvProtectionWindowCoordinator,
+)
+
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> bool:
+    """Set up OpenUV as config entry."""
+    websession = aiohttp_client.async_get_clientsession(hass)
+    client = Client(
+        entry.data[CONF_API_KEY],
+        entry.data.get(CONF_LATITUDE, hass.config.latitude),
+        entry.data.get(CONF_LONGITUDE, hass.config.longitude),
+        altitude=entry.data.get(CONF_ELEVATION, hass.config.elevation),
+        session=websession,
+        check_status_before_request=True,
+    )
+
+    async def async_update_protection_data() -> dict[str, Any]:
+        """Update binary sensor (protection window) data."""
+        low = entry.options.get(CONF_FROM_WINDOW, DEFAULT_FROM_WINDOW)
+        high = entry.options.get(CONF_TO_WINDOW, DEFAULT_TO_WINDOW)
+        return await client.uv_protection_window(low=low, high=high)
+
+    coordinators: dict[str, OpenUvCoordinator] = {
+        coordinator_name: coordinator_cls(
+            hass,
+            entry=entry,
+            name=coordinator_name,
+            latitude=client.latitude,
+            longitude=client.longitude,
+            update_method=update_method,
+        )
+        for coordinator_cls, coordinator_name, update_method in (
+            (OpenUvCoordinator, DATA_UV, client.uv_index),
+            (
+                OpenUvProtectionWindowCoordinator,
+                DATA_PROTECTION_WINDOW,
+                async_update_protection_data,
+            ),
+        )
+    }
+
+    init_tasks = [
+        coordinator.async_config_entry_first_refresh()
+        for coordinator in coordinators.values()
+    ]
+    await asyncio.gather(*init_tasks)
+
+    entry.runtime_data = coordinators
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> bool:
+    """Unload an OpenUV config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> bool:
+    """Migrate the config entry upon new versions."""
+    version = entry.version
+    data = {**entry.data}
+
+    LOGGER.debug("Migrating from version %s", version)
+
+    # 1 -> 2: Remove unused condition data:
+    if version == 1:
+        data.pop(CONF_BINARY_SENSORS, None)
+        data.pop(CONF_SENSORS, None)
+        version = 2
+        hass.config_entries.async_update_entry(entry, data=data, version=2)
+        LOGGER.debug("Migration to version %s successful", version)
+
+    return True

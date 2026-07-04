@@ -1,0 +1,6 @@
+{
+  "domain": "legrand",
+  "name": "Legrand",
+  "integration_type": "virtual",
+  "supported_by": "netatmo"
+}

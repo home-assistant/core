@@ -1,0 +1,212 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 2,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Koogeek-SW2-187A91"
+          },
+          {
+            "format": "string",
+            "iid": 3,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Koogeek"
+          },
+          {
+            "format": "string",
+            "iid": 4,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "KH02CN"
+          },
+          {
+            "format": "string",
+            "iid": 5,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "CNNT061751001372"
+          },
+          {
+            "format": "bool",
+            "iid": 6,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          },
+          {
+            "format": "string",
+            "iid": 7,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "1.0.3"
+          }
+        ],
+        "iid": 1,
+        "stype": "accessory-information",
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "ev": true,
+            "format": "bool",
+            "iid": 9,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": false
+          },
+          {
+            "format": "string",
+            "iid": 10,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Switch 1"
+          }
+        ],
+        "iid": 8,
+        "primary": true,
+        "stype": "switch",
+        "type": "00000049-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "ev": true,
+            "format": "bool",
+            "iid": 12,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": false
+          },
+          {
+            "format": "string",
+            "iid": 13,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Switch 2"
+          }
+        ],
+        "iid": 11,
+        "primary": true,
+        "stype": "switch",
+        "type": "00000049-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 15,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "custom service"
+          },
+          {
+            "description": "Current Time",
+            "format": "int",
+            "iid": 16,
+            "perms": ["pr"],
+            "type": "7BBBA961-EB2D-11E5-A837-0800200C9A66",
+            "value": 1599731035
+          },
+          {
+            "description": "Time Zone",
+            "format": "int",
+            "iid": 17,
+            "perms": ["pr", "pw"],
+            "type": "7BBBA980-EB2D-11E5-A837-0800200C9A66",
+            "value": 16
+          },
+          {
+            "description": "Current Power",
+            "ev": false,
+            "format": "int",
+            "iid": 18,
+            "perms": ["pr", "ev"],
+            "type": "7BBBA96E-EB2D-11E5-A837-0800200C9A66",
+            "value": 0
+          },
+          {
+            "description": "Power Consumption Today",
+            "format": "data",
+            "iid": 19,
+            "perms": ["pr"],
+            "type": "7BBBA96F-EB2D-11E5-A837-0800200C9A66",
+            "value": "9pcBAL4GAAC1BgAAtgYAAELhAABXIwAAtgYAAKcGAABHOQAA1aMAAP//////////////////////////////////////////////////////////////////////////"
+          },
+          {
+            "description": "Power Consumption last 2 Month",
+            "format": "data",
+            "iid": 20,
+            "perms": ["pr"],
+            "type": "7BBBA972-EB2D-11E5-A837-0800200C9A66",
+            "value": "/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCFAEA5HkIADGbAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+          },
+          {
+            "description": "Power Consumption last 12 Month",
+            "format": "data",
+            "iid": 21,
+            "perms": ["pr"],
+            "type": "7BBBA970-EB2D-11E5-A837-0800200C9A66",
+            "value": "//////////////////////////////////////////+XKQ0A////////////////"
+          }
+        ],
+        "hidden": true,
+        "iid": 14,
+        "stype": "Unknown Service: 7BBBA977-EB2D-11E5-A837-0800200C9A66",
+        "type": "7BBBA977-EB2D-11E5-A837-0800200C9A66"
+      },
+      {
+        "characteristics": [
+          {
+            "description": "FW Upgrade supported types",
+            "format": "string",
+            "iid": 23,
+            "perms": ["pr", "hd"],
+            "type": "151909D2-3802-11E4-916C-0800200C9A66",
+            "value": "url,data"
+          },
+          {
+            "description": "FW Upgrade URL",
+            "format": "string",
+            "iid": 24,
+            "maxLen": 256,
+            "perms": ["pw", "hd"],
+            "type": "151909D1-3802-11E4-916C-0800200C9A66"
+          },
+          {
+            "description": "FW Upgrade Status",
+            "ev": false,
+            "format": "int",
+            "iid": 25,
+            "perms": ["pr", "ev", "hd"],
+            "type": "151909D6-3802-11E4-916C-0800200C9A66",
+            "value": 0
+          },
+          {
+            "description": "FW Upgrade Data",
+            "format": "data",
+            "iid": 26,
+            "perms": ["pw", "hd"],
+            "type": "151909D7-3802-11E4-916C-0800200C9A66"
+          }
+        ],
+        "hidden": true,
+        "iid": 22,
+        "stype": "Unknown Service: 151909D0-3802-11E4-916C-0800200C9A66",
+        "type": "151909D0-3802-11E4-916C-0800200C9A66"
+      }
+    ]
+  }
+]

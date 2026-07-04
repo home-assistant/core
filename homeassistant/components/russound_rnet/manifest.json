@@ -1,0 +1,10 @@
+{
+  "domain": "russound_rnet",
+  "name": "Russound RNET",
+  "codeowners": ["@noahhusby"],
+  "documentation": "https://www.home-assistant.io/integrations/russound_rnet",
+  "iot_class": "local_polling",
+  "loggers": ["aiorussound"],
+  "quality_scale": "legacy",
+  "requirements": ["aiorussound==5.0.1"]
+}

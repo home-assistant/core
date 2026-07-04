@@ -1,0 +1,744 @@
+{
+  "components": {
+    "main": {
+      "custom.thermostatSetpointControl": {
+        "minimumSetpoint": {
+          "value": 38,
+          "unit": "C",
+          "timestamp": "2025-05-14T19:29:59.586Z"
+        },
+        "maximumSetpoint": {
+          "value": 69,
+          "unit": "C",
+          "timestamp": "2025-05-14T19:29:59.586Z"
+        }
+      },
+      "airConditionerMode": {
+        "availableAcModes": {
+          "value": null
+        },
+        "supportedAcModes": {
+          "value": ["eco", "std", "power", "force"],
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "airConditionerMode": {
+          "value": "std",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        }
+      },
+      "samsungce.deviceIdentification": {
+        "micomAssayCode": {
+          "value": null
+        },
+        "modelName": {
+          "value": null
+        },
+        "serialNumber": {
+          "value": null
+        },
+        "serialNumberExtra": {
+          "value": null
+        },
+        "modelClassificationCode": {
+          "value": null
+        },
+        "description": {
+          "value": null
+        },
+        "releaseYear": {
+          "value": null
+        },
+        "binaryId": {
+          "value": "TP1X_DA_AC_EHS_01001_0000",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": null
+        },
+        "mndt": {
+          "value": null
+        },
+        "mnfv": {
+          "value": "AEH-WW-TP1-22-AE6000_17240903",
+          "timestamp": "2025-04-13T13:07:05.925Z"
+        },
+        "mnhw": {
+          "value": "Realtek",
+          "timestamp": "2025-04-13T13:07:05.925Z"
+        },
+        "di": {
+          "value": "4165c51e-bf6b-c5b6-fd53-127d6248754b",
+          "timestamp": "2025-04-13T13:07:05.925Z"
+        },
+        "mnsl": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2025-04-13T13:07:05.925Z"
+        },
+        "dmv": {
+          "value": "1.2.1",
+          "timestamp": "2025-04-13T13:07:05.925Z"
+        },
+        "n": {
+          "value": "Samsung EHS",
+          "timestamp": "2025-04-13T13:07:05.925Z"
+        },
+        "mnmo": {
+          "value": "TP1X_DA_AC_EHS_01001_0000|10250141|60070110001711034A00010000002000",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "vid": {
+          "value": "DA-AC-EHS-01001",
+          "timestamp": "2025-04-13T13:07:05.925Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2025-04-13T13:07:05.925Z"
+        },
+        "mnml": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2025-04-13T13:07:05.925Z"
+        },
+        "mnpv": {
+          "value": "DAWIT 2.0",
+          "timestamp": "2025-04-13T13:07:05.925Z"
+        },
+        "mnos": {
+          "value": "TizenRT 3.1",
+          "timestamp": "2025-04-13T13:07:05.925Z"
+        },
+        "pi": {
+          "value": "4165c51e-bf6b-c5b6-fd53-127d6248754b",
+          "timestamp": "2025-04-13T13:07:05.925Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2025-04-13T13:07:05.925Z"
+        }
+      },
+      "samsungce.toggleSwitch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": [
+            "samsungce.alwaysOnSensing",
+            "samsungce.sacDisplayCondition"
+          ],
+          "timestamp": "2025-04-13T13:07:09.182Z"
+        }
+      },
+      "samsungce.sensingOnSuspendMode": {
+        "sensingOnSuspendMode": {
+          "value": "unavailable",
+          "timestamp": "2025-04-13T13:00:53.287Z"
+        }
+      },
+      "samsungce.driverVersion": {
+        "versionNumber": {
+          "value": 25010101,
+          "timestamp": "2025-04-13T13:00:53.287Z"
+        }
+      },
+      "sec.diagnosticsInformation": {
+        "logType": {
+          "value": ["errCode", "dump"],
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "endpoint": {
+          "value": "SSM",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "minVersion": {
+          "value": "3.0",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "signinPermission": {
+          "value": null
+        },
+        "setupId": {
+          "value": "AE0",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "protocolType": {
+          "value": "ble_ocf",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "tsId": {
+          "value": "DA01",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "mnId": {
+          "value": "0AJT",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "dumpType": {
+          "value": "file",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": null
+        },
+        "temperature": {
+          "value": 57,
+          "unit": "C",
+          "timestamp": "2025-05-14T19:51:09.752Z"
+        }
+      },
+      "custom.deviceReportStateConfiguration": {
+        "reportStateRealtimePeriod": {
+          "value": "enabled",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "reportStateRealtime": {
+          "value": {
+            "state": "disabled"
+          },
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "reportStatePeriod": {
+          "value": "enabled",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        }
+      },
+      "thermostatCoolingSetpoint": {
+        "coolingSetpointRange": {
+          "value": null
+        },
+        "coolingSetpoint": {
+          "value": 56,
+          "unit": "C",
+          "timestamp": "2025-05-14T19:29:59.586Z"
+        }
+      },
+      "demandResponseLoadControl": {
+        "drlcStatus": {
+          "value": {
+            "drlcType": 1,
+            "drlcLevel": 0,
+            "duration": 0,
+            "override": false
+          },
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        }
+      },
+      "powerConsumptionReport": {
+        "powerConsumption": {
+          "value": {
+            "energy": 4053792,
+            "deltaEnergy": 0,
+            "power": 0,
+            "powerEnergy": 0.0,
+            "persistedEnergy": 0,
+            "energySaved": 0,
+            "persistedSavedEnergy": 0,
+            "start": "2025-05-13T23:00:23Z",
+            "end": "2025-05-14T13:26:17Z"
+          },
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        }
+      },
+      "samsungce.ehsCycleData": {
+        "outdoor": {
+          "value": [
+            {
+              "timestamp": "2025-05-13T22:45:05Z",
+              "data": "0000000050624249410207D002580000FFFF00350032A05A00000000"
+            },
+            {
+              "timestamp": "2025-05-13T22:50:07Z",
+              "data": "001400145B683E414102015A02120002FFFF002F007CA06200000000"
+            },
+            {
+              "timestamp": "2025-05-13T22:55:06Z",
+              "data": "00000000586643494102000000000000FFFF003D003BA06200000000"
+            }
+          ],
+          "unit": "C",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "indoor": {
+          "value": [
+            {
+              "timestamp": "2025-05-13T22:45:05Z",
+              "data": "4B0559590505014264000000000000000001000000021F1C0000007505054B"
+            },
+            {
+              "timestamp": "2025-05-13T22:50:07Z",
+              "data": "5C055D5E0505013A64000000000000000001000000021F210000007505054B"
+            },
+            {
+              "timestamp": "2025-05-13T22:55:06Z",
+              "data": "49055D5D0505000000000000000000000000000000021F260000007505054B"
+            }
+          ],
+          "unit": "C",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        }
+      },
+      "custom.outingMode": {
+        "outingMode": {
+          "value": "off",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        }
+      },
+      "samsungce.ehsThermostat": {
+        "connectionState": {
+          "value": "disconnected",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        }
+      },
+      "samsungce.individualControlLock": {
+        "lockState": {
+          "value": "unlocked",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        }
+      },
+      "samsungce.alwaysOnSensing": {
+        "origins": {
+          "value": null
+        },
+        "alwaysOn": {
+          "value": null
+        }
+      },
+      "refresh": {},
+      "samsungce.ehsFsvSettings": {
+        "fsvSettings": {
+          "value": [
+            {
+              "id": "1031",
+              "inUse": true,
+              "resolution": 1,
+              "type": "temperature",
+              "minValue": 37,
+              "maxValue": 75,
+              "value": 65,
+              "isValid": true,
+              "temperatureUnit": "C"
+            },
+            {
+              "id": "1032",
+              "inUse": true,
+              "resolution": 1,
+              "type": "temperature",
+              "minValue": 15,
+              "maxValue": 37,
+              "value": 26,
+              "isValid": true,
+              "temperatureUnit": "C"
+            },
+            {
+              "id": "1051",
+              "inUse": true,
+              "resolution": 1,
+              "type": "temperature",
+              "minValue": 50,
+              "maxValue": 70,
+              "value": 69,
+              "isValid": true,
+              "temperatureUnit": "C"
+            },
+            {
+              "id": "1052",
+              "inUse": true,
+              "resolution": 1,
+              "type": "temperature",
+              "minValue": 30,
+              "maxValue": 40,
+              "value": 38,
+              "isValid": true,
+              "temperatureUnit": "C"
+            },
+            {
+              "id": "2011",
+              "inUse": true,
+              "resolution": 1,
+              "type": "temperature",
+              "minValue": -20,
+              "maxValue": 5,
+              "value": -5,
+              "isValid": true,
+              "temperatureUnit": "C"
+            },
+            {
+              "id": "2012",
+              "inUse": true,
+              "resolution": 1,
+              "type": "temperature",
+              "minValue": 10,
+              "maxValue": 20,
+              "value": 10,
+              "isValid": true,
+              "temperatureUnit": "C"
+            },
+            {
+              "id": "2021",
+              "inUse": true,
+              "resolution": 1,
+              "type": "temperature",
+              "minValue": 17,
+              "maxValue": 75,
+              "value": 70,
+              "isValid": true,
+              "temperatureUnit": "C"
+            },
+            {
+              "id": "2022",
+              "inUse": true,
+              "resolution": 1,
+              "type": "temperature",
+              "minValue": 17,
+              "maxValue": 75,
+              "value": 45,
+              "isValid": true,
+              "temperatureUnit": "C"
+            },
+            {
+              "id": "2031",
+              "inUse": true,
+              "resolution": 1,
+              "type": "temperature",
+              "minValue": 17,
+              "maxValue": 75,
+              "value": 70,
+              "isValid": true,
+              "temperatureUnit": "C"
+            },
+            {
+              "id": "2032",
+              "inUse": true,
+              "resolution": 1,
+              "type": "temperature",
+              "minValue": 17,
+              "maxValue": 75,
+              "value": 40,
+              "isValid": true,
+              "temperatureUnit": "C"
+            },
+            {
+              "id": "2091",
+              "inUse": true,
+              "resolution": 1,
+              "type": "etc",
+              "minValue": 0,
+              "maxValue": 4,
+              "value": 0,
+              "isValid": true
+            },
+            {
+              "id": "2092",
+              "inUse": true,
+              "resolution": 1,
+              "type": "etc",
+              "minValue": 0,
+              "maxValue": 4,
+              "value": 0,
+              "isValid": true
+            },
+            {
+              "id": "2093",
+              "inUse": true,
+              "resolution": 1,
+              "type": "etc",
+              "minValue": 1,
+              "maxValue": 4,
+              "value": 2,
+              "isValid": true
+            },
+            {
+              "id": "3011",
+              "inUse": true,
+              "resolution": 1,
+              "type": "etc",
+              "minValue": 0,
+              "maxValue": 2,
+              "value": 1,
+              "isValid": true
+            },
+            {
+              "id": "3071",
+              "inUse": true,
+              "resolution": 1,
+              "type": "etc",
+              "minValue": 0,
+              "maxValue": 1,
+              "value": 0,
+              "isValid": true
+            },
+            {
+              "id": "4011",
+              "inUse": true,
+              "resolution": 1,
+              "type": "etc",
+              "minValue": 0,
+              "maxValue": 1,
+              "value": 1,
+              "isValid": true
+            },
+            {
+              "id": "4012",
+              "inUse": true,
+              "resolution": 1,
+              "type": "temperature",
+              "minValue": -15,
+              "maxValue": 20,
+              "value": 0,
+              "isValid": true,
+              "temperatureUnit": "C"
+            },
+            {
+              "id": "4021",
+              "inUse": true,
+              "resolution": 1,
+              "type": "etc",
+              "minValue": 0,
+              "maxValue": 2,
+              "value": 0,
+              "isValid": true
+            },
+            {
+              "id": "4042",
+              "inUse": true,
+              "resolution": 1,
+              "type": "temperature",
+              "minValue": 5,
+              "maxValue": 15,
+              "value": 10,
+              "isValid": true,
+              "temperatureUnit": "C"
+            },
+            {
+              "id": "4061",
+              "inUse": true,
+              "resolution": 1,
+              "type": "etc",
+              "minValue": 0,
+              "maxValue": 1,
+              "value": 0,
+              "isValid": true
+            }
+          ],
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        }
+      },
+      "execute": {
+        "data": {
+          "value": null
+        }
+      },
+      "samsungce.sacDisplayCondition": {
+        "switch": {
+          "value": null
+        }
+      },
+      "sec.wifiConfiguration": {
+        "autoReconnection": {
+          "value": true,
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "minVersion": {
+          "value": "1.0",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "supportedWiFiFreq": {
+          "value": ["2.4G"],
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "supportedAuthType": {
+          "value": ["OPEN", "WEP", "WPA-PSK", "WPA2-PSK", "SAE"],
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "protocolType": {
+          "value": ["helper_hotspot", "ble_ocf"],
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        }
+      },
+      "samsungce.softwareVersion": {
+        "versions": {
+          "value": [
+            {
+              "id": "0",
+              "swType": "Software",
+              "versionNumber": "02504A240903",
+              "description": "Version"
+            },
+            {
+              "id": "1",
+              "swType": "Firmware",
+              "versionNumber": "02501A24062401,FFFFFFFFFFFFFF",
+              "description": "Version"
+            },
+            {
+              "id": "2",
+              "swType": "Outdoor",
+              "versionNumber": "02572A23081000,02549A10000800",
+              "description": "Version"
+            }
+          ],
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        }
+      },
+      "custom.energyType": {
+        "energyType": {
+          "value": null
+        },
+        "energySavingSupport": {
+          "value": true,
+          "timestamp": "2025-04-13T13:00:53.287Z"
+        },
+        "drMaxDuration": {
+          "value": 99999999,
+          "unit": "min",
+          "timestamp": "2025-04-13T13:00:53.287Z"
+        },
+        "energySavingLevel": {
+          "value": null
+        },
+        "energySavingInfo": {
+          "value": null
+        },
+        "supportedEnergySavingLevels": {
+          "value": null
+        },
+        "energySavingOperation": {
+          "value": false,
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "notificationTemplateID": {
+          "value": null
+        },
+        "energySavingOperationSupport": {
+          "value": true,
+          "timestamp": "2025-04-13T13:00:53.287Z"
+        }
+      },
+      "samsungce.softwareUpdate": {
+        "targetModule": {
+          "value": {
+            "newVersion": "00000000",
+            "currentVersion": "00000000",
+            "moduleType": "mainController"
+          },
+          "timestamp": "2025-05-11T20:13:06.918Z"
+        },
+        "otnDUID": {
+          "value": "7XCFUCFWT6VB4",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "lastUpdatedDate": {
+          "value": null
+        },
+        "availableModules": {
+          "value": [],
+          "timestamp": "2025-04-13T13:00:53.287Z"
+        },
+        "newVersionAvailable": {
+          "value": false,
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "operatingState": {
+          "value": "none",
+          "timestamp": "2025-05-11T20:13:06.918Z"
+        },
+        "progress": {
+          "value": null
+        }
+      },
+      "samsungce.ehsTemperatureReference": {
+        "temperatureReference": {
+          "value": "water",
+          "timestamp": "2025-05-14T19:29:59.586Z"
+        }
+      }
+    },
+    "INDOOR1": {
+      "samsungce.ehsThermostat": {
+        "connectionState": {
+          "value": "disconnected",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        }
+      },
+      "samsungce.toggleSwitch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": null
+        },
+        "temperature": {
+          "value": 18.5,
+          "unit": "C",
+          "timestamp": "2025-05-14T19:54:55.948Z"
+        }
+      },
+      "custom.thermostatSetpointControl": {
+        "minimumSetpoint": {
+          "value": 26,
+          "unit": "C",
+          "timestamp": "2025-05-14T19:54:55.948Z"
+        },
+        "maximumSetpoint": {
+          "value": 65,
+          "unit": "C",
+          "timestamp": "2025-05-14T19:54:55.948Z"
+        }
+      },
+      "airConditionerMode": {
+        "availableAcModes": {
+          "value": null
+        },
+        "supportedAcModes": {
+          "value": ["cool", "heat", "auto"],
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        },
+        "airConditionerMode": {
+          "value": "heat",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        }
+      },
+      "samsungce.ehsTemperatureReference": {
+        "temperatureReference": {
+          "value": "water",
+          "timestamp": "2025-05-14T19:54:55.948Z"
+        }
+      },
+      "thermostatCoolingSetpoint": {
+        "coolingSetpointRange": {
+          "value": null
+        },
+        "coolingSetpoint": {
+          "value": 35,
+          "unit": "C",
+          "timestamp": "2025-05-14T19:54:55.948Z"
+        }
+      },
+      "samsungce.sacDisplayCondition": {
+        "switch": {
+          "value": null
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-05-14T13:26:17.184Z"
+        }
+      }
+    }
+  }
+}

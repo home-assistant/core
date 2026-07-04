@@ -1,0 +1,109 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "The user credentials provided do not match this Schlage account."
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "The Schlage integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "keypad_disabled": {
+        "name": "Keypad disabled"
+      }
+    },
+    "select": {
+      "auto_lock_time": {
+        "name": "Auto-lock time",
+        "state": {
+          "0": "[%key:common::state::disabled%]",
+          "5": "5 seconds",
+          "15": "15 seconds",
+          "30": "30 seconds",
+          "60": "1 minute",
+          "120": "2 minutes",
+          "240": "4 minutes",
+          "300": "5 minutes"
+        }
+      }
+    },
+    "switch": {
+      "beeper": {
+        "name": "Keypress Beep"
+      },
+      "lock_and_leave": {
+        "name": "1-Touch Locking"
+      }
+    }
+  },
+  "exceptions": {
+    "schlage_add_code_failed": {
+      "message": "Failed to add PIN code to the lock."
+    },
+    "schlage_code_exists": {
+      "message": "A PIN code with this value already exists on the lock."
+    },
+    "schlage_delete_code_failed": {
+      "message": "Failed to delete PIN code from the lock."
+    },
+    "schlage_name_exists": {
+      "message": "A PIN code with the name \"{name}\" already exists on the lock."
+    },
+    "schlage_refresh_failed": {
+      "message": "Failed to refresh Schlage data."
+    }
+  },
+  "services": {
+    "add_code": {
+      "description": "Adds a PIN code to a lock.",
+      "fields": {
+        "code": {
+          "description": "The PIN code to add. Must be unique to the lock and be between 4 and 8 digits long.",
+          "name": "PIN code"
+        },
+        "name": {
+          "description": "Name for PIN code. Must be case insensitively unique to the lock.",
+          "name": "PIN name"
+        },
+        "notify_on_use": {
+          "description": "Whether the native Schlage notification should be sent when this PIN is used.",
+          "name": "Notify when PIN is used"
+        }
+      },
+      "name": "Add PIN code"
+    },
+    "delete_code": {
+      "description": "Deletes a PIN code from a lock.",
+      "fields": {
+        "name": {
+          "description": "Name of PIN code to delete.",
+          "name": "[%key:component::schlage::services::add_code::fields::name::name%]"
+        }
+      },
+      "name": "Delete PIN code"
+    },
+    "get_codes": {
+      "description": "Retrieves all PIN codes from a lock.",
+      "name": "Get PIN codes"
+    }
+  }
+}

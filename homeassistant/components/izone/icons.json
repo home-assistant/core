@@ -1,0 +1,10 @@
+{
+  "services": {
+    "airflow_max": {
+      "service": "mdi:fan-plus"
+    },
+    "airflow_min": {
+      "service": "mdi:fan-minus"
+    }
+  }
+}

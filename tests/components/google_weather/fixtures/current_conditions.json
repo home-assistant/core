@@ -1,0 +1,88 @@
+{
+  "currentTime": "2025-01-28T22:04:12.025273178Z",
+  "timeZone": {
+    "id": "America/Los_Angeles"
+  },
+  "isDaytime": true,
+  "weatherCondition": {
+    "iconBaseUri": "https://maps.gstatic.com/weather/v1/sunny",
+    "description": {
+      "text": "Sunny",
+      "languageCode": "en"
+    },
+    "type": "CLEAR"
+  },
+  "temperature": {
+    "degrees": 13.7,
+    "unit": "CELSIUS"
+  },
+  "feelsLikeTemperature": {
+    "degrees": 13.1,
+    "unit": "CELSIUS"
+  },
+  "dewPoint": {
+    "degrees": 1.1,
+    "unit": "CELSIUS"
+  },
+  "heatIndex": {
+    "degrees": 13.7,
+    "unit": "CELSIUS"
+  },
+  "windChill": {
+    "degrees": 13.1,
+    "unit": "CELSIUS"
+  },
+  "relativeHumidity": 42,
+  "uvIndex": 1,
+  "precipitation": {
+    "probability": {
+      "percent": 0,
+      "type": "RAIN"
+    },
+    "qpf": {
+      "quantity": 0,
+      "unit": "MILLIMETERS"
+    }
+  },
+  "thunderstormProbability": 0,
+  "airPressure": {
+    "meanSeaLevelMillibars": 1019.16
+  },
+  "wind": {
+    "direction": {
+      "degrees": 335,
+      "cardinal": "NORTH_NORTHWEST"
+    },
+    "speed": {
+      "value": 8,
+      "unit": "KILOMETERS_PER_HOUR"
+    },
+    "gust": {
+      "value": 18,
+      "unit": "KILOMETERS_PER_HOUR"
+    }
+  },
+  "visibility": {
+    "distance": 16,
+    "unit": "KILOMETERS"
+  },
+  "cloudCover": 0,
+  "currentConditionsHistory": {
+    "temperatureChange": {
+      "degrees": -0.6,
+      "unit": "CELSIUS"
+    },
+    "maxTemperature": {
+      "degrees": 14.3,
+      "unit": "CELSIUS"
+    },
+    "minTemperature": {
+      "degrees": 3.7,
+      "unit": "CELSIUS"
+    },
+    "qpf": {
+      "quantity": 0,
+      "unit": "MILLIMETERS"
+    }
+  }
+}

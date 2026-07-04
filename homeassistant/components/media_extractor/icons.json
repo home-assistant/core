@@ -1,0 +1,10 @@
+{
+  "services": {
+    "extract_media_url": {
+      "service": "mdi:link"
+    },
+    "play_media": {
+      "service": "mdi:play"
+    }
+  }
+}

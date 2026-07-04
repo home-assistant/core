@@ -1,0 +1,274 @@
+{
+  "components": {
+    "main": {
+      "custom.disabledComponents": {
+        "disabledComponents": {
+          "value": ["station"],
+          "timestamp": "2020-11-03T04:43:07.114Z"
+        }
+      },
+      "powerConsumptionReport": {
+        "powerConsumption": {
+          "value": null,
+          "timestamp": "2020-11-03T04:43:07.092Z"
+        }
+      },
+      "refresh": {},
+      "samsungce.robotCleanerOperatingState": {
+        "supportedOperatingState": {
+          "value": [
+            "homing",
+            "error",
+            "idle",
+            "charging",
+            "chargingForRemainingJob",
+            "paused",
+            "cleaning"
+          ],
+          "timestamp": "2020-11-03T04:43:06.547Z"
+        },
+        "operatingState": {
+          "value": "idle",
+          "timestamp": "2023-06-18T15:59:24.580Z"
+        },
+        "cleaningStep": {
+          "value": null
+        },
+        "homingReason": {
+          "value": "none",
+          "timestamp": "2020-11-03T04:43:22.926Z"
+        },
+        "isMapBasedOperationAvailable": {
+          "value": null
+        }
+      },
+      "battery": {
+        "quantity": {
+          "value": null
+        },
+        "battery": {
+          "value": 100,
+          "unit": "%",
+          "timestamp": "2022-09-09T22:55:13.962Z"
+        },
+        "type": {
+          "value": null
+        }
+      },
+      "execute": {
+        "data": {
+          "value": {
+            "payload": {
+              "rt": ["x.com.samsung.da.alarms"],
+              "if": ["oic.if.baseline", "oic.if.a"],
+              "x.com.samsung.da.items": [
+                {
+                  "x.com.samsung.da.code": "4",
+                  "x.com.samsung.da.alarmType": "Device",
+                  "x.com.samsung.da.triggeredTime": "2023-06-18T15:59:30",
+                  "x.com.samsung.da.state": "deleted"
+                }
+              ]
+            }
+          },
+          "data": {
+            "href": "/alarms/vs/0"
+          },
+          "timestamp": "2023-06-18T15:59:28.267Z"
+        }
+      },
+      "samsungce.deviceIdentification": {
+        "micomAssayCode": {
+          "value": null
+        },
+        "modelName": {
+          "value": null
+        },
+        "serialNumber": {
+          "value": null
+        },
+        "serialNumberExtra": {
+          "value": null
+        },
+        "modelClassificationCode": {
+          "value": null
+        },
+        "description": {
+          "value": null
+        },
+        "releaseYear": {
+          "value": null
+        },
+        "binaryId": {
+          "value": null
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2023-06-18T15:59:27.658Z"
+        }
+      },
+      "robotCleanerTurboMode": {
+        "robotCleanerTurboMode": {
+          "value": "off",
+          "timestamp": "2022-09-08T02:53:49.826Z"
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": null,
+          "timestamp": "2020-06-02T23:30:52.793Z"
+        },
+        "mndt": {
+          "value": null,
+          "timestamp": "2020-06-03T13:34:18.508Z"
+        },
+        "mnfv": {
+          "value": "1.0",
+          "timestamp": "2019-07-07T19:45:19.771Z"
+        },
+        "mnhw": {
+          "value": "1.0",
+          "timestamp": "2019-07-07T19:45:19.771Z"
+        },
+        "di": {
+          "value": "3442dfc6-17c0-a65f-dae0-4c6e01786f44",
+          "timestamp": "2019-07-07T19:45:19.771Z"
+        },
+        "mnsl": {
+          "value": null,
+          "timestamp": "2020-06-03T00:49:53.813Z"
+        },
+        "dmv": {
+          "value": "res.1.1.0,sh.1.1.0",
+          "timestamp": "2021-12-23T07:09:40.610Z"
+        },
+        "n": {
+          "value": "[robot vacuum] Samsung",
+          "timestamp": "2019-07-07T19:45:19.771Z"
+        },
+        "mnmo": {
+          "value": "powerbot_7000_17M|50016055|80010404011141000100000000000000",
+          "timestamp": "2022-09-07T06:42:36.551Z"
+        },
+        "vid": {
+          "value": "DA-RVC-NORMAL-000001",
+          "timestamp": "2019-07-07T19:45:19.771Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2019-07-07T19:45:19.771Z"
+        },
+        "mnml": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2019-07-07T19:45:19.771Z"
+        },
+        "mnpv": {
+          "value": "00",
+          "timestamp": "2019-07-07T19:45:19.771Z"
+        },
+        "mnos": {
+          "value": "Tizen(3/0)",
+          "timestamp": "2019-07-07T19:45:19.771Z"
+        },
+        "pi": {
+          "value": "3442dfc6-17c0-a65f-dae0-4c6e01786f44",
+          "timestamp": "2019-07-07T19:45:19.771Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2019-07-07T19:45:19.771Z"
+        }
+      },
+      "samsungce.robotCleanerCleaningMode": {
+        "supportedCleaningMode": {
+          "value": ["auto", "spot", "manual", "stop"],
+          "timestamp": "2020-11-03T04:43:06.547Z"
+        },
+        "repeatModeEnabled": {
+          "value": false,
+          "timestamp": "2020-12-21T01:32:56.245Z"
+        },
+        "supportRepeatMode": {
+          "value": true,
+          "timestamp": "2020-11-03T04:43:06.547Z"
+        },
+        "cleaningMode": {
+          "value": "stop",
+          "timestamp": "2022-09-09T21:25:20.601Z"
+        }
+      },
+      "robotCleanerMovement": {
+        "robotCleanerMovement": {
+          "value": "idle",
+          "timestamp": "2023-06-18T15:59:24.580Z"
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": [
+            "samsungce.robotCleanerMapAreaInfo",
+            "samsungce.robotCleanerMapCleaningInfo",
+            "samsungce.robotCleanerPatrol",
+            "samsungce.robotCleanerPetMonitoring",
+            "samsungce.robotCleanerPetMonitoringReport",
+            "samsungce.robotCleanerPetCleaningSchedule",
+            "soundDetection",
+            "samsungce.soundDetectionSensitivity",
+            "samsungce.musicPlaylist",
+            "mediaPlayback",
+            "mediaTrackControl",
+            "imageCapture",
+            "videoCapture",
+            "audioVolume",
+            "audioMute",
+            "audioNotification",
+            "powerConsumptionReport",
+            "custom.hepaFilter",
+            "samsungce.robotCleanerMotorFilter",
+            "samsungce.robotCleanerRelayCleaning",
+            "audioTrackAddressing",
+            "samsungce.robotCleanerWelcome"
+          ],
+          "timestamp": "2022-09-08T01:03:48.820Z"
+        }
+      },
+      "robotCleanerCleaningMode": {
+        "robotCleanerCleaningMode": {
+          "value": "stop",
+          "timestamp": "2022-09-09T21:25:20.601Z"
+        }
+      },
+      "samsungce.softwareUpdate": {
+        "targetModule": {
+          "value": null
+        },
+        "otnDUID": {
+          "value": null
+        },
+        "lastUpdatedDate": {
+          "value": null
+        },
+        "availableModules": {
+          "value": null
+        },
+        "newVersionAvailable": {
+          "value": null
+        },
+        "operatingState": {
+          "value": null
+        },
+        "progress": {
+          "value": null
+        }
+      },
+      "samsungce.driverVersion": {
+        "versionNumber": {
+          "value": 22100101,
+          "timestamp": "2022-11-01T09:26:07.107Z"
+        }
+      }
+    }
+  }
+}

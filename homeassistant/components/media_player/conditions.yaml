@@ -1,0 +1,51 @@
+.condition_common: &condition_common
+  target: &condition_media_player_target
+    entity:
+      domain: media_player
+  fields:
+    behavior: &condition_behavior
+      required: true
+      default: any
+      selector:
+        automation_behavior:
+          mode: condition
+    for: &condition_for
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+
+.volume_threshold_entity: &volume_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "%"
+  - domain: number
+    unit_of_measurement: "%"
+  - domain: sensor
+    unit_of_measurement: "%"
+
+.volume_threshold_number: &volume_threshold_number
+  min: 0
+  max: 100
+  mode: box
+  unit_of_measurement: "%"
+
+is_muted: *condition_common
+is_off: *condition_common
+is_on: *condition_common
+is_not_playing: *condition_common
+is_paused: *condition_common
+is_playing: *condition_common
+is_unmuted: *condition_common
+
+is_volume:
+  target: *condition_media_player_target
+  fields:
+    behavior: *condition_behavior
+    for: *condition_for
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *volume_threshold_entity
+          mode: is
+          number: *volume_threshold_number

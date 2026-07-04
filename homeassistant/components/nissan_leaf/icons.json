@@ -1,0 +1,10 @@
+{
+  "services": {
+    "start_charge": {
+      "service": "mdi:flash"
+    },
+    "update": {
+      "service": "mdi:update"
+    }
+  }
+}

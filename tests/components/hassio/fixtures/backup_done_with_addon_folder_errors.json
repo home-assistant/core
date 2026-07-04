@@ -1,0 +1,171 @@
+{
+  "result": "ok",
+  "data": {
+    "name": "backup_manager_partial_backup",
+    "reference": "14a1ea4b",
+    "uuid": "400a90112553472a90d84a7e60d5265e",
+    "progress": 0,
+    "stage": "finishing_file",
+    "done": true,
+    "errors": [],
+    "created": "2025-05-14T08:56:22.801143+00:00",
+    "child_jobs": [
+      {
+        "name": "backup_store_homeassistant",
+        "reference": "14a1ea4b",
+        "uuid": "176318a1a8184b02b7e9ad3ec54ee5ec",
+        "progress": 0,
+        "stage": null,
+        "done": true,
+        "errors": [],
+        "created": "2025-05-14T08:56:22.807078+00:00",
+        "child_jobs": [],
+        "extra": null
+      },
+      {
+        "name": "backup_store_addons",
+        "reference": "14a1ea4b",
+        "uuid": "42664cb8fd4e474f8919bd737877125b",
+        "progress": 0,
+        "stage": null,
+        "done": true,
+        "errors": [
+          {
+            "type": "BackupError",
+            "message": "Can't backup add-on core_ssh: Can't write tarfile: FAKE OS error during add-on backup",
+            "stage": null
+          },
+          {
+            "type": "BackupError",
+            "message": "Can't backup add-on core_whisper: Can't write tarfile: FAKE OS error during add-on backup",
+            "stage": null
+          }
+        ],
+        "created": "2025-05-14T08:56:22.843960+00:00",
+        "child_jobs": [
+          {
+            "name": "backup_addon_save",
+            "reference": "core_ssh",
+            "uuid": "7cc7feb782e54345bdb5ca653928233f",
+            "progress": 0,
+            "stage": null,
+            "done": true,
+            "errors": [
+              {
+                "type": "BackupError",
+                "message": "Can't write tarfile: FAKE OS error during add-on backup",
+                "stage": null
+              }
+            ],
+            "created": "2025-05-14T08:56:22.844160+00:00",
+            "child_jobs": [],
+            "extra": null
+          },
+          {
+            "name": "backup_addon_save",
+            "reference": "core_whisper",
+            "uuid": "0cfb1163751740929e63a68df59dc13b",
+            "progress": 0,
+            "stage": null,
+            "done": true,
+            "errors": [
+              {
+                "type": "BackupError",
+                "message": "Can't write tarfile: FAKE OS error during add-on backup",
+                "stage": null
+              }
+            ],
+            "created": "2025-05-14T08:56:22.850376+00:00",
+            "child_jobs": [],
+            "extra": null
+          }
+        ],
+        "extra": null
+      },
+      {
+        "name": "backup_store_folders",
+        "reference": "14a1ea4b",
+        "uuid": "dd4685b4aac9460ab0e1150fe5c968e1",
+        "progress": 0,
+        "stage": null,
+        "done": true,
+        "errors": [
+          {
+            "type": "BackupError",
+            "message": "Can't backup folder share: Can't write tarfile: FAKE OS error during folder backup",
+            "stage": null
+          },
+          {
+            "type": "BackupError",
+            "message": "Can't backup folder ssl: Can't write tarfile: FAKE OS error during folder backup",
+            "stage": null
+          },
+          {
+            "type": "BackupError",
+            "message": "Can't backup folder media: Can't write tarfile: FAKE OS error during folder backup",
+            "stage": null
+          }
+        ],
+        "created": "2025-05-14T08:56:22.858227+00:00",
+        "child_jobs": [
+          {
+            "name": "backup_folder_save",
+            "reference": "share",
+            "uuid": "8a4dccd988f641a383abb469a478cbdb",
+            "progress": 0,
+            "stage": null,
+            "done": true,
+            "errors": [
+              {
+                "type": "BackupError",
+                "message": "Can't write tarfile: FAKE OS error during folder backup",
+                "stage": null
+              }
+            ],
+            "created": "2025-05-14T08:56:22.858385+00:00",
+            "child_jobs": [],
+            "extra": null
+          },
+          {
+            "name": "backup_folder_save",
+            "reference": "ssl",
+            "uuid": "f9b437376cc9428090606779eff35b41",
+            "progress": 0,
+            "stage": null,
+            "done": true,
+            "errors": [
+              {
+                "type": "BackupError",
+                "message": "Can't write tarfile: FAKE OS error during folder backup",
+                "stage": null
+              }
+            ],
+            "created": "2025-05-14T08:56:22.859973+00:00",
+            "child_jobs": [],
+            "extra": null
+          },
+          {
+            "name": "backup_folder_save",
+            "reference": "media",
+            "uuid": "b920835ef079403784fba4ff54437197",
+            "progress": 0,
+            "stage": null,
+            "done": true,
+            "errors": [
+              {
+                "type": "BackupError",
+                "message": "Can't write tarfile: FAKE OS error during folder backup",
+                "stage": null
+              }
+            ],
+            "created": "2025-05-14T08:56:22.860792+00:00",
+            "child_jobs": [],
+            "extra": null
+          }
+        ],
+        "extra": null
+      }
+    ],
+    "extra": null
+  }
+}

@@ -1,0 +1,308 @@
+{
+  "components": {
+    "main": {
+      "refresh": {},
+      "execute": {
+        "data": {
+          "value": null
+        }
+      },
+      "samsungce.deviceIdentification": {
+        "micomAssayCode": {
+          "value": "40442241",
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        },
+        "modelName": {
+          "value": null
+        },
+        "serialNumber": {
+          "value": null
+        },
+        "serialNumberExtra": {
+          "value": null
+        },
+        "modelClassificationCode": {
+          "value": "50000204001011000100000000000000",
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        },
+        "description": {
+          "value": "NV9300K-/AA3",
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        },
+        "releaseYear": {
+          "value": 16,
+          "timestamp": "2025-06-13T19:06:42.910Z"
+        },
+        "binaryId": {
+          "value": "TP2X_DA-KS-COOKTOP-000001",
+          "timestamp": "2025-12-02T09:19:03.380Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-12-02T09:19:03.377Z"
+        }
+      },
+      "samsungce.softwareVersion": {
+        "versions": {
+          "value": [
+            {
+              "id": "0",
+              "swType": "Software",
+              "versionNumber": "230515",
+              "description": "Version"
+            },
+            {
+              "id": "1",
+              "swType": "Firmware",
+              "versionNumber": "DE92-04422A_22112100",
+              "description": "Version"
+            }
+          ],
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": null
+        },
+        "mndt": {
+          "value": null
+        },
+        "mnfv": {
+          "value": "AKS-WW-TP2X-20-COOKTOP_40230515",
+          "timestamp": "2025-06-18T19:50:19.130Z"
+        },
+        "mnhw": {
+          "value": "MediaTek",
+          "timestamp": "2025-06-18T19:50:19.130Z"
+        },
+        "di": {
+          "value": "5c202ad1-d112-d746-50b8-bd76a554b362",
+          "timestamp": "2025-06-18T19:50:19.130Z"
+        },
+        "mnsl": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2025-06-18T19:50:19.130Z"
+        },
+        "dmv": {
+          "value": "res.1.1.0,sh.1.1.0",
+          "timestamp": "2025-06-18T19:50:19.130Z"
+        },
+        "n": {
+          "value": "Samsung Cooktop",
+          "timestamp": "2025-06-18T19:50:19.130Z"
+        },
+        "mnmo": {
+          "value": "TP2X_DA-KS-COOKTOP-000001|40442241|50000204001011000100000000000000",
+          "timestamp": "2025-06-18T19:50:19.130Z"
+        },
+        "vid": {
+          "value": "DA-KS-COOKTOP-000001",
+          "timestamp": "2025-06-18T19:50:19.130Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2025-06-18T19:50:19.130Z"
+        },
+        "mnml": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2025-06-18T19:50:19.130Z"
+        },
+        "mnpv": {
+          "value": "DAWIT 3.0",
+          "timestamp": "2025-06-18T19:50:19.130Z"
+        },
+        "mnos": {
+          "value": "TizenRT 2.0 + IPv6",
+          "timestamp": "2025-06-18T19:50:19.130Z"
+        },
+        "pi": {
+          "value": "5c202ad1-d112-d746-50b8-bd76a554b362",
+          "timestamp": "2025-06-18T19:50:19.130Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2025-06-18T19:50:19.130Z"
+        }
+      },
+      "samsungce.kitchenDeviceIdentification": {
+        "regionCode": {
+          "value": "US",
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        },
+        "modelCode": {
+          "value": "NV9300K-/AA3",
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        },
+        "fuel": {
+          "value": null
+        },
+        "type": {
+          "value": "cooktop",
+          "timestamp": "2025-06-18T19:50:18.927Z"
+        },
+        "representativeComponent": {
+          "value": null
+        }
+      },
+      "custom.cooktopOperatingState": {
+        "supportedCooktopOperatingState": {
+          "value": ["ready", "run"],
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        },
+        "cooktopOperatingState": {
+          "value": "ready",
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": ["samsungce.kidsLockControl"],
+          "timestamp": "2025-03-27T22:25:08.123Z"
+        }
+      },
+      "samsungce.driverVersion": {
+        "versionNumber": {
+          "value": 25040101,
+          "timestamp": "2025-06-13T19:06:42.910Z"
+        }
+      },
+      "samsungce.softwareUpdate": {
+        "targetModule": {
+          "value": {},
+          "timestamp": "2025-12-02T02:42:41.363Z"
+        },
+        "otnDUID": {
+          "value": "ZPCPH4AI7CHPC",
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        },
+        "lastUpdatedDate": {
+          "value": null
+        },
+        "availableModules": {
+          "value": [],
+          "timestamp": "2025-03-27T22:25:08.123Z"
+        },
+        "newVersionAvailable": {
+          "value": false,
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        },
+        "operatingState": {
+          "value": null
+        },
+        "progress": {
+          "value": null
+        }
+      },
+      "sec.diagnosticsInformation": {
+        "logType": {
+          "value": ["errCode", "dump"],
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        },
+        "endpoint": {
+          "value": "SSM",
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        },
+        "minVersion": {
+          "value": "1.0",
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        },
+        "signinPermission": {
+          "value": null
+        },
+        "setupId": {
+          "value": "800",
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        },
+        "protocolType": {
+          "value": "wifi_https",
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        },
+        "tsId": {
+          "value": null
+        },
+        "mnId": {
+          "value": "0AJT",
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        },
+        "dumpType": {
+          "value": "file",
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        }
+      },
+      "samsungce.kidsLockControl": {
+        "lockState": {
+          "value": "unlocked",
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        }
+      },
+      "samsungce.kidsLock": {
+        "lockState": {
+          "value": "unlocked",
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        }
+      }
+    },
+    "hood": {
+      "samsungce.connectionState": {
+        "connectionState": {
+          "value": "disconnected",
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": ["samsungce.lamp", "samsungce.hoodFanSpeed"],
+          "timestamp": "2025-03-27T22:25:07.975Z"
+        }
+      },
+      "samsungce.hoodFanSpeed": {
+        "settableMaxFanSpeed": {
+          "value": 5,
+          "timestamp": "2025-06-13T19:06:42.910Z"
+        },
+        "hoodFanSpeed": {
+          "value": 0,
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        },
+        "supportedHoodFanSpeed": {
+          "value": [0, 1, 2, 3, 4, 5],
+          "timestamp": "2025-06-13T19:06:42.910Z"
+        },
+        "settableMinFanSpeed": {
+          "value": 0,
+          "timestamp": "2025-06-13T19:06:42.910Z"
+        }
+      },
+      "samsungce.countDownTimer": {
+        "startValue": {
+          "value": null
+        },
+        "currentValue": {
+          "value": null
+        },
+        "status": {
+          "value": null
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-12-02T09:19:03.377Z"
+        }
+      },
+      "samsungce.lamp": {
+        "brightnessLevel": {
+          "value": "off",
+          "timestamp": "2025-12-02T09:19:03.381Z"
+        },
+        "supportedBrightnessLevel": {
+          "value": ["off", "high"],
+          "timestamp": "2025-06-13T19:06:42.910Z"
+        }
+      }
+    }
+  }
+}

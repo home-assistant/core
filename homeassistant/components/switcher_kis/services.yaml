@@ -1,0 +1,27 @@
+set_auto_off:
+  target:
+    entity:
+      integration: switcher_kis
+      domain: switch
+      device_class: switch
+  fields:
+    auto_off:
+      required: true
+      example: '"02:30"'
+      selector:
+        text:
+
+turn_on_with_timer:
+  target:
+    entity:
+      integration: switcher_kis
+      domain: switch
+      device_class: switch
+  fields:
+    timer_minutes:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 150
+          unit_of_measurement: minutes

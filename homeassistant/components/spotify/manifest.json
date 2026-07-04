@@ -1,0 +1,12 @@
+{
+  "domain": "spotify",
+  "name": "Spotify",
+  "codeowners": ["@frenck", "@joostlek"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/spotify",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["spotifyaio"],
+  "requirements": ["spotifyaio==2.0.2"]
+}

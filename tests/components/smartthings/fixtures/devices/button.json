@@ -1,0 +1,49 @@
+{
+  "items": [
+    {
+      "deviceId": "c4bdd19f-85d1-4d58-8f9c-e75ac3cf113b",
+      "name": "button",
+      "label": "button",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "238c483a-10e8-359b-b032-1be2b2fcdee7",
+      "locationId": "88a3a314-f0c8-40b4-bb44-44ba06c9c42f",
+      "ownerId": "12d4af93-cb68-b108-87f5-625437d7371f",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "button",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2025-03-07T12:20:43.273Z",
+      "profile": {
+        "id": "b045d731-4d01-35bc-8018-b3da711d8904"
+      },
+      "virtual": {
+        "name": "button",
+        "executingLocally": false
+      },
+      "type": "VIRTUAL",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

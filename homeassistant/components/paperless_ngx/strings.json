@@ -1,0 +1,157 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::invalid_host%]",
+      "forbidden": "The token does not have permission to access the API.",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "user_inactive_or_deleted": "Authentication failed. The user is inactive or has been deleted."
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::paperless_ngx::config::step::user::data_description::api_key%]"
+        },
+        "title": "Re-auth Paperless-ngx instance"
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::paperless_ngx::config::step::user::data_description::api_key%]",
+          "url": "[%key:component::paperless_ngx::config::step::user::data_description::url%]",
+          "verify_ssl": "[%key:component::paperless_ngx::config::step::user::data_description::verify_ssl%]"
+        },
+        "title": "Reconfigure Paperless-ngx instance"
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_key": "API key to connect to the Paperless-ngx API",
+          "url": "URL to connect to the Paperless-ngx instance",
+          "verify_ssl": "Verify the SSL certificate of the Paperless-ngx instance. Disable this option if you’re using a self-signed certificate."
+        },
+        "title": "Add Paperless-ngx instance"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "celery_status": {
+        "name": "Status Celery",
+        "state": {
+          "error": "[%key:common::state::error%]",
+          "ok": "[%key:component::paperless_ngx::entity::sensor::database_status::state::ok%]",
+          "warning": "[%key:component::paperless_ngx::entity::sensor::database_status::state::warning%]"
+        }
+      },
+      "characters_count": {
+        "name": "Total characters",
+        "unit_of_measurement": "characters"
+      },
+      "classifier_status": {
+        "name": "Status classifier",
+        "state": {
+          "error": "[%key:common::state::error%]",
+          "ok": "[%key:component::paperless_ngx::entity::sensor::database_status::state::ok%]",
+          "warning": "[%key:component::paperless_ngx::entity::sensor::database_status::state::warning%]"
+        }
+      },
+      "correspondent_count": {
+        "name": "Correspondents",
+        "unit_of_measurement": "correspondents"
+      },
+      "database_status": {
+        "name": "Status database",
+        "state": {
+          "error": "[%key:common::state::error%]",
+          "ok": "OK",
+          "warning": "Warning"
+        }
+      },
+      "document_type_count": {
+        "name": "Document types",
+        "unit_of_measurement": "document types"
+      },
+      "documents_inbox": {
+        "name": "Documents in inbox",
+        "unit_of_measurement": "[%key:component::paperless_ngx::entity::sensor::documents_total::unit_of_measurement%]"
+      },
+      "documents_total": {
+        "name": "Total documents",
+        "unit_of_measurement": "documents"
+      },
+      "index_status": {
+        "name": "Status index",
+        "state": {
+          "error": "[%key:common::state::error%]",
+          "ok": "[%key:component::paperless_ngx::entity::sensor::database_status::state::ok%]",
+          "warning": "[%key:component::paperless_ngx::entity::sensor::database_status::state::warning%]"
+        }
+      },
+      "redis_status": {
+        "name": "Status Redis",
+        "state": {
+          "error": "[%key:common::state::error%]",
+          "ok": "[%key:component::paperless_ngx::entity::sensor::database_status::state::ok%]",
+          "warning": "[%key:component::paperless_ngx::entity::sensor::database_status::state::warning%]"
+        }
+      },
+      "sanity_check_status": {
+        "name": "Status sanity",
+        "state": {
+          "error": "[%key:common::state::error%]",
+          "ok": "[%key:component::paperless_ngx::entity::sensor::database_status::state::ok%]",
+          "warning": "[%key:component::paperless_ngx::entity::sensor::database_status::state::warning%]"
+        }
+      },
+      "storage_available": {
+        "name": "Available storage"
+      },
+      "storage_total": {
+        "name": "Total storage"
+      },
+      "tag_count": {
+        "name": "Tags",
+        "unit_of_measurement": "tags"
+      }
+    },
+    "update": {
+      "paperless_update": {
+        "name": "Software"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::invalid_host%]"
+    },
+    "forbidden": {
+      "message": "[%key:component::paperless_ngx::config::error::forbidden%]"
+    },
+    "invalid_api_key": {
+      "message": "[%key:common::config_flow::error::invalid_api_key%]"
+    },
+    "unknown": {
+      "message": "[%key:common::config_flow::error::unknown%]"
+    },
+    "user_inactive_or_deleted": {
+      "message": "[%key:component::paperless_ngx::config::error::user_inactive_or_deleted%]"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "domain": "caldav",
+  "name": "CalDAV",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/caldav",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["caldav", "vobject"],
+  "requirements": ["caldav==2.1.0", "icalendar==6.3.1", "vobject==0.9.9"]
+}

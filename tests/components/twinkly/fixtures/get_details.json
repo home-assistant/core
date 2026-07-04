@@ -1,0 +1,23 @@
+{
+  "product_name": "Twinkly",
+  "product_version": "1",
+  "hardware_version": "1",
+  "flash_size": 4,
+  "led_type": 1,
+  "led_version": "1",
+  "product_code": "TW2016",
+  "device_name": "Tree 1",
+  "uptime": "4087441",
+  "rssi": -78,
+  "hw_id": "002d133b",
+  "mac": "00:2d:13:3b:aa:bb",
+  "uuid": "00000000-0000-0000-0000-000000000000",
+  "max_supported_led": 100,
+  "base_leds_number": 100,
+  "number_of_led": 100,
+  "led_profile": "RGB",
+  "frame_rate": 14,
+  "movie_capacity": 708,
+  "copyright": "LEDWORKS 2017",
+  "code": 1000
+}

@@ -1,0 +1,12 @@
+set_value:
+  target:
+    entity:
+      domain: input_text
+  fields:
+    value:
+      required: true
+      example: This is an example text
+      selector:
+        text:
+
+reload:

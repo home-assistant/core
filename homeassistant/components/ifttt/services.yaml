@@ -1,0 +1,34 @@
+# Describes the format for available ifttt services
+
+push_alarm_state:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          domain: alarm_control_panel
+    state:
+      required: true
+      example: "armed_night"
+      selector:
+        text:
+
+trigger:
+  fields:
+    event:
+      required: true
+      example: "MY_HA_EVENT"
+      selector:
+        text:
+    value1:
+      example: "Hello World"
+      selector:
+        text:
+    value2:
+      example: "some additional data"
+      selector:
+        text:
+    value3:
+      example: "even more data"
+      selector:
+        text:

@@ -1,0 +1,33 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    '0': dict({
+      'ac_mode': 4,
+      'error_code': 0,
+      'fan_locked': False,
+      'fan_mode': 5,
+      'is_ac_mode_locked': False,
+      'is_celsius': True,
+      'is_remote_locked': False,
+      'locked_ac_mode': 0,
+      'locked_cool_temperature': 0,
+      'locked_heat_temperature': 0,
+      'temperature': 27,
+      'temperature_setpoint': 23,
+    }),
+    '1': dict({
+      'ac_mode': 0,
+      'error_code': 0,
+      'fan_locked': False,
+      'fan_mode': 2,
+      'is_ac_mode_locked': False,
+      'is_celsius': True,
+      'is_remote_locked': False,
+      'locked_ac_mode': 0,
+      'locked_cool_temperature': 0,
+      'locked_heat_temperature': 0,
+      'temperature': 26,
+      'temperature_setpoint': 24,
+    }),
+  })
+# ---

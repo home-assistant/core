@@ -1,0 +1,57 @@
+select_next:
+  target:
+    entity:
+      domain: input_select
+  fields:
+    cycle:
+      default: true
+      selector:
+        boolean:
+
+select_option:
+  target:
+    entity:
+      domain: input_select
+  fields:
+    option:
+      required: true
+      example: '"Item A"'
+      selector:
+        state:
+          hide_states:
+            - unavailable
+            - unknown
+
+select_previous:
+  target:
+    entity:
+      domain: input_select
+  fields:
+    cycle:
+      default: true
+      selector:
+        boolean:
+
+select_first:
+  target:
+    entity:
+      domain: input_select
+
+select_last:
+  target:
+    entity:
+      domain: input_select
+
+set_options:
+  target:
+    entity:
+      domain: input_select
+  fields:
+    options:
+      required: true
+      example: '["Item A", "Item B", "Item C"]'
+      selector:
+        text:
+          multiple: true
+
+reload:

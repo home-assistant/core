@@ -1,0 +1,24 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_thermostat": "The thermostat serial number is invalid.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "serial_number": "Serial number of the thermostat.",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "You will need to obtain your thermostat\u2019s numeric serial number or ID by logging into {nuheat_url} and selecting your thermostat(s).",
+        "title": "Connect to the NuHeat"
+      }
+    }
+  }
+}

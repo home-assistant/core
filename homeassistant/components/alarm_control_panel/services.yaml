@@ -1,0 +1,59 @@
+# Describes the format for available alarm control panel services
+.common_service_fields: &common_service_fields
+  code:
+    example: "1234"
+    selector:
+      text:
+
+alarm_disarm:
+  target:
+    entity:
+      domain: alarm_control_panel
+  fields: *common_service_fields
+
+alarm_arm_custom_bypass:
+  target:
+    entity:
+      domain: alarm_control_panel
+      supported_features:
+        - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+  fields: *common_service_fields
+
+alarm_arm_home:
+  target:
+    entity:
+      domain: alarm_control_panel
+      supported_features:
+        - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
+  fields: *common_service_fields
+
+alarm_arm_away:
+  target:
+    entity:
+      domain: alarm_control_panel
+      supported_features:
+        - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_AWAY
+  fields: *common_service_fields
+alarm_arm_night:
+  target:
+    entity:
+      domain: alarm_control_panel
+      supported_features:
+        - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_NIGHT
+  fields: *common_service_fields
+
+alarm_arm_vacation:
+  target:
+    entity:
+      domain: alarm_control_panel
+      supported_features:
+        - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_VACATION
+  fields: *common_service_fields
+
+alarm_trigger:
+  target:
+    entity:
+      domain: alarm_control_panel
+      supported_features:
+        - alarm_control_panel.AlarmControlPanelEntityFeature.TRIGGER
+  fields: *common_service_fields

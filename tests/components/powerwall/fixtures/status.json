@@ -1,0 +1,10 @@
+{
+  "commission_count": 0,
+  "device_type": "hec",
+  "git_hash": "d0e69bde519634961cca04a616d2d4dae80b9f61",
+  "is_new": false,
+  "start_time": "2020-10-28 20:14:11 +0800",
+  "sync_type": "v1",
+  "up_time_seconds": "17h11m31.214751424s",
+  "version": "1.50.1 c58c2df3"
+}

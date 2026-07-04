@@ -1,0 +1,79 @@
+{
+  "config": {
+    "abort": {
+      "account_mismatch": "The inexogy account authenticated with does not match the account that needed re-authentication.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email address used to log in to your inexogy account.",
+          "password": "The password used to log in to your inexogy account."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "last_transmitted": {
+        "name": "Last transmitted"
+      },
+      "phase_1_power": {
+        "name": "Phase 1 power"
+      },
+      "phase_1_voltage": {
+        "name": "Phase 1 voltage"
+      },
+      "phase_2_power": {
+        "name": "Phase 2 power"
+      },
+      "phase_2_voltage": {
+        "name": "Phase 2 voltage"
+      },
+      "phase_3_power": {
+        "name": "Phase 3 power"
+      },
+      "phase_3_voltage": {
+        "name": "Phase 3 voltage"
+      },
+      "total_consumption": {
+        "name": "Total consumption"
+      },
+      "total_gas_consumption": {
+        "name": "Total gas consumption"
+      },
+      "total_power": {
+        "name": "Total power"
+      },
+      "total_production": {
+        "name": "Total production"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect_meters_setup": {
+      "message": "Failed to connect and retrieve meters from inexogy during setup. Please ensure the service is reachable and try again."
+    },
+    "invalid_auth": {
+      "message": "Authentication failed. Please check your inexogy email and password."
+    },
+    "reading_update_failed": {
+      "message": "Error fetching the latest reading for meter {meter_id} from inexogy. The service might be temporarily unavailable or there's a connection issue. Check logs for more details."
+    }
+  },
+  "system_health": {
+    "info": {
+      "api_endpoint_reachable": "inexogy API endpoint reachable"
+    }
+  }
+}

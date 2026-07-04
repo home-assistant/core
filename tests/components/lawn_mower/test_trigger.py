@@ -1,0 +1,224 @@
+"""Test lawn mower triggers."""
+
+from typing import Any
+
+import pytest
+
+from homeassistant.components.lawn_mower import LawnMowerActivity
+from homeassistant.core import HomeAssistant
+
+from tests.components.common import (
+    TriggerStateDescription,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
+    assert_trigger_behavior_first,
+    assert_trigger_options_supported,
+    other_states,
+    parametrize_target_entities,
+    parametrize_trigger_states,
+    target_entities,
+)
+
+
+@pytest.fixture
+async def target_lawn_mowers(hass: HomeAssistant) -> dict[str, list[str]]:
+    """Create multiple lawn mower entities associated with different targets."""
+    return await target_entities(hass, "lawn_mower")
+
+
+@pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("lawn_mower.returned_to_dock", {}, True, True),
+        ("lawn_mower.errored", {}, True, True),
+        ("lawn_mower.paused_mowing", {}, True, True),
+        ("lawn_mower.started_mowing", {}, True, True),
+        ("lawn_mower.started_returning", {}, True, True),
+    ],
+)
+async def test_lawn_mower_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that lawn_mower triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("lawn_mower"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_trigger_states(
+            trigger="lawn_mower.returned_to_dock",
+            target_states=[LawnMowerActivity.DOCKED],
+            other_states=other_states(LawnMowerActivity.DOCKED),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.errored",
+            target_states=[LawnMowerActivity.ERROR],
+            other_states=other_states(LawnMowerActivity.ERROR),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.paused_mowing",
+            target_states=[LawnMowerActivity.PAUSED],
+            other_states=other_states(LawnMowerActivity.PAUSED),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.started_mowing",
+            target_states=[LawnMowerActivity.MOWING],
+            other_states=other_states(LawnMowerActivity.MOWING),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.started_returning",
+            target_states=[LawnMowerActivity.RETURNING],
+            other_states=other_states(LawnMowerActivity.RETURNING),
+        ),
+    ],
+)
+async def test_lawn_mower_state_trigger_behavior_each(
+    hass: HomeAssistant,
+    target_lawn_mowers: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test lawn mower trigger fires when any mower changes state."""
+    await assert_trigger_behavior_each(
+        hass,
+        target_entities=target_lawn_mowers,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("lawn_mower"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_trigger_states(
+            trigger="lawn_mower.returned_to_dock",
+            target_states=[LawnMowerActivity.DOCKED],
+            other_states=other_states(LawnMowerActivity.DOCKED),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.errored",
+            target_states=[LawnMowerActivity.ERROR],
+            other_states=other_states(LawnMowerActivity.ERROR),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.paused_mowing",
+            target_states=[LawnMowerActivity.PAUSED],
+            other_states=other_states(LawnMowerActivity.PAUSED),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.started_mowing",
+            target_states=[LawnMowerActivity.MOWING],
+            other_states=other_states(LawnMowerActivity.MOWING),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.started_returning",
+            target_states=[LawnMowerActivity.RETURNING],
+            other_states=other_states(LawnMowerActivity.RETURNING),
+        ),
+    ],
+)
+async def test_lawn_mower_state_trigger_behavior_first(
+    hass: HomeAssistant,
+    target_lawn_mowers: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test lawn mower trigger fires when first mower changes state."""
+    await assert_trigger_behavior_first(
+        hass,
+        target_entities=target_lawn_mowers,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("lawn_mower"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_trigger_states(
+            trigger="lawn_mower.returned_to_dock",
+            target_states=[LawnMowerActivity.DOCKED],
+            other_states=other_states(LawnMowerActivity.DOCKED),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.errored",
+            target_states=[LawnMowerActivity.ERROR],
+            other_states=other_states(LawnMowerActivity.ERROR),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.paused_mowing",
+            target_states=[LawnMowerActivity.PAUSED],
+            other_states=other_states(LawnMowerActivity.PAUSED),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.started_mowing",
+            target_states=[LawnMowerActivity.MOWING],
+            other_states=other_states(LawnMowerActivity.MOWING),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.started_returning",
+            target_states=[LawnMowerActivity.RETURNING],
+            other_states=other_states(LawnMowerActivity.RETURNING),
+        ),
+    ],
+)
+async def test_lawn_mower_state_trigger_behavior_all(
+    hass: HomeAssistant,
+    target_lawn_mowers: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test lawn mower trigger fires when last mower changes state."""
+    await assert_trigger_behavior_all(
+        hass,
+        target_entities=target_lawn_mowers,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )

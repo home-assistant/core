@@ -1,0 +1,11 @@
+snapshot:
+  target:
+    entity:
+      integration: monoprice
+      domain: media_player
+
+restore:
+  target:
+    entity:
+      integration: monoprice
+      domain: media_player

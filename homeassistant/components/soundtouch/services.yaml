@@ -1,0 +1,56 @@
+play_everywhere:
+  fields:
+    master:
+      required: true
+      selector:
+        entity:
+          integration: soundtouch
+          domain: media_player
+
+create_zone:
+  fields:
+    master:
+      required: true
+      selector:
+        entity:
+          integration: soundtouch
+          domain: media_player
+    slaves:
+      required: true
+      selector:
+        entity:
+          multiple: true
+          integration: soundtouch
+          domain: media_player
+
+add_zone_slave:
+  fields:
+    master:
+      required: true
+      selector:
+        entity:
+          integration: soundtouch
+          domain: media_player
+    slaves:
+      required: true
+      selector:
+        entity:
+          multiple: true
+          integration: soundtouch
+          domain: media_player
+
+remove_zone_slave:
+  fields:
+    master:
+      required: true
+      selector:
+        entity:
+          integration: soundtouch
+          domain: media_player
+    slaves:
+      required: true
+      selector:
+        entity:
+          multiple: true
+          integration: soundtouch
+          domain: media_player

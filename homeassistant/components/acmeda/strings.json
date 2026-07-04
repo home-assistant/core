@@ -1,0 +1,15 @@
+{
+  "config": {
+    "abort": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "id": "Host ID"
+        },
+        "title": "Pick a hub to add"
+      }
+    }
+  }
+}

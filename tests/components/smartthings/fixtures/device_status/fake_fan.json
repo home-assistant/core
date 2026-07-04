@@ -1,0 +1,31 @@
+{
+  "components": {
+    "main": {
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-02-08T23:21:22.908Z"
+        }
+      },
+      "fanSpeed": {
+        "fanSpeed": {
+          "value": 60,
+          "timestamp": "2025-02-10T21:09:08.357Z"
+        }
+      },
+      "airConditionerFanMode": {
+        "fanMode": {
+          "value": null,
+          "timestamp": "2021-04-06T16:44:10.381Z"
+        },
+        "supportedAcFanModes": {
+          "value": ["auto", "low", "medium", "high", "turbo"],
+          "timestamp": "2024-09-10T10:26:28.605Z"
+        },
+        "availableAcFanModes": {
+          "value": null
+        }
+      }
+    }
+  }
+}

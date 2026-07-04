@@ -1,0 +1,62 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unknown_coordinates": "No data for latitude/longitude"
+    },
+    "step": {
+      "coordinates": {
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
+        },
+        "description": "Input the latitude and longitude to monitor:"
+      },
+      "location": {
+        "data": {
+          "location_type": "[%key:common::config_flow::data::location%]"
+        },
+        "description": "Pick a location to monitor:"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Please re-enter the password for {username}:",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "Input your username and password:"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "marginal_operating_emissions_rate": {
+        "name": "Marginal operating emissions rate"
+      },
+      "relative_marginal_emissions_intensity": {
+        "name": "Relative marginal emissions intensity"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "show_on_map": "Show monitored location on the map"
+        },
+        "title": "Configure WattTime"
+      }
+    }
+  }
+}

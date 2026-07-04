@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+    <channel>
+        <title><![CDATA[RSS en espa&ntilde;ol]]></title>
+        <description><![CDATA[Esto es un ejemplo de un feed RSS en espa&ntilde;ol]]></description>
+        <link>http://www.example.com/main.html</link>
+        <lastBuildDate>Mon, 18 Nov 2024 15:00:00 +1000</lastBuildDate>
+        <pubDate>Mon, 18 Nov 2024 15:00:00 +1000</pubDate>
+        <ttl>1800</ttl>
+
+        <item>
+            <title><![CDATA[T&iacute;tulo 1]]></title>
+            <description><![CDATA[Descripci&oacute;n 1]]></description>
+            <link>http://www.example.com/link/1</link>
+            <guid isPermaLink="false">GUID 1</guid>
+            <pubDate>Mon, 18 Nov 2024 15:00:00 +1000</pubDate>
+            <content><![CDATA[Contenido 1 en espa&ntilde;ol]]></content>
+        </item>
+
+    </channel>
+</rss>

@@ -1,0 +1,22 @@
+#!/bin/sh
+# Resolve all dependencies that the application requires to run.
+
+# Stop on errors
+set -e
+
+cd "$(realpath "$(dirname "$0")/..")"
+
+if [ ! -n "$VIRTUAL_ENV" ]; then
+  source .venv/bin/activate
+fi
+
+echo "Installing development dependencies..."
+uv pip install \
+  -e . \
+  -r requirements_all.txt \
+  -r requirements_test.txt \
+  colorlog \
+  --upgrade \
+  --config-settings editable_mode=compat
+
+python3 -m script.translations develop --all

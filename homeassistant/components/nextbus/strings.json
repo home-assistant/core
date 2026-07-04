@@ -1,0 +1,33 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "invalid_agency": "The agency value selected is not valid",
+      "invalid_route": "The route value selected is not valid",
+      "invalid_stop": "The stop value selected is not valid"
+    },
+    "step": {
+      "agency": {
+        "data": {
+          "agency": "Metro agency"
+        },
+        "title": "Select metro agency"
+      },
+      "route": {
+        "data": {
+          "route": "Route"
+        },
+        "title": "Select route"
+      },
+      "stop": {
+        "data": {
+          "stop": "Stop"
+        },
+        "title": "Select stop"
+      }
+    }
+  },
+  "title": "NextBus predictions"
+}

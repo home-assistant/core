@@ -1,0 +1,10 @@
+{
+  "domain": "idteck_prox",
+  "name": "IDTECK Proximity Reader",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/idteck_prox",
+  "iot_class": "local_push",
+  "loggers": ["rfk101py"],
+  "quality_scale": "legacy",
+  "requirements": ["rfk101py==0.0.1"]
+}

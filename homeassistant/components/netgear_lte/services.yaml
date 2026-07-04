@@ -1,0 +1,46 @@
+delete_sms:
+  fields:
+    host:
+      example: 192.168.5.1
+      selector:
+        text:
+    sms_id:
+      required: true
+      example: 7
+      selector:
+        object:
+
+set_option:
+  fields:
+    host:
+      example: 192.168.5.1
+      selector:
+        text:
+    failover:
+      selector:
+        select:
+          options:
+            - "auto"
+            - "mobile"
+            - "wire"
+    autoconnect:
+      selector:
+        select:
+          options:
+            - "always"
+            - "home"
+            - "never"
+
+connect_lte:
+  fields:
+    host:
+      example: 192.168.5.1
+      selector:
+        text:
+
+disconnect_lte:
+  fields:
+    host:
+      example: 192.168.5.1
+      selector:
+        text:

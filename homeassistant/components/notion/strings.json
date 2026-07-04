@@ -1,0 +1,49 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Please re-enter the password for {username}.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "title": "Fill in your information"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "hinged_window": {
+        "name": "Hinged window"
+      },
+      "safe": {
+        "name": "Safe"
+      },
+      "sliding_door_window": {
+        "name": "Sliding door/window"
+      },
+      "smoke_carbon_monoxide_detector": {
+        "name": "Smoke/Carbon monoxide detector"
+      }
+    },
+    "sensor": {
+      "mold_risk": {
+        "name": "Mold risk"
+      }
+    }
+  }
+}

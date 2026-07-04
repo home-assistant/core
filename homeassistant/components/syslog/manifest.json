@@ -1,0 +1,8 @@
+{
+  "domain": "syslog",
+  "name": "Syslog",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/syslog",
+  "iot_class": "local_push",
+  "quality_scale": "legacy"
+}

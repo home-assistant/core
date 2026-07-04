@@ -1,0 +1,10 @@
+{
+  "domain": "harman_kardon_avr",
+  "name": "Harman Kardon AVR",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/harman_kardon_avr",
+  "iot_class": "local_polling",
+  "loggers": ["hkavr"],
+  "quality_scale": "legacy",
+  "requirements": ["hkavr==0.0.5"]
+}

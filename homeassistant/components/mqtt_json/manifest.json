@@ -1,0 +1,9 @@
+{
+  "domain": "mqtt_json",
+  "name": "MQTT JSON",
+  "codeowners": [],
+  "dependencies": ["mqtt"],
+  "documentation": "https://www.home-assistant.io/integrations/mqtt_json",
+  "iot_class": "local_push",
+  "quality_scale": "legacy"
+}

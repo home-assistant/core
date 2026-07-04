@@ -1,0 +1,10 @@
+{
+  "domain": "ripple",
+  "name": "Ripple",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/ripple",
+  "iot_class": "cloud_polling",
+  "loggers": ["pyripple"],
+  "quality_scale": "legacy",
+  "requirements": ["python-ripple-api==0.0.3"]
+}

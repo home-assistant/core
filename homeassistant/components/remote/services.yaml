@@ -1,0 +1,107 @@
+# Describes the format for available remote services
+
+turn_on:
+  target:
+    entity:
+      domain: remote
+  fields:
+    activity:
+      example: "BedroomTV"
+      filter:
+        supported_features:
+          - remote.RemoteEntityFeature.ACTIVITY
+      selector:
+        text:
+
+toggle:
+  target:
+    entity:
+      domain: remote
+
+turn_off:
+  target:
+    entity:
+      domain: remote
+
+send_command:
+  target:
+    entity:
+      domain: remote
+  fields:
+    device:
+      example: "32756745"
+      selector:
+        text:
+    command:
+      required: true
+      example: "Play"
+      selector:
+        object:
+    num_repeats:
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 255
+    delay_secs:
+      default: 0.4
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 0.1
+          unit_of_measurement: seconds
+    hold_secs:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 0.1
+          unit_of_measurement: seconds
+
+learn_command:
+  target:
+    entity:
+      domain: remote
+  fields:
+    device:
+      example: "television"
+      selector:
+        text:
+    command:
+      example: "Turn on"
+      selector:
+        object:
+    command_type:
+      default: "ir"
+      selector:
+        select:
+          options:
+            - "ir"
+            - "rf"
+    alternative:
+      selector:
+        boolean:
+    timeout:
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 5
+          unit_of_measurement: seconds
+
+delete_command:
+  target:
+    entity:
+      domain: remote
+  fields:
+    device:
+      example: "television"
+      selector:
+        text:
+    command:
+      required: true
+      example: "Mute"
+      selector:
+        object:

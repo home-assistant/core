@@ -1,0 +1,11 @@
+search:
+  target:
+    entity:
+      integration: roku
+      domain: media_player
+  fields:
+    keyword:
+      required: true
+      example: "Space Jam"
+      selector:
+        text:

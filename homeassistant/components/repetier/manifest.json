@@ -1,0 +1,10 @@
+{
+  "domain": "repetier",
+  "name": "Repetier-Server",
+  "codeowners": ["@ShadowBr0ther"],
+  "documentation": "https://www.home-assistant.io/integrations/repetier",
+  "iot_class": "local_polling",
+  "loggers": ["pyrepetierng"],
+  "quality_scale": "legacy",
+  "requirements": ["pyrepetierng==0.1.0"]
+}

@@ -1,0 +1,117 @@
+"""Config flow for Modem Caller ID integration."""
+
+from typing import Any, override
+
+from phone_modem import PhoneModem
+import voluptuous as vol
+
+from homeassistant.components import usb
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_DEVICE, CONF_NAME
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
+
+from .const import DEFAULT_NAME, DOMAIN, EXCEPTIONS
+
+DATA_SCHEMA = vol.Schema({"name": str, "device": str})
+
+
+def _generate_unique_id(port: usb.USBDevice | usb.SerialDevice) -> str:
+    """Generate unique id from usb attributes."""
+    vid = port.vid if isinstance(port, usb.USBDevice) else None
+    pid = port.pid if isinstance(port, usb.USBDevice) else None
+    return f"{vid}:{pid}_{port.serial_number}_{port.manufacturer}_{port.description}"
+
+
+class PhoneModemFlowHandler(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Phone Modem."""
+
+    def __init__(self) -> None:
+        """Set up flow instance."""
+        self._device: str | None = None
+
+    @override
+    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
+        """Handle USB Discovery."""
+        dev_path = discovery_info.device
+        unique_id = (
+            f"{discovery_info.vid}:{discovery_info.pid}"
+            f"_{discovery_info.serial_number}"
+            f"_{discovery_info.manufacturer}"
+            f"_{discovery_info.description}"
+        )
+        if (
+            await self.validate_device_errors(dev_path=dev_path, unique_id=unique_id)
+            is None
+        ):
+            self._device = dev_path
+            return await self.async_step_usb_confirm()
+        return self.async_abort(reason="cannot_connect")
+
+    async def async_step_usb_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle USB Discovery confirmation."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                data={CONF_DEVICE: self._device},
+            )
+        self._set_confirm_only()
+        return self.async_show_form(step_id="usb_confirm")
+
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initiated by the user."""
+        errors: dict[str, str] | None = {}
+        if self._async_in_progress():
+            return self.async_abort(reason="already_in_progress")
+        ports = await usb.async_scan_serial_ports(self.hass)
+        existing_devices = [
+            entry.data[CONF_DEVICE] for entry in self._async_current_entries()
+        ]
+        port_map = {
+            usb.human_readable_device_name(
+                port.device,
+                port.serial_number,
+                port.manufacturer,
+                port.description,
+                port.vid if isinstance(port, usb.USBDevice) else None,
+                port.pid if isinstance(port, usb.USBDevice) else None,
+            ): port
+            for port in ports
+            if port.device not in existing_devices
+        }
+        if not port_map:
+            return self.async_abort(reason="no_devices_found")
+
+        if user_input is not None:
+            port = port_map[user_input[CONF_DEVICE]]
+            dev_path = port.device
+            errors = await self.validate_device_errors(
+                dev_path=dev_path, unique_id=_generate_unique_id(port)
+            )
+            if errors is None:
+                return self.async_create_entry(
+                    title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                    data={CONF_DEVICE: dev_path},
+                )
+        user_input = user_input or {}
+        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(list(port_map))})
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+
+    async def validate_device_errors(
+        self, dev_path: str, unique_id: str
+    ) -> dict[str, str] | None:
+        """Handle common flow input validation."""
+        self._async_abort_entries_match({CONF_DEVICE: dev_path})
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured(updates={CONF_DEVICE: dev_path})
+        try:
+            api = PhoneModem()
+            await api.test(dev_path)
+        except EXCEPTIONS:
+            return {"base": "cannot_connect"}
+
+        return None

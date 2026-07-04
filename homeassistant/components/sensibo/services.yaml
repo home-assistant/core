@@ -1,0 +1,179 @@
+assume_state:
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
+  fields:
+    state:
+      required: true
+      example: "on"
+      selector:
+        select:
+          options:
+            - "on"
+            - "off"
+          translation_key: assume_state
+enable_timer:
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
+  fields:
+    minutes:
+      required: false
+      example: 30
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+enable_pure_boost:
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
+  fields:
+    ac_integration:
+      required: true
+      example: true
+      selector:
+        boolean:
+    geo_integration:
+      required: true
+      example: true
+      selector:
+        boolean:
+    indoor_integration:
+      required: true
+      example: true
+      selector:
+        boolean:
+    outdoor_integration:
+      required: true
+      example: true
+      selector:
+        boolean:
+    sensitivity:
+      required: true
+      example: "Normal"
+      selector:
+        select:
+          options:
+            - "normal"
+            - "sensitive"
+          translation_key: sensitivity
+full_state:
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
+  fields:
+    mode:
+      required: true
+      example: "heat"
+      selector:
+        select:
+          options:
+            - "cool"
+            - "heat"
+            - "fan"
+            - "auto"
+            - "dry"
+            - "off"
+          translation_key: hvac_mode
+    target_temperature:
+      required: false
+      example: 23
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+    fan_mode:
+      required: false
+      example: "low"
+      selector:
+        text:
+          type: text
+    swing_mode:
+      required: false
+      example: "fixedBottom"
+      selector:
+        text:
+          type: text
+    horizontal_swing_mode:
+      required: false
+      example: "fixedLeft"
+      selector:
+        text:
+          type: text
+    light:
+      required: false
+      example: "on"
+      selector:
+        select:
+          options:
+            - "on"
+            - "off"
+            - "dim"
+          translation_key: light_mode
+enable_climate_react:
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
+  fields:
+    high_temperature_threshold:
+      required: true
+      example: 24
+      selector:
+        number:
+          min: 0
+          max: 150
+          step: 0.1
+          mode: box
+    high_temperature_state:
+      required: true
+      selector:
+        object:
+    low_temperature_threshold:
+      required: true
+      example: 19
+      selector:
+        number:
+          min: 0
+          max: 150
+          step: 0.1
+          mode: box
+    low_temperature_state:
+      required: true
+      selector:
+        object:
+    smart_type:
+      required: true
+      example: "temperature"
+      selector:
+        select:
+          options:
+            - "temperature"
+            - "feelslike"
+            - "humidity"
+          translation_key: smart_type
+get_device_capabilities:
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
+  fields:
+    hvac_mode:
+      required: true
+      example: "heat"
+      selector:
+        select:
+          options:
+            - "auto"
+            - "cool"
+            - "dry"
+            - "fan"
+            - "heat"
+          translation_key: hvac_mode

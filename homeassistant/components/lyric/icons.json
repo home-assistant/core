@@ -1,0 +1,19 @@
+{
+  "entity": {
+    "select": {
+      "room_priority": {
+        "default": "mdi:home-thermometer"
+      }
+    },
+    "sensor": {
+      "setpoint_status": {
+        "default": "mdi:thermostat"
+      }
+    }
+  },
+  "services": {
+    "set_hold_time": {
+      "service": "mdi:timer-pause"
+    }
+  }
+}

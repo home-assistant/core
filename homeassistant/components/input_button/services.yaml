@@ -1,0 +1,6 @@
+press:
+  target:
+    entity:
+      domain: input_button
+
+reload:

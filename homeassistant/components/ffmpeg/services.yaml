@@ -1,0 +1,21 @@
+restart:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: ffmpeg
+          domain: binary_sensor
+start:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: ffmpeg
+          domain: binary_sensor
+stop:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: ffmpeg
+          domain: binary_sensor

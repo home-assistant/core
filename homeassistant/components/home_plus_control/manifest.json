@@ -1,0 +1,6 @@
+{
+  "domain": "home_plus_control",
+  "name": "Legrand Home+ Control",
+  "integration_type": "virtual",
+  "supported_by": "netatmo"
+}

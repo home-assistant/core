@@ -1,0 +1,29 @@
+{
+  "did": "8516fbb1-17f1-4194-0000001",
+  "name": "E1234567890000000003",
+  "class": "qhe2o2",
+  "resource": "NHl5",
+  "company": "eco-ng",
+  "bindTs": 1734792100110,
+  "service": {
+    "jmq": "jmq-ngiot-eu.dc.ww.ecouser.net",
+    "mqs": "api-ngiot.dc-eu.ww.ecouser.net"
+  },
+  "deviceName": "DEEBOT N20 PRO PLUS",
+  "icon": "https: //portal-ww.ecouser.net/api/pim/file/get/0000001",
+  "ota": true,
+  "UILogicId": "y2_ww_h_y2h5",
+  "materialNo": "110-2406-0001",
+  "pid": "0000001",
+  "product_category": "DEEBOT",
+  "model": "Y2_AES_BLACK_INT",
+  "updateInfo": {
+    "needUpdate": false,
+    "changeLog": ""
+  },
+  "nick": "Dusty",
+  "homeId": "1234567890abcdef12345678",
+  "homeSort": 1,
+  "status": 1,
+  "otaUpgrade": {}
+}

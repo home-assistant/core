@@ -1,0 +1,403 @@
+{
+  "players": [
+    {
+      "player_id": "00:00:00:00:00:01",
+      "provider": "test",
+      "type": "player",
+      "available": true,
+      "powered": false,
+      "device_info": {
+        "model": "Test Model",
+        "address": "192.168.1.1",
+        "manufacturer": "Test Manufacturer"
+      },
+      "supported_features": [
+        "volume_set",
+        "volume_mute",
+        "pause",
+        "set_members",
+        "power",
+        "enqueue",
+        "select_source",
+        "select_sound_mode"
+      ],
+      "elapsed_time": null,
+      "elapsed_time_last_updated": 0,
+      "playback_state": "idle",
+      "volume_level": 20,
+      "volume_muted": false,
+      "group_members": [],
+      "options": [
+        {
+          "key": "treble",
+          "name": "Treble",
+          "type": "integer",
+          "translation_key": "treble",
+          "translation_params": null,
+          "value": -6,
+          "read_only": false,
+          "min_value": -10,
+          "max_value": 10,
+          "step": 1,
+          "options": null
+        },
+        {
+          "key": "bass",
+          "name": "Bass",
+          "type": "float",
+          "translation_key": "bass",
+          "translation_params": null,
+          "value": -6.0,
+          "read_only": false,
+          "min_value": -10.0,
+          "max_value": 10.0,
+          "step": 1.0,
+          "options": null
+        },
+        {
+          "key": "treble_ro",
+          "name": "Treble RO",
+          "type": "integer",
+          "translation_key": "treble",
+          "translation_params": null,
+          "value": -6,
+          "read_only": true,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": null
+        },
+        {
+          "key": "enhancer",
+          "name": "Enhancer",
+          "type": "boolean",
+          "translation_key": "enhancer",
+          "translation_params": null,
+          "value": false,
+          "read_only": false,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": null
+        },
+        {
+          "key": "enhancer_ro",
+          "name": "Enhancer RO",
+          "type": "boolean",
+          "translation_key": "enhancer",
+          "translation_params": null,
+          "value": false,
+          "read_only": true,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": null
+        },
+        {
+          "key": "network_name",
+          "name": "Network Name",
+          "type": "string",
+          "translation_key": "network_name",
+          "translation_params": null,
+          "value": "receiver",
+          "read_only": false,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": null
+        },
+        {
+          "key": "network_name_ro",
+          "name": "Network Name RO",
+          "type": "string",
+          "translation_key": "network_name",
+          "translation_params": null,
+          "value": "receiver ro",
+          "read_only": true,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": null
+        },
+        {
+          "key": "link_audio_delay",
+          "name": "Link Audio Delay",
+          "type": "string",
+          "translation_key": "link_audio_delay",
+          "translation_params": null,
+          "value": "lip_sync",
+          "read_only": false,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": [
+            {
+              "key": "audio_sync",
+              "name": "audio_sync",
+              "type": "string",
+              "value": "audio_sync",
+              "translation_key": "audio_sync_translation"
+            },
+            {
+              "key": "balanced",
+              "name": "balanced",
+              "type": "string",
+              "value": "balanced",
+              "translation_key": "balanced_translation"
+            },
+            {
+              "key": "lip_sync",
+              "name": "lip_sync",
+              "type": "string",
+              "value": "lip_sync",
+              "translation_key": "lip_sync_translation"
+            }
+          ]
+        },
+        {
+          "key": "link_audio_delay_ro",
+          "name": "Link Audio Delay",
+          "type": "string",
+          "translation_key": "link_audio_delay",
+          "translation_params": null,
+          "value": "lip_sync",
+          "read_only": true,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": [
+            {
+              "key": "audio_sync",
+              "name": "audio_sync",
+              "type": "string",
+              "value": "audio_sync",
+              "translation_key": "audio_sync_translation"
+            },
+            {
+              "key": "balanced",
+              "name": "balanced",
+              "type": "string",
+              "value": "balanced",
+              "translation_key": "balanced_translation"
+            },
+            {
+              "key": "lip_sync",
+              "name": "lip_sync",
+              "type": "string",
+              "value": "lip_sync",
+              "translation_key": "lip_sync_translation"
+            }
+          ]
+        },
+        {
+          "key": "boolean_with_options",
+          "name": "Boolean with options",
+          "type": "boolean",
+          "translation_key": "link_audio_delay",
+          "translation_params": null,
+          "value": true,
+          "read_only": false,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": [
+            {
+              "key": "option_a",
+              "name": "Option A",
+              "type": "boolean",
+              "value": false,
+              "translation_key": "option_a"
+            },
+            {
+              "key": "option_b",
+              "name": "Option B",
+              "type": "boolean",
+              "value": true,
+              "translation_key": "option_b"
+            }
+          ]
+        }
+      ],
+      "active_source": "00:00:00:00:00:01",
+      "active_group": null,
+      "current_media": null,
+      "synced_to": null,
+      "enabled_by_default": true,
+      "needs_poll": false,
+      "poll_interval": 30,
+      "enabled": true,
+      "icon": "mdi-speaker",
+      "group_volume": 20,
+      "name": "Test Player 1",
+      "power_control": "native",
+      "volume_control": "native",
+      "mute_control": "native",
+      "hide_player_in_ui": ["when_unavailable"],
+      "expose_to_ha": true,
+      "can_group_with": ["00:00:00:00:00:02"],
+      "source_list": [
+        {
+          "id": "00:00:00:00:00:01",
+          "name": "Music Assistant Queue",
+          "passive": false,
+          "can_play_pause": true,
+          "can_seek": true,
+          "can_next_previous": true
+        },
+        {
+          "id": "spotify",
+          "name": "Spotify Connect",
+          "passive": true,
+          "can_play_pause": true,
+          "can_seek": true,
+          "can_next_previous": true
+        },
+        {
+          "id": "linein",
+          "name": "Line-In",
+          "passive": false,
+          "can_play_pause": false,
+          "can_seek": false,
+          "can_next_previous": false
+        }
+      ],
+      "active_sound_mode": "munich_id",
+      "sound_mode_list": [
+        {
+          "id": "munich_id",
+          "name": "Munich",
+          "passive": false,
+          "translation_key": "munich_translation"
+        },
+        {
+          "id": "stuttgart_id",
+          "name": "Stuttgart",
+          "passive": false,
+          "translation_key": "stuttgart_translation"
+        },
+        {
+          "id": "passive_sound_mode_id",
+          "name": "Passive",
+          "passive": true,
+          "translation_key": "passive_sound_mode_translation"
+        }
+      ]
+    },
+    {
+      "player_id": "00:00:00:00:00:02",
+      "provider": "test",
+      "type": "player",
+      "available": true,
+      "powered": true,
+      "device_info": {
+        "model": "Test Model",
+        "address": "192.168.1.2",
+        "manufacturer": "Test Manufacturer"
+      },
+      "supported_features": [
+        "volume_set",
+        "volume_mute",
+        "pause",
+        "set_members",
+        "power",
+        "enqueue"
+      ],
+      "elapsed_time": 0,
+      "elapsed_time_last_updated": 0,
+      "playback_state": "playing",
+      "volume_level": 20,
+      "volume_muted": false,
+      "group_members": [],
+      "active_source": "spotify",
+      "active_group": null,
+      "current_media": {
+        "uri": "spotify://track/5d95dc5be77e4f7eb4939f62cfef527b",
+        "media_type": "track",
+        "title": "Test Track",
+        "artist": "Test Artist",
+        "album": "Test Album",
+        "image_url": null,
+        "duration": 300,
+        "queue_id": null,
+        "queue_item_id": null,
+        "custom_data": null
+      },
+      "synced_to": null,
+      "enabled_by_default": true,
+      "enabled": true,
+      "hidden": false,
+      "icon": "mdi-speaker",
+      "group_volume": 20,
+      "name": "My Super Test Player 2",
+      "power_control": "native",
+      "volume_control": "native",
+      "mute_control": "native",
+      "hide_player_in_ui": ["when_unavailable"],
+      "expose_to_ha": true,
+      "can_group_with": ["00:00:00:00:00:01"],
+      "source_list": [
+        {
+          "id": "spotify",
+          "name": "Spotify Connect",
+          "passive": true,
+          "can_play_pause": false,
+          "can_seek": false,
+          "can_next_previous": false
+        }
+      ]
+    },
+    {
+      "player_id": "test_group_player_1",
+      "provider": "player_group",
+      "type": "group",
+      "available": true,
+      "powered": true,
+      "device_info": {
+        "model": "Sync Group",
+        "address": "",
+        "manufacturer": "Test"
+      },
+      "supported_features": [
+        "volume_set",
+        "volume_mute",
+        "pause",
+        "set_members",
+        "power",
+        "enqueue"
+      ],
+      "elapsed_time": 0.0,
+      "elapsed_time_last_updated": 1730315437.9904983,
+      "playback_state": "idle",
+      "volume_level": 6,
+      "volume_muted": false,
+      "group_members": ["00:00:00:00:00:01", "00:00:00:00:00:02"],
+      "active_source": "test_group_player_1",
+      "active_group": null,
+      "current_media": {
+        "uri": "http://192.168.1.1:8097/single/test_group_player_1/5d95dc5be77e4f7eb4939f62cfef527b.flac?ts=1730313038",
+        "media_type": "unknown",
+        "title": null,
+        "artist": null,
+        "album": null,
+        "image_url": null,
+        "duration": null,
+        "queue_id": "test_group_player_1",
+        "queue_item_id": "5d95dc5be77e4f7eb4939f62cfef527b",
+        "custom_data": null
+      },
+      "synced_to": null,
+      "enabled_by_default": true,
+      "enabled": true,
+      "icon": "mdi-speaker-multiple",
+      "group_volume": 6,
+      "name": "Test Group Player 1",
+      "power_control": "native",
+      "volume_control": "native",
+      "mute_control": "native",
+      "hide_player_in_ui": ["when_unavailable"],
+      "expose_to_ha": true,
+      "can_group_with": [],
+      "source_list": []
+    }
+  ]
+}

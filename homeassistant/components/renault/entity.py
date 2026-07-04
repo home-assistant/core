@@ -1,0 +1,58 @@
+"""Base classes for Renault entities."""
+
+from dataclasses import dataclass
+from typing import override
+
+from renault_api.kamereon.models import KamereonVehicleDataAttributes
+
+from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .coordinator import RenaultDataUpdateCoordinator
+from .renault_vehicle import RenaultVehicleProxy
+
+
+@dataclass(frozen=True, kw_only=True)
+class RenaultDataEntityDescription(EntityDescription):
+    """Class describing Renault data entities."""
+
+    coordinator: str
+
+
+class RenaultEntity(Entity):
+    """Implementation of a Renault entity with a data coordinator."""
+
+    _attr_has_entity_name = True
+    entity_description: EntityDescription
+
+    def __init__(
+        self,
+        vehicle: RenaultVehicleProxy,
+        description: EntityDescription,
+    ) -> None:
+        """Initialise entity."""
+        self.vehicle = vehicle
+        self.entity_description = description
+        self._attr_device_info = self.vehicle.device_info
+        self._attr_unique_id = f"{self.vehicle.details.vin}_{description.key}".lower()
+
+
+class RenaultDataEntity[T: KamereonVehicleDataAttributes](
+    CoordinatorEntity[RenaultDataUpdateCoordinator[T]], RenaultEntity
+):
+    """Implementation of a Renault entity with a data coordinator."""
+
+    def __init__(
+        self,
+        vehicle: RenaultVehicleProxy,
+        description: RenaultDataEntityDescription,
+    ) -> None:
+        """Initialise entity."""
+        super().__init__(vehicle.coordinators[description.coordinator])
+        RenaultEntity.__init__(self, vehicle, description)
+
+    @property
+    @override
+    def assumed_state(self) -> bool:
+        """Return True if unable to access real state of the entity."""
+        return self.coordinator.assumed_state

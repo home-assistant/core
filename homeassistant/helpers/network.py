@@ -1,0 +1,377 @@
+"""Network helpers."""
+
+from collections.abc import Callable
+from contextlib import suppress
+from ipaddress import ip_address
+import logging
+
+from aiohttp import hdrs
+from hass_nabucasa import remote
+import yarl
+
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.network import is_ip_address, is_loopback, normalize_url
+
+from . import http
+from .hassio import is_hassio
+
+_LOGGER = logging.getLogger(__name__)
+
+TYPE_URL_INTERNAL = "internal_url"
+TYPE_URL_EXTERNAL = "external_url"
+SUPERVISOR_NETWORK_HOST = "homeassistant"
+
+
+class NoURLAvailableError(HomeAssistantError):
+    """URL to the Home Assistant instance is not available."""
+
+
+def is_internal_request(hass: HomeAssistant) -> bool:
+    """Test if the current request is internal."""
+    try:
+        get_url(
+            hass, allow_external=False, allow_cloud=False, require_current_request=True
+        )
+    except NoURLAvailableError:
+        return False
+    return True
+
+
+def get_supervisor_network_url(
+    hass: HomeAssistant, *, allow_ssl: bool = False
+) -> str | None:
+    """Get URL for home assistant within supervisor network."""
+    if hass.config.api is None or not is_hassio(hass):
+        return None
+
+    scheme = "http"
+    if hass.config.api.use_ssl:
+        # Certificate won't be valid for hostname so this URL usually won't work
+        if not allow_ssl:
+            return None
+
+        scheme = "https"
+
+    return str(
+        yarl.URL.build(
+            scheme=scheme,
+            host=SUPERVISOR_NETWORK_HOST,
+            port=hass.config.api.port,
+        )
+    )
+
+
+def is_hass_url(hass: HomeAssistant, url: str) -> bool:
+    """Return if the URL points at this Home Assistant instance."""
+    parsed = yarl.URL(url)
+
+    if not parsed.is_absolute():
+        return False
+
+    if parsed.is_default_port():
+        parsed = parsed.with_port(None)
+
+    def host_ip() -> str | None:
+        if hass.config.api is None or is_loopback(ip_address(hass.config.api.local_ip)):
+            return None
+
+        return str(
+            yarl.URL.build(
+                scheme="http", host=hass.config.api.local_ip, port=hass.config.api.port
+            )
+        )
+
+    def cloud_url() -> str | None:
+        try:
+            return _get_cloud_url(hass)
+        except NoURLAvailableError:
+            return None
+
+    potential_base_factory: Callable[[], str | None]
+    for potential_base_factory in (
+        lambda: hass.config.internal_url,
+        lambda: hass.config.external_url,
+        cloud_url,
+        host_ip,
+        lambda: get_supervisor_network_url(hass, allow_ssl=True),
+    ):
+        potential_base = potential_base_factory()
+
+        if potential_base is None:
+            continue
+
+        potential_parsed = yarl.URL(normalize_url(potential_base))
+
+        if (
+            parsed.scheme == potential_parsed.scheme
+            and parsed.authority == potential_parsed.authority
+        ):
+            return True
+
+    return False
+
+
+def get_url(
+    hass: HomeAssistant,
+    *,
+    require_current_request: bool = False,
+    require_ssl: bool = False,
+    require_standard_port: bool = False,
+    require_cloud: bool = False,
+    allow_internal: bool = True,
+    allow_external: bool = True,
+    allow_cloud: bool = True,
+    allow_ip: bool | None = None,
+    prefer_external: bool | None = None,
+    prefer_cloud: bool = False,
+) -> str:
+    """Get a URL to this instance."""
+    if require_current_request and http.current_request.get() is None:
+        raise NoURLAvailableError
+
+    if prefer_external is None:
+        prefer_external = hass.config.api is not None and hass.config.api.use_ssl
+
+    if allow_ip is None:
+        allow_ip = hass.config.api is None or not hass.config.api.use_ssl
+
+    order = [TYPE_URL_INTERNAL, TYPE_URL_EXTERNAL]
+    if prefer_external:
+        order.reverse()
+
+    # Try finding a URL in the order specified
+    for url_type in order:
+        if allow_internal and url_type == TYPE_URL_INTERNAL and not require_cloud:
+            with suppress(NoURLAvailableError):
+                return _get_internal_url(
+                    hass,
+                    allow_ip=allow_ip,
+                    require_current_request=require_current_request,
+                    require_ssl=require_ssl,
+                    require_standard_port=require_standard_port,
+                )
+
+        if require_cloud or (allow_external and url_type == TYPE_URL_EXTERNAL):
+            with suppress(NoURLAvailableError):
+                return _get_external_url(
+                    hass,
+                    allow_cloud=allow_cloud,
+                    allow_ip=allow_ip,
+                    prefer_cloud=prefer_cloud,
+                    require_current_request=require_current_request,
+                    require_ssl=require_ssl,
+                    require_standard_port=require_standard_port,
+                    require_cloud=require_cloud,
+                )
+            if require_cloud:
+                raise NoURLAvailableError
+
+    # For current request, we accept loopback interfaces (e.g., 127.0.0.1),
+    # the Supervisor hostname and localhost transparently. We ignore the port
+    # in the request since we didn't match above and only use the configured
+    # scheme/port.
+    request_host, _ = _get_request_host_port()
+    if (
+        require_current_request
+        and request_host is not None
+        and hass.config.api is not None
+    ):
+        scheme = "https" if hass.config.api.use_ssl else "http"
+        current_url = yarl.URL.build(
+            scheme=scheme,
+            host=request_host,
+            port=hass.config.api.port,
+        )
+
+        known_hostnames = ["localhost"]
+        if is_hassio(hass):
+            # Local import to avoid circular dependencies
+            from homeassistant.components.hassio import (  # noqa: PLC0415
+                HassioNotReadyError,
+                get_host_info,
+            )
+
+            try:
+                host_info = get_host_info(hass)
+                known_hostnames.extend(
+                    [host_info["hostname"], f"{host_info['hostname']}.local"]
+                )
+            except HassioNotReadyError:
+                _LOGGER.debug(
+                    "Could not retrieve Supervisor host information,"
+                    " list of known URLs will be incomplete"
+                )
+
+        if (
+            (
+                (
+                    allow_ip
+                    and is_ip_address(request_host)
+                    and is_loopback(ip_address(request_host))
+                )
+                or request_host in known_hostnames
+            )
+            and (not require_ssl or current_url.scheme == "https")
+            and (not require_standard_port or current_url.is_default_port())
+        ):
+            return normalize_url(str(current_url))
+
+    # We have to be honest now, we have no viable option available
+    raise NoURLAvailableError
+
+
+def _get_url_port(url: yarl.URL) -> int:
+    """Get resolved port of a yarl.URL."""
+    if url.port is not None:
+        return url.port
+    return 443 if url.scheme == "https" else 80
+
+
+def _get_request_host_port() -> tuple[str | None, int | None]:
+    """Get the host address and resolved port of the current request."""
+    if (request := http.current_request.get()) is None:
+        raise NoURLAvailableError
+    host = request.headers.get(hdrs.HOST)
+    if host is None:
+        return None, None
+
+    # IPv6 addresses are enclosed in brackets
+    # use same logic as yarl and urllib to extract the host
+    if "[" in host:
+        host_part, _, port_part = host.partition("[")[2].partition("]")
+        port_str = port_part.lstrip(":")
+    # partition the host to remove the port
+    # because the raw host header can contain the port
+    elif ":" in host:
+        host_part, _, port_str = host.partition(":")
+    else:
+        host_part, port_str = host, ""
+
+    if port_str:
+        try:
+            port = int(port_str)
+        except ValueError:
+            return None, None
+    else:
+        port = 443 if request.url.scheme == "https" else 80
+
+    return host_part, port
+
+
+def _match_request_host_port(url: yarl.URL) -> bool:
+    """Match request host and resolved port."""
+    try:
+        req_host, req_port = _get_request_host_port()
+    except NoURLAvailableError:
+        return False
+
+    return url.host == req_host and _get_url_port(url) == req_port
+
+
+def _get_internal_url(
+    hass: HomeAssistant,
+    *,
+    allow_ip: bool = True,
+    require_current_request: bool = False,
+    require_ssl: bool = False,
+    require_standard_port: bool = False,
+) -> str:
+    """Get internal URL of this instance."""
+    if hass.config.internal_url:
+        internal_url = yarl.URL(hass.config.internal_url)
+        if (
+            (not require_current_request or _match_request_host_port(internal_url))
+            and (not require_ssl or internal_url.scheme == "https")
+            and (not require_standard_port or internal_url.is_default_port())
+            and (allow_ip or not is_ip_address(str(internal_url.host)))
+        ):
+            return normalize_url(str(internal_url))
+
+    # Fallback to detected local IP
+    if allow_ip and not (
+        require_ssl or hass.config.api is None or hass.config.api.use_ssl
+    ):
+        ip_url = yarl.URL.build(
+            scheme="http", host=hass.config.api.local_ip, port=hass.config.api.port
+        )
+        if (
+            ip_url.host
+            and not is_loopback(ip_address(ip_url.host))
+            and (not require_current_request or _match_request_host_port(ip_url))
+            and (not require_standard_port or ip_url.is_default_port())
+        ):
+            return normalize_url(str(ip_url))
+
+    raise NoURLAvailableError
+
+
+def _get_external_url(
+    hass: HomeAssistant,
+    *,
+    allow_cloud: bool = True,
+    allow_ip: bool = True,
+    prefer_cloud: bool = False,
+    require_current_request: bool = False,
+    require_ssl: bool = False,
+    require_standard_port: bool = False,
+    require_cloud: bool = False,
+) -> str:
+    """Get external URL of this instance."""
+    if require_cloud:
+        return _get_cloud_url(hass, require_current_request=require_current_request)
+
+    if prefer_cloud and allow_cloud:
+        with suppress(NoURLAvailableError):
+            return _get_cloud_url(hass)
+
+    if hass.config.external_url:
+        external_url = yarl.URL(hass.config.external_url)
+        if (
+            (allow_ip or not is_ip_address(str(external_url.host)))
+            and (not require_current_request or _match_request_host_port(external_url))
+            and (not require_standard_port or external_url.is_default_port())
+            and (
+                not require_ssl
+                or (
+                    external_url.scheme == "https"
+                    and not is_ip_address(str(external_url.host))
+                )
+            )
+        ):
+            return normalize_url(str(external_url))
+
+    if allow_cloud:
+        with suppress(NoURLAvailableError):
+            return _get_cloud_url(hass, require_current_request=require_current_request)
+
+    raise NoURLAvailableError
+
+
+def _get_cloud_url(hass: HomeAssistant, require_current_request: bool = False) -> str:
+    """Get external Home Assistant Cloud URL of this instance."""
+    if "cloud" in hass.config.components:
+        # Local import to avoid circular dependencies
+        from homeassistant.components.cloud import (  # noqa: PLC0415
+            CloudNotAvailable,
+            async_remote_ui_url,
+        )
+
+        try:
+            cloud_url = yarl.URL(async_remote_ui_url(hass))
+        except CloudNotAvailable as err:
+            raise NoURLAvailableError from err
+
+        if not require_current_request or _match_request_host_port(cloud_url):
+            return normalize_url(str(cloud_url))
+
+    raise NoURLAvailableError
+
+
+def is_cloud_connection(hass: HomeAssistant) -> bool:
+    """Return True if the current connection is a nabucasa cloud connection."""
+
+    if "cloud" not in hass.config.components:
+        return False
+
+    return remote.is_cloud_request.get()

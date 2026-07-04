@@ -1,0 +1,195 @@
+{
+  "config": {
+    "abort": {
+      "invalid_config": "Invalid configuration"
+    },
+    "error": {
+      "invalid_prv_key": "Invalid private key",
+      "unknown": "Unknown error"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "vapid_email": "[%key:common::config_flow::data::email%]",
+          "vapid_prv_key": "VAPID private key"
+        },
+        "data_description": {
+          "vapid_email": "This contact address will be included in the metadata of each notification.",
+          "vapid_prv_key": "If not specified, one will be automatically generated."
+        }
+      }
+    }
+  },
+  "entity": {
+    "event": {
+      "event": {
+        "state_attributes": {
+          "action": { "name": "Action" },
+          "event_type": {
+            "state": {
+              "clicked": "Clicked",
+              "closed": "Closed",
+              "received": "Received"
+            }
+          },
+          "tag": {
+            "name": "[%key:component::html5::services::send_message::fields::tag::name%]"
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "channel_expired": {
+      "message": "Notification channel for {target} has expired"
+    },
+    "connection_error": {
+      "message": "Sending notification to {target} failed due to a connection error"
+    },
+    "request_error": {
+      "message": "Sending notification to {target} failed due to a request error"
+    }
+  },
+  "issues": {
+    "deprecated_dismiss_action": {
+      "description": "The action `{action}` is deprecated and will be removed in a future release.\n\nPlease update your automations and scripts to use the notify entities with the `{new_action}` action instead.",
+      "title": "[%key:component::html5::issues::deprecated_notify_action::title%]"
+    },
+    "deprecated_notify_action": {
+      "description": "The action `{action}` is deprecated and will be removed in a future release.\n\nPlease update your automations and scripts to use the notify entities with the `{new_action_1}` or `{new_action_2}` actions instead.",
+      "title": "Detected use of deprecated action {action}"
+    }
+  },
+  "selector": {
+    "actions": {
+      "fields": {
+        "action": {
+          "description": "The identifier of the action. This will be sent back to Home Assistant when the user clicks the button.",
+          "name": "Action identifier"
+        },
+        "icon": {
+          "description": "URL of an image displayed as the icon for this button.",
+          "name": "Icon"
+        },
+        "title": {
+          "description": "The label of the button displayed to the user.",
+          "name": "Title"
+        }
+      }
+    },
+    "dir": {
+      "options": {
+        "auto": "[%key:common::state::auto%]",
+        "ltr": "Left-to-right",
+        "rtl": "Right-to-left"
+      }
+    },
+    "urgency": {
+      "options": {
+        "high": "[%key:common::state::high%]",
+        "low": "[%key:common::state::low%]",
+        "normal": "[%key:common::state::normal%]"
+      }
+    }
+  },
+  "services": {
+    "dismiss": {
+      "description": "Dismisses an HTML5 notification.",
+      "fields": {
+        "data": {
+          "description": "Extended information of notification. Supports tag.",
+          "name": "Data"
+        },
+        "target": {
+          "description": "An array of targets.",
+          "name": "Target"
+        }
+      },
+      "name": "Dismiss"
+    },
+    "dismiss_message": {
+      "description": "Dismisses one or more HTML5 notifications.",
+      "fields": {
+        "tag": {
+          "description": "The tag of the notifications to dismiss. If not specified, all notifications will be dismissed.",
+          "name": "[%key:component::html5::services::send_message::fields::tag::name%]"
+        }
+      },
+      "name": "Dismiss message"
+    },
+    "send_message": {
+      "description": "Sends a message via HTML5 Push Notifications",
+      "fields": {
+        "actions": {
+          "description": "Adds action buttons to the notification. When the user clicks a button, an event is sent back to Home Assistant. Amount of actions supported may vary between platforms.",
+          "name": "Action buttons"
+        },
+        "badge": {
+          "description": "URL or relative path of a small image to replace the browser icon on mobile platforms. Maximum size is 96px by 96px",
+          "name": "Badge"
+        },
+        "data": {
+          "description": "Additional custom key-value pairs to include in the payload of the push message. This can be used to include extra information that can be accessed in the notification events.",
+          "name": "Extra data"
+        },
+        "dir": {
+          "description": "The direction of the notification's text. Adopts the browser's language setting behavior by default.",
+          "name": "Text direction"
+        },
+        "icon": {
+          "description": "URL or relative path of an image to display as the main icon in the notification. Maximum size is 320px by 320px.",
+          "name": "Icon"
+        },
+        "image": {
+          "description": "URL or relative path of a larger image to display in the main body of the notification. Experimental support, may not be displayed on all platforms.",
+          "name": "Image"
+        },
+        "lang": {
+          "description": "The language of the notification's content.",
+          "name": "Language"
+        },
+        "message": {
+          "description": "The message body of the notification.",
+          "name": "Message"
+        },
+        "renotify": {
+          "description": "If enabled, the user will be alerted again (sound/vibration) when a notification with the same tag replaces a previous one.",
+          "name": "Renotify"
+        },
+        "require_interaction": {
+          "description": "If enabled, the notification will remain active until the user clicks or dismisses it, rather than automatically closing after a few seconds. This provides the same behavior on desktop as on mobile platforms.",
+          "name": "Require interaction"
+        },
+        "silent": {
+          "description": "If enabled, the notification will not play sounds or trigger vibration, regardless of the device's notification settings.",
+          "name": "Silent"
+        },
+        "tag": {
+          "description": "The identifier of the notification. Sending a new notification with the same tag will replace the existing one. If not specified, a unique tag will be generated for each notification.",
+          "name": "Tag"
+        },
+        "timestamp": {
+          "description": "The timestamp of the notification. By default, it uses the time when the notification is sent.",
+          "name": "Timestamp"
+        },
+        "title": {
+          "description": "Title for your notification message.",
+          "name": "Title"
+        },
+        "ttl": {
+          "description": "Specifies how long the push service should retain the message if the user's browser or device is offline. After this period, the notification expires. A value of 0 means the notification is discarded immediately if the target is not connected. Defaults to 1 day.",
+          "name": "Time to live"
+        },
+        "urgency": {
+          "description": "Whether the push service should try to deliver the notification immediately or defer it in accordance with the user's power saving preferences.",
+          "name": "Urgency"
+        },
+        "vibrate": {
+          "description": "A vibration pattern to run with the notification. An array of integers representing alternating periods of vibration and silence in milliseconds. For example, [200, 100, 200] would vibrate for 200ms, pause for 100ms, then vibrate for another 200ms.",
+          "name": "Vibration pattern"
+        }
+      },
+      "name": "Send message"
+    }
+  }
+}

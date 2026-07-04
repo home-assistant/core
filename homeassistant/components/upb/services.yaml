@@ -1,0 +1,123 @@
+light_fade_start:
+  target:
+    entity:
+      integration: upb
+      domain: light
+  fields:
+    brightness:
+      selector:
+        number:
+          min: 0
+          max: 255
+    brightness_pct:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    rate:
+      default: -1
+      selector:
+        number:
+          min: -1
+          max: 3600
+          step: 0.01
+          unit_of_measurement: seconds
+
+light_fade_stop:
+  target:
+    entity:
+      integration: upb
+      domain: light
+
+light_blink:
+  target:
+    entity:
+      integration: upb
+      domain: light
+  fields:
+    rate:
+      default: 0.5
+      selector:
+        number:
+          min: 0
+          max: 4.25
+          step: 0.01
+          unit_of_measurement: seconds
+
+link_deactivate:
+  target:
+    entity:
+      integration: upb
+      domain: scene
+
+link_goto:
+  target:
+    entity:
+      integration: upb
+      domain: scene
+  fields:
+    brightness:
+      selector:
+        number:
+          min: 0
+          max: 255
+    brightness_pct:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    rate:
+      selector:
+        number:
+          min: -1
+          max: 3600
+          step: 0.01
+          unit_of_measurement: seconds
+
+link_fade_start:
+  target:
+    entity:
+      integration: upb
+      domain: scene
+  fields:
+    brightness:
+      selector:
+        number:
+          min: 0
+          max: 255
+    brightness_pct:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    rate:
+      selector:
+        number:
+          min: -1
+          max: 3600
+          step: 0.01
+          unit_of_measurement: seconds
+
+link_fade_stop:
+  target:
+    entity:
+      integration: upb
+      domain: scene
+
+link_blink:
+  target:
+    entity:
+      integration: upb
+      domain: scene
+  fields:
+    blink_rate:
+      default: 0.5
+      selector:
+        number:
+          min: 0
+          max: 4.25
+          step: 0.01
+          unit_of_measurement: seconds

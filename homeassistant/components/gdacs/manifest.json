@@ -1,0 +1,11 @@
+{
+  "domain": "gdacs",
+  "name": "Global Disaster Alert and Coordination System (GDACS)",
+  "codeowners": ["@exxamalte"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/gdacs",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["aio_georss_gdacs", "aio_georss_client"],
+  "requirements": ["aio-georss-gdacs==0.10"]
+}

@@ -1,0 +1,523 @@
+{
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
+    "condition_threshold_name": "Threshold type",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least",
+    "trigger_threshold_name": "Threshold type"
+  },
+  "conditions": {
+    "is_cooling": {
+      "description": "Tests if one or more thermostats are cooling.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::climate::common::condition_for_name%]"
+        }
+      },
+      "name": "Thermostat is cooling"
+    },
+    "is_drying": {
+      "description": "Tests if one or more thermostats are drying.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::climate::common::condition_for_name%]"
+        }
+      },
+      "name": "Thermostat is drying"
+    },
+    "is_heating": {
+      "description": "Tests if one or more thermostats are heating.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::climate::common::condition_for_name%]"
+        }
+      },
+      "name": "Thermostat is heating"
+    },
+    "is_hvac_mode": {
+      "description": "Tests if one or more thermostats are set to a specific HVAC mode.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::climate::common::condition_for_name%]"
+        },
+        "hvac_mode": {
+          "description": "The HVAC modes to test for.",
+          "name": "Modes"
+        }
+      },
+      "name": "Thermostat HVAC mode"
+    },
+    "is_off": {
+      "description": "Tests if one or more thermostats are off.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::climate::common::condition_for_name%]"
+        }
+      },
+      "name": "Thermostat is off"
+    },
+    "is_on": {
+      "description": "Tests if one or more thermostats are on.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::climate::common::condition_for_name%]"
+        }
+      },
+      "name": "Thermostat is on"
+    },
+    "is_target_humidity": {
+      "description": "Tests the humidity setpoint of one or more thermostats.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::climate::common::condition_for_name%]"
+        },
+        "threshold": {
+          "name": "[%key:component::climate::common::condition_threshold_name%]"
+        }
+      },
+      "name": "Thermostat target humidity"
+    },
+    "is_target_temperature": {
+      "description": "Tests the temperature setpoint of one or more thermostats.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::climate::common::condition_for_name%]"
+        },
+        "threshold": {
+          "name": "[%key:component::climate::common::condition_threshold_name%]"
+        }
+      },
+      "name": "Thermostat target temperature"
+    }
+  },
+  "device_automation": {
+    "action_type": {
+      "set_hvac_mode": "Change HVAC mode on {entity_name}",
+      "set_preset_mode": "Change preset on {entity_name}"
+    },
+    "condition_type": {
+      "is_hvac_mode": "{entity_name} is set to a specific HVAC mode",
+      "is_preset_mode": "{entity_name} is set to a specific preset mode"
+    },
+    "extra_fields": {
+      "above": "[%key:common::device_automation::extra_fields::above%]",
+      "below": "[%key:common::device_automation::extra_fields::below%]",
+      "for": "[%key:common::device_automation::extra_fields::for%]",
+      "hvac_mode": "HVAC mode",
+      "preset_mode": "Preset mode",
+      "to": "[%key:common::device_automation::extra_fields::to%]"
+    },
+    "trigger_type": {
+      "current_humidity_changed": "{entity_name} measured humidity changed",
+      "current_temperature_changed": "{entity_name} measured temperature changed",
+      "hvac_mode_changed": "{entity_name} HVAC mode changed"
+    }
+  },
+  "entity_component": {
+    "_": {
+      "name": "Thermostat",
+      "state": {
+        "auto": "[%key:common::state::auto%]",
+        "cool": "Cool",
+        "dry": "Dry",
+        "fan_only": "Fan only",
+        "heat": "Heat",
+        "heat_cool": "Heat/Cool",
+        "off": "[%key:common::state::off%]"
+      },
+      "state_attributes": {
+        "current_humidity": {
+          "name": "Current humidity"
+        },
+        "current_temperature": {
+          "name": "Current temperature"
+        },
+        "fan_mode": {
+          "name": "Fan mode",
+          "state": {
+            "auto": "[%key:common::state::auto%]",
+            "diffuse": "Diffuse",
+            "focus": "Focus",
+            "high": "[%key:common::state::high%]",
+            "low": "[%key:common::state::low%]",
+            "medium": "[%key:common::state::medium%]",
+            "middle": "Middle",
+            "off": "[%key:common::state::off%]",
+            "on": "[%key:common::state::on%]",
+            "top": "Top"
+          }
+        },
+        "fan_modes": {
+          "name": "Fan modes"
+        },
+        "humidity": {
+          "name": "Target humidity"
+        },
+        "hvac_action": {
+          "name": "Current action",
+          "state": {
+            "cooling": "Cooling",
+            "defrosting": "Defrosting",
+            "drying": "Drying",
+            "fan": "Fan",
+            "heating": "Heating",
+            "idle": "[%key:common::state::idle%]",
+            "off": "[%key:common::state::off%]",
+            "preheating": "Preheating"
+          }
+        },
+        "hvac_modes": {
+          "name": "HVAC modes"
+        },
+        "max_humidity": {
+          "name": "Max target humidity"
+        },
+        "max_temp": {
+          "name": "Max target temperature"
+        },
+        "min_humidity": {
+          "name": "Min target humidity"
+        },
+        "min_temp": {
+          "name": "Min target temperature"
+        },
+        "preset_mode": {
+          "name": "Preset",
+          "state": {
+            "activity": "Activity",
+            "away": "[%key:common::state::not_home%]",
+            "boost": "Boost",
+            "comfort": "Comfort",
+            "eco": "Eco",
+            "home": "[%key:common::state::home%]",
+            "none": "None",
+            "sleep": "Sleep"
+          }
+        },
+        "preset_modes": {
+          "name": "Presets"
+        },
+        "swing_horizontal_mode": {
+          "name": "Horizontal swing mode",
+          "state": {
+            "off": "[%key:common::state::off%]",
+            "on": "[%key:common::state::on%]"
+          }
+        },
+        "swing_horizontal_modes": {
+          "name": "Horizontal swing modes"
+        },
+        "swing_mode": {
+          "name": "Swing mode",
+          "state": {
+            "both": "Both",
+            "horizontal": "Horizontal",
+            "off": "[%key:common::state::off%]",
+            "on": "[%key:common::state::on%]",
+            "vertical": "Vertical"
+          }
+        },
+        "swing_modes": {
+          "name": "Swing modes"
+        },
+        "target_temp_high": {
+          "name": "Upper target temperature"
+        },
+        "target_temp_low": {
+          "name": "Lower target temperature"
+        },
+        "target_temp_step": {
+          "name": "Target temperature step"
+        },
+        "temperature": {
+          "name": "Target temperature"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "humidity_out_of_range": {
+      "message": "Provided humidity {humidity} is not valid. Accepted range is {min_humidity} to {max_humidity}."
+    },
+    "low_temp_higher_than_high_temp": {
+      "message": "'Lower target temperature' cannot be higher than 'Upper target temperature'."
+    },
+    "missing_target_temperature_entity_feature": {
+      "message": "Set temperature action was used with the 'Target temperature' parameter but the entity does not support it."
+    },
+    "missing_target_temperature_range_entity_feature": {
+      "message": "Set temperature action was used with the 'Lower/Upper target temperature' parameter but the entity does not support it."
+    },
+    "not_valid_fan_mode": {
+      "message": "Fan mode {mode} is not valid. Valid fan modes are: {modes}."
+    },
+    "not_valid_horizontal_swing_mode": {
+      "message": "Horizontal swing mode {mode} is not valid. Valid horizontal swing modes are: {modes}."
+    },
+    "not_valid_hvac_mode": {
+      "message": "HVAC mode {mode} is not valid. Valid HVAC modes are: {modes}."
+    },
+    "not_valid_preset_mode": {
+      "message": "Preset mode {mode} is not valid. Valid preset modes are: {modes}."
+    },
+    "not_valid_swing_mode": {
+      "message": "Swing mode {mode} is not valid. Valid swing modes are: {modes}."
+    },
+    "temp_out_of_range": {
+      "message": "Provided temperature {check_temp} is not valid. Accepted range is {min_temp} to {max_temp}."
+    }
+  },
+  "services": {
+    "set_fan_mode": {
+      "description": "Sets the fan mode of a thermostat.",
+      "fields": {
+        "fan_mode": {
+          "description": "Fan operation mode.",
+          "name": "Fan mode"
+        }
+      },
+      "name": "Set thermostat fan mode"
+    },
+    "set_humidity": {
+      "description": "Sets the target humidity of a thermostat.",
+      "fields": {
+        "humidity": {
+          "description": "Target humidity.",
+          "name": "Humidity"
+        }
+      },
+      "name": "Set thermostat target humidity"
+    },
+    "set_hvac_mode": {
+      "description": "Sets the HVAC mode of a thermostat.",
+      "fields": {
+        "hvac_mode": {
+          "description": "HVAC operation mode.",
+          "name": "HVAC mode"
+        }
+      },
+      "name": "Set thermostat HVAC mode"
+    },
+    "set_preset_mode": {
+      "description": "Sets the preset mode of a thermostat.",
+      "fields": {
+        "preset_mode": {
+          "description": "Preset mode.",
+          "name": "Preset mode"
+        }
+      },
+      "name": "Set thermostat preset mode"
+    },
+    "set_swing_horizontal_mode": {
+      "description": "Sets the horizontal swing mode of a thermostat.",
+      "fields": {
+        "swing_horizontal_mode": {
+          "description": "Horizontal swing operation mode.",
+          "name": "Horizontal swing mode"
+        }
+      },
+      "name": "Set thermostat horizontal swing mode"
+    },
+    "set_swing_mode": {
+      "description": "Sets the swing mode of a thermostat.",
+      "fields": {
+        "swing_mode": {
+          "description": "Swing operation mode.",
+          "name": "Swing mode"
+        }
+      },
+      "name": "Set thermostat swing mode"
+    },
+    "set_temperature": {
+      "description": "Sets the target temperature of a thermostat.",
+      "fields": {
+        "hvac_mode": {
+          "description": "HVAC operation mode.",
+          "name": "HVAC mode"
+        },
+        "target_temp_high": {
+          "description": "The max temperature setpoint.",
+          "name": "Upper target temperature"
+        },
+        "target_temp_low": {
+          "description": "The min temperature setpoint.",
+          "name": "Lower target temperature"
+        },
+        "temperature": {
+          "description": "The temperature setpoint.",
+          "name": "Target temperature"
+        }
+      },
+      "name": "Set thermostat target temperature",
+      "sections": {
+        "temperature_range": {
+          "name": "Temperature range"
+        }
+      }
+    },
+    "toggle": {
+      "description": "Toggles a thermostat on/off.",
+      "name": "Toggle thermostat"
+    },
+    "turn_off": {
+      "description": "Turns off a thermostat.",
+      "name": "Turn off thermostat"
+    },
+    "turn_on": {
+      "description": "Turns on a thermostat.",
+      "name": "Turn on thermostat"
+    }
+  },
+  "title": "Climate",
+  "triggers": {
+    "hvac_mode_changed": {
+      "description": "Triggers when the mode of one or more thermostats changes.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::climate::common::trigger_for_name%]"
+        },
+        "hvac_mode": {
+          "description": "The HVAC modes to trigger on.",
+          "name": "Modes"
+        }
+      },
+      "name": "Thermostat mode changed"
+    },
+    "started_cooling": {
+      "description": "Triggers when one or more thermostats start cooling.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::climate::common::trigger_for_name%]"
+        }
+      },
+      "name": "Thermostat started cooling"
+    },
+    "started_drying": {
+      "description": "Triggers when one or more thermostats start drying.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::climate::common::trigger_for_name%]"
+        }
+      },
+      "name": "Thermostat started drying"
+    },
+    "started_heating": {
+      "description": "Triggers when one or more thermostats start heating.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::climate::common::trigger_for_name%]"
+        }
+      },
+      "name": "Thermostat started heating"
+    },
+    "target_humidity_changed": {
+      "description": "Triggers when the humidity setpoint of one or more thermostats changes.",
+      "fields": {
+        "threshold": {
+          "name": "[%key:component::climate::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Thermostat target humidity changed"
+    },
+    "target_humidity_crossed_threshold": {
+      "description": "Triggers when the humidity setpoint of one or more thermostats crosses a threshold.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::climate::common::trigger_for_name%]"
+        },
+        "threshold": {
+          "name": "[%key:component::climate::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Thermostat target humidity crossed threshold"
+    },
+    "target_temperature_changed": {
+      "description": "Triggers when the temperature setpoint of one or more thermostats changes.",
+      "fields": {
+        "threshold": {
+          "name": "[%key:component::climate::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Thermostat target temperature changed"
+    },
+    "target_temperature_crossed_threshold": {
+      "description": "Triggers when the temperature setpoint of one or more thermostats crosses a threshold.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::climate::common::trigger_for_name%]"
+        },
+        "threshold": {
+          "name": "[%key:component::climate::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Thermostat target temperature crossed threshold"
+    },
+    "turned_off": {
+      "description": "Triggers when one or more thermostats turn off.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::climate::common::trigger_for_name%]"
+        }
+      },
+      "name": "Thermostat turned off"
+    },
+    "turned_on": {
+      "description": "Triggers when one or more thermostats turn on, regardless of the mode.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::climate::common::trigger_for_name%]"
+        }
+      },
+      "name": "Thermostat turned on"
+    }
+  }
+}

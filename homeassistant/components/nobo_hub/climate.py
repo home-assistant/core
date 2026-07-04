@@ -1,0 +1,198 @@
+"""Python Control of Nobø Hub - Nobø Energy Control."""
+
+from typing import Any, override
+
+from pynobo import PynoboError, nobo
+
+from homeassistant.components.climate import (
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
+    PRESET_AWAY,
+    PRESET_COMFORT,
+    PRESET_ECO,
+    PRESET_NONE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
+)
+from homeassistant.const import (
+    ATTR_NAME,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    UnitOfTemperature,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
+
+from . import NoboHubConfigEntry
+from .const import (
+    ATTR_SERIAL,
+    ATTR_TEMP_COMFORT_C,
+    ATTR_TEMP_ECO_C,
+    CONF_OVERRIDE_TYPE,
+    DOMAIN,
+    OVERRIDE_TYPE_NOW,
+)
+from .entity import NoboBaseEntity
+
+PARALLEL_UPDATES = 0
+
+SUPPORT_FLAGS = (
+    ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+)
+
+PRESET_MODES = [PRESET_NONE, PRESET_COMFORT, PRESET_ECO, PRESET_AWAY]
+
+MIN_TEMPERATURE = 7
+MAX_TEMPERATURE = 30
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: NoboHubConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Nobø Ecohub platform from UI configuration."""
+
+    # Setup connection with hub
+    hub = config_entry.runtime_data
+
+    override_type = (
+        nobo.API.OVERRIDE_TYPE_NOW
+        if config_entry.options.get(CONF_OVERRIDE_TYPE) == OVERRIDE_TYPE_NOW
+        else nobo.API.OVERRIDE_TYPE_CONSTANT
+    )
+
+    # Add zones as entities
+    async_add_entities(NoboZone(zone_id, hub, override_type) for zone_id in hub.zones)
+
+
+class NoboZone(NoboBaseEntity, ClimateEntity):
+    """Representation of a Nobø zone.
+
+    A Nobø zone consists of a group of physical devices that are
+    controlled as a unity.
+    """
+
+    _attr_name = None
+    _attr_max_temp = MAX_TEMPERATURE
+    _attr_min_temp = MIN_TEMPERATURE
+    _attr_precision = PRECISION_TENTHS
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.AUTO]
+    _attr_hvac_mode = HVACMode.AUTO
+    _attr_preset_modes = PRESET_MODES
+    _attr_supported_features = SUPPORT_FLAGS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_target_temperature_step = PRECISION_WHOLE
+    # Need to poll to get preset change when in HVACMode.AUTO
+    _attr_should_poll = True
+
+    def __init__(self, zone_id, hub: nobo, override_type) -> None:
+        """Initialize the climate device."""
+        super().__init__(hub)
+        self._id = zone_id
+        self._attr_unique_id = f"{hub.hub_serial}:{zone_id}"
+        self._override_type = override_type
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{hub.hub_serial}:{zone_id}")},
+            name=hub.zones[zone_id][ATTR_NAME],
+            via_device=(DOMAIN, hub.hub_info[ATTR_SERIAL]),
+            suggested_area=hub.zones[zone_id][ATTR_NAME],
+        )
+        self._read_state()
+
+    @override
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target HVAC mode."""
+        preset = PRESET_COMFORT if hvac_mode == HVACMode.HEAT else PRESET_NONE
+        await self._apply_preset(preset, "set_hvac_mode_failed")
+
+    @override
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new zone override."""
+        await self._apply_preset(preset_mode, "set_preset_mode_failed")
+
+    async def _apply_preset(
+        self,
+        preset_mode: str,
+        translation_key: str,
+    ) -> None:
+        if preset_mode == PRESET_ECO:
+            mode = nobo.API.OVERRIDE_MODE_ECO
+        elif preset_mode == PRESET_AWAY:
+            mode = nobo.API.OVERRIDE_MODE_AWAY
+        elif preset_mode == PRESET_COMFORT:
+            mode = nobo.API.OVERRIDE_MODE_COMFORT
+        else:  # PRESET_NONE
+            mode = nobo.API.OVERRIDE_MODE_NORMAL
+        try:
+            await self._nobo.async_create_override(
+                mode,
+                self._override_type,
+                nobo.API.OVERRIDE_TARGET_ZONE,
+                self._id,
+            )
+        except PynoboError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key=translation_key,
+            ) from err
+
+    @override
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        if ATTR_TARGET_TEMP_LOW in kwargs:
+            low = round(kwargs[ATTR_TARGET_TEMP_LOW])
+            high = round(kwargs[ATTR_TARGET_TEMP_HIGH])
+            try:
+                await self._nobo.async_update_zone(
+                    self._id, temp_comfort_c=high, temp_eco_c=low
+                )
+            except PynoboError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="set_temperature_failed",
+                ) from err
+
+    async def async_update(self) -> None:
+        """Fetch new state data for this zone."""
+        self._read_state()
+
+    @callback
+    @override
+    def _read_state(self) -> None:
+        """Copy the current hub state onto the entity attributes."""
+        if self._id not in self._nobo.zones:
+            # Zone removed via the Nobø app; mark unavailable.
+            self._attr_available = False
+            return
+        self._attr_available = True
+        state = self._nobo.get_current_zone_mode(self._id, dt_util.now())
+        self._attr_hvac_mode = HVACMode.AUTO
+        self._attr_preset_mode = PRESET_NONE
+
+        if state == nobo.API.NAME_OFF:
+            self._attr_hvac_mode = HVACMode.OFF
+        elif state == nobo.API.NAME_AWAY:
+            self._attr_preset_mode = PRESET_AWAY
+        elif state == nobo.API.NAME_ECO:
+            self._attr_preset_mode = PRESET_ECO
+        elif state == nobo.API.NAME_COMFORT:
+            self._attr_preset_mode = PRESET_COMFORT
+
+        if self._nobo.get_zone_override_mode(self._id) != nobo.API.NAME_NORMAL:
+            self._attr_hvac_mode = HVACMode.HEAT
+
+        current_temperature = self._nobo.get_current_zone_temperature(self._id)
+        self._attr_current_temperature = (
+            None if current_temperature is None else float(current_temperature)
+        )
+        self._attr_target_temperature_high = int(
+            self._nobo.zones[self._id][ATTR_TEMP_COMFORT_C]
+        )
+        self._attr_target_temperature_low = int(
+            self._nobo.zones[self._id][ATTR_TEMP_ECO_C]
+        )

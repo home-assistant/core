@@ -1,0 +1,650 @@
+                  <h1>List of Alexa Interfaces and Supported Languages</h1>
+
+
+<div markdown="span" class="alert alert-info" role="alert"><i class="fa fa-info-circle"></i> <b>Note:</b> Sign in to the <a href="https://developer.amazon.com/alexa/console/ask" target="_blank" rel="noopener noreferrer">developer console</a> to build or publish your skill.</div><hr />
+
+
+
+
+
+                  <p>Implement the Alexa interfaces to build automotive skills, music, radio, and podcast skills, smart home skills, and video skills.  Alexa interfaces use the <a href="../ask-overviews/voice-interaction-models.html#prebuilt-models">pre-built voice interaction model</a>.</p>
+
+<p>You can use these interfaces with Alexa Voice Service (AVS) Built-in and Alexa Connect Kit (ACK) enabled devices, also. For more details, see <a href="../smarthome/development-options.html">Smart Home Development Options</a>.</p>
+
+<h2 id="alexa-interfaces">Alexa interfaces</h2>
+
+<p>The following table shows the interfaces that you can implement in your Alexa skills. Follow the link to each interface for full details, including the supported capabilities and example customer utterances.</p>
+
+<table><thead><tr><th> Interface
+</th>
+<th> Version
+</th>
+<th> Primary skill type
+</th>
+<th> Supported languages
+
+</th></tr></thead><tbody></tbody><colgroup><col width=" 40%" /><col width="10%" /><col width="20%" /><col width="30%" /></colgroup><tbody><tr><td>
+        <p><a href="../alexa-voice-service/alexa-applicationstatereporter.html"><code>Alexa.ApplicationStateReporter</code></a></p>
+      </td><td>
+        <p>1.0</p>
+      </td><td>
+        <p>AVS</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-audio-playqueue.html"><code>Alexa.Audio.PlayQueue</code></a></p>
+      </td><td>
+        <p>1.0</p>
+      </td><td>
+        <p>Music, Radio, Podcast</p>
+      </td><td>
+        <p><code>en-US</code>, <code>es-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../automotive/alexa-authorizationcontroller.html"><code>Alexa.AuthorizationController</code></a></p>
+      </td><td>
+        <p>1.0</p>
+      </td><td>
+        <p>Automotive</p>
+      </td><td>
+        <p><code>en-CA</code>, <code>en-US</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-automationmanagement.html"><code>Alexa.AutomationManagement</code></a></p>
+      </td><td>
+        <p>1.0</p>
+      </td><td>
+        <p>Smart Home Energy</p>
+      </td><td>
+        <p><code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../automotive/alexa-automotive-vehicledata.html"><code>Alexa.Automotive.VehicleData</code></a></p>
+      </td><td>
+        <p>1.0</p>
+      </td><td>
+        <p>Automotive</p>
+      </td><td>
+        <p><code>en-CA</code>, <code>en-US</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-brightnesscontroller.html"><code>Alexa.BrightnessController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>,<code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../alexa-voice-service/alexa-liveviewcontroller.html"><code>Alexa.Camera.LiveViewController</code></a></p>
+      </td><td>
+        <p>1.7</p>
+      </td><td>
+        <p>AVS</p>
+      </td><td>
+        <p><code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-camerastreamcontroller.html"><code>Alexa.CameraStreamController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Security</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-channelcontroller.html"><code>Alexa.ChannelController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Entertainment, <br />
+Video</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-colorcontroller.html"><code>Alexa.ColorController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home</p>
+      </td><td>
+        <p><code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-colortemperaturecontroller.html"><code>Alexa.ColorTemperatureController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home</p>
+      </td><td>
+        <p><code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-commissionable.html"><code>Alexa.Commissionable</code></a></p>
+      </td><td>
+        <p>1.0</p>
+      </td><td>
+        <p>Smart Home</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-consentrequiredreporter.html"><code>Alexa.ConsentManagement.ConsentRequiredReporter</code></a></p>
+      </td><td>
+        <p>1.0</p>
+      </td><td>
+        <p>Smart Home</p>
+      </td><td>
+        <p><code>ja-JP</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-contactsensor.html"><code>Alexa.ContactSensor</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Security</p>
+      </td><td>
+        <p><code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-cooking.html"><code>Alexa.Cooking</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Cooking</p>
+      </td><td>
+        <p><code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-cooking-foodtemperaturecontroller.html"><code>Alexa.Cooking.FoodTemperatureController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Cooking</p>
+      </td><td>
+        <p><code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-cooking-foodtemperaturesensor.html"><code>Alexa.Cooking.FoodTemperatureSensor</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Cooking</p>
+      </td><td>
+        <p><code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-cooking-presetcontroller.html"><code>Alexa.Cooking.PresetController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Cooking</p>
+      </td><td>
+        <p><code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-cooking-temperaturecontroller.html"><code>Alexa.Cooking.TemperatureController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Cooking</p>
+      </td><td>
+        <p><code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-cooking-temperaturesensor.html"><code>Alexa.Cooking.TemperatureSensor</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Cooking</p>
+      </td><td>
+        <p><code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-cooking-timecontroller.html"><code>Alexa.Cooking.TimeController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Cooking</p>
+      </td><td>
+        <p><code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-datacontroller.html"><code>Alexa.DataController</code></a></p>
+      </td><td>
+        <p>1.0</p>
+      </td><td>
+        <p>Smart Home</p>
+      </td><td>
+        <p><code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-deviceusage-estimation.html"><code>Alexa.DeviceUsage.Estimation</code></a></p>
+      </td><td>
+        <p>1.0</p>
+      </td><td>
+        <p>Smart Home Energy</p>
+      </td><td>
+        <p><code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-deviceusage-meter.html"><code>Alexa.DeviceUsage.Meter</code></a></p>
+      </td><td>
+        <p>1.0</p>
+      </td><td>
+        <p>Smart Home Energy</p>
+      </td><td>
+        <p><code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-doorbelleventsource.html"><code>Alexa.DoorbellEventSource</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Security</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-endpointhealth.html"><code>Alexa.EndpointHealth</code></a></p>
+      </td><td>
+        <p>3.1</p>
+      </td><td>
+        <p>Smart Home</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-equalizercontroller.html"><code>Alexa.EqualizerController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Entertainment</p>
+      </td><td>
+        <p><code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>,  <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-inputcontroller.html"><code>Alexa.InputController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Entertainment, <br />
+Video, AVS</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-inventorylevelsensor.html"><code>Alexa.InventoryLevelSensor</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home</p>
+      </td><td>
+        <p><code>de-DE</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>,  <code>it-IT</code>, <code>ja-JP</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-inventorylevelusagesensor.html"><code>Alexa.InventoryLevelUsageSensor</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home</p>
+      </td><td>
+        <p><code>de-DE</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>,  <code>it-IT</code>, <code>ja-JP</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-inventoryusagesensor.html"><code>Alexa.InventoryUsageSensor</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home</p>
+      </td><td>
+        <p><code>de-DE</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>,  <code>it-IT</code>, <code>ja-JP</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-keypadcontroller.html"><code>Alexa.KeypadController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Video</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-launcher.html"><code>Alexa.Launcher</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Video</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-lockcontroller.html"><code>Alexa.LockController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Security</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-media-playback.html"><code>Alexa.Media.Playback</code></a></p>
+      </td><td>
+        <p>1.0</p>
+      </td><td>
+        <p>Music, Radio, Podcast</p>
+      </td><td>
+        <p><code>en-US</code>, <code>es-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-media-playqueue.html"><code>Alexa.Media.PlayQueue</code></a></p>
+      </td><td>
+        <p>1.0</p>
+      </td><td>
+        <p>Music, Radio, Podcast</p>
+      </td><td>
+        <p><code>en-US</code>, <code>es-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-media-search.html"><code>Alexa.Media.Search</code></a></p>
+      </td><td>
+        <p>1.0</p>
+      </td><td>
+        <p>Music, Radio, Podcast</p>
+      </td><td>
+        <p><code>en-US</code>, <code>es-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-modecontroller.html"><code>Alexa.ModeController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home, AVS</p>
+      </td><td>
+        <p><code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-motionsensor.html"><code>Alexa.MotionSensor</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Security</p>
+      </td><td>
+        <p><code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>,  <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-percentagecontroller.html"><code>Alexa.PercentageController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home</p>
+      </td><td>
+        <p><code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>,  <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>,  <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-playbackcontroller.html"><code>Alexa.PlaybackController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Entertainment, <br />
+Video</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-playbackcontroller.html"><code>Alexa.PlaybackStateReporter</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Entertainment, <br />
+Video</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-powercontroller.html"><code>Alexa.PowerController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home,  <br />
+Video, AVS</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-powerlevelcontroller.html"><code>Alexa.PowerLevelController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home</p>
+      </td><td>
+        <p><code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>it-IT</code>, <code>ja-JP</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-proactivenotificationsource.html"><code>Alexa.ProactiveNotificationSource</code></a></p>
+      </td><td>
+        <p>3.0</p>
+      </td><td>
+        <p>Smart Home</p>
+      </td><td>
+        <p>Notifications for device state: <code>de-DE</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>it-IT</code> <br />
+Notifications for cooking: <code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-rangecontroller.html"><code>Alexa.RangeController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home, AVS</p>
+      </td><td>
+        <p><code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-recordcontroller.html"><code>Alexa.RecordController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Video</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-remotevideoplayer.html"><code>Alexa.RemoteVideoPlayer</code></a></p>
+      </td><td>
+        <p>3.1</p>
+      </td><td>
+        <p>Video</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-rtcsessioncontroller.html"><code>Alexa.RTCSessionController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Security</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-US</code>, <code>es-ES</code>,  <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-scenecontroller.html"><code>Alexa.SceneController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home</p>
+      </td><td>
+        <p><code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-securitypanelcontroller.html"><code>Alexa.SecurityPanelController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Security</p>
+      </td><td>
+        <p><code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-securitypanelcontroller-alert.html"><code>Alexa.SecurityPanelController.Alert</code></a></p>
+      </td><td>
+        <p>1.1</p>
+      </td><td>
+        <p>Smart Home Security</p>
+      </td><td>
+        <p><code>de-DE</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-US</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-seekcontroller.html"><code>Alexa.SeekController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Video</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-simpleeventsource.html"><code>Alexa.SimpleEventSource</code></a></p>
+      </td><td>
+        <p>1.0</p>
+      </td><td>
+        <p>Smart Home</p>
+      </td><td>
+        <p><code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-smartvision-objectdetectionsensor.html"><code>Alexa.SmartVision.ObjectDetectionSensor</code></a></p>
+      </td><td>
+        <p>1.0</p>
+      </td><td>
+        <p>Smart Home Security</p>
+      </td><td>
+        <p><code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-speaker.html"><code>Alexa.Speaker</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Entertainment,  <br />
+Video</p>
+      </td><td>
+        <p><code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>it-IT</code>, <code>ja-JP</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-stepspeaker.html"><code>Alexa.StepSpeaker</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Entertainment,  <br />
+Video</p>
+      </td><td>
+        <p><code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>it-IT</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-temperaturesensor.html"><code>Alexa.TemperatureSensor</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>,  <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-thermostatcontroller.html"><code>Alexa.ThermostatController</code></a></p>
+      </td><td>
+        <p>3.1</p>
+      </td><td>
+        <p>Smart Home</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>,  <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-thermostatcontroller-configuration.html"><code>Alexa.ThermostatController.Configuration</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home</p>
+      </td><td>
+        <p><code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-thermostatcontroller-hvac-components.html"><code>Alexa.ThermostatController.HVAC.Components</code></a></p>
+      </td><td>
+        <p>1.0</p>
+      </td><td>
+        <p>Smart Home Energy</p>
+      </td><td>
+        <p><code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-thermostatcontroller-schedule.html"><code>Alexa.ThermostatController.Schedule</code></a></p>
+      </td><td>
+        <p>3.2</p>
+      </td><td>
+        <p>Smart Home</p>
+      </td><td>
+        <p><code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-timeholdcontroller.html"><code>Alexa.TimeHoldController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Cooking</p>
+      </td><td>
+        <p><code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-togglecontroller.html"><code>Alexa.ToggleController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home, AVS</p>
+      </td><td>
+        <p><code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>,  <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-uicontroller.html"><code>Alexa.UIController</code></a></p>
+      </td><td>
+        <p>3.0</p>
+      </td><td>
+        <p>Video</p>
+      </td><td>
+        <p><code>en-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-userpreference.html"><code>Alexa.UserPreference</code></a></p>
+      </td><td>
+        <p>2.0</p>
+      </td><td>
+        <p>Music, Radio, Podcast</p>
+      </td><td>
+        <p><code>en-US</code>, <code>es-US</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-videorecorder.html"><code>Alexa.VideoRecorder</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Video</p>
+      </td><td>
+        <p><code>ar-SA</code>, <code>de-DE</code>, <code>en-AU</code>, <code>en-CA</code>, <code>en-GB</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>es-MX</code>, <code>es-US</code>, <code>fr-CA</code>, <code>fr-FR</code>, <code>hi-IN</code>, <code>it-IT</code>, <code>ja-JP</code>, <code>pt-BR</code></p>
+
+      </td></tr><tr><td>
+        <p><a href="../device-apis/alexa-wakeonlancontroller.html"><code>Alexa.WakeOnLANController</code></a></p>
+      </td><td>
+        <p>3</p>
+      </td><td>
+        <p>Smart Home Entertainment</p>
+      </td><td>
+        <p><code>de-DE</code>, <code>en-AU</code>, <code>en-IN</code>, <code>en-US</code>, <code>es-ES</code>, <code>it-IT</code>, <code>ja-JP</code></p>
+
+      </td></tr></tbody></table>
+
+
+
+

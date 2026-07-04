@@ -1,0 +1,33 @@
+{
+  "entity": {
+    "sensor": {
+      "health_index": {
+        "default": "mdi:heart-pulse"
+      },
+      "mold": {
+        "default": "mdi:water-check"
+      },
+      "oxygen": {
+        "default": "mdi:leaf"
+      },
+      "performance_index": {
+        "default": "mdi:head-check"
+      },
+      "r32": {
+        "default": "mdi:hvac"
+      },
+      "r454b": {
+        "default": "mdi:hvac"
+      },
+      "r454c": {
+        "default": "mdi:hvac"
+      },
+      "radon": {
+        "default": "mdi:radioactive"
+      },
+      "virus_index": {
+        "default": "mdi:virus-off"
+      }
+    }
+  }
+}

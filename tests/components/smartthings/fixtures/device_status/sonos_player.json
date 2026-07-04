@@ -1,0 +1,259 @@
+{
+  "components": {
+    "main": {
+      "mediaPlayback": {
+        "supportedPlaybackCommands": {
+          "value": ["play", "pause", "stop"],
+          "timestamp": "2025-02-02T13:18:40.078Z"
+        },
+        "playbackStatus": {
+          "value": "playing",
+          "timestamp": "2025-02-09T19:53:58.330Z"
+        }
+      },
+      "mediaPresets": {
+        "presets": {
+          "value": [
+            {
+              "id": "10",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000059036.jpg",
+              "mediaSource": "Storytel",
+              "name": "Dra \u00e5t skogen Sune!"
+            },
+            {
+              "id": "22",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000001894.jpg",
+              "mediaSource": "Storytel",
+              "name": "Fy katten Sune"
+            },
+            {
+              "id": "29",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000001896.jpg",
+              "mediaSource": "Storytel",
+              "name": "Gult \u00e4r fult, Sune"
+            },
+            {
+              "id": "2",
+              "imageUrl": "https://static.mytuner.mobi/media/tvos_radios/2l5zg6lhjbab.png",
+              "mediaSource": "myTuner Radio",
+              "name": "Kiss"
+            },
+            {
+              "id": "3",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000046017.jpg",
+              "mediaSource": "Storytel",
+              "name": "L\u00e4skigt Sune!"
+            },
+            {
+              "id": "16",
+              "imageUrl": "https://www.storytel.com//images/320x320/0002590598.jpg",
+              "mediaSource": "Storytel",
+              "name": "Pluggh\u00e4sten Sune"
+            },
+            {
+              "id": "14",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000000070.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sagan om Sune"
+            },
+            {
+              "id": "18",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000006452.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sk\u00e4mtaren Sune"
+            },
+            {
+              "id": "26",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000001892.jpg",
+              "mediaSource": "Storytel",
+              "name": "Spik och panik, Sune!"
+            },
+            {
+              "id": "7",
+              "imageUrl": "https://www.storytel.com//images/320x320/0003119145.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sune - T\u00e5gsemestern"
+            },
+            {
+              "id": "25",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000000071.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sune b\u00f6rjar tv\u00e5an"
+            },
+            {
+              "id": "9",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000006448.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sune i Grekland"
+            },
+            {
+              "id": "8",
+              "imageUrl": "https://www.storytel.com//images/320x320/0002492498.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sune i Ullared"
+            },
+            {
+              "id": "30",
+              "imageUrl": "https://www.storytel.com//images/320x320/0002072946.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sune och familjen Anderssons sjuka jul"
+            },
+            {
+              "id": "17",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000000475.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sune och klantpappan"
+            },
+            {
+              "id": "11",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000042688.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sune och Mamma Mysko"
+            },
+            {
+              "id": "20",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000000072.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sune och syster vampyr"
+            },
+            {
+              "id": "15",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000039918.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sune slutar f\u00f6rsta klass"
+            },
+            {
+              "id": "5",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000017431.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sune v\u00e4rsta killen!"
+            },
+            {
+              "id": "27",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000068900.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sunes halloween"
+            },
+            {
+              "id": "19",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000000476.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sunes hemligheter"
+            },
+            {
+              "id": "21",
+              "imageUrl": "https://www.storytel.com//images/320x320/0002370989.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sunes hj\u00e4rnsl\u00e4pp"
+            },
+            {
+              "id": "24",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000001889.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sunes jul"
+            },
+            {
+              "id": "28",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000034437.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sunes party"
+            },
+            {
+              "id": "4",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000006450.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sunes skolresa"
+            },
+            {
+              "id": "13",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000000477.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sunes sommar"
+            },
+            {
+              "id": "12",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000046015.jpg",
+              "mediaSource": "Storytel",
+              "name": "Sunes Sommarstuga"
+            },
+            {
+              "id": "6",
+              "imageUrl": "https://www.storytel.com//images/320x320/0002099327.jpg",
+              "mediaSource": "Storytel",
+              "name": "Supersnuten Sune"
+            },
+            {
+              "id": "23",
+              "imageUrl": "https://www.storytel.com//images/320x320/0000563738.jpg",
+              "mediaSource": "Storytel",
+              "name": "Zunes stolpskott"
+            }
+          ],
+          "timestamp": "2025-02-02T13:18:48.272Z"
+        }
+      },
+      "audioVolume": {
+        "volume": {
+          "value": 15,
+          "unit": "%",
+          "timestamp": "2025-02-09T19:57:37.230Z"
+        }
+      },
+      "mediaGroup": {
+        "groupMute": {
+          "value": "unmuted",
+          "timestamp": "2025-02-07T01:19:54.911Z"
+        },
+        "groupPrimaryDeviceId": {
+          "value": "RINCON_38420B9108F601400",
+          "timestamp": "2025-02-09T19:52:24.000Z"
+        },
+        "groupId": {
+          "value": "RINCON_38420B9108F601400:3579458382",
+          "timestamp": "2025-02-09T19:54:06.936Z"
+        },
+        "groupVolume": {
+          "value": 12,
+          "unit": "%",
+          "timestamp": "2025-02-07T01:19:54.911Z"
+        },
+        "groupRole": {
+          "value": "ungrouped",
+          "timestamp": "2025-02-09T19:52:23.974Z"
+        }
+      },
+      "refresh": {},
+      "mediaTrackControl": {
+        "supportedTrackControlCommands": {
+          "value": ["nextTrack", "previousTrack"],
+          "timestamp": "2025-02-02T13:18:40.123Z"
+        }
+      },
+      "audioMute": {
+        "mute": {
+          "value": "unmuted",
+          "timestamp": "2025-02-09T19:57:35.487Z"
+        }
+      },
+      "audioNotification": {},
+      "audioTrackData": {
+        "totalTime": {
+          "value": null
+        },
+        "audioTrackData": {
+          "value": {
+            "album": "Forever Young",
+            "albumArtUrl": "http://192.168.1.123:1400/getaa?s=1&u=x-sonos-spotify%3aspotify%253atrack%253a3bg2qahpZmsg5wV2EMPXIk%3fsid%3d9%26flags%3d8232%26sn%3d9",
+            "artist": "David Guetta",
+            "mediaSource": "Spotify",
+            "title": "Forever Young"
+          },
+          "timestamp": "2025-02-09T19:53:55.615Z"
+        },
+        "elapsedTime": {
+          "value": null
+        }
+      }
+    }
+  }
+}

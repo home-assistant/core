@@ -1,0 +1,25 @@
+decrement:
+  target:
+    entity:
+      domain: input_number
+
+increment:
+  target:
+    entity:
+      domain: input_number
+
+set_value:
+  target:
+    entity:
+      domain: input_number
+  fields:
+    value:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 9223372036854775807
+          step: 0.001
+          mode: box
+
+reload:

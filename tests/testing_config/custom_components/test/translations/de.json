@@ -1,0 +1,13 @@
+{
+  "entity": {
+    "switch": {
+      "other1": {
+        "name": "Anderes 1",
+        "unit_of_measurement": "einheiten"
+      },
+      "other2": { "name": "Anderes 2 {placeholder}" },
+      "other3": { "name": "" },
+      "outlet": { "name": "Steckdose {something}" }
+    }
+  }
+}

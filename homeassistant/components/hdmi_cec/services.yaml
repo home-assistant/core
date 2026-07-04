@@ -1,0 +1,51 @@
+power_on:
+select_device:
+  fields:
+    device:
+      required: true
+      example: '"switch.hdmi_1" or "1.1.0.0" or "01:10"'
+      selector:
+        text:
+send_command:
+  fields:
+    att:
+      example: [0, 2]
+      selector:
+        object:
+    cmd:
+      example: 144 or "0x90"
+      selector:
+        text:
+    dst:
+      example: 5 or "0x5"
+      selector:
+        text:
+    raw:
+      example: '"10:36"'
+      selector:
+        text:
+    src:
+      example: 12 or "0xc"
+      selector:
+        text:
+standby:
+update:
+volume:
+  fields:
+    down:
+      selector:
+        number:
+          min: 1
+          max: 100
+    mute:
+      selector:
+        select:
+          options:
+            - "off"
+            - "on"
+            - "toggle"
+    up:
+      selector:
+        number:
+          min: 1
+          max: 100

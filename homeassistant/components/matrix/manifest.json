@@ -1,0 +1,10 @@
+{
+  "domain": "matrix",
+  "name": "Matrix",
+  "codeowners": ["@PaarthShah"],
+  "documentation": "https://www.home-assistant.io/integrations/matrix",
+  "iot_class": "cloud_push",
+  "loggers": ["matrix_client"],
+  "quality_scale": "legacy",
+  "requirements": ["matrix-nio==0.25.2", "Pillow==12.2.0", "aiofiles==24.1.0"]
+}

@@ -1,0 +1,21 @@
+# Describes the format for available Remember The Milk services
+
+create_task:
+  fields:
+    name:
+      required: true
+      example: "do this ^today #from_hass"
+      selector:
+        text:
+    id:
+      example: myid
+      selector:
+        text:
+
+complete_task:
+  fields:
+    id:
+      required: true
+      example: myid
+      selector:
+        text:

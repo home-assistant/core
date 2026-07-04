@@ -1,0 +1,428 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Sensor T & H Server Home",
+  "category": "wsdcg",
+  "product_id": "xflodz7oja0pndk3",
+  "product_name": "T&H Sensor",
+  "online": true,
+  "sub": false,
+  "time_zone": "-03:00",
+  "active_time": "2023-12-14T21:05:25+00:00",
+  "create_time": "2023-12-14T21:05:25+00:00",
+  "update_time": "2023-12-14T21:05:25+00:00",
+  "function": {
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    },
+    "maxtemp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "Ôäâ",
+        "min": -200,
+        "max": 600,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "minitemp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "Ôäâ",
+        "min": -200,
+        "max": 600,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "maxhum_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "minihum_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_sensitivity": {
+      "type": "Integer",
+      "value": {
+        "unit": "Ôäâ",
+        "min": 3,
+        "max": 20,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "hum_sensitivity": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 3,
+        "max": 20,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "va_temperature": {
+      "type": "Integer",
+      "value": {
+        "unit": "Ôäâ",
+        "min": -200,
+        "max": 600,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "va_humidity": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    },
+    "maxtemp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "Ôäâ",
+        "min": -200,
+        "max": 600,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "minitemp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "Ôäâ",
+        "min": -200,
+        "max": 600,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "maxhum_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "minihum_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_alarm": {
+      "type": "Enum",
+      "value": {
+        "range": ["loweralarm", "upperalarm", "cancel"]
+      }
+    },
+    "hum_alarm": {
+      "type": "Enum",
+      "value": {
+        "range": ["loweralarm", "upperalarm", "cancel"]
+      }
+    },
+    "temp_sensitivity": {
+      "type": "Integer",
+      "value": {
+        "unit": "Ôäâ",
+        "min": 3,
+        "max": 20,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "hum_sensitivity": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 3,
+        "max": 20,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "va_temperature": 327,
+    "va_humidity": 50,
+    "battery_percentage": 100,
+    "temp_unit_convert": "c",
+    "maxtemp_set": 390,
+    "minitemp_set": 0,
+    "maxhum_set": 82,
+    "minihum_set": 20,
+    "temp_alarm": "cancel",
+    "hum_alarm": "loweralarm",
+    "temp_sensitivity": 6,
+    "hum_sensitivity": 6
+  },
+  "set_up": true,
+  "support_local": true,
+  "local_strategy": {
+    "1": {
+      "value_convert": "default",
+      "status_code": "va_temperature",
+      "config_item": {
+        "statusFormat": {
+          "va_temperature": "$"
+        },
+        "valueDesc": {
+          "unit": "Ôäâ",
+          "min": -200,
+          "max": 600,
+          "scale": 1,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "xflodz7oja0pndk3"
+      }
+    },
+    "2": {
+      "value_convert": "default",
+      "status_code": "humidity_value",
+      "config_item": {
+        "statusFormat": {
+          "va_humidity": "$"
+        },
+        "valueDesc": {
+          "unit": "%",
+          "min": 0,
+          "max": 100,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "xflodz7oja0pndk3"
+      }
+    },
+    "4": {
+      "value_convert": "default",
+      "status_code": "battery_percentage",
+      "config_item": {
+        "statusFormat": {
+          "battery_percentage": "$"
+        },
+        "valueDesc": {
+          "unit": "%",
+          "min": 0,
+          "max": 100,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "xflodz7oja0pndk3"
+      }
+    },
+    "9": {
+      "value_convert": "default",
+      "status_code": "temp_unit_convert",
+      "config_item": {
+        "statusFormat": {
+          "temp_unit_convert": "$"
+        },
+        "valueDesc": {
+          "range": ["c", "f"]
+        },
+        "valueType": "Enum",
+        "enumMappingMap": {},
+        "pid": "xflodz7oja0pndk3"
+      }
+    },
+    "10": {
+      "value_convert": "default",
+      "status_code": "maxtemp_set",
+      "config_item": {
+        "statusFormat": {
+          "maxtemp_set": "$"
+        },
+        "valueDesc": {
+          "unit": "Ôäâ",
+          "min": -200,
+          "max": 600,
+          "scale": 1,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "xflodz7oja0pndk3"
+      }
+    },
+    "11": {
+      "value_convert": "default",
+      "status_code": "minitemp_set",
+      "config_item": {
+        "statusFormat": {
+          "minitemp_set": "$"
+        },
+        "valueDesc": {
+          "unit": "Ôäâ",
+          "min": -200,
+          "max": 600,
+          "scale": 1,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "xflodz7oja0pndk3"
+      }
+    },
+    "12": {
+      "value_convert": "default",
+      "status_code": "maxhum_set",
+      "config_item": {
+        "statusFormat": {
+          "maxhum_set": "$"
+        },
+        "valueDesc": {
+          "unit": "%",
+          "min": 0,
+          "max": 100,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "xflodz7oja0pndk3"
+      }
+    },
+    "13": {
+      "value_convert": "default",
+      "status_code": "minihum_set",
+      "config_item": {
+        "statusFormat": {
+          "minihum_set": "$"
+        },
+        "valueDesc": {
+          "unit": "%",
+          "min": 0,
+          "max": 100,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "xflodz7oja0pndk3"
+      }
+    },
+    "14": {
+      "value_convert": "default",
+      "status_code": "temp_alarm",
+      "config_item": {
+        "statusFormat": {
+          "temp_alarm": "$"
+        },
+        "valueDesc": {
+          "range": ["loweralarm", "upperalarm", "cancel"]
+        },
+        "valueType": "Enum",
+        "enumMappingMap": {},
+        "pid": "xflodz7oja0pndk3"
+      }
+    },
+    "15": {
+      "value_convert": "default",
+      "status_code": "hum_alarm",
+      "config_item": {
+        "statusFormat": {
+          "hum_alarm": "$"
+        },
+        "valueDesc": {
+          "range": ["loweralarm", "upperalarm", "cancel"]
+        },
+        "valueType": "Enum",
+        "enumMappingMap": {},
+        "pid": "xflodz7oja0pndk3"
+      }
+    },
+    "19": {
+      "value_convert": "default",
+      "status_code": "temp_sensitivity",
+      "config_item": {
+        "statusFormat": {
+          "temp_sensitivity": "$"
+        },
+        "valueDesc": {
+          "unit": "Ôäâ",
+          "min": 3,
+          "max": 20,
+          "scale": 1,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "xflodz7oja0pndk3"
+      }
+    },
+    "20": {
+      "value_convert": "default",
+      "status_code": "hum_sensitivity",
+      "config_item": {
+        "statusFormat": {
+          "hum_sensitivity": "$"
+        },
+        "valueDesc": {
+          "unit": "%",
+          "min": 3,
+          "max": 20,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "xflodz7oja0pndk3"
+      }
+    }
+  }
+}

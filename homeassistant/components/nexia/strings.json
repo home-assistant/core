@@ -1,0 +1,122 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "brand": "Brand",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "blower_active": {
+        "name": "Blower active"
+      },
+      "emergency_heat_active": {
+        "name": "Emergency heat active"
+      }
+    },
+    "number": {
+      "fan_speed": {
+        "name": "Fan speed"
+      }
+    },
+    "sensor": {
+      "air_cleaner_mode": {
+        "name": "Air cleaner mode"
+      },
+      "current_compressor_speed": {
+        "name": "Current compressor speed"
+      },
+      "get_dehumidify_setpoint": {
+        "name": "Cooling dehumidify setpoint"
+      },
+      "get_humidify_setpoint": {
+        "name": "Heating humidify setpoint"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "requested_compressor_speed": {
+        "name": "Requested compressor speed"
+      },
+      "system_status": {
+        "name": "System status"
+      },
+      "zone_setpoint_status": {
+        "name": "Zone setpoint status"
+      },
+      "zone_status": {
+        "name": "Zone status"
+      }
+    },
+    "switch": {
+      "emergency_heat": {
+        "name": "Emergency heat"
+      },
+      "hold": {
+        "name": "Hold"
+      },
+      "room_iq_sensor": {
+        "name": "Include {sensor_name}"
+      }
+    }
+  },
+  "services": {
+    "set_aircleaner_mode": {
+      "description": "Sets the air cleaner mode.",
+      "fields": {
+        "aircleaner_mode": {
+          "description": "The air cleaner mode to set.",
+          "name": "Air cleaner mode"
+        }
+      },
+      "name": "Set air cleaner mode"
+    },
+    "set_dehumidify_setpoint": {
+      "description": "Sets the target humidity for cooling.",
+      "fields": {
+        "humidity": {
+          "description": "The setpoint for dehumidification when cooling.",
+          "name": "Humidity"
+        }
+      },
+      "name": "Set dehumidify setpoint"
+    },
+    "set_humidify_setpoint": {
+      "description": "Sets the target humidity for heating.",
+      "fields": {
+        "humidity": {
+          "description": "The setpoint for humidification when heating.",
+          "name": "Humidity"
+        }
+      },
+      "name": "Set humidify setpoint"
+    },
+    "set_hvac_run_mode": {
+      "description": "Sets the run and/or operation mode of the HVAC system.",
+      "fields": {
+        "hvac_mode": {
+          "description": "The HVAC mode to use for the schedule or hold. If not specified, the current HVAC mode will be used.",
+          "name": "HVAC mode"
+        },
+        "run_mode": {
+          "description": "Run the schedule or hold. If not specified, the current run mode will be used.",
+          "name": "Run mode"
+        }
+      },
+      "name": "Set HVAC run mode"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "conditions": {
+    "is_option_selected": {
+      "condition": "mdi:format-list-bulleted"
+    }
+  },
+  "entity_component": {
+    "_": {
+      "default": "mdi:format-list-bulleted"
+    }
+  },
+  "services": {
+    "select_first": {
+      "service": "mdi:format-list-bulleted"
+    },
+    "select_last": {
+      "service": "mdi:format-list-bulleted"
+    },
+    "select_next": {
+      "service": "mdi:format-list-bulleted"
+    },
+    "select_option": {
+      "service": "mdi:format-list-bulleted"
+    },
+    "select_previous": {
+      "service": "mdi:format-list-bulleted"
+    }
+  },
+  "triggers": {
+    "selection_changed": {
+      "trigger": "mdi:format-list-bulleted"
+    }
+  }
+}

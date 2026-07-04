@@ -1,0 +1,85 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Anbau",
+  "category": "wkf",
+  "product_id": "p3dbf6qs",
+  "product_name": "Smart Radiator Thermostat",
+  "online": false,
+  "sub": true,
+  "time_zone": "+02:00",
+  "active_time": "2023-10-14T06:23:27+00:00",
+  "create_time": "2023-10-14T06:23:27+00:00",
+  "update_time": "2023-10-14T06:23:27+00:00",
+  "function": {
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["auto", "manual", "off"]
+      }
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 50,
+        "max": 350,
+        "scale": 1,
+        "step": 10
+      }
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["auto", "manual", "off"]
+      }
+    },
+    "work_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["opened", "closed"]
+      }
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 50,
+        "max": 350,
+        "scale": 1,
+        "step": 10
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 0,
+        "max": 500,
+        "scale": 1,
+        "step": 10
+      }
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "mode": "manual",
+    "work_state": "opened",
+    "temp_set": 250,
+    "temp_current": 220,
+    "child_lock": false
+  },
+  "set_up": true,
+  "support_local": true
+}

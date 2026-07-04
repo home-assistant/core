@@ -1,0 +1,98 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unique_id_exists": "Another config entry with this username already exist"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "area_id": "[%key:component::yale_smart_alarm::config::step::user::data::area_id%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      },
+      "user": {
+        "data": {
+          "area_id": "Area ID",
+          "name": "[%key:common::config_flow::data::name%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "battery": {
+        "name": "Battery"
+      },
+      "jam": {
+        "name": "Jam"
+      },
+      "power_loss": {
+        "name": "Power loss"
+      },
+      "tamper": {
+        "name": "Tamper"
+      }
+    },
+    "button": {
+      "panic": {
+        "name": "Panic button"
+      }
+    },
+    "select": {
+      "volume": {
+        "name": "Volume",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    },
+    "switch": {
+      "autolock": {
+        "name": "Autolock"
+      }
+    }
+  },
+  "exceptions": {
+    "could_not_change_alarm": {
+      "message": "Could not change alarm, check system ready for arming"
+    },
+    "could_not_change_lock": {
+      "message": "Could not set lock, check system ready for lock"
+    },
+    "could_not_trigger_panic": {
+      "message": "Could not trigger panic button for entity ID {entity_id}: {error}"
+    },
+    "set_alarm": {
+      "message": "Could not set alarm for {name}: {error}"
+    },
+    "set_lock": {
+      "message": "Could not set lock for {name}: {error}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "lock_code_digits": "Number of digits in PIN code for locks"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+# Describes the format for available device tracker services
+
+see:
+  fields:
+    mac:
+      example: "FF:FF:FF:FF:FF:FF"
+      selector:
+        text:
+    dev_id:
+      example: "phonedave"
+      selector:
+        text:
+    host_name:
+      example: "Dave"
+      selector:
+        text:
+    location_name:
+      example: "home"
+      selector:
+        text:
+    gps:
+      example: "[51.509802, -0.086692]"
+      selector:
+        object:
+    gps_accuracy:
+      selector:
+        number:
+          min: 0
+          mode: box
+          unit_of_measurement: "m"
+    battery:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"

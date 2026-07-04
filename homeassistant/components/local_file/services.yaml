@@ -1,0 +1,11 @@
+update_file_path:
+  target:
+    entity:
+      integration: local_file
+      domain: camera
+  fields:
+    file_path:
+      required: true
+      example: "/config/www/images/image.jpg"
+      selector:
+        text:

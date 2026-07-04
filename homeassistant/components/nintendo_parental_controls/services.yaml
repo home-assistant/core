@@ -1,0 +1,17 @@
+add_bonus_time:
+  fields:
+    bonus_time:
+      required: true
+      example: 30
+      selector:
+        number:
+          min: -1
+          max: 1440
+          unit_of_measurement: minutes
+          mode: box
+    device_id:
+      required: true
+      example: 1234567890abcdef1234567890abcdef
+      selector:
+        device:
+          integration: nintendo_parental_controls

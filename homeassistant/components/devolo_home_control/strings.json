@@ -1,0 +1,70 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "reauth_failed": "Please use the same mydevolo user as before."
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:component::devolo_home_control::config::step::user::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::devolo_home_control::config::step::user::data_description::password%]",
+          "username": "[%key:component::devolo_home_control::config::step::user::data_description::username%]"
+        }
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "Email / devolo ID"
+        },
+        "data_description": {
+          "password": "Password of your mydevolo account.",
+          "username": "Email address you used to register the central unit at mydevolo."
+        }
+      },
+      "zeroconf_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:component::devolo_home_control::config::step::user::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::devolo_home_control::config::step::user::data_description::password%]",
+          "username": "[%key:component::devolo_home_control::config::step::user::data_description::username%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "button": {
+        "name": "Button {key}"
+      },
+      "overload": {
+        "name": "Overload"
+      }
+    },
+    "sensor": {
+      "brightness": {
+        "name": "Brightness"
+      }
+    }
+  },
+  "exceptions": {
+    "connection_failed": {
+      "message": "Failed to connect to any devolo Home Control central unit."
+    },
+    "invalid_auth": {
+      "message": "Authentication failed. Please re-authenticate with your mydevolo account."
+    },
+    "maintenance": {
+      "message": "devolo Home Control is currently in maintenance mode."
+    }
+  }
+}

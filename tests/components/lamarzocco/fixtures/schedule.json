@@ -1,0 +1,61 @@
+{
+  "serialNumber": "MR123456",
+  "type": "CoffeeMachine",
+  "name": "MR123456",
+  "location": null,
+  "modelCode": "LINEAMICRA",
+  "modelName": "LINEA MICRA",
+  "connected": true,
+  "connectionDate": 1742526019892,
+  "offlineMode": false,
+  "requireFirmwareUpdate": false,
+  "availableFirmwareUpdate": false,
+  "coffeeStation": null,
+  "imageUrl": "https://lion.lamarzocco.io/img/thing-model/detail/lineamicra/lineamicra-1-c-bianco.png",
+  "bleAuthToken": null,
+  "smartWakeUpSleepSupported": true,
+  "smartWakeUpSleep": {
+    "smartStandByEnabled": true,
+    "smartStandByMinutes": 10,
+    "smartStandByMinutesMin": 1,
+    "smartStandByMinutesMax": 30,
+    "smartStandByMinutesStep": 1,
+    "smartStandByAfter": "PowerOn",
+    "schedules": [
+      {
+        "id": "Os2OswX",
+        "enabled": true,
+        "onTimeMinutes": 1320,
+        "offTimeMinutes": 1440,
+        "days": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday"
+        ],
+        "steamBoiler": true
+      },
+      {
+        "id": "aXFz5bJ",
+        "enabled": true,
+        "onTimeMinutes": 420,
+        "offTimeMinutes": 450,
+        "days": ["Sunday"],
+        "steamBoiler": false
+      }
+    ]
+  },
+  "smartWakeUpSleepTutorialUrl": "https://www.lamarzocco.com/it/en/app/support/scheduling/#gs3-linea-micra-linea-mini-home",
+  "weeklySupported": false,
+  "weekly": null,
+  "weeklyTutorialUrl": "https://www.lamarzocco.com/it/en/app/support/scheduling/#linea-classic-s",
+  "autoOnOffSupported": false,
+  "autoOnOff": null,
+  "autoOnOffTutorialUrl": "https://www.lamarzocco.com/it/en/app/support/scheduling/#gb5-s-x-kb90-linea-pb-pbx-strada-s-x-commercial",
+  "autoStandBySupported": false,
+  "autoStandBy": null,
+  "autoStandByTutorialUrl": null
+}

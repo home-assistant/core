@@ -1,0 +1,117 @@
+{
+  "entity": {
+    "button": {
+      "mute_alarm": {
+        "default": "mdi:volume-mute"
+      },
+      "self_test": {
+        "default": "mdi:progress-wrench"
+      },
+      "unmute_alarm": {
+        "default": "mdi:volume-high"
+      }
+    },
+    "number": {
+      "external_temperature": {
+        "default": "mdi:thermometer-check"
+      },
+      "valve_position": {
+        "default": "mdi:pipe-valve"
+      }
+    },
+    "sensor": {
+      "charger_state": {
+        "default": "mdi:ev-station"
+      },
+      "detected_objects": {
+        "default": "mdi:account-group"
+      },
+      "detected_objects_with_channel_name": {
+        "default": "mdi:account-group"
+      },
+      "gas_concentration": {
+        "default": "mdi:gauge"
+      },
+      "gas_detected": {
+        "default": "mdi:gas-burner"
+      },
+      "illuminance_level": {
+        "default": "mdi:brightness-5"
+      },
+      "lamp_life": {
+        "default": "mdi:progress-wrench"
+      },
+      "left_slot_level": {
+        "default": "mdi:bottle-tonic-outline"
+      },
+      "left_slot_vial": {
+        "default": "mdi:scent"
+      },
+      "operation": {
+        "default": "mdi:cog-transfer"
+      },
+      "right_slot_level": {
+        "default": "mdi:bottle-tonic-outline"
+      },
+      "right_slot_vial": {
+        "default": "mdi:scent"
+      },
+      "self_test": {
+        "default": "mdi:progress-wrench"
+      },
+      "tilt": {
+        "default": "mdi:angle-acute"
+      },
+      "valve_position": {
+        "default": "mdi:pipe-valve"
+      },
+      "valve_status": {
+        "default": "mdi:valve"
+      }
+    },
+    "switch": {
+      "cury_away_mode": {
+        "default": "mdi:home-outline",
+        "state": {
+          "off": "mdi:home-import-outline",
+          "on": "mdi:home-export-outline"
+        }
+      },
+      "left_slot": {
+        "default": "mdi:scent",
+        "state": {
+          "off": "mdi:scent-off",
+          "on": "mdi:scent"
+        }
+      },
+      "left_slot_boost": {
+        "default": "mdi:rocket-launch"
+      },
+      "right_slot": {
+        "default": "mdi:scent",
+        "state": {
+          "off": "mdi:scent-off",
+          "on": "mdi:scent"
+        }
+      },
+      "right_slot_boost": {
+        "default": "mdi:rocket-launch"
+      },
+      "valve_switch": {
+        "default": "mdi:valve",
+        "state": {
+          "off": "mdi:valve-closed",
+          "on": "mdi:valve-open"
+        }
+      }
+    }
+  },
+  "services": {
+    "get_kvs_value": {
+      "service": "mdi:import"
+    },
+    "set_kvs_value": {
+      "service": "mdi:export"
+    }
+  }
+}

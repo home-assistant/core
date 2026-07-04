@@ -1,0 +1,6 @@
+{
+  "domain": "somfy",
+  "name": "Somfy",
+  "integration_type": "virtual",
+  "supported_by": "overkiz"
+}

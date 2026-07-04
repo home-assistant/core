@@ -1,0 +1,63 @@
+reload:
+write_coil:
+  fields:
+    address:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 65535
+    state:
+      required: true
+      example: "0 or [1,0]"
+      selector:
+        object:
+    slave:
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 255
+    hub:
+      example: "hub1"
+      default: "modbus_hub"
+      selector:
+        text:
+write_register:
+  fields:
+    address:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 65535
+    slave:
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 255
+    value:
+      required: true
+      example: "0 or [4,0]"
+      selector:
+        object:
+    hub:
+      example: "hub1"
+      default: "modbus_hub"
+      selector:
+        text:
+stop:
+  fields:
+    hub:
+      example: "hub1"
+      default: "modbus_hub"
+      selector:
+        text:
+restart:
+  fields:
+    hub:
+      example: "hub1"
+      default: "modbus_hub"
+      selector:
+        text:

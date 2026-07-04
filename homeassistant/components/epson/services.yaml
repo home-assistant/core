@@ -1,0 +1,11 @@
+select_cmode:
+  target:
+    entity:
+      integration: epson
+      domain: media_player
+  fields:
+    cmode:
+      required: true
+      example: "cinema"
+      selector:
+        text:

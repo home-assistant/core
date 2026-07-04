@@ -1,0 +1,14 @@
+toggle:
+  target:
+    entity:
+      domain: alert
+
+turn_off:
+  target:
+    entity:
+      domain: alert
+
+turn_on:
+  target:
+    entity:
+      domain: alert

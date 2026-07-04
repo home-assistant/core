@@ -1,0 +1,9 @@
+{
+  "domain": "media_player",
+  "name": "Media Player",
+  "codeowners": ["@home-assistant/core"],
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/media_player",
+  "integration_type": "entity",
+  "quality_scale": "internal"
+}

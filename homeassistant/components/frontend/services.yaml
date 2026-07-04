@@ -1,0 +1,17 @@
+# Describes the format for available frontend services
+
+set_theme:
+  fields:
+    name:
+      required: false
+      example: "default"
+      selector:
+        theme:
+          include_default: true
+    name_dark:
+      required: false
+      example: "default"
+      selector:
+        theme:
+          include_default: true
+reload_themes:

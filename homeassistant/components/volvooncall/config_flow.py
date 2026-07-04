@@ -1,0 +1,21 @@
+"""Config flow for Volvo On Call integration."""
+
+from typing import Any, override
+
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+
+from .const import DOMAIN
+
+
+class VolvoOnCallConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Volvo On Call."""
+
+    VERSION = 1
+
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step."""
+
+        return self.async_abort(reason="deprecated")

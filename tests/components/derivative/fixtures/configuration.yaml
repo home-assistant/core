@@ -1,0 +1,9 @@
+sensor:
+  - platform: derivative
+    name: derivative
+    source: "sensor.energy"
+    unit: "W"
+  - platform: derivative
+    name: derivative_new
+    source: "sensor.energy"
+    unit: "W"

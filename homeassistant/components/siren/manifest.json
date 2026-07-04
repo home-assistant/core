@@ -1,0 +1,8 @@
+{
+  "domain": "siren",
+  "name": "Siren",
+  "codeowners": ["@home-assistant/core", "@raman325"],
+  "documentation": "https://www.home-assistant.io/integrations/siren",
+  "integration_type": "entity",
+  "quality_scale": "internal"
+}

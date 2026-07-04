@@ -1,0 +1,8 @@
+{
+  "domain": "dublin_bus_transport",
+  "name": "Dublin Bus",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/dublin_bus_transport",
+  "iot_class": "cloud_polling",
+  "quality_scale": "legacy"
+}

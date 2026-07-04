@@ -1,0 +1,7 @@
+browse_url:
+  fields:
+    url:
+      required: true
+      example: "https://www.home-assistant.io"
+      selector:
+        text:

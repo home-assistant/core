@@ -1,0 +1,265 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "SWS 16600 WiFi SH",
+  "category": "qxj",
+  "product_id": "xbwbniyt6bgws9ia",
+  "product_name": "SWS 16600 WiFi SH",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2025-03-17T14:39:27+00:00",
+  "create_time": "2025-03-17T14:39:27+00:00",
+  "update_time": "2025-03-17T14:39:27+00:00",
+  "function": {},
+  "status_range": {
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -400,
+        "max": 601,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "humidity_value": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 101,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_current_external": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -400,
+        "max": 601,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "humidity_outdoor": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 101,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_current_external_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -400,
+        "max": 601,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "humidity_outdoor_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 101,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_current_external_2": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -400,
+        "max": 601,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "humidity_outdoor_2": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 101,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_current_external_3": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -400,
+        "max": 601,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "humidity_outdoor_3": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 101,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "atmospheric_pressture": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 3000,
+        "max": 12001,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "pressure_drop": {
+      "type": "Integer",
+      "value": {
+        "unit": "hPa",
+        "min": 0,
+        "max": 16,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "windspeed_avg": {
+      "type": "Integer",
+      "value": {
+        "unit": "km/h",
+        "min": 0,
+        "max": 701,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "windspeed_gust": {
+      "type": "Integer",
+      "value": {
+        "unit": "km/h",
+        "min": 0,
+        "max": 701,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "rain_24h": {
+      "type": "Integer",
+      "value": {
+        "unit": "mm",
+        "min": 0,
+        "max": 1000001,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "rain_rate": {
+      "type": "Integer",
+      "value": {
+        "unit": "mm",
+        "min": 0,
+        "max": 1000001,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "uv_index": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 181,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "unit": "lux",
+        "min": 0,
+        "max": 238001,
+        "scale": 0,
+        "step": 100
+      }
+    },
+    "dew_point_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -400,
+        "max": 801,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "feellike_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -650,
+        "max": 501,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "heat_index": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 260,
+        "max": 501,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "windchill_index": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -650,
+        "max": 601,
+        "scale": 1,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "temp_current": 245,
+    "humidity_value": 47,
+    "temp_current_external": 207,
+    "humidity_outdoor": 68,
+    "temp_current_external_1": 601,
+    "humidity_outdoor_1": 101,
+    "temp_current_external_2": 601,
+    "humidity_outdoor_2": 101,
+    "temp_current_external_3": 601,
+    "humidity_outdoor_3": 101,
+    "atmospheric_pressture": 10078,
+    "pressure_drop": 0,
+    "windspeed_avg": 0,
+    "windspeed_gust": 0,
+    "rain_24h": 0,
+    "rain_rate": 0,
+    "uv_index": 0,
+    "bright_value": 7480,
+    "dew_point_temp": 145,
+    "feellike_temp": 207,
+    "heat_index": 501,
+    "windchill_index": 205
+  },
+  "set_up": true,
+  "support_local": true
+}

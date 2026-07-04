@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "downloading_count": {
+        "default": "mdi:download"
+      },
+      "seeding_count": {
+        "default": "mdi:upload"
+      }
+    }
+  }
+}

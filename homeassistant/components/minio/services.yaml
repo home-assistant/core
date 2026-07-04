@@ -1,0 +1,48 @@
+get:
+  fields:
+    bucket:
+      required: true
+      example: camera-files
+      selector:
+        text:
+    key:
+      required: true
+      example: front_camera/2018/01/02/snapshot_12512514.jpg
+      selector:
+        text:
+    file_path:
+      required: true
+      example: /data/camera_files/snapshot.jpg
+      selector:
+        text:
+
+put:
+  fields:
+    bucket:
+      required: true
+      example: camera-files
+      selector:
+        text:
+    key:
+      required: true
+      example: front_camera/2018/01/02/snapshot_12512514.jpg
+      selector:
+        text:
+    file_path:
+      required: true
+      example: /data/camera_files/snapshot.jpg
+      selector:
+        text:
+
+remove:
+  fields:
+    bucket:
+      required: true
+      example: camera-files
+      selector:
+        text:
+    key:
+      required: true
+      example: front_camera/2018/01/02/snapshot_12512514.jpg
+      selector:
+        text:

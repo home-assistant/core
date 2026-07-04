@@ -1,0 +1,173 @@
+{
+  "components": {
+    "main": {
+      "wifiInformation": {
+        "supportedWiFiAuthTypes": {
+          "value": ["OPEN", "WEP", "WPA-PSK", "WPA2-PSK", "SAE"],
+          "timestamp": "2026-03-13T00:32:35.516Z"
+        },
+        "ssid": {
+          "value": "Starfleet",
+          "timestamp": "2026-03-13T00:32:35.516Z"
+        },
+        "supportedWiFiFrequencies": {
+          "value": ["2.4G", "5G"],
+          "timestamp": "2026-03-13T00:32:35.554Z"
+        }
+      },
+      "sec.networkConfiguration": {
+        "activatedNetwork": {
+          "value": "wifi",
+          "timestamp": "2026-03-10T12:02:26.682Z"
+        },
+        "supportedNetwork": {
+          "value": ["ethernet", "wifi"],
+          "timestamp": "2026-03-10T12:02:26.678Z"
+        }
+      },
+      "sec.appliedHubGroupMemberState": {
+        "hubGroupId": {
+          "value": "",
+          "timestamp": "2026-03-07T14:36:41.780Z"
+        },
+        "role": {
+          "value": "standalone",
+          "timestamp": "2026-03-07T14:36:41.765Z"
+        },
+        "lastTriggerType": {
+          "value": "unknown",
+          "timestamp": "2026-03-07T14:36:41.778Z"
+        },
+        "primaryZigbeeReachable": {
+          "value": "unknown",
+          "timestamp": "2026-03-07T14:36:41.821Z"
+        },
+        "preferredHubStatus": {
+          "value": "unknown",
+          "timestamp": "2026-03-07T14:36:41.780Z"
+        }
+      },
+      "samsungim.devicestatus": {
+        "status": {
+          "value": {
+            "modelNumber": "IM6001-V4P22",
+            "serialNumber": "4022002360",
+            "wifiMac": "68:3A:48:50:1A:76",
+            "btAddr": "68:3A:48:50:1A:77",
+            "mnId": "0AFD",
+            "setupId": "427",
+            "productionDate": "",
+            "swVer": "000.059.00008",
+            "hwVer": "Test",
+            "mnmo": "hubv4-EU"
+          },
+          "timestamp": "2026-03-07T14:36:40.709Z"
+        }
+      },
+      "sec.diagnosticsInformation": {
+        "logType": {
+          "value": ["errCode", "dump"],
+          "timestamp": "2026-03-07T14:36:40.728Z"
+        },
+        "endpoint": {
+          "value": "PIPER",
+          "timestamp": "2026-03-07T14:36:40.729Z"
+        },
+        "minVersion": {
+          "value": "5.0",
+          "timestamp": "2026-03-07T14:36:40.717Z"
+        },
+        "signinPermission": {
+          "value": null
+        },
+        "setupId": {
+          "value": "427",
+          "timestamp": "2026-03-07T14:36:40.716Z"
+        },
+        "protocolType": {
+          "value": "ble_stdk_hub",
+          "timestamp": "2026-03-07T14:36:40.730Z"
+        },
+        "tsId": {
+          "value": "MX01",
+          "timestamp": "2026-03-07T14:36:40.716Z"
+        },
+        "mnId": {
+          "value": "0AFD",
+          "timestamp": "2026-03-07T14:36:40.716Z"
+        },
+        "dumpType": {
+          "value": "file",
+          "timestamp": "2026-03-07T14:36:40.728Z"
+        }
+      },
+      "bridge": {},
+      "firmwareUpdate": {
+        "lastUpdateStatusReason": {
+          "value": null
+        },
+        "imageTransferProgress": {
+          "value": 0,
+          "unit": "%",
+          "timestamp": "2026-01-12T00:05:00.078Z"
+        },
+        "availableVersion": {
+          "value": "hubv4@3.39.8-0-g342d3657",
+          "timestamp": "2026-01-11T16:04:42.983Z"
+        },
+        "lastUpdateStatus": {
+          "value": "updateSucceeded",
+          "timestamp": "2026-01-12T00:05:00.049Z"
+        },
+        "supportedCommands": {
+          "value": null
+        },
+        "state": {
+          "value": "normalOperation",
+          "timestamp": "2026-03-07T14:36:40.714Z"
+        },
+        "estimatedTimeRemaining": {
+          "value": 0,
+          "timestamp": "2026-01-12T00:05:00.062Z"
+        },
+        "updateAvailable": {
+          "value": false,
+          "timestamp": "2026-01-12T00:05:00.040Z"
+        },
+        "currentVersion": {
+          "value": "hubv4@3.39.8-0-g342d3657",
+          "timestamp": "2026-01-11T16:12:51.552Z"
+        },
+        "lastUpdateTime": {
+          "value": null
+        },
+        "supportsProgressReports": {
+          "value": false,
+          "timestamp": "2026-01-12T00:05:00.046Z"
+        }
+      },
+      "sec.wifiConfiguration": {
+        "autoReconnection": {
+          "value": true,
+          "timestamp": "2026-03-07T14:36:40.732Z"
+        },
+        "minVersion": {
+          "value": "1.0",
+          "timestamp": "2026-03-07T14:36:40.730Z"
+        },
+        "supportedWiFiFreq": {
+          "value": ["2.4G", "5G"],
+          "timestamp": "2026-03-07T14:36:40.783Z"
+        },
+        "supportedAuthType": {
+          "value": ["OPEN", "WEP", "WPA-PSK", "WPA2-PSK", "SAE"],
+          "timestamp": "2026-03-07T14:36:40.816Z"
+        },
+        "protocolType": {
+          "value": ["ble_stdk_hub"],
+          "timestamp": "2026-03-07T14:36:40.816Z"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "shodan",
+  "name": "Shodan",
+  "codeowners": ["@fabaff"],
+  "documentation": "https://www.home-assistant.io/integrations/shodan",
+  "iot_class": "cloud_polling",
+  "loggers": ["shodan"],
+  "quality_scale": "legacy",
+  "requirements": ["shodan==1.28.0"]
+}

@@ -1,0 +1,49 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "Device already detected. Check discovered devices.",
+      "cannot_connect": "Failed to connect to the device. Please try again.",
+      "timeout_connect": "Timed out connecting. Ensure VegeHub is awake, and try again.",
+      "unknown_error": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect. Ensure VegeHub is awake, and try again.",
+      "invalid_ip": "Invalid IPv4 address.",
+      "timeout_connect": "Timeout establishing connection. Ensure VegeHub is awake, and try again."
+    },
+    "flow_title": "{host}",
+    "step": {
+      "user": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "ip_address": "IP address of target VegeHub"
+        },
+        "description": "Do you want to set up this VegeHub?",
+        "title": "Set up VegeHub"
+      },
+      "zeroconf_confirm": {
+        "description": "[%key:component::vegehub::config::step::user::description%]",
+        "title": "[%key:component::vegehub::config::step::user::title%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "analog_sensor": {
+        "name": "Input {index}"
+      },
+      "battery_volts": {
+        "name": "Battery voltage"
+      }
+    },
+    "switch": {
+      "switch": {
+        "name": "Actuator {index}"
+      }
+    }
+  },
+  "title": "VegeHub"
+}

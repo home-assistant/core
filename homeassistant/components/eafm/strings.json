@@ -1,0 +1,17 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_stations": "No flood monitoring stations found."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "station": "Station"
+        },
+        "description": "Select the station you want to monitor",
+        "title": "Track a flood monitoring station"
+      }
+    }
+  }
+}

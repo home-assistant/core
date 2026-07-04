@@ -1,0 +1,98 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'app': dict({
+        'app_id': None,
+        'name': 'Roku',
+        'screensaver': False,
+        'version': None,
+      }),
+      'apps': list([
+        dict({
+          'app_id': '11',
+          'name': 'Roku Channel Store',
+          'screensaver': False,
+          'version': None,
+        }),
+        dict({
+          'app_id': '12',
+          'name': 'Netflix',
+          'screensaver': False,
+          'version': None,
+        }),
+        dict({
+          'app_id': '13',
+          'name': 'Amazon Video on Demand',
+          'screensaver': False,
+          'version': None,
+        }),
+        dict({
+          'app_id': '14',
+          'name': 'MLB.TV®',
+          'screensaver': False,
+          'version': None,
+        }),
+        dict({
+          'app_id': '26',
+          'name': 'Free FrameChannel Service',
+          'screensaver': False,
+          'version': None,
+        }),
+        dict({
+          'app_id': '27',
+          'name': 'Mediafly',
+          'screensaver': False,
+          'version': None,
+        }),
+        dict({
+          'app_id': '28',
+          'name': 'Pandora',
+          'screensaver': False,
+          'version': None,
+        }),
+        dict({
+          'app_id': '74519',
+          'name': "Pluto TV - It's Free TV",
+          'screensaver': False,
+          'version': '5.2.0',
+        }),
+      ]),
+      'channel': None,
+      'channels': list([
+      ]),
+      'info': dict({
+        'brand': 'Roku',
+        'device_location': None,
+        'device_type': 'box',
+        'ethernet_mac': 'b0:a7:37:96:4d:fa',
+        'ethernet_support': True,
+        'headphones_connected': False,
+        'model_name': 'Roku 3',
+        'model_number': '4200X',
+        'name': 'My Roku 3',
+        'network_name': None,
+        'network_type': 'ethernet',
+        'serial_number': '1GU48T017973',
+        'supports_airplay': False,
+        'supports_find_remote': False,
+        'supports_private_listening': False,
+        'supports_wake_on_wlan': False,
+        'version': '7.5.0',
+        'wifi_mac': 'b0:a7:37:96:4d:fb',
+      }),
+      'media': None,
+      'state': dict({
+        'at': '2023-08-15T17:00:00+00:00',
+        'available': True,
+        'standby': False,
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '192.168.1.160',
+      }),
+      'unique_id': '1GU48T017973',
+    }),
+  })
+# ---

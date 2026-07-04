@@ -1,0 +1,29 @@
+# Describes the format for available counter services
+
+decrement:
+  target:
+    entity:
+      domain: counter
+
+increment:
+  target:
+    entity:
+      domain: counter
+
+reset:
+  target:
+    entity:
+      domain: counter
+
+set_value:
+  target:
+    entity:
+      domain: counter
+  fields:
+    value:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 9223372036854775807
+          mode: box

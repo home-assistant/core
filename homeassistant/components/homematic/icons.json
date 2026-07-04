@@ -1,0 +1,22 @@
+{
+  "services": {
+    "put_paramset": {
+      "service": "mdi:cog"
+    },
+    "reconnect": {
+      "service": "mdi:wifi-refresh"
+    },
+    "set_device_value": {
+      "service": "mdi:television"
+    },
+    "set_install_mode": {
+      "service": "mdi:cog"
+    },
+    "set_variable_value": {
+      "service": "mdi:console"
+    },
+    "virtualkey": {
+      "service": "mdi:keyboard"
+    }
+  }
+}

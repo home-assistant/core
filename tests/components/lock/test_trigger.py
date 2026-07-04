@@ -1,0 +1,208 @@
+"""Test lock triggers."""
+
+from typing import Any
+
+import pytest
+
+from homeassistant.components.lock import DOMAIN, LockState
+from homeassistant.core import HomeAssistant
+
+from tests.components.common import (
+    TriggerStateDescription,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
+    assert_trigger_behavior_first,
+    assert_trigger_options_supported,
+    other_states,
+    parametrize_target_entities,
+    parametrize_trigger_states,
+    target_entities,
+)
+
+
+@pytest.fixture
+async def target_locks(hass: HomeAssistant) -> dict[str, list[str]]:
+    """Create multiple lock entities associated with different targets."""
+    return await target_entities(hass, DOMAIN)
+
+
+@pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("lock.jammed", {}, True, True),
+        ("lock.locked", {}, True, True),
+        ("lock.opened", {}, True, True),
+        ("lock.unlocked", {}, True, True),
+    ],
+)
+async def test_lock_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that lock triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities(DOMAIN),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_trigger_states(
+            trigger="lock.jammed",
+            target_states=[LockState.JAMMED],
+            other_states=other_states(LockState.JAMMED),
+        ),
+        *parametrize_trigger_states(
+            trigger="lock.locked",
+            target_states=[LockState.LOCKED],
+            other_states=other_states(LockState.LOCKED),
+        ),
+        *parametrize_trigger_states(
+            trigger="lock.opened",
+            target_states=[LockState.OPEN],
+            other_states=other_states(LockState.OPEN),
+        ),
+        *parametrize_trigger_states(
+            trigger="lock.unlocked",
+            target_states=[LockState.UNLOCKED],
+            other_states=other_states(LockState.UNLOCKED),
+        ),
+    ],
+)
+async def test_lock_state_trigger_behavior_each(
+    hass: HomeAssistant,
+    target_locks: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test lock trigger fires when any lock changes state."""
+    await assert_trigger_behavior_each(
+        hass,
+        target_entities=target_locks,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities(DOMAIN),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_trigger_states(
+            trigger="lock.jammed",
+            target_states=[LockState.JAMMED],
+            other_states=other_states(LockState.JAMMED),
+        ),
+        *parametrize_trigger_states(
+            trigger="lock.locked",
+            target_states=[LockState.LOCKED],
+            other_states=other_states(LockState.LOCKED),
+        ),
+        *parametrize_trigger_states(
+            trigger="lock.opened",
+            target_states=[LockState.OPEN],
+            other_states=other_states(LockState.OPEN),
+        ),
+        *parametrize_trigger_states(
+            trigger="lock.unlocked",
+            target_states=[LockState.UNLOCKED],
+            other_states=other_states(LockState.UNLOCKED),
+        ),
+    ],
+)
+async def test_lock_state_trigger_behavior_first(
+    hass: HomeAssistant,
+    target_locks: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test lock trigger fires when first lock changes state."""
+    await assert_trigger_behavior_first(
+        hass,
+        target_entities=target_locks,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities(DOMAIN),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_trigger_states(
+            trigger="lock.jammed",
+            target_states=[LockState.JAMMED],
+            other_states=other_states(LockState.JAMMED),
+        ),
+        *parametrize_trigger_states(
+            trigger="lock.locked",
+            target_states=[LockState.LOCKED],
+            other_states=other_states(LockState.LOCKED),
+        ),
+        *parametrize_trigger_states(
+            trigger="lock.opened",
+            target_states=[LockState.OPEN],
+            other_states=other_states(LockState.OPEN),
+        ),
+        *parametrize_trigger_states(
+            trigger="lock.unlocked",
+            target_states=[LockState.UNLOCKED],
+            other_states=other_states(LockState.UNLOCKED),
+        ),
+    ],
+)
+async def test_lock_state_trigger_behavior_all(
+    hass: HomeAssistant,
+    target_locks: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test lock trigger fires when last lock changes state."""
+    await assert_trigger_behavior_all(
+        hass,
+        target_entities=target_locks,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )

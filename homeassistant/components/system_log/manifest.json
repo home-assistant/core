@@ -1,0 +1,8 @@
+{
+  "domain": "system_log",
+  "name": "System Log",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/system_log",
+  "integration_type": "system",
+  "quality_scale": "internal"
+}

@@ -1,0 +1,12 @@
+set_pump_speed:
+  target:
+    entity:
+      integration: omnilogic
+      domain: switch
+  fields:
+    speed:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100000

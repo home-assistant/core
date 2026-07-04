@@ -1,0 +1,1 @@
+"""Maytag virtual integration."""

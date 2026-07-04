@@ -1,0 +1,47 @@
+{
+  "entity": {
+    "sensor": {
+      "band": {
+        "default": "mdi:radio-tower"
+      },
+      "cell_id": {
+        "default": "mdi:radio-tower"
+      },
+      "connection_text": {
+        "default": "mdi:radio-tower"
+      },
+      "connection_type": {
+        "default": "mdi:ip"
+      },
+      "register_network_display": {
+        "default": "mdi:web"
+      },
+      "service_type": {
+        "default": "mdi:radio-tower"
+      },
+      "sms": {
+        "default": "mdi:message-processing"
+      },
+      "sms_total": {
+        "default": "mdi:message-processing"
+      },
+      "upstream": {
+        "default": "mdi:ip-network"
+      }
+    }
+  },
+  "services": {
+    "connect_lte": {
+      "service": "mdi:wifi"
+    },
+    "delete_sms": {
+      "service": "mdi:delete"
+    },
+    "disconnect_lte": {
+      "service": "mdi:wifi-off"
+    },
+    "set_option": {
+      "service": "mdi:cog"
+    }
+  }
+}

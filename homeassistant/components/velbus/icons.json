@@ -1,0 +1,36 @@
+{
+  "entity": {
+    "light": {
+      "button_light": {
+        "state": {
+          "off": "mdi:led-off",
+          "on": "mdi:led-on"
+        }
+      }
+    },
+    "select": {
+      "select_program": {
+        "state": {
+          "0": "mdi:numeric-0-box",
+          "1": "mdi:numeric-1-box",
+          "2": "mdi:numeric-2-box",
+          "3": "mdi:numeric-3-box"
+        }
+      }
+    }
+  },
+  "services": {
+    "clear_cache": {
+      "service": "mdi:delete"
+    },
+    "scan": {
+      "service": "mdi:magnify"
+    },
+    "set_memo_text": {
+      "service": "mdi:note-text"
+    },
+    "sync_clock": {
+      "service": "mdi:clock"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "domain": "test_integration_platform",
+  "name": "Test Integration Platform",
+  "documentation": "http://test-package.io",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [],
+  "config_flow": true,
+  "import_executor": true,
+  "version": "1.2.3"
+}

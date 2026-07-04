@@ -1,0 +1,5 @@
+homeassistant:
+  packages:
+    - should_be_a_dict_not_a_list
+    - this_also_fails:
+      iot_domain: [{ "some": "yay" }]

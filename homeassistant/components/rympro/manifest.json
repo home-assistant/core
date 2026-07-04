@@ -1,0 +1,10 @@
+{
+  "domain": "rympro",
+  "name": "Read Your Meter Pro",
+  "codeowners": ["@OnFreund", "@elad-bar", "@maorcc"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/rympro",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "requirements": ["pyrympro==0.0.9"]
+}

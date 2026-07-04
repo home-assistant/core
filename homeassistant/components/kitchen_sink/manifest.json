@@ -1,0 +1,17 @@
+{
+  "domain": "kitchen_sink",
+  "name": "Everything but the Kitchen Sink",
+  "after_dependencies": ["recorder"],
+  "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/kitchen_sink",
+  "iot_class": "calculated",
+  "preview_features": {
+    "special_repair": {
+      "feedback_url": "https://community.home-assistant.io",
+      "learn_more_url": "https://www.home-assistant.io/integrations/kitchen_sink",
+      "report_issue_url": "https://github.com/home-assistant/core/issues/new?template=bug_report.yml&integration_link=https://www.home-assistant.io/integrations/kitchen_sink&integration_name=Kitchen%20Sink"
+    }
+  },
+  "quality_scale": "internal",
+  "single_config_entry": true
+}

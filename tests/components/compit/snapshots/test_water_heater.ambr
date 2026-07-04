@@ -1,0 +1,74 @@
+# serializer version: 1
+# name: test_water_heater_entities_snapshot[water_heater.r_900-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 70.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 0.0,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
+        'off',
+        'performance',
+        'eco',
+      ]),
+      <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.r_900',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'compit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 11>,
+    'translation_key': None,
+    'unique_id': '1_R 900',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_water_heater_entities_snapshot[water_heater.r_900-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 50.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'R 900',
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 70.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 0.0,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
+        'off',
+        'performance',
+        'eco',
+      ]),
+      <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'performance',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 11>,
+      <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+      <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 55.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.r_900',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'performance',
+  })
+# ---

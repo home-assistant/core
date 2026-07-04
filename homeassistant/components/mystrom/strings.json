@@ -1,0 +1,38 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up the myStrom device at {host}?"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your myStrom device."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "avg_consumption": {
+        "name": "Average consumption"
+      },
+      "energy_since_boot": {
+        "name": "Energy since boot"
+      },
+      "time_since_boot": {
+        "name": "Last restart"
+      }
+    }
+  }
+}

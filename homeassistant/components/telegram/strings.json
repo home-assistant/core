@@ -1,0 +1,14 @@
+{
+  "issues": {
+    "migrate_notify": {
+      "description": "The Telegram `notify` service has been migrated. A new `notify` entity per chat ID is available now.\n\nUpdate all affected automations to use the new `notify.send_message` action exposed by these new entities and then restart Home Assistant.",
+      "title": "Migration of Telegram notify service"
+    }
+  },
+  "services": {
+    "reload": {
+      "description": "Reloads telegram notify services.",
+      "name": "[%key:common::action::reload%]"
+    }
+  }
+}

@@ -1,0 +1,83 @@
+"""Support for IKEA Tradfri switches."""
+
+from collections.abc import Callable
+from typing import Any, cast, override
+
+from pytradfri.command import Command
+
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .const import CONF_GATEWAY_ID
+from .coordinator import TradfriConfigEntry, TradfriDeviceDataUpdateCoordinator
+from .entity import TradfriBaseEntity
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: TradfriConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Load Tradfri switches based on a config entry."""
+    gateway_id = config_entry.data[CONF_GATEWAY_ID]
+    tradfri_data = config_entry.runtime_data
+
+    async_add_entities(
+        TradfriSwitch(
+            device_coordinator,
+            tradfri_data.api,
+            gateway_id,
+        )
+        for device_coordinator in tradfri_data.coordinator_list
+        if device_coordinator.device.has_socket_control
+    )
+
+
+class TradfriSwitch(TradfriBaseEntity, SwitchEntity):
+    """The platform class required by Home Assistant."""
+
+    _attr_name = None
+
+    def __init__(
+        self,
+        device_coordinator: TradfriDeviceDataUpdateCoordinator,
+        api: Callable[[Command | list[Command]], Any],
+        gateway_id: str,
+    ) -> None:
+        """Initialize a switch."""
+        super().__init__(
+            device_coordinator=device_coordinator,
+            api=api,
+            gateway_id=gateway_id,
+        )
+
+        self._device_control = self._device.socket_control
+        self._device_data = self._device_control.sockets[0]
+
+    @override
+    def _refresh(self) -> None:
+        """Refresh the device."""
+        self._device_data = self.coordinator.data.socket_control.sockets[0]
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return true if switch is on."""
+        if not self._device_data:
+            return False
+        return cast(bool, self._device_data.state)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Instruct the switch to turn off."""
+        if not self._device_control:
+            return
+        await self._api(self._device_control.set_state(False))
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Instruct the switch to turn on."""
+        if not self._device_control:
+            return
+        await self._api(self._device_control.set_state(True))

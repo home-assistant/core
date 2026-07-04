@@ -1,0 +1,418 @@
+"""Support for exposing a templated binary sensor."""
+
+from abc import abstractmethod
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from functools import partial
+import logging
+from typing import Any, Self, override
+
+import voluptuous as vol
+
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASSES_SCHEMA,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    ENTITY_ID_FORMAT,
+    BinarySensorEntity,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_STATE,
+    CONF_UNIT_OF_MEASUREMENT,
+    STATE_ON,
+)
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
+from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.event import async_call_later, async_track_point_in_utc_time
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
+
+from . import TriggerUpdateCoordinator
+from .entity import AbstractTemplateEntity
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
+)
+from .schemas import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    make_template_entity_common_modern_attributes_schema,
+)
+from .template_entity import TemplateEntity
+from .trigger_entity import TriggerEntity
+
+DEFAULT_NAME = "Template Binary Sensor"
+
+CONF_DELAY_ON = "delay_on"
+CONF_DELAY_OFF = "delay_off"
+CONF_AUTO_OFF = "auto_off"
+
+
+BINARY_SENSOR_COMMON_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_AUTO_OFF): vol.Any(cv.positive_time_period, cv.template),
+        vol.Optional(CONF_DELAY_OFF): vol.Any(cv.positive_time_period, cv.template),
+        vol.Optional(CONF_DELAY_ON): vol.Any(cv.positive_time_period, cv.template),
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Required(CONF_STATE): cv.template,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    }
+)
+
+BINARY_SENSOR_YAML_SCHEMA = BINARY_SENSOR_COMMON_SCHEMA.extend(
+    make_template_entity_common_modern_attributes_schema(
+        BINARY_SENSOR_DOMAIN, DEFAULT_NAME
+    ).schema
+)
+
+BINARY_SENSOR_CONFIG_ENTRY_SCHEMA = BINARY_SENSOR_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
+)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the template binary sensors."""
+    await async_setup_template_platform(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        config,
+        StateBinarySensorEntity,
+        TriggerBinarySensorEntity,
+        async_add_entities,
+        discovery_info,
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateBinarySensorEntity,
+        BINARY_SENSOR_CONFIG_ENTRY_SCHEMA,
+    )
+
+
+@callback
+def async_create_preview_binary_sensor(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> StateBinarySensorEntity:
+    """Create a preview sensor."""
+    return async_setup_template_preview(
+        hass, name, config, StateBinarySensorEntity, BINARY_SENSOR_CONFIG_ENTRY_SCHEMA
+    )
+
+
+class AbstractTemplateBinarySensor(
+    AbstractTemplateEntity, BinarySensorEntity, RestoreEntity
+):
+    """Representation of a template binary sensor features."""
+
+    _entity_id_format = ENTITY_ID_FORMAT
+    _state_option = CONF_STATE
+    _restore_state_properties = ("_attr_is_on",)
+
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
+    def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
+        """Initialize the features."""
+
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
+        self._template: template.Template = config[CONF_STATE]
+        self._delay_on = None
+        self._delay_off = None
+        self._delay_cancel: CALLBACK_TYPE | None = None
+
+        self.setup_state_template(
+            "_attr_is_on",
+            on_update=self._update_state,
+        )
+        self._delay_on = None
+        try:
+            self._delay_on = cv.positive_time_period(config.get(CONF_DELAY_ON))
+        except vol.Invalid:
+            self.setup_template(CONF_DELAY_ON, "_delay_on", cv.positive_time_period)
+
+        self._delay_off = None
+        try:
+            self._delay_off = cv.positive_time_period(config.get(CONF_DELAY_OFF))
+        except vol.Invalid:
+            self.setup_template(CONF_DELAY_OFF, "_delay_off", cv.positive_time_period)
+
+    @override
+    def restore_last_state_state(self, last_state: State) -> bool:
+        """Restore the state from the last state."""
+        self._attr_is_on = last_state.state == STATE_ON
+        return True
+
+    @callback
+    @abstractmethod
+    def _update_state(self, result: Any) -> None:
+        """Update the state."""
+
+
+class StateBinarySensorEntity(TemplateEntity, AbstractTemplateBinarySensor):
+    """A virtual binary sensor that triggers from another sensor."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: dict[str, Any],
+        unique_id: str | None,
+    ) -> None:
+        """Initialize the Template binary sensor."""
+        TemplateEntity.__init__(self, hass, config, unique_id)
+        AbstractTemplateBinarySensor.__init__(self, config)
+
+    @callback
+    @override
+    def _update_state(self, result):
+        super()._update_state(result)
+
+        if self._delay_cancel:
+            self._delay_cancel()
+            self._delay_cancel = None
+
+        state: bool | None = None
+        if result is not None and not isinstance(result, TemplateError):
+            state = template.result_as_boolean(result)
+
+        if state == self._attr_is_on:
+            return
+
+        # state without delay
+        if (
+            state is None
+            or (state and not self._delay_on)
+            or (not state and not self._delay_off)
+        ):
+            self._attr_is_on = state
+            return
+
+        @callback
+        def _set_state(_):
+            """Set state of template binary sensor."""
+            self._attr_is_on = state
+            self.async_write_ha_state()
+
+        delay = (self._delay_on if state else self._delay_off).total_seconds()
+        # state with delay. Cancelled if template result changes.
+        self._delay_cancel = async_call_later(self.hass, delay, _set_state)
+
+
+@dataclass
+class AutoOffExtraStoredData(ExtraStoredData):
+    """Object to hold extra stored data."""
+
+    auto_off_time: datetime | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of additional data."""
+        auto_off_time: datetime | dict[str, str] | None = self.auto_off_time
+        if isinstance(auto_off_time, datetime):
+            auto_off_time = {
+                "__type": str(type(auto_off_time)),
+                "isoformat": auto_off_time.isoformat(),
+            }
+        return {
+            "auto_off_time": auto_off_time,
+        }
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize a stored binary sensor state from a dict."""
+        try:
+            auto_off_time = restored["auto_off_time"]
+        except KeyError:
+            return None
+        try:
+            type_ = auto_off_time["__type"]
+            if type_ == "<class 'datetime.datetime'>":
+                auto_off_time = dt_util.parse_datetime(auto_off_time["isoformat"])
+        except TypeError:
+            pass
+        except KeyError:
+            return None
+
+        return cls(auto_off_time)
+
+
+class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
+    """Sensor entity based on trigger data."""
+
+    domain = BINARY_SENSOR_DOMAIN
+    _restore_state_extra_data = AutoOffExtraStoredData
+
+    # delay on and delay off are validated when the state is validated.
+    skip_rendered_result = (CONF_DELAY_ON, CONF_DELAY_OFF)
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: TriggerUpdateCoordinator,
+        config: dict,
+    ) -> None:
+        """Initialize the entity."""
+        TriggerEntity.__init__(self, hass, coordinator, config)
+        AbstractTemplateBinarySensor.__init__(self, config)
+
+        self._last_delay_from: bool | None = None
+        self._last_delay_to: bool | None = None
+        self._auto_off_cancel: CALLBACK_TYPE | None = None
+        self._auto_off_time: datetime | None = None
+
+        # Auto off should not render the result as a stand alone template, it should
+        # only be render when the binary sensor state updates. The validator for
+        # Auto off is built into self._set_state.
+        if isinstance(config.get(CONF_AUTO_OFF), template.Template):
+            self._to_render_simple.append(CONF_AUTO_OFF)
+            self._parse_result.add(CONF_AUTO_OFF)
+
+    @override
+    def restore_extra_data(self, extra_data: AutoOffExtraStoredData) -> None:
+        """Restore extra data from the last state."""
+        if CONF_AUTO_OFF not in self._config:
+            return
+
+        if (
+            auto_off_time := extra_data.auto_off_time
+        ) is not None and auto_off_time <= dt_util.utcnow():
+            # It's already past the saved auto off time
+            self._attr_is_on = False
+
+        if self._attr_is_on and auto_off_time is not None:
+            self._set_auto_off(auto_off_time)
+
+    @callback
+    def _cancel_delays(self):
+        if self._delay_cancel:
+            self._delay_cancel()
+            self._delay_cancel = None
+
+        if self._auto_off_cancel:
+            self._auto_off_cancel()
+            self._auto_off_cancel = None
+            self._auto_off_time = None
+
+    @callback
+    @override
+    def _update_state(self, result):
+        state: bool | None = None
+        if result is not None:
+            state = template.result_as_boolean(result)
+
+        if state:
+            delay = self._rendered.get(CONF_DELAY_ON) or self._delay_on
+        else:
+            delay = self._rendered.get(CONF_DELAY_OFF) or self._delay_off
+
+        if (
+            self._delay_cancel
+            and delay
+            and self._attr_is_on == self._last_delay_from
+            and state == self._last_delay_to
+        ):
+            return
+
+        self._cancel_delays()
+
+        # state without delay.
+        if self._attr_is_on == state or delay is None:
+            self._set_state(state)
+            return
+
+        if not isinstance(delay, timedelta):
+            try:
+                delay = cv.positive_time_period(delay)
+            except vol.Invalid as err:
+                key = CONF_DELAY_ON if state else CONF_DELAY_OFF
+                logging.getLogger(__name__).warning(
+                    "Error rendering %s template: %s", key, err
+                )
+                return
+
+        # state with delay. Cancelled if new trigger received
+        self._last_delay_from = self._attr_is_on
+        self._last_delay_to = state
+        self._delay_cancel = async_call_later(
+            self.hass, delay.total_seconds(), partial(self._set_state, state)
+        )
+
+    @callback
+    def _set_state(self, state, _=None):
+        """Set up auto off."""
+        self._attr_is_on = state
+        self._delay_cancel = None
+        self.async_write_ha_state()
+
+        if not state:
+            return
+
+        auto_off_delay = self._rendered.get(CONF_AUTO_OFF) or self._config.get(
+            CONF_AUTO_OFF
+        )
+
+        if auto_off_delay is None:
+            return
+
+        if not isinstance(auto_off_delay, timedelta):
+            try:
+                auto_off_delay = cv.positive_time_period(auto_off_delay)
+            except vol.Invalid as err:
+                logging.getLogger(__name__).warning(
+                    "Error rendering %s template: %s", CONF_AUTO_OFF, err
+                )
+                return
+
+        auto_off_time = dt_util.utcnow() + auto_off_delay
+        self._set_auto_off(auto_off_time)
+
+    @override
+    def _render_availability_template(self, variables):
+        available = super()._render_availability_template(variables)
+        if not available:
+            # Cancel any delay_on, delay_off, or auto_off when
+            # the entity goes unavailable
+            self._cancel_delays()
+        return available
+
+    def _set_auto_off(self, auto_off_time: datetime) -> None:
+        @callback
+        def _auto_off(_):
+            """Reset state of template binary sensor."""
+            self._attr_is_on = False
+            self.async_write_ha_state()
+
+        self._auto_off_time = auto_off_time
+        self._auto_off_cancel = async_track_point_in_utc_time(
+            self.hass, _auto_off, self._auto_off_time
+        )
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> AutoOffExtraStoredData:
+        """Return specific state data to be restored."""
+        return AutoOffExtraStoredData(self._auto_off_time)

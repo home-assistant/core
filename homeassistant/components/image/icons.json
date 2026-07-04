@@ -1,0 +1,12 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:image"
+    }
+  },
+  "services": {
+    "snapshot": {
+      "service": "mdi:camera"
+    }
+  }
+}

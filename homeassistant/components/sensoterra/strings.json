@@ -1,0 +1,38 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "[%key:component::sensoterra::config::step::user::description%]"
+      },
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Enter credentials to obtain a token"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "si_at_cm": {
+        "name": "SI @ {depth} cm"
+      },
+      "soil_moisture_at_cm": {
+        "name": "Soil moisture @ {depth} cm"
+      }
+    }
+  }
+}

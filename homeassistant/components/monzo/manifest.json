@@ -1,0 +1,11 @@
+{
+  "domain": "monzo",
+  "name": "Monzo",
+  "codeowners": ["@jakemartin-icl"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/monzo",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": ["monzopy==1.5.1"]
+}

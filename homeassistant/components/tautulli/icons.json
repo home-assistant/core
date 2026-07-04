@@ -1,0 +1,36 @@
+{
+  "entity": {
+    "sensor": {
+      "progress": {
+        "default": "mdi:progress-clock"
+      },
+      "state": {
+        "default": "mdi:plex"
+      },
+      "stream_count_direct_play": {
+        "default": "mdi:plex"
+      },
+      "stream_count_direct_stream": {
+        "default": "mdi:plex"
+      },
+      "stream_count_transcode": {
+        "default": "mdi:plex"
+      },
+      "top_movies": {
+        "default": "mdi:movie-open"
+      },
+      "top_tv": {
+        "default": "mdi:television"
+      },
+      "top_user": {
+        "default": "mdi:walk"
+      },
+      "transcode_decision": {
+        "default": "mdi:plex"
+      },
+      "watching_count": {
+        "default": "mdi:plex"
+      }
+    }
+  }
+}

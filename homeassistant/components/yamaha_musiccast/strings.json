@@ -1,0 +1,159 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "yxc_control_url_missing": "The control URL is not given in the ssdp description."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_musiccast_device": "This device seems to be no MusicCast Device.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "MusicCast: {name}",
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Yamaha MusicCast receiver."
+        },
+        "description": "Set up MusicCast to integrate with Home Assistant."
+      }
+    }
+  },
+  "entity": {
+    "media_player": {
+      "zone": {
+        "state_attributes": {
+          "sound_mode": {
+            "state": {
+              "2ch_stereo": "2ch stereo",
+              "5ch_stereo": "5ch stereo",
+              "7ch_stereo": "7ch stereo",
+              "9ch_stereo": "9ch stereo",
+              "11ch_stereo": "11ch stereo",
+              "action_game": "Action game",
+              "adventure": "Adventure",
+              "all_ch_stereo": "All ch stereo",
+              "amsterdam": "Hall in Amsterdam",
+              "arena": "Arena",
+              "bottom_line": "The Bottom Line",
+              "cellar_club": "Cellar club",
+              "chamber": "Chamber",
+              "concert": "Live concert",
+              "disco": "Disco",
+              "drama": "Drama",
+              "enhanced": "Enhanced",
+              "frankfurt": "Hall in Frankfurt",
+              "freiburg": "Church in Freiburg",
+              "game": "Game",
+              "jazz_club": "Jazz club",
+              "mono_movie": "Mono movie",
+              "movie": "Movie",
+              "munich": "Hall in Munich",
+              "munich_a": "Hall in Munich A",
+              "munich_b": "Hall in Munich B",
+              "music": "Music",
+              "music_video": "Music video",
+              "my_surround": "My surround",
+              "off": "[%key:common::state::off%]",
+              "pavilion": "Pavilion",
+              "recital_opera": "Recital/opera",
+              "roleplaying_game": "Roleplaying game",
+              "roxy_theatre": "The Roxy Theatre",
+              "royaumont": "Church in Royaumont",
+              "sci-fi": "Sci-fi",
+              "spectacle": "Spectacle",
+              "sports": "Sports",
+              "standard": "Standard",
+              "stereo": "Stereo",
+              "straight": "Straight",
+              "stuttgart": "Hall in Stuttgart",
+              "surr_decoder": "Surround decoder",
+              "talk_show": "Talk show",
+              "target": "Target",
+              "tokyo": "Church in Tokyo",
+              "tv_program": "TV program",
+              "usa_a": "Hall in USA A",
+              "usa_b": "Hall in USA B",
+              "vienna": "Hall in Vienna",
+              "village_gate": "Village Gate",
+              "village_vanguard": "Village Vanguard",
+              "warehouse_loft": "Warehouse loft"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "dimmer": {
+        "state": {
+          "auto": "[%key:common::state::auto%]"
+        }
+      },
+      "zone_equalizer_mode": {
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "bypass": "[%key:component::yamaha_musiccast::entity::select::zone_tone_control_mode::state::bypass%]",
+          "manual": "[%key:common::state::manual%]"
+        }
+      },
+      "zone_link_audio_delay": {
+        "state": {
+          "audio_sync": "Audio synchronization",
+          "audio_sync_off": "Audio synchronization off",
+          "audio_sync_on": "Audio synchronization on",
+          "balanced": "Balanced",
+          "lip_sync": "Lip synchronization"
+        }
+      },
+      "zone_link_audio_quality": {
+        "state": {
+          "compressed": "Compressed",
+          "uncompressed": "Uncompressed"
+        }
+      },
+      "zone_link_control": {
+        "state": {
+          "speed": "Speed",
+          "stability": "Stability",
+          "standard": "Standard"
+        }
+      },
+      "zone_sleep": {
+        "state": {
+          "30_min": "30 minutes",
+          "60_min": "60 minutes",
+          "90_min": "90 minutes",
+          "120_min": "120 minutes",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "zone_surr_decoder_type": {
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "dolby_pl": "Dolby ProLogic",
+          "dolby_pl2x_game": "Dolby ProLogic 2x Game",
+          "dolby_pl2x_movie": "Dolby ProLogic 2x Movie",
+          "dolby_pl2x_music": "Dolby ProLogic 2x Music",
+          "dolby_surround": "Dolby Surround",
+          "dts_neo6_cinema": "DTS Neo:6 Cinema",
+          "dts_neo6_music": "DTS Neo:6 Music",
+          "dts_neural_x": "DTS Neural:X",
+          "toggle": "[%key:common::action::toggle%]"
+        }
+      },
+      "zone_tone_control_mode": {
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "bypass": "Bypass",
+          "manual": "[%key:common::state::manual%]"
+        }
+      }
+    }
+  }
+}

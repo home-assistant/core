@@ -1,0 +1,250 @@
+"""Device tracker for Mobile app."""
+
+from collections.abc import Callable
+from dataclasses import dataclass
+import logging
+from typing import Any, Self, override
+
+import voluptuous as vol
+
+from homeassistant.components.device_tracker import (
+    ATTR_BATTERY,
+    ATTR_GPS,
+    ATTR_IN_ZONES,
+    ATTR_LOCATION_NAME,
+    TrackerEntity,
+)
+from homeassistant.components.zone import (
+    DOMAIN as ZONE_DOMAIN,
+    ENTITY_ID_FORMAT as ZONE_ENTITY_ID_FORMAT,
+    HOME_ZONE,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    ATTR_DEVICE_ID,
+    ATTR_GPS_ACCURACY,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    STATE_HOME,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
+
+from .const import (
+    ATTR_ALTITUDE,
+    ATTR_COURSE,
+    ATTR_DEVICE_NAME,
+    ATTR_SPEED,
+    ATTR_VERTICAL_ACCURACY,
+    SIGNAL_LOCATION_UPDATE,
+)
+from .helpers import device_info
+
+_LOGGER = logging.getLogger(__name__)
+
+ATTR_KEYS = (ATTR_ALTITUDE, ATTR_COURSE, ATTR_SPEED, ATTR_VERTICAL_ACCURACY)
+
+LOCATION_UPDATE_SCHEMA = vol.All(
+    cv.key_dependency(ATTR_GPS, ATTR_GPS_ACCURACY),
+    vol.Schema(
+        {
+            vol.Optional(ATTR_LOCATION_NAME): cv.string,
+            vol.Optional(ATTR_GPS): cv.gps,
+            vol.Optional(ATTR_GPS_ACCURACY): cv.positive_float,
+            vol.Optional(ATTR_BATTERY): cv.positive_int,
+            vol.Optional(ATTR_SPEED): cv.positive_int,
+            vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
+            vol.Optional(ATTR_COURSE): cv.positive_int,
+            vol.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
+            vol.Optional(ATTR_IN_ZONES): cv.entities_domain(ZONE_DOMAIN),
+        },
+    ),
+)
+
+
+@dataclass
+class MobileAppDeviceTrackerExtraStoredData(ExtraStoredData):
+    """Object to hold mobile app device tracker data to be restored."""
+
+    data: dict[str, Any]
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the stored data."""
+        return {"data": self.data}
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize a stored mobile app entity data from a dict."""
+        if (data := restored.get("data")) is None:
+            return None
+        try:
+            validated = LOCATION_UPDATE_SCHEMA(data)
+        except vol.Invalid as err:
+            _LOGGER.debug("Discarding invalid restored device tracker data: %s", err)
+            return None
+        return cls(validated)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Mobile app based off an entry."""
+    entity = MobileAppEntity(entry)
+    async_add_entities([entity])
+
+
+class MobileAppEntity(TrackerEntity, RestoreEntity):
+    """Represent a tracked device."""
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        """Set up Mobile app entity."""
+        self._entry = entry
+        self._data: dict[str, Any] = {}
+        self._dispatch_unsub: Callable[[], None] | None = None
+
+    @property
+    @override
+    def unique_id(self) -> str:
+        """Return the unique ID."""
+        return self._entry.data[ATTR_DEVICE_ID]
+
+    @property
+    @override
+    def battery_level(self) -> int | None:
+        """Return the battery level of the device."""
+        return self._data.get(ATTR_BATTERY)
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return device specific attributes."""
+        attrs = {}
+        for key in ATTR_KEYS:
+            if (value := self._data.get(key)) is not None:
+                attrs[key] = value
+
+        return attrs
+
+    @property
+    @override
+    def in_zones(self) -> list[str] | None:
+        """Return the zones the device is currently in."""
+        return self._data.get(ATTR_IN_ZONES)
+
+    @property
+    @override
+    def location_accuracy(self) -> float:
+        """Return the gps accuracy of the device."""
+        return self._data.get(ATTR_GPS_ACCURACY, 0)
+
+    @property
+    @override
+    def latitude(self) -> float | None:
+        """Return latitude value of the device."""
+        if (gps := self._data.get(ATTR_GPS)) is None:
+            return None
+
+        return gps[0]
+
+    @property
+    @override
+    def longitude(self) -> float | None:
+        """Return longitude value of the device."""
+        if (gps := self._data.get(ATTR_GPS)) is None:
+            return None
+
+        return gps[1]
+
+    @property
+    @override
+    def location_name(self) -> str | None:
+        """Return a location name for the current location of the device."""
+        if ATTR_IN_ZONES in self._data:
+            # New app sends in_zones as well as location_name. Prioritize in_zones
+            # and only use location_name for backwards compatibility with old
+            # app versions.
+            return None
+        if location_name := self._data.get(ATTR_LOCATION_NAME):
+            if location_name == HOME_ZONE:
+                return STATE_HOME
+            if zone_state := self.hass.states.get(
+                ZONE_ENTITY_ID_FORMAT.format(location_name)
+            ):
+                return zone_state.name
+            return location_name
+        return None
+
+    @property
+    @override
+    def name(self) -> str:
+        """Return the name of the device."""
+        return self._entry.data[ATTR_DEVICE_NAME]
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return device_info(self._entry.data)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Call when entity about to be added to Home Assistant."""
+        await super().async_added_to_hass()
+        self._dispatch_unsub = async_dispatcher_connect(
+            self.hass,
+            SIGNAL_LOCATION_UPDATE.format(self._entry.entry_id),
+            self.update_data,
+        )
+
+        if (extra_data := await self.async_get_last_extra_data()) is not None:
+            if (
+                restored := MobileAppDeviceTrackerExtraStoredData.from_dict(
+                    extra_data.as_dict()
+                )
+            ) is not None:
+                self._data = restored.data
+            return
+
+        # Fallback for entities saved before MobileAppDeviceTrackerExtraStoredData
+        # was introduced: reconstruct from the previous state's attributes.
+        # This can be removed in HA Core 2026.12.
+        if (state := await self.async_get_last_state()) is None:
+            return
+
+        attr = state.attributes
+        data = {
+            ATTR_GPS: (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE)),
+            ATTR_GPS_ACCURACY: attr.get(ATTR_GPS_ACCURACY),
+            ATTR_BATTERY: attr.get(ATTR_BATTERY_LEVEL),
+        }
+        data.update({key: attr[key] for key in attr if key in ATTR_KEYS})
+        self._data = data
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> MobileAppDeviceTrackerExtraStoredData:
+        """Return the entity data to be restored."""
+        return MobileAppDeviceTrackerExtraStoredData(self._data)
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Call when entity is being removed from hass."""
+        await super().async_will_remove_from_hass()
+
+        if self._dispatch_unsub:
+            self._dispatch_unsub()
+            self._dispatch_unsub = None
+
+    @callback
+    def update_data(self, data: dict[str, Any]) -> None:
+        """Mark the device as seen."""
+        self._data = data
+        self.async_write_ha_state()

@@ -1,0 +1,16 @@
+{
+  "battery_percentage": 78,
+  "battery_type": "NICKEL_METAL_HYDRIDE",
+  "battery_type_numeric": 1,
+  "battery_voltage": 10.37,
+  "bolt_state": "day_lock",
+  "bolt_state_numeric": 2,
+  "bridge_mac_wifi": "***REDACTED***",
+  "bridge_mac_ble": "***REDACTED***",
+  "lock_online": 1,
+  "webhooks_number": 1,
+  "ip_address": "192.168.42.12",
+  "up_timestamp": 1653041994,
+  "wifi_strength": 73,
+  "ble_strength": 20
+}

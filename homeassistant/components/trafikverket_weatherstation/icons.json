@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "measure_time": {
+        "default": "mdi:clock"
+      },
+      "modified_time": {
+        "default": "mdi:clock"
+      },
+      "precipitation": {
+        "default": "mdi:weather-snowy-rainy"
+      },
+      "wind_direction": {
+        "default": "mdi:flag-triangle"
+      },
+      "wind_speed_max": {
+        "default": "mdi:weather-windy-variant"
+      }
+    }
+  }
+}

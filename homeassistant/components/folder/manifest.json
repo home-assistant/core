@@ -1,0 +1,8 @@
+{
+  "domain": "folder",
+  "name": "Folder",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/folder",
+  "iot_class": "local_polling",
+  "quality_scale": "legacy"
+}

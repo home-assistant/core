@@ -1,0 +1,19 @@
+{
+  "components": {
+    "main": {
+      "refresh": {},
+      "fanSpeed": {
+        "fanSpeed": {
+          "value": 0,
+          "timestamp": "2025-03-06T11:47:32.683Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-03-06T11:47:32.697Z"
+        }
+      }
+    }
+  }
+}

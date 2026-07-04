@@ -1,0 +1,584 @@
+"""Utility functions for Home Assistant SkyConnect integration."""
+
+import asyncio
+from collections import defaultdict
+from collections.abc import AsyncGenerator, Callable, Sequence
+from contextlib import AsyncExitStack, asynccontextmanager
+from dataclasses import dataclass
+from enum import StrEnum
+import logging
+
+from aiohasupervisor import SupervisorError, SupervisorNotFoundError
+from aiohasupervisor.models import RaspberryPiFirmwareInfo
+from universal_silabs_flasher.const import ApplicationType as FlasherApplicationType
+from universal_silabs_flasher.firmware import parse_firmware_image
+from universal_silabs_flasher.flasher import BaseFlasher, DeviceSpecificFlasher, Flasher
+
+from homeassistant.components.hassio import (
+    AddonError,
+    AddonManager,
+    AddonState,
+    HassioNotReadyError,
+    get_apps_list,
+    get_supervisor_client,
+)
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.hassio import is_hassio
+from homeassistant.helpers.singleton import singleton
+from homeassistant.util import dt as dt_util
+
+from . import DATA_COMPONENT
+from .const import (
+    OTBR_ADDON_MANAGER_DATA,
+    OTBR_ADDON_NAME,
+    OTBR_ADDON_SLUG,
+    Z2M_ADDON_NAME,
+    Z2M_ADDON_SLUG_REGEX,
+)
+from .helpers import async_firmware_update_context
+
+_LOGGER = logging.getLogger(__name__)
+
+ADDON_STATE_POLL_INTERVAL = 3
+ADDON_INFO_POLL_TIMEOUT = 15 * 60
+
+
+class WaitingAddonManager(AddonManager):
+    """Addon manager which supports waiting operations for managing an addon."""
+
+    async def async_wait_until_addon_state(self, *states: AddonState) -> None:
+        """Poll an addon's info until it is in a specific state."""
+        async with asyncio.timeout(ADDON_INFO_POLL_TIMEOUT):
+            while True:
+                try:
+                    info = await self.async_get_addon_info()
+                except AddonError:
+                    info = None
+
+                _LOGGER.debug("Waiting for addon to be in state %s: %s", states, info)
+
+                if info is not None and info.state in states:
+                    break
+
+                await asyncio.sleep(ADDON_STATE_POLL_INTERVAL)
+
+    async def async_start_addon_waiting(self) -> None:
+        """Start an add-on."""
+        await self.async_schedule_start_addon()
+        await self.async_wait_until_addon_state(AddonState.RUNNING)
+
+    async def async_install_addon_waiting(self) -> None:
+        """Install an add-on."""
+        await self.async_schedule_install_addon()
+        await self.async_wait_until_addon_state(
+            AddonState.RUNNING,
+            AddonState.NOT_RUNNING,
+        )
+
+    async def async_uninstall_addon_waiting(self) -> None:
+        """Uninstall an add-on."""
+        try:
+            info = await self.async_get_addon_info()
+        except AddonError:
+            info = None
+
+        # Do not try to uninstall an addon if it is already uninstalled
+        if info is not None and info.state is AddonState.NOT_INSTALLED:
+            return
+
+        await self.async_uninstall_addon()
+        await self.async_wait_until_addon_state(AddonState.NOT_INSTALLED)
+
+
+class ApplicationType(StrEnum):
+    """Application type running on a device."""
+
+    GECKO_BOOTLOADER = "bootloader"
+    EZSP = "ezsp"
+    SPINEL = "spinel"
+    CPC = "cpc"
+    ROUTER = "router"
+
+    @classmethod
+    def from_flasher_application_type(
+        cls, app_type: FlasherApplicationType
+    ) -> ApplicationType:
+        """Convert a USF application type enum."""
+        return cls(app_type.value)
+
+    def as_flasher_application_type(self) -> FlasherApplicationType:
+        """Convert the application type enum into one compatible with USF."""
+        return FlasherApplicationType(self.value)
+
+
+@singleton(OTBR_ADDON_MANAGER_DATA)
+@callback
+def get_otbr_addon_manager(hass: HomeAssistant) -> WaitingAddonManager:
+    """Get the OTBR add-on manager."""
+    return WaitingAddonManager(
+        hass,
+        _LOGGER,
+        OTBR_ADDON_NAME,
+        OTBR_ADDON_SLUG,
+    )
+
+
+@callback
+def get_z2m_addon_manager(hass: HomeAssistant, slug: str) -> WaitingAddonManager:
+    """Get the Z2M add-on manager."""
+    return WaitingAddonManager(
+        hass,
+        _LOGGER,
+        Z2M_ADDON_NAME,
+        slug,
+    )
+
+
+@dataclass(kw_only=True)
+class OwningAddon:
+    """Owning add-on."""
+
+    slug: str
+
+    def _get_addon_manager(self, hass: HomeAssistant) -> WaitingAddonManager:
+        return WaitingAddonManager(
+            hass,
+            _LOGGER,
+            f"Add-on {self.slug}",
+            self.slug,
+        )
+
+    async def is_running(self, hass: HomeAssistant) -> bool:
+        """Check if the add-on is running."""
+        addon_manager = self._get_addon_manager(hass)
+
+        try:
+            addon_info = await addon_manager.async_get_addon_info()
+        except AddonError:
+            return False
+        else:
+            return addon_info.state is AddonState.RUNNING
+
+    @asynccontextmanager
+    async def temporarily_stop(self, hass: HomeAssistant) -> AsyncGenerator[None]:
+        """Temporarily stop the add-on, restarting it after completion."""
+        addon_manager = self._get_addon_manager(hass)
+
+        try:
+            addon_info = await addon_manager.async_get_addon_info()
+        except AddonError:
+            yield
+            return
+
+        if addon_info.state is not AddonState.RUNNING:
+            yield
+            return
+
+        try:
+            await addon_manager.async_stop_addon()
+            await addon_manager.async_wait_until_addon_state(AddonState.NOT_RUNNING)
+            yield
+        finally:
+            await addon_manager.async_start_addon_waiting()
+
+
+@dataclass(kw_only=True)
+class OwningIntegration:
+    """Owning integration."""
+
+    config_entry_id: str
+
+    async def is_running(self, hass: HomeAssistant) -> bool:
+        """Check if the integration is running."""
+        if (entry := hass.config_entries.async_get_entry(self.config_entry_id)) is None:
+            return False
+
+        return entry.state in (
+            ConfigEntryState.LOADED,
+            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.SETUP_IN_PROGRESS,
+        )
+
+    @asynccontextmanager
+    async def temporarily_stop(self, hass: HomeAssistant) -> AsyncGenerator[None]:
+        """Temporarily stop the integration, restarting it after completion."""
+        if (entry := hass.config_entries.async_get_entry(self.config_entry_id)) is None:
+            yield
+            return
+
+        if entry.state is not ConfigEntryState.LOADED:
+            yield
+            return
+
+        try:
+            await hass.config_entries.async_unload(entry.entry_id)
+            yield
+        finally:
+            await hass.config_entries.async_setup(entry.entry_id)
+
+
+@dataclass(kw_only=True)
+class FirmwareInfo:
+    """Firmware guess."""
+
+    device: str
+    firmware_type: ApplicationType
+    firmware_version: str | None
+
+    source: str
+    owners: list[OwningAddon | OwningIntegration]
+
+    async def is_running(self, hass: HomeAssistant) -> bool:
+        """Check if the firmware owner is running."""
+        states = await asyncio.gather(*(o.is_running(hass) for o in self.owners))
+        if not states:
+            return False
+
+        return all(states)
+
+
+async def get_otbr_addon_firmware_info(
+    hass: HomeAssistant, otbr_addon_manager: AddonManager
+) -> FirmwareInfo | None:
+    """Get firmware info from the OTBR add-on."""
+    try:
+        otbr_addon_info = await otbr_addon_manager.async_get_addon_info()
+    except AddonError:
+        return None
+
+    if otbr_addon_info.state is AddonState.NOT_INSTALLED:
+        return None
+
+    if (otbr_path := otbr_addon_info.options.get("device")) is None:
+        return None
+
+    # Only create a new entry if there are no existing OTBR ones
+    return FirmwareInfo(
+        device=otbr_path,
+        firmware_type=ApplicationType.SPINEL,
+        firmware_version=None,
+        source="otbr",
+        owners=[OwningAddon(slug=otbr_addon_manager.addon_slug)],
+    )
+
+
+async def get_z2m_addon_firmware_info(
+    hass: HomeAssistant, z2m_addon_manager: AddonManager
+) -> FirmwareInfo | None:
+    """Get firmware info from a Z2M add-on."""
+    try:
+        z2m_addon_info = await z2m_addon_manager.async_get_addon_info()
+    except AddonError:
+        return None
+
+    if z2m_addon_info.state is AddonState.NOT_INSTALLED:
+        return None
+
+    serial = z2m_addon_info.options.get("serial")
+
+    if not isinstance(serial, dict) or (z2m_port := serial.get("port")) is None:
+        return None
+
+    return FirmwareInfo(
+        device=z2m_port,
+        firmware_type=ApplicationType.EZSP,
+        firmware_version=None,
+        source=f"zigbee2mqtt ({z2m_addon_manager.addon_slug})",
+        owners=[OwningAddon(slug=z2m_addon_manager.addon_slug)],
+    )
+
+
+async def guess_hardware_owners(
+    hass: HomeAssistant, device_path: str
+) -> list[FirmwareInfo]:
+    """Guess the firmware info based on installed addons and other integrations."""
+    device_guesses: defaultdict[str, list[FirmwareInfo]] = defaultdict(list)
+
+    async for firmware_info in hass.data[DATA_COMPONENT].iter_firmware_info():
+        device_guesses[firmware_info.device].append(firmware_info)
+
+    if not is_hassio(hass):
+        return device_guesses.get(device_path, [])
+
+    # It may be possible for the OTBR addon to be present without the integration
+    otbr_addon_manager = get_otbr_addon_manager(hass)
+    otbr_addon_fw_info = await get_otbr_addon_firmware_info(hass, otbr_addon_manager)
+    otbr_path = otbr_addon_fw_info.device if otbr_addon_fw_info is not None else None
+
+    # Only create a new entry if there are no existing OTBR ones
+    if otbr_path is not None and not any(
+        info.source == "otbr" for info in device_guesses[otbr_path]
+    ):
+        assert otbr_addon_fw_info is not None
+        device_guesses[otbr_path].append(otbr_addon_fw_info)
+
+    # Lazy import to avoid circular dependency
+    from .silabs_multiprotocol_addon import (  # noqa: PLC0415
+        get_multiprotocol_addon_manager,
+    )
+
+    multipan_addon_manager = await get_multiprotocol_addon_manager(hass)
+
+    try:
+        multipan_addon_info = await multipan_addon_manager.async_get_addon_info()
+    except AddonError:
+        pass
+    else:
+        if multipan_addon_info.state is not AddonState.NOT_INSTALLED:
+            multipan_path = multipan_addon_info.options.get("device")
+
+            if multipan_path is not None:
+                device_guesses[multipan_path].append(
+                    FirmwareInfo(
+                        device=multipan_path,
+                        firmware_type=ApplicationType.CPC,
+                        firmware_version=None,
+                        source="multiprotocol",
+                        owners=[OwningAddon(slug=multipan_addon_manager.addon_slug)],
+                    )
+                )
+
+    # Z2M can be provided by one of many add-ons, we match them by name
+    try:
+        apps_list = get_apps_list(hass)
+    except HassioNotReadyError:
+        apps_list = []
+    for app_info in apps_list:
+        slug = app_info.get("slug")
+
+        if not isinstance(slug, str) or Z2M_ADDON_SLUG_REGEX.fullmatch(slug) is None:
+            continue
+
+        z2m_addon_manager = get_z2m_addon_manager(hass, slug)
+        z2m_fw_info = await get_z2m_addon_firmware_info(hass, z2m_addon_manager)
+
+        if z2m_fw_info is not None:
+            device_guesses[z2m_fw_info.device].append(z2m_fw_info)
+
+    return device_guesses.get(device_path, [])
+
+
+async def guess_firmware_info(hass: HomeAssistant, device_path: str) -> FirmwareInfo:
+    """Guess the firmware type based on installed addons and other integrations."""
+
+    hardware_owners = await guess_hardware_owners(hass, device_path)
+
+    # Fall back to EZSP if we have no way to guess
+    if not hardware_owners:
+        return FirmwareInfo(
+            device=device_path,
+            firmware_type=ApplicationType.EZSP,
+            firmware_version=None,
+            source="unknown",
+            owners=[],
+        )
+
+    # Prioritize guesses that are pulled from a real source
+    guesses = [
+        (guess, sum([await owner.is_running(hass) for owner in guess.owners]))
+        for guess in hardware_owners
+    ]
+    guesses.sort(key=lambda p: p[1])
+    assert guesses
+
+    # Pick the best one. We use a stable sort so ZHA < OTBR < multi-PAN
+    return guesses[-1][0]
+
+
+async def probe_silabs_firmware_info(
+    device: str,
+    *,
+    flasher_cls: type[BaseFlasher],
+    application_probe_methods: Sequence[ApplicationType] | None = None,
+) -> FirmwareInfo | None:
+    """Probe the running firmware on a SiLabs device."""
+    flasher = flasher_cls(device=device)
+
+    try:
+        await flasher.probe_app_type(
+            only=(
+                [m.as_flasher_application_type() for m in application_probe_methods]
+                if application_probe_methods is not None
+                else None
+            )
+        )
+    except Exception:  # noqa: BLE001
+        _LOGGER.debug("Failed to probe application type", exc_info=True)
+
+    if flasher.app_type is None:
+        return None
+
+    return FirmwareInfo(
+        device=device,
+        firmware_type=ApplicationType.from_flasher_application_type(flasher.app_type),
+        firmware_version=(
+            flasher.app_version.orig_version
+            if flasher.app_version is not None
+            else None
+        ),
+        source="probe",
+        owners=[],
+    )
+
+
+async def probe_silabs_firmware_type(
+    device: str,
+    *,
+    application_probe_methods: Sequence[tuple[ApplicationType, int]],
+) -> ApplicationType | None:
+    """Probe the running firmware type on a SiLabs device."""
+    flasher = Flasher(
+        device=device,
+        probe_methods=[
+            (m.as_flasher_application_type(), b) for m, b in application_probe_methods
+        ],
+    )
+
+    try:
+        await flasher.probe_app_type()
+    except Exception:  # noqa: BLE001
+        _LOGGER.debug("Failed to probe application type", exc_info=True)
+
+    if flasher.app_type is None:
+        return None
+
+    return ApplicationType.from_flasher_application_type(flasher.app_type)
+
+
+@asynccontextmanager
+async def async_firmware_flashing_context(
+    hass: HomeAssistant, device: str, source_domain: str
+) -> AsyncGenerator[None]:
+    """Register a device as having its firmware being actively interacted with."""
+    async with async_firmware_update_context(hass, device, source_domain):
+        firmware_info = await guess_firmware_info(hass, device)
+        _LOGGER.debug("Guessed firmware info before update: %s", firmware_info)
+
+        async with AsyncExitStack() as stack:
+            for owner in firmware_info.owners:
+                await stack.enter_async_context(owner.temporarily_stop(hass))
+
+            yield
+
+
+async def async_flash_silabs_firmware(
+    hass: HomeAssistant,
+    device: str,
+    fw_data: bytes,
+    flasher_cls: type[DeviceSpecificFlasher],
+    expected_installed_firmware_type: ApplicationType,
+    progress_callback: Callable[[int, int], None] | None = None,
+) -> FirmwareInfo:
+    """Flash firmware to the SiLabs device.
+
+    This function is meant to be used within a firmware update context.
+    """
+
+    fw_image = await hass.async_add_executor_job(parse_firmware_image, fw_data)
+
+    flasher = flasher_cls(device=device)
+
+    try:
+        # Enter the bootloader with indeterminate progress
+        await flasher.enter_bootloader()
+
+        # Flash the firmware, with progress
+        await flasher.flash_firmware(fw_image, progress_callback=progress_callback)
+    except PermissionError as err:
+        raise HomeAssistantError(
+            "Failed to flash firmware: Device is used by another application"
+        ) from err
+    except Exception as err:
+        raise HomeAssistantError("Failed to flash firmware") from err
+
+    probed_firmware_info = await probe_silabs_firmware_info(
+        device,
+        flasher_cls=flasher_cls,
+        # Only probe for the expected installed firmware type
+        application_probe_methods=[expected_installed_firmware_type],
+    )
+
+    if probed_firmware_info is None:
+        raise HomeAssistantError("Failed to probe the firmware after flashing")
+
+    return probed_firmware_info
+
+
+# Supervisor os_info.board values whose os-agent exposes
+# io.hass.os.Boards.RaspberryPi.Firmware (Raspberry Pi 4/5 and Yellow CM4/CM5).
+# RPi 2/3 have no SPI EEPROM bootloader. These boards belong to different
+# integrations (raspberry_pi and homeassistant_yellow), so the shared Supervisor
+# plumbing lives here.
+BOARDS_WITH_RASPBERRYPI_FIRMWARE = frozenset({"rpi4-64", "rpi5-64", "yellow"})
+
+RPI_FIRMWARE_RELEASE_URL_DEFAULT = (
+    "https://github.com/raspberrypi/rpi-eeprom/blob/master/releases.md"
+)
+
+# Per-SoC release notes. The Yellow can run both with a CM4 or CM5, so we don't
+# know the exact SoC.
+_RPI_FIRMWARE_RELEASE_URLS = {
+    "rpi4-64": "https://github.com/raspberrypi/rpi-eeprom/blob/master/firmware-2711/release-notes.md",
+    "rpi5-64": "https://github.com/raspberrypi/rpi-eeprom/blob/master/firmware-2712/release-notes.md",
+}
+
+
+def rpi_firmware_release_url(board: str) -> str:
+    """Return the RPi firmware release notes URL for a board."""
+    return _RPI_FIRMWARE_RELEASE_URLS.get(board, RPI_FIRMWARE_RELEASE_URL_DEFAULT)
+
+
+def humanize_rpi_firmware_version(version: str | None) -> str | None:
+    """Turn a raw firmware version into a human-readable string.
+
+    The Supervisor reports the bootloader EEPROM build as a Unix timestamp,
+    optionally suffixed with the VL805 EEPROM revision (timestamp-hexstring).
+    Render the timestamp as a UTC YYYY-MM-DD date and append (VL805 hexstring)
+    when a VL805 revision is present.
+    """
+    if version is None:
+        return None
+    timestamp, _, vl805 = version.partition("-")
+    try:
+        date = dt_util.utc_from_timestamp(int(timestamp)).strftime("%Y-%m-%d")
+    except ValueError:
+        return version
+    if vl805:
+        return f"{date} (VL805 {vl805})"
+    return date
+
+
+async def async_get_raspberry_pi_firmware_info(
+    hass: HomeAssistant,
+) -> RaspberryPiFirmwareInfo | None:
+    """Return the firmware info, or None if the Supervisor doesn't expose it.
+
+    A 404 (SupervisorNotFoundError) means the endpoint is unavailable (older
+    Supervisor, pre OS 18) and the feature is skipped. Any other SupervisorError
+    is a real communication failure and is left to propagate so the caller can
+    retry.
+    """
+    client = get_supervisor_client(hass)
+    try:
+        return await client.os.raspberry_pi_firmware_info()
+    except SupervisorNotFoundError:
+        _LOGGER.debug("Raspberry Pi firmware endpoint unavailable")
+        return None
+
+
+async def async_update_raspberry_pi_firmware(hass: HomeAssistant) -> None:
+    """Trigger the Raspberry Pi firmware (bootloader EEPROM and VL805) update.
+
+    The Supervisor always raises a reboot-required issue and suggestion on
+    success. The new firmware only runs after the next reboot, whether the
+    flash was live (RPi5/CM5) or staged (RPi4/CM4/Yellow).
+    """
+    client = get_supervisor_client(hass)
+    try:
+        await client.os.update_raspberry_pi_firmware()
+    except SupervisorError as err:
+        raise HomeAssistantError(
+            f"Error updating Raspberry Pi firmware: {err}"
+        ) from err

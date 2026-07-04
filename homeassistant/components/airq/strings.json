@@ -1,0 +1,170 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "incomplete_discovery": "The discovered air-Q device did not provide a device ID. Ensure the firmware is up to date."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_input": "[%key:common::config_flow::error::invalid_host%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "discovery_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Do you want to set up **{name}**?",
+        "title": "Set up air-Q"
+      },
+      "user": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Provide the IP address or mDNS of the device and its password",
+        "title": "Identify the device"
+      }
+    }
+  },
+  "entity": {
+    "number": {
+      "airq_led_brightness": {
+        "name": "LED brightness"
+      }
+    },
+    "sensor": {
+      "acetaldehyde": {
+        "name": "Acetaldehyde"
+      },
+      "ammonia": {
+        "name": "Ammonia"
+      },
+      "arsine": {
+        "name": "Arsine"
+      },
+      "bromine": {
+        "name": "Bromine"
+      },
+      "carbon_disulfide": {
+        "name": "Carbon disulfide"
+      },
+      "carbon_monoxide": {
+        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
+      },
+      "chlorine": {
+        "name": "Chlorine"
+      },
+      "chlorine_dioxide": {
+        "name": "Chlorine dioxide"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "ethanol": {
+        "name": "Ethanol"
+      },
+      "ethylene": {
+        "name": "Ethylene"
+      },
+      "fluorine": {
+        "name": "Fluorine"
+      },
+      "formaldehyde": {
+        "name": "Formaldehyde"
+      },
+      "health_index": {
+        "name": "Health index"
+      },
+      "hydrochloric_acid": {
+        "name": "Hydrochloric acid"
+      },
+      "hydrogen": {
+        "name": "Hydrogen"
+      },
+      "hydrogen_cyanide": {
+        "name": "Hydrogen cyanide"
+      },
+      "hydrogen_fluoride": {
+        "name": "Hydrogen fluoride"
+      },
+      "hydrogen_peroxide": {
+        "name": "Hydrogen peroxide"
+      },
+      "hydrogen_phosphide": {
+        "name": "Hydrogen phosphide"
+      },
+      "hydrogen_sulfide": {
+        "name": "Hydrogen sulfide"
+      },
+      "industrial_volatile_organic_compounds": {
+        "name": "VOCs (industrial)"
+      },
+      "maximum_noise": {
+        "name": "Noise (maximum)"
+      },
+      "methane": {
+        "name": "Methane"
+      },
+      "methanethiol": {
+        "name": "Methanethiol"
+      },
+      "mold": {
+        "name": "Mold index"
+      },
+      "noise": {
+        "name": "Noise"
+      },
+      "organic_acid": {
+        "name": "Organic acid"
+      },
+      "oxygen": {
+        "name": "Oxygen"
+      },
+      "performance_index": {
+        "name": "Performance index"
+      },
+      "propane": {
+        "name": "Propane"
+      },
+      "r32": {
+        "name": "Refrigerant R-32"
+      },
+      "r454b": {
+        "name": "Refrigerant R-454B"
+      },
+      "r454c": {
+        "name": "Refrigerant R-454C"
+      },
+      "radon": {
+        "name": "Radon"
+      },
+      "relative_pressure": {
+        "name": "Relative pressure"
+      },
+      "silicon_hydride": {
+        "name": "Silicon hydride"
+      },
+      "virus_index": {
+        "name": "Virus index"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "clip_negatives": "Clip negative values",
+          "return_average": "Show values averaged by the device"
+        },
+        "data_description": {
+          "clip_negatives": "For baseline calibration purposes, certain sensor values may briefly become negative. The default behavior is to clip such values to 0",
+          "return_average": "air-Q allows to poll both the noisy sensor readings as well as the values averaged on the device (default)"
+        },
+        "title": "Configure air-Q integration"
+      }
+    }
+  }
+}

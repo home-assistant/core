@@ -1,0 +1,147 @@
+"""Tests for the nexia sensor platform."""
+
+from nexia.home import NexiaHome
+
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+
+from .conftest import setup_integration
+
+
+async def test_create_sensors(hass: HomeAssistant, patch_nexia_home: NexiaHome) -> None:
+    """Test creation of sensors."""
+
+    await setup_integration(hass, patch_nexia_home)
+
+    state = hass.states.get("sensor.nick_office_nick_office_temperature")
+    assert state is not None
+    assert round(float(state.state)) == 23
+
+    expected_attributes = {
+        "attribution": "Data provided by Trane Technologies",
+        "device_class": "temperature",
+        "friendly_name": "Nick Office Temperature",
+        "unit_of_measurement": UnitOfTemperature.CELSIUS,
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(
+        state.attributes[key] == value for key, value in expected_attributes.items()
+    )
+
+    state = hass.states.get("sensor.nick_office_nick_office_zone_setpoint_status")
+    assert state is not None
+    assert state.state == "Permanent Hold"
+    expected_attributes = {
+        "attribution": "Data provided by Trane Technologies",
+        "friendly_name": "Nick Office Zone setpoint status",
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(
+        state.attributes[key] == value for key, value in expected_attributes.items()
+    )
+
+    state = hass.states.get("sensor.nick_office_nick_office_zone_status")
+    assert state is not None
+    assert state.state == "Relieving Air"
+
+    expected_attributes = {
+        "attribution": "Data provided by Trane Technologies",
+        "friendly_name": "Nick Office Zone status",
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(
+        state.attributes[key] == value for key, value in expected_attributes.items()
+    )
+
+    state = hass.states.get("sensor.master_suite_air_cleaner_mode")
+    assert state is not None
+    assert state.state == "auto"
+
+    expected_attributes = {
+        "attribution": "Data provided by Trane Technologies",
+        "friendly_name": "Master Suite Air cleaner mode",
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(
+        state.attributes[key] == value for key, value in expected_attributes.items()
+    )
+
+    state = hass.states.get("sensor.master_suite_current_compressor_speed")
+    assert state is not None
+    assert round(float(state.state)) == 69
+
+    expected_attributes = {
+        "attribution": "Data provided by Trane Technologies",
+        "friendly_name": "Master Suite Current compressor speed",
+        "unit_of_measurement": PERCENTAGE,
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(
+        state.attributes[key] == value for key, value in expected_attributes.items()
+    )
+
+    state = hass.states.get("sensor.master_suite_outdoor_temperature")
+    assert state is not None
+    assert round(float(state.state), 1) == 30.6
+
+    expected_attributes = {
+        "attribution": "Data provided by Trane Technologies",
+        "device_class": "temperature",
+        "friendly_name": "Master Suite Outdoor temperature",
+        "unit_of_measurement": UnitOfTemperature.CELSIUS,
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(
+        state.attributes[key] == value for key, value in expected_attributes.items()
+    )
+
+    state = hass.states.get("sensor.master_suite_humidity")
+    assert state is not None
+    assert state.state == "52.0"
+
+    expected_attributes = {
+        "attribution": "Data provided by Trane Technologies",
+        "device_class": "humidity",
+        "friendly_name": "Master Suite Humidity",
+        "unit_of_measurement": PERCENTAGE,
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(
+        state.attributes[key] == value for key, value in expected_attributes.items()
+    )
+
+    state = hass.states.get("sensor.master_suite_requested_compressor_speed")
+    assert state is not None
+    assert state.state == "69.0"
+
+    expected_attributes = {
+        "attribution": "Data provided by Trane Technologies",
+        "friendly_name": "Master Suite Requested compressor speed",
+        "unit_of_measurement": PERCENTAGE,
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(
+        state.attributes[key] == value for key, value in expected_attributes.items()
+    )
+
+    state = hass.states.get("sensor.master_suite_system_status")
+    assert state is not None
+    assert state.state == "Cooling"
+
+    expected_attributes = {
+        "attribution": "Data provided by Trane Technologies",
+        "friendly_name": "Master Suite System status",
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(
+        state.attributes[key] == value for key, value in expected_attributes.items()
+    )

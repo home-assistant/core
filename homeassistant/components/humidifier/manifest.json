@@ -1,0 +1,8 @@
+{
+  "domain": "humidifier",
+  "name": "Humidifier",
+  "codeowners": ["@home-assistant/core", "@Shulyaka"],
+  "documentation": "https://www.home-assistant.io/integrations/humidifier",
+  "integration_type": "entity",
+  "quality_scale": "internal"
+}

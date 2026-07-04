@@ -1,0 +1,643 @@
+{
+  "components": {
+    "main": {
+      "relativeHumidityMeasurement": {
+        "humidity": {
+          "value": 59,
+          "unit": "%",
+          "timestamp": "2025-10-04T13:03:19.251Z"
+        }
+      },
+      "custom.airConditionerOdorController": {
+        "airConditionerOdorControllerProgress": {
+          "value": null
+        },
+        "airConditionerOdorControllerState": {
+          "value": null
+        }
+      },
+      "custom.thermostatSetpointControl": {
+        "minimumSetpoint": {
+          "value": 16,
+          "unit": "C",
+          "timestamp": "2025-08-20T15:31:02.655Z"
+        },
+        "maximumSetpoint": {
+          "value": 30,
+          "unit": "C",
+          "timestamp": "2025-06-18T03:34:18.116Z"
+        }
+      },
+      "airConditionerMode": {
+        "availableAcModes": {
+          "value": null
+        },
+        "supportedAcModes": {
+          "value": ["cool", "dry", "wind", "auto", "heat"],
+          "timestamp": "2025-06-18T03:34:18.116Z"
+        },
+        "airConditionerMode": {
+          "value": "heat",
+          "timestamp": "2025-10-04T12:59:27.205Z"
+        }
+      },
+      "custom.spiMode": {
+        "spiMode": {
+          "value": "off",
+          "timestamp": "2025-10-03T18:10:05.905Z"
+        }
+      },
+      "samsungce.deviceIdentification": {
+        "micomAssayCode": {
+          "value": "10217841",
+          "timestamp": "2025-06-18T03:34:18.116Z"
+        },
+        "modelName": {
+          "value": null
+        },
+        "serialNumber": {
+          "value": null
+        },
+        "serialNumberExtra": {
+          "value": null
+        },
+        "modelClassificationCode": {
+          "value": "60010523001411010200001000000000",
+          "timestamp": "2025-06-18T03:34:18.116Z"
+        },
+        "description": {
+          "value": "ARTIK051_PRAC_20K",
+          "timestamp": "2025-06-18T03:34:18.116Z"
+        },
+        "releaseYear": {
+          "value": 20,
+          "timestamp": "2025-06-12T09:25:21.264Z"
+        },
+        "binaryId": {
+          "value": "ARTIK051_PRAC_20K",
+          "timestamp": "2025-10-04T03:34:13.732Z"
+        }
+      },
+      "airQualitySensor": {
+        "airQuality": {
+          "value": null
+        }
+      },
+      "custom.airConditionerOptionalMode": {
+        "supportedAcOptionalMode": {
+          "value": [
+            "off",
+            "sleep",
+            "quiet",
+            "smart",
+            "speed",
+            "motionIndirect",
+            "motionDirect",
+            "windFree",
+            "windFreeSleep"
+          ],
+          "timestamp": "2025-06-18T03:34:18.116Z"
+        },
+        "acOptionalMode": {
+          "value": "off",
+          "timestamp": "2025-09-28T10:20:26.885Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "on",
+          "timestamp": "2025-10-04T12:59:27.185Z"
+        }
+      },
+      "custom.airConditionerTropicalNightMode": {
+        "acTropicalNightModeLevel": {
+          "value": 0,
+          "timestamp": "2025-06-17T10:45:00.985Z"
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": null
+        },
+        "mndt": {
+          "value": null
+        },
+        "mnfv": {
+          "value": "ARTIK051_PRAC_20K_11230313",
+          "timestamp": "2025-10-04T03:34:13.484Z"
+        },
+        "mnhw": {
+          "value": "ARTIK051",
+          "timestamp": "2025-10-04T03:34:13.484Z"
+        },
+        "di": {
+          "value": "1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977",
+          "timestamp": "2025-10-04T03:34:13.486Z"
+        },
+        "mnsl": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2025-10-04T03:34:13.484Z"
+        },
+        "dmv": {
+          "value": "res.1.1.0,sh.1.1.0",
+          "timestamp": "2025-10-04T03:34:13.486Z"
+        },
+        "n": {
+          "value": "Samsung Room A/C",
+          "timestamp": "2025-10-04T03:34:13.486Z"
+        },
+        "mnmo": {
+          "value": "ARTIK051_PRAC_20K|10217841|60010523001411010200001000000000",
+          "timestamp": "2025-10-04T03:34:13.732Z"
+        },
+        "vid": {
+          "value": "DA-AC-RAC-000003",
+          "timestamp": "2025-10-04T03:34:13.484Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2025-10-04T03:34:13.484Z"
+        },
+        "mnml": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2025-10-04T03:34:13.484Z"
+        },
+        "mnpv": {
+          "value": "DAWIT 2.0",
+          "timestamp": "2025-10-04T03:34:13.484Z"
+        },
+        "mnos": {
+          "value": "TizenRT 1.0 + IPv6",
+          "timestamp": "2025-10-04T03:34:13.484Z"
+        },
+        "pi": {
+          "value": "1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977",
+          "timestamp": "2025-10-04T03:34:13.484Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2025-10-04T03:34:13.486Z"
+        }
+      },
+      "airConditionerFanMode": {
+        "fanMode": {
+          "value": "auto",
+          "timestamp": "2025-10-04T12:59:27.323Z"
+        },
+        "supportedAcFanModes": {
+          "value": ["auto", "low", "medium", "high", "turbo"],
+          "timestamp": "2024-06-21T13:45:16.785Z"
+        },
+        "availableAcFanModes": {
+          "value": null
+        }
+      },
+      "samsungce.dustFilterAlarm": {
+        "alarmThreshold": {
+          "value": 500,
+          "unit": "Hour",
+          "timestamp": "2025-06-17T12:15:04.968Z"
+        },
+        "supportedAlarmThresholds": {
+          "value": [180, 300, 500, 700],
+          "unit": "Hour",
+          "timestamp": "2025-06-18T03:34:18.116Z"
+        }
+      },
+      "custom.electricHepaFilter": {
+        "electricHepaFilterCapacity": {
+          "value": null
+        },
+        "electricHepaFilterUsageStep": {
+          "value": null
+        },
+        "electricHepaFilterLastResetDate": {
+          "value": null
+        },
+        "electricHepaFilterStatus": {
+          "value": null
+        },
+        "electricHepaFilterUsage": {
+          "value": null
+        },
+        "electricHepaFilterResetType": {
+          "value": null
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": [
+            "remoteControlStatus",
+            "airQualitySensor",
+            "dustSensor",
+            "odorSensor",
+            "veryFineDustSensor",
+            "custom.spiMode",
+            "custom.deodorFilter",
+            "custom.electricHepaFilter",
+            "custom.periodicSensing",
+            "custom.doNotDisturbMode",
+            "demandResponseLoadControl",
+            "custom.airConditionerOdorController",
+            "samsungce.individualControlLock",
+            "samsungce.alwaysOnSensing"
+          ],
+          "timestamp": "2025-10-04T12:59:27.205Z"
+        }
+      },
+      "custom.ocfResourceVersion": {
+        "ocfResourceUpdatedTime": {
+          "value": null
+        },
+        "ocfResourceVersion": {
+          "value": null
+        }
+      },
+      "samsungce.driverVersion": {
+        "versionNumber": {
+          "value": 25040101,
+          "timestamp": "2025-06-12T10:13:31.862Z"
+        }
+      },
+      "fanOscillationMode": {
+        "supportedFanOscillationModes": {
+          "value": ["fixed", "all", "vertical", "horizontal"],
+          "timestamp": "2025-02-08T08:54:15.797Z"
+        },
+        "availableFanOscillationModes": {
+          "value": null
+        },
+        "fanOscillationMode": {
+          "value": "fixed",
+          "timestamp": "2025-10-04T15:53:27.427Z"
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": null
+        },
+        "temperature": {
+          "value": 20,
+          "unit": "C",
+          "timestamp": "2025-10-04T13:07:50.163Z"
+        }
+      },
+      "dustSensor": {
+        "dustLevel": {
+          "value": null
+        },
+        "fineDustLevel": {
+          "value": null
+        }
+      },
+      "custom.deviceReportStateConfiguration": {
+        "reportStateRealtimePeriod": {
+          "value": "disabled",
+          "timestamp": "2025-06-18T03:34:18.116Z"
+        },
+        "reportStateRealtime": {
+          "value": {
+            "state": "enabled",
+            "duration": 10,
+            "unit": "minute"
+          },
+          "timestamp": "2025-10-04T15:53:14.562Z"
+        },
+        "reportStatePeriod": {
+          "value": "enabled",
+          "timestamp": "2025-06-18T03:34:18.116Z"
+        }
+      },
+      "custom.periodicSensing": {
+        "automaticExecutionSetting": {
+          "value": "NotSupported",
+          "timestamp": "2021-05-28T08:57:59.311Z"
+        },
+        "automaticExecutionMode": {
+          "value": "NotSupported",
+          "timestamp": "2021-05-28T08:57:59.311Z"
+        },
+        "supportedAutomaticExecutionSetting": {
+          "value": ["NotSupported"],
+          "timestamp": "2021-05-28T08:57:59.311Z"
+        },
+        "supportedAutomaticExecutionMode": {
+          "value": ["NotSupported"],
+          "timestamp": "2021-05-28T08:57:59.311Z"
+        },
+        "periodicSensing": {
+          "value": "off",
+          "timestamp": "2021-12-22T07:01:09.979Z"
+        },
+        "periodicSensingInterval": {
+          "value": 600,
+          "timestamp": "2021-05-28T08:57:59.311Z"
+        },
+        "lastSensingTime": {
+          "value": null
+        },
+        "lastSensingLevel": {
+          "value": "",
+          "timestamp": "2021-05-28T08:57:59.311Z"
+        },
+        "periodicSensingStatus": {
+          "value": "nonprocessing",
+          "timestamp": "2021-05-28T08:57:59.311Z"
+        }
+      },
+      "thermostatCoolingSetpoint": {
+        "coolingSetpointRange": {
+          "value": null
+        },
+        "coolingSetpoint": {
+          "value": 19,
+          "unit": "C",
+          "timestamp": "2025-10-04T12:59:27.582Z"
+        }
+      },
+      "demandResponseLoadControl": {
+        "drlcStatus": {
+          "value": {
+            "drlcType": 1,
+            "drlcLevel": -1,
+            "start": "1970-01-01T00:00:00Z",
+            "duration": 0,
+            "override": false
+          },
+          "timestamp": "2025-06-18T03:34:18.116Z"
+        }
+      },
+      "audioVolume": {
+        "volume": {
+          "value": 100,
+          "unit": "%",
+          "timestamp": "2025-06-17T10:45:00.985Z"
+        }
+      },
+      "powerConsumptionReport": {
+        "powerConsumption": {
+          "value": {
+            "energy": 6652713,
+            "deltaEnergy": 2,
+            "power": 143,
+            "powerEnergy": 1.747048611111111,
+            "persistedEnergy": 6652713,
+            "energySaved": 0,
+            "start": "2025-10-04T15:54:24Z",
+            "end": "2025-10-04T15:55:07Z"
+          },
+          "timestamp": "2025-10-04T15:55:07.378Z"
+        }
+      },
+      "custom.autoCleaningMode": {
+        "supportedAutoCleaningModes": {
+          "value": ["on", "off"],
+          "timestamp": "2025-06-18T03:34:18.116Z"
+        },
+        "timedCleanDuration": {
+          "value": null
+        },
+        "operatingState": {
+          "value": "ready",
+          "timestamp": "2025-08-20T17:44:52.796Z"
+        },
+        "timedCleanDurationRange": {
+          "value": null
+        },
+        "supportedOperatingStates": {
+          "value": ["autoClean", "ready"],
+          "timestamp": "2025-06-18T03:34:18.116Z"
+        },
+        "progress": {
+          "value": 0,
+          "unit": "%",
+          "timestamp": "2025-08-20T17:44:52.796Z"
+        },
+        "autoCleaningMode": {
+          "value": "on",
+          "timestamp": "2025-08-18T18:16:46.505Z"
+        }
+      },
+      "samsungce.individualControlLock": {
+        "lockState": {
+          "value": null
+        }
+      },
+      "samsungce.alwaysOnSensing": {
+        "origins": {
+          "value": null
+        },
+        "alwaysOn": {
+          "value": null
+        }
+      },
+      "refresh": {},
+      "execute": {
+        "data": {
+          "value": null
+        }
+      },
+      "samsungce.softwareVersion": {
+        "versions": {
+          "value": [
+            {
+              "id": "0",
+              "swType": "Software",
+              "versionNumber": "02181A230313",
+              "description": "Version"
+            },
+            {
+              "id": "1",
+              "swType": "Firmware",
+              "versionNumber": "20082000,FFFFFFFF",
+              "description": "Version"
+            },
+            {
+              "id": "2",
+              "swType": "Outdoor",
+              "versionNumber": "19112900,10000400",
+              "description": "Version"
+            }
+          ],
+          "timestamp": "2025-06-18T03:34:18.116Z"
+        }
+      },
+      "samsungce.selfCheck": {
+        "result": {
+          "value": null
+        },
+        "supportedActions": {
+          "value": ["start"],
+          "timestamp": "2024-06-21T13:45:16.348Z"
+        },
+        "progress": {
+          "value": null
+        },
+        "errors": {
+          "value": [],
+          "timestamp": "2025-10-03T16:56:38.154Z"
+        },
+        "status": {
+          "value": "ready",
+          "timestamp": "2025-10-03T18:10:05.915Z"
+        }
+      },
+      "custom.dustFilter": {
+        "dustFilterUsageStep": {
+          "value": 1,
+          "timestamp": "2025-06-17T12:15:04.968Z"
+        },
+        "dustFilterUsage": {
+          "value": 22,
+          "timestamp": "2025-10-03T15:20:27.649Z"
+        },
+        "dustFilterLastResetDate": {
+          "value": null
+        },
+        "dustFilterStatus": {
+          "value": "normal",
+          "timestamp": "2025-06-17T12:15:04.968Z"
+        },
+        "dustFilterCapacity": {
+          "value": 500,
+          "unit": "Hour",
+          "timestamp": "2025-06-17T12:15:04.968Z"
+        },
+        "dustFilterResetType": {
+          "value": ["replaceable", "washable"],
+          "timestamp": "2025-06-17T12:15:04.968Z"
+        }
+      },
+      "odorSensor": {
+        "odorLevel": {
+          "value": null
+        }
+      },
+      "remoteControlStatus": {
+        "remoteControlEnabled": {
+          "value": null
+        }
+      },
+      "custom.deodorFilter": {
+        "deodorFilterCapacity": {
+          "value": null
+        },
+        "deodorFilterLastResetDate": {
+          "value": null
+        },
+        "deodorFilterStatus": {
+          "value": null
+        },
+        "deodorFilterResetType": {
+          "value": null
+        },
+        "deodorFilterUsage": {
+          "value": null
+        },
+        "deodorFilterUsageStep": {
+          "value": null
+        }
+      },
+      "custom.energyType": {
+        "energyType": {
+          "value": "1.0",
+          "timestamp": "2024-12-14T03:34:07.681Z"
+        },
+        "energySavingSupport": {
+          "value": false,
+          "timestamp": "2021-12-29T01:15:12.093Z"
+        },
+        "drMaxDuration": {
+          "value": 1440,
+          "unit": "min",
+          "timestamp": "2022-01-01T12:19:18.649Z"
+        },
+        "energySavingLevel": {
+          "value": null
+        },
+        "energySavingInfo": {
+          "value": null
+        },
+        "supportedEnergySavingLevels": {
+          "value": null
+        },
+        "energySavingOperation": {
+          "value": null
+        },
+        "notificationTemplateID": {
+          "value": null
+        },
+        "energySavingOperationSupport": {
+          "value": false,
+          "timestamp": "2022-01-01T12:19:18.649Z"
+        }
+      },
+      "samsungce.softwareUpdate": {
+        "targetModule": {
+          "value": {},
+          "timestamp": "2025-06-19T07:55:10.859Z"
+        },
+        "otnDUID": {
+          "value": "ZPCNQWBWA22VW",
+          "timestamp": "2025-06-18T03:34:18.116Z"
+        },
+        "lastUpdatedDate": {
+          "value": null
+        },
+        "availableModules": {
+          "value": [],
+          "timestamp": "2024-12-13T22:55:32.254Z"
+        },
+        "newVersionAvailable": {
+          "value": false,
+          "timestamp": "2025-06-18T03:34:18.116Z"
+        },
+        "operatingState": {
+          "value": null
+        },
+        "progress": {
+          "value": null
+        }
+      },
+      "veryFineDustSensor": {
+        "veryFineDustLevel": {
+          "value": null
+        }
+      },
+      "custom.veryFineDustFilter": {
+        "veryFineDustFilterStatus": {
+          "value": null
+        },
+        "veryFineDustFilterResetType": {
+          "value": null
+        },
+        "veryFineDustFilterUsage": {
+          "value": null
+        },
+        "veryFineDustFilterLastResetDate": {
+          "value": null
+        },
+        "veryFineDustFilterUsageStep": {
+          "value": null
+        },
+        "veryFineDustFilterCapacity": {
+          "value": null
+        }
+      },
+      "custom.doNotDisturbMode": {
+        "doNotDisturb": {
+          "value": "off",
+          "timestamp": "2021-05-28T08:57:59.311Z"
+        },
+        "startTime": {
+          "value": "0000",
+          "timestamp": "2021-05-28T08:57:59.311Z"
+        },
+        "endTime": {
+          "value": "0000",
+          "timestamp": "2021-05-28T08:57:59.311Z"
+        }
+      }
+    }
+  }
+}

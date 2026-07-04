@@ -1,0 +1,54 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "pin": "[%key:common::config_flow::data::pin%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Venstar thermostat."
+        },
+        "description": "Connect to the Venstar thermostat"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "active_stage": {
+        "name": "Active stage",
+        "state": {
+          "first_stage": "First stage",
+          "idle": "[%key:common::state::idle%]",
+          "second_stage": "Second stage"
+        }
+      },
+      "filter_install_time": {
+        "name": "Filter installation time"
+      },
+      "filter_usage": {
+        "name": "Filter usage"
+      },
+      "schedule_part": {
+        "name": "Schedule part",
+        "state": {
+          "day": "Day",
+          "evening": "Evening",
+          "inactive": "Inactive",
+          "morning": "Morning",
+          "night": "Night"
+        }
+      }
+    }
+  }
+}

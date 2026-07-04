@@ -1,0 +1,29 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'automations': list([
+      dict({
+        'data': 1,
+        'name': 'automation1',
+      }),
+      dict({
+        'data': 2,
+        'name': 'automation2',
+      }),
+    ]),
+    'devices': list([
+      dict({
+        'data': 3,
+        'name': 'device1',
+      }),
+      dict({
+        'data': 4,
+        'name': 'device2',
+      }),
+    ]),
+    'entry': dict({
+      'brand': None,
+      'title': 'Mock Title',
+    }),
+  })
+# ---

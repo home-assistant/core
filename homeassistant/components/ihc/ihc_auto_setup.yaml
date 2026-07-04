@@ -1,0 +1,132 @@
+# IHC auto setup configuration.
+# To customize this, copy this file to the Home Assistant configuration
+# folder and make your changes.
+
+binary_sensor:
+  # Magnet contact
+  - xpath: './/product_dataline[@product_identifier="_0x2109"]'
+    node: "dataline_input"
+    type: "opening"
+    inverting: true
+  # Pir sensors
+  - xpath: './/product_dataline[@product_identifier="_0x210e"]'
+    node: "dataline_input[1]"
+    type: "motion"
+  # Pir sensors twilight sensor
+  - xpath: './/product_dataline[@product_identifier="_0x0"]'
+    node: "dataline_input[1]"
+    type: "motion"
+  # Pir sensors alarm
+  - xpath: './/product_dataline[@product_identifier="_0x210f"]'
+    node: "dataline_input"
+    type: "motion"
+  # Smoke detector
+  - xpath: './/product_dataline[@product_identifier="_0x210a"]'
+    node: "dataline_input"
+    type: "smoke"
+  # leak detector
+  - xpath: './/product_dataline[@product_identifier="_0x210c"]'
+    node: "dataline_input"
+    type: "moisture"
+  # light detector
+  - xpath: './/product_dataline[@product_identifier="_0x2110"]'
+    node: "dataline_input"
+    type: "light"
+
+light:
+  # Swedish Wireless dimmer (Mobil VU/Dimmer 1-knapp/touch)
+  - xpath: './/product_airlink[@product_identifier="_0x4301"]'
+    node: "airlink_dimming"
+    dimmable: true
+  # Swedish Wireless dimmer (Lamputtag/Dimmer 1-knapp/touch)
+  - xpath: './/product_airlink[@product_identifier="_0x4302"]'
+    node: "airlink_dimming"
+    dimmable: true
+  # Swedish Wireless dimmer (Blind/Dimmer 1-knapp/touch)
+  - xpath: './/product_airlink[@product_identifier="_0x4305"]'
+    node: "airlink_dimming"
+    dimmable: true
+  # Swedish Wireless dimmer (3-tråds Puck/Dimmer 1-knapp/touch)
+  - xpath: './/product_airlink[@product_identifier="_0x4307"]'
+    node: "airlink_dimming"
+    dimmable: true
+  # Swedish Wireless dimmer (3-tråds Puck/Dimmer 2-knapp)
+  - xpath: './/product_airlink[@product_identifier="_0x4308"]'
+    node: "airlink_dimming"
+    dimmable: true
+  # 2 channel RS485 dimmer
+  - xpath: './/rs485_led_dimmer_channel[@product_identifier="_0x4410"]'
+    node: "airlink_dimming"
+    dimmable: true
+  # Wireless Combi dimmer 4 buttons
+  - xpath: './/product_airlink[@product_identifier="_0x4406"]'
+    node: "airlink_dimming"
+    dimmable: true
+  # Wireless Combi dimmer 4 buttons touch
+  - xpath: './/product_airlink[@product_identifier="_0x4402"]'
+    node: "airlink_dimming"
+    dimmable: true
+  # Wireless Combi dimmer 2 buttons touch
+  - xpath: './/product_airlink[@product_identifier="_0x4401"]'
+    node: "airlink_dimming"
+    dimmable: true
+  # Wireless Lamp outlet dimmer
+  - xpath: './/product_airlink[@product_identifier="_0x4304"]'
+    node: "airlink_dimming"
+    dimmable: true
+  # Wireless universal dimmer
+  - xpath: './/product_airlink[@product_identifier="_0x4306"]'
+    node: "airlink_dimming"
+    dimmable: true
+  # Wireless Lamp outlet relay
+  - xpath: './/product_airlink[@product_identifier="_0x4202"]'
+    node: "airlink_relay"
+  # Wireless Combi relay 4 buttons
+  - xpath: './/product_airlink[@product_identifier="_0x4404"]'
+    node: "airlink_relay"
+  # Wireless Combi relay 2 buttons
+  - xpath: './/product_airlink[@product_identifier="_0x4403"]'
+    node: "airlink_relay"
+  # Dataline Lamp outlet
+  - xpath: './/product_dataline[@product_identifier="_0x2202"]'
+    node: "dataline_output"
+  # Mobile Wireless dimmer
+  - xpath: './/product_airlink[@product_identifier="_0x4303"]'
+    node: "airlink_dimming"
+    dimmable: true
+
+sensor:
+  # Temperature sensor
+  - xpath: './/product_dataline[@product_identifier="_0x2124"]'
+    node: "resource_temperature"
+    unit_of_measurement: "°C"
+  # Humidity/temperature
+  - xpath: './/product_dataline[@product_identifier="_0x2135"]'
+    node: "resource_humidity_level"
+    unit_of_measurement: "%"
+  # Humidity/temperature
+  - xpath: './/product_dataline[@product_identifier="_0x2135"]'
+    node: "resource_temperature"
+    unit_of_measurement: "°C"
+  # Lux/temperature
+  - xpath: './/product_dataline[@product_identifier="_0x2136"]'
+    node: "resource_light"
+    unit_of_measurement: "Lux"
+  # Lux/temperature
+  - xpath: './/product_dataline[@product_identifier="_0x2136"]'
+    node: "resource_temperature"
+    unit_of_measurement: "°C"
+
+switch:
+  # Wireless Plug outlet
+  - xpath: './/product_airlink[@product_identifier="_0x4201"]'
+    node: "airlink_relay"
+  # Dataline universal relay
+  - xpath: './/product_airlink[@product_identifier="_0x4203"]'
+    node: "airlink_relay"
+  # Dataline plug outlet
+  - xpath: './/product_dataline[@product_identifier="_0x2201"]'
+    node: "dataline_output"
+  # Wireless mobile relay
+  - xpath: './/product_airlink[@product_identifier="_0x4204"]'
+    node: "airlink_relay"

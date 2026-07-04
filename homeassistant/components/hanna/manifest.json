@@ -1,0 +1,11 @@
+{
+  "domain": "hanna",
+  "name": "Hanna",
+  "codeowners": ["@bestycame"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hanna",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["hanna-cloud==0.0.7"]
+}

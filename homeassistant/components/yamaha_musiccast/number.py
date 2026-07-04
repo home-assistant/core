@@ -1,0 +1,65 @@
+"""Number entities for musiccast."""
+
+from typing import override
+
+from aiomusiccast.capabilities import NumberSetter
+
+from homeassistant.components.number import NumberEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .coordinator import MusicCastConfigEntry, MusicCastDataUpdateCoordinator
+from .entity import MusicCastCapabilityEntity
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: MusicCastConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up MusicCast number entities based on a config entry."""
+    coordinator = entry.runtime_data
+
+    number_entities = [
+        NumberCapability(coordinator, capability)
+        for capability in coordinator.data.capabilities
+        if isinstance(capability, NumberSetter)
+    ]
+
+    number_entities.extend(
+        NumberCapability(coordinator, capability, zone)
+        for zone, data in coordinator.data.zones.items()
+        for capability in data.capabilities
+        if isinstance(capability, NumberSetter)
+    )
+
+    async_add_entities(number_entities)
+
+
+class NumberCapability(MusicCastCapabilityEntity, NumberEntity):
+    """Representation of a MusicCast Number entity."""
+
+    capability: NumberSetter
+
+    def __init__(
+        self,
+        coordinator: MusicCastDataUpdateCoordinator,
+        capability: NumberSetter,
+        zone_id: str | None = None,
+    ) -> None:
+        """Initialize the number entity."""
+        super().__init__(coordinator, capability, zone_id)
+        self._attr_native_min_value = capability.value_range.minimum
+        self._attr_native_max_value = capability.value_range.maximum
+        self._attr_native_step = capability.value_range.step
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return the current value."""
+        return self.capability.current
+
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        """Set a new value."""
+        await self.capability.set(value)

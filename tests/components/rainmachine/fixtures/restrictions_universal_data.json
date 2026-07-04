@@ -1,0 +1,9 @@
+{
+  "hotDaysExtraWatering": false,
+  "freezeProtectEnabled": true,
+  "freezeProtectTemp": 2,
+  "noWaterInWeekDays": "0000000",
+  "noWaterInMonths": "000000000000",
+  "rainDelayStartTime": 1524854551,
+  "rainDelayDuration": 0
+}

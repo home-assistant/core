@@ -1,0 +1,60 @@
+{
+  "services": {
+    "clear_cache": {
+      "description": "Removes all cached text-to-speech files and purges the memory.",
+      "name": "Clear TTS cache"
+    },
+    "say": {
+      "description": "Says something using text-to-speech on a media player.",
+      "fields": {
+        "cache": {
+          "description": "Stores this message locally so that when the text is requested again, the output can be produced more quickly.",
+          "name": "Cache"
+        },
+        "entity_id": {
+          "description": "Media players to play the message.",
+          "name": "Entity"
+        },
+        "language": {
+          "description": "Language to use for speech generation.",
+          "name": "[%key:common::config_flow::data::language%]"
+        },
+        "message": {
+          "description": "The text you want to convert into speech so that you can listen to it on your device.",
+          "name": "Message"
+        },
+        "options": {
+          "description": "A dictionary containing integration-specific options.",
+          "name": "Options"
+        }
+      },
+      "name": "Say a TTS message"
+    },
+    "speak": {
+      "description": "Speaks something using text-to-speech on a media player.",
+      "fields": {
+        "cache": {
+          "description": "[%key:component::tts::services::say::fields::cache::description%]",
+          "name": "[%key:component::tts::services::say::fields::cache::name%]"
+        },
+        "language": {
+          "description": "[%key:component::tts::services::say::fields::language::description%]",
+          "name": "[%key:common::config_flow::data::language%]"
+        },
+        "media_player_entity_id": {
+          "description": "Media players to play the message.",
+          "name": "Media player entity"
+        },
+        "message": {
+          "description": "[%key:component::tts::services::say::fields::message::description%]",
+          "name": "[%key:component::tts::services::say::fields::message::name%]"
+        },
+        "options": {
+          "description": "[%key:component::tts::services::say::fields::options::description%]",
+          "name": "[%key:component::tts::services::say::fields::options::name%]"
+        }
+      },
+      "name": "Speak"
+    }
+  }
+}

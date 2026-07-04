@@ -1,0 +1,251 @@
+# serializer version: 1
+# name: test_forecasts[config0-ConfigurationStyle.MODERN]
+  dict({
+    'weather.template_weather': dict({
+      'forecast': list([
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2023-02-17T14:00:00+00:00',
+          'temperature': 14.2,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts[config0-ConfigurationStyle.MODERN].1
+  dict({
+    'weather.template_weather': dict({
+      'forecast': list([
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2023-02-17T14:00:00+00:00',
+          'temperature': 14.2,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts[config0-ConfigurationStyle.MODERN].2
+  dict({
+    'weather.template_weather': dict({
+      'forecast': list([
+        dict({
+          'condition': 'fog',
+          'datetime': '2023-02-17T14:00:00+00:00',
+          'is_daytime': True,
+          'temperature': 14.2,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts[config0-ConfigurationStyle.MODERN].3
+  dict({
+    'weather.template_weather': dict({
+      'forecast': list([
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2023-02-17T14:00:00+00:00',
+          'temperature': 16.9,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts[config0-ConfigurationStyle.TRIGGER]
+  dict({
+    'weather.template_weather': dict({
+      'forecast': list([
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2023-02-17T14:00:00+00:00',
+          'temperature': 14.2,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts[config0-ConfigurationStyle.TRIGGER].1
+  dict({
+    'weather.template_weather': dict({
+      'forecast': list([
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2023-02-17T14:00:00+00:00',
+          'temperature': 14.2,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts[config0-ConfigurationStyle.TRIGGER].2
+  dict({
+    'weather.template_weather': dict({
+      'forecast': list([
+        dict({
+          'condition': 'fog',
+          'datetime': '2023-02-17T14:00:00+00:00',
+          'is_daytime': True,
+          'temperature': 14.2,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts[config0-ConfigurationStyle.TRIGGER].3
+  dict({
+    'weather.template_weather': dict({
+      'forecast': list([
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2023-02-17T14:00:00+00:00',
+          'temperature': 16.9,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts[config1-ConfigurationStyle.MODERN]
+  dict({
+    'weather.template_weather': dict({
+      'forecast': list([
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2023-02-17T14:00:00+00:00',
+          'temperature': 14.2,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts[config1-ConfigurationStyle.MODERN].1
+  dict({
+    'weather.template_weather': dict({
+      'forecast': list([
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2023-02-17T14:00:00+00:00',
+          'temperature': 14.2,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts[config1-ConfigurationStyle.MODERN].2
+  dict({
+    'weather.template_weather': dict({
+      'forecast': list([
+        dict({
+          'condition': 'fog',
+          'datetime': '2023-02-17T14:00:00+00:00',
+          'is_daytime': True,
+          'temperature': 14.2,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts[config1-ConfigurationStyle.MODERN].3
+  dict({
+    'weather.template_weather': dict({
+      'forecast': list([
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2023-02-17T14:00:00+00:00',
+          'temperature': 16.9,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts[config1-ConfigurationStyle.TRIGGER]
+  dict({
+    'weather.template_weather': dict({
+      'forecast': list([
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2023-02-17T14:00:00+00:00',
+          'temperature': 14.2,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts[config1-ConfigurationStyle.TRIGGER].1
+  dict({
+    'weather.template_weather': dict({
+      'forecast': list([
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2023-02-17T14:00:00+00:00',
+          'temperature': 14.2,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts[config1-ConfigurationStyle.TRIGGER].2
+  dict({
+    'weather.template_weather': dict({
+      'forecast': list([
+        dict({
+          'condition': 'fog',
+          'datetime': '2023-02-17T14:00:00+00:00',
+          'is_daytime': True,
+          'temperature': 14.2,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts[config1-ConfigurationStyle.TRIGGER].3
+  dict({
+    'weather.template_weather': dict({
+      'forecast': list([
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2023-02-17T14:00:00+00:00',
+          'temperature': 16.9,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_restore_weather_save_state
+  dict({
+    'last_apparent_temperature': None,
+    'last_cloud_coverage': None,
+    'last_dew_point': None,
+    'last_humidity': 25.0,
+    'last_ozone': None,
+    'last_pressure': None,
+    'last_temperature': 15.0,
+    'last_uv_index': None,
+    'last_visibility': None,
+    'last_wind_bearing': None,
+    'last_wind_gust_speed': None,
+    'last_wind_speed': None,
+  })
+# ---
+# name: test_setup_config_entry
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by Home Assistant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My template',
+      <WeatherEntityStateAttribute.HUMIDITY: 'humidity'>: 50,
+      <WeatherEntityStateAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      <WeatherEntityStateAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: 0,
+      <WeatherEntityStateAttribute.TEMPERATURE: 'temperature'>: 20.0,
+      <WeatherEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      <WeatherEntityStateAttribute.VISIBILITY_UNIT: 'visibility_unit'>: <UnitOfLength.KILOMETERS: 'km'>,
+      <WeatherEntityStateAttribute.WIND_SPEED_UNIT: 'wind_speed_unit'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'weather.my_template',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

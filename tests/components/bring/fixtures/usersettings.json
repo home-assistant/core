@@ -1,0 +1,60 @@
+{
+  "userlistsettings": [
+    {
+      "listUuid": "e542eef6-dba7-4c31-a52c-29e6ab9d83a5",
+      "usersettings": [
+        {
+          "key": "listSectionOrder",
+          "value": "[\"Früchte & Gemüse\",\"Brot & Gebäck\",\"Milch & Käse\",\"Fleisch & Fisch\",\"Zutaten & Gewürze\",\"Fertig- & Tiefkühlprodukte\",\"Getreideprodukte\",\"Snacks & Süsswaren\",\"Getränke & Tabak\",\"Haushalt & Gesundheit\",\"Pflege & Gesundheit\",\"Tierbedarf\",\"Baumarkt & Garten\",\"Eigene Artikel\"]"
+        },
+        {
+          "key": "listArticleLanguage",
+          "value": "de-DE"
+        }
+      ]
+    },
+    {
+      "listUuid": "b4776778-7f6c-496e-951b-92a35d3db0dd",
+      "usersettings": [
+        {
+          "key": "listSectionOrder",
+          "value": "[\"Früchte & Gemüse\",\"Brot & Gebäck\",\"Milch & Käse\",\"Fleisch & Fisch\",\"Zutaten & Gewürze\",\"Fertig- & Tiefkühlprodukte\",\"Getreideprodukte\",\"Snacks & Süsswaren\",\"Getränke & Tabak\",\"Haushalt & Gesundheit\",\"Pflege & Gesundheit\",\"Tierbedarf\",\"Baumarkt & Garten\",\"Eigene Artikel\"]"
+        },
+        {
+          "key": "listArticleLanguage",
+          "value": "en-US"
+        }
+      ]
+    }
+  ],
+  "usersettings": [
+    {
+      "key": "autoPush",
+      "value": "ON"
+    },
+    {
+      "key": "premiumHideOffersBadge",
+      "value": "ON"
+    },
+    {
+      "key": "premiumHideSponsoredCategories",
+      "value": "ON"
+    },
+    {
+      "key": "premiumHideInspirationsBadge",
+      "value": "ON"
+    },
+    {
+      "key": "onboardClient",
+      "value": "android"
+    },
+    {
+      "key": "premiumHideOffersOnMain",
+      "value": "ON"
+    },
+    {
+      "key": "defaultListUUID",
+      "value": "e542eef6-dba7-4c31-a52c-29e6ab9d83a5"
+    }
+  ]
+}

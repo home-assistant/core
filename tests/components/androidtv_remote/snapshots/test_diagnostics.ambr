@@ -1,0 +1,14 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'api_device_info': dict({
+      'manufacturer': 'My Android TV manufacturer',
+      'model': 'My Android TV model',
+    }),
+    'config_entry_data': dict({
+      'host': '**REDACTED**',
+      'mac': '**REDACTED**',
+      'name': 'My Android TV',
+    }),
+  })
+# ---

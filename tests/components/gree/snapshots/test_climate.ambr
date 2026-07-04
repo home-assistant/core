@@ -1,0 +1,126 @@
+# serializer version: 1
+# name: test_entity_states
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 25,
+        <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+        <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
+          'auto',
+          'low',
+          'medium low',
+          'medium',
+          'medium high',
+          'high',
+        ]),
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake-device-1',
+        <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+          <HVACMode.AUTO: 'auto'>,
+          <HVACMode.COOL: 'cool'>,
+          <HVACMode.DRY: 'dry'>,
+          <HVACMode.FAN_ONLY: 'fan_only'>,
+          <HVACMode.HEAT: 'heat'>,
+          <HVACMode.OFF: 'off'>,
+        ]),
+        <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
+        <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 8,
+        <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
+        <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+          'eco',
+          'away',
+          'boost',
+          'none',
+          'sleep',
+        ]),
+        <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 441>,
+        <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'off',
+        <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
+          'off',
+          'vertical',
+          'horizontal',
+          'both',
+        ]),
+        <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+        <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 25,
+      }),
+      'context': <ANY>,
+      'entity_id': 'climate.fake_device_1',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+  ])
+# ---
+# name: test_registry_settings
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
+          'auto',
+          'low',
+          'medium low',
+          'medium',
+          'medium high',
+          'high',
+        ]),
+        <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+          <HVACMode.AUTO: 'auto'>,
+          <HVACMode.COOL: 'cool'>,
+          <HVACMode.DRY: 'dry'>,
+          <HVACMode.FAN_ONLY: 'fan_only'>,
+          <HVACMode.HEAT: 'heat'>,
+          <HVACMode.OFF: 'off'>,
+        ]),
+        <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
+        <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 8,
+        <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+          'eco',
+          'away',
+          'boost',
+          'none',
+          'sleep',
+        ]),
+        <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
+          'off',
+          'vertical',
+          'horizontal',
+          'both',
+        ]),
+        <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'climate',
+      'entity_category': None,
+      'entity_id': 'climate.fake_device_1',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': None,
+      'platform': 'gree',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': <ClimateEntityFeature: 441>,
+      'translation_key': None,
+      'unique_id': 'aabbcc112233',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---

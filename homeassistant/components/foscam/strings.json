@@ -1,0 +1,110 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_response": "Invalid response from the device",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "rtsp_port": "RTSP port",
+          "stream": "Stream",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Foscam camera.",
+          "password": "The password to log in to your Foscam camera.",
+          "port": "The port of your Foscam camera, default is 88.",
+          "rtsp_port": "The RTSP protocol port of the camera, used to pull the camera's real-time video stream. New model cameras only support RTSP ports 88 and 554, while old model cameras only support ports 88 and 65534.",
+          "stream": "Select the video stream type to pull. The main stream offers higher clarity but requires a better network environment.",
+          "username": "The username to log in to your Foscam camera."
+        }
+      }
+    }
+  },
+  "entity": {
+    "number": {
+      "device_volume": {
+        "name": "Device volume"
+      },
+      "speak_volume": {
+        "name": "Speak volume"
+      }
+    },
+    "switch": {
+      "car_detection": {
+        "name": "Car detection"
+      },
+      "flip_switch": {
+        "name": "Flip"
+      },
+      "hdr_switch": {
+        "name": "HDR"
+      },
+      "human_detection": {
+        "name": "Human detection"
+      },
+      "ir_switch": {
+        "name": "Infrared mode"
+      },
+      "mirror_switch": {
+        "name": "Mirror"
+      },
+      "pet_detection": {
+        "name": "Pet detection"
+      },
+      "siren_alarm_switch": {
+        "name": "Siren alarm"
+      },
+      "sleep_switch": {
+        "name": "Sleep mode"
+      },
+      "turn_off_light_switch": {
+        "name": "Light"
+      },
+      "turn_off_volume_switch": {
+        "name": "Volume muted"
+      },
+      "wdr_switch": {
+        "name": "WDR"
+      },
+      "white_light_switch": {
+        "name": "White light"
+      }
+    }
+  },
+  "services": {
+    "ptz": {
+      "description": "Moves a Foscam camera to a specified direction.",
+      "fields": {
+        "movement": {
+          "description": "Direction of the movement.",
+          "name": "Movement"
+        },
+        "travel_time": {
+          "description": "Travel time in seconds.",
+          "name": "Travel time"
+        }
+      },
+      "name": "PTZ"
+    },
+    "ptz_preset": {
+      "description": "Moves a Foscam camera to a predefined position.",
+      "fields": {
+        "preset_name": {
+          "description": "The name of the preset to move to. Presets can be created from within the official Foscam apps.",
+          "name": "Preset name"
+        }
+      },
+      "name": "PTZ preset"
+    }
+  }
+}

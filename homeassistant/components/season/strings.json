@@ -1,0 +1,40 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "type": "Type of season definition"
+        }
+      }
+    }
+  },
+  "device": {
+    "season": {
+      "name": "[%key:component::season::title%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "season": {
+        "state": {
+          "autumn": "Autumn",
+          "spring": "Spring",
+          "summer": "Summer",
+          "winter": "Winter"
+        }
+      }
+    }
+  },
+  "selector": {
+    "season_type": {
+      "options": {
+        "astronomical": "Astronomical",
+        "meteorological": "Meteorological"
+      }
+    }
+  },
+  "title": "Season"
+}

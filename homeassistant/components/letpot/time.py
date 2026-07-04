@@ -1,0 +1,103 @@
+"""Support for LetPot time entities."""
+
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
+from datetime import time
+from typing import Any, override
+
+from letpot.deviceclient import LetPotDeviceClient
+from letpot.models import LetPotDeviceStatus
+
+from homeassistant.components.time import TimeEntity, TimeEntityDescription
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator, LetPotGardenStatus
+from .entity import LetPotEntity, exception_handler
+
+# Each change pushes a 'full' device status with the change. The library will cache
+# pending changes to avoid overwriting, but try to avoid a lot of parallelism.
+PARALLEL_UPDATES = 1
+
+
+@dataclass(frozen=True, kw_only=True)
+class LetPotTimeEntityDescription[_DataT: LetPotDeviceStatus](TimeEntityDescription):
+    """Describes a LetPot time entity."""
+
+    value_fn: Callable[[_DataT], time | None]
+    set_value_fn: Callable[[LetPotDeviceClient, str, time], Coroutine[Any, Any, None]]
+
+
+TIME_SENSORS: tuple[LetPotTimeEntityDescription[LetPotGardenStatus], ...] = (
+    LetPotTimeEntityDescription[LetPotGardenStatus](
+        key="light_schedule_end",
+        translation_key="light_schedule_end",
+        value_fn=lambda status: None if status is None else status.light_schedule_end,
+        set_value_fn=(
+            lambda device_client, serial, value: device_client.set_light_schedule(
+                serial=serial, start=None, end=value
+            )
+        ),
+        entity_category=EntityCategory.CONFIG,
+    ),
+    LetPotTimeEntityDescription[LetPotGardenStatus](
+        key="light_schedule_start",
+        translation_key="light_schedule_start",
+        value_fn=lambda status: None if status is None else status.light_schedule_start,
+        set_value_fn=(
+            lambda device_client, serial, value: device_client.set_light_schedule(
+                serial=serial, start=value, end=None
+            )
+        ),
+        entity_category=EntityCategory.CONFIG,
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: LetPotConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up LetPot time entities based on a config entry."""
+    coordinators = entry.runtime_data
+    async_add_entities(
+        LetPotTimeEntity[LetPotGardenStatus](coordinator, description)
+        for description in TIME_SENSORS
+        for coordinator in coordinators
+    )
+
+
+class LetPotTimeEntity[_DataT: LetPotDeviceStatus](LetPotEntity[_DataT], TimeEntity):
+    """Defines a LetPot time entity."""
+
+    entity_description: LetPotTimeEntityDescription[_DataT]
+
+    def __init__(
+        self,
+        coordinator: LetPotDeviceCoordinator[_DataT],
+        description: LetPotTimeEntityDescription[_DataT],
+    ) -> None:
+        """Initialize LetPot time entity."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}"
+            f"_{coordinator.device.serial_number}"
+            f"_{description.key}"
+        )
+
+    @property
+    @override
+    def native_value(self) -> time | None:
+        """Return the time."""
+        return self.entity_description.value_fn(self.coordinator.data)
+
+    @exception_handler
+    @override
+    async def async_set_value(self, value: time) -> None:
+        """Set the time."""
+        await self.entity_description.set_value_fn(
+            self.coordinator.device_client, self.coordinator.device.serial_number, value
+        )

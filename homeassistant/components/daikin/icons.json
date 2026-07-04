@@ -1,0 +1,26 @@
+{
+  "entity": {
+    "sensor": {
+      "compressor_frequency": {
+        "default": "mdi:fan"
+      },
+      "cool_energy_consumption": {
+        "default": "mdi:snowflake"
+      },
+      "heat_energy_consumption": {
+        "default": "mdi:fire"
+      }
+    },
+    "switch": {
+      "streamer": {
+        "default": "mdi:air-filter"
+      },
+      "toggle": {
+        "default": "mdi:power"
+      },
+      "zone": {
+        "default": "mdi:home-circle"
+      }
+    }
+  }
+}

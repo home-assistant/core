@@ -1,0 +1,929 @@
+{
+  "components": {
+    "main": {
+      "samsungce.welcomeMessage": {
+        "welcomeMessage": {
+          "value": null
+        }
+      },
+      "samsungce.deviceIdentification": {
+        "micomAssayCode": {
+          "value": "20299141",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "modelName": {
+          "value": null
+        },
+        "serialNumber": {
+          "value": null
+        },
+        "serialNumberExtra": {
+          "value": null
+        },
+        "modelClassificationCode": {
+          "value": "3801010200151107020100FF00000000",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "description": {
+          "value": "DA_DF_TP2_20_COMMON_DF8500A/DC92-02995A_0010",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "releaseYear": {
+          "value": null
+        },
+        "binaryId": {
+          "value": "DA_DF_TP2_20_COMMON",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        }
+      },
+      "samsungce.steamClosetCycle": {
+        "supportedCycles": {
+          "value": [
+            {
+              "cycle": "22",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6106",
+                  "default": "off",
+                  "options": ["off", "on"]
+                }
+              }
+            },
+            {
+              "cycle": "23",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6102",
+                  "default": "off",
+                  "options": ["off"]
+                }
+              }
+            },
+            {
+              "cycle": "32",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6102",
+                  "default": "off",
+                  "options": ["off"]
+                }
+              }
+            },
+            {
+              "cycle": "09",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6102",
+                  "default": "off",
+                  "options": ["off"]
+                }
+              }
+            },
+            {
+              "cycle": "12",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6102",
+                  "default": "off",
+                  "options": ["off"]
+                }
+              }
+            },
+            {
+              "cycle": "0C",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6102",
+                  "default": "off",
+                  "options": ["off"]
+                }
+              }
+            },
+            {
+              "cycle": "31",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6102",
+                  "default": "off",
+                  "options": ["off"]
+                }
+              }
+            },
+            {
+              "cycle": "0B",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6102",
+                  "default": "off",
+                  "options": ["off"]
+                }
+              }
+            },
+            {
+              "cycle": "10",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6102",
+                  "default": "off",
+                  "options": ["off"]
+                }
+              }
+            },
+            {
+              "cycle": "0A",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6106",
+                  "default": "off",
+                  "options": ["off", "on"]
+                }
+              }
+            },
+            {
+              "cycle": "14",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6102",
+                  "default": "off",
+                  "options": ["off"]
+                }
+              }
+            },
+            {
+              "cycle": "13",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6106",
+                  "default": "off",
+                  "options": ["off", "on"]
+                }
+              }
+            },
+            {
+              "cycle": "16",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6102",
+                  "default": "off",
+                  "options": ["off"]
+                }
+              }
+            },
+            {
+              "cycle": "24",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6206",
+                  "default": "on",
+                  "options": ["off", "on"]
+                }
+              }
+            },
+            {
+              "cycle": "25",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6206",
+                  "default": "on",
+                  "options": ["off", "on"]
+                }
+              }
+            },
+            {
+              "cycle": "2F",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6206",
+                  "default": "on",
+                  "options": ["off", "on"]
+                }
+              }
+            },
+            {
+              "cycle": "20",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6204",
+                  "default": "on",
+                  "options": ["on"]
+                }
+              }
+            },
+            {
+              "cycle": "0F",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "66F0",
+                  "default": "off",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6204",
+                  "default": "on",
+                  "options": ["on"]
+                }
+              }
+            },
+            {
+              "cycle": "27",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6102",
+                  "default": "off",
+                  "options": ["off"]
+                }
+              }
+            },
+            {
+              "cycle": "30",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6102",
+                  "default": "off",
+                  "options": ["off"]
+                }
+              }
+            },
+            {
+              "cycle": "15",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6102",
+                  "default": "off",
+                  "options": ["off"]
+                }
+              }
+            },
+            {
+              "cycle": "1A",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6102",
+                  "default": "off",
+                  "options": ["off"]
+                }
+              }
+            },
+            {
+              "cycle": "1B",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6102",
+                  "default": "off",
+                  "options": ["off"]
+                }
+              }
+            },
+            {
+              "cycle": "1C",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6102",
+                  "default": "off",
+                  "options": ["off"]
+                }
+              }
+            },
+            {
+              "cycle": "2D",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "660F",
+                  "default": "on",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6102",
+                  "default": "off",
+                  "options": ["off"]
+                }
+              }
+            },
+            {
+              "cycle": "07",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "66F0",
+                  "default": "off",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6102",
+                  "default": "off",
+                  "options": ["off"]
+                }
+              }
+            },
+            {
+              "cycle": "08",
+              "supportedOptions": {
+                "keepFresh": {
+                  "raw": "66F0",
+                  "default": "off",
+                  "options": ["on", "off"]
+                },
+                "sanitize": {
+                  "raw": "6102",
+                  "default": "off",
+                  "options": ["off"]
+                }
+              }
+            }
+          ],
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "steamClosetCycle": {
+          "value": "Table_00_Course_22",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "referenceTable": {
+          "value": {
+            "id": "Table_00"
+          },
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        }
+      },
+      "samsungce.quickControl": {
+        "version": {
+          "value": null
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": null
+        },
+        "mndt": {
+          "value": null
+        },
+        "mnfv": {
+          "value": "DA_DF_TP2_20_COMMON_30230807",
+          "timestamp": "2025-01-14T01:42:53.834Z"
+        },
+        "mnhw": {
+          "value": "MediaTek",
+          "timestamp": "2025-01-14T01:42:53.834Z"
+        },
+        "di": {
+          "value": "b93211bf-9d96-bd21-3b2f-964fcc87f5cc",
+          "timestamp": "2025-01-14T01:42:53.834Z"
+        },
+        "mnsl": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2025-01-14T01:42:53.834Z"
+        },
+        "dmv": {
+          "value": "res.1.1.0,sh.1.1.0",
+          "timestamp": "2025-01-14T01:42:53.834Z"
+        },
+        "n": {
+          "value": "[airdresser] Samsung",
+          "timestamp": "2025-01-14T01:42:53.834Z"
+        },
+        "mnmo": {
+          "value": "DA_DF_TP2_20_COMMON|20299141|3801010200151107020100FF00000000",
+          "timestamp": "2025-01-14T01:42:53.834Z"
+        },
+        "vid": {
+          "value": "DA-WM-SC-000001",
+          "timestamp": "2025-01-14T01:42:53.834Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2025-01-14T01:42:53.834Z"
+        },
+        "mnml": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2025-01-14T01:42:53.834Z"
+        },
+        "mnpv": {
+          "value": "DAWIT 2.0",
+          "timestamp": "2025-01-14T01:42:53.834Z"
+        },
+        "mnos": {
+          "value": "TizenRT 2.0 + IPv6",
+          "timestamp": "2025-01-14T01:42:53.834Z"
+        },
+        "pi": {
+          "value": "b93211bf-9d96-bd21-3b2f-964fcc87f5cc",
+          "timestamp": "2025-01-14T01:42:53.834Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2025-01-14T01:42:53.834Z"
+        }
+      },
+      "samsungce.steamClosetCyclePreset": {
+        "maxNumberOfPresets": {
+          "value": 10,
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "presets": {
+          "value": {
+            "F1": {},
+            "F2": {},
+            "F3": {},
+            "F4": {},
+            "F5": {},
+            "F6": {},
+            "F7": {},
+            "F8": {},
+            "F9": {},
+            "FA": {}
+          },
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": [
+            "custom.steamClosetWrinklePrevent",
+            "custom.veryFineDustFilter",
+            "demandResponseLoadControl",
+            "sec.wifiConfiguration",
+            "samsungce.quickControl",
+            "samsungce.deviceInfoPrivate"
+          ],
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        }
+      },
+      "samsungce.driverVersion": {
+        "versionNumber": {
+          "value": 24110101,
+          "timestamp": "2024-12-02T07:55:47.237Z"
+        }
+      },
+      "sec.diagnosticsInformation": {
+        "logType": {
+          "value": ["errCode", "dump"],
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "endpoint": {
+          "value": "SSM",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "minVersion": {
+          "value": "1.0",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "signinPermission": {
+          "value": null
+        },
+        "setupId": {
+          "value": "A00",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "protocolType": {
+          "value": "wifi_https",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "tsId": {
+          "value": null
+        },
+        "mnId": {
+          "value": "0AJT",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "dumpType": {
+          "value": "file",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        }
+      },
+      "samsungce.steamClosetKeepFreshMode": {
+        "operatingState": {
+          "value": "ready",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "status": {
+          "value": "off",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        }
+      },
+      "samsungce.kidsLock": {
+        "lockState": {
+          "value": "unlocked",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        }
+      },
+      "demandResponseLoadControl": {
+        "drlcStatus": {
+          "value": null
+        }
+      },
+      "powerConsumptionReport": {
+        "powerConsumption": {
+          "value": {
+            "energy": 207500,
+            "deltaEnergy": 0,
+            "power": 0,
+            "powerEnergy": 0.0,
+            "persistedEnergy": 0,
+            "energySaved": 0,
+            "start": "2025-02-10T22:51:59Z",
+            "end": "2025-02-11T08:21:17Z"
+          },
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        }
+      },
+      "dryerOperatingState": {
+        "completionTime": {
+          "value": "2025-02-11T09:00:17Z",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "machineState": {
+          "value": "stop",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "supportedMachineStates": {
+          "value": ["stop", "run", "pause"],
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "dryerJobState": {
+          "value": "none",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        }
+      },
+      "refresh": {},
+      "samsungce.steamClosetSanitizeMode": {
+        "status": {
+          "value": "off",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        }
+      },
+      "custom.jobBeginningStatus": {
+        "jobBeginningStatus": {
+          "value": null
+        }
+      },
+      "execute": {
+        "data": {
+          "value": {
+            "payload": {
+              "rt": ["x.com.samsung.da.information"],
+              "if": ["oic.if.baseline", "oic.if.a"],
+              "x.com.samsung.da.modelNum": "DA_DF_TP2_20_COMMON|20299141|3801010200151107020100FF00000000",
+              "x.com.samsung.da.description": "DA_DF_TP2_20_COMMON_DF8500A/DC92-02995A_0010",
+              "x.com.samsung.da.serialNum": "1EG158TW400002M",
+              "x.com.samsung.da.otnDUID": "MTCHUODP5V4FA",
+              "x.com.samsung.da.diagProtocolType": "WIFI_HTTPS",
+              "x.com.samsung.da.diagLogType": ["errCode", "dump"],
+              "x.com.samsung.da.diagDumpType": "file",
+              "x.com.samsung.da.diagEndPoint": "SSM",
+              "x.com.samsung.da.diagMnid": "0AJT",
+              "x.com.samsung.da.diagSetupid": "A00",
+              "x.com.samsung.da.diagMinVersion": "1.0",
+              "x.com.samsung.da.items": [
+                {
+                  "x.com.samsung.da.id": "0",
+                  "x.com.samsung.da.description": "DA_DF_TP2_20_COMMON|20299141|3801010200151107020100FF00000000",
+                  "x.com.samsung.da.type": "Software",
+                  "x.com.samsung.da.number": "02673A230807(F821)",
+                  "x.com.samsung.da.newVersionAvailable": "0"
+                },
+                {
+                  "x.com.samsung.da.id": "1",
+                  "x.com.samsung.da.description": "Firmware_1_DB_20299141210618090FFFFF202995412203111604FFFF(015E2029914120299541_30000000)(FileDown:0)(Type:0)",
+                  "x.com.samsung.da.type": "Firmware",
+                  "x.com.samsung.da.number": "21061809,22031116",
+                  "x.com.samsung.da.newVersionAvailable": "0"
+                },
+                {
+                  "x.com.samsung.da.id": "2",
+                  "x.com.samsung.da.description": "Firmware_2_DB_2023564319111852041FFFFFFFFFFFFFFFFFFFFFFFFE(015E20235643FFFFFFFF_30000000)(FileDown:0)(Type:0)",
+                  "x.com.samsung.da.type": "Firmware",
+                  "x.com.samsung.da.number": "19111852,FFFFFFFF"
+                }
+              ]
+            }
+          },
+          "data": {
+            "href": "/information/vs/0"
+          },
+          "timestamp": "2024-03-06T11:24:05.312Z"
+        }
+      },
+      "samsungce.steamClosetDelayEnd": {
+        "remainingTime": {
+          "value": 0,
+          "unit": "min",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        }
+      },
+      "samsungce.steamClosetAutoCycleLink": {
+        "steamClosetAutoCycleLink": {
+          "value": "on",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        }
+      },
+      "sec.wifiConfiguration": {
+        "autoReconnection": {
+          "value": null
+        },
+        "minVersion": {
+          "value": null
+        },
+        "supportedWiFiFreq": {
+          "value": null
+        },
+        "supportedAuthType": {
+          "value": null
+        },
+        "protocolType": {
+          "value": null
+        }
+      },
+      "custom.steamClosetWrinklePrevent": {
+        "steamClosetWrinklePrevent": {
+          "value": "off",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        }
+      },
+      "remoteControlStatus": {
+        "remoteControlEnabled": {
+          "value": "false",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        }
+      },
+      "custom.supportedOptions": {
+        "course": {
+          "value": null
+        },
+        "referenceTable": {
+          "value": {
+            "id": "Table_00"
+          },
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "supportedCourses": {
+          "value": [
+            "22",
+            "23",
+            "32",
+            "09",
+            "12",
+            "0C",
+            "31",
+            "0B",
+            "10",
+            "0A",
+            "14",
+            "13",
+            "16",
+            "24",
+            "25",
+            "2F",
+            "20",
+            "0F",
+            "27",
+            "30",
+            "15",
+            "1A",
+            "1B",
+            "1C",
+            "2D",
+            "07",
+            "08"
+          ],
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        }
+      },
+      "custom.steamClosetOperatingState": {
+        "supportedSteamClosetJobState": {
+          "value": ["none", "steaming", "airwashing", "drying", "finish"],
+          "timestamp": "2025-02-09T22:16:19.221Z"
+        },
+        "completionTime": {
+          "value": "2025-02-11T09:00:17Z",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "steamClosetMachineState": {
+          "value": "stop",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "supportedSteamClosetMachineState": {
+          "value": ["stop", "run", "pause"],
+          "timestamp": "2023-06-23T16:00:41.238Z"
+        },
+        "steamClosetJobState": {
+          "value": "none",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "progress": {
+          "value": 1,
+          "unit": "%",
+          "timestamp": "2025-02-10T22:53:25.928Z"
+        },
+        "remainingTimeStr": {
+          "value": "00:39",
+          "timestamp": "2025-02-10T22:53:25.928Z"
+        },
+        "steamClosetDelayEndTime": {
+          "value": null
+        },
+        "remainingTime": {
+          "value": 39,
+          "unit": "min",
+          "timestamp": "2025-02-10T22:53:25.928Z"
+        }
+      },
+      "custom.energyType": {
+        "energyType": {
+          "value": "2.0",
+          "timestamp": "2024-03-06T11:24:06.106Z"
+        },
+        "energySavingSupport": {
+          "value": false,
+          "timestamp": "2024-03-06T11:24:06.106Z"
+        },
+        "drMaxDuration": {
+          "value": null
+        },
+        "energySavingLevel": {
+          "value": null
+        },
+        "energySavingInfo": {
+          "value": null
+        },
+        "supportedEnergySavingLevels": {
+          "value": null
+        },
+        "energySavingOperation": {
+          "value": null
+        },
+        "notificationTemplateID": {
+          "value": null
+        },
+        "energySavingOperationSupport": {
+          "value": null
+        }
+      },
+      "samsungce.softwareUpdate": {
+        "targetModule": {
+          "value": {},
+          "timestamp": "2025-02-09T17:33:28.019Z"
+        },
+        "otnDUID": {
+          "value": "MTCHUODP5V4FA",
+          "timestamp": "2025-02-11T08:21:17.534Z"
+        },
+        "lastUpdatedDate": {
+          "value": null
+        },
+        "availableModules": {
+          "value": [],
+          "timestamp": "2023-06-23T16:00:41.636Z"
+        },
+        "newVersionAvailable": {
+          "value": false,
+          "timestamp": "2025-02-09T17:33:28.019Z"
+        },
+        "operatingState": {
+          "value": null
+        },
+        "progress": {
+          "value": null
+        }
+      },
+      "custom.veryFineDustFilter": {
+        "veryFineDustFilterStatus": {
+          "value": null
+        },
+        "veryFineDustFilterResetType": {
+          "value": null
+        },
+        "veryFineDustFilterUsage": {
+          "value": null
+        },
+        "veryFineDustFilterLastResetDate": {
+          "value": null
+        },
+        "veryFineDustFilterUsageStep": {
+          "value": null
+        },
+        "veryFineDustFilterCapacity": {
+          "value": null
+        }
+      }
+    }
+  }
+}

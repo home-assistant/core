@@ -1,0 +1,38 @@
+# serializer version: 1
+# name: test_static_attributes
+  ReadOnlyDict({
+    <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 50,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20,
+    'fan_action': 'idle',
+    <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+    <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
+      'on',
+      'auto',
+      'diffuse',
+    ]),
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'device1',
+    <ClimateEntityStateAttribute.HUMIDITY: 'humidity'>: None,
+    <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.OFF: 'off'>,
+    <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+      <HVACMode.OFF: 'off'>,
+      <HVACMode.HEAT_COOL: 'heat_cool'>,
+      <HVACMode.COOL: 'cool'>,
+      <HVACMode.HEAT: 'heat'>,
+    ]),
+    <ClimateEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 99,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+    <ClimateEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+    'permanent_hold': False,
+    <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
+    <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+      'none',
+      'away',
+      'hold',
+    ]),
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 415>,
+    <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+    <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+  })
+# ---

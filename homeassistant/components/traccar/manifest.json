@@ -1,0 +1,11 @@
+{
+  "domain": "traccar",
+  "name": "Traccar Client",
+  "codeowners": ["@ludeeus"],
+  "config_flow": true,
+  "dependencies": ["webhook"],
+  "documentation": "https://www.home-assistant.io/integrations/traccar",
+  "iot_class": "cloud_push",
+  "loggers": ["pytraccar"],
+  "requirements": ["pytraccar==3.0.0"]
+}

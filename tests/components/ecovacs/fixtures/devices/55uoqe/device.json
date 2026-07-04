@@ -1,0 +1,22 @@
+{
+  "did": "E1234567890000000002",
+  "name": "E1234567890000000002",
+  "class": "55uoqe",
+  "resource": "upQ7",
+  "company": "eco-ng",
+  "service": {
+    "jmq": "jmq-ngiot-eu.dc.ww.ecouser.net",
+    "mqs": "api-ngiot.dc-as.ww.ecouser.net"
+  },
+  "deviceName": "DEEBOT Mini",
+  "icon": "https://portal-ww.ecouser.net/api/pim/file/get/606278df4a84d700082b39f1",
+  "UILogicId": "DX_9G",
+  "materialNo": "110-1820-0102",
+  "pid": "5c19a91ca1e6ee000178224b",
+  "product_category": "DEEBOT",
+  "model": "DX9H",
+  "nick": "DBMini",
+  "homeSort": 9999,
+  "status": 1,
+  "otaUpgrade": {}
+}

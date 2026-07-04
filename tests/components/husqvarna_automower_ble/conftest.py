@@ -1,0 +1,120 @@
+"""Common fixtures for the Husqvarna Automower Bluetooth tests."""
+
+from collections.abc import Generator
+from unittest.mock import AsyncMock, Mock, patch
+
+from automower_ble.protocol import ResponseResult
+from gardena_bluetooth.parse import ManufacturerData
+import pytest
+
+from homeassistant.components.bluetooth import async_last_service_info
+from homeassistant.components.husqvarna_automower_ble.const import DOMAIN
+from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN
+from homeassistant.core import HomeAssistant
+from homeassistant.loader import async_get_bluetooth
+
+from . import AUTOMOWER_SERVICE_INFO_SERIAL
+
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True, scope="module")
+def only_discover_this_domain() -> Generator[None]:
+    """Only discover devices for this domain.
+
+    This is needed to avoid interference from domains like
+    gardena bluetooth that also matches on these devices.
+    Which can cause async_block_till_done to wait too long
+    waiting for advertisements that won't show up.
+    """
+
+    async def filtered_matches(hass: HomeAssistant):
+        matchers = await async_get_bluetooth(hass)
+        return [matcher for matcher in matchers if matcher["domain"] == DOMAIN]
+
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", new=filtered_matches
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.husqvarna_automower_ble.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture(autouse=True)
+def mock_get_manufacturer_data(
+    hass: HomeAssistant, enable_bluetooth: None
+) -> Generator[None]:
+    """Mock async_get_manufacturer_data to return injected data."""
+
+    async def _get_manufacturer_data(
+        addresses: set[str], **kwargs
+    ) -> dict[str, ManufacturerData]:
+        result: dict[str, ManufacturerData] = {}
+        for address in addresses:
+            mfg = ManufacturerData()
+            if service_info := async_last_service_info(hass, address):
+                raw = service_info.manufacturer_data.get(ManufacturerData.company)
+                if raw is not None:
+                    mfg.update(raw)
+            result[address] = mfg
+        return result
+
+    with patch(
+        "homeassistant.components.husqvarna_automower_ble.config_flow.async_get_manufacturer_data",
+        new=_get_manufacturer_data,
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_automower_client(enable_bluetooth: None) -> Generator[AsyncMock]:
+    """Mock a BleakClient client."""
+    mock_device = Mock()
+    mock_device.name = "Mower"
+    with (
+        patch(
+            "homeassistant.components.husqvarna_automower_ble.Mower",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.husqvarna_automower_ble.config_flow.Mower",
+            new=mock_client,
+        ),
+        patch(
+            "homeassistant.components.husqvarna_automower_ble.config_flow.bluetooth.async_ble_device_from_address",
+            return_value=mock_device,
+        ),
+    ):
+        client = mock_client.return_value
+        client.connect.return_value = ResponseResult.OK
+        client.is_connected.return_value = True
+        client.get_model.return_value = "305"
+        client.battery_level.return_value = 100
+        client.mower_state.return_value = "pendingStart"
+        client.mower_activity.return_value = "charging"
+        client.probe_gatts.return_value = ("Husqvarna", "Automower", "305")
+
+        yield client
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Mock a config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Husqvarna AutoMower",
+        data={
+            CONF_ADDRESS: AUTOMOWER_SERVICE_INFO_SERIAL.address,
+            CONF_CLIENT_ID: 1197489078,
+            CONF_PIN: "1234",
+        },
+        unique_id=AUTOMOWER_SERVICE_INFO_SERIAL.address,
+    )

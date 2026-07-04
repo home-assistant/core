@@ -1,0 +1,58 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_results": "No results. Try with a different station/address"
+    },
+    "step": {
+      "station": {
+        "data": {
+          "station": "Station/Address"
+        },
+        "title": "Enter Station/Address"
+      },
+      "station_select": {
+        "data": {
+          "station": "[%key:component::hvv_departures::config::step::station::data::station%]"
+        },
+        "title": "Select Station/Address"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "title": "Connect to the HVV API"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "departures": {
+        "name": "Departures"
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "filter": "Select lines",
+          "offset": "Offset (minutes)",
+          "real_time": "Use real time data"
+        },
+        "description": "Change options for this departure sensor",
+        "title": "Options"
+      }
+    }
+  }
+}

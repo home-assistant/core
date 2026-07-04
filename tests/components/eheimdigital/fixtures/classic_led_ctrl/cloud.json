@@ -1,0 +1,12 @@
+{
+  "title": "CLOUD",
+  "from": "00:00:00:00:00:01",
+  "probability": 50,
+  "maxAmount": 90,
+  "minIntensity": 60,
+  "maxIntensity": 100,
+  "minDuration": 600,
+  "maxDuration": 1500,
+  "cloudActive": 1,
+  "mode": 2
+}

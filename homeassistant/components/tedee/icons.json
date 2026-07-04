@@ -1,0 +1,17 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "uncalibrated": {
+        "state": {
+          "off": "mdi:sync",
+          "on": "mdi:sync-alert"
+        }
+      }
+    },
+    "sensor": {
+      "pullspring_duration": {
+        "default": "mdi:timer-lock-open"
+      }
+    }
+  }
+}

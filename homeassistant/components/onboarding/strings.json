@@ -1,0 +1,11 @@
+{
+  "area": {
+    "bedroom": "Bedroom",
+    "kitchen": "Kitchen",
+    "living_room": "Living Room"
+  },
+  "dashboard": {
+    "map": { "title": "Map" },
+    "overview": { "title": "Overview" }
+  }
+}

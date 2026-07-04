@@ -1,0 +1,12 @@
+{
+  "1": {
+    "sensor_id": 1,
+    "children": {},
+    "type": 17,
+    "sketch_name": "Battery Sensor",
+    "sketch_version": "1.0",
+    "battery_level": 42,
+    "protocol_version": "2.3.2",
+    "heartbeat": 0
+  }
+}

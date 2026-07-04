@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "download": {
+        "default": "mdi:speedometer"
+      },
+      "ping": {
+        "default": "mdi:speedometer"
+      },
+      "upload": {
+        "default": "mdi:speedometer"
+      }
+    }
+  }
+}

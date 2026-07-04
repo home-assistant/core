@@ -1,0 +1,33 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_format": "Invalid format. Please specify as xxx-xxx.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "code": "Auth Code (xxx-xxx)"
+        },
+        "description": "Please enter your personal Auth Code that is shown in the laundrify app."
+      },
+      "reauth_confirm": {
+        "description": "The laundrify integration needs to re-authenticate.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "wash_cycle": {
+        "name": "Cycle"
+      }
+    }
+  }
+}

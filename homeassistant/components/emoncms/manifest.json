@@ -1,0 +1,10 @@
+{
+  "domain": "emoncms",
+  "name": "Emoncms",
+  "codeowners": ["@borpin", "@alexandrecuer"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/emoncms",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "requirements": ["pyemoncms==0.1.3"]
+}

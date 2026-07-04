@@ -1,0 +1,111 @@
+# Describes the format for available component services
+
+activate_eco_mode_with_duration:
+  fields:
+    duration:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 1440
+          unit_of_measurement: "minutes"
+    accesspoint_id:
+      example: 3014xxxxxxxxxxxxxxxxxxxx
+      selector:
+        text:
+
+activate_eco_mode_with_period:
+  fields:
+    endtime:
+      required: true
+      example: 2019-02-17 14:00
+      selector:
+        text:
+    accesspoint_id:
+      example: 3014xxxxxxxxxxxxxxxxxxxx
+      selector:
+        text:
+
+activate_vacation:
+  fields:
+    endtime:
+      required: true
+      example: 2019-09-17 14:00
+      selector:
+        text:
+    temperature:
+      required: true
+      default: 18
+      selector:
+        number:
+          min: 0
+          max: 55
+          step: 0.5
+          unit_of_measurement: "°"
+    accesspoint_id:
+      example: 3014xxxxxxxxxxxxxxxxxxxx
+      selector:
+        text:
+
+deactivate_eco_mode:
+  fields:
+    accesspoint_id:
+      example: 3014xxxxxxxxxxxxxxxxxxxx
+      selector:
+        text:
+
+deactivate_vacation:
+  fields:
+    accesspoint_id:
+      example: 3014xxxxxxxxxxxxxxxxxxxx
+      selector:
+        text:
+
+set_active_climate_profile:
+  fields:
+    entity_id:
+      required: true
+      example: climate.livingroom
+      selector:
+        text:
+    climate_profile_index:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 100
+
+dump_hap_config:
+  fields:
+    config_output_path:
+      example: "/config"
+      selector:
+        text:
+    config_output_file_prefix:
+      example: "hmip-config"
+      default: "hmip-config"
+      selector:
+        text:
+    anonymize:
+      default: true
+      selector:
+        boolean:
+
+reset_energy_counter:
+  fields:
+    entity_id:
+      required: true
+      example: switch.livingroom
+      selector:
+        text:
+
+set_home_cooling_mode:
+  fields:
+    cooling:
+      default: true
+      selector:
+        boolean:
+    accesspoint_id:
+      example: 3014xxxxxxxxxxxxxxxxxxxx
+      selector:
+        text:

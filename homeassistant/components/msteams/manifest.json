@@ -1,0 +1,8 @@
+{
+  "domain": "msteams",
+  "name": "Microsoft Teams",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/msteams",
+  "iot_class": "cloud_push",
+  "quality_scale": "legacy"
+}

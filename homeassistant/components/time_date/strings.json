@@ -1,0 +1,70 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "The chosen Time & Date sensor has already been configured"
+    },
+    "error": {
+      "timezone_not_exist": "Timezone is not set in Home Assistant configuration"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "display_options": "Sensor type"
+        },
+        "description": "Select from the sensor options below"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "beat": {
+        "name": "[%key:component::time_date::selector::display_options::options::beat%]"
+      },
+      "date": {
+        "name": "[%key:component::time_date::selector::display_options::options::date%]"
+      },
+      "date_time": {
+        "name": "[%key:component::time_date::selector::display_options::options::date_time%]"
+      },
+      "date_time_iso": {
+        "name": "[%key:component::time_date::selector::display_options::options::date_time_iso%]"
+      },
+      "date_time_utc": {
+        "name": "[%key:component::time_date::selector::display_options::options::date_time_utc%]"
+      },
+      "time": {
+        "name": "[%key:component::time_date::selector::display_options::options::time%]"
+      },
+      "time_date": {
+        "name": "[%key:component::time_date::selector::display_options::options::time_date%]"
+      },
+      "time_utc": {
+        "name": "[%key:component::time_date::selector::display_options::options::time_utc%]"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "display_options": "[%key:component::time_date::config::step::user::data::display_options%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "display_options": {
+      "options": {
+        "beat": "Internet time",
+        "date": "Date",
+        "date_time": "Date & Time",
+        "date_time_iso": "Date & Time (ISO)",
+        "date_time_utc": "Date & Time (UTC)",
+        "time": "Time",
+        "time_date": "Time & Date",
+        "time_utc": "Time (UTC)"
+      }
+    }
+  },
+  "title": "Time & Date"
+}

@@ -1,0 +1,20 @@
+{
+  "state": "Somewhere",
+  "utility": "Wom Energy",
+  "distributor": "*",
+  "max_system_energy_kWh": 0,
+  "nominal_system_power_kW": 25,
+  "grid_voltage_setting": 240,
+  "retailer": "*",
+  "grid_code": "60Hz_240V_s_IEEE1547a_2014",
+  "timezone": "America/Chicago",
+  "nominal_system_energy_kWh": 13.5,
+  "region": "IEEE1547a:2014",
+  "min_site_meter_power_kW": -1000000000,
+  "site_name": "MySite",
+  "country": "United States",
+  "max_site_meter_power_kW": 1000000000,
+  "grid_phase_setting": "Split",
+  "max_system_power_kW": 0,
+  "grid_freq_setting": 60
+}

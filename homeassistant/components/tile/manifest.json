@@ -1,0 +1,11 @@
+{
+  "domain": "tile",
+  "name": "Tile",
+  "codeowners": ["@bachya"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/tile",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["pytile"],
+  "requirements": ["pytile==2024.12.0"]
+}

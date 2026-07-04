@@ -1,0 +1,118 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "device_mismatch": "Please ensure you reauthenticate the same controller.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_sites_found": "No sites found which the user can manage.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_controller": "Omada controller version not supported."
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Password for the Omada controller user.",
+          "username": "Username for the Omada controller user."
+        },
+        "description": "The provided credentials have stopped working. Please update them.",
+        "title": "Update TP-Link Omada credentials"
+      },
+      "site": {
+        "data": {
+          "site": "Site"
+        },
+        "data_description": {
+          "site": "Select the site you want to manage in Home Assistant."
+        },
+        "title": "Choose which site to manage"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "URL of the management interface of your TP-Link Omada controller.",
+          "password": "Password for the Omada controller user.",
+          "username": "Username for the Omada controller user.",
+          "verify_ssl": "Uncheck this box if you are using the default self-signed certificate on the controller."
+        },
+        "description": "Enter the connection details for the Omada controller. Cloud controllers aren't supported."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "lan_status": {
+        "name": "Port {port_name} LAN status"
+      },
+      "online_detection": {
+        "name": "Port {port_name} online detection"
+      },
+      "poe_delivery": {
+        "name": "Port {port_name} PoE delivery"
+      },
+      "wan_link": {
+        "name": "Port {port_name} Internet link"
+      }
+    },
+    "sensor": {
+      "cpu_usage": {
+        "name": "CPU usage"
+      },
+      "device_status": {
+        "name": "Device status",
+        "state": {
+          "adopt_failed": "Adopt failed",
+          "connected": "[%key:common::state::connected%]",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "error": "[%key:common::state::error%]",
+          "heartbeat_missed": "Heartbeat missed",
+          "isolated": "Isolated",
+          "managed_externally": "Managed externally",
+          "pending": "Pending"
+        }
+      },
+      "mem_usage": {
+        "name": "Memory usage"
+      }
+    },
+    "switch": {
+      "poe_control": {
+        "name": "Port {port_name} PoE"
+      },
+      "wan_connect_ipv4": {
+        "name": "Port {port_name} Internet connected"
+      },
+      "wan_connect_ipv6": {
+        "name": "Port {port_name} Internet connected (IPv6)"
+      }
+    }
+  },
+  "services": {
+    "reconnect_client": {
+      "description": "Tries to get wireless client to reconnect to Omada network.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The instance of the Omada integration to which the client is connected.",
+          "name": "Omada controller"
+        },
+        "mac": {
+          "description": "MAC address of the device.",
+          "name": "MAC address"
+        }
+      },
+      "name": "Reconnect wireless client"
+    }
+  }
+}

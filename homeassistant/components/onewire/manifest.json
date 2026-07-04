@@ -1,0 +1,13 @@
+{
+  "domain": "onewire",
+  "name": "1-Wire",
+  "codeowners": ["@garbled1", "@epenet"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/onewire",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["aio_ownet"],
+  "quality_scale": "silver",
+  "requirements": ["aio-ownet==0.0.5"],
+  "zeroconf": ["_owserver._tcp.local."]
+}

@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "channel": {
+        "default": "mdi:twitch"
+      }
+    }
+  }
+}

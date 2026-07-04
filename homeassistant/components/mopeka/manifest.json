@@ -1,0 +1,67 @@
+{
+  "domain": "mopeka",
+  "name": "Mopeka",
+  "bluetooth": [
+    {
+      "connectable": false,
+      "manufacturer_data_start": [3],
+      "manufacturer_id": 89,
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "connectable": false,
+      "manufacturer_data_start": [4],
+      "manufacturer_id": 89,
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "connectable": false,
+      "manufacturer_data_start": [5],
+      "manufacturer_id": 89,
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "connectable": false,
+      "manufacturer_data_start": [6],
+      "manufacturer_id": 89,
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "connectable": false,
+      "manufacturer_data_start": [8],
+      "manufacturer_id": 89,
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "connectable": false,
+      "manufacturer_data_start": [9],
+      "manufacturer_id": 89,
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "connectable": false,
+      "manufacturer_data_start": [10],
+      "manufacturer_id": 89,
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "connectable": false,
+      "manufacturer_data_start": [11],
+      "manufacturer_id": 89,
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "connectable": false,
+      "manufacturer_data_start": [12],
+      "manufacturer_id": 89,
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb"
+    }
+  ],
+  "codeowners": ["@bdraco"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/mopeka",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "requirements": ["mopeka-iot-ble==0.8.0"]
+}

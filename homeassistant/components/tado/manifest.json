@@ -1,0 +1,19 @@
+{
+  "domain": "tado",
+  "name": "Tado",
+  "codeowners": ["@erwindouna"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "tado*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/tado",
+  "homekit": {
+    "models": ["tado", "AC02"]
+  },
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["PyTado"],
+  "requirements": ["python-tado==0.18.16"]
+}

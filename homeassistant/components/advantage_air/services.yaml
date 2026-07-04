@@ -1,0 +1,13 @@
+set_time_to:
+  target:
+    entity:
+      integration: advantage_air
+      domain: sensor
+  fields:
+    minutes:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 1440
+          unit_of_measurement: minutes

@@ -1,0 +1,18 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "invalid_zip_code": "ZIP code is invalid"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "zip_code": "ZIP code"
+        },
+        "description": "Fill out your U.S. or Canadian ZIP code."
+      }
+    }
+  }
+}

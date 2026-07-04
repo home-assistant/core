@@ -1,0 +1,27 @@
+[
+  {
+    "CONFIGURATION_ID": 1,
+    "LABEL": "Verbruik tarief elektriciteit dal/nacht in euro.",
+    "PARAMETER": "0.20522"
+  },
+  {
+    "CONFIGURATION_ID": 2,
+    "LABEL": "Verbruik tarief elektriciteit piek/dag in euro.",
+    "PARAMETER": "0.20522"
+  },
+  {
+    "CONFIGURATION_ID": 3,
+    "LABEL": "Geleverd tarief elektriciteit dal/nacht in euro.",
+    "PARAMETER": "0.20522"
+  },
+  {
+    "CONFIGURATION_ID": 4,
+    "LABEL": "Geleverd tarief elektriciteit piek/dag in euro.",
+    "PARAMETER": "0.20522"
+  },
+  {
+    "CONFIGURATION_ID": 15,
+    "LABEL": "Verbruik tarief gas in euro.",
+    "PARAMETER": "0.64"
+  }
+]

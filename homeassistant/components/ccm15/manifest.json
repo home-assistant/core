@@ -1,0 +1,11 @@
+{
+  "domain": "ccm15",
+  "name": "Midea ccm15 AC Controller",
+  "codeowners": ["@ocalvo"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/ccm15",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "quality_scale": "silver",
+  "requirements": ["py_ccm15==1.1.1"]
+}

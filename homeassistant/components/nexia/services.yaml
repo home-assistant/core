@@ -1,0 +1,64 @@
+set_aircleaner_mode:
+  target:
+    entity:
+      integration: nexia
+      domain: climate
+  fields:
+    aircleaner_mode:
+      required: true
+      selector:
+        select:
+          options:
+            - "allergy"
+            - "auto"
+            - "quick"
+
+set_humidify_setpoint:
+  target:
+    entity:
+      integration: nexia
+      domain: climate
+  fields:
+    humidity:
+      required: true
+      selector:
+        number:
+          min: 10
+          max: 45
+          unit_of_measurement: "%"
+
+set_dehumidify_setpoint:
+  target:
+    entity:
+      integration: nexia
+      domain: climate
+  fields:
+    humidity:
+      required: true
+      selector:
+        number:
+          min: 35
+          max: 65
+          unit_of_measurement: "%"
+
+set_hvac_run_mode:
+  target:
+    entity:
+      integration: nexia
+      domain: climate
+  fields:
+    run_mode:
+      required: false
+      selector:
+        select:
+          options:
+            - "permanent_hold"
+            - "run_schedule"
+    hvac_mode:
+      required: false
+      selector:
+        select:
+          options:
+            - "auto"
+            - "cool"
+            - "heat"

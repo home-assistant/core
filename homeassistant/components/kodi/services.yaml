@@ -1,0 +1,37 @@
+# Describes the format for available Kodi services
+
+add_to_playlist:
+  target:
+    entity:
+      integration: kodi
+      domain: media_player
+  fields:
+    media_type:
+      required: true
+      example: ALBUM
+      selector:
+        text:
+    media_id:
+      example: 123456
+      selector:
+        text:
+    media_name:
+      example: "Highway to Hell"
+      selector:
+        text:
+    artist_name:
+      example: "AC/DC"
+      selector:
+        text:
+
+call_method:
+  target:
+    entity:
+      integration: kodi
+      domain: media_player
+  fields:
+    method:
+      required: true
+      example: "VideoLibrary.GetRecentlyAddedEpisodes"
+      selector:
+        text:

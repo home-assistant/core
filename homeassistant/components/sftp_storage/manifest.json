@@ -1,0 +1,13 @@
+{
+  "domain": "sftp_storage",
+  "name": "SFTP Storage",
+  "after_dependencies": ["backup"],
+  "codeowners": ["@maretodoric"],
+  "config_flow": true,
+  "dependencies": ["file_upload"],
+  "documentation": "https://www.home-assistant.io/integrations/sftp_storage",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "quality_scale": "silver",
+  "requirements": ["asyncssh==2.21.0"]
+}

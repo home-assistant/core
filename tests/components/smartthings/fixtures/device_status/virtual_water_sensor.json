@@ -1,0 +1,28 @@
+{
+  "components": {
+    "main": {
+      "waterSensor": {
+        "water": {
+          "value": "dry",
+          "timestamp": "2025-02-10T21:58:18.784Z"
+        }
+      },
+      "refresh": {},
+      "battery": {
+        "quantity": {
+          "value": 84,
+          "timestamp": "2025-02-10T21:58:18.784Z"
+        },
+        "battery": {
+          "value": 100,
+          "unit": "%",
+          "timestamp": "2025-02-10T21:58:18.784Z"
+        },
+        "type": {
+          "value": "46120",
+          "timestamp": "2025-02-10T21:58:18.784Z"
+        }
+      }
+    }
+  }
+}

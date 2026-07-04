@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "after_time": "On time",
+          "before_time": "Off time",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "description": "Create a binary sensor that turns on or off depending on the time.",
+        "title": "Create Times of the Day Sensor"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "after_time": "[%key:component::tod::config::step::user::data::after_time%]",
+          "before_time": "[%key:component::tod::config::step::user::data::before_time%]"
+        }
+      }
+    }
+  },
+  "title": "Times of the Day Sensor"
+}

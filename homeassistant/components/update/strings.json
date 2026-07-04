@@ -1,0 +1,129 @@
+{
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
+  },
+  "conditions": {
+    "is_available": {
+      "description": "Tests if one or more updates are available.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::update::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::update::common::condition_for_name%]"
+        }
+      },
+      "name": "Update is available"
+    },
+    "is_not_available": {
+      "description": "Tests if one or more updates are not available.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::update::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::update::common::condition_for_name%]"
+        }
+      },
+      "name": "Update is not available"
+    }
+  },
+  "device_automation": {
+    "extra_fields": {
+      "for": "[%key:common::device_automation::extra_fields::for%]"
+    },
+    "trigger_type": {
+      "changed_states": "{entity_name} update availability changed",
+      "turned_off": "{entity_name} became up-to-date",
+      "turned_on": "{entity_name} got an update available"
+    }
+  },
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::update::title%]",
+      "state": {
+        "off": "Up-to-date",
+        "on": "Update available"
+      },
+      "state_attributes": {
+        "auto_update": {
+          "name": "Auto update",
+          "state": {
+            "false": "[%key:common::state::no%]",
+            "true": "[%key:common::state::yes%]"
+          }
+        },
+        "in_progress": {
+          "name": "In progress",
+          "state": {
+            "false": "[%key:common::state::no%]",
+            "true": "[%key:common::state::yes%]"
+          }
+        },
+        "installed_version": {
+          "name": "Installed version"
+        },
+        "latest_version": {
+          "name": "Latest version"
+        },
+        "release_summary": {
+          "name": "Release summary"
+        },
+        "release_url": {
+          "name": "Release URL"
+        },
+        "skipped_version": {
+          "name": "Skipped version"
+        },
+        "title": {
+          "name": "Title"
+        }
+      }
+    },
+    "firmware": {
+      "name": "Firmware"
+    }
+  },
+  "services": {
+    "clear_skipped": {
+      "description": "Removes the skipped version marker from an update.",
+      "name": "Clear skipped update"
+    },
+    "install": {
+      "description": "Installs an update for a device or service.",
+      "fields": {
+        "backup": {
+          "description": "If supported by the integration, this creates a backup before starting the update.",
+          "name": "Backup"
+        },
+        "version": {
+          "description": "The version to install. If omitted, the latest version will be installed.",
+          "name": "Version"
+        }
+      },
+      "name": "Install update"
+    },
+    "skip": {
+      "description": "Marks a currently available update as skipped.",
+      "name": "Skip update"
+    }
+  },
+  "title": "Update",
+  "triggers": {
+    "became_available": {
+      "description": "Triggers when one or more updates become available.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::update::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::update::common::trigger_for_name%]"
+        }
+      },
+      "name": "Update became available"
+    }
+  }
+}

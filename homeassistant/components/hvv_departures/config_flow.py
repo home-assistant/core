@@ -1,0 +1,240 @@
+"""Config flow for HVV integration."""
+
+import logging
+from typing import Any, override
+
+from aiohttp import ClientConnectorError
+from pygti.auth import GTI_DEFAULT_HOST
+from pygti.exceptions import GTIError, GTIUnauthorizedError
+from pygti.models import (
+    CNRequest,
+    DLRequest,
+    GTITime,
+    RegionalSDNameType,
+    SDName,
+    SDNameType,
+)
+import voluptuous as vol
+
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.const import CONF_HOST, CONF_OFFSET, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
+from homeassistant.helpers import aiohttp_client, config_validation as cv
+
+from .const import CONF_FILTER, CONF_REAL_TIME, CONF_STATION, DOMAIN
+from .hub import GTIHub, HVVConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
+
+SCHEMA_STEP_USER = vol.Schema(
+    {
+        vol.Required(CONF_HOST, default=GTI_DEFAULT_HOST): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
+
+SCHEMA_STEP_STATION = vol.Schema({vol.Required(CONF_STATION): str})
+
+SCHEMA_STEP_OPTIONS = vol.Schema(
+    {
+        vol.Required(CONF_FILTER): vol.In([]),
+        vol.Required(CONF_OFFSET, default=0): cv.positive_int,
+        vol.Optional(CONF_REAL_TIME, default=True): bool,
+    }
+)
+
+
+class HVVDeparturesConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for HVV."""
+
+    VERSION = 1
+
+    hub: GTIHub
+    data: dict[str, Any]
+
+    def __init__(self) -> None:
+        """Initialize component."""
+        self.stations: dict[str, Any] = {}
+
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step."""
+        errors = {}
+
+        if user_input is not None:
+            session = aiohttp_client.async_get_clientsession(self.hass)
+            self.hub = GTIHub(
+                user_input[CONF_HOST],
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+                session,
+            )
+
+            try:
+                response = await self.hub.authenticate()
+                _LOGGER.debug("Init gti: %r", response)
+            except GTIUnauthorizedError:
+                errors["base"] = "invalid_auth"
+            except GTIError, ClientConnectorError:
+                errors["base"] = "cannot_connect"
+
+            if not errors:
+                self.data = user_input
+                return await self.async_step_station()
+
+        return self.async_show_form(
+            step_id="user", data_schema=SCHEMA_STEP_USER, errors=errors
+        )
+
+    async def async_step_station(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the step where the user inputs his/her station."""
+        if user_input is not None:
+            errors = {}
+
+            check_name = await self.hub.gti.checkName(
+                CNRequest(theName=SDName(name=user_input[CONF_STATION]), maxList=20)
+            )
+
+            self.stations = {
+                station.name: station
+                for station in (check_name.results or [])
+                if station.type == RegionalSDNameType.STATION
+                and station.name is not None
+            }
+
+            if not self.stations:
+                errors["base"] = "no_results"
+
+                return self.async_show_form(
+                    step_id="station", data_schema=SCHEMA_STEP_STATION, errors=errors
+                )
+
+            # schema
+
+            return await self.async_step_station_select()
+
+        return self.async_show_form(step_id="station", data_schema=SCHEMA_STEP_STATION)
+
+    async def async_step_station_select(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the step where the user inputs his/her station."""
+
+        schema = vol.Schema({vol.Required(CONF_STATION): vol.In(list(self.stations))})
+
+        if user_input is None:
+            return self.async_show_form(step_id="station_select", data_schema=schema)
+
+        self.data.update(
+            {
+                "station": self.stations[user_input[CONF_STATION]].model_dump(
+                    mode="json", exclude_none=True
+                )
+            }
+        )
+
+        title = self.data[CONF_STATION]["name"]
+
+        return self.async_create_entry(title=title, data=self.data)
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: HVVConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Get options flow."""
+        return OptionsFlowHandler()
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Options flow handler."""
+
+    config_entry: HVVConfigEntry
+
+    def __init__(self) -> None:
+        """Initialize HVV Departures options flow."""
+        self.departure_filters: dict[str, Any] = {}
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        errors = {}
+        if not self.departure_filters:
+            hub = self.config_entry.runtime_data
+
+            try:
+                departure_list = await hub.gti.departureList(
+                    DLRequest(
+                        station=SDName(
+                            id=self.config_entry.data[CONF_STATION].get("id"),
+                            type=SDNameType.STATION,
+                        ),
+                        time=GTITime(date="heute", time="jetzt"),
+                        maxList=5,
+                        maxTimeOffset=200,
+                        useRealtime=True,
+                        returnFilters=True,
+                    )
+                )
+            except GTIUnauthorizedError:
+                errors["base"] = "invalid_auth"
+            except GTIError, ClientConnectorError:
+                errors["base"] = "cannot_connect"
+            else:
+                self.departure_filters = {
+                    str(i): f.model_dump(mode="json", exclude_none=True)
+                    for i, f in enumerate(departure_list.filter or [])
+                }
+
+        if user_input is not None and not errors:
+            options = {
+                CONF_FILTER: [
+                    self.departure_filters[x] for x in user_input[CONF_FILTER]
+                ],
+                CONF_OFFSET: user_input[CONF_OFFSET],
+                CONF_REAL_TIME: user_input[CONF_REAL_TIME],
+            }
+
+            return self.async_create_entry(title="", data=options)
+
+        if CONF_FILTER in self.config_entry.options:
+            old_filter = [
+                i
+                for (i, f) in self.departure_filters.items()
+                if f in self.config_entry.options[CONF_FILTER]
+            ]
+        else:
+            old_filter = []
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_FILTER, default=old_filter): cv.multi_select(
+                        {
+                            key: (
+                                f"{departure_filter.get('serviceName', '')},"
+                                f" {departure_filter.get('label', '')}"
+                            )
+                            for key, departure_filter in self.departure_filters.items()
+                        }
+                    ),
+                    vol.Required(
+                        CONF_OFFSET,
+                        default=self.config_entry.options.get(CONF_OFFSET, 0),
+                    ): cv.positive_int,
+                    vol.Optional(
+                        CONF_REAL_TIME,
+                        default=self.config_entry.options.get(CONF_REAL_TIME, True),
+                    ): bool,
+                }
+            ),
+            errors=errors,
+        )

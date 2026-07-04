@@ -1,0 +1,398 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "S1-TY-BLE-PRO 2",
+  "category": "jtmspro",
+  "product_id": "xqeob8h6",
+  "product_name": "S1-TY-BLE-PRO",
+  "online": false,
+  "sub": true,
+  "time_zone": "+03:00",
+  "active_time": "2025-07-01T15:21:36+00:00",
+  "create_time": "2025-07-01T15:21:36+00:00",
+  "update_time": "2025-07-01T15:21:36+00:00",
+  "function": {
+    "unlock_method_create": {
+      "type": "Raw",
+      "value": {}
+    },
+    "unlock_method_delete": {
+      "type": "Raw",
+      "value": {}
+    },
+    "unlock_method_modify": {
+      "type": "Raw",
+      "value": {}
+    },
+    "lock_record": {
+      "type": "Raw",
+      "value": {}
+    },
+    "message": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "automatic_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "unlock_switch": {
+      "type": "Enum",
+      "value": {
+        "range": ["single_unlock", "finger_card"]
+      }
+    },
+    "auto_lock_time": {
+      "type": "Integer",
+      "value": {
+        "min": 1,
+        "max": 1800,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "rtc_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "manual_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "synch_method": {
+      "type": "Raw",
+      "value": {}
+    },
+    "remote_no_dp_key": {
+      "type": "Raw",
+      "value": {}
+    },
+    "record": {
+      "type": "Raw",
+      "value": {}
+    },
+    "check_code_set": {
+      "type": "Raw",
+      "value": {}
+    },
+    "ble_unlock_check": {
+      "type": "Raw",
+      "value": {}
+    },
+    "remote_pd_setkey_check": {
+      "type": "Raw",
+      "value": {}
+    },
+    "unlock_ble_ibeacon": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "ibeacon_scan_mode": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "always",
+          "5min",
+          "10min",
+          "20min",
+          "40min",
+          "60min",
+          "90min",
+          "120min"
+        ]
+      }
+    },
+    "rssi_sensitivity_level": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "inactive",
+          "90db",
+          "80db",
+          "70db",
+          "60db",
+          "50db",
+          "40db",
+          "30db",
+          "20db"
+        ]
+      }
+    },
+    "ibeacon_switch": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "unlock_method_create": {
+      "type": "Raw",
+      "value": {}
+    },
+    "unlock_method_delete": {
+      "type": "Raw",
+      "value": {}
+    },
+    "unlock_method_modify": {
+      "type": "Raw",
+      "value": {}
+    },
+    "residual_electricity": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "unlock_fingerprint": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "unlock_card": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "unlock_key": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "unlock_ble": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "lock_record": {
+      "type": "Raw",
+      "value": {}
+    },
+    "alarm_lock": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "wrong_finger",
+          "wrong_password",
+          "wrong_card",
+          "wrong_face",
+          "tongue_bad",
+          "too_hot",
+          "unclosed_time",
+          "tongue_not_out",
+          "pry",
+          "key_in",
+          "low_battery",
+          "power_off",
+          "shock",
+          "defense"
+        ]
+      }
+    },
+    "hijack": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "doorbell": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "message": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "automatic_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "unlock_switch": {
+      "type": "Enum",
+      "value": {
+        "range": ["single_unlock", "finger_card"]
+      }
+    },
+    "auto_lock_time": {
+      "type": "Integer",
+      "value": {
+        "min": 1,
+        "max": 1800,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "closed_opened": {
+      "type": "Enum",
+      "value": {
+        "range": ["unknown", "open", "closed"]
+      }
+    },
+    "rtc_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "manual_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "lock_motor_state": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "synch_method": {
+      "type": "Raw",
+      "value": {}
+    },
+    "remote_no_dp_key": {
+      "type": "Raw",
+      "value": {}
+    },
+    "unlock_phone_remote": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "unlock_voice_remote": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "record": {
+      "type": "Raw",
+      "value": {}
+    },
+    "check_code_set": {
+      "type": "Raw",
+      "value": {}
+    },
+    "ble_unlock_check": {
+      "type": "Raw",
+      "value": {}
+    },
+    "unlock_record_check": {
+      "type": "Raw",
+      "value": {}
+    },
+    "remote_pd_setkey_check": {
+      "type": "Raw",
+      "value": {}
+    },
+    "unlock_double_kit": {
+      "type": "Raw",
+      "value": {}
+    },
+    "unlock_ble_ibeacon": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "ibeacon_scan_mode": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "always",
+          "5min",
+          "10min",
+          "20min",
+          "40min",
+          "60min",
+          "90min",
+          "120min"
+        ]
+      }
+    },
+    "rssi_sensitivity_level": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "inactive",
+          "90db",
+          "80db",
+          "70db",
+          "60db",
+          "50db",
+          "40db",
+          "30db",
+          "20db"
+        ]
+      }
+    },
+    "ibeacon_switch": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "unlock_method_create": "A/8BAQIAAA==",
+    "unlock_method_delete": "",
+    "unlock_method_modify": "",
+    "residual_electricity": 99,
+    "unlock_fingerprint": 1,
+    "unlock_card": 0,
+    "unlock_key": 0,
+    "unlock_ble": 1,
+    "lock_record": "",
+    "alarm_lock": "wrong_finger",
+    "hijack": false,
+    "doorbell": false,
+    "message": false,
+    "automatic_lock": true,
+    "unlock_switch": "single_unlock",
+    "auto_lock_time": 3,
+    "closed_opened": "unknown",
+    "rtc_lock": false,
+    "manual_lock": true,
+    "lock_motor_state": false,
+    "synch_method": "AQA=",
+    "remote_no_dp_key": "AAAB",
+    "unlock_phone_remote": 1,
+    "unlock_voice_remote": 0,
+    "record": "AAEB",
+    "check_code_set": "AAH//wAAAAAAAAAAAP//AA==",
+    "ble_unlock_check": "AAH//zY2MDkzNTA0AWhkA/QAAA==",
+    "unlock_record_check": "",
+    "remote_pd_setkey_check": "AAH//zY2MDkzNTA0AQABAA==",
+    "unlock_double_kit": "",
+    "unlock_ble_ibeacon": 0,
+    "ibeacon_scan_mode": "always",
+    "rssi_sensitivity_level": "inactive",
+    "ibeacon_switch": false
+  },
+  "set_up": false,
+  "support_local": true
+}

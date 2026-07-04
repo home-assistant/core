@@ -1,0 +1,52 @@
+# serializer version: 1
+# name: test_light_device[config_prod_awning_dimmer.json-status_prod_dimmer.json]
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'terrasse',
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://webcontrol/control',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wmspro',
+        '97358',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'WAREMA Renkhoff SE',
+    'model': 'Dimmer',
+    'model_id': None,
+    'name': 'Licht',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '97358',
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_light_update[config_prod_awning_dimmer.json-status_prod_dimmer.json]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by WMS WebControl pro API',
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Licht',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.terrasse_licht',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

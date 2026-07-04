@@ -1,0 +1,79 @@
+{
+  "entity": {
+    "number": {
+      "status_light_brightness": {
+        "default": "mdi:lightbulb-on"
+      }
+    },
+    "sensor": {
+      "active_liter_lpm": {
+        "default": "mdi:water"
+      },
+      "active_tariff": {
+        "default": "mdi:calendar-clock"
+      },
+      "any_power_fail_count": {
+        "default": "mdi:transmission-tower-off"
+      },
+      "cycles": {
+        "default": "mdi:battery-sync-outline"
+      },
+      "dsmr_version": {
+        "default": "mdi:counter"
+      },
+      "gas_unique_id": {
+        "default": "mdi:alphabetical-variant"
+      },
+      "long_power_fail_count": {
+        "default": "mdi:transmission-tower-off"
+      },
+      "meter_model": {
+        "default": "mdi:gauge"
+      },
+      "total_liter_m3": {
+        "default": "mdi:gauge"
+      },
+      "unique_meter_id": {
+        "default": "mdi:alphabetical-variant"
+      },
+      "voltage_sag_l1_count": {
+        "default": "mdi:alert"
+      },
+      "voltage_sag_l2_count": {
+        "default": "mdi:alert"
+      },
+      "voltage_sag_l3_count": {
+        "default": "mdi:alert"
+      },
+      "voltage_swell_l1_count": {
+        "default": "mdi:alert"
+      },
+      "voltage_swell_l2_count": {
+        "default": "mdi:alert"
+      },
+      "voltage_swell_l3_count": {
+        "default": "mdi:alert"
+      },
+      "wifi_ssid": {
+        "default": "mdi:wifi"
+      },
+      "wifi_strength": {
+        "default": "mdi:wifi"
+      }
+    },
+    "switch": {
+      "cloud_connection": {
+        "default": "mdi:cloud",
+        "state": {
+          "off": "mdi:cloud-off-outline"
+        }
+      },
+      "switch_lock": {
+        "default": "mdi:lock",
+        "state": {
+          "off": "mdi:lock-open"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+set_humidity:
+  target:
+    entity:
+      integration: wemo
+      domain: fan
+  fields:
+    target_humidity:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 5
+          unit_of_measurement: "%"
+
+reset_filter_life:
+  target:
+    entity:
+      integration: wemo
+      domain: fan

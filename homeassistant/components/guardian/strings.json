@@ -1,0 +1,121 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up this Guardian device?"
+      },
+      "user": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "description": "Configure a local Elexa Guardian device."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "leak": {
+        "name": "Leak detected"
+      },
+      "moved": {
+        "name": "Recently moved"
+      }
+    },
+    "button": {
+      "reset_diagnostics": {
+        "name": "Reset valve diagnostics"
+      }
+    },
+    "sensor": {
+      "current": {
+        "name": "Current"
+      },
+      "instantaneous_current": {
+        "name": "Instantaneous current"
+      },
+      "instantaneous_current_ddt": {
+        "name": "Instantaneous current (DDT)"
+      },
+      "travel_count": {
+        "name": "Travel count"
+      },
+      "uptime": {
+        "name": "Uptime"
+      }
+    },
+    "switch": {
+      "onboard_access_point": {
+        "name": "Onboard access point"
+      },
+      "valve_controller": {
+        "name": "Valve controller"
+      }
+    },
+    "valve": {
+      "valve_controller": {
+        "name": "Valve controller"
+      }
+    }
+  },
+  "services": {
+    "pair_sensor": {
+      "description": "Adds a new paired sensor to the valve controller.",
+      "fields": {
+        "device_id": {
+          "description": "The valve controller to add the sensor to.",
+          "name": "[%key:component::guardian::entity::valve::valve_controller::name%]"
+        },
+        "uid": {
+          "description": "The UID of the paired sensor.",
+          "name": "UID"
+        }
+      },
+      "name": "Pair sensor"
+    },
+    "unpair_sensor": {
+      "description": "Removes a paired sensor from the valve controller.",
+      "fields": {
+        "device_id": {
+          "description": "The valve controller to remove the sensor from.",
+          "name": "[%key:component::guardian::entity::valve::valve_controller::name%]"
+        },
+        "uid": {
+          "description": "[%key:component::guardian::services::pair_sensor::fields::uid::description%]",
+          "name": "[%key:component::guardian::services::pair_sensor::fields::uid::name%]"
+        }
+      },
+      "name": "Unpair sensor"
+    },
+    "upgrade_firmware": {
+      "description": "Upgrades the device firmware.",
+      "fields": {
+        "device_id": {
+          "description": "The valve controller whose firmware should be upgraded.",
+          "name": "[%key:component::guardian::entity::valve::valve_controller::name%]"
+        },
+        "filename": {
+          "description": "The firmware filename.",
+          "name": "Filename"
+        },
+        "port": {
+          "description": "The port on which the firmware file is served.",
+          "name": "[%key:common::config_flow::data::port%]"
+        },
+        "url": {
+          "description": "The URL of the server hosting the firmware file.",
+          "name": "[%key:common::config_flow::data::url%]"
+        }
+      },
+      "name": "Upgrade firmware"
+    }
+  }
+}

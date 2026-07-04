@@ -1,0 +1,19 @@
+# Describes the format for available switch services
+
+reset:
+  target:
+    entity:
+      domain: select
+      integration: utility_meter
+
+calibrate:
+  target:
+    entity:
+      domain: sensor
+      integration: utility_meter
+  fields:
+    value:
+      example: "100"
+      required: true
+      selector:
+        text:

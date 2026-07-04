@@ -1,0 +1,12 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:calendar-clock"
+    }
+  },
+  "services": {
+    "set_value": {
+      "service": "mdi:calendar-edit"
+    }
+  }
+}

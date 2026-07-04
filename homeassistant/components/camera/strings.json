@@ -1,0 +1,112 @@
+{
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::camera::title%]",
+      "state": {
+        "idle": "[%key:common::state::idle%]",
+        "recording": "Recording",
+        "streaming": "Streaming"
+      },
+      "state_attributes": {
+        "access_token": {
+          "name": "Access token"
+        },
+        "brand": {
+          "name": "Brand"
+        },
+        "frontend_stream_type": {
+          "name": "Stream type",
+          "state": {
+            "hls": "HLS",
+            "webrtc": "WebRTC"
+          }
+        },
+        "model_name": {
+          "name": "[%key:common::generic::model%]"
+        },
+        "motion_detection": {
+          "name": "Motion detection",
+          "state": {
+            "false": "[%key:common::state::disabled%]",
+            "true": "[%key:common::state::enabled%]"
+          }
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_filename_template": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The pre-defined template variable `entity_id` was used when performing action `{service}` targeting camera entity `{entity_id}`. The pre-defined template variable `entity_id` is being removed from the `filename` parameter of `{service}`.\n\nPlease update your automations and scripts to use a manually defined variable instead and select **Submit** to close this issue.",
+            "title": "[%key:component::camera::issues::deprecated_filename_template::title%]"
+          }
+        }
+      },
+      "title": "Detected use of deprecated template variable"
+    }
+  },
+  "selector": {},
+  "services": {
+    "disable_motion_detection": {
+      "description": "Disables the motion detection of a camera.",
+      "name": "Disable camera motion detection"
+    },
+    "enable_motion_detection": {
+      "description": "Enables the motion detection of a camera.",
+      "name": "Enable camera motion detection"
+    },
+    "play_stream": {
+      "description": "Plays a camera stream on a supported media player.",
+      "fields": {
+        "format": {
+          "description": "Stream format supported by the media player.",
+          "name": "Format"
+        },
+        "media_player": {
+          "description": "Media player to stream to.",
+          "name": "Media player"
+        }
+      },
+      "name": "Play camera stream"
+    },
+    "record": {
+      "description": "Creates a recording of a live camera feed.",
+      "fields": {
+        "duration": {
+          "description": "Planned duration of the recording. The actual duration may vary.",
+          "name": "Duration"
+        },
+        "filename": {
+          "description": "Full path to filename. Must be mp4.",
+          "name": "[%key:component::camera::services::snapshot::fields::filename::name%]"
+        },
+        "lookback": {
+          "description": "Planned lookback period to include in the recording (in addition to the duration). Only available if there is currently an active HLS stream. The actual length of the lookback period may vary.",
+          "name": "Lookback"
+        }
+      },
+      "name": "Record camera feed"
+    },
+    "snapshot": {
+      "description": "Takes a snapshot from a camera.",
+      "fields": {
+        "filename": {
+          "description": "Full path to filename.",
+          "name": "Filename"
+        }
+      },
+      "name": "Take camera snapshot"
+    },
+    "turn_off": {
+      "description": "Turns off a camera.",
+      "name": "Turn off camera"
+    },
+    "turn_on": {
+      "description": "Turns on a camera.",
+      "name": "Turn on camera"
+    }
+  },
+  "title": "Camera"
+}

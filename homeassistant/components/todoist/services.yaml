@@ -1,0 +1,84 @@
+new_task:
+  fields:
+    content:
+      required: true
+      example: Pick up the mail.
+      selector:
+        text:
+    description:
+      selector:
+        text:
+    project:
+      example: Errands
+      default: Inbox
+      selector:
+        text:
+    section:
+      example: Deliveries
+      selector:
+        text:
+    labels:
+      example: Chores,Delivieries
+      selector:
+        text:
+    assignee:
+      example: username
+      selector:
+        text:
+    priority:
+      selector:
+        number:
+          min: 1
+          max: 4
+    due_date_string:
+      example: Tomorrow
+      selector:
+        text:
+    due_date_lang:
+      selector:
+        select:
+          options:
+            - "da"
+            - "de"
+            - "en"
+            - "es"
+            - "fr"
+            - "it"
+            - "ja"
+            - "ko"
+            - "nl"
+            - "pl"
+            - "pt"
+            - "ru"
+            - "sv"
+            - "zh"
+    due_date:
+      example: "2019-10-22"
+      selector:
+        text:
+    reminder_date_string:
+      example: Tomorrow
+      selector:
+        text:
+    reminder_date_lang:
+      selector:
+        select:
+          options:
+            - "da"
+            - "de"
+            - "en"
+            - "es"
+            - "fr"
+            - "it"
+            - "ja"
+            - "ko"
+            - "nl"
+            - "pl"
+            - "pt"
+            - "ru"
+            - "sv"
+            - "zh"
+    reminder_date:
+      example: "2019-10-22T10:30:00"
+      selector:
+        text:

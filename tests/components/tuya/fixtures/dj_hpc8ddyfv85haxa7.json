@@ -1,0 +1,154 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Garage",
+  "category": "dj",
+  "product_id": "hpc8ddyfv85haxa7",
+  "product_name": "RGB Smart Plug",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2020-12-21T14:43:57+00:00",
+  "create_time": "2020-12-21T14:43:57+00:00",
+  "update_time": "2020-12-21T14:43:57+00:00",
+  "function": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour", "scene", "music"]
+      }
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 25,
+        "scale": 0,
+        "unit": "",
+        "max": 255,
+        "step": 1
+      }
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "scale": 0,
+        "unit": "",
+        "max": 255,
+        "step": 1
+      }
+    },
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "colour_data_v2": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "v": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        }
+      }
+    }
+  },
+  "status_range": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour", "scene", "music"]
+      }
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 25,
+        "scale": 0,
+        "unit": "",
+        "max": 255,
+        "step": 1
+      }
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "scale": 0,
+        "unit": "",
+        "max": 255,
+        "step": 1
+      }
+    },
+    "colour_data_v2": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "v": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        }
+      }
+    }
+  },
+  "status": {
+    "switch_led": false,
+    "work_mode": "colour",
+    "bright_value": 255,
+    "temp_value": 255,
+    "colour_data_v2": {
+      "h": 16384,
+      "s": 65280,
+      "v": 65535
+    },
+    "switch_1": false
+  },
+  "set_up": true,
+  "support_local": true
+}

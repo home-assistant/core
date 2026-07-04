@@ -1,0 +1,73 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Water Fountain",
+  "category": "cwysj",
+  "product_id": "akln8rb04cav403q",
+  "product_name": "Smart Pet Water Fountain",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2025-07-18T11:30:36+00:00",
+  "create_time": "2025-07-18T11:30:36+00:00",
+  "update_time": "2025-07-18T11:30:36+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "filter_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "pump_reset": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "pump_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "day",
+        "min": 0,
+        "max": 31,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "filter_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "pump_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "filter_life": {
+      "type": "Integer",
+      "value": {
+        "unit": "day",
+        "min": 0,
+        "max": 30,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "switch": true,
+    "pump_time": 7,
+    "filter_reset": false,
+    "pump_reset": false,
+    "filter_life": 14
+  },
+  "set_up": true,
+  "support_local": true
+}

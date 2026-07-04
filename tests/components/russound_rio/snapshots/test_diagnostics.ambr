@@ -1,0 +1,81 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'C': dict({
+      '1': dict({
+        'Z': dict({
+          '1': dict({
+            'balance': '0',
+            'bass': '0',
+            'currentSource': '2',
+            'doNotDisturb': 'OFF',
+            'enabled_sources': list([
+              3,
+              2,
+            ]),
+            'lastError': None,
+            'loudness': 'OFF',
+            'mute': 'OFF',
+            'name': 'Deck',
+            'page': 'OFF',
+            'partyMode': 'OFF',
+            'sharedSource': 'OFF',
+            'sleepTimeRemaining': '0',
+            'status': 'OFF',
+            'treble': '0',
+            'turnOnVolume': '10',
+            'volume': '0',
+          }),
+        }),
+      }),
+    }),
+    'S': dict({
+      '1': dict({
+        'albumName': None,
+        'artistName': None,
+        'channelName': None,
+        'coverArtURL': None,
+        'mode': 'Unknown',
+        'name': 'Tuner',
+        'playlistName': 'Please Wait...',
+        'rating': None,
+        'repeatMode': None,
+        'shuffleMode': None,
+        'songName': 'Connecting to media source.',
+        'type': 'DMS-3.1 Media Streamer',
+        'volume': '0',
+      }),
+      '2': dict({
+        'name': 'Liv. Rm TV',
+        'type': 'Misc Audio',
+      }),
+      '3': dict({
+        'name': 'Streamer',
+        'type': 'Misc Audio',
+      }),
+      '4': dict({
+        'name': 'Basement TV',
+        'type': None,
+      }),
+      '5': dict({
+        'name': 'Source 5',
+        'type': None,
+      }),
+      '6': dict({
+        'name': 'Source 6',
+        'type': None,
+      }),
+      '7': dict({
+        'name': 'Source 7',
+        'type': None,
+      }),
+      '8': dict({
+        'name': 'Source 8',
+        'type': None,
+      }),
+    }),
+    'System': dict({
+      'status': 'OFF',
+    }),
+  })
+# ---

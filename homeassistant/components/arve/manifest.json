@@ -1,0 +1,10 @@
+{
+  "domain": "arve",
+  "name": "Arve",
+  "codeowners": ["@ikalnyi"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/arve",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "requirements": ["asyncarve==0.1.1"]
+}

@@ -1,0 +1,16 @@
+{
+  "domain": "flume",
+  "name": "Flume",
+  "codeowners": ["@ChrisMandich", "@bdraco", "@jeeftor"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "flume-gw-*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/flume",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["pyflume"],
+  "requirements": ["PyFlume==0.6.5"]
+}

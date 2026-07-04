@@ -1,0 +1,60 @@
+"""Support for the Skybell HD Doorbell."""
+
+import asyncio
+
+from aioskybell import Skybell
+from aioskybell.exceptions import SkybellAuthenticationException, SkybellException
+
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .coordinator import SkybellConfigEntry, SkybellDataUpdateCoordinator
+
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CAMERA,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: SkybellConfigEntry) -> bool:
+    """Set up Skybell from a config entry."""
+    email = entry.data[CONF_EMAIL]
+    password = entry.data[CONF_PASSWORD]
+
+    api = Skybell(
+        username=email,
+        password=password,
+        get_devices=True,
+        cache_path=hass.config.path(f"./skybell_{entry.unique_id}.pickle"),
+        session=async_get_clientsession(hass),
+    )
+    try:
+        devices = await api.async_initialize()
+    except SkybellAuthenticationException as ex:
+        raise ConfigEntryAuthFailed from ex
+    except SkybellException as ex:
+        raise ConfigEntryNotReady(f"Unable to connect to Skybell service: {ex}") from ex
+
+    device_coordinators: list[SkybellDataUpdateCoordinator] = [
+        SkybellDataUpdateCoordinator(hass, entry, device) for device in devices
+    ]
+    await asyncio.gather(
+        *[
+            coordinator.async_config_entry_first_refresh()
+            for coordinator in device_coordinators
+        ]
+    )
+    entry.runtime_data = device_coordinators
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: SkybellConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

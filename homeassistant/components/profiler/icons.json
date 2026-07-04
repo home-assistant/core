@@ -1,0 +1,43 @@
+{
+  "services": {
+    "dump_log_objects": {
+      "service": "mdi:invoice-export-outline"
+    },
+    "dump_sockets": {
+      "service": "mdi:pipe"
+    },
+    "log_current_tasks": {
+      "service": "mdi:format-list-bulleted"
+    },
+    "log_event_loop_scheduled": {
+      "service": "mdi:calendar-clock"
+    },
+    "log_thread_frames": {
+      "service": "mdi:format-list-bulleted"
+    },
+    "lru_stats": {
+      "service": "mdi:chart-areaspline"
+    },
+    "memory": {
+      "service": "mdi:memory"
+    },
+    "set_asyncio_debug": {
+      "service": "mdi:bug-check"
+    },
+    "start": {
+      "service": "mdi:play"
+    },
+    "start_log_object_sources": {
+      "service": "mdi:play"
+    },
+    "start_log_objects": {
+      "service": "mdi:invoice-text-plus"
+    },
+    "stop_log_object_sources": {
+      "service": "mdi:stop"
+    },
+    "stop_log_objects": {
+      "service": "mdi:invoice-text-remove"
+    }
+  }
+}

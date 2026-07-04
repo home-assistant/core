@@ -1,0 +1,33 @@
+# Describes the format for available lock services
+
+lock:
+  target:
+    entity:
+      domain: lock
+  fields:
+    code:
+      example: 1234
+      selector:
+        text:
+
+open:
+  target:
+    entity:
+      domain: lock
+      supported_features:
+        - lock.LockEntityFeature.OPEN
+  fields:
+    code:
+      example: 1234
+      selector:
+        text:
+
+unlock:
+  target:
+    entity:
+      domain: lock
+  fields:
+    code:
+      example: 1234
+      selector:
+        text:

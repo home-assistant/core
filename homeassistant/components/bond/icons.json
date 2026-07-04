@@ -1,0 +1,127 @@
+{
+  "entity": {
+    "button": {
+      "close_next": {
+        "default": "mdi:minus-box"
+      },
+      "cycle_brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "cycle_down_light_brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "cycle_up_light_brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "decrease_brightness": {
+        "default": "mdi:brightness-1"
+      },
+      "decrease_down_light_brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "decrease_flame": {
+        "default": "mdi:fire-off"
+      },
+      "decrease_position": {
+        "default": "mdi:minus-box"
+      },
+      "decrease_speed": {
+        "default": "mdi:skew-less"
+      },
+      "decrease_temperature": {
+        "default": "mdi:thermometer-minus"
+      },
+      "decrease_up_light_brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "increase_brightness": {
+        "default": "mdi:brightness-7"
+      },
+      "increase_down_light_brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "increase_flame": {
+        "default": "mdi:fire"
+      },
+      "increase_position": {
+        "default": "mdi:plus-box"
+      },
+      "increase_speed": {
+        "default": "mdi:skew-more"
+      },
+      "increase_temperature": {
+        "default": "mdi:thermometer-plus"
+      },
+      "increase_up_light_brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "open_next": {
+        "default": "mdi:plus-box"
+      },
+      "start_decreasing_brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "start_dimmer": {
+        "default": "mdi:brightness-percent"
+      },
+      "start_down_light_dimmer": {
+        "default": "mdi:brightness-percent"
+      },
+      "start_increasing_brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "start_up_light_dimmer": {
+        "default": "mdi:brightness-percent"
+      },
+      "stop_actions": {
+        "default": "mdi:stop-circle-outline"
+      },
+      "toggle_direction": {
+        "default": "mdi:directions-fork"
+      },
+      "toggle_down_light": {
+        "default": "mdi:lightbulb"
+      },
+      "toggle_light": {
+        "default": "mdi:lightbulb"
+      },
+      "toggle_power": {
+        "default": "mdi:power-cycle"
+      },
+      "toggle_up_light": {
+        "default": "mdi:lightbulb"
+      }
+    },
+    "light": {
+      "fireplace": {
+        "default": "mdi:fireplace-off",
+        "state": {
+          "on": "mdi:fireplace"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_fan_speed_tracked_state": {
+      "service": "mdi:fan"
+    },
+    "set_light_brightness_tracked_state": {
+      "service": "mdi:lightbulb-on"
+    },
+    "set_light_power_tracked_state": {
+      "service": "mdi:lightbulb"
+    },
+    "set_switch_power_tracked_state": {
+      "service": "mdi:toggle-switch-variant"
+    },
+    "start_decreasing_brightness": {
+      "service": "mdi:brightness-1"
+    },
+    "start_increasing_brightness": {
+      "service": "mdi:brightness-7"
+    },
+    "stop": {
+      "service": "mdi:stop"
+    }
+  }
+}

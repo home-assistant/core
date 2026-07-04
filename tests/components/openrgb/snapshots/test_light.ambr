@@ -1,0 +1,96 @@
+# serializer version: 1
+# name: test_entities[light.ene_dram-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
+        'off',
+        'breathing',
+        'flashing',
+        'spectrum_cycle',
+        'rainbow',
+        'chase_fade',
+        'chase',
+        'random_flicker',
+      ]),
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.RGB: 'rgb'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.ene_dram',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:memory',
+    'original_name': None,
+    'platform': 'openrgb',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <LightEntityFeature: 4>,
+    'translation_key': 'openrgb_light',
+    'unique_id': '01J0EXAMPLE0CONFIGENTRY00||DRAM||ENE||ENE SMBus Device||none||I2C: PIIX4, address 0x70',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[light.ene_dram-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 255,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGB: 'rgb'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'off',
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
+        'off',
+        'breathing',
+        'flashing',
+        'spectrum_cycle',
+        'rainbow',
+        'chase_fade',
+        'chase',
+        'random_flicker',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ENE DRAM',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
+        0.0,
+        100.0,
+      ),
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:memory',
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
+        255,
+        0,
+        0,
+      ),
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.RGB: 'rgb'>,
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 4>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
+        0.701,
+        0.299,
+      ),
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.ene_dram',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

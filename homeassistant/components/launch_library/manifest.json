@@ -1,0 +1,11 @@
+{
+  "domain": "launch_library",
+  "name": "Launch Library",
+  "codeowners": ["@ludeeus", "@DurgNomis-drol"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/launch_library",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": ["pylaunches==2.0.0"],
+  "single_config_entry": true
+}

@@ -1,0 +1,53 @@
+{
+  "conditions": {
+    "is_active": {
+      "condition": "mdi:timer"
+    },
+    "is_idle": {
+      "condition": "mdi:timer-off"
+    },
+    "is_paused": {
+      "condition": "mdi:timer-pause"
+    }
+  },
+  "services": {
+    "cancel": {
+      "service": "mdi:timer-cancel"
+    },
+    "change": {
+      "service": "mdi:timer-edit"
+    },
+    "finish": {
+      "service": "mdi:timer-check"
+    },
+    "pause": {
+      "service": "mdi:timer-pause"
+    },
+    "reload": {
+      "service": "mdi:reload"
+    },
+    "start": {
+      "service": "mdi:timer-play"
+    }
+  },
+  "triggers": {
+    "cancelled": {
+      "trigger": "mdi:timer-cancel"
+    },
+    "finished": {
+      "trigger": "mdi:timer-check"
+    },
+    "paused": {
+      "trigger": "mdi:timer-pause"
+    },
+    "remaining_time_reached": {
+      "trigger": "mdi:timer-alert-outline"
+    },
+    "restarted": {
+      "trigger": "mdi:timer-refresh"
+    },
+    "started": {
+      "trigger": "mdi:timer-play"
+    }
+  }
+}

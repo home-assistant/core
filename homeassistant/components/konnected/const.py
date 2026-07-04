@@ -1,0 +1,3 @@
+"""Konnected constants."""
+
+DOMAIN = "konnected"

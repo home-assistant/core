@@ -1,0 +1,12 @@
+{
+  "domain": "xiaomi_miio",
+  "name": "Xiaomi Home",
+  "codeowners": ["@rytilahti", "@syssi", "@starkillerOG"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/xiaomi_miio",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["micloud", "miio"],
+  "requirements": ["construct==2.10.68", "micloud==0.5", "python-miio==0.5.12"],
+  "zeroconf": ["_miio._udp.local."]
+}

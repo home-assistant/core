@@ -1,0 +1,23 @@
+get_movies:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: radarr
+
+get_queue:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: radarr
+    max_items:
+      required: false
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 500
+          mode: box

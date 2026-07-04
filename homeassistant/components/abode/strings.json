@@ -1,0 +1,70 @@
+{
+  "config": {
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_mfa_code": "Invalid MFA code"
+    },
+    "step": {
+      "mfa": {
+        "data": {
+          "mfa_code": "MFA code (6-digits)"
+        },
+        "title": "Enter your MFA code for Abode"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
+        },
+        "title": "[%key:component::abode::config::step::user::title%]"
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
+        },
+        "title": "Fill in your Abode login information"
+      }
+    }
+  },
+  "services": {
+    "capture_image": {
+      "description": "Requests a new image capture from a camera device.",
+      "fields": {
+        "entity_id": {
+          "description": "Entity ID of the camera to request an image from.",
+          "name": "Entity"
+        }
+      },
+      "name": "Capture image"
+    },
+    "change_setting": {
+      "description": "Changes an Abode system setting.",
+      "fields": {
+        "setting": {
+          "description": "Setting to change.",
+          "name": "Setting"
+        },
+        "value": {
+          "description": "Value of the setting.",
+          "name": "Value"
+        }
+      },
+      "name": "Change setting"
+    },
+    "trigger_automation": {
+      "description": "Triggers an Abode automation.",
+      "fields": {
+        "entity_id": {
+          "description": "Entity ID of the automation to trigger.",
+          "name": "Entity"
+        }
+      },
+      "name": "Trigger automation"
+    }
+  }
+}

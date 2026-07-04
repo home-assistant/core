@@ -1,0 +1,8 @@
+{
+  "domain": "cover",
+  "name": "Cover",
+  "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/cover",
+  "integration_type": "entity",
+  "quality_scale": "internal"
+}

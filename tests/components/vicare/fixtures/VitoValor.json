@@ -1,0 +1,26 @@
+{
+  "data": [
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "heating.sensors.temperature.hydraulicSeparator",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "connected"
+        },
+        "value": {
+          "type": "number",
+          "unit": "celsius",
+          "value": 22.3
+        }
+      },
+      "timestamp": "2022-11-18T06:52:46.507Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v1/equipment/installations/#######/gateways/################/devices/0/features/heating.sensors.temperature.hydraulicSeparator"
+    }
+  ]
+}

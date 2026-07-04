@@ -1,0 +1,60 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "max_regions": "Max 5 regions can be configured",
+      "rate_limit": "Too much requests",
+      "timeout": "[%key:common::config_flow::error::timeout_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "community": {
+        "data": {
+          "region": "[%key:component::ukraine_alarm::config::step::user::data::region%]"
+        },
+        "description": "Choose the district you selected above or select a specific community within that district"
+      },
+      "district": {
+        "data": {
+          "region": "[%key:component::ukraine_alarm::config::step::user::data::region%]"
+        },
+        "description": "Choose a district to monitor within the selected state"
+      },
+      "user": {
+        "data": {
+          "region": "Region"
+        },
+        "description": "Choose a state"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "air": {
+        "name": "Air"
+      },
+      "artillery": {
+        "name": "Artillery"
+      },
+      "chemical": {
+        "name": "Chemical"
+      },
+      "nuclear": {
+        "name": "Nuclear"
+      },
+      "unknown": {
+        "name": "Unknown"
+      },
+      "urban_fights": {
+        "name": "Urban fights"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_state_region": {
+      "description": "The region `{region_name}` is a state-level region, which is no longer supported. Please remove this integration entry and add it again, selecting a district or community instead of the entire state.",
+      "title": "State-level region monitoring is no longer supported"
+    }
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Solar zijpad",
+  "category": "tyndj",
+  "product_id": "pyakuuoc",
+  "product_name": "Solar flood light  App panel",
+  "online": false,
+  "sub": true,
+  "time_zone": "+08:00",
+  "active_time": "2023-03-08T13:24:06+00:00",
+  "create_time": "2023-03-08T13:24:06+00:00",
+  "update_time": "2023-03-08T13:24:06+00:00",
+  "function": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour", "scene", "music"]
+      }
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "scene_data": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "countdown": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "music_data": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "switch_save_energy": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "device_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["manual", "auto"]
+      }
+    }
+  },
+  "status_range": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour", "scene", "music"]
+      }
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "scene_data": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "countdown": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "switch_save_energy": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "device_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["manual", "auto"]
+      }
+    },
+    "battery_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high"]
+      }
+    }
+  },
+  "status": {
+    "switch_led": false,
+    "work_mode": "white",
+    "bright_value": 10,
+    "scene_data": "",
+    "countdown": 0,
+    "switch_save_energy": false,
+    "battery_percentage": 0,
+    "device_mode": "manual",
+    "battery_state": "low"
+  },
+  "set_up": true,
+  "support_local": true
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "route53",
+  "name": "AWS Route53",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/route53",
+  "iot_class": "cloud_push",
+  "loggers": ["boto3", "botocore", "s3transfer"],
+  "quality_scale": "legacy",
+  "requirements": ["boto3==1.37.1"]
+}

@@ -1,0 +1,81 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "encrypt_token": "[%key:component::nuki::config::step::user::data::encrypt_token%]",
+          "token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "description": "The Nuki integration needs to re-authenticate with your bridge.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "encrypt_token": "Use an encrypted token for authentication.",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Nuki bridge. For example: {sample_ip}."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ring_action": {
+        "name": "Ring Action"
+      }
+    },
+    "lock": {
+      "nuki_lock": {
+        "state_attributes": {
+          "battery_critical": {
+            "state": {
+              "off": "[%key:common::state::normal%]",
+              "on": "[%key:common::state::low%]"
+            }
+          }
+        }
+      }
+    }
+  },
+  "issues": {
+    "https_webhook": {
+      "description": "The Nuki bridge cannot push events to an HTTPS address (SSL), please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}). The current (local) address is: `{base_url}`, a valid address could, for example, be `{sample_url}` where `{sample_ip}` is the IP of the Home Assistant device",
+      "title": "Nuki webhook URL uses HTTPS (SSL)"
+    }
+  },
+  "services": {
+    "lock_n_go": {
+      "description": "Unlocks the door, waits a few seconds then re-locks. The wait period can be customized through the app.",
+      "fields": {
+        "unlatch": {
+          "description": "Whether to also unlatch the door when unlocking it.",
+          "name": "Unlatch"
+        }
+      },
+      "name": "Lock 'n' Go"
+    },
+    "set_continuous_mode": {
+      "description": "Enables or disables continuous mode on Nuki Opener.",
+      "fields": {
+        "enable": {
+          "description": "Whether to enable or disable the feature.",
+          "name": "[%key:common::action::enable%]"
+        }
+      },
+      "name": "Set continuous mode"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "domain": "futurenow",
+  "name": "P5 FutureNow",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/futurenow",
+  "iot_class": "local_polling",
+  "quality_scale": "legacy",
+  "requirements": ["pyfnip==0.2"]
+}

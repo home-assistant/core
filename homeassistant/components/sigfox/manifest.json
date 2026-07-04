@@ -1,0 +1,8 @@
+{
+  "domain": "sigfox",
+  "name": "Sigfox",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/sigfox",
+  "iot_class": "cloud_polling",
+  "quality_scale": "legacy"
+}

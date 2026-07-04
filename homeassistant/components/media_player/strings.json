@@ -1,0 +1,593 @@
+{
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
+    "condition_threshold_name": "Threshold",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least",
+    "trigger_threshold_name": "Threshold"
+  },
+  "conditions": {
+    "is_muted": {
+      "description": "Tests if one or more media players are muted.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
+        }
+      },
+      "name": "Media player is muted"
+    },
+    "is_not_playing": {
+      "description": "Tests if one or more media players are not playing.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
+        }
+      },
+      "name": "Media player is not playing"
+    },
+    "is_off": {
+      "description": "Tests if one or more media players are off.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
+        }
+      },
+      "name": "Media player is off"
+    },
+    "is_on": {
+      "description": "Tests if one or more media players are on.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
+        }
+      },
+      "name": "Media player is on"
+    },
+    "is_paused": {
+      "description": "Tests if one or more media players are paused.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
+        }
+      },
+      "name": "Media player is paused"
+    },
+    "is_playing": {
+      "description": "Tests if one or more media players are playing.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
+        }
+      },
+      "name": "Media player is playing"
+    },
+    "is_unmuted": {
+      "description": "Tests if one or more media players are not muted.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
+        }
+      },
+      "name": "Media player is not muted"
+    },
+    "is_volume": {
+      "description": "Tests the volume of one or more media players.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
+        },
+        "threshold": {
+          "name": "[%key:component::media_player::common::condition_threshold_name%]"
+        }
+      },
+      "name": "Media player volume"
+    }
+  },
+  "device_automation": {
+    "condition_type": {
+      "is_buffering": "{entity_name} is buffering",
+      "is_idle": "{entity_name} is idle",
+      "is_off": "[%key:common::device_automation::condition_type::is_off%]",
+      "is_on": "[%key:common::device_automation::condition_type::is_on%]",
+      "is_paused": "{entity_name} is paused",
+      "is_playing": "{entity_name} is playing"
+    },
+    "extra_fields": {
+      "for": "[%key:common::device_automation::extra_fields::for%]"
+    },
+    "trigger_type": {
+      "buffering": "{entity_name} starts buffering",
+      "changed_states": "[%key:common::device_automation::trigger_type::changed_states%]",
+      "idle": "{entity_name} becomes idle",
+      "paused": "{entity_name} is paused",
+      "playing": "{entity_name} starts playing",
+      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]",
+      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]"
+    }
+  },
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::media_player::title%]",
+      "state": {
+        "buffering": "Buffering",
+        "idle": "[%key:common::state::idle%]",
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]",
+        "paused": "[%key:common::state::paused%]",
+        "playing": "Playing",
+        "standby": "[%key:common::state::standby%]"
+      },
+      "state_attributes": {
+        "app_id": {
+          "name": "App ID"
+        },
+        "app_name": {
+          "name": "App"
+        },
+        "entity_picture_local": {
+          "name": "Local accessible entity picture"
+        },
+        "groups_members": {
+          "name": "Group members"
+        },
+        "is_volume_muted": {
+          "name": "Muted",
+          "state": {
+            "false": "[%key:common::state::no%]",
+            "true": "[%key:common::state::yes%]"
+          }
+        },
+        "media_album_artist": {
+          "name": "Album artist"
+        },
+        "media_album_name": {
+          "name": "Album"
+        },
+        "media_artist": {
+          "name": "Artist"
+        },
+        "media_channel": {
+          "name": "Channel"
+        },
+        "media_content_id": {
+          "name": "Content ID"
+        },
+        "media_content_type": {
+          "name": "Content type",
+          "state": {
+            "album": "Album",
+            "app": "App",
+            "artist": "Artist",
+            "channel": "Channel",
+            "channels": "Channels",
+            "composer": "Composer",
+            "contributing_artist": "Contributing artist",
+            "episode": "Episode",
+            "game": "Game",
+            "genre": "Genre",
+            "image": "Image",
+            "movie": "Movie",
+            "music": "Music",
+            "playlist": "Playlist",
+            "podcast": "Podcast",
+            "season": "Season",
+            "track": "Track",
+            "tvshow": "TV show",
+            "url": "URL",
+            "video": "Video"
+          }
+        },
+        "media_duration": {
+          "name": "Duration"
+        },
+        "media_episode": {
+          "name": "Episode"
+        },
+        "media_playlist": {
+          "name": "Playlist"
+        },
+        "media_position": {
+          "name": "Position"
+        },
+        "media_position_updated_at": {
+          "name": "Position updated"
+        },
+        "media_season": {
+          "name": "Season"
+        },
+        "media_series_title": {
+          "name": "Series"
+        },
+        "media_title": {
+          "name": "Title"
+        },
+        "media_track": {
+          "name": "Track"
+        },
+        "repeat": {
+          "name": "Repeat",
+          "state": {
+            "all": "All",
+            "off": "[%key:common::state::off%]",
+            "one": "One"
+          }
+        },
+        "shuffle": {
+          "name": "Shuffle",
+          "state": {
+            "false": "[%key:common::state::off%]",
+            "true": "[%key:common::state::on%]"
+          }
+        },
+        "sound_mode": {
+          "name": "Sound mode"
+        },
+        "sound_mode_list": {
+          "name": "Available sound modes"
+        },
+        "source": {
+          "name": "Source"
+        },
+        "source_list": {
+          "name": "Available sources"
+        },
+        "volume_level": {
+          "name": "Volume"
+        }
+      }
+    },
+    "projector": {
+      "name": "Projector"
+    },
+    "receiver": {
+      "name": "Receiver"
+    },
+    "speaker": {
+      "name": "Speaker"
+    },
+    "tv": {
+      "name": "TV"
+    }
+  },
+  "selector": {
+    "enqueue": {
+      "options": {
+        "add": "Add to queue",
+        "next": "Play next",
+        "play": "Play",
+        "replace": "Play now and clear queue"
+      }
+    },
+    "repeat": {
+      "options": {
+        "all": "Repeat all",
+        "off": "[%key:common::state::off%]",
+        "one": "Repeat one"
+      }
+    }
+  },
+  "services": {
+    "browse_media": {
+      "description": "Browses the available media.",
+      "fields": {
+        "media_content_id": {
+          "description": "The ID of the content to browse. Integration dependent.",
+          "name": "Content ID"
+        },
+        "media_content_type": {
+          "description": "The type of the content to browse, such as image, music, TV show, video, episode, channel, or playlist.",
+          "name": "Content type"
+        }
+      },
+      "name": "Browse media"
+    },
+    "clear_playlist": {
+      "description": "Removes all items from a media player's playlist.",
+      "name": "Clear media player playlist"
+    },
+    "join": {
+      "description": "Groups media players together for synchronous playback. Only works on supported multiroom audio systems.",
+      "fields": {
+        "group_members": {
+          "description": "The players which will be synced with the playback specified in 'Targets'.",
+          "name": "Group members"
+        }
+      },
+      "name": "Join media players"
+    },
+    "media_next_track": {
+      "description": "Selects the next track on a media player.",
+      "name": "Next track"
+    },
+    "media_pause": {
+      "description": "Pauses playback on a media player.",
+      "name": "Pause media"
+    },
+    "media_play": {
+      "description": "Starts playback on a media player.",
+      "name": "Play media"
+    },
+    "media_play_pause": {
+      "description": "Toggles play/pause on a media player.",
+      "name": "Play/Pause media"
+    },
+    "media_previous_track": {
+      "description": "Selects the previous track on a media player.",
+      "name": "Previous track"
+    },
+    "media_seek": {
+      "description": "Allows you to go to a different part of the media that is currently playing on a media player.",
+      "fields": {
+        "seek_position": {
+          "description": "Target position in the currently playing media. The format is platform dependent.",
+          "name": "Position"
+        }
+      },
+      "name": "Seek media"
+    },
+    "media_stop": {
+      "description": "Stops playback on a media player.",
+      "name": "Stop media"
+    },
+    "play_media": {
+      "description": "Starts playing specified media on a media player.",
+      "fields": {
+        "announce": {
+          "description": "If the media should be played as an announcement.",
+          "name": "Announce"
+        },
+        "enqueue": {
+          "description": "If the content should be played now or be added to the queue.",
+          "name": "Enqueue"
+        },
+        "media": {
+          "description": "The media selected to play.",
+          "name": "Media"
+        }
+      },
+      "name": "Play specified media"
+    },
+    "repeat_set": {
+      "description": "Sets the repeat mode of a media player.",
+      "fields": {
+        "repeat": {
+          "description": "Whether the media (one or all) should be played in a loop or not.",
+          "name": "Repeat mode"
+        }
+      },
+      "name": "Set media player repeat"
+    },
+    "search_media": {
+      "description": "Searches the available media.",
+      "fields": {
+        "media_content_id": {
+          "description": "[%key:component::media_player::services::browse_media::fields::media_content_id::description%]",
+          "name": "[%key:component::media_player::services::browse_media::fields::media_content_id::name%]"
+        },
+        "media_content_type": {
+          "description": "[%key:component::media_player::services::browse_media::fields::media_content_type::description%]",
+          "name": "[%key:component::media_player::services::browse_media::fields::media_content_type::name%]"
+        },
+        "media_filter_classes": {
+          "description": "List of media classes to filter the search results by.",
+          "name": "Media class filter"
+        },
+        "search_query": {
+          "description": "The term to search for.",
+          "name": "Search query"
+        }
+      },
+      "name": "Search media"
+    },
+    "select_sound_mode": {
+      "description": "Selects a specific sound mode of a media player.",
+      "fields": {
+        "sound_mode": {
+          "description": "Name of the sound mode to switch to.",
+          "name": "Sound mode"
+        }
+      },
+      "name": "Select media player sound mode"
+    },
+    "select_source": {
+      "description": "Sends a media player the command to change the input source.",
+      "fields": {
+        "source": {
+          "description": "Name of the source to switch to. Platform dependent.",
+          "name": "Source"
+        }
+      },
+      "name": "Select media player source"
+    },
+    "shuffle_set": {
+      "description": "Enables or disables the shuffle mode of a media player.",
+      "fields": {
+        "shuffle": {
+          "description": "Whether the media should be played in randomized order or not.",
+          "name": "Shuffle mode"
+        }
+      },
+      "name": "Set media player shuffle"
+    },
+    "toggle": {
+      "description": "Toggles a media player on/off.",
+      "name": "Toggle media player"
+    },
+    "turn_off": {
+      "description": "Turns off the power of a media player.",
+      "name": "Turn off media player"
+    },
+    "turn_on": {
+      "description": "Turns on the power of a media player.",
+      "name": "Turn on media player"
+    },
+    "unjoin": {
+      "description": "Removes a media player from a group. Only works on platforms which support player groups.",
+      "name": "Unjoin media player"
+    },
+    "volume_down": {
+      "description": "Turns down the volume of a media player.",
+      "name": "Turn down media player volume"
+    },
+    "volume_mute": {
+      "description": "Mutes or unmutes a media player.",
+      "fields": {
+        "is_volume_muted": {
+          "description": "Defines whether or not it is muted.",
+          "name": "Muted"
+        }
+      },
+      "name": "Mute/unmute media player"
+    },
+    "volume_set": {
+      "description": "Sets the volume level of a media player.",
+      "fields": {
+        "volume_level": {
+          "description": "The volume. 0 is inaudible, 1 is the maximum volume.",
+          "name": "Level"
+        }
+      },
+      "name": "Set media player volume"
+    },
+    "volume_up": {
+      "description": "Turns up the volume of a media player.",
+      "name": "Turn up media player volume"
+    }
+  },
+  "title": "Media player",
+  "triggers": {
+    "muted": {
+      "description": "Triggers when one or more media players are muted.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::trigger_for_name%]"
+        }
+      },
+      "name": "Media player muted"
+    },
+    "paused_playing": {
+      "description": "Triggers when one or more media players pause playing.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::trigger_for_name%]"
+        }
+      },
+      "name": "Media player paused playing"
+    },
+    "started_playing": {
+      "description": "Triggers when one or more media players start playing.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::trigger_for_name%]"
+        }
+      },
+      "name": "Media player started playing"
+    },
+    "stopped_playing": {
+      "description": "Triggers when one or more media players stop playing.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::trigger_for_name%]"
+        }
+      },
+      "name": "Media player stopped playing"
+    },
+    "turned_off": {
+      "description": "Triggers when one or more media players turn off.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::trigger_for_name%]"
+        }
+      },
+      "name": "Media player turned off"
+    },
+    "turned_on": {
+      "description": "Triggers when one or more media players turn on.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::trigger_for_name%]"
+        }
+      },
+      "name": "Media player turned on"
+    },
+    "unmuted": {
+      "description": "Triggers when one or more media players are unmuted.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::trigger_for_name%]"
+        }
+      },
+      "name": "Media player unmuted"
+    },
+    "volume_changed": {
+      "description": "Triggers when the volume of one or more media players changes.",
+      "fields": {
+        "threshold": {
+          "name": "[%key:component::media_player::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Media player volume changed"
+    },
+    "volume_crossed_threshold": {
+      "description": "Triggers when the volume of one or more media players crosses a threshold.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::trigger_for_name%]"
+        },
+        "threshold": {
+          "name": "[%key:component::media_player::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Media player volume crossed threshold"
+    }
+  }
+}

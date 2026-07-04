@@ -1,0 +1,115 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Your Snoo password",
+          "username": "Your Snoo username or email"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "left_clip": {
+        "name": "Left safety clip"
+      },
+      "right_clip": {
+        "name": "Right safety clip"
+      }
+    },
+    "button": {
+      "start_snoo": {
+        "name": "Start"
+      }
+    },
+    "event": {
+      "event": {
+        "name": "Snoo event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "activity": "Activity press",
+              "command": "Command sent",
+              "config_change": "Config changed",
+              "cry": "Cry",
+              "long_activity_press": "Long activity press",
+              "power": "Power button pressed",
+              "restart": "Restart",
+              "safety_clip": "Safety clip changed",
+              "status_requested": "Status requested",
+              "sticky_white_noise_updated": "Sleepytime sounds updated",
+              "timer": "Timer"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "intensity": {
+        "name": "Intensity",
+        "state": {
+          "baseline": "[%key:component::snoo::entity::sensor::state::state::baseline%]",
+          "level1": "[%key:component::snoo::entity::sensor::state::state::level1%]",
+          "level2": "[%key:component::snoo::entity::sensor::state::state::level2%]",
+          "level3": "[%key:component::snoo::entity::sensor::state::state::level3%]",
+          "level4": "[%key:component::snoo::entity::sensor::state::state::level4%]",
+          "stop": "[%key:common::state::stopped%]"
+        }
+      }
+    },
+    "sensor": {
+      "state": {
+        "name": "State",
+        "state": {
+          "baseline": "Baseline",
+          "level1": "Level 1",
+          "level2": "Level 2",
+          "level3": "Level 3",
+          "level4": "Level 4",
+          "pretimeout": "Pre-timeout",
+          "stop": "[%key:common::state::stopped%]",
+          "timeout": "Timeout",
+          "weaning_baseline": "Baseline (Weaning)"
+        }
+      },
+      "time_left": {
+        "name": "Time left"
+      }
+    },
+    "switch": {
+      "hold": {
+        "name": "Level lock"
+      },
+      "sticky_white_noise": {
+        "name": "Sleepytime sounds"
+      }
+    }
+  },
+  "exceptions": {
+    "select_failed": {
+      "message": "Error while updating {name} to {option}"
+    },
+    "start_snoo_failed": {
+      "message": "Starting {name} failed"
+    },
+    "switch_off_failed": {
+      "message": "Turning {name} off failed"
+    },
+    "switch_on_failed": {
+      "message": "Turning {name} on failed"
+    }
+  }
+}

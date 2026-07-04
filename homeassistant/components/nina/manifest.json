@@ -1,0 +1,13 @@
+{
+  "domain": "nina",
+  "name": "NINA",
+  "codeowners": ["@DeerMaximum"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/nina",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["pynina"],
+  "quality_scale": "silver",
+  "requirements": ["pynina==1.0.2"],
+  "single_config_entry": true
+}

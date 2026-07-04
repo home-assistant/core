@@ -1,0 +1,54 @@
+# Describes the format for available notification services
+
+notify:
+  fields:
+    message:
+      required: true
+      example: The garage door has been open for 10 minutes.
+      selector:
+        text:
+    title:
+      example: "Your Garage Door Friend"
+      selector:
+        text:
+    target:
+      example: platform specific
+      selector:
+        object:
+    data:
+      example: platform specific
+      selector:
+        object:
+
+send_message:
+  target:
+    entity:
+      domain: notify
+  fields:
+    message:
+      required: true
+      selector:
+        text:
+    title:
+      required: false
+      selector:
+        text:
+      filter:
+        supported_features:
+          - notify.NotifyEntityFeature.TITLE
+
+persistent_notification:
+  fields:
+    message:
+      required: true
+      example: The garage door has been open for 10 minutes.
+      selector:
+        text:
+    title:
+      example: "Your Garage Door Friend"
+      selector:
+        text:
+    data:
+      example: platform specific
+      selector:
+        object:

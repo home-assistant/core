@@ -1,0 +1,27 @@
+{
+  "success": true,
+  "data": {
+    "_id": "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b",
+    "type": "reward",
+    "text": "Belohne Dich selbst",
+    "notes": "Schaue fern, spiele ein Spiel, gönne Dir einen Leckerbissen, es liegt ganz bei Dir!",
+    "tags": [],
+    "value": 10,
+    "priority": 1,
+    "attribute": "str",
+    "challenge": {},
+    "group": {
+      "completedBy": {},
+      "assignedUsers": []
+    },
+    "byHabitica": false,
+    "reminders": [],
+    "createdAt": "2024-07-07T17:51:53.266Z",
+    "updatedAt": "2024-07-07T17:51:53.266Z",
+    "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
+    "id": "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b"
+  },
+  "notifications": [],
+  "userV": 589,
+  "appVersion": "5.28.6"
+}

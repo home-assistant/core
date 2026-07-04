@@ -1,0 +1,1965 @@
+{
+  "electricity": {
+    "tariffs": [
+      {
+        "startDateTime": "2025-11-24T00:00:00+01:00",
+        "endDateTime": "2025-11-24T01:00:00+01:00",
+        "totalAmount": 0.23497,
+        "totalAmountEx": 0.19419,
+        "totalAmountVat": 0.04078,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.08683,
+            "amountEx": 0.07176
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T01:00:00+01:00",
+        "endDateTime": "2025-11-24T02:00:00+01:00",
+        "totalAmount": 0.23167,
+        "totalAmountEx": 0.19146,
+        "totalAmountVat": 0.04021,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.08353,
+            "amountEx": 0.06903
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T02:00:00+01:00",
+        "endDateTime": "2025-11-24T03:00:00+01:00",
+        "totalAmount": 0.23308,
+        "totalAmountEx": 0.19263,
+        "totalAmountVat": 0.04045,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.08494,
+            "amountEx": 0.0702
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T03:00:00+01:00",
+        "endDateTime": "2025-11-24T04:00:00+01:00",
+        "totalAmount": 0.23245,
+        "totalAmountEx": 0.19211,
+        "totalAmountVat": 0.04034,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.08431,
+            "amountEx": 0.06968
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T04:00:00+01:00",
+        "endDateTime": "2025-11-24T05:00:00+01:00",
+        "totalAmount": 0.23141,
+        "totalAmountEx": 0.19125,
+        "totalAmountVat": 0.04016,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.08327,
+            "amountEx": 0.06882
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T05:00:00+01:00",
+        "endDateTime": "2025-11-24T06:00:00+01:00",
+        "totalAmount": 0.24061,
+        "totalAmountEx": 0.19885,
+        "totalAmountVat": 0.04176,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.09247,
+            "amountEx": 0.07642
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T06:00:00+01:00",
+        "endDateTime": "2025-11-24T07:00:00+01:00",
+        "totalAmount": 0.25628,
+        "totalAmountEx": 0.2118,
+        "totalAmountVat": 0.04448,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.10814,
+            "amountEx": 0.08937
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T07:00:00+01:00",
+        "endDateTime": "2025-11-24T08:00:00+01:00",
+        "totalAmount": 0.2559,
+        "totalAmountEx": 0.21149,
+        "totalAmountVat": 0.04441,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.10776,
+            "amountEx": 0.08906
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T08:00:00+01:00",
+        "endDateTime": "2025-11-24T09:00:00+01:00",
+        "totalAmount": 0.26255,
+        "totalAmountEx": 0.21698,
+        "totalAmountVat": 0.04557,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.11441,
+            "amountEx": 0.09455
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T09:00:00+01:00",
+        "endDateTime": "2025-11-24T10:00:00+01:00",
+        "totalAmount": 0.27052,
+        "totalAmountEx": 0.22357,
+        "totalAmountVat": 0.04695,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.12238,
+            "amountEx": 0.10114
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T10:00:00+01:00",
+        "endDateTime": "2025-11-24T11:00:00+01:00",
+        "totalAmount": 0.28456,
+        "totalAmountEx": 0.23517,
+        "totalAmountVat": 0.04939,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.13642,
+            "amountEx": 0.11274
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T11:00:00+01:00",
+        "endDateTime": "2025-11-24T12:00:00+01:00",
+        "totalAmount": 0.29716,
+        "totalAmountEx": 0.24559,
+        "totalAmountVat": 0.05157,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.14902,
+            "amountEx": 0.12316
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T12:00:00+01:00",
+        "endDateTime": "2025-11-24T13:00:00+01:00",
+        "totalAmount": 0.29794,
+        "totalAmountEx": 0.24623,
+        "totalAmountVat": 0.05171,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.1498,
+            "amountEx": 0.1238
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T13:00:00+01:00",
+        "endDateTime": "2025-11-24T14:00:00+01:00",
+        "totalAmount": 0.31654,
+        "totalAmountEx": 0.2616,
+        "totalAmountVat": 0.05494,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.1684,
+            "amountEx": 0.13917
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T14:00:00+01:00",
+        "endDateTime": "2025-11-24T15:00:00+01:00",
+        "totalAmount": 0.32409,
+        "totalAmountEx": 0.26784,
+        "totalAmountVat": 0.05625,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.17595,
+            "amountEx": 0.14541
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T15:00:00+01:00",
+        "endDateTime": "2025-11-24T16:00:00+01:00",
+        "totalAmount": 0.35995,
+        "totalAmountEx": 0.29748,
+        "totalAmountVat": 0.06247,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.21181,
+            "amountEx": 0.17505
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T16:00:00+01:00",
+        "endDateTime": "2025-11-24T17:00:00+01:00",
+        "totalAmount": 0.39349,
+        "totalAmountEx": 0.3252,
+        "totalAmountVat": 0.06829,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.24535,
+            "amountEx": 0.20277
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T17:00:00+01:00",
+        "endDateTime": "2025-11-24T18:00:00+01:00",
+        "totalAmount": 0.43552,
+        "totalAmountEx": 0.35993,
+        "totalAmountVat": 0.07559,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.28738,
+            "amountEx": 0.2375
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T18:00:00+01:00",
+        "endDateTime": "2025-11-24T19:00:00+01:00",
+        "totalAmount": 0.40223,
+        "totalAmountEx": 0.33242,
+        "totalAmountVat": 0.06981,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.25409,
+            "amountEx": 0.20999
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T19:00:00+01:00",
+        "endDateTime": "2025-11-24T20:00:00+01:00",
+        "totalAmount": 0.35943,
+        "totalAmountEx": 0.29705,
+        "totalAmountVat": 0.06238,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.21129,
+            "amountEx": 0.17462
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T20:00:00+01:00",
+        "endDateTime": "2025-11-24T21:00:00+01:00",
+        "totalAmount": 0.31994,
+        "totalAmountEx": 0.26441,
+        "totalAmountVat": 0.05553,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.1718,
+            "amountEx": 0.14198
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T21:00:00+01:00",
+        "endDateTime": "2025-11-24T22:00:00+01:00",
+        "totalAmount": 0.30277,
+        "totalAmountEx": 0.25022,
+        "totalAmountVat": 0.05255,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.15463,
+            "amountEx": 0.12779
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T22:00:00+01:00",
+        "endDateTime": "2025-11-24T23:00:00+01:00",
+        "totalAmount": 0.28913,
+        "totalAmountEx": 0.23895,
+        "totalAmountVat": 0.05018,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.14099,
+            "amountEx": 0.11652
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T23:00:00+01:00",
+        "endDateTime": "2025-11-25T00:00:00+01:00",
+        "totalAmount": 0.26962,
+        "totalAmountEx": 0.22283,
+        "totalAmountVat": 0.04679,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.12148,
+            "amountEx": 0.1004
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      }
+    ],
+    "tariffs_tomorrow": [
+      {
+        "startDateTime": "2025-11-25T00:00:00+01:00",
+        "endDateTime": "2025-11-25T01:00:00+01:00",
+        "totalAmount": 0.2627,
+        "totalAmountEx": 0.21711,
+        "totalAmountVat": 0.04559,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.11456,
+            "amountEx": 0.09468
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T01:00:00+01:00",
+        "endDateTime": "2025-11-25T02:00:00+01:00",
+        "totalAmount": 0.25873,
+        "totalAmountEx": 0.21383,
+        "totalAmountVat": 0.0449,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.11059,
+            "amountEx": 0.0914
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T02:00:00+01:00",
+        "endDateTime": "2025-11-25T03:00:00+01:00",
+        "totalAmount": 0.25565,
+        "totalAmountEx": 0.21128,
+        "totalAmountVat": 0.04437,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.10751,
+            "amountEx": 0.08885
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T03:00:00+01:00",
+        "endDateTime": "2025-11-25T04:00:00+01:00",
+        "totalAmount": 0.25231,
+        "totalAmountEx": 0.20852,
+        "totalAmountVat": 0.04379,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.10417,
+            "amountEx": 0.08609
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T04:00:00+01:00",
+        "endDateTime": "2025-11-25T05:00:00+01:00",
+        "totalAmount": 0.25409,
+        "totalAmountEx": 0.20999,
+        "totalAmountVat": 0.0441,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.10595,
+            "amountEx": 0.08756
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T05:00:00+01:00",
+        "endDateTime": "2025-11-25T06:00:00+01:00",
+        "totalAmount": 0.25251,
+        "totalAmountEx": 0.20869,
+        "totalAmountVat": 0.04382,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.10437,
+            "amountEx": 0.08626
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T06:00:00+01:00",
+        "endDateTime": "2025-11-25T07:00:00+01:00",
+        "totalAmount": 0.25717,
+        "totalAmountEx": 0.21254,
+        "totalAmountVat": 0.04463,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.10903,
+            "amountEx": 0.09011
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T07:00:00+01:00",
+        "endDateTime": "2025-11-25T08:00:00+01:00",
+        "totalAmount": 0.38408,
+        "totalAmountEx": 0.31742,
+        "totalAmountVat": 0.06666,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.23594,
+            "amountEx": 0.19499
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T08:00:00+01:00",
+        "endDateTime": "2025-11-25T09:00:00+01:00",
+        "totalAmount": 0.423,
+        "totalAmountEx": 0.34959,
+        "totalAmountVat": 0.07341,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.27486,
+            "amountEx": 0.22716
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T09:00:00+01:00",
+        "endDateTime": "2025-11-25T10:00:00+01:00",
+        "totalAmount": 0.41029,
+        "totalAmountEx": 0.33908,
+        "totalAmountVat": 0.07121,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.26215,
+            "amountEx": 0.21665
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T10:00:00+01:00",
+        "endDateTime": "2025-11-25T11:00:00+01:00",
+        "totalAmount": 0.36883,
+        "totalAmountEx": 0.30482,
+        "totalAmountVat": 0.06401,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.22069,
+            "amountEx": 0.18239
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T11:00:00+01:00",
+        "endDateTime": "2025-11-25T12:00:00+01:00",
+        "totalAmount": 0.2807,
+        "totalAmountEx": 0.23198,
+        "totalAmountVat": 0.04872,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.13256,
+            "amountEx": 0.10955
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T12:00:00+01:00",
+        "endDateTime": "2025-11-25T13:00:00+01:00",
+        "totalAmount": 0.27269,
+        "totalAmountEx": 0.22536,
+        "totalAmountVat": 0.04733,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.12455,
+            "amountEx": 0.10293
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T13:00:00+01:00",
+        "endDateTime": "2025-11-25T14:00:00+01:00",
+        "totalAmount": 0.27604,
+        "totalAmountEx": 0.22813,
+        "totalAmountVat": 0.04791,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.1279,
+            "amountEx": 0.1057
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T14:00:00+01:00",
+        "endDateTime": "2025-11-25T15:00:00+01:00",
+        "totalAmount": 0.29565,
+        "totalAmountEx": 0.24434,
+        "totalAmountVat": 0.05131,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.14751,
+            "amountEx": 0.12191
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T15:00:00+01:00",
+        "endDateTime": "2025-11-25T16:00:00+01:00",
+        "totalAmount": 0.37804,
+        "totalAmountEx": 0.31243,
+        "totalAmountVat": 0.06561,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.2299,
+            "amountEx": 0.19
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T16:00:00+01:00",
+        "endDateTime": "2025-11-25T17:00:00+01:00",
+        "totalAmount": 0.45976,
+        "totalAmountEx": 0.37997,
+        "totalAmountVat": 0.07979,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.31162,
+            "amountEx": 0.25754
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T17:00:00+01:00",
+        "endDateTime": "2025-11-25T18:00:00+01:00",
+        "totalAmount": 0.48992,
+        "totalAmountEx": 0.40489,
+        "totalAmountVat": 0.08503,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.34178,
+            "amountEx": 0.28246
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T18:00:00+01:00",
+        "endDateTime": "2025-11-25T19:00:00+01:00",
+        "totalAmount": 0.4476,
+        "totalAmountEx": 0.36992,
+        "totalAmountVat": 0.07768,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.29946,
+            "amountEx": 0.24749
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T19:00:00+01:00",
+        "endDateTime": "2025-11-25T20:00:00+01:00",
+        "totalAmount": 0.39183,
+        "totalAmountEx": 0.32383,
+        "totalAmountVat": 0.068,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.24369,
+            "amountEx": 0.2014
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T20:00:00+01:00",
+        "endDateTime": "2025-11-25T21:00:00+01:00",
+        "totalAmount": 0.33488,
+        "totalAmountEx": 0.27676,
+        "totalAmountVat": 0.05812,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.18674,
+            "amountEx": 0.15433
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T21:00:00+01:00",
+        "endDateTime": "2025-11-25T22:00:00+01:00",
+        "totalAmount": 0.29866,
+        "totalAmountEx": 0.24683,
+        "totalAmountVat": 0.05183,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.15052,
+            "amountEx": 0.1244
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T22:00:00+01:00",
+        "endDateTime": "2025-11-25T23:00:00+01:00",
+        "totalAmount": 0.27795,
+        "totalAmountEx": 0.22971,
+        "totalAmountVat": 0.04824,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.12981,
+            "amountEx": 0.10728
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-25T23:00:00+01:00",
+        "endDateTime": "2025-11-26T00:00:00+01:00",
+        "totalAmount": 0.25781,
+        "totalAmountEx": 0.21307,
+        "totalAmountVat": 0.04474,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.10967,
+            "amountEx": 0.09064
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.02528,
+            "amountEx": 0.02089
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.12286,
+            "amountEx": 0.10154
+          }
+        ]
+      }
+    ],
+    "unit": "kWh",
+    "min_price": 0.23141,
+    "avg_price": 0.29591,
+    "max_price": 0.43552
+  },
+  "gas": {
+    "tariffs": [
+      {
+        "startDateTime": "2025-11-24T00:00:00+01:00",
+        "endDateTime": "2025-11-24T01:00:00+01:00",
+        "totalAmount": 1.1398,
+        "totalAmountEx": 0.94199,
+        "totalAmountVat": 0.19781,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36151,
+            "amountEx": 0.29877
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T01:00:00+01:00",
+        "endDateTime": "2025-11-24T02:00:00+01:00",
+        "totalAmount": 1.1398,
+        "totalAmountEx": 0.94199,
+        "totalAmountVat": 0.19781,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36151,
+            "amountEx": 0.29877
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T02:00:00+01:00",
+        "endDateTime": "2025-11-24T03:00:00+01:00",
+        "totalAmount": 1.1398,
+        "totalAmountEx": 0.94199,
+        "totalAmountVat": 0.19781,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36151,
+            "amountEx": 0.29877
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T03:00:00+01:00",
+        "endDateTime": "2025-11-24T04:00:00+01:00",
+        "totalAmount": 1.1398,
+        "totalAmountEx": 0.94199,
+        "totalAmountVat": 0.19781,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36151,
+            "amountEx": 0.29877
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T04:00:00+01:00",
+        "endDateTime": "2025-11-24T05:00:00+01:00",
+        "totalAmount": 1.1398,
+        "totalAmountEx": 0.94199,
+        "totalAmountVat": 0.19781,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36151,
+            "amountEx": 0.29877
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T05:00:00+01:00",
+        "endDateTime": "2025-11-24T06:00:00+01:00",
+        "totalAmount": 1.1398,
+        "totalAmountEx": 0.94199,
+        "totalAmountVat": 0.19781,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36151,
+            "amountEx": 0.29877
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T06:00:00+01:00",
+        "endDateTime": "2025-11-24T07:00:00+01:00",
+        "totalAmount": 1.13952,
+        "totalAmountEx": 0.94175,
+        "totalAmountVat": 0.19777,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36123,
+            "amountEx": 0.29853
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T07:00:00+01:00",
+        "endDateTime": "2025-11-24T08:00:00+01:00",
+        "totalAmount": 1.13952,
+        "totalAmountEx": 0.94175,
+        "totalAmountVat": 0.19777,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36123,
+            "amountEx": 0.29853
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T08:00:00+01:00",
+        "endDateTime": "2025-11-24T09:00:00+01:00",
+        "totalAmount": 1.13952,
+        "totalAmountEx": 0.94175,
+        "totalAmountVat": 0.19777,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36123,
+            "amountEx": 0.29853
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T09:00:00+01:00",
+        "endDateTime": "2025-11-24T10:00:00+01:00",
+        "totalAmount": 1.13952,
+        "totalAmountEx": 0.94175,
+        "totalAmountVat": 0.19777,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36123,
+            "amountEx": 0.29853
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T10:00:00+01:00",
+        "endDateTime": "2025-11-24T11:00:00+01:00",
+        "totalAmount": 1.13952,
+        "totalAmountEx": 0.94175,
+        "totalAmountVat": 0.19777,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36123,
+            "amountEx": 0.29853
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T11:00:00+01:00",
+        "endDateTime": "2025-11-24T12:00:00+01:00",
+        "totalAmount": 1.13952,
+        "totalAmountEx": 0.94175,
+        "totalAmountVat": 0.19777,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36123,
+            "amountEx": 0.29853
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T12:00:00+01:00",
+        "endDateTime": "2025-11-24T13:00:00+01:00",
+        "totalAmount": 1.13952,
+        "totalAmountEx": 0.94175,
+        "totalAmountVat": 0.19777,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36123,
+            "amountEx": 0.29853
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T13:00:00+01:00",
+        "endDateTime": "2025-11-24T14:00:00+01:00",
+        "totalAmount": 1.13952,
+        "totalAmountEx": 0.94175,
+        "totalAmountVat": 0.19777,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36123,
+            "amountEx": 0.29853
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T14:00:00+01:00",
+        "endDateTime": "2025-11-24T15:00:00+01:00",
+        "totalAmount": 1.13952,
+        "totalAmountEx": 0.94175,
+        "totalAmountVat": 0.19777,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36123,
+            "amountEx": 0.29853
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T15:00:00+01:00",
+        "endDateTime": "2025-11-24T16:00:00+01:00",
+        "totalAmount": 1.13952,
+        "totalAmountEx": 0.94175,
+        "totalAmountVat": 0.19777,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36123,
+            "amountEx": 0.29853
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T16:00:00+01:00",
+        "endDateTime": "2025-11-24T17:00:00+01:00",
+        "totalAmount": 1.13952,
+        "totalAmountEx": 0.94175,
+        "totalAmountVat": 0.19777,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36123,
+            "amountEx": 0.29853
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T17:00:00+01:00",
+        "endDateTime": "2025-11-24T18:00:00+01:00",
+        "totalAmount": 1.13952,
+        "totalAmountEx": 0.94175,
+        "totalAmountVat": 0.19777,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36123,
+            "amountEx": 0.29853
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T18:00:00+01:00",
+        "endDateTime": "2025-11-24T19:00:00+01:00",
+        "totalAmount": 1.13952,
+        "totalAmountEx": 0.94175,
+        "totalAmountVat": 0.19777,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36123,
+            "amountEx": 0.29853
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T19:00:00+01:00",
+        "endDateTime": "2025-11-24T20:00:00+01:00",
+        "totalAmount": 1.13952,
+        "totalAmountEx": 0.94175,
+        "totalAmountVat": 0.19777,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36123,
+            "amountEx": 0.29853
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T20:00:00+01:00",
+        "endDateTime": "2025-11-24T21:00:00+01:00",
+        "totalAmount": 1.13952,
+        "totalAmountEx": 0.94175,
+        "totalAmountVat": 0.19777,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36123,
+            "amountEx": 0.29853
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T21:00:00+01:00",
+        "endDateTime": "2025-11-24T22:00:00+01:00",
+        "totalAmount": 1.13952,
+        "totalAmountEx": 0.94175,
+        "totalAmountVat": 0.19777,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36123,
+            "amountEx": 0.29853
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T22:00:00+01:00",
+        "endDateTime": "2025-11-24T23:00:00+01:00",
+        "totalAmount": 1.13952,
+        "totalAmountEx": 0.94175,
+        "totalAmountVat": 0.19777,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36123,
+            "amountEx": 0.29853
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      },
+      {
+        "startDateTime": "2025-11-24T23:00:00+01:00",
+        "endDateTime": "2025-11-25T00:00:00+01:00",
+        "totalAmount": 1.13952,
+        "totalAmountEx": 0.94175,
+        "totalAmountVat": 0.19777,
+        "groups": [
+          {
+            "description": "Beursprijs",
+            "type": "MARKET_PRICE",
+            "amount": 0.36123,
+            "amountEx": 0.29853
+          },
+          {
+            "description": "Inkoopvergoeding",
+            "type": "PURCHASING_FEE",
+            "amount": 0.07872,
+            "amountEx": 0.06506
+          },
+          {
+            "description": "Energiebelasting",
+            "type": "TAX",
+            "amount": 0.69957,
+            "amountEx": 0.57816
+          }
+        ]
+      }
+    ],
+    "tariffs_tomorrow": [],
+    "unit": "m³",
+    "min_price": 1.13952,
+    "avg_price": 1.13959,
+    "max_price": 1.1398
+  }
+}

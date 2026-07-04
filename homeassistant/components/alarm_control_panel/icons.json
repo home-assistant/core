@@ -1,0 +1,86 @@
+{
+  "conditions": {
+    "is_armed": {
+      "condition": "mdi:shield"
+    },
+    "is_armed_away": {
+      "condition": "mdi:shield-lock"
+    },
+    "is_armed_home": {
+      "condition": "mdi:shield-home"
+    },
+    "is_armed_night": {
+      "condition": "mdi:shield-moon"
+    },
+    "is_armed_vacation": {
+      "condition": "mdi:shield-airplane"
+    },
+    "is_disarmed": {
+      "condition": "mdi:shield-off"
+    },
+    "is_triggered": {
+      "condition": "mdi:bell-ring"
+    }
+  },
+  "entity_component": {
+    "_": {
+      "default": "mdi:shield",
+      "state": {
+        "armed_away": "mdi:shield-lock",
+        "armed_custom_bypass": "mdi:security",
+        "armed_home": "mdi:shield-home",
+        "armed_night": "mdi:shield-moon",
+        "armed_vacation": "mdi:shield-airplane",
+        "disarmed": "mdi:shield-off",
+        "pending": "mdi:shield-outline",
+        "triggered": "mdi:bell-ring"
+      }
+    }
+  },
+  "services": {
+    "alarm_arm_away": {
+      "service": "mdi:shield-lock"
+    },
+    "alarm_arm_custom_bypass": {
+      "service": "mdi:security"
+    },
+    "alarm_arm_home": {
+      "service": "mdi:shield-home"
+    },
+    "alarm_arm_night": {
+      "service": "mdi:shield-moon"
+    },
+    "alarm_arm_vacation": {
+      "service": "mdi:shield-airplane"
+    },
+    "alarm_disarm": {
+      "service": "mdi:shield-off"
+    },
+    "alarm_trigger": {
+      "service": "mdi:bell-ring"
+    }
+  },
+  "triggers": {
+    "armed": {
+      "trigger": "mdi:shield"
+    },
+    "armed_away": {
+      "trigger": "mdi:shield-lock"
+    },
+    "armed_home": {
+      "trigger": "mdi:shield-home"
+    },
+    "armed_night": {
+      "trigger": "mdi:shield-moon"
+    },
+    "armed_vacation": {
+      "trigger": "mdi:shield-airplane"
+    },
+    "disarmed": {
+      "trigger": "mdi:shield-off"
+    },
+    "triggered": {
+      "trigger": "mdi:bell-ring"
+    }
+  }
+}

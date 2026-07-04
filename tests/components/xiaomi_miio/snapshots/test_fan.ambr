@@ -1,0 +1,131 @@
+# serializer version: 1
+# name: test_fan_status[dmaker.fan.p18][fan.test_fan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'Normal',
+        'Nature',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.test_fan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'xiaomi_miio',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 63>,
+    'translation_key': 'generic_fan',
+    'unique_id': '123456',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fan_status[dmaker.fan.p18][fan.test_fan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <FanEntityStateAttribute.DIRECTION: 'direction'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_fan',
+      <FanEntityStateAttribute.OSCILLATING: 'oscillating'>: None,
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: None,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'Normal',
+        'Nature',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 63>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.test_fan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_fan_status[dmaker.fan.p5][fan.test_fan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'Normal',
+        'Nature',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.test_fan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'xiaomi_miio',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 63>,
+    'translation_key': 'generic_fan',
+    'unique_id': '123456',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fan_status[dmaker.fan.p5][fan.test_fan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <FanEntityStateAttribute.DIRECTION: 'direction'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_fan',
+      <FanEntityStateAttribute.OSCILLATING: 'oscillating'>: False,
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: None,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'Nature',
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'Normal',
+        'Nature',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 63>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.test_fan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

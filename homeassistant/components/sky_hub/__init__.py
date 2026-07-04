@@ -1,0 +1,1 @@
+"""The Sky Hub integration."""

@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "sensor": {
+      "hours_priced_equal_or_lower": {
+        "default": "mdi:clock"
+      },
+      "percentage_of_max": {
+        "default": "mdi:percent"
+      }
+    }
+  },
+  "services": {
+    "get_energy_prices": {
+      "service": "mdi:lightning-bolt"
+    },
+    "get_gas_prices": {
+      "service": "mdi:gas-station"
+    }
+  }
+}

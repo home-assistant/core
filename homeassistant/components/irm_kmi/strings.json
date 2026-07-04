@@ -1,0 +1,50 @@
+{
+  "common": {
+    "language_override_description": "Override the Home Assistant language for the textual weather forecast."
+  },
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "api_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "out_of_benelux": "The location is outside of Benelux. Pick a location in Benelux."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "location": "[%key:common::config_flow::data::location%]"
+        },
+        "data_description": {
+          "location": "[%key:common::config_flow::data::location%]"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "language_override": "[%key:common::config_flow::data::language%]"
+        },
+        "data_description": {
+          "language_override": "[%key:component::irm_kmi::common::language_override_description%]"
+        },
+        "title": "Options"
+      }
+    }
+  },
+  "selector": {
+    "language_override": {
+      "options": {
+        "de": "German",
+        "en": "English",
+        "fr": "French",
+        "nl": "Dutch",
+        "none": "Follow Home Assistant server language"
+      }
+    }
+  },
+  "title": "Royal Meteorological Institute of Belgium"
+}
