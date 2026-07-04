@@ -1020,7 +1020,7 @@
 # name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via Manual entry',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via vin_audit',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'VinAudit 2050 Toyota RAV8 Data age',
     }),
@@ -1074,7 +1074,7 @@
 # name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_value-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via Manual entry',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via vin_audit',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://api.monarchmoney.com/cdn-cgi/image/width=128/images/institution/159427559853802644',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'VinAudit 2050 Toyota RAV8 Value',
