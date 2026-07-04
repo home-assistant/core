@@ -1,6 +1,7 @@
 """Support for esphome devices."""
 
 import logging
+from typing import Literal
 
 from aioesphomeapi import APIClient, APIConnectionError
 
@@ -25,7 +26,13 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 from . import assist_satellite, dashboard, ffmpeg_proxy, serial_proxy
-from .const import CONF_BLUETOOTH_MAC_ADDRESS, CONF_NOISE_PSK, DOMAIN
+from .const import (
+    CONF_BLUETOOTH_MAC_ADDRESS,
+    CONF_BLUETOOTH_MAC_ADDRESS_TYPE,
+    CONF_NOISE_PSK,
+    CONF_TRANSPORT,
+    DOMAIN,
+)
 from .domain_data import DomainData
 from .encryption_key_storage import async_get_encryption_key_storage
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
@@ -93,6 +100,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> b
     port: int = entry.data[CONF_PORT]
     password: str | None = entry.data[CONF_PASSWORD]
     noise_psk: str | None = entry.data.get(CONF_NOISE_PSK)
+    transport: Literal["ble", "ip"] = entry.data.get(CONF_TRANSPORT, "ip")
+    ble_address_type: Literal["public", "random"] | None = entry.data.get(
+        CONF_BLUETOOTH_MAC_ADDRESS_TYPE
+    )
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
 
@@ -100,24 +111,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> b
         host,
         port,
         password,
+        transport=transport,
         client_info=CLIENT_INFO,
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
         timezone=hass.config.time_zone,
+        ble_address_type=ble_address_type,
     )
 
     domain_data = DomainData.get(hass)
     entry_data = RuntimeEntryData(
         client=cli,
         entry_id=entry.entry_id,
+        transport=transport,
         title=entry.title,
         store=domain_data.get_or_create_store(hass, entry),
         original_options=dict(entry.options),
+        host=host,
     )
     entry.runtime_data = entry_data
 
     manager = ESPHomeManager(
-        hass, entry, host, password, cli, zeroconf_instance, domain_data
+        hass,
+        entry,
+        host,
+        password,
+        transport,
+        cli,
+        zeroconf_instance,
+        domain_data,
     )
     await manager.async_start()
 
@@ -163,6 +185,8 @@ async def _async_clear_dynamic_encryption_key(
     port: int = entry.data[CONF_PORT]
     password: str | None = entry.data[CONF_PASSWORD]
     noise_psk: str | None = entry.data.get(CONF_NOISE_PSK)
+    transport = entry.data.get(CONF_TRANSPORT, "ip")
+    ble_address_type = entry.data.get(CONF_BLUETOOTH_MAC_ADDRESS_TYPE)
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
 
@@ -170,10 +194,12 @@ async def _async_clear_dynamic_encryption_key(
         host,
         port,
         password,
+        transport=transport,
         client_info=CLIENT_INFO,
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
         timezone=hass.config.time_zone,
+        ble_address_type=ble_address_type,
     )
 
     try:

@@ -2,6 +2,12 @@
   "domain": "esphome",
   "name": "ESPHome",
   "after_dependencies": ["hassio", "tag", "usb", "zeroconf"],
+  "bluetooth": [
+    {
+      "connectable": true,
+      "service_uuid": "e51b0d8b-1c9c-4444-8964-45545339803e"
+    }
+  ],
   "codeowners": ["@jesserockz", "@kbx81", "@bdraco"],
   "config_flow": true,
   "dependencies": ["assist_pipeline", "bluetooth", "intent", "ffmpeg", "http"],

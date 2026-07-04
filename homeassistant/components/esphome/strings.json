@@ -71,6 +71,24 @@
         "description": "The ESPHome device `{name}` disabled transport encryption. Please confirm that you want to remove the encryption key and allow unencrypted connections."
       },
       "user": {
+        "description": "Choose how to connect to your ESPHome device.",
+        "menu_options": {
+          "user_ble": "Bluetooth Low Energy",
+          "user_ip": "IP (WiFi, Ethernet or Thread)"
+        }
+      },
+      "user_ble": {
+        "data": {
+          "bluetooth_mac_address_type": "MAC address type",
+          "host": "MAC address"
+        },
+        "data_description": {
+          "bluetooth_mac_address_type": "Type of the Bluetooth MAC address",
+          "host": "Bluetooth MAC address of the ESPHome device"
+        },
+        "description": "Please enter connection settings of your ESPHome device."
+      },
+      "user_ip": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
