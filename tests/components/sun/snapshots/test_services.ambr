@@ -1,0 +1,34 @@
+# serializer version: 1
+# name: test_get_positions
+  dict({
+    'sun.sun': dict({
+      'positions': list([
+        dict({
+          'azimuth': 330.3,
+          'datetime': '2026-07-04T06:00:00+00:00',
+          'elevation': -28.04,
+        }),
+        dict({
+          'azimuth': 337.57,
+          'datetime': '2026-07-04T06:30:00+00:00',
+          'elevation': -30.81,
+        }),
+        dict({
+          'azimuth': 345.35,
+          'datetime': '2026-07-04T07:00:00+00:00',
+          'elevation': -32.82,
+        }),
+        dict({
+          'azimuth': 353.51,
+          'datetime': '2026-07-04T07:30:00+00:00',
+          'elevation': -33.98,
+        }),
+        dict({
+          'azimuth': 1.86,
+          'datetime': '2026-07-04T08:00:00+00:00',
+          'elevation': -34.23,
+        }),
+      ]),
+    }),
+  })
+# ---

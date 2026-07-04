@@ -19,11 +19,13 @@ from . import (
     sensor as sensor_pre_import,  # noqa: F401
 )
 from .const import (  # noqa: F401  # noqa: F401
+    DATA_COMPONENT,
     DOMAIN,
     STATE_ABOVE_HORIZON,
     STATE_BELOW_HORIZON,
 )
 from .entity import Sun, SunConfigEntry
+from .services import async_setup_services
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -34,6 +36,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track the state of the sun."""
+    hass.data[DATA_COMPONENT] = EntityComponent[Sun](_LOGGER, DOMAIN, hass)
+    async_setup_services(hass)
     if not hass.config_entries.async_entries(DOMAIN):
         # We avoid creating an import flow if its already
         # setup since it will have to import the config_flow
@@ -58,8 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SunConfigEntry) -> bool:
         ent_reg.async_remove(entity_id)
 
     sun = Sun(hass)
-    component = EntityComponent[Sun](_LOGGER, DOMAIN, hass)
-    await component.async_add_entities([sun])
+    await hass.data[DATA_COMPONENT].async_add_entities([sun])
     entry.runtime_data = sun
     entry.async_on_unload(sun.remove_listeners)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

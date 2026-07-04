@@ -62,6 +62,11 @@
       }
     }
   },
+  "services": {
+    "get_positions": {
+      "service": "mdi:sun-angle"
+    }
+  },
   "triggers": {
     "dawn": {
       "trigger": "mdi:weather-sunset-up"

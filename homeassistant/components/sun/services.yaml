@@ -1,0 +1,19 @@
+get_positions:
+  target:
+    entity:
+      domain: sun
+  fields:
+    start_date_time:
+      example: "2026-07-04 06:00:00"
+      selector:
+        datetime:
+    end_date_time:
+      example: "2026-07-05 06:00:00"
+      selector:
+        datetime:
+    duration:
+      selector:
+        duration:
+    interval:
+      selector:
+        duration:

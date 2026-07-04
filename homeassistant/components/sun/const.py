@@ -1,10 +1,18 @@
 """Constants for the Sun integration."""
 
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import astral
 
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from .entity import Sun
+
 DOMAIN: Final = "sun"
+DATA_COMPONENT: HassKey[EntityComponent[Sun]] = HassKey(DOMAIN)
 
 DEFAULT_NAME: Final = "Sun"
 

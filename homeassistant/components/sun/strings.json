@@ -94,6 +94,14 @@
       }
     }
   },
+  "exceptions": {
+    "end_before_start": {
+      "message": "The end of the requested time range must be after its start."
+    },
+    "too_many_positions": {
+      "message": "The requested time range and interval would return {requested} positions; the maximum is {limit}. Use a shorter range or a larger interval."
+    }
+  },
   "selector": {
     "twilight_type": {
       "options": {
@@ -102,6 +110,30 @@
         "civil": "Civil",
         "nautical": "Nautical"
       }
+    }
+  },
+  "services": {
+    "get_positions": {
+      "description": "Retrieves the solar azimuth and elevation over a time range.",
+      "fields": {
+        "duration": {
+          "description": "Length of the time range from the start. Cannot be used together with 'End time'.",
+          "name": "Duration"
+        },
+        "end_date_time": {
+          "description": "End of the time range. Cannot be used together with 'Duration'. Defaults to 24 hours after the start.",
+          "name": "End time"
+        },
+        "interval": {
+          "description": "Time between two returned positions. Defaults to 5 minutes.",
+          "name": "Interval"
+        },
+        "start_date_time": {
+          "description": "Start of the time range. Defaults to now.",
+          "name": "Start time"
+        }
+      },
+      "name": "Get positions"
     }
   },
   "title": "Sun",
