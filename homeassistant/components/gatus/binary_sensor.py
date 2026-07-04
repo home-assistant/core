@@ -1,6 +1,6 @@
 """Support for Gatus binary sensors."""
 
-from typing import TYPE_CHECKING, Any, cast, override
+from typing import Any, cast, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -27,7 +27,7 @@ async def async_setup_entry(
 
     async_add_entities(
         GatusEndpointBinarySensor(coordinator, entry, endpoint_key)
-        for endpoint_key in set(coordinator.data.keys())
+        for endpoint_key in coordinator.data
     )
 
 
@@ -51,9 +51,6 @@ class GatusEndpointBinarySensor(
         self._endpoint_key = endpoint_key
 
         endpoint_data = self.endpoint_data
-
-        if TYPE_CHECKING:
-            assert endpoint_data is not None
 
         endpoint_name = endpoint_data["name"]
         if "group" in endpoint_data and endpoint_data["group"] is not None:
