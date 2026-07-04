@@ -6,9 +6,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max_temp': 70.0,
-      'min_temp': 50.0,
-      'operation_list': list([
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 70.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 50.0,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
         'auto',
         'manual',
         'performance',
@@ -47,21 +47,21 @@
 # name: test_water_heater_entities_snapshot[cloud_atlantic_cozytouch.json][water_heater.my_home_patio_water_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'away_mode': 'off',
-      'current_temperature': 64.4,
-      'friendly_name': 'Patio Water Heating',
-      'max_temp': 70.0,
-      'min_temp': 50.0,
-      'operation_list': list([
+      <WaterHeaterStateAttribute.AWAY_MODE: 'away_mode'>: 'off',
+      <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 64.4,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating',
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 70.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 50.0,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
         'auto',
         'manual',
         'performance',
       ]),
-      'operation_mode': 'manual',
-      'supported_features': <WaterHeaterEntityFeature: 7>,
-      'target_temp_high': None,
-      'target_temp_low': None,
-      'temperature': 60.0,
+      <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'manual',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 7>,
+      <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 60.0,
     }),
     'context': <ANY>,
     'entity_id': 'water_heater.my_home_patio_water_heating',
@@ -69,5 +69,76 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'manual',
+  })
+# ---
+# name: test_water_heater_entities_snapshot[cloud_atlantic_cozytouch.json][water_heater.yutaki_dhw-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 70,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 30,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
+        'on',
+        'high_demand',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.yutaki_dhw',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Yutaki DHW',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Yutaki DHW',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': 'modbus://1234-5678-5643/6381497/1#4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_water_heater_entities_snapshot[cloud_atlantic_cozytouch.json][water_heater.yutaki_dhw-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 46,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yutaki DHW',
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 70,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 30,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
+        'on',
+        'high_demand',
+        'off',
+      ]),
+      <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'off',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 3>,
+      <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 54,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.yutaki_dhw',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---

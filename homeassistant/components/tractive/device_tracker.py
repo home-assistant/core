@@ -1,6 +1,6 @@
 """Support for Tractive device trackers."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.core import HomeAssistant, callback
@@ -48,6 +48,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         self._attr_unique_id = item.trackable["_id"]
 
     @property
+    @override
     def source_type(self) -> SourceType:
         """Return the source type of the device."""
         if self._source_type == "PHONE":
@@ -63,6 +64,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         self._attr_available = True
         self.async_write_ha_state()
 
+    @override
     # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

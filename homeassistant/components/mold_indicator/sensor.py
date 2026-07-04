@@ -3,7 +3,7 @@
 from collections.abc import Callable, Mapping
 import logging
 import math
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -193,6 +193,7 @@ class MoldIndicator(SensorEntity):
         self._async_setup_sensor()
         return self._call_on_remove_callbacks
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self._async_setup_sensor()
@@ -413,6 +414,7 @@ class MoldIndicator(SensorEntity):
         _LOGGER.debug("Mold indicator humidity: %s", self.native_value)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if self._is_metric:

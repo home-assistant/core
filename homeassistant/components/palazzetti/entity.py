@@ -1,5 +1,7 @@
 """Base class for Palazzetti entities."""
 
+from typing import override
+
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -27,6 +29,7 @@ class PalazzettiEntity(CoordinatorEntity[PalazzettiDataUpdateCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Is the entity available."""
         return super().available and self.coordinator.client.connected

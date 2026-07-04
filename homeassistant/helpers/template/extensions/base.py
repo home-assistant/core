@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Concatenate, NoReturn
+from typing import TYPE_CHECKING, Any, Concatenate, NoReturn, override
 
 from jinja2 import pass_context
 from jinja2.ext import Extension
@@ -135,6 +135,7 @@ class BaseTemplateExtension(Extension):
             )
         return self.environment.hass
 
+    @override
     def parse(self, parser: Parser) -> Node | list[Node]:
         """Required by Jinja2 Extension base class."""
         return []

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import CookieJar
 from tesla_powerwall import (
@@ -136,6 +136,7 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
             or not async_last_update_was_successful(self.hass, entry)
         ) and not await _powerwall_is_reachable(ip_address, password)
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -251,6 +252,7 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
