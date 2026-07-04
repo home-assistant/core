@@ -113,7 +113,7 @@ class ModbusConnectionConfigFlow(ConfigFlow, domain=DOMAIN):
         connection: most Modbus devices reject a second client, so probing one
         that is already in use would fail.
         """
-        for entry in self._async_current_entries(include_ignore=True):
+        for entry in self._async_current_entries():
             if entry.data[CONF_TYPE] != data[CONF_TYPE]:
                 continue
             if data[CONF_TYPE] == CONNECTION_SERIAL:
