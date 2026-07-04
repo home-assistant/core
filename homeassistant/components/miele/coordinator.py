@@ -89,7 +89,6 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
         actions = {}
 
         for device_id, device in devices.items():
-
             # actions are fetched separately
             try:
                 actions_json = await self.api.get_actions(device_id)
@@ -146,7 +145,7 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
                 actions=self.data.actions,
             )
         )
-        for device_id, device in devices.items():
+        for device_id, device in updated_devices.items():
             # failures are fetched only if needed
             self._handle_device_failure(device_id, device)
 
@@ -215,6 +214,7 @@ class MieleFailureDataUpdateCoordinator(DataUpdateCoordinator):
         self.api = api
         self.data: dict[str, MieleFailureData | None] = {}
 
+    @override
     async def _async_update_data(self) -> dict[str, MieleFailureData | None]:
         """Update data is not fetched on an interval, but on demand."""
         return self.data
