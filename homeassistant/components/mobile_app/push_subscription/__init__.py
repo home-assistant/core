@@ -1,10 +1,9 @@
 """Platform-agnostic push subscriptions for mobile_app.
 
 An app registers a push token against a set of entity_ids; the integration sends
-a silent push to that token whenever any of those entities change state. Used by
-the iOS companion app to keep WidgetKit timelines in sync, but the contract is
-deliberately platform-neutral: an app says "here is my token, push to it when
-these entities change". Core has no knowledge of widgets.
+a silent push to that token whenever any of those entities change state. The
+contract is deliberately platform-neutral: an app says "here is my token, push
+to it when these entities change".
 """
 
 # Imported so the webhook command registrations in the submodule run on import.
