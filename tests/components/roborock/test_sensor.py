@@ -61,6 +61,11 @@ async def test_sensors_coordinator_state(
             device.zeo.query_values.side_effect = side_effect
         if device.b01_q10_properties is not None:
             device.b01_q10_properties.refresh.side_effect = side_effect
+            # Clear all non-private attributes of the Q10 status to simulate uninitialized/empty status
+            status = device.b01_q10_properties.status
+            for attr in list(vars(status)):
+                if not attr.startswith("_"):
+                    setattr(status, attr, None)
         if device.b01_q7_properties is not None:
             device.b01_q7_properties.query_values.side_effect = side_effect
 
@@ -86,10 +91,7 @@ async def test_sensors_coordinator_state(
     assert state is not None
     assert state.state == expected_state
 
-    # B01 Q10 sensors: Q10 status api has mocked data initially, so it reports value when available
+    # B01 Q10 sensors
     state = hass.states.get("sensor.roborock_q10_s5_battery")
     assert state is not None
-    if expected_state == STATE_UNKNOWN:
-        assert state.state == "100"
-    else:
-        assert state.state == expected_state
+    assert state.state == expected_state
