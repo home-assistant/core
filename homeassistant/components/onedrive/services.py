@@ -62,7 +62,9 @@ def _split_glob_pattern(pattern: str) -> tuple[str, str]:
     return base, relative_pattern
 
 
-def _expand_filenames(filenames: list[str]) -> list[tuple[str, str]]:
+def _expand_filenames(
+    hass: HomeAssistant, filenames: list[str]
+) -> list[tuple[str, str]]:
     """Expand wildcard patterns, preserving subfolder structure."""
     expanded: dict[str, str] = {}
     no_matches: list[str] = []
@@ -71,6 +73,13 @@ def _expand_filenames(filenames: list[str]) -> list[tuple[str, str]]:
             expanded.setdefault(filename, Path(filename).name)
             continue
         base, relative_pattern = _split_glob_pattern(filename)
+
+        if not hass.config.is_allowed_path(base):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_access_to_path",
+                translation_placeholders={"filename": base},
+            )
         matches = sorted(
             match
             for match in glob.glob(relative_pattern, root_dir=base, recursive=True)
@@ -105,7 +114,7 @@ def _read_file_contents(
     hass: HomeAssistant, filenames: list[str]
 ) -> list[tuple[str, bytes]]:
     """Return the destination-relative path and file contents for each file."""
-    files = _expand_filenames(filenames)
+    files = _expand_filenames(hass, filenames)
     missing: list[str] = []
     for full_path, _ in files:
         if not hass.config.is_allowed_path(full_path):

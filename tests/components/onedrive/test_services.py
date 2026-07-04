@@ -220,6 +220,36 @@ async def test_upload_service_wildcard_no_match(
     assert pattern in exc_info.value.translation_placeholders["patterns"]
 
 
+@pytest.mark.parametrize("upload_file", [MockUploadFile(is_allowed_path=False)])
+async def test_upload_service_wildcard_base_not_allowed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a wildcard base directory outside the allowlist is rejected."""
+    await setup_integration(hass, mock_config_entry)
+
+    with (
+        patch(
+            "homeassistant.components.onedrive.services.glob.glob",
+        ) as mock_glob,
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            UPLOAD_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_FILENAME: "/config/www/*.jpg",
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "no_access_to_path"
+    assert exc_info.value.translation_placeholders["filename"] == "/config/www"
+    # globbing must not run for a base directory outside the allowlist
+    mock_glob.assert_not_called()
+
+
 async def test_upload_service_no_response(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

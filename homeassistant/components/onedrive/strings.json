@@ -182,7 +182,7 @@
           "name": "Destination folder"
         },
         "filename": {
-          "description": "One or more paths to files to upload. Supports wildcards, for example `/config/www/*.jpg` to upload all JPG files in a folder, or `/config/www/**/*.jpg` to also include subfolders. Subfolders matched by a wildcard are recreated inside the destination folder.",
+          "description": "One or more paths to files to upload. Supports wildcards, for example `/config/www/*.jpg` to upload all JPG files in a folder, or `/config/www/**/*.jpg` to also include subfolders. Subfolders matched by a wildcard are recreated inside the destination folder. The characters `*`, `?` and `[` are treated as wildcards; to upload a file whose name contains one of these characters literally, make sure the file exists under that exact name.",
           "example": "{example_image_path}",
           "name": "Filenames"
         }
