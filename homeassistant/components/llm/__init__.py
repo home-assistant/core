@@ -40,8 +40,13 @@ class LLMToolsPlatformProtocol(Protocol):
     """Define the format that LLM tools platforms can have."""
 
     @callback
-    def async_get_tools(self, hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
-        """Return the integration's LLM tools for the given context."""
+    def async_get_tools(
+        self, hass: HomeAssistant, llm_context: LLMContext, api_id: str
+    ) -> LLMTools | None:
+        """Return the integration's LLM tools for the given context and API.
+
+        Return None when the integration has nothing for the given API.
+        """
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -60,7 +65,9 @@ def _process_llm_tools_platform(
     return platform
 
 
-async def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
+async def async_get_tools(
+    hass: HomeAssistant, llm_context: LLMContext, api_id: str
+) -> LLMTools:
     """Return the tools and merged prompt from all integration platforms."""
     platforms = await hass.data[DATA_PLATFORMS].async_get_platforms()
 
@@ -69,9 +76,11 @@ async def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTo
     # Sort by domain so the tool and prompt order is independent of load order.
     for domain, platform in sorted(platforms.items()):
         try:
-            result = platform.async_get_tools(hass, llm_context)
+            result = platform.async_get_tools(hass, llm_context, api_id)
         except Exception:
             _LOGGER.exception("Error getting tools from LLM platform %s", domain)
+            continue
+        if result is None:
             continue
         tools.extend(result.tools)
         if result.prompt:
