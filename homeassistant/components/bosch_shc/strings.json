@@ -98,5 +98,13 @@
         "name": "Routing"
       }
     }
+  },
+  "exceptions": {
+    "button_press_failed": {
+      "message": "Failed to press {name}: {error}"
+    },
+    "scenario_trigger_failed": {
+      "message": "Failed to trigger scenario {name}: {error}"
+    }
   }
 }

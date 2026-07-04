@@ -5,12 +5,15 @@ from dataclasses import dataclass
 from typing import override
 
 from boschshcpy.device import SHCDevice
+from boschshcpy.exceptions import SHCException
 from boschshcpy.scenario import SHCScenario
 from boschshcpy.services_impl import DetectionTestService, WalkTestService
+from requests.exceptions import RequestException
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -161,7 +164,17 @@ class SHCScenarioButton(ButtonEntity):
     @override
     def press(self) -> None:
         """Trigger the scenario."""
-        self._scenario.trigger()
+        try:
+            self._scenario.trigger()
+        except (SHCException, RequestException) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="scenario_trigger_failed",
+                translation_placeholders={
+                    "name": self._scenario.name,
+                    "error": str(err),
+                },
+            ) from err
 
 
 class SHCButton(SHCEntity, ButtonEntity):
@@ -184,4 +197,14 @@ class SHCButton(SHCEntity, ButtonEntity):
     @override
     def press(self) -> None:
         """Press the button."""
-        self.entity_description.press_fn(self._device)
+        try:
+            self.entity_description.press_fn(self._device)
+        except (SHCException, RequestException) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="button_press_failed",
+                translation_placeholders={
+                    "name": self._device.name,
+                    "error": str(err),
+                },
+            ) from err

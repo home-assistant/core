@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, create_autospec, patch
 
 from boschshcpy import SHCSmokeDetector, SHCTwinguard
 from boschshcpy.device import SHCDevice
+from boschshcpy.exceptions import SHCException
 from boschshcpy.models_impl import SHCMicromoduleRelay, SHCMotionDetector2
 from boschshcpy.scenario import SHCScenario
 from boschshcpy.services_impl import DetectionTestService, WalkTestService
@@ -14,6 +15,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -239,3 +241,47 @@ async def test_motion_detector2_optional_buttons_skipped(
     }
     # The tamper-reset button is always created for a Motion Detector II.
     assert entity_ids == {"button.test_device_reset_tamper"}
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "device_key", "mock_attr"),
+    [
+        pytest.param(
+            "button.test_shc_good_night", "scenario", "trigger", id="scenario"
+        ),
+        pytest.param(
+            "button.test_device_trigger",
+            "impulse_relay",
+            "trigger_impulse_state",
+            id="device_backed",
+        ),
+    ],
+)
+async def test_button_press_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    entity_id: str,
+    device_key: str,
+    mock_attr: str,
+) -> None:
+    """A library error while pressing a button surfaces as a HomeAssistantError."""
+    scenario = _make_scenario("sc-1", "Good Night")
+    impulse_relay = _make_device(SHCMicromoduleRelay, "ir-serial", "ir-id")
+    mock_session.scenarios = [scenario]
+    mock_session.device_helper.micromodule_impulse_relays = [impulse_relay]
+
+    device_by_key = {"scenario": scenario, "impulse_relay": impulse_relay}
+    getattr(device_by_key[device_key], mock_attr).side_effect = SHCException(
+        "Test error"
+    )
+
+    await _setup_button_platform(hass, mock_config_entry, mock_session)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
