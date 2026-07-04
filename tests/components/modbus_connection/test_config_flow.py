@@ -90,7 +90,12 @@ async def test_serial_flow(hass: HomeAssistant) -> None:
     flow_id = await _start_menu(hass, "serial")
     result = await hass.config_entries.flow.async_configure(flow_id, SERIAL_INPUT)
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_TYPE: CONNECTION_SERIAL, **SERIAL_INPUT}
+    # Parity is stored uppercase (the code the connection expects).
+    assert result["data"] == {
+        CONF_TYPE: CONNECTION_SERIAL,
+        **SERIAL_INPUT,
+        CONF_PARITY: "N",
+    }
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

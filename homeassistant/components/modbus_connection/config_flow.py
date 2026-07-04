@@ -97,7 +97,12 @@ class ModbusConnectionConfigFlow(ConfigFlow, domain=DOMAIN):
         """Configure a Modbus serial (RTU) connection, incl. network serial proxies."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            data = {CONF_TYPE: CONNECTION_SERIAL, **user_input}
+            data = {
+                CONF_TYPE: CONNECTION_SERIAL,
+                **user_input,
+                # Store the uppercase parity code the connection expects.
+                CONF_PARITY: user_input[CONF_PARITY].upper(),
+            }
             # A serial link is identified by its device path alone, regardless of
             # baud rate and other line settings.
             self._async_abort_entries_match(
