@@ -453,6 +453,19 @@
             }
           }
         },
+        "button": {
+          "description": "Entity for sending predefined values.",
+          "knx": {
+            "data": {
+              "description": "The value sent when the button is pressed. The format of the value depends on the DPT of the configured address.",
+              "label": "Data"
+            },
+            "ga_send": {
+              "description": "Group address the value is sent to.",
+              "label": "Address"
+            }
+          }
+        },
         "climate": {
           "description": "The KNX climate platform is used as an interface to heating actuators, HVAC gateways, etc.",
           "knx": {
@@ -1014,6 +1027,19 @@
     "project": {
       "description": "Inspect imported group addresses",
       "title": "Project"
+    },
+    "selectors": {
+      "knx-payload-selector": {
+        "dpt_missing": "No DPT selected – Typed mode not available",
+        "mode": {
+          "label": "Payload format",
+          "raw": "Raw payload",
+          "typed": "Typed value"
+        },
+        "raw_length": "Payload length",
+        "raw_length_description": "Length of the raw payload in bytes. For DPT 1, 2 and 3 use `0`.",
+        "raw_payload": "Raw payload"
+      }
     }
   },
   "device_automation": {

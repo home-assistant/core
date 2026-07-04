@@ -129,6 +129,39 @@
     'type': 'result',
   })
 # ---
+# name: test_knx_get_schema[button]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_send',
+        'options': dict({
+          'dptClasses': list([
+            'numeric',
+            'enum',
+            'complex',
+            'string',
+          ]),
+          'passive': False,
+          'state': False,
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'ga_path': 'ga_send',
+        'name': 'data',
+        'required': True,
+        'type': 'knx_payload',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_knx_get_schema[climate]
   dict({
     'id': 1,

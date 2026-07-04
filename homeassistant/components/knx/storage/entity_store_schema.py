@@ -3,7 +3,8 @@
 from enum import StrEnum, unique
 
 import voluptuous as vol
-from xknx.dpt import DPTNumeric
+from xknx.dpt import DPTBase, DPTBinary, DPTNumeric
+from xknx.exceptions import ConversionError
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.number import (
@@ -36,9 +37,11 @@ from ..const import (
     CONF_CONTEXT_TIMEOUT,
     CONF_IGNORE_INTERNAL_STATE,
     CONF_INVERT,
+    CONF_PAYLOAD_LENGTH,
     CONF_RESET_AFTER,
     CONF_RESPOND_TO_READ,
     CONF_SYNC_STATE,
+    CONF_VALUE,
     DOMAIN,
     SUPPORTED_PLATFORMS_UI,
     ClimateConf,
@@ -92,6 +95,7 @@ from .const import (
     CONF_GA_RED_SWITCH,
     CONF_GA_SATURATION,
     CONF_GA_SCENE,
+    CONF_GA_SEND,
     CONF_GA_SENSOR,
     CONF_GA_SETPOINT_SHIFT,
     CONF_GA_SPEED,
@@ -115,6 +119,7 @@ from .knx_selector import (
     GASelector,
     GroupSelect,
     GroupSelectOption,
+    KnxPayloadSelector,
     KNXSectionFlat,
     SyncStateSelector,
 )
@@ -167,6 +172,55 @@ BINARY_SENSOR_KNX_SCHEMA = vol.Schema(
             allow_false=True
         ),
     },
+)
+
+
+def _button_data_sub_validator(config: dict) -> dict:
+    """Validate data matching configured DPT."""
+    dpt = config[CONF_GA_SEND].get(CONF_DPT)
+    transcoder = None
+    if dpt:
+        transcoder = DPTBase.parse_transcoder(dpt)
+        assert transcoder is not None  # already checked by GASelector
+
+        if CONF_VALUE in config[CONF_DATA]:
+            try:
+                transcoder.to_knx(config[CONF_DATA][CONF_VALUE])
+            except ConversionError as ex:
+                raise vol.Invalid(
+                    f"Value invalid for DPT {transcoder.dpt_number_str()}",
+                    path=([CONF_DATA]),
+                ) from ex
+        elif CONF_PAYLOAD_LENGTH in config[CONF_DATA]:
+            length = config[CONF_DATA][CONF_PAYLOAD_LENGTH]
+            if length != transcoder.payload_length or (
+                length != 0 and transcoder.payload_type is DPTBinary
+            ):
+                raise vol.Invalid(
+                    f"Payload length invalid for DPT {transcoder.dpt_number_str()}",
+                    path=([CONF_DATA]),
+                )
+        return config
+    # without DPT only raw allowed -> payload + payload_length (checked by KnxPayloadSelector)
+    if CONF_PAYLOAD_LENGTH in config[CONF_DATA]:
+        return config
+    raise vol.Invalid("Invalid configuration for button entity")
+
+
+BUTTON_KNX_SCHEMA = AllSerializeFirst(
+    vol.Schema(
+        {
+            vol.Required(CONF_GA_SEND): GASelector(
+                state=False,
+                write_required=True,
+                passive=False,
+                dpt=["numeric", "enum", "complex", "string"],
+                dpt_required=False,  # for raw payload support
+            ),
+            vol.Required(CONF_DATA): KnxPayloadSelector(ga_path=CONF_GA_SEND),
+        },
+    ),
+    _button_data_sub_validator,
 )
 
 COVER_KNX_SCHEMA = AllSerializeFirst(
@@ -741,6 +795,7 @@ SENSOR_KNX_SCHEMA = AllSerializeFirst(
 
 KNX_SCHEMA_FOR_PLATFORM = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_KNX_SCHEMA,
+    Platform.BUTTON: BUTTON_KNX_SCHEMA,
     Platform.CLIMATE: CLIMATE_KNX_SCHEMA,
     Platform.COVER: COVER_KNX_SCHEMA,
     Platform.DATE: DATE_KNX_SCHEMA,
