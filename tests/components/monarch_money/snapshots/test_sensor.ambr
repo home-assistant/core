@@ -1131,7 +1131,7 @@
 # name: test_all_entities[sensor.zillow_house_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via Manual entry',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via zillow',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'data:image/png;base64,base64Nonce',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zillow House Balance',
@@ -1186,7 +1186,7 @@
 # name: test_all_entities[sensor.zillow_house_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via Manual entry',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via zillow',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zillow House Data age',
     }),
