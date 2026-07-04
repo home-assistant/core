@@ -109,6 +109,29 @@ async def test_clean_gpio_does_not_create_issue(
     assert issue_registry.async_get_issue(DOMAIN, "corrupted_gpio") is None
 
 
+async def test_corrupt_gpio_clears_stale_issue_from_previous_session(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """A stale issue from a previous session clears on the first clean poll."""
+    issue_registry = ir.async_get(hass)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "corrupted_gpio",
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="corrupted_gpio",
+        translation_placeholders={"details": "- stale"},
+    )
+    assert issue_registry.async_get_issue(DOMAIN, "corrupted_gpio") is not None
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert issue_registry.async_get_issue(DOMAIN, "corrupted_gpio") is None
+
+
 async def test_corrupt_gpio_logs_error_only_on_state_change(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

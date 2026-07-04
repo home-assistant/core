@@ -44,7 +44,7 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.client = client
         self._firmware = "?"
-        self._corrupted_gpio_keys: frozenset[str] = frozenset()
+        self._corrupted_gpio_keys: frozenset[str] | None = None
 
     def _check_gpio_registers(self, data: dict[str, Any]) -> None:
         """Validate GPIO register values and (re-)raise or clear the repair issue."""
