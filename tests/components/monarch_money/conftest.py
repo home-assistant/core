@@ -5,12 +5,12 @@ import json
 from typing import Any
 from unittest.mock import AsyncMock, PropertyMock, patch
 
-import pytest
-from typedmonarchmoney.models import (
+from monarchmoney.monarchmoney_typed import (
     MonarchAccount,
     MonarchCashflowSummary,
     MonarchSubscription,
 )
+import pytest
 
 from homeassistant.components.monarch_money.const import DOMAIN
 from homeassistant.const import CONF_TOKEN
@@ -58,11 +58,11 @@ def mock_config_api() -> Generator[AsyncMock]:
 
     with (
         patch(
-            "homeassistant.components.monarch_money.config_flow.TypedMonarchMoney",
+            "homeassistant.components.monarch_money.config_flow.MonarchMoneyTyped",
             autospec=True,
         ) as mock_class,
         patch(
-            "homeassistant.components.monarch_money.TypedMonarchMoney", new=mock_class
+            "homeassistant.components.monarch_money.MonarchMoneyTyped", new=mock_class
         ),
     ):
         instance = mock_class.return_value
