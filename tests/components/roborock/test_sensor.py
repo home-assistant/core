@@ -34,7 +34,7 @@ async def test_sensors(
 
 async def mock_delay(*args: Any, **kwargs: Any) -> None:
     """Delay the update to simulate before first update completes."""
-    await asyncio.sleep(10)
+    await asyncio.sleep(15)
 
 
 @pytest.mark.parametrize(
