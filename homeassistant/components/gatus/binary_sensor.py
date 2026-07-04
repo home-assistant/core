@@ -6,7 +6,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -25,27 +25,10 @@ async def async_setup_entry(
     """Set up the Gatus binary sensor platform."""
     coordinator: GatusDataUpdateCoordinator = entry.runtime_data
 
-    known_endpoints = set(coordinator.data.keys())
-
     async_add_entities(
         GatusEndpointBinarySensor(coordinator, entry, endpoint_key)
-        for endpoint_key in known_endpoints
+        for endpoint_key in set(coordinator.data.keys())
     )
-
-    @callback
-    def _async_discover_new_endpoints() -> None:
-        """Automatically detect and add new endpoints from the runtime data."""
-        new_endpoints = set(coordinator.data.keys()) - known_endpoints
-        if not new_endpoints:
-            return
-
-        async_add_entities(
-            GatusEndpointBinarySensor(coordinator, entry, endpoint_key)
-            for endpoint_key in new_endpoints
-        )
-        known_endpoints.update(new_endpoints)
-
-    entry.async_on_unload(coordinator.async_add_listener(_async_discover_new_endpoints))
 
 
 class GatusEndpointBinarySensor(
@@ -89,11 +72,9 @@ class GatusEndpointBinarySensor(
 
     @property
     @override
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if the endpoint is up and healthy."""
         latest_result = self.latest_result
-        if latest_result is None:
-            return None
 
         return bool(latest_result["success"])
 
@@ -102,18 +83,15 @@ class GatusEndpointBinarySensor(
     def available(self) -> bool:
         """Return True if entity is available."""
         data = self.coordinator.data
-        return super().available and data is not None and self._endpoint_key in data
+        return super().available and self._endpoint_key in data
 
     @property
-    def endpoint_data(self) -> dict[str, Any] | None:
+    def endpoint_data(self) -> dict[str, Any]:
         """Return this specific endpoint's data from the coordinator."""
-        return self.coordinator.data.get(self._endpoint_key)
+        return self.coordinator.data[self._endpoint_key]
 
     @property
-    def latest_result(self) -> dict[str, Any] | None:
+    def latest_result(self) -> dict[str, Any]:
         """Return the most recent monitoring result (Gatus appends newest last)."""
         data = self.endpoint_data
-        if data is None or not data["results"]:
-            return None
-
         return cast(dict[str, Any], data["results"][-1])
