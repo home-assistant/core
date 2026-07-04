@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import Callable, Generator, Iterable
 from copy import deepcopy
-import dataclasses
 import io
 import threading
 from typing import Any
@@ -2771,35 +2770,6 @@ async def test_reload_service_helper(hass: HomeAssistant) -> None:
     # We don't try to reload the failed targets again, so only the
     # new reload is executed
     assert reloaded == unordered(["target1"])
-
-
-async def test_deprecated_async_extract_referenced_entity_ids(
-    hass: HomeAssistant,
-) -> None:
-    """Test deprecated async_extract_referenced_entity_ids forwards correctly."""
-    from homeassistant.helpers import target  # noqa: PLC0415
-
-    mock_selected = target.SelectedEntities(
-        referenced={"entity.test"},
-        indirectly_referenced={"entity.indirect"},
-    )
-    with patch(
-        "homeassistant.helpers.target.async_extract_referenced_entity_ids",
-        return_value=mock_selected,
-    ) as mock_target_func:
-        call = ServiceCall(hass, "test", "test", {"entity_id": "light.test"})
-        result = service.async_extract_referenced_entity_ids(
-            hass, call, expand_group=False
-        )
-
-        # Verify target helper was called with correct parameters
-        mock_target_func.assert_called_once()
-        args = mock_target_func.call_args
-        assert args[0][0] is hass
-        assert args[0][1].entity_ids == {"light.test"}
-        assert args[0][2] is False
-
-        assert dataclasses.asdict(result) == dataclasses.asdict(mock_selected)
 
 
 async def test_register_platform_entity_service(

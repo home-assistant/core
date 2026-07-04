@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine, Iterable, Mapping, Sequence
-import dataclasses
 from enum import Enum
 from functools import cache, partial
 import inspect
@@ -60,7 +59,7 @@ from . import (
     target as target_helpers,
     template,
 )
-from .deprecation import deprecated_function, deprecated_hass_argument
+from .deprecation import deprecated_hass_argument
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType, VolDictType, VolSchemaType
 
@@ -414,21 +413,6 @@ async def async_extract_entity_ids(
         service_call.hass, target_selection, expand_group
     )
     return referenced.referenced | referenced.indirectly_referenced
-
-
-@deprecated_function(
-    "homeassistant.helpers.target.async_extract_referenced_entity_ids",
-    breaks_in_ha_version="2026.8",
-)
-def async_extract_referenced_entity_ids(
-    hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
-) -> target_helpers.SelectedEntities:
-    """Extract referenced entity IDs from a service call."""
-    target_selection = target_helpers.TargetSelection(service_call.data)
-    selected = target_helpers.async_extract_referenced_entity_ids(
-        hass, target_selection, expand_group
-    )
-    return target_helpers.SelectedEntities(**dataclasses.asdict(selected))
 
 
 @deprecated_hass_argument(breaks_in_ha_version="2026.10")
