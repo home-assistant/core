@@ -19,10 +19,11 @@ PARALLEL_UPDATES = 1
 
 _CastTypeT = TypeVar("_CastTypeT", int, float, str)
 
-# Fully saturated colors (every channel 0 or 255) are the only ones the LED
-# renders accurately at all brightness levels; intermediate colors drift. They
-# are offered as named presets while the light's RGB picker stays available for
-# custom colors.
+# The LED does not necessarily render an arbitrary RGB value as the same color
+# at every brightness level (an LR5 firmware quirk, like the non-monotonic
+# brightness mapping below). These presets are verified on hardware to render
+# true at all brightness levels and are offered as known-good options while the
+# light's RGB picker stays available for custom colors.
 NIGHT_LIGHT_PRESETS: dict[str, str] = {
     "red": "#FF0000",
     "green": "#00FF00",
