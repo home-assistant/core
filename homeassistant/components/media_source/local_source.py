@@ -13,7 +13,13 @@ import voluptuous as vol
 
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http import require_admin
-from homeassistant.components.media_player import BrowseError, MediaClass
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaClass,
+    SearchMedia,
+    SearchMediaQuery,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
@@ -23,6 +29,7 @@ from .error import Unresolvable
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
 
 MAX_UPLOAD_SIZE = 1024 * 1024 * 20
+MAX_SEARCH_RESULTS = 100
 LOGGER = logging.getLogger(__name__)
 
 
@@ -175,6 +182,72 @@ class LocalSource(MediaSource):
             self._browse_media, source_dir_id, location
         )
 
+    @override
+    async def async_search_media(
+        self, item: MediaSourceItem, query: SearchMediaQuery
+    ) -> SearchMedia:
+        """Search media by file name within the local media directories."""
+        if item.identifier:
+            try:
+                source_dir_id, location = self.async_parse_identifier(item)
+            except Unresolvable as err:
+                raise BrowseError(str(err)) from err
+            search_dirs = [(source_dir_id, location)]
+        else:
+            search_dirs = [(source_dir_id, "") for source_dir_id in self.media_dirs]
+
+        return await self.hass.async_add_executor_job(
+            self._search_media, search_dirs, query
+        )
+
+    def _search_media(
+        self, search_dirs: list[tuple[str, str]], query: SearchMediaQuery
+    ) -> SearchMedia:
+        """Search media files by name (runs in the executor)."""
+        query_str = query.search_query.casefold()
+        filter_classes = set(query.media_filter_classes or ())
+        results: list[BrowseMedia] = []
+
+        for source_dir_id, location in search_dirs:
+            if len(results) >= MAX_SEARCH_RESULTS:
+                break
+            base_path = Path(self.media_dirs[source_dir_id])
+            search_path = base_path / location
+            if not search_path.is_dir():
+                continue
+
+            # Traverse lazily so MAX_SEARCH_RESULTS can short-circuit large libraries
+            for path in search_path.rglob("*"):
+                if len(results) >= MAX_SEARCH_RESULTS:
+                    break
+                relative = path.relative_to(base_path)
+                if any(part.startswith(".") for part in relative.parts):
+                    continue
+                if query_str not in path.name.casefold() or not path.is_file():
+                    continue
+                mime_type, _ = mimetypes.guess_type(str(path))
+                if not mime_type or mime_type.split("/")[0] not in MEDIA_MIME_TYPES:
+                    continue
+                media_class = MEDIA_CLASS_MAP.get(
+                    mime_type.split("/")[0], MediaClass.DIRECTORY
+                )
+                if filter_classes and media_class not in filter_classes:
+                    continue
+                results.append(
+                    BrowseMediaSource(
+                        domain=self.domain,
+                        identifier=f"{source_dir_id}/{relative}",
+                        media_class=media_class,
+                        media_content_type=mime_type,
+                        title=path.name,
+                        can_play=True,
+                        can_expand=False,
+                    )
+                )
+
+        results.sort(key=lambda item: item.title)
+        return SearchMedia(result=results)
+
     def _browse_media(
         self, source_dir_id: str | None, location: str
     ) -> BrowseMediaSource:
@@ -197,6 +270,7 @@ class LocalSource(MediaSource):
                 title=self.name,
                 can_play=False,
                 can_expand=True,
+                can_search=True,
                 children_media_class=MediaClass.DIRECTORY,
             )
 
@@ -255,6 +329,7 @@ class LocalSource(MediaSource):
             title=title,
             can_play=is_file,
             can_expand=is_dir,
+            can_search=is_dir,
         )
 
         if is_file or is_child:
