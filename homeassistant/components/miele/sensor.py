@@ -1184,6 +1184,7 @@ class MieleFailureSensor(MieleFailureEntity, SensorEntity):
             self._attr_unique_id = description.unique_id_fn(device_id, description)
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the failure sensor."""
         return (
