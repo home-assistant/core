@@ -22,6 +22,7 @@ from homeassistant.components.deconz.services import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .test_hub import BRIDGE_ID
@@ -111,7 +112,8 @@ async def test_configure_service_with_entity_and_field(
 
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_configure_service_with_faulty_bridgeid(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test that service fails on a bad bridge id."""
     aioclient_mock.clear_requests()
@@ -122,8 +124,13 @@ async def test_configure_service_with_faulty_bridgeid(
         SERVICE_DATA: {"on": True},
     }
 
-    await hass.services.async_call(DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data)
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CONFIGURE_DEVICE,
+            service_data=data,
+            blocking=True,
+        )
 
     assert len(aioclient_mock.mock_calls) == 0
 
@@ -141,9 +148,10 @@ async def test_configure_service_with_faulty_field(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_configure_service_with_faulty_entity(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test that service on a non existing entity."""
+    """Test that service fails on a non-existing entity."""
     aioclient_mock.clear_requests()
 
     data = {
@@ -151,8 +159,13 @@ async def test_configure_service_with_faulty_entity(
         SERVICE_DATA: {},
     }
 
-    await hass.services.async_call(DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data)
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError, match="Could not find entity"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CONFIGURE_DEVICE,
+            service_data=data,
+            blocking=True,
+        )
 
     assert len(aioclient_mock.mock_calls) == 0
 
@@ -160,7 +173,8 @@ async def test_configure_service_with_faulty_entity(
 @pytest.mark.parametrize("config_entry_options", [{CONF_MASTER_GATEWAY: False}])
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_calling_service_with_no_master_gateway_fails(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test that service call fails when no master gateway exist."""
     aioclient_mock.clear_requests()
@@ -170,8 +184,13 @@ async def test_calling_service_with_no_master_gateway_fails(
         SERVICE_DATA: {"on": True},
     }
 
-    await hass.services.async_call(DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data)
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CONFIGURE_DEVICE,
+            service_data=data,
+            blocking=True,
+        )
 
     assert len(aioclient_mock.mock_calls) == 0
 
