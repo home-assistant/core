@@ -128,7 +128,7 @@ async def _async_import_yaml(hass: HomeAssistant, config: ConfigType) -> None:
             translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
             translation_placeholders={
                 "domain": DOMAIN,
-                "integration_title": "Keba Charging Station",
+                "integration_title": "KEBA Charging Station",
             },
         )
         return
@@ -144,7 +144,7 @@ async def _async_import_yaml(hass: HomeAssistant, config: ConfigType) -> None:
         translation_key="deprecated_yaml",
         translation_placeholders={
             "domain": DOMAIN,
-            "integration_title": "Keba Charging Station",
+            "integration_title": "KEBA Charging Station",
         },
     )
 

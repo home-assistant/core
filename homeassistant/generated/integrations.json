@@ -3483,6 +3483,7 @@
       "iot_class": "local_polling"
     },
     "keba": {
+      "name": "KEBA Charging Station",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling",
@@ -8482,7 +8483,6 @@
     "integration",
     "irm_kmi",
     "islamic_prayer_times",
-    "keba",
     "local_calendar",
     "local_ip",
     "local_todo",

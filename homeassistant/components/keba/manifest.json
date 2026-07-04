@@ -1,6 +1,6 @@
 {
   "domain": "keba",
-  "name": "Keba Charging Station",
+  "name": "KEBA Charging Station",
   "codeowners": ["@dannerph"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/keba",
