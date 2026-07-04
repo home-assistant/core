@@ -214,15 +214,15 @@ async def async_get_rtsp_stream_url(hass: HomeAssistant, entity_id: str) -> str 
     when needed, so every consumer of the returned URL shares go2rtc's single
     upstream connection to the camera. Returns None when go2rtc is not set up,
     the server is not managed by Home Assistant (its RTSP endpoint is unknown),
-    or the camera's stream source is unsupported.
+    the camera entity is not available, or its stream source is unsupported.
     """
     if (config := hass.data.get(_DATA_GO2RTC)) is None or config.url != HA_MANAGED_URL:
         return None
     if not (entries := hass.config_entries.async_loaded_entries(DOMAIN)):
         return None
     provider = entries[0].runtime_data
-    camera = get_camera_from_entity_id(hass, entity_id)
     try:
+        camera = get_camera_from_entity_id(hass, entity_id)
         await provider.async_update_stream_source(camera)
     except HomeAssistantError as err:
         _LOGGER.debug("Not providing RTSP restream URL for %s: %s", entity_id, err)

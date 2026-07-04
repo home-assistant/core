@@ -1259,3 +1259,9 @@ async def test_get_rtsp_stream_url_unusable_source(
     """The helper returns None when the camera source cannot be proxied."""
     init_test_integration.set_stream_source(stream_source)
     assert await async_get_rtsp_stream_url(hass, "camera.test") is None
+
+
+@pytest.mark.usefixtures("init_integration", "init_test_integration")
+async def test_get_rtsp_stream_url_unknown_camera(hass: HomeAssistant) -> None:
+    """The helper returns None for an unavailable camera entity."""
+    assert await async_get_rtsp_stream_url(hass, "camera.does_not_exist") is None
