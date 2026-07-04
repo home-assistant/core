@@ -7,8 +7,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -49,8 +49,11 @@ STEP_SERIAL = vol.Schema(
         ),
         vol.Required(CONF_PARITY, default=DEFAULT_PARITY): SelectSelector(
             SelectSelectorConfig(
-                options=["N", "E", "O"],
-                translation_key="parity",
+                options=[
+                    SelectOptionDict(value="N", label="None"),
+                    SelectOptionDict(value="E", label="Even"),
+                    SelectOptionDict(value="O", label="Odd"),
+                ],
                 mode=SelectSelectorMode.DROPDOWN,
             )
         ),
@@ -82,7 +85,8 @@ class ModbusConnectionConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             data = {CONF_TYPE: CONNECTION_TCP, **user_input}
-            self._abort_if_configured(data)
+            # Dedupe before opening: most Modbus devices reject a second client.
+            self._async_abort_entries_match(data)
             if not (errors := await self._async_validate(data)):
                 return self.async_create_entry(
                     title=f"{data[CONF_HOST]}:{data[CONF_PORT]}", data=data
@@ -98,33 +102,16 @@ class ModbusConnectionConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             data = {CONF_TYPE: CONNECTION_SERIAL, **user_input}
-            self._abort_if_configured(data)
+            # A serial link is identified by its device path alone, regardless of
+            # baud rate and other line settings.
+            self._async_abort_entries_match(
+                {CONF_TYPE: CONNECTION_SERIAL, CONF_DEVICE: data[CONF_DEVICE]}
+            )
             if not (errors := await self._async_validate(data)):
                 return self.async_create_entry(title=data[CONF_DEVICE], data=data)
         return self.async_show_form(
             step_id="serial", data_schema=STEP_SERIAL, errors=errors
         )
-
-    def _abort_if_configured(self, data: dict[str, Any]) -> None:
-        """Abort if this exact link is already configured.
-
-        A Modbus endpoint has no hardware identity to use as a unique ID, so we
-        dedupe by connection parameters. We check *before* opening the
-        connection: most Modbus devices reject a second client, so probing one
-        that is already in use would fail.
-        """
-        for entry in self._async_current_entries():
-            if entry.data[CONF_TYPE] != data[CONF_TYPE]:
-                continue
-            if data[CONF_TYPE] == CONNECTION_SERIAL:
-                configured = entry.data[CONF_DEVICE] == data[CONF_DEVICE]
-            else:
-                configured = (
-                    entry.data[CONF_HOST] == data[CONF_HOST]
-                    and entry.data[CONF_PORT] == data[CONF_PORT]
-                )
-            if configured:
-                raise AbortFlow("already_configured")
 
     async def _async_validate(self, data: dict[str, Any]) -> dict[str, str]:
         """Validate by actually opening the connection; return form errors."""
