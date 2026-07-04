@@ -14,7 +14,6 @@ from homeassistant.components.remote import (
     DOMAIN as REMOTE_DOMAIN,
     RemoteEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -57,7 +56,6 @@ from .const import (
     SERV_INPUT_SOURCE,
     SERV_TELEVISION,
 )
-from .models import HomeKitEntryData
 from .util import cleanup_name_for_homekit
 
 VISIBILITY_PERSIST_COOLDOWN = 1.0
@@ -134,6 +132,7 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
         self.char_active = serv_tv.configure_char(
             CHAR_ACTIVE, setter_callback=self.set_on_off
         )
+        self._visibility_debouncer: Debouncer | None = None
 
         if not self.support_select_source:
             return
@@ -204,41 +203,24 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
             self._hidden_sources.discard(source)
         if (char := self._input_current_visibility_chars.get(source)) is not None:
             char.set_value(int(is_hidden))
-        self._visibility_debouncer.async_schedule_call()
+        if self._visibility_debouncer is not None:
+            self._visibility_debouncer.async_schedule_call()
 
-    async def _async_persist_hidden_sources(self) -> None:
-        """Write the current hidden-source set back to the config entry options."""
+    @callback
+    def _async_persist_hidden_sources(self) -> None:
+        """Write the current hidden-source set back to the config entry options.
+
+        The read-modify-write runs entirely in this synchronous callback:
+        ``async_update_entry`` is itself a callback and dispatches its update
+        listeners as separate tasks, so sibling accessories on the same bridge
+        can't interleave and no lock is needed.
+        """
         entry_id = self.driver.entry_id
         if not entry_id:
             return
         entry = self.hass.config_entries.async_get_entry(entry_id)
         if entry is None:
             return
-        # Serialise the read-modify-write so sibling accessories on the same
-        # bridge can't drop each other's updates. The lock lives on the entry's
-        # runtime data and is reclaimed with the entry on unload; if runtime
-        # data isn't present (unit tests that build accessories directly) we
-        # fall through without locking — there's no real concurrency in those.
-        entry_data = getattr(entry, "runtime_data", None)
-        lock = (
-            entry_data.visibility_lock
-            if isinstance(entry_data, HomeKitEntryData)
-            else None
-        )
-        if lock is not None:
-            async with lock:
-                self._async_write_hidden_sources(entry)
-        else:
-            _LOGGER.debug(
-                "%s: persisting visibility without a lock — runtime_data is not "
-                "HomeKitEntryData; concurrent sibling accessories may race",
-                self.entity_id,
-            )
-            self._async_write_hidden_sources(entry)
-
-    @callback
-    def _async_write_hidden_sources(self, entry: ConfigEntry) -> None:
-        """Compute and apply the new options for this entity's hide list."""
         new_options = dict(entry.options)
         hidden_map = dict(new_options.get(CONF_HOMEKIT_HIDDEN_SOURCES, {}))
         sorted_sources = sorted(self._hidden_sources)
@@ -257,12 +239,9 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
     @callback
     def async_stop(self) -> None:
         """Flush any pending visibility persist before tearing down."""
-        if (debouncer := getattr(self, "_visibility_debouncer", None)) is not None:
-            debouncer.async_cancel()
-            self.hass.async_create_background_task(
-                self._async_persist_hidden_sources(),
-                name=f"homekit_flush_visibility_{self.entity_id}",
-            )
+        if self._visibility_debouncer is not None:
+            self._visibility_debouncer.async_cancel()
+            self._async_persist_hidden_sources()
         super().async_stop()
 
     def _get_mapped_sources(self, state: State) -> dict[str, str]:
