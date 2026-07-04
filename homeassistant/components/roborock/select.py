@@ -505,6 +505,8 @@ class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
     @override
     def current_option(self) -> str | None:
         """Get the current status of the select entity from coordinator data."""
+        if self.coordinator.data is None:
+            return None
         if self.entity_description.data_protocol not in self.coordinator.data:
             return None
 

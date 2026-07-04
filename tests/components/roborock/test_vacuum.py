@@ -1,5 +1,6 @@
 """Tests for Roborock vacuums."""
 
+import asyncio
 from typing import Any
 from unittest.mock import Mock, call
 
@@ -32,7 +33,12 @@ from homeassistant.components.vacuum import (
     SERVICE_START,
     SERVICE_STOP,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -1072,42 +1078,49 @@ async def test_q10_ha_refresh(
     fake_q10_vacuum.b01_q10_properties.refresh.assert_called()
 
 
-async def test_vacuums_unavailable(
+async def mock_delay(*args: Any, **kwargs: Any) -> None:
+    """Delay the update to simulate before first update completes."""
+    await asyncio.sleep(15)
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        (RoborockException("Simulated failure"), STATE_UNAVAILABLE),
+        (mock_delay, STATE_UNKNOWN),
+    ],
+)
+async def test_vacuums_coordinator_state(
     hass: HomeAssistant,
     mock_roborock_entry: MockConfigEntry,
     fake_devices: list[FakeDevice],
+    side_effect: Any,
+    expected_state: str,
 ) -> None:
-    """Test vacuums are still created when the coordinator data is unavailable."""
+    """Test vacuums state based on coordinator update success or delay."""
     for device in fake_devices:
         if device.v1_properties is not None:
-            device.v1_properties.status.refresh.side_effect = RoborockException(
-                "Simulated V1 failure"
-            )
+            device.v1_properties.status.refresh.side_effect = side_effect
         if device.b01_q10_properties is not None:
-            device.b01_q10_properties.refresh.side_effect = RoborockException(
-                "Simulated Q10 failure"
-            )
+            device.b01_q10_properties.refresh.side_effect = side_effect
         if device.b01_q7_properties is not None:
-            device.b01_q7_properties.query_values.side_effect = RoborockException(
-                "Simulated Q7 failure"
-            )
+            device.b01_q7_properties.query_values.side_effect = side_effect
 
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Verify that a vacuum from each device type is created but reports STATE_UNAVAILABLE
-
+    # Verify that a vacuum from each device type is created
     state = hass.states.get("vacuum.roborock_s7_maxv")
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == expected_state
 
     state = hass.states.get("vacuum.roborock_q10_s5")
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == expected_state
 
     state = hass.states.get("vacuum.roborock_q7")
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == expected_state
 
 
 async def test_q10_get_segments(
