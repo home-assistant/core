@@ -1,7 +1,6 @@
 """Test the Home Assistant local auth provider."""
 
 import asyncio
-from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -14,7 +13,6 @@ from homeassistant.auth.providers import (
     homeassistant as hass_auth,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 
@@ -23,15 +21,6 @@ async def data(hass: HomeAssistant) -> hass_auth.Data:
     """Create a loaded data class."""
     data = hass_auth.Data(hass)
     await data.async_load()
-    return data
-
-
-@pytest.fixture
-async def legacy_data(hass: HomeAssistant) -> hass_auth.Data:
-    """Create a loaded legacy data class."""
-    data = hass_auth.Data(hass)
-    await data.async_load()
-    data.is_legacy = True
     return data
 
 
@@ -209,118 +198,6 @@ async def test_get_or_create_credentials(
     assert credentials1 is credentials2
 
 
-# Legacy mode
-
-
-async def test_legacy_adding_user(legacy_data: hass_auth.Data) -> None:
-    """Test in legacy mode adding a user."""
-    legacy_data.add_auth("test-user", "test-pass")
-    legacy_data.validate_login("test-user", "test-pass")
-
-
-async def test_legacy_validating_password_invalid_password(
-    legacy_data: hass_auth.Data,
-) -> None:
-    """Test in legacy mode validating an invalid password."""
-    legacy_data.add_auth("test-user", "test-pass")
-
-    with pytest.raises(hass_auth.InvalidAuth):
-        legacy_data.validate_login("test-user", "invalid-pass")
-
-
-async def test_legacy_changing_password(legacy_data: hass_auth.Data) -> None:
-    """Test in legacy mode adding a user."""
-    user = "test-user"
-    legacy_data.add_auth(user, "test-pass")
-    legacy_data.change_password(user, "new-pass")
-
-    with pytest.raises(hass_auth.InvalidAuth):
-        legacy_data.validate_login(user, "test-pass")
-
-    legacy_data.validate_login(user, "new-pass")
-
-
-async def test_legacy_changing_password_raises_invalid_user(
-    legacy_data: hass_auth.Data,
-) -> None:
-    """Test in legacy mode that we initialize an empty config."""
-    with pytest.raises(hass_auth.InvalidUser):
-        legacy_data.change_password("non-existing", "pw")
-
-
-async def test_legacy_login_flow_validates(
-    legacy_data: hass_auth.Data, hass: HomeAssistant
-) -> None:
-    """Test in legacy mode login flow."""
-    legacy_data.add_auth("test-user", "test-pass")
-    await legacy_data.async_save()
-
-    provider = hass_auth.HassAuthProvider(
-        hass, auth_store.AuthStore(hass), {"type": "homeassistant"}
-    )
-    flow = await provider.async_login_flow({})
-    result = await flow.async_step_init()
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
-
-    result = await flow.async_step_init(
-        {"username": "incorrect-user", "password": "test-pass"}
-    )
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
-    assert result["errors"]["base"] == "invalid_auth"
-
-    result = await flow.async_step_init(
-        {"username": "test-user", "password": "incorrect-pass"}
-    )
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
-    assert result["errors"]["base"] == "invalid_auth"
-
-    result = await flow.async_step_init(
-        {"username": "test-user", "password": "test-pass"}
-    )
-    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"]["username"] == "test-user"
-
-
-async def test_legacy_saving_loading(
-    legacy_data: hass_auth.Data, hass: HomeAssistant
-) -> None:
-    """Test in legacy mode saving and loading JSON."""
-    legacy_data.add_auth("test-user", "test-pass")
-    legacy_data.add_auth("second-user", "second-pass")
-    await legacy_data.async_save()
-
-    legacy_data = hass_auth.Data(hass)
-    await legacy_data.async_load()
-    legacy_data.is_legacy = True
-    legacy_data.validate_login("test-user", "test-pass")
-    legacy_data.validate_login("second-user", "second-pass")
-
-    with pytest.raises(hass_auth.InvalidAuth):
-        legacy_data.validate_login("test-user ", "test-pass")
-
-
-async def test_legacy_get_or_create_credentials(
-    hass: HomeAssistant, legacy_data: hass_auth.Data
-) -> None:
-    """Test in legacy mode that we can get or create credentials."""
-    manager = await auth_manager_from_config(hass, [{"type": "homeassistant"}], [])
-    provider = manager.auth_providers[0]
-    provider.data = legacy_data
-    credentials1 = await provider.async_get_or_create_credentials({"username": "hello"})
-
-    with patch.object(provider, "async_credentials", return_value=[credentials1]):
-        credentials2 = await provider.async_get_or_create_credentials(
-            {"username": "hello"}
-        )
-    assert credentials1 is credentials2
-
-    with patch.object(provider, "async_credentials", return_value=[credentials1]):
-        credentials3 = await provider.async_get_or_create_credentials(
-            {"username": "hello "}
-        )
-    assert credentials1 is not credentials3
-
-
 async def test_race_condition_in_data_loading(hass: HomeAssistant) -> None:
     """Test race condition in the hass_auth.Data loading.
 
@@ -361,28 +238,6 @@ def test_change_username(data: hass_auth.Data) -> None:
     assert users[0]["username"] == "new-user"
 
 
-@pytest.mark.parametrize("username", ["test-user ", "TEST-USER"])
-def test_change_username_legacy(legacy_data: hass_auth.Data, username: str) -> None:
-    """Test changing username."""
-    # Cannot use add_auth as it normalizes username
-    legacy_data.users.append(
-        {
-            "username": username,
-            "password": legacy_data.hash_password("test-pass", True).decode(),
-        }
-    )
-
-    users = legacy_data.users
-    assert len(users) == 1
-    assert users[0]["username"] == username
-
-    legacy_data.change_username(username, "test-user")
-
-    users = legacy_data.users
-    assert len(users) == 1
-    assert users[0]["username"] == "test-user"
-
-
 def test_change_username_invalid_user(data: hass_auth.Data) -> None:
     """Test changing username raises on invalid user."""
     data.add_auth("test-user", "test-pass")
@@ -409,91 +264,3 @@ async def test_change_username_not_normalized(
         hass_auth.InvalidUsername, match='Username "TEST-user " is not normalized'
     ):
         data.change_username("test-user", "TEST-user ")
-
-
-@pytest.mark.parametrize(
-    ("usernames_in_storage", "usernames_in_repair"),
-    [
-        (["Uppercase"], '- "Uppercase"'),
-        ([" leading"], '- " leading"'),
-        (["trailing "], '- "trailing "'),
-        (["Test", "test", "Fritz "], '- "Fritz "\n- "Test"'),
-    ],
-)
-async def test_create_repair_on_legacy_usernames(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    issue_registry: ir.IssueRegistry,
-    usernames_in_storage: list[str],
-    usernames_in_repair: str,
-) -> None:
-    """Test that we create a repair issue for legacy usernames."""
-    assert not issue_registry.issues.get(
-        ("auth", "homeassistant_provider_not_normalized_usernames")
-    ), "Repair issue already exists"
-
-    hass_storage[hass_auth.STORAGE_KEY] = {
-        "version": 1,
-        "minor_version": 1,
-        "key": "auth_provider.homeassistant",
-        "data": {
-            "users": [
-                {
-                    "username": username,
-                    "password": "onlyherebecauseweneedapasswordstring",
-                }
-                for username in usernames_in_storage
-            ]
-        },
-    }
-    data = hass_auth.Data(hass)
-    await data.async_load()
-    issue = issue_registry.issues.get(
-        ("auth", "homeassistant_provider_not_normalized_usernames")
-    )
-    assert issue, "Repair issue not created"
-    assert issue.translation_placeholders == {"usernames": usernames_in_repair}
-
-
-async def test_delete_repair_after_fixing_usernames(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test that the repair is deleted after fixing the usernames."""
-    hass_storage[hass_auth.STORAGE_KEY] = {
-        "version": 1,
-        "minor_version": 1,
-        "key": "auth_provider.homeassistant",
-        "data": {
-            "users": [
-                {
-                    "username": "Test",
-                    "password": "onlyherebecauseweneedapasswordstring",
-                },
-                {
-                    "username": "bla ",
-                    "password": "onlyherebecauseweneedapasswordstring",
-                },
-            ]
-        },
-    }
-    data = hass_auth.Data(hass)
-    await data.async_load()
-    issue = issue_registry.issues.get(
-        ("auth", "homeassistant_provider_not_normalized_usernames")
-    )
-    assert issue, "Repair issue not created"
-    assert issue.translation_placeholders == {"usernames": '- "Test"\n- "bla "'}
-
-    data.change_username("Test", "test")
-    issue = issue_registry.issues.get(
-        ("auth", "homeassistant_provider_not_normalized_usernames")
-    )
-    assert issue
-    assert issue.translation_placeholders == {"usernames": '- "bla "'}
-
-    data.change_username("bla ", "bla")
-    assert not issue_registry.issues.get(
-        ("auth", "homeassistant_provider_not_normalized_usernames")
-    ), "Repair issue should be deleted"
