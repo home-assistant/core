@@ -4,9 +4,11 @@ from typing import override
 
 from homeassistant.components.notify import NotifyEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import KebaConfigEntry, KebaHandler
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -27,6 +29,11 @@ class KebaNotifyEntity(NotifyEntity):
     def __init__(self, keba: KebaHandler) -> None:
         """Initialize the notify entity."""
         self._keba = keba
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, keba.device_id)},
+            name=keba.device_name,
+            manufacturer="KEBA",
+        )
         self._attr_unique_id = keba.device_id
         self._attr_name = f"{keba.device_name} Display"
 

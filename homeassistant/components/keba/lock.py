@@ -4,9 +4,11 @@ from typing import Any, override
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import KebaConfigEntry, KebaHandler
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -30,6 +32,11 @@ class KebaLock(LockEntity):
         """Initialize the KEBA lock."""
         self._keba = keba
         self._attr_is_locked = True
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, keba.device_id)},
+            name=keba.device_name,
+            manufacturer="KEBA",
+        )
         self._attr_name = f"{keba.device_name} {name}"
         self._attr_unique_id = f"{keba.device_id}_{entity_type}"
 

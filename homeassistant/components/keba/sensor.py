@@ -10,9 +10,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfElectricCurrent, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import KebaConfigEntry, KebaHandler
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -95,6 +97,11 @@ class KebaSensor(SensorEntity):
         self._keba = keba
         self.entity_description = description
 
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, keba.device_id)},
+            name=keba.device_name,
+            manufacturer="KEBA",
+        )
         self._attr_name = f"{keba.device_name} {description.name}"
         self._attr_unique_id = f"{keba.device_id}_{entity_type}"
 
