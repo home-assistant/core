@@ -1,8 +1,9 @@
 """deCONZ service tests."""
 
 from collections.abc import Callable
+from types import MappingProxyType
 from typing import Any
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock
 
 from pydeconz.errors import RequestError
 import pytest
@@ -414,21 +415,23 @@ async def test_remove_orphaned_entries_service(
         == 2  # Light and switch battery
     )
 
-@pytest.mark.usefixtures("config_entry_setup")
+
 async def test_configure_service_request_error(
     hass: HomeAssistant,
-    config_entry_setup: MockConfigEntry,
+    mock_put_request,
 ) -> None:
     """Test configure service handles API request errors."""
-    hub = config_entry_setup.runtime_data
-
-    hub.api.request = AsyncMock(side_effect=RequestError("fail"))
 
     data = {
         SERVICE_FIELD: "/lights/2",
         CONF_BRIDGE_ID: BRIDGE_ID,
         SERVICE_DATA: {"on": True},
     }
+
+    mock_put_request(
+        "/lights/2",
+        exc=RequestError("Request failed"),
+    )
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
@@ -440,15 +443,25 @@ async def test_configure_service_request_error(
 
     assert exc_info.value.translation_key == "configure_failed"
 
-@pytest.mark.usefixtures("config_entry_setup")
+
 async def test_service_refresh_devices_failure(
     hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_data: MappingProxyType[str, Any],
     config_entry_setup: MockConfigEntry,
 ) -> None:
-    """Test refresh service resets ignore_state_updates on failure."""
-    hub = config_entry_setup.runtime_data
+    """Test refresh service handles request failures."""
+    
+    url = (
+        f"http://{config_entry_data[CONF_HOST]}:"
+        f"{config_entry_data[CONF_PORT]}/api/"
+        f"{config_entry_data[CONF_API_KEY]}"
+    )
 
-    hub.api.refresh_state = AsyncMock(side_effect=TimeoutError)
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(url, exc=TimeoutError)
+
+    hub = config_entry_setup.runtime_data
     hub.load_ignored_devices = Mock()
 
     with pytest.raises(HomeAssistantError) as exc_info:
