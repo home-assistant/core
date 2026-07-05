@@ -1084,7 +1084,9 @@ class KNXOptionsFlow(OptionsFlowWithReload):
             dsn = _build_dsn(params)
             errors = await _async_check_postgres_dsn(dsn)
             if not errors:
-                self.new_entry_options["telegram_db_postgres_dsn"] = dsn
+                self.new_entry_options |= KNXConfigEntryOptions(
+                    telegram_db_postgres_dsn=dsn
+                )
                 return self.finish_flow()
 
         parsed = _parse_dsn(current_dsn)
