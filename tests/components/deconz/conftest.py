@@ -100,12 +100,11 @@ def fixture_put_request(
         host: str = "",
         *,
         exc: Exception | type[Exception] | None = None,
-        json: dict[str, Any] | None = None,
     ) -> AiohttpClientMocker:
         url = f"http://{host or _host}:{_port}/api/{_api_key}{path}"
         aioclient_mock.put(
             url,
-            json={} if json is None else json,
+            json={},
             exc=exc,
             headers={"content-type": CONTENT_TYPE_JSON},
         )
@@ -145,12 +144,11 @@ def fixture_get_request(
         host: str = "",
         *,
         exc: Exception | type[Exception] | None = None,
-        json: dict[str, Any] | None = None,
     ) -> None:
         url = f"http://{host or _host}:{_port}/api/{_api_key}"
         aioclient_mock.get(
             url,
-            json=deconz_payload | {"config": config_payload} if json is None else json,
+            json=deconz_payload | {"config": config_payload},
             exc=exc,
             headers={"content-type": CONTENT_TYPE_JSON},
         )

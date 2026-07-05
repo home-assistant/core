@@ -1,7 +1,6 @@
 """deCONZ service tests."""
 
 from collections.abc import Callable
-from types import MappingProxyType
 from typing import Any
 
 from pydeconz.errors import RequestError
@@ -23,7 +22,6 @@ from homeassistant.components.deconz.services import (
     SERVICE_REMOVE_ORPHANED_ENTRIES,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -127,7 +125,7 @@ async def test_configure_service_with_faulty_bridgeid(
         SERVICE_DATA: {"on": True},
     }
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CONFIGURE_DEVICE,
@@ -135,6 +133,7 @@ async def test_configure_service_with_faulty_bridgeid(
             blocking=True,
         )
 
+    assert err.value.translation_key == "gateway_not_found"
     assert len(aioclient_mock.mock_calls) == 0
 
 
@@ -448,19 +447,13 @@ async def test_configure_service_request_error(
 async def test_service_refresh_devices_failure(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_data: MappingProxyType[str, Any],
     config_entry_setup: MockConfigEntry,
+    mock_requests: Callable[..., None],
 ) -> None:
     """Test refresh service handles request failures."""
 
-    url = (
-        f"http://{config_entry_data[CONF_HOST]}:"
-        f"{config_entry_data[CONF_PORT]}/api/"
-        f"{config_entry_data[CONF_API_KEY]}"
-    )
-
     aioclient_mock.clear_requests()
-    aioclient_mock.get(url, exc=TimeoutError)
+    mock_requests(exc=TimeoutError)
 
     hub = config_entry_setup.runtime_data
 
