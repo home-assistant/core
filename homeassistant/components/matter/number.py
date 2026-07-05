@@ -337,8 +337,8 @@ DISCOVERY_SCHEMAS = [
             device_class=NumberDeviceClass.TEMPERATURE,
             entity_category=EntityCategory.CONFIG,
             translation_key="temperature_offset",
-            native_max_value=25,  # Matter 1.3 limit
-            native_min_value=-25,  # Matter 1.3 limit
+            native_max_value=2.5,  # Matter 1.3 limit (raw -25..25 in 0.1°C units)
+            native_min_value=-2.5,  # Matter 1.3 limit (raw -25..25 in 0.1°C units)
             native_step=0.5,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_to_ha=lambda x: None if x is None else x / 10,
@@ -349,6 +349,30 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.Thermostat.Attributes.LocalTemperatureCalibration,
         ),
+        cluster_revision_max=6,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="TemperatureOffset",
+            device_class=NumberDeviceClass.TEMPERATURE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="temperature_offset",
+            # Matter 1.4 dropped the ±2.5°C constraint; fall back to the
+            # int8 storage range of the raw attribute (-128..127 in 0.1°C units)
+            native_max_value=12.7,
+            native_min_value=-12.7,
+            native_step=0.5,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_to_ha=lambda x: None if x is None else x / 10,
+            ha_to_device=lambda x: round(x * 10),
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            clusters.Thermostat.Attributes.LocalTemperatureCalibration,
+        ),
+        cluster_revision_min=7,
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,

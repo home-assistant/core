@@ -506,3 +506,25 @@ async def test_occupancy_sensing_pir_attributes(
         ),
         value=3,
     )
+
+
+@pytest.mark.parametrize(
+    ("attributes", "expected_min", "expected_max"),
+    [
+        ({"1/513/65533": 6}, -2.5, 2.5),
+        ({"1/513/65533": 7}, -12.7, 12.7),
+    ],
+)
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat"])
+async def test_temperature_offset_cluster_revision(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    expected_min: float,
+    expected_max: float,
+) -> None:
+    """Test TemperatureOffset schema bounds are selected based on ClusterRevision."""
+    state = hass.states.get("number.mock_thermostat_temperature_offset")
+    assert state
+    assert state.attributes["min"] == expected_min
+    assert state.attributes["max"] == expected_max
