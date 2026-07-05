@@ -5,7 +5,8 @@ from typing import Any, override
 
 from monarchmoney import LoginFailedException, RequireMFAException
 from monarchmoney.monarchmoney import SESSION_FILE
-from typedmonarchmoney import TypedMonarchMoney, MonarchSubscription
+from typedmonarchmoney import TypedMonarchMoney
+from typedmonarchmoney.models import MonarchSubscription
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult

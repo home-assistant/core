@@ -8,11 +8,11 @@ from typing import override
 from aiohttp import ClientResponseError
 from gql.transport.exceptions import TransportServerError
 from monarchmoney import LoginFailedException
-from typedmonarchmoney import (
+from typedmonarchmoney import TypedMonarchMoney
+from typedmonarchmoney.models import (
     MonarchAccount,
     MonarchCashflowSummary,
     MonarchSubscription,
-    TypedMonarchMoney,
 )
 
 from homeassistant.config_entries import ConfigEntry

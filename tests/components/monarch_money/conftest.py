@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
-from typedmonarchmoney import (
+from typedmonarchmoney.models import (
     MonarchAccount,
     MonarchCashflowSummary,
     MonarchSubscription,
