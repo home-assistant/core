@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
-from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES, MEDIA_SOURCE_DATA
+from .const import DATA_LOCAL_SOURCE, DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
 from .error import Unresolvable
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
 
@@ -446,7 +446,7 @@ class UploadMediaView(http.HomeAssistantView):
         if target_folder.domain != DOMAIN:
             raise web.HTTPBadRequest
 
-        source = cast(LocalSource, hass.data[MEDIA_SOURCE_DATA][target_folder.domain])
+        source = cast(LocalSource, hass.data[DATA_LOCAL_SOURCE])
         try:
             uploaded_media_source_id = await source.async_upload_media(
                 target_folder, data["file"]
@@ -491,7 +491,7 @@ async def websocket_remove_media(
         )
         return
 
-    source = cast(LocalSource, hass.data[MEDIA_SOURCE_DATA][item.domain])
+    source = cast(LocalSource, hass.data[DATA_LOCAL_SOURCE])
 
     try:
         await source.async_delete_media(item)
