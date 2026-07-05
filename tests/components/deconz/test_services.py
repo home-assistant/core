@@ -417,9 +417,10 @@ async def test_remove_orphaned_entries_service(
     )
 
 
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_configure_service_request_error(
     hass: HomeAssistant,
-    mock_put_request,
+    mock_put_request: Callable[..., AiohttpClientMocker],
 ) -> None:
     """Test configure service handles API request errors."""
 

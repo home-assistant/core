@@ -631,6 +631,7 @@ async def test_hassio_discovery_update_configuration(
     assert config_entry_setup.data[CONF_API_KEY] == "updated"
 
 
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_hassio_discovery_dont_update_configuration(hass: HomeAssistant) -> None:
     """Test we can update an existing config entry."""
     result = await hass.config_entries.flow.async_init(
