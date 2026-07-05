@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pylgnetcast import LG_COMMAND, LgNetCastClient, LgNetCastError
 from requests import RequestException
@@ -57,6 +57,7 @@ class LgNetCastRemote(RemoteEntity):
             manufacturer=ATTR_MANUFACTURER,
         )
 
+    @override
     def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send commands to the TV."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]
@@ -81,12 +82,14 @@ class LgNetCastRemote(RemoteEntity):
                 self.schedule_update_ha_state()
                 return
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on is handled via a separate turn_on trigger."""
         raise NotImplementedError(
             "Turning on the TV is not supported by the LG Netcast remote entity"
         )
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the TV."""
         self.send_command(["POWER"], **{ATTR_NUM_REPEATS: 1})

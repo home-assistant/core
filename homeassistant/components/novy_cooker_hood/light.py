@@ -1,6 +1,6 @@
 """Light platform for the Novy Cooker Hood."""
 
-from typing import Any
+from typing import Any, override
 
 from rf_protocols.codes.novy.cooker_hood import NovyCookerHoodButton
 
@@ -48,18 +48,21 @@ class NovyCookerHoodLight(
         self._code = entry.data[CONF_CODE]
         self._attr_unique_id = entry.entry_id
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore the last known on/off state."""
         await super().async_added_to_hass()
         if (last_state := await self.async_get_last_state()) is not None:
             self._attr_is_on = last_state.state == STATE_ON
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on by sending the toggle command."""
         await self._async_send_light()
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off by sending the toggle command."""
         await self._async_send_light()

@@ -1,7 +1,7 @@
 """Fan platform for the Novy Cooker Hood (calibrated speed control)."""
 
 import math
-from typing import Any
+from typing import Any, override
 
 from rf_protocols.codes.novy.cooker_hood import NovyCookerHoodButton
 
@@ -61,17 +61,20 @@ class NovyCookerHoodFan(
         self._attr_unique_id = entry.entry_id
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the fan is currently on."""
         return self._level > 0
 
     @property
+    @override
     def percentage(self) -> int:
         """Return the current speed as a percentage."""
         if self._level == 0:
             return 0
         return ranged_value_to_percentage(_SPEED_RANGE, self._level)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore the last known speed level from the saved percentage."""
         await super().async_added_to_hass()
@@ -82,6 +85,7 @@ class NovyCookerHoodFan(
         if isinstance(last_pct, (int, float)) and last_pct > 0:
             self._level = math.ceil(percentage_to_ranged_value(_SPEED_RANGE, last_pct))
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -95,10 +99,12 @@ class NovyCookerHoodFan(
             level = math.ceil(percentage_to_ranged_value(_SPEED_RANGE, percentage))
         await self._async_set_level(level)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off by sending the calibration sequence to level 0."""
         await self._async_set_level(0)
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the fan speed via calibration."""
         if percentage <= 0:
@@ -107,6 +113,7 @@ class NovyCookerHoodFan(
         level = math.ceil(percentage_to_ranged_value(_SPEED_RANGE, percentage))
         await self._async_set_level(level)
 
+    @override
     async def async_increase_speed(self, percentage_step: int | None = None) -> None:
         """Bump speed up by N hardware levels (no recalibration)."""
         steps = self._steps_from_percentage(percentage_step)
@@ -116,6 +123,7 @@ class NovyCookerHoodFan(
         self._level = min(SPEED_COUNT, self._level + steps)
         self.async_write_ha_state()
 
+    @override
     async def async_decrease_speed(self, percentage_step: int | None = None) -> None:
         """Bump speed down by N hardware levels (no recalibration)."""
         steps = self._steps_from_percentage(percentage_step)

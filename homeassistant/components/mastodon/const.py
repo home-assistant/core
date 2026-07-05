@@ -24,6 +24,8 @@ ATTR_MEDIA_DESCRIPTION = "media_description"
 ATTR_LANGUAGE = "language"
 ATTR_DURATION = "duration"
 ATTR_HIDE_NOTIFICATIONS = "hide_notifications"
+ATTR_IN_REPLY_TO = "in_reply_to"
+ATTR_QUOTED_STATUS = "quoted_status"
 
 ATTR_DISPLAY_NAME = "display_name"
 ATTR_NOTE = "note"

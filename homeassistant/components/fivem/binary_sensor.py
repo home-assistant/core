@@ -1,6 +1,7 @@
 """The FiveM binary sensor platform."""
 
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -50,6 +51,7 @@ class FiveMSensorEntity(FiveMEntity, BinarySensorEntity):
     entity_description: FiveMBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return self.coordinator.data[self.entity_description.key]

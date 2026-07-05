@@ -107,12 +107,12 @@ async def test_job_manager_ws_updates(
     job_data: Job | None = None
 
     @callback
-    def mock_subcription_callback(job: Job) -> None:
+    def mock_subscription_callback(job: Job) -> None:
         nonlocal job_data
         job_data = job
 
     subscription = JobSubscription(
-        mock_subcription_callback, name="test_job", reference="test"
+        mock_subscription_callback, name="test_job", reference="test"
     )
     unsubscribe = data_coordinator.jobs.subscribe(subscription)
 
@@ -318,11 +318,11 @@ async def test_job_manager_reload_on_supervisor_restart(
     job_data: Job | None = None
 
     @callback
-    def mock_subcription_callback(job: Job) -> None:
+    def mock_subscription_callback(job: Job) -> None:
         nonlocal job_data
         job_data = job
 
-    subscription = JobSubscription(mock_subcription_callback, name="test_job")
+    subscription = JobSubscription(mock_subscription_callback, name="test_job")
     data_coordinator.jobs.subscribe(subscription)
 
     # Send supervisor restart signal
@@ -347,3 +347,78 @@ async def test_job_manager_reload_on_supervisor_restart(
     assert job_data.reference == "test"
     assert job_data.done is True
     assert not data_coordinator.jobs.current_jobs
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_subscribe_returns_unsubscribe_when_job_already_matches(
+    hass: HomeAssistant,
+    jobs_info: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test subscribe returns a working unsubscribe even if a job already matches."""
+    jobs_info.return_value = JobsInfo(
+        ignore_conditions=[],
+        jobs=[
+            Job(
+                name="test_job",
+                reference="test",
+                uuid=uuid4(),
+                progress=0,
+                stage=None,
+                done=False,
+                errors=[],
+                created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                extra=None,
+                child_jobs=[],
+            )
+        ],
+    )
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    client = await hass_supervisor_ws_client()
+    data_coordinator: HassioMainDataUpdateCoordinator = hass.data[MAIN_COORDINATOR]
+
+    received: list[Job] = []
+
+    @callback
+    def mock_subscription_callback(job: Job) -> None:
+        received.append(job)
+
+    subscription = JobSubscription(mock_subscription_callback, name="test_job")
+    unsubscribe = data_coordinator.jobs.subscribe(subscription)
+
+    # Existing matching job is delivered immediately, and a callable unsubscribe
+    # is returned (not the None result of the callback)
+    assert len(received) == 1
+    assert received[0].name == "test_job"
+    assert callable(unsubscribe)
+
+    # After unsubscribing, a new matching job update is no longer delivered
+    unsubscribe()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "job",
+                "data": {
+                    "name": "test_job",
+                    "reference": "test",
+                    "uuid": uuid4().hex,
+                    "progress": 50,
+                    "stage": None,
+                    "done": False,
+                    "errors": [],
+                    "created": datetime.now().isoformat(),  # pylint: disable=home-assistant-enforce-naive-now
+                    "extra": None,
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert len(received) == 1

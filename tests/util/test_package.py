@@ -7,7 +7,7 @@ import logging
 import os
 from subprocess import PIPE
 import sys
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, Mock, PropertyMock, call, patch
 
 import pytest
 
@@ -20,6 +20,16 @@ RESOURCE_DIR = os.path.abspath(
 TEST_NEW_REQ = "pyhelloworld3==1.0.0"
 
 TEST_ZIP_REQ = f"file://{RESOURCE_DIR}/pyhelloworld3.zip#{TEST_NEW_REQ}"
+
+TEST_EXTRA_INDEX_URL = "https://wheels.home-assistant.io/musllinux-index/"
+TEST_OTHER_INDEX_URL = "https://example.com/simple/"
+TEST_INDEX_FAIL_STDERR = (
+    f"error: Failed to fetch: `{TEST_EXTRA_INDEX_URL}pyhelloworld3/`"
+)
+TEST_WHEEL_FAIL_STDERR = (
+    "error: Failed to fetch: `https://wheels.home-assistant.io/"
+    "pyhelloworld3-1.0.0-cp314-cp314-musllinux_1_2_x86_64.whl`"
+)
 
 
 @pytest.fixture
@@ -306,6 +316,103 @@ def test_install_error(caplog: pytest.LogCaptureFixture, mock_popen) -> None:
     assert len(caplog.records) == 1
     for record in caplog.records:
         assert record.levelname == "ERROR"
+
+
+@pytest.mark.parametrize(
+    ("extra_index", "install_stderr", "expected_retry_env"),
+    [
+        pytest.param(
+            TEST_EXTRA_INDEX_URL, TEST_INDEX_FAIL_STDERR, {}, id="single_index_removed"
+        ),
+        pytest.param(
+            f"{TEST_EXTRA_INDEX_URL} {TEST_OTHER_INDEX_URL}",
+            TEST_INDEX_FAIL_STDERR,
+            {"UV_EXTRA_INDEX_URL": TEST_OTHER_INDEX_URL},
+            id="healthy_index_kept",
+        ),
+        pytest.param(
+            TEST_EXTRA_INDEX_URL,
+            TEST_WHEEL_FAIL_STDERR,
+            {},
+            id="wheel_file_outside_index_path",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_sys", "mock_venv")
+def test_install_extra_index_fallback(
+    mock_popen: MagicMock,
+    mock_env_copy: Mock,
+    extra_index: str,
+    install_stderr: str,
+    expected_retry_env: dict[str, str],
+) -> None:
+    """Test install retries without a failing extra index."""
+    env = mock_env_copy()
+    env["UV_EXTRA_INDEX_URL"] = extra_index
+    mock_popen.return_value.communicate.side_effect = [
+        (b"", install_stderr.encode()),
+        (b"", b""),
+    ]
+    type(mock_popen.return_value).returncode = PropertyMock(side_effect=[1, 0])
+    assert package.install_package(TEST_NEW_REQ, False)
+    assert mock_popen.return_value.communicate.call_count == 2
+    assert mock_popen.call_args_list[2].kwargs["env"] == expected_retry_env
+
+
+@pytest.mark.usefixtures("mock_sys", "mock_venv")
+def test_install_extra_index_fallback_redacts_credentials(
+    mock_popen: MagicMock,
+    mock_env_copy: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the retry warning does not log extra index credentials."""
+    caplog.set_level(logging.WARNING)
+    env = mock_env_copy()
+    env["UV_EXTRA_INDEX_URL"] = (
+        "https://user:secret@wheels.home-assistant.io/musllinux-index/"
+    )
+    mock_popen.return_value.communicate.side_effect = [
+        (b"", TEST_INDEX_FAIL_STDERR.encode()),
+        (b"", b""),
+    ]
+    type(mock_popen.return_value).returncode = PropertyMock(side_effect=[1, 0])
+    assert package.install_package(TEST_NEW_REQ, False)
+    assert "wheels.home-assistant.io" in caplog.text
+    assert "secret" not in caplog.text
+
+
+@pytest.mark.usefixtures("mock_sys", "mock_venv")
+def test_install_extra_index_fallback_fails(
+    mock_popen: MagicMock,
+    mock_env_copy: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test install fails when the retry without the extra index also fails."""
+    caplog.set_level(logging.WARNING)
+    env = mock_env_copy()
+    env["UV_EXTRA_INDEX_URL"] = TEST_EXTRA_INDEX_URL
+    mock_popen.return_value.communicate.return_value = (
+        b"",
+        TEST_INDEX_FAIL_STDERR.encode(),
+    )
+    mock_popen.return_value.returncode = 1
+    assert not package.install_package(TEST_NEW_REQ, False)
+    assert mock_popen.return_value.communicate.call_count == 2
+    assert "retrying without it" in caplog.text
+    assert "Unable to install package" in caplog.text
+
+
+@pytest.mark.usefixtures("mock_sys", "mock_venv")
+def test_install_extra_index_unrelated_error(
+    mock_popen: MagicMock,
+    mock_env_copy: Mock,
+) -> None:
+    """Test install does not retry when the error is not from the extra index."""
+    env = mock_env_copy()
+    env["UV_EXTRA_INDEX_URL"] = TEST_EXTRA_INDEX_URL
+    mock_popen.return_value.returncode = 1
+    assert not package.install_package(TEST_NEW_REQ, False)
+    assert mock_popen.return_value.communicate.call_count == 1
 
 
 @pytest.mark.usefixtures("mock_venv")

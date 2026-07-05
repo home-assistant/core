@@ -20,7 +20,6 @@ from script.hassfest.model import Config, Integration
 # requirements_all.txt.
 EXCLUDED_REQUIREMENTS_ALL = {
     "atenpdu",  # depends on pysnmp which is not maintained at this time
-    "avion",
     "beewi-smartclim",  # depends on bluepy
     "bluepy",
     "evdev",
@@ -207,7 +206,7 @@ num2words==0.5.14
 # pymodbus does not follow SemVer, and it keeps getting
 # downgraded or upgraded by custom components
 # This ensures all use the same version
-pymodbus==3.11.2
+pymodbus==3.13.1
 
 # Pin pytest-rerunfailures to prevent accidental breaks
 pytest-rerunfailures==16.0.1

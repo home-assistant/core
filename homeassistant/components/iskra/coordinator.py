@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from pyiskra.devices import Device
 from pyiskra.exceptions import (
@@ -41,6 +42,7 @@ class IskraDataUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=timedelta(seconds=60),
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from Iskra device."""
         try:

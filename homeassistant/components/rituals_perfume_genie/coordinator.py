@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiohttp import ClientError, ClientResponseError
 from pyrituals import Account, AuthenticationException, Diffuser
@@ -42,6 +43,7 @@ class RitualsDataUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=update_interval,
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from Rituals, with one silent re-auth on 401.
 

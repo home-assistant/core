@@ -1,6 +1,7 @@
 """An entity class for mobile_app."""
 
 import logging
+from typing import override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -61,6 +62,7 @@ class MobileAppEntity(RestoreEntity):
         self._attr_entity_category = config.get(ATTR_SENSOR_ENTITY_CATEGORY)
         self._attr_available = config.get(ATTR_SENSOR_STATE) != STATE_UNAVAILABLE
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
@@ -95,6 +97,7 @@ class MobileAppEntity(RestoreEntity):
                 config[ATTR_SENSOR_ICON] = last_state.attributes[ATTR_ICON]
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         return device_info(self._registration)

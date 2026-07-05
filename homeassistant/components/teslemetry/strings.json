@@ -363,6 +363,24 @@
       }
     },
     "select": {
+      "climate_state_seat_fan_front_left": {
+        "name": "Seat cooler front left",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "climate_state_seat_fan_front_right": {
+        "name": "Seat cooler front right",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
       "climate_state_seat_heater_left": {
         "name": "Seat heater front left",
         "state": {
@@ -575,8 +593,11 @@
         "name": "Consumer imported from solar"
       },
       "credit_balance": {
-        "name": "Teslemetry credits",
+        "name": "Teslemetry command credits",
         "unit_of_measurement": "credits"
+      },
+      "credit_quota": {
+        "name": "Teslemetry command quota used"
       },
       "cruise_follow_distance": {
         "name": "Cruise follow distance"

@@ -1,7 +1,7 @@
 """Config flow for AirNow integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyairnow import WebServiceAPI
 from pyairnow.errors import AirNowError, EmptyResponseError, InvalidKeyError
@@ -63,6 +63,7 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -122,6 +123,7 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> AirNowOptionsFlowHandler:
