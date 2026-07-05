@@ -92,12 +92,6 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
         self.async_write_ha_state()
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        self._attr_native_unit_of_measurement = self._native_unit_of_measurement()
-        await super().async_added_to_hass()
-
-    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
         if TYPE_CHECKING:
