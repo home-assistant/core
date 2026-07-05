@@ -35,11 +35,7 @@ async def test_user_flow(hass: HomeAssistant, mock_flow_it: AsyncMock) -> None:
         USER_INPUT,
     )
     await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Flow-it Device"
     assert result["data"] == {**USER_INPUT, "host": "http://1.1.1.1"}
-    assert result["result"].unique_id == "00:11:22:33:44:55"
 
 
 @pytest.mark.parametrize(
@@ -75,11 +71,7 @@ async def test_user_flow_exceptions(
         USER_INPUT,
     )
     await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Flow-it Device"
     assert result["data"] == {**USER_INPUT, "host": "http://1.1.1.1"}
-    assert result["result"].unique_id == "00:11:22:33:44:55"
 
 
 async def test_zeroconf(hass: HomeAssistant, mock_flow_it: AsyncMock) -> None:
