@@ -427,7 +427,16 @@ class ImmichMediaSource(MediaSource):
                     selected_supported_classes[0]
                 ]
 
-        results = await immich_api.search.async_smart_search(**search_args)
+        try:
+            results = await immich_api.search.async_smart_search(**search_args)
+        except ImmichForbiddenError as err:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="missing_api_permission",
+                translation_placeholders={"msg": str(err)},
+            ) from err
+        except ImmichError:
+            return SearchMedia(result=[])
 
         return SearchMedia(result=_parse_assets(results, identifier))
 
