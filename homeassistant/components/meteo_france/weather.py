@@ -164,6 +164,13 @@ class MeteoFranceWeather(
 
     @property
     @override
+    def uv_index(self) -> float | None:
+        """Return the UV index."""
+        uv_index = self.coordinator.data.current_forecast.get("uv")
+        return float(uv_index) if uv_index is not None else None
+
+    @property
+    @override
     def native_wind_speed(self) -> float:
         """Return the wind speed."""
         return self.coordinator.data.current_forecast["wind"]["speed"]
@@ -207,6 +214,7 @@ class MeteoFranceWeather(
                             "windchill"
                         ),
                         ATTR_FORECAST_NATIVE_PRECIPITATION: forecast["rain"].get("1h"),
+                        ATTR_FORECAST_UV_INDEX: forecast.get("uv"),
                         ATTR_FORECAST_NATIVE_WIND_SPEED: forecast["wind"]["speed"],
                         ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: forecast["wind"].get(
                             "gust"
@@ -231,7 +239,6 @@ class MeteoFranceWeather(
                             forecast["weather12H"]["desc"], force_day=True
                         ),
                         ATTR_FORECAST_HUMIDITY: forecast["humidity"]["max"],
-                        ATTR_FORECAST_UV_INDEX: forecast.get("uv"),
                         ATTR_FORECAST_NATIVE_TEMP: forecast["T"]["max"],
                         ATTR_FORECAST_NATIVE_TEMP_LOW: forecast["T"]["min"],
                         ATTR_FORECAST_NATIVE_PRECIPITATION: forecast["precipitation"][

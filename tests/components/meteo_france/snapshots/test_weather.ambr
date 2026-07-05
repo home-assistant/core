@@ -49,6 +49,7 @@
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WeatherEntityFeature: 3>,
       <WeatherEntityStateAttribute.TEMPERATURE: 'temperature'>: 9.1,
       <WeatherEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      <WeatherEntityStateAttribute.UV_INDEX: 'uv_index'>: 1.0,
       <WeatherEntityStateAttribute.VISIBILITY_UNIT: 'visibility_unit'>: <UnitOfLength.KILOMETERS: 'km'>,
       <WeatherEntityStateAttribute.WIND_BEARING: 'wind_bearing'>: 200,
       <WeatherEntityStateAttribute.WIND_GUST_SPEED: 'wind_gust_speed'>: 64.8,
