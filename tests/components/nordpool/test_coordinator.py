@@ -267,7 +267,7 @@ async def test_coordinator(
         assert "Data for current day is missing" in caplog.text
 
 
-@pytest.mark.freeze_time("2025-10-01T10:05:00+00:00")
+@pytest.mark.freeze_time("2025-10-01T10:05:00+02:00")
 async def test_coordinator_update_data(
     hass: HomeAssistant,
     get_client: NordPoolClient,
@@ -323,27 +323,27 @@ async def test_coordinator_update_data(
     await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get("sensor.nord_pool_se3_current_price")
+    assert state.state == "1.03744"
+    assert "Next data update at 2025-10-01 11:00:00+02:00" in caplog.text
+    assert "Next listener update at 2025-10-01 10:15:00+02:00" in caplog.text
+
+    caplog.clear()
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("sensor.nord_pool_se3_current_price")
+    assert state.state == "0.8616"
+    assert "Next data update at 2025-10-01 12:00:00+02:00" in caplog.text
+    assert "Next listener update at 2025-10-01 11:15:00+02:00" in caplog.text
+
+    caplog.clear()
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("sensor.nord_pool_se3_current_price")
     assert state.state == "0.67405"
-    assert "Next data update at 2025-10-01 11:00:00+00:00" in caplog.text
-    assert "Next listener update at 2025-10-01 10:15:00+00:00" in caplog.text
-
-    caplog.clear()
-    freezer.tick(timedelta(hours=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    state = hass.states.get("sensor.nord_pool_se3_current_price")
-    assert state.state == "0.63736"
-    assert "Next data update at 2025-10-01 12:00:00+00:00" in caplog.text
-    assert "Next listener update at 2025-10-01 11:15:00+00:00" in caplog.text
-
-    caplog.clear()
-    freezer.tick(timedelta(hours=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    state = hass.states.get("sensor.nord_pool_se3_current_price")
-    assert state.state == "0.62233"
-    assert "Next data update at 2025-10-01 13:00:00+00:00" in caplog.text
-    assert "Next listener update at 2025-10-01 12:15:00+00:00" in caplog.text
+    assert "Next data update at 2025-10-01 13:00:00+02:00" in caplog.text
+    assert "Next listener update at 2025-10-01 12:15:00+02:00" in caplog.text
 
     aioclient_mock.clear_requests()
     aioclient_mock.request(
@@ -385,15 +385,15 @@ async def test_coordinator_update_data(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("sensor.nord_pool_se3_current_price")
-    assert state.state == "0.6294"
-    assert "Next data update at 2025-10-02 00:00:00+00:00" in caplog.text
-    assert "Next listener update at 2025-10-01 13:15:00+00:00" in caplog.text
+    assert state.state == "0.63736"
+    assert "Next data update at 2025-10-02 00:00:00+02:00" in caplog.text
+    assert "Next listener update at 2025-10-01 13:15:00+02:00" in caplog.text
 
     caplog.clear()
     freezer.tick(timedelta(minutes=15))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("sensor.nord_pool_se3_current_price")
-    assert state.state == "0.72953"
+    assert state.state == "0.66068"
     assert "Next data update" not in caplog.text
-    assert "Next listener update at 2025-10-01 13:30:00+00:00" in caplog.text
+    assert "Next listener update at 2025-10-01 13:30:00+02:00" in caplog.text
