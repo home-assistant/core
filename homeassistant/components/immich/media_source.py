@@ -392,6 +392,9 @@ class ImmichMediaSource(MediaSource):
         self, item: MediaSourceItem, query: SearchMediaQuery
     ) -> SearchMedia:
         """Search media."""
+
+        LOGGER.debug("search called with item:%s query:%s", item, query)
+
         identifier = ImmichMediaSourceIdentifier(item.identifier)
         entry: ImmichConfigEntry | None = (
             self.hass.config_entries.async_entry_for_domain_unique_id(
@@ -427,17 +430,23 @@ class ImmichMediaSource(MediaSource):
                     selected_supported_classes[0]
                 ]
 
+        LOGGER.debug("search args:%s", search_args)
+
         try:
+            LOGGER.debug("try")
             results = await immich_api.search.async_smart_search(**search_args)
         except ImmichForbiddenError as err:
+            LOGGER.debug("except %s", err)
             raise BrowseError(
                 translation_domain=DOMAIN,
                 translation_key="missing_api_permission",
                 translation_placeholders={"msg": str(err)},
             ) from err
-        except ImmichError:
+        except ImmichError as err:
+            LOGGER.debug("except %s", err)
             return SearchMedia(result=[])
 
+        LOGGER.debug("finish %s", results)
         return SearchMedia(result=_parse_assets(results, identifier))
 
 

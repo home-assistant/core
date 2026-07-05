@@ -5,6 +5,7 @@ import tempfile
 from unittest.mock import Mock, patch
 
 from aiohttp import web
+from aioimmich.assets.models import AssetType
 from aioimmich.exceptions import ImmichError, ImmichForbiddenError
 import pytest
 
@@ -14,7 +15,12 @@ from homeassistant.components.immich.media_source import (
     ImmichMediaView,
     async_get_media_source,
 )
-from homeassistant.components.media_player import BrowseError, BrowseMedia, MediaClass
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaClass,
+    SearchMediaQuery,
+)
 from homeassistant.components.media_source import MediaSourceItem, Unresolvable
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -616,3 +622,157 @@ async def test_media_view(
             "2e65a5f2-db83-44c4-81ab-f5ff20c9bd7b/fullsize/video/mp4",
         )
         assert isinstance(result, web.StreamResponse)
+
+
+@pytest.mark.parametrize(
+    ("identifier", "query", "expected_smart_search_call"),
+    [
+        # search on config entry root (collections overview)
+        (
+            "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
+            SearchMediaQuery(search_query="my search"),
+            {"query": "my search"},
+        ),
+        # search on config entry root (collections overview) with different media class filters
+        (
+            "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
+            SearchMediaQuery(
+                search_query="my search", media_filter_classes=[MediaClass.IMAGE]
+            ),
+            {"query": "my search", "asset_type": AssetType.IMAGE},
+        ),
+        (
+            "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
+            SearchMediaQuery(
+                search_query="my search", media_filter_classes=[MediaClass.VIDEO]
+            ),
+            {"query": "my search", "asset_type": AssetType.VIDEO},
+        ),
+        (
+            "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
+            SearchMediaQuery(
+                search_query="my search",
+                media_filter_classes=[MediaClass.IMAGE, MediaClass.VIDEO],
+            ),
+            {"query": "my search"},
+        ),
+        # search on album collection
+        (
+            "e7ef5713-9dab-4bd4-b899-715b0ca4379e|albums",
+            SearchMediaQuery(search_query="my search"),
+            {"query": "my search", "is_not_in_album": False},
+        ),
+        (
+            "e7ef5713-9dab-4bd4-b899-715b0ca4379e|albums|721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
+            SearchMediaQuery(search_query="my search"),
+            {
+                "query": "my search",
+                "is_not_in_album": False,
+                "album_ids": ["721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"],
+            },
+        ),
+        # search on people collection
+        (
+            "e7ef5713-9dab-4bd4-b899-715b0ca4379e|people",
+            SearchMediaQuery(search_query="my search"),
+            {"query": "my search"},
+        ),
+        (
+            "e7ef5713-9dab-4bd4-b899-715b0ca4379e|people|721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
+            SearchMediaQuery(search_query="my search"),
+            {
+                "query": "my search",
+                "person_ids": ["721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"],
+            },
+        ),
+        # search on tags collection
+        (
+            "e7ef5713-9dab-4bd4-b899-715b0ca4379e|tags",
+            SearchMediaQuery(search_query="my search"),
+            {"query": "my search"},
+        ),
+        (
+            "e7ef5713-9dab-4bd4-b899-715b0ca4379e|tags|721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
+            SearchMediaQuery(search_query="my search"),
+            {
+                "query": "my search",
+                "tag_ids": ["721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"],
+            },
+        ),
+        # search on favorites collection
+        (
+            "e7ef5713-9dab-4bd4-b899-715b0ca4379e|favorites",
+            SearchMediaQuery(search_query="my search"),
+            {"query": "my search", "is_favorite": True},
+        ),
+    ],
+)
+async def test_search_media(
+    hass: HomeAssistant,
+    mock_immich: Mock,
+    mock_config_entry: MockConfigEntry,
+    identifier: str,
+    query: SearchMediaQuery,
+    expected_smart_search_call,
+) -> None:
+    """Test search_media."""
+    assert await async_setup_component(hass, "media_source", {})
+
+    with patch("homeassistant.components.immich.PLATFORMS", []):
+        await setup_integration(hass, mock_config_entry)
+
+    source = await async_get_media_source(hass)
+
+    item = MediaSourceItem(hass, "immich", identifier, None)
+
+    result = await source.async_search_media(item, query)
+    assert len(result.result) == 4
+    mock_immich.search.async_smart_search.assert_called_once_with(
+        **expected_smart_search_call
+    )
+
+
+async def test_search_media_errors(
+    hass: HomeAssistant,
+    mock_immich: Mock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test errors in search_media."""
+    assert await async_setup_component(hass, "media_source", {})
+
+    with patch("homeassistant.components.immich.PLATFORMS", []):
+        await setup_integration(hass, mock_config_entry)
+
+    source = await async_get_media_source(hass)
+
+    # test generic ImmichError
+    mock_immich.search.async_smart_search.side_effect = ImmichError(
+        {
+            "message": "Not found or no album.read access",
+            "error": "Bad Request",
+            "statusCode": 400,
+            "correlationId": "e0hlizyl",
+        }
+    )
+    result = await source.async_search_media(
+        MediaSourceItem(hass, "immich", "e7ef5713-9dab-4bd4-b899-715b0ca4379e", None),
+        SearchMediaQuery(search_query="my search"),
+    )
+    assert len(result.result) == 0
+
+    # test ImmichForbiddenError
+    mock_immich.search.async_smart_search.side_effect = ImmichForbiddenError(
+        {
+            "message": "Missing required permission: asset.read",
+            "error": "Forbidden",
+            "statusCode": 403,
+            "correlationId": "e0hlizyl",
+        }
+    )
+    with pytest.raises(BrowseError, match="Missing API permission"):
+        await source.async_search_media(
+            MediaSourceItem(
+                hass, "immich", "e7ef5713-9dab-4bd4-b899-715b0ca4379e", None
+            ),
+            SearchMediaQuery(search_query="my search"),
+        )
