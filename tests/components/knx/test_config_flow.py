@@ -1823,21 +1823,33 @@ async def test_options_telegram_store_postgres_reuses_password(
     assert len(knx_setup.mock_calls) == 2
 
 
+@pytest.mark.parametrize(
+    ("error_kind", "expected_error"),
+    [
+        pytest.param(ConnectionErrorKind.AUTH, "invalid_auth", id="invalid_auth"),
+        pytest.param(
+            ConnectionErrorKind.MISSING_TIMESCALEDB,
+            "missing_timescaledb",
+            id="missing_timescaledb",
+        ),
+    ],
+)
 async def test_options_telegram_store_postgres_connection_failure(
-    hass: HomeAssistant, knx_setup, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    knx_setup,
+    mock_config_entry: MockConfigEntry,
+    error_kind: ConnectionErrorKind,
+    expected_error: str,
 ) -> None:
-    """Test options flow handles PostgreSQL connection failure."""
+    """Test the PostgreSQL step maps connection check failures to form errors."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     result = await _advance_to_postgres_step(hass, result["flow_id"])
-    # Simulate connection failure (e.g. invalid auth)
     with patch(
         "knx_telegram_store.backends.postgres.PostgresStore.check_config",
-        return_value=ConnectionCheckResult.failure(
-            ConnectionErrorKind.AUTH, "Authentication failed"
-        ),
+        return_value=ConnectionCheckResult.failure(error_kind, "check failed"),
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -1852,7 +1864,7 @@ async def test_options_telegram_store_postgres_connection_failure(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "telegram_store_postgres"
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": expected_error}
 
 
 async def test_options_telegram_store_postgres_timeout(

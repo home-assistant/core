@@ -1149,6 +1149,7 @@ async def _async_check_postgres_dsn(dsn: str) -> dict[str, str]:
         ConnectionErrorKind.PERMISSION: "permission",
         ConnectionErrorKind.TIMEOUT: "timeout",
         ConnectionErrorKind.MISSING_DEPENDENCY: "missing_dependency",
+        ConnectionErrorKind.MISSING_TIMESCALEDB: "missing_timescaledb",
     }
     try:
         async with asyncio.timeout(10):
