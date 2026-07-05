@@ -4374,6 +4374,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "modbus_connection": {
+      "name": "Modbus Connection",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "modem_callerid": {
       "name": "Phone Modem",
       "integration_type": "device",

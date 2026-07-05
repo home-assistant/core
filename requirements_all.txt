@@ -303,7 +303,7 @@ aiohue==4.8.1
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.16.0
+aioimmich==0.16.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -1584,6 +1584,9 @@ mitsubishi-comfort==0.3.2
 
 # homeassistant.components.moat
 moat-ble==0.1.1
+
+# homeassistant.components.modbus_connection
+modbus-connection[tmodbus]==3.3.0
 
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.4.0
