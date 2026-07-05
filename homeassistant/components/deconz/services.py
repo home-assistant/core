@@ -160,6 +160,7 @@ async def async_refresh_devices_service(hub: DeconzHub) -> None:
 
     try:
         await hub.api.refresh_state()
+        hub.load_ignored_devices()
     except (TimeoutError, errors.RequestError, errors.ResponseError) as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
