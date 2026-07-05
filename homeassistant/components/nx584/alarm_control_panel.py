@@ -15,12 +15,23 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_platform,
+    issue_registry as ir,
+)
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import NX584ConfigEntry
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,32 +53,8 @@ PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the NX584 platform."""
-    name: str = config[CONF_NAME]
-    host: str = config[CONF_HOST]
-    port: int = config[CONF_PORT]
-
-    url = f"http://{host}:{port}"
-
-    try:
-        alarm_client = client.Client(url)
-        await hass.async_add_executor_job(alarm_client.list_zones)
-    except requests.exceptions.ConnectionError as ex:
-        _LOGGER.error(
-            "Unable to connect to %(host)s: %(reason)s",
-            {"host": url, "reason": ex},
-        )
-        raise PlatformNotReady from ex
-
-    entity = NX584Alarm(name, alarm_client, url)
-    async_add_entities([entity])
-
+def _async_register_services() -> None:
+    """Register the bypass/unbypass zone entity services."""
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
@@ -81,6 +68,64 @@ async def async_setup_platform(
         {vol.Required(ATTR_ZONE): cv.positive_int},
         "alarm_unbypass",
     )
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the NX584 platform from YAML, importing it as a config entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_issue",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "NX584",
+            },
+        )
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "NX584",
+        },
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: NX584ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the NX584 alarm control panel from a config entry."""
+    data = entry.runtime_data
+
+    entity = NX584Alarm(entry.title, data.client, data.url)
+    async_add_entities([entity])
+
+    _async_register_services()
 
 
 class NX584Alarm(AlarmControlPanelEntity):

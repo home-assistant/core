@@ -15,11 +15,19 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import NX584ConfigEntry
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,44 +57,94 @@ def _zone_flags_indicate_bypass(zone_flags: list[str]) -> bool:
     return not BYPASS_ZONE_FLAGS.isdisjoint(zone_flags)
 
 
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the NX584 binary sensor platform."""
-
-    host: str = config[CONF_HOST]
-    port: int = config[CONF_PORT]
-    exclude: list[int] = config[CONF_EXCLUDE_ZONES]
-    zone_types: dict[int, BinarySensorDeviceClass] = config[CONF_ZONE_TYPES]
-
+def _build_zone_sensors(
+    client: nx584_client.Client,
+    exclude: list[int],
+    zone_types: dict[int, BinarySensorDeviceClass],
+) -> dict[int, NX584ZoneSensor] | None:
+    """Fetch the zones from the panel and build the zone sensor map."""
     try:
-        client = nx584_client.Client(f"http://{host}:{port}")
         zones = client.list_zones()
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to NX584: %s", str(ex))
-        return
+        return None
 
     version = [int(v) for v in client.get_version().split(".")]
     if version < [1, 1]:
         _LOGGER.error("NX584 is too old to use for sensors (>=0.2 required)")
-        return
+        return None
 
-    zone_sensors = {
+    return {
         zone["number"]: NX584ZoneSensor(
             zone, zone_types.get(zone["number"], BinarySensorDeviceClass.OPENING)
         )
         for zone in zones
         if zone["number"] not in exclude
     }
-    if zone_sensors:
-        add_entities(zone_sensors.values())
-        watcher = NX584Watcher(client, zone_sensors)
-        watcher.start()
-    else:
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the NX584 binary sensor platform from YAML, importing it as a config entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_issue",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "NX584",
+            },
+        )
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "NX584",
+        },
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: NX584ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the NX584 binary sensor platform from a config entry."""
+    data = entry.runtime_data
+
+    zone_sensors = await hass.async_add_executor_job(
+        _build_zone_sensors, data.client, [], {}
+    )
+    if not zone_sensors:
         _LOGGER.warning("No zones found on NX584")
+        return
+
+    async_add_entities(zone_sensors.values())
+    watcher = NX584Watcher(data.client, zone_sensors)
+    watcher.start()
 
 
 class NX584ZoneSensor(BinarySensorEntity):
