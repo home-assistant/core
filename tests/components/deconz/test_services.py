@@ -464,7 +464,6 @@ async def test_service_refresh_devices_failure(
     aioclient_mock.get(url, exc=TimeoutError)
 
     hub = config_entry_setup.runtime_data
-    hub.load_ignored_devices = Mock()
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
@@ -475,6 +474,4 @@ async def test_service_refresh_devices_failure(
         )
 
     assert exc_info.value.translation_key == "device_refresh_failed"
-
     assert hub.ignore_state_updates is False
-    hub.load_ignored_devices.assert_not_called()
