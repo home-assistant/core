@@ -27,7 +27,7 @@ UPDATE_INTERVAL = datetime.timedelta(minutes=1)
 # The calendar data requires RPCs for each program/zone, and the data rarely
 # changes, so we refresh it less often.
 CALENDAR_UPDATE_INTERVAL = datetime.timedelta(minutes=15)
-CALENDAR_TIMEOUT_SECONDS = 30
+CALENDAR_TIMEOUT_SECONDS = 120
 
 # The valves state are not immediately reflected after issuing a command. We add
 # small delay to give additional time to reflect the new state.

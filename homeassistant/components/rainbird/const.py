@@ -9,4 +9,4 @@ CONF_IMPORTED_NAMES = "imported_names"
 
 ATTR_DURATION = "duration"
 
-TIMEOUT_SECONDS = 20
+TIMEOUT_SECONDS = 60
