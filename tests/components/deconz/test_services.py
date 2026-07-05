@@ -462,4 +462,4 @@ async def test_service_refresh_devices_failure(
     assert exc_info.value.translation_key == "device_refresh_failed"
 
     assert hub.ignore_state_updates is False
-    hub.load_ignored_devices.assert_called_once()
+    hub.load_ignored_devices.assert_not_called()
