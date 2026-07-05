@@ -17,10 +17,13 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util import dt as dt_util
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,6 +143,16 @@ class CollectionImageImageEntity(ImageEntity):
     def image(self) -> bytes | None:
         """Return bytes of image."""
         if self.path:
-            return self.path.read_bytes()
+            try:
+                return self.path.read_bytes()
+            except OSError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="image_read_error",
+                    translation_placeholders={
+                        "path": str(self.path),
+                        "error": str(err),
+                    },
+                ) from err
 
         return None

@@ -19,5 +19,10 @@
       }
     }
   },
+  "exceptions": {
+    "image_read_error": {
+      "message": "Error reading image from {path}: {error}"
+    }
+  },
   "title": "Collection Image"
 }
