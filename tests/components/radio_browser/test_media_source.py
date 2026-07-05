@@ -7,7 +7,8 @@ import pytest
 from radios import FilterBy, Order, RadioBrowserError
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player import BrowseError
+from homeassistant.components.media_player import BrowseError, SearchMediaQuery
+from homeassistant.components.media_source import MediaSourceItem
 from homeassistant.components.radio_browser.media_source import async_get_media_source
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -46,6 +47,7 @@ async def test_browsing_local(
     assert len(item.children) == 5
     assert item.can_play is False
     assert item.can_expand is True
+    assert item.can_search is True
 
     assert item.children[3].title == "Local stations"
 
@@ -131,6 +133,47 @@ async def test_browsing_not_ready(
                 hass, f"{media_source.URI_SCHEME}{DOMAIN}/popular"
             )
         assert exc_info.value.translation_key == "config_entry_not_ready"
+
+
+async def test_search_media(
+    hass: HomeAssistant, init_integration: AsyncMock, patch_radios
+) -> None:
+    """Test searching stations."""
+
+    source = await async_get_media_source(hass)
+    patch_radios(source)
+
+    result = await source.async_search_media(
+        MediaSourceItem(hass, "immich", f"{media_source.URI_SCHEME}{DOMAIN}", None),
+        SearchMediaQuery(search_query="my search"),
+    )
+
+    source.radios.search.assert_awaited_with(name="my search")
+    assert len(result.result) == 5
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [DNSError, RadioBrowserError],
+)
+async def test_search_media_exceptions(
+    hass: HomeAssistant,
+    init_integration: AsyncMock,
+    patch_radios,
+    exception: Exception,
+) -> None:
+    """Test search exceptions."""
+
+    source = await async_get_media_source(hass)
+    patch_radios(source)
+
+    source.radios.search.side_effect = exception
+    with pytest.raises(BrowseError) as exc_info:
+        await source.async_search_media(
+            MediaSourceItem(hass, "immich", f"{media_source.URI_SCHEME}{DOMAIN}", None),
+            SearchMediaQuery(search_query="my search"),
+        )
+    assert exc_info.value.translation_key == "radio_browser_error"
 
 
 @pytest.mark.parametrize(
