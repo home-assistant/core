@@ -9,7 +9,12 @@ from synology_dsm.api.photos import SynoPhotosAlbum, SynoPhotosItem
 from synology_dsm.exceptions import SynologyDSMException
 
 from homeassistant.components import http
-from homeassistant.components.media_player import BrowseError, MediaClass
+from homeassistant.components.media_player import (
+    BrowseError,
+    MediaClass,
+    SearchMedia,
+    SearchMediaQuery,
+)
 from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
@@ -76,6 +81,23 @@ class SynologyPhotosMediaSource(MediaSource):
         self.hass = hass
         self.entries = entries
 
+    def _get_diskstation(
+        self, identifier: SynologyPhotosMediaSourceIdentifier
+    ) -> SynologyDSMData:
+        """Get diskstation object."""
+        entry: SynologyDSMConfigEntry | None = (
+            self.hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, identifier.unique_id
+            )
+        )
+        if TYPE_CHECKING:
+            assert entry
+        diskstation = entry.runtime_data
+        if TYPE_CHECKING:
+            assert diskstation.api.photos is not None
+
+        return diskstation
+
     @override
     async def async_browse_media(
         self,
@@ -84,14 +106,16 @@ class SynologyPhotosMediaSource(MediaSource):
         """Return media."""
         if not self.hass.config_entries.async_loaded_entries(DOMAIN):
             raise BrowseError("Diskstation not initialized")
+
         return BrowseMediaSource(
             domain=DOMAIN,
-            identifier=None,
+            identifier=item.identifier,
             media_class=MediaClass.DIRECTORY,
             media_content_type=MediaClass.IMAGE,
             title="Synology Photos",
             can_play=False,
             can_expand=True,
+            can_search=bool(item.identifier),
             children_media_class=MediaClass.DIRECTORY,
             children=[
                 *await self._async_build_diskstations(item),
@@ -116,14 +140,7 @@ class SynologyPhotosMediaSource(MediaSource):
                 for entry in self.entries
             ]
         identifier = SynologyPhotosMediaSourceIdentifier(item.identifier)
-        entry: SynologyDSMConfigEntry | None = (
-            self.hass.config_entries.async_entry_for_domain_unique_id(
-                DOMAIN, identifier.unique_id
-            )
-        )
-        if TYPE_CHECKING:
-            assert entry
-        diskstation = entry.runtime_data
+        diskstation = self._get_diskstation(identifier)
         if TYPE_CHECKING:
             assert diskstation.api.photos is not None
 
@@ -193,38 +210,34 @@ class SynologyPhotosMediaSource(MediaSource):
                 )
             except SynologyDSMException:
                 return []
-        if TYPE_CHECKING:
-            assert album_items is not None
 
-        ret = []
-        for album_item in album_items:
-            mime_type, _ = mimetypes.guess_type(album_item.file_name)
-            if isinstance(mime_type, str) and mime_type.startswith("image/"):
-                # Force small small thumbnails
-                album_item.thumbnail_size = "sm"
-                suffix = ""
-                if album_item.is_shared:
-                    suffix = SHARED_SUFFIX
-                ret.append(
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=(
-                            f"{identifier.unique_id}/"
-                            f"{identifier.album_id}_{identifier.passphrase}/"
-                            f"{album_item.thumbnail_cache_key}/"
-                            f"{album_item.file_name}{suffix}"
-                        ),
-                        media_class=MediaClass.IMAGE,
-                        media_content_type=mime_type,
-                        title=album_item.file_name,
-                        can_play=True,
-                        can_expand=False,
-                        thumbnail=await self.async_get_thumbnail(
-                            album_item, diskstation
-                        ),
-                    )
+        return await self._async_parse_assets(album_items, identifier, diskstation)
+
+    @override
+    async def async_search_media(
+        self, item: MediaSourceItem, query: SearchMediaQuery
+    ) -> SearchMedia:
+        """Search media."""
+
+        LOGGER.debug("search called with item:%s query:%s", item, query)
+
+        identifier = SynologyPhotosMediaSourceIdentifier(item.identifier)
+        diskstation = self._get_diskstation(identifier)
+        if TYPE_CHECKING:
+            assert diskstation.api.photos is not None
+
+        try:
+            return SearchMedia(
+                result=await self._async_parse_assets(
+                    await diskstation.api.photos.get_items_from_search(
+                        query.search_query, 0, 1000
+                    ),
+                    identifier,
+                    diskstation,
                 )
-        return ret
+            )
+        except SynologyDSMException:
+            return SearchMedia(result=[])
 
     @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
@@ -262,6 +275,46 @@ class SynologyPhotosMediaSource(MediaSource):
         except SynologyDSMException:
             return None
         return str(thumbnail)
+
+    async def _async_parse_assets(
+        self,
+        album_items: list[SynoPhotosItem] | None,
+        identifier: SynologyPhotosMediaSourceIdentifier,
+        diskstation: SynologyDSMData,
+    ) -> list[BrowseMediaSource]:
+        """Parse list of SynoPhotosItem to list of BrowseMediaSource."""
+        if not album_items:
+            return []
+
+        ret = []
+        for album_item in album_items:
+            mime_type, _ = mimetypes.guess_type(album_item.file_name)
+            if isinstance(mime_type, str) and mime_type.startswith("image/"):
+                # Force small small thumbnails
+                album_item.thumbnail_size = "sm"
+                suffix = ""
+                if album_item.is_shared:
+                    suffix = SHARED_SUFFIX
+                ret.append(
+                    BrowseMediaSource(
+                        domain=DOMAIN,
+                        identifier=(
+                            f"{identifier.unique_id}/"
+                            f"{identifier.album_id}_{identifier.passphrase}/"
+                            f"{album_item.thumbnail_cache_key}/"
+                            f"{album_item.file_name}{suffix}"
+                        ),
+                        media_class=MediaClass.IMAGE,
+                        media_content_type=mime_type,
+                        title=album_item.file_name,
+                        can_play=True,
+                        can_expand=False,
+                        thumbnail=await self.async_get_thumbnail(
+                            album_item, diskstation
+                        ),
+                    )
+                )
+        return ret
 
 
 class SynologyDsmMediaView(http.HomeAssistantView):
