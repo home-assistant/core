@@ -1,6 +1,6 @@
 """Support for Cameras with FFmpeg as decoder."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
@@ -63,10 +63,12 @@ class FFmpegCamera(Camera):
         self._input: str = config[CONF_INPUT]
         self._extra_arguments: str = config[CONF_EXTRA_ARGUMENTS]
 
+    @override
     async def stream_source(self) -> str:
         """Return the stream source."""
         return self._input.split(" ")[-1]
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -78,6 +80,7 @@ class FFmpegCamera(Camera):
             extra_cmd=self._extra_arguments,
         )
 
+    @override
     async def handle_async_mjpeg_stream(
         self, request: web.Request
     ) -> web.StreamResponse:
@@ -98,6 +101,7 @@ class FFmpegCamera(Camera):
             await stream.close()
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of this camera."""
         return self._name

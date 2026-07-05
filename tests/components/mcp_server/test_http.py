@@ -19,14 +19,19 @@ import pytest
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.mcp_server.const import STATELESS_LLM_API
+from homeassistant.components.mcp_server.const import DOMAIN, STATELESS_LLM_API
 from homeassistant.components.mcp_server.http import (
     MESSAGES_API,
     SSE_API,
     STREAMABLE_API,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_LLM_HASS_API, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    CONF_LLM_HASS_API,
+    CONTENT_TYPE_JSON,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -219,7 +224,7 @@ async def test_http_sse_multiple_config_entries(
     """
 
     config_entry = MockConfigEntry(
-        domain="mcp_server", data={CONF_LLM_HASS_API: ["llm-api-id"]}
+        domain=DOMAIN, data={CONF_LLM_HASS_API: ["llm-api-id"]}
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -633,3 +638,78 @@ async def test_mcp_tool_call_unicode(
     response_text = result.content[0].text
     assert "这是一个测试" in response_text
     assert "\\u" not in response_text
+
+
+async def test_streamable_api_id_exposes_registered_api(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test the keyed endpoint exposes any registered API, not just the configured one."""
+    llm.async_register_api(
+        hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test API")
+    )
+
+    client = await hass_client()
+    mcp_url = str(client.make_url(f"{STREAMABLE_API}/{TEST_LLM_API_ID}"))
+
+    async with mcp_streamable_session(
+        hass, mcp_url, hass_supervisor_access_token
+    ) as session:
+        result = await session.list_prompts()
+
+    assert len(result.prompts) == 1
+    assert result.prompts[0].name == "Test API"
+
+
+async def test_streamable_api_id_requires_admin(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test a non-Assist keyed endpoint requires an admin user."""
+    llm.async_register_api(
+        hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test API")
+    )
+
+    client = await hass_client(hass_read_only_access_token)
+    response = await client.post(
+        f"{STREAMABLE_API}/{TEST_LLM_API_ID}",
+        json=INITIALIZE_MESSAGE,
+        headers={"accept": CONTENT_TYPE_JSON},
+    )
+    assert response.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_streamable_api_id_assist_allows_non_admin(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test the Assist keyed endpoint does not require an admin user."""
+    client = await hass_client(hass_read_only_access_token)
+    response = await client.post(
+        f"{STREAMABLE_API}/{llm.LLM_API_ASSIST}",
+        json=INITIALIZE_MESSAGE,
+        headers={"accept": CONTENT_TYPE_JSON},
+    )
+    assert response.status == HTTPStatus.OK
+
+
+async def test_streamable_api_id_unknown(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the keyed endpoint returns 404 for an unknown API ID."""
+    client = await hass_client()
+    response = await client.post(
+        f"{STREAMABLE_API}/does-not-exist",
+        json=INITIALIZE_MESSAGE,
+        headers={"accept": CONTENT_TYPE_JSON},
+    )
+    assert response.status == HTTPStatus.NOT_FOUND
+    assert "Unknown LLM API" in await response.text()

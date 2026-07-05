@@ -112,7 +112,49 @@
       }
     }
   },
+  "exceptions": {
+    "not_connected": {
+      "message": "Environment Canada is not connected"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "radar_layer": "Radar type",
+          "radar_legend": "Show legend",
+          "radar_opacity": "Radar opacity",
+          "radar_radius": "Map radius",
+          "radar_timestamp": "Show timestamp"
+        },
+        "data_description": {
+          "radar_opacity": "Opacity of the radar layer overlay (0-100)",
+          "radar_radius": "Radius of the radar map in kilometres"
+        },
+        "title": "Radar camera options"
+      }
+    }
+  },
+  "selector": {
+    "radar_layer": {
+      "options": {
+        "precip_type": "Precipitation type",
+        "rain": "Rain",
+        "snow": "Snow"
+      }
+    }
+  },
   "services": {
+    "get_alerts": {
+      "description": "Retrieves the alerts from the selected weather service.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Environment Canada service to retrieve alerts from.",
+          "name": "Environment Canada service"
+        }
+      },
+      "name": "Get alerts"
+    },
     "get_forecasts": {
       "description": "Retrieves the forecast from selected weather services.",
       "name": "Get forecasts"

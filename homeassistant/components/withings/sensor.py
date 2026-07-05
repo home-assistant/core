@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from aiowithings import (
     Activity,
@@ -917,6 +917,7 @@ class WithingsMeasurementSensor(
     """Implementation of a Withings measurement sensor."""
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the entity."""
         return self.coordinator.data[
@@ -927,6 +928,7 @@ class WithingsMeasurementSensor(
         ]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the sensor is available."""
         return (
@@ -948,6 +950,7 @@ class WithingsSleepSensor(
     """Implementation of a Withings sleep sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         if not self.coordinator.data:
@@ -964,6 +967,7 @@ class WithingsGoalsSensor(
     """Implementation of a Withings goals sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         assert self.coordinator.data
@@ -979,6 +983,7 @@ class WithingsActivitySensor(
     """Implementation of a Withings activity sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         if not self.coordinator.data:
@@ -986,6 +991,7 @@ class WithingsActivitySensor(
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def last_reset(self) -> datetime:
         """These values reset every day."""
         return dt_util.start_of_local_day()
@@ -1000,6 +1006,7 @@ class WithingsWorkoutSensor(
     """Implementation of a Withings workout sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         if not self.coordinator.data:
@@ -1023,6 +1030,7 @@ class WithingsDeviceSensor(WithingsDeviceEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         return self.entity_description.value_fn(self.device)

@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohomeconnect.model import EventKey, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
@@ -141,6 +141,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 self._attr_color_mode = ColorMode.HS
                 self._attr_supported_color_modes = {ColorMode.HS, ColorMode.RGB}
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the light on, change brightness, change color."""
         try:
@@ -251,6 +252,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                     },
                 ) from err
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the light off."""
         try:
@@ -269,6 +271,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 },
             ) from err
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register listener."""
         await super().async_added_to_hass()
@@ -285,6 +288,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 )
             )
 
+    @override
     def update_native_value(self) -> None:
         """Update the light's status."""
         self._attr_is_on = self.appliance.settings[SettingKey(self.bsh_key)].value

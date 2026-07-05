@@ -11,6 +11,7 @@
       "protect_api_key": "This API key is associated with UniFi Protect, not UniFi Access. Please generate a new API key from the UniFi Access application settings.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
+    "flow_title": "{name} ({ip_address})",
     "step": {
       "discovery_confirm": {
         "data": {

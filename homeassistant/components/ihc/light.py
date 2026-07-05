@@ -1,6 +1,6 @@
 """Support for IHC lights."""
 
-from typing import Any
+from typing import Any, override
 
 from ihcsdk.ihccontroller import IHCController
 
@@ -82,15 +82,18 @@ class IhcLight(IHCEntity, LightEntity):
         self._attr_supported_color_modes = {self._attr_color_mode}
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return self._brightness
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self._state
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -107,6 +110,7 @@ class IhcLight(IHCEntity, LightEntity):
         else:
             await async_set_bool(self.hass, self.ihc_controller, self.ihc_id, True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         if self._dimmable:
@@ -116,6 +120,7 @@ class IhcLight(IHCEntity, LightEntity):
         else:
             await async_set_bool(self.hass, self.ihc_controller, self.ihc_id, False)
 
+    @override
     def on_ihc_change(self, ihc_id, value):
         """Handle IHC notifications."""
         if isinstance(value, bool):

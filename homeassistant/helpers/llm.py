@@ -8,7 +8,7 @@ from decimal import Decimal
 from enum import Enum
 from functools import cache, partial
 from operator import attrgetter
-from typing import Any, cast
+from typing import Any, cast, override
 
 import slugify as unicode_slug
 import voluptuous as vol
@@ -22,6 +22,7 @@ from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
+from homeassistant.components.sensor import async_rounded_state
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN, TodoServices
 from homeassistant.components.weather import INTENT_GET_WEATHER
 from homeassistant.const import (
@@ -190,7 +191,7 @@ class LLMContext:
     language: str | None
     """Language of the LLM request."""
 
-    assistant: str | None
+    assistant: str
     """Assistant domain that is handling the LLM request."""
 
     device_id: str | None
@@ -222,6 +223,7 @@ class Tool:
         """Call the tool."""
         raise NotImplementedError
 
+    @override
     def __repr__(self) -> str:
         """Represent a string of a Tool."""
         return f"<{self.__class__.__name__} - {self.name}>"
@@ -301,6 +303,7 @@ class IntentTool(Tool):
         if extra_slots:
             self.extra_slots = extra_slots
 
+    @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
@@ -372,6 +375,7 @@ class NamespacedTool(Tool):
         self.parameters = tool.parameters
         self.tool = tool
 
+    @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
@@ -405,6 +409,7 @@ class MergedAPI(API):
         )
         self.llm_apis = llm_apis
 
+    @override
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
         """Return the instance of the API."""
         # These usually don't do I/O and execute right away
@@ -480,6 +485,7 @@ class AssistAPI(API):
             partial(unicode_slug.slugify, separator="_", lowercase=False)
         )
 
+    @override
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
         """Return the instance of the API."""
         if llm_context.assistant:
@@ -699,7 +705,7 @@ def _get_exposed_entities(
             ):
                 # Entity is in area
                 area_names.append(area_entry.name)
-                area_names.extend(area_entry.aliases)
+                area_names.extend(sorted(area_entry.aliases))
             elif device_entry is not None:
                 # Check device area
                 if (
@@ -710,7 +716,7 @@ def _get_exposed_entities(
                     is not None
                 ):
                     area_names.append(area_entry.name)
-                    area_names.extend(area_entry.aliases)
+                    area_names.extend(sorted(area_entry.aliases))
 
         info: dict[str, Any] = {
             "names": ", ".join(names),
@@ -719,6 +725,10 @@ def _get_exposed_entities(
 
         if include_state:
             info["state"] = state.state
+
+            # Format numeric states with configured display precision
+            if state.domain == "sensor":
+                info["state"] = async_rounded_state(hass, state.entity_id, state)
 
             # Convert timestamp device_class states from UTC to local time
             if state.attributes.get("device_class") == "timestamp" and state.state:
@@ -730,7 +740,7 @@ def _get_exposed_entities(
 
         if include_state and (
             attributes := {
-                attr_name: (
+                str(attr_name): (
                     str(attr_value)
                     if isinstance(attr_value, (Enum, Decimal, int))
                     else attr_value
@@ -957,9 +967,9 @@ def _get_cached_action_parameters(
                 aliases = er.async_get_entity_aliases(hass, entity_entry)
                 if aliases:
                     if description:
-                        description = description + ". Aliases: " + str(list(aliases))
+                        description = description + ". Aliases: " + str(sorted(aliases))
                     else:
-                        description = "Aliases: " + str(list(aliases))
+                        description = "Aliases: " + str(sorted(aliases))
 
         parameters_cache.setdefault(domain, {})[action] = (description, parameters)
 
@@ -989,6 +999,7 @@ class ActionTool(Tool):
             hass, domain, action
         )
 
+    @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
@@ -1078,6 +1089,7 @@ class CalendarGetEventsTool(Tool):
             }
         )
 
+    @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
@@ -1154,6 +1166,7 @@ class TodoGetItemsTool(Tool):
             }
         )
 
+    @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
@@ -1257,6 +1270,7 @@ class GetLiveContextTool(Tool):
         }
     )
 
+    @override
     async def async_call(
         self,
         hass: HomeAssistant,
@@ -1264,11 +1278,6 @@ class GetLiveContextTool(Tool):
         llm_context: LLMContext,
     ) -> JsonObjectType:
         """Get the current state of exposed entities."""
-        if llm_context.assistant is None:
-            # Note this doesn't happen in practice since this tool won't be
-            # exposed if no assistant is configured.
-            return {"success": False, "error": "No assistant configured"}
-
         args = self.parameters(tool_input.tool_args)
         exposed_entities = _get_exposed_entities(hass, llm_context.assistant)
 
@@ -1301,6 +1310,10 @@ class GetLiveContextTool(Tool):
                     name=name_filter,
                     area_name=area_filter,
                     domains=domain_filter,
+                    # This tool only returns context, so multiple entities
+                    # sharing a name (e.g. "AC" in two areas) should all be
+                    # returned rather than failing as an ambiguous match.
+                    allow_duplicate_names=True,
                 ),
                 states=exposed_states,
             )
@@ -1339,6 +1352,7 @@ class GetDateTimeTool(Tool):
     name = "GetDateTime"
     description = "Provides the current date and time."
 
+    @override
     async def async_call(
         self,
         hass: HomeAssistant,

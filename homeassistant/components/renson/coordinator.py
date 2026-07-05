@@ -4,7 +4,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from renson_endura_delta.renson import RensonVentilation
 
@@ -51,6 +51,7 @@ class RensonCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
         async with asyncio.timeout(30):

@@ -39,10 +39,10 @@
 # name: test_all_entities[cover.cover0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'shutter',
-      'friendly_name': 'Cover0',
-      'is_closed': None,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cover0',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.cover0',

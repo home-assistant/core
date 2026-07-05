@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for Xthings Cloud."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from ha_xthings_cloud import (
     XthingsCloudApiClient,
@@ -68,6 +68,7 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             },
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch latest device data from cloud."""
         await self._async_ensure_token_valid()

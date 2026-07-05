@@ -125,6 +125,8 @@ _LOGGER = logging.getLogger(__name__)
 
 type TelegramBotConfigEntry = ConfigEntry[TelegramNotificationService]
 
+_RETRY_DELAY = 1  # 1 second delay between retries
+
 
 def _get_bot_info(bot: Bot, config_entry: ConfigEntry) -> dict[str, Any]:
     return {
@@ -1213,9 +1215,8 @@ async def load_data(
                     _LOGGER.warning("Empty data (retry #%s) in %s)", retry_num + 1, url)
                 retry_num += 1
                 if retry_num < num_retries:
-                    await asyncio.sleep(
-                        1
-                    )  # Add a sleep to allow other async operations to proceed
+                    # Add a sleep to allow other async operations to proceed
+                    await asyncio.sleep(_RETRY_DELAY)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_load_url",

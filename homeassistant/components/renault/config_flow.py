@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
 from renault_api.const import AVAILABLE_LOCALES
@@ -22,14 +22,12 @@ _LOGGER = logging.getLogger(__name__)
 
 USER_SCHEMA = vol.Schema(
     {
-        vol.Required(RenaultConfigurationKeys.LOCALE.value): vol.In(
-            AVAILABLE_LOCALES.keys()
-        ),
-        vol.Required(RenaultConfigurationKeys.USERNAME.value): str,
-        vol.Required(RenaultConfigurationKeys.PASSWORD.value): str,
+        vol.Required(RenaultConfigurationKeys.LOCALE): vol.In(AVAILABLE_LOCALES.keys()),
+        vol.Required(RenaultConfigurationKeys.USERNAME): str,
+        vol.Required(RenaultConfigurationKeys.PASSWORD): str,
     }
 )
-REAUTH_SCHEMA = vol.Schema({vol.Required(RenaultConfigurationKeys.PASSWORD.value): str})
+REAUTH_SCHEMA = vol.Schema({vol.Required(RenaultConfigurationKeys.PASSWORD): str})
 
 
 class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -41,6 +39,7 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the Renault config flow."""
         self.renault_config: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -122,9 +121,9 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="kamereon",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID.value
-                    ): vol.In(accounts)
+                    vol.Required(RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID): vol.In(
+                        accounts
+                    )
                 }
             ),
         )
