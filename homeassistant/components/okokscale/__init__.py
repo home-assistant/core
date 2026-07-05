@@ -22,8 +22,10 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
+type OKOKScaleConfigEntry = ConfigEntry[ActiveBluetoothProcessorCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: OKOKScaleConfigEntry) -> bool:
     """Set up OKOK Scale device from a config entry."""
     address = entry.unique_id
     assert address is not None
@@ -88,12 +90,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OKOKScaleConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: OKOKScaleConfigEntry
+) -> bool:
     """Migrate old config entry."""
     if config_entry.version == 1 and config_entry.minor_version < 2:
 

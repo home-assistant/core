@@ -410,6 +410,7 @@ homeassistant.components.ntfy.*
 homeassistant.components.number.*
 homeassistant.components.nut.*
 homeassistant.components.ohme.*
+homeassistant.components.okokscale.*
 homeassistant.components.onboarding.*
 homeassistant.components.oncue.*
 homeassistant.components.onedrive.*
