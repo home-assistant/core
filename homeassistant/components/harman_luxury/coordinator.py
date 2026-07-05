@@ -1,6 +1,6 @@
 """Data update coordinator for Harman Luxury."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import override
 
@@ -14,6 +14,7 @@ from aioharmanluxury import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +28,7 @@ class HarmanLuxuryCoordinator(DataUpdateCoordinator[HarmanLuxuryState]):
 
     config_entry: HarmanLuxuryConfigEntry
     device_info: DeviceInfo
+    position_updated_at: datetime | None = None
 
     def __init__(
         self,
@@ -56,6 +58,8 @@ class HarmanLuxuryCoordinator(DataUpdateCoordinator[HarmanLuxuryState]):
     async def _async_update_data(self) -> HarmanLuxuryState:
         """Fetch the latest player state."""
         try:
-            return await self.client.async_get_state()
+            state = await self.client.async_get_state()
         except HarmanLuxuryError as err:
             raise UpdateFailed(str(err)) from err
+        self.position_updated_at = dt_util.utcnow()
+        return state

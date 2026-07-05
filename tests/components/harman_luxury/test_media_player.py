@@ -34,9 +34,9 @@ ENTITY_ID = "media_player.dining_room"
 
 
 @pytest.mark.freeze_time("2024-01-01 12:00:00+00:00")
+@pytest.mark.usefixtures("mock_client")
 async def test_entities(
     hass: HomeAssistant,
-    mock_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,

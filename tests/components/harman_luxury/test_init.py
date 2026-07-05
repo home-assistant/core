@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from aioharmanluxury import HarmanLuxuryError
+import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -12,8 +13,9 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_client")
 async def test_setup_and_unload(
-    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test a config entry loads and unloads cleanly."""
     await setup_integration(hass, mock_config_entry)

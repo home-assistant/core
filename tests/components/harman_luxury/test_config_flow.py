@@ -4,6 +4,7 @@ from dataclasses import replace
 from unittest.mock import AsyncMock
 
 from aioharmanluxury import HarmanLuxuryError
+import pytest
 
 from homeassistant.components.harman_luxury.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
@@ -16,7 +17,8 @@ from .conftest import SSDP_DISCOVERY, TEST_HOST, TEST_NAME, TEST_SERIAL
 from tests.common import MockConfigEntry
 
 
-async def test_user_flow(hass: HomeAssistant, mock_client: AsyncMock) -> None:
+@pytest.mark.usefixtures("mock_client")
+async def test_user_flow(hass: HomeAssistant) -> None:
     """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -56,8 +58,9 @@ async def test_user_flow_cannot_connect(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_client")
 async def test_user_flow_already_configured(
-    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test aborting the user flow when the device is already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -72,7 +75,8 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_ssdp_flow(hass: HomeAssistant, mock_client: AsyncMock) -> None:
+@pytest.mark.usefixtures("mock_client")
+async def test_ssdp_flow(hass: HomeAssistant) -> None:
     """Test the SSDP discovery flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DISCOVERY
@@ -87,18 +91,21 @@ async def test_ssdp_flow(hass: HomeAssistant, mock_client: AsyncMock) -> None:
     assert result["result"].unique_id == TEST_SERIAL
 
 
-async def test_ssdp_flow_already_configured(
-    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
-) -> None:
+@pytest.mark.usefixtures("mock_client")
+async def test_ssdp_flow_already_configured(hass: HomeAssistant) -> None:
     """Test SSDP discovery aborts and updates the host when already configured."""
-    mock_config_entry.add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "5.5.5.5"}, unique_id=TEST_SERIAL
+    )
+    entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DISCOVERY
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_HOST] == TEST_HOST
+    # The stale host is updated to the newly discovered one.
+    assert entry.data[CONF_HOST] == TEST_HOST
 
 
 async def test_ssdp_flow_cannot_connect(
@@ -114,9 +121,8 @@ async def test_ssdp_flow_cannot_connect(
     assert result["reason"] == "cannot_connect"
 
 
-async def test_ssdp_flow_missing_serial(
-    hass: HomeAssistant, mock_client: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_client")
+async def test_ssdp_flow_missing_serial(hass: HomeAssistant) -> None:
     """Test SSDP discovery aborts when the advertisement lacks a serial."""
     discovery = replace(SSDP_DISCOVERY, upnp={})
 

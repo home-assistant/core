@@ -15,7 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import HarmanLuxuryConfigEntry, HarmanLuxuryCoordinator
@@ -160,9 +159,9 @@ class HarmanLuxuryMediaPlayer(
 
     @property
     @override
-    def media_position_updated_at(self) -> datetime:
+    def media_position_updated_at(self) -> datetime | None:
         """Return when the media position was last retrieved."""
-        return dt_util.utcnow()
+        return self.coordinator.position_updated_at
 
     @override
     async def async_set_volume_level(self, volume: float) -> None:
