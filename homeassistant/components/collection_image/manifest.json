@@ -3,7 +3,6 @@
   "name": "Collection Image",
   "codeowners": ["@karwosts"],
   "config_flow": true,
-  "dependencies": ["media_source"],
   "documentation": "https://www.home-assistant.io/integrations/collection_image",
   "integration_type": "service",
   "iot_class": "calculated",
