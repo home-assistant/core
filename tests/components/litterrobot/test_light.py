@@ -54,7 +54,7 @@ async def test_turn_on_brightness(
         blocking=True,
     )
     robot.set_night_light_settings.assert_awaited_once_with(
-        mode=NightLightMode.AUTO, brightness=100, color="#FFFFFF"
+        mode=NightLightMode.AUTO, brightness=100, color=(255, 255, 255)
     )
 
 
@@ -102,7 +102,7 @@ async def test_turn_on_from_off_switches_on(hass: HomeAssistant) -> None:
         blocking=True,
     )
     robot.set_night_light_settings.assert_awaited_once_with(
-        mode=NightLightMode.ON, brightness=50, color="#FFFFFF"
+        mode=NightLightMode.ON, brightness=50, color=(255, 255, 255)
     )
 
 
