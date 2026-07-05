@@ -50,14 +50,16 @@ DEVICE_CONTROL_TOOL_USAGE_PROMPT = (
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
 ) -> LLMTools | None:
-    """Return LLM tools for the generic intents."""
+    """Return the generic intent tools and the device control prompt."""
     if api_id != LLM_API_ASSIST:
         return None
 
+    supports_timers = (
+        llm_context.device_id is not None
+        and async_device_supports_timers(hass, llm_context.device_id)
+    )
     wanted = set(LLM_INTENTS)
-    if llm_context.device_id and async_device_supports_timers(
-        hass, llm_context.device_id
-    ):
+    if supports_timers:
         wanted.update(TIMER_INTENTS)
 
     exposed_domains = {
@@ -79,63 +81,38 @@ def async_get_tools(
         return None
 
     # Only guide device control once something is exposed to control.
-    prompt = _async_get_prompt(hass, llm_context) if exposed_domains else None
-    return LLMTools(tools=tools, prompt=prompt)
+    if not exposed_domains:
+        return LLMTools(tools=tools)
 
-
-@callback
-def _async_get_prompt(hass: HomeAssistant, llm_context: LLMContext) -> str:
-    """Return the device control prompt for the exposed intent tools."""
-    prompt_parts = [
-        DEVICE_CONTROL_TOOL_USAGE_PROMPT,
-        _async_get_area_prompt(hass, llm_context),
-    ]
-    if no_timer_prompt := _async_get_no_timer_prompt(hass, llm_context):
-        prompt_parts.append(no_timer_prompt)
-    return "\n".join(prompt_parts)
-
-
-@callback
-def _async_get_no_timer_prompt(
-    hass: HomeAssistant, llm_context: LLMContext
-) -> str | None:
-    """Return a prompt when the device cannot start timers."""
-    if not llm_context.device_id or not async_device_supports_timers(
-        hass, llm_context.device_id
-    ):
-        return "This device is not able to start timers."
-    return None
-
-
-@callback
-def _async_get_area_prompt(hass: HomeAssistant, llm_context: LLMContext) -> str:
-    """Return the area prompt for the voice satellite."""
+    # Tell the voice satellite which area it is in so generic commands target it.
     floor: fr.FloorEntry | None = None
     area: ar.AreaEntry | None = None
-    extra = ""
-    if llm_context.device_id:
-        device_reg = dr.async_get(hass)
-        device = device_reg.async_get(llm_context.device_id)
+    if llm_context.device_id and (
+        device := dr.async_get(hass).async_get(llm_context.device_id)
+    ):
+        area_reg = ar.async_get(hass)
+        if device.area_id and (area := area_reg.async_get_area(device.area_id)):
+            if area.floor_id:
+                floor = fr.async_get(hass).async_get_floor(area.floor_id)
 
-        if device:
-            area_reg = ar.async_get(hass)
-            if device.area_id and (area := area_reg.async_get_area(device.area_id)):
-                floor_reg = fr.async_get(hass)
-                if area.floor_id:
-                    floor = floor_reg.async_get_floor(area.floor_id)
-
-        extra = (
-            "and all generic commands like"
-            " 'turn on the lights' should target"
-            " this area."
+    if area and floor:
+        area_prompt = (
+            f"You are in area {area.name} (floor {floor.name}) and all generic"
+            " commands like 'turn on the lights' should target this area."
+        )
+    elif area:
+        area_prompt = (
+            f"You are in area {area.name} and all generic commands like"
+            " 'turn on the lights' should target this area."
+        )
+    else:
+        area_prompt = (
+            "When a user asks to turn on all devices of a specific type, "
+            "ask the user to specify an area, unless there is only one device"
+            " of that type."
         )
 
-    if floor and area:
-        return f"You are in area {area.name} (floor {floor.name}) {extra}".strip()
-    if area:
-        return f"You are in area {area.name} {extra}".strip()
-    return (
-        "When a user asks to turn on all devices of a specific type, "
-        "ask the user to specify an area, unless there"
-        " is only one device of that type."
-    )
+    prompt_parts = [DEVICE_CONTROL_TOOL_USAGE_PROMPT, area_prompt]
+    if not supports_timers:
+        prompt_parts.append("This device is not able to start timers.")
+    return LLMTools(tools=tools, prompt="\n".join(prompt_parts))
