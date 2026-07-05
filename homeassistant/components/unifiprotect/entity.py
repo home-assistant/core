@@ -403,7 +403,9 @@ class ProtectFobEntity(Entity):
             connections={(dr.CONNECTION_NETWORK_MAC, fob.mac)},
             identifiers={(DOMAIN, fob.mac)},
             manufacturer=DEFAULT_BRAND,
-            name=fob.name,
+            # A freshly-paired, unnamed fob reports ``name=None``; fall back to a
+            # stable default so the device is never registered nameless.
+            name=fob.name or f"Key Fob {fob.mac}",
             model="Key Fob",
             via_device=(DOMAIN, nvr.mac),
         )

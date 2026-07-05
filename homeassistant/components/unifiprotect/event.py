@@ -4,8 +4,9 @@ import dataclasses
 from typing import Any, override
 
 from uiprotect import ProtectEvent
-from uiprotect.data import Fob, FobButton, ModelType, SmartDetectObjectType
+from uiprotect.data import Fob, ModelType, SmartDetectObjectType
 from uiprotect.data.nvr import Event, EventDetectedThumbnail
+from uiprotect.data.types import EventButtonType
 
 from homeassistant.components.event import (
     DoorbellEventType,
@@ -400,24 +401,24 @@ class ProtectDeviceSmartDetectEventEntity(
             self.async_write_ha_state()
 
 
-# A key-fob button press is delivered over the public events websocket. Captured
-# from real USL-FOB hardware (paired via a LinkStation bridge): the event type is
-# ``sensorButtonPressed``, the event's ``device`` is the fob itself, and the
-# pressed button is in ``metadata.button``. ``alarmHubButtonPress`` is also
-# accepted, since a fob paired to an alarm hub is expected to route through it.
-_FOB_BUTTON_EVENT_TYPES = (
-    EventType.SENSOR_BUTTON_PRESSED,
-    EventType.ALARM_HUB_BUTTON_PRESS,
-)
+# A key-fob button press is delivered over the public events websocket as a
+# ``sensorButtonPressed`` event (captured from real USL-FOB hardware, paired via
+# a LinkStation bridge): the event's ``device`` is the fob itself, and the
+# pressed button is in ``metadata.button``. A fob paired to an alarm hub routes
+# its press through the hub, which is a separate device with its own id, so that
+# path is deferred to the alarm-hub work rather than handled here.
+_FOB_BUTTON_EVENT_TYPES = (EventType.SENSOR_BUTTON_PRESSED,)
 
 # Real hardware reports an empty ``feature_flags.buttons`` (the fob does not
-# advertise which buttons it has), so the event entity declares the full
-# ``FobButton`` vocabulary. Each type is the button's snake_case enum name (e.g.
-# ``alarm_hub_button``) so it is a valid HA translation key; ``EventButtonType``
-# shares its member names 1:1 with ``FobButton``, so a press resolves to the
-# same key.
+# advertise which buttons it has), so the event entity declares the full button
+# vocabulary. It is built from ``EventButtonType`` (the enum carried in
+# ``metadata.button``, which is matched against below) so the declared types and
+# the matched value cannot drift apart. Each type is the button's snake_case
+# enum name (e.g. ``alarm_hub_button``) so it is a valid HA translation key.
 _FOB_EVENT_TYPES: list[str] = [
-    button.name.lower() for button in FobButton if button is not FobButton.UNKNOWN
+    button.name.lower()
+    for button in EventButtonType
+    if button is not EventButtonType.UNKNOWN
 ]
 
 
@@ -425,8 +426,8 @@ class ProtectFobButtonEventEntity(ProtectFobEntity, EventEntity):
     """A UniFi Protect key fob button-press event entity.
 
     Each fob exposes one event entity that fires the pressed button (from a
-    public ``sensorButtonPressed`` / ``alarmHubButtonPress`` event's
-    ``metadata.button``) as its event type.
+    public ``sensorButtonPressed`` event's ``metadata.button``) as its event
+    type.
     """
 
     _attr_translation_key = "keyfob"

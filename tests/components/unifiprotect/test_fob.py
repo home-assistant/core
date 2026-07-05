@@ -1,9 +1,10 @@
 """Tests for the UniFi Protect key fob (Public API) entities."""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from unittest.mock import Mock
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 from uiprotect import EventChange, ProtectEvent, ProtectEventChannel
 from uiprotect.data import (
     DeviceState,
@@ -98,7 +99,7 @@ def _button_event(
     fob: Mock,
     *,
     event_id: str = "evt-1",
-    button: EventButtonType = EventButtonType.ARM,
+    button: EventButtonType | None = EventButtonType.ARM,
     event_type: EventType = EventType.SENSOR_BUTTON_PRESSED,
     device_id: str | None = None,
     device_mac: str | None = None,
@@ -107,7 +108,8 @@ def _button_event(
     """Build a button-press ``ProtectEvent`` matching a real USL-FOB capture.
 
     A real press is born-closed (``start == end``) and carries the fob itself as
-    the event ``device`` with the pressed button in ``metadata.button``.
+    the event ``device`` with the pressed button in ``metadata.button``. Pass
+    ``button=None`` to omit metadata entirely.
     """
     when = now or datetime(2026, 1, 1)
     return ProtectEvent(
@@ -118,7 +120,7 @@ def _button_event(
         device_mac=fob.mac if device_mac is None else device_mac,
         start=when,
         end=when,
-        metadata=PublicEventMetadata(button=button),
+        metadata=None if button is None else PublicEventMetadata(button=button),
     )
 
 
@@ -172,11 +174,12 @@ async def test_fob_entities_created(
     assert battery_low.state == "off"
 
 
-async def test_fob_button_event_types_are_full_vocabulary(
+async def test_fob_button_event_types(
     hass: HomeAssistant,
     ufp_with_fob: tuple[MockUFPFixture, Mock],
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """The button event entity declares the full FobButton vocabulary.
+    """The button event entity declares the full button vocabulary.
 
     Real hardware reports an empty ``feature_flags.buttons``, so the entity
     cannot derive its types from the device and declares them all.
@@ -186,25 +189,29 @@ async def test_fob_button_event_types_are_full_vocabulary(
 
     state = hass.states.get(BUTTON_EVENT)
     assert state is not None
-    assert set(state.attributes["event_types"]) == {
-        "function",
-        "alarm_hub_button",
-        "arm",
-        "disarm",
-        "night",
-        "panic",
-        "left",
-        "right",
-        "input1",
-        "input2",
-    }
+    assert state.attributes["event_types"] == snapshot
 
 
+@pytest.mark.parametrize(
+    ("button", "expected_event_type"),
+    [
+        pytest.param(EventButtonType.ARM, "arm", id="arm"),
+        pytest.param(EventButtonType.DISARM, "disarm", id="disarm"),
+        pytest.param(EventButtonType.PANIC, "panic", id="panic"),
+        pytest.param(
+            EventButtonType.ALARM_HUB_BUTTON,
+            "alarm_hub_button",
+            id="camelcase_maps_to_snake_case",
+        ),
+    ],
+)
 async def test_fob_button_press_fires_event(
     hass: HomeAssistant,
     ufp_with_fob: tuple[MockUFPFixture, Mock],
+    button: EventButtonType,
+    expected_event_type: str,
 ) -> None:
-    """A sensor button-press event fires the fob button event entity."""
+    """A sensor button-press fires an event of the matching snake_case type."""
     ufp, fob = ufp_with_fob
     await init_entry(hass, ufp, [])
 
@@ -216,21 +223,29 @@ async def test_fob_button_press_fires_event(
 
     unsub = async_track_state_change_event(hass, BUTTON_EVENT, _capture)
 
-    ufp.events_msg(_button_event(fob, button=EventButtonType.ARM), EventChange.STARTED)
+    ufp.events_msg(_button_event(fob, button=button), EventChange.STARTED)
     await hass.async_block_till_done()
 
     assert len(events) == 1
     new_state = events[0].data["new_state"]
-    assert new_state.attributes["event_type"] == "arm"
+    assert new_state.attributes["event_type"] == expected_event_type
     assert new_state.attributes[ATTR_EVENT_ID] == "evt-1"
     unsub()
 
 
-async def test_fob_alarm_hub_button_press_also_fires(
+@pytest.mark.parametrize(
+    "button",
+    [
+        pytest.param(EventButtonType.UNKNOWN, id="unknown_button"),
+        pytest.param(None, id="no_metadata"),
+    ],
+)
+async def test_fob_button_press_ignored(
     hass: HomeAssistant,
     ufp_with_fob: tuple[MockUFPFixture, Mock],
+    button: EventButtonType | None,
 ) -> None:
-    """An ``alarmHubButtonPress`` event also fires (alarm-hub-paired fobs)."""
+    """A press for an unknown button, or one with no metadata, does not fire."""
     ufp, fob = ufp_with_fob
     await init_entry(hass, ufp, [])
 
@@ -242,106 +257,7 @@ async def test_fob_alarm_hub_button_press_also_fires(
 
     unsub = async_track_state_change_event(hass, BUTTON_EVENT, _capture)
 
-    ufp.events_msg(
-        _button_event(
-            fob,
-            button=EventButtonType.PANIC,
-            event_type=EventType.ALARM_HUB_BUTTON_PRESS,
-        ),
-        EventChange.STARTED,
-    )
-    await hass.async_block_till_done()
-
-    assert len(events) == 1
-    assert events[0].data["new_state"].attributes["event_type"] == "panic"
-    unsub()
-
-
-async def test_fob_unknown_button_is_skipped(
-    hass: HomeAssistant,
-    ufp_with_fob: tuple[MockUFPFixture, Mock],
-) -> None:
-    """A press for an unrecognized button (coerced to UNKNOWN) does not fire."""
-    ufp, fob = ufp_with_fob
-    await init_entry(hass, ufp, [])
-
-    events: list[HAEvent] = []
-
-    @callback
-    def _capture(event: HAEvent) -> None:
-        events.append(event)
-
-    unsub = async_track_state_change_event(hass, BUTTON_EVENT, _capture)
-
-    ufp.events_msg(
-        _button_event(fob, button=EventButtonType.UNKNOWN), EventChange.STARTED
-    )
-    await hass.async_block_till_done()
-
-    assert len(events) == 0
-    unsub()
-
-
-async def test_fob_alarm_hub_button_uses_snake_case_event_type(
-    hass: HomeAssistant,
-    ufp_with_fob: tuple[MockUFPFixture, Mock],
-) -> None:
-    """The camelCase ``alarmHubButton`` wire value maps to a snake_case type."""
-    ufp, fob = ufp_with_fob
-    await init_entry(hass, ufp, [])
-
-    state = hass.states.get(BUTTON_EVENT)
-    assert state is not None
-    assert "alarm_hub_button" in state.attributes["event_types"]
-
-    events: list[HAEvent] = []
-
-    @callback
-    def _capture(event: HAEvent) -> None:
-        events.append(event)
-
-    unsub = async_track_state_change_event(hass, BUTTON_EVENT, _capture)
-
-    ufp.events_msg(
-        _button_event(fob, button=EventButtonType.ALARM_HUB_BUTTON),
-        EventChange.STARTED,
-    )
-    await hass.async_block_till_done()
-
-    assert len(events) == 1
-    assert events[0].data["new_state"].attributes["event_type"] == "alarm_hub_button"
-    unsub()
-
-
-async def test_fob_button_press_without_metadata_is_ignored(
-    hass: HomeAssistant,
-    ufp_with_fob: tuple[MockUFPFixture, Mock],
-) -> None:
-    """A button-press event carrying no button metadata does not fire."""
-    ufp, fob = ufp_with_fob
-    await init_entry(hass, ufp, [])
-
-    events: list[HAEvent] = []
-
-    @callback
-    def _capture(event: HAEvent) -> None:
-        events.append(event)
-
-    unsub = async_track_state_change_event(hass, BUTTON_EVENT, _capture)
-
-    ufp.events_msg(
-        ProtectEvent(
-            id="evt-nometa",
-            type=EventType.ALARM_HUB_BUTTON_PRESS,
-            channel=ProtectEventChannel.ALARM_HUB,
-            device_id=fob.id,
-            device_mac=fob.mac,
-            start=datetime(2026, 1, 1) - timedelta(seconds=1),
-            end=datetime(2026, 1, 1),
-            metadata=None,
-        ),
-        EventChange.STARTED,
-    )
+    ufp.events_msg(_button_event(fob, button=button), EventChange.STARTED)
     await hass.async_block_till_done()
 
     assert len(events) == 0
