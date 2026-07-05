@@ -8,7 +8,8 @@ from unittest.mock import call, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import mqtt, water_heater
+from homeassistant.components import water_heater
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.water_heater import (
     MQTT_WATER_HEATER_ATTRIBUTES_BLOCKED,
 )
@@ -96,7 +97,7 @@ _DEFAULT_MAX_TEMP_CELSIUS = round(
 
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         water_heater.DOMAIN: {
             "name": "test",
             "mode_command_topic": "mode-topic",
@@ -553,7 +554,7 @@ async def test_custom_availability_payload(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 water_heater.DOMAIN: {
                     "name": "test",
                     "mode_command_topic": "mode-topic",
@@ -618,7 +619,7 @@ async def test_get_with_templates(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 water_heater.DOMAIN: {
                     "name": "test",
                     "mode_command_topic": "mode-topic",
@@ -867,7 +868,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 water_heater.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -910,7 +911,7 @@ async def test_encoding_subscribable_topics(
     attribute_value: Any,
 ) -> None:
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][water_heater.DOMAIN])
+    config = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][water_heater.DOMAIN])
     await help_test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry,
@@ -927,7 +928,7 @@ async def test_discovery_removal_water_heater(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered water heater."""
-    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][water_heater.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG[DOMAIN][water_heater.DOMAIN])
     await help_test_discovery_removal(hass, mqtt_mock_entry, water_heater.DOMAIN, data)
 
 
@@ -1008,7 +1009,7 @@ async def test_entity_id_update_subscriptions(
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             water_heater.DOMAIN: {
                 "name": "test",
                 "mode_state_topic": "test-topic",
@@ -1035,7 +1036,7 @@ async def test_entity_debug_info_message(
 ) -> None:
     """Test MQTT debug info."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             water_heater.DOMAIN: {
                 "name": "test",
                 "mode_command_topic": "command-topic",
@@ -1270,6 +1271,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

@@ -6,7 +6,7 @@ from enum import EnumType, IntEnum, IntFlag, StrEnum, _EnumDict
 import functools
 import inspect
 import logging
-from typing import Any, NamedTuple, cast
+from typing import Any, NamedTuple, cast, override
 
 
 def deprecated_substitute[_ObjectT: object](
@@ -43,7 +43,7 @@ def deprecated_substitute[_ObjectT: object](
                         inspect.getfile(self.__class__),
                     )
                     warnings[module_name] = True
-                    setattr(func, "_deprecated_substitute_warnings", warnings)
+                    setattr(func, "_deprecated_substitute_warnings", warnings)  # noqa: B010
 
                 # Return the old property
                 return getattr(self, substitute_name)
@@ -428,6 +428,7 @@ class EnumWithDeprecatedMembers(EnumType):
         classdict["__deprecated__"] = deprecated
         return super().__new__(mcs, cls, bases, classdict, **kwds)
 
+    @override
     def __getattribute__(cls, name: str) -> Any:
         """Warn if accessing a deprecated member."""
         deprecated = super().__getattribute__("__deprecated__")

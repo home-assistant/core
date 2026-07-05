@@ -8,9 +8,15 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: Integration does not subscribe to entity events, uses coordinator pattern
@@ -40,12 +46,8 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info:
-    status: exempt
-    comment: Integration does not support network discovery
-  discovery:
-    status: exempt
-    comment: Integration does not support network discovery
+  discovery-update-info: done
+  discovery: done
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -60,7 +62,7 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:
@@ -69,6 +71,7 @@ rules:
   stale-devices:
     status: exempt
     comment: Integration represents a single device, not a hub with multiple devices
+
   # Platinum
   async-dependency: done
   inject-websession: done

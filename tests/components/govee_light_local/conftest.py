@@ -4,11 +4,15 @@ from asyncio import Event
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from govee_local_api import GoveeLightCapabilities, GoveeLightFeatures
+from govee_local_api import GoveeDevice, GoveeLightCapabilities, GoveeLightFeatures
 from govee_local_api.light_capabilities import COMMON_FEATURES, SCENE_CODES
 import pytest
 
+from homeassistant.components.govee_light_local.const import DOMAIN
 from homeassistant.components.govee_light_local.coordinator import GoveeController
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_govee_api")
@@ -56,3 +60,37 @@ SCENE_CAPABILITIES: GoveeLightCapabilities = GoveeLightCapabilities(
     segments=[],
     scenes=SCENE_CODES,
 )
+
+
+async def setup_light(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    capabilities: GoveeLightCapabilities = DEFAULT_CAPABILITIES,
+    *,
+    ip: str = "192.168.1.100",
+    fingerprint: str = "asdawdqwdqwd",
+    sku: str = "H615A",
+) -> tuple[MockConfigEntry, GoveeDevice]:
+    """Set up a single mocked Govee light device and return its entry and device.
+
+    The returned tuple lets tests that need to mutate the device after setup
+    (e.g. ``device.update(...)`` in availability tests) access the underlying
+    ``GoveeDevice`` directly. Tests that only need the entry or neither can
+    discard the unused half with ``_``.
+    """
+    device = GoveeDevice(
+        controller=mock_govee_api,
+        ip=ip,
+        fingerprint=fingerprint,
+        sku=sku,
+        capabilities=capabilities,
+    )
+    mock_govee_api.devices = [device]
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    return entry, device

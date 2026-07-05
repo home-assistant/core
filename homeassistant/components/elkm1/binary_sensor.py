@@ -1,6 +1,6 @@
 """Support for control of ElkM1 binary sensors."""
 
-from typing import Any
+from typing import Any, override
 
 from elkm1_lib.const import ZoneLogicalStatus, ZoneType
 from elkm1_lib.elements import Element
@@ -47,8 +47,9 @@ class ElkBinarySensor(ElkAttachedEntity, BinarySensorEntity):
     _element: Zone
     _attr_entity_registry_enabled_default = False
 
+    @override
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         # Zone in NORMAL state is OFF; any other state is ON
         self._attr_is_on = bool(
-            self._element.logical_status != ZoneLogicalStatus.NORMAL
+            self._element.logical_status is not ZoneLogicalStatus.NORMAL
         )

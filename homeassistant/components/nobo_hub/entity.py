@@ -1,5 +1,7 @@
 """Base entity for the Nobø Ecohub integration."""
 
+from typing import override
+
 from pynobo import nobo
 
 from homeassistant.core import callback
@@ -16,11 +18,13 @@ class NoboBaseEntity(Entity):
         """Initialize the entity."""
         self._nobo = hub
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback with hub."""
         await super().async_added_to_hass()
         self._nobo.register_callback(self._handle_hub_update)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Deregister callback from hub."""
         self._nobo.deregister_callback(self._handle_hub_update)
@@ -34,5 +38,10 @@ class NoboBaseEntity(Entity):
 
     @callback
     def _read_state(self) -> None:
-        """Read the current state from the hub. Must be overridden."""
+        """Copy the current hub state from the pynobo client onto the entity attributes.
+
+        The pynobo client keeps its own in-memory state, updated via pushes
+        from the hub; subclasses override this to map the relevant values
+        onto their `_attr_*` fields. Must be overridden.
+        """
         raise NotImplementedError

@@ -1,8 +1,19 @@
 {
   "entity": {
+    "binary_sensor": {
+      "half_lock_calibration": {
+        "default": "mdi:lock-check"
+      }
+    },
     "button": {
       "light_sensor": {
         "default": "mdi:brightness-auto"
+      },
+      "next_image": {
+        "default": "mdi:skip-next"
+      },
+      "previous_image": {
+        "default": "mdi:skip-previous"
       }
     },
     "climate": {

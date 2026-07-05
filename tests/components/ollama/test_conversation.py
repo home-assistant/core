@@ -84,7 +84,7 @@ async def test_chat(
             Message(role="user", content="test message"),
         ]
 
-        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE, (
             result
         )
         assert result.response.speech["plain"]["speech"] == "test response"
@@ -147,7 +147,7 @@ async def test_chat_stream(
             Message(role="user", content="test message"),
         ]
 
-        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE, (
             result
         )
         assert result.response.speech["plain"]["speech"] == "test response"
@@ -254,7 +254,7 @@ async def test_template_variables(
             hass, "hello", None, context, agent_id=mock_config_entry.entry_id
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE, (
         result
     )
 
@@ -357,7 +357,7 @@ async def test_function_call(
         )
 
     assert mock_chat.call_count == 2
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
         == "I have successfully called the function"
@@ -441,7 +441,7 @@ async def test_function_exception(
         )
 
     assert mock_chat.call_count == 2
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
         == "There was an error calling the function"
@@ -547,13 +547,19 @@ async def test_history_conversion(
             ),
             Message(
                 role="tool",
-                content='{"speech":{"plain":{"speech":"4:24 PM","extra_data":null}},"response_type":"action_done","speech_slots":{"time":"16:24:17.813343"},"data":{"success":[],"failed":[]}}',
+                content=(
+                    '{"speech":{"plain":{"speech":"4:24 PM",'
+                    '"extra_data":null}},'
+                    '"response_type":"action_done",'
+                    '"speech_slots":{"time":"16:24:17.813343"},'
+                    '"data":{"success":[],"failed":[]}}'
+                ),
             ),
             Message(role="assistant", content="4:24 PM"),
             Message(role="user", content="test message"),
         ]
 
-        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE, (
             result
         )
         assert result.response.speech["plain"]["speech"] == "test response"
@@ -618,7 +624,7 @@ async def test_message_history_trimming(
                 agent_id=mock_config_entry.entry_id,
             )
             assert (
-                result.response.response_type == intent.IntentResponseType.ACTION_DONE
+                result.response.response_type is intent.IntentResponseType.ACTION_DONE
             ), result
 
         assert mock_chat.call_count == 5
@@ -719,7 +725,7 @@ async def test_message_history_unlimited(
                 agent_id=mock_config_entry.entry_id,
             )
             assert (
-                result.response.response_type == intent.IntentResponseType.ACTION_DONE
+                result.response.response_type is intent.IntentResponseType.ACTION_DONE
             ), result
 
         args = mock_chat.call_args_list
@@ -744,7 +750,7 @@ async def test_error_handling(
             hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
 
 
@@ -770,7 +776,7 @@ async def test_template_error(
             hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
 
 

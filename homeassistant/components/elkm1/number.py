@@ -1,7 +1,7 @@
 """Support for ElkM1 number entities."""
 
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from elkm1_lib.const import SettingFormat
 from elkm1_lib.elements import Element
@@ -56,10 +56,11 @@ class ElkNumberSetting(ElkAttachedEntity, NumberEntity):
     def __init__(self, element: Setting, elk: Any, elk_data: ELKM1Data) -> None:
         """Initialize the number setting."""
         super().__init__(element, elk, elk_data)
-        if element.value_format == SettingFormat.TIMER:
+        if element.value_format is SettingFormat.TIMER:
             self._attr_device_class = NumberDeviceClass.DURATION
             self._attr_native_unit_of_measurement = UnitOfTime.SECONDS
 
+    @override
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         # Guard against the panel possibly changing the underlying
         # type without us knowing about the change
@@ -68,10 +69,13 @@ class ElkNumberSetting(ElkAttachedEntity, NumberEntity):
         else:
             self._attr_available = False
             _LOGGER.warning(
-                "Setting type for '%s' differs between the ElkM1 and the entity. Restart the integration to fix",
+                "Setting type for '%s' differs between the"
+                " ElkM1 and the entity. Restart the"
+                " integration to fix",
                 self.entity_id,
             )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the value of the setting."""
         self._element.set(int(value))

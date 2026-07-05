@@ -1,7 +1,7 @@
 """Support for Powerview scenes from a Powerview hub."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiopvapi.helpers.constants import ATTR_NAME
 from aiopvapi.resources.scene import Scene as PvScene
@@ -54,6 +54,7 @@ class PowerViewScene(HDEntity, Scene):
         self._attr_name = scene.name
         self._attr_extra_state_attributes = {STATE_ATTRIBUTE_ROOM_NAME: room_name}
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
         shades = await self._scene.activate()

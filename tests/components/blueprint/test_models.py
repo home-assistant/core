@@ -44,7 +44,8 @@ def blueprint_2(request: pytest.FixtureRequest) -> models.Blueprint:
         "example-default": Input("test-input-default"),
     }
     if request.param:
-        # Replace the inputs with inputs in sections. Test should otherwise behave the same.
+        # Replace the inputs with inputs in sections.
+        # Test should otherwise behave the same.
         blueprint["blueprint"]["input"] = {
             "section-1": {
                 "name": "Section 1",

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -53,7 +53,9 @@ def valid_config(config: ConfigType) -> ConfigType:
     """Check if there is a state topic or json_attributes_topic."""
     if CONF_STATE_TOPIC not in config and CONF_JSON_ATTRS_TOPIC not in config:
         raise vol.Invalid(
-            f"Invalid device tracker config, missing {CONF_STATE_TOPIC} or {CONF_JSON_ATTRS_TOPIC}, got: {config}"
+            f"Invalid device tracker config, missing"
+            f" {CONF_STATE_TOPIC} or"
+            f" {CONF_JSON_ATTRS_TOPIC}, got: {config}"
         )
     return config
 
@@ -105,10 +107,12 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._value_template = MqttValueTemplate(
@@ -139,17 +143,20 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             self._attr_location_name = msg.payload
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
             CONF_STATE_TOPIC, self._tracker_message_received, {"_attr_location_name"}
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     @callback
+    @override
     def _process_update_extra_state_attributes(
         self, extra_state_attributes: dict[str, Any]
     ) -> None:
@@ -173,10 +180,10 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                 self._attr_latitude = None
                 self._attr_longitude = None
                 _LOGGER.warning(
-                    "Extra state attributes received at % and template %s "
+                    "Extra state attributes received at %s and template %s "
                     "contain invalid or incomplete location info. Got %s",
-                    self._config.get(CONF_JSON_ATTRS_TEMPLATE),
                     self._config.get(CONF_JSON_ATTRS_TOPIC),
+                    self._config.get(CONF_JSON_ATTRS_TEMPLATE),
                     extra_state_attributes,
                 )
 
@@ -188,11 +195,11 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                     self._attr_location_accuracy = gps_accuracy
                 else:
                     _LOGGER.warning(
-                        "Extra state attributes received at % and template %s "
+                        "Extra state attributes received at %s and template %s "
                         "contain invalid GPS accuracy setting, "
                         "gps_accuracy was set to 0 as the default. Got %s",
-                        self._config.get(CONF_JSON_ATTRS_TEMPLATE),
                         self._config.get(CONF_JSON_ATTRS_TOPIC),
+                        self._config.get(CONF_JSON_ATTRS_TEMPLATE),
                         extra_state_attributes,
                     )
                     self._attr_location_accuracy = 0

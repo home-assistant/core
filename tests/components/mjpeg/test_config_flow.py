@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
 import requests
 from requests_mock import Mocker
 
@@ -215,11 +216,9 @@ async def test_connection_error(
     assert mock_mjpeg_requests.call_count == 5
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_already_configured(
-    hass: HomeAssistant,
-    mock_mjpeg_requests: Mocker,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_mjpeg_requests: Mocker, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test we abort if the MJPEG IP Camera is already configured."""
     mock_config_entry.add_to_hass(hass)

@@ -6,6 +6,7 @@ from dataclasses import asdict
 from unittest.mock import Mock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components import stt
 from homeassistant.components.assist_pipeline import (
@@ -24,7 +25,7 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteAnswer,
     SatelliteBusyError,
 )
-from homeassistant.components.assist_satellite.const import PREANNOUNCE_URL
+from homeassistant.components.assist_satellite.const import DOMAIN, PREANNOUNCE_URL
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntry
@@ -362,7 +363,7 @@ async def test_announce(
         patch.object(entity, "async_announce", new=async_announce),
     ):
         await hass.services.async_call(
-            "assist_satellite",
+            DOMAIN,
             "announce",
             service_data,
             target={"entity_id": "assist_satellite.test_entity"},
@@ -457,7 +458,7 @@ async def test_announce_default_preannounce(
 
     with patch.object(entity, "async_announce", new=async_announce):
         await hass.services.async_call(
-            "assist_satellite",
+            DOMAIN,
             "announce",
             {"media_id": "test-media-id"},
             target={"entity_id": "assist_satellite.test_entity"},
@@ -588,7 +589,7 @@ async def test_vad_sensitivity_entity(
 async def test_pipeline_entity_not_found(
     hass: HomeAssistant, init_components: ConfigEntry, entity: MockAssistSatellite
 ) -> None:
-    """Test that setting the pipeline entity id to a non-existent entity raises an error."""
+    """Test setting pipeline entity id to non-existent entity errors."""
     audio_stream = object()
 
     # Set to an entity that doesn't exist
@@ -601,7 +602,7 @@ async def test_pipeline_entity_not_found(
 async def test_vad_sensitivity_entity_not_found(
     hass: HomeAssistant, init_components: ConfigEntry, entity: MockAssistSatellite
 ) -> None:
-    """Test that setting the vad sensitivity entity id to a non-existent entity raises an error."""
+    """Test setting vad sensitivity entity id to non-existent entity errors."""
     audio_stream = object()
 
     # Set to an entity that doesn't exist
@@ -777,7 +778,7 @@ async def test_start_conversation(
         patch.object(entity, "async_start_conversation", new=async_start_conversation),
     ):
         await hass.services.async_call(
-            "assist_satellite",
+            DOMAIN,
             "start_conversation",
             service_data,
             target={"entity_id": "assist_satellite.test_entity"},
@@ -796,7 +797,7 @@ async def test_start_conversation_reject_builtin_agent(
     """Test starting a conversation on a device."""
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            "assist_satellite",
+            DOMAIN,
             "start_conversation",
             {"start_message": "Hey!"},
             target={"entity_id": "assist_satellite.test_entity"},
@@ -807,7 +808,7 @@ async def test_start_conversation_reject_builtin_agent(
 async def test_start_conversation_default_preannounce(
     hass: HomeAssistant, init_components: ConfigEntry, entity: MockAssistSatellite
 ) -> None:
-    """Test starting a conversation on a device with the default preannouncement sound."""
+    """Test starting a conversation with the default preannounce sound."""
 
     async def async_start_conversation(start_announcement):
         assert PREANNOUNCE_URL in start_announcement.preannounce_media_id
@@ -822,7 +823,7 @@ async def test_start_conversation_default_preannounce(
         patch.object(entity, "async_start_conversation", new=async_start_conversation),
     ):
         await hass.services.async_call(
-            "assist_satellite",
+            DOMAIN,
             "start_conversation",
             {"start_media_id": "test-media-id"},
             target={"entity_id": "assist_satellite.test_entity"},
@@ -882,6 +883,24 @@ async def test_start_conversation_default_preannounce(
                 slots={"artist": "Pink Floyd"},
             ),
             True,
+        ),
+        (
+            {
+                "answers": [
+                    {
+                        "id": "jazz_with_volume",
+                        "sentences": ["jazz at {1..100:volume} percent volume"],
+                    },
+                ],
+                "preannounce": False,
+            },
+            "jazz at forty two percent volume",
+            AssistSatelliteAnswer(
+                id="jazz_with_volume",
+                sentence="jazz at forty two percent volume",
+                slots={"volume": 42},
+            ),
+            False,
         ),
     ],
 )
@@ -958,7 +977,7 @@ async def test_ask_question(
         patch.object(entity, "async_start_conversation", new=async_start_conversation),
     ):
         response = await hass.services.async_call(
-            "assist_satellite",
+            DOMAIN,
             "ask_question",
             {"entity_id": entity_id, "question": question_text, **service_data},
             blocking=True,
@@ -977,12 +996,34 @@ async def test_ask_question_requires_entity_permission(
     """Test ask_question is denied for users without POLICY_CONTROL on the entity."""
     with pytest.raises(Unauthorized):
         await hass.services.async_call(
-            "assist_satellite",
+            DOMAIN,
             "ask_question",
             {"entity_id": "assist_satellite.test_entity", "question": "Anything?"},
             blocking=True,
             return_response=True,
             context=Context(user_id=hass_read_only_user.id),
+        )
+
+
+@pytest.mark.parametrize("sentence", ["no punctuation!", "[malformed template)"])
+async def test_ask_question_invalid_sentences(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    sentence: str,
+) -> None:
+    """Test that invalid sentences raise an exception."""
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            "ask_question",
+            {
+                "entity_id": "assist_satellite.test_entity",
+                "question": "Test",
+                "answers": [{"id": "answer", "sentences": [sentence]}],
+            },
+            blocking=True,
+            return_response=True,
         )
 
 

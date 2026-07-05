@@ -3,7 +3,7 @@
 from copy import copy
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohttp import ClientError
 from cieloconnectapi import CieloClient
@@ -51,12 +51,15 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
             name=DOMAIN,
             config_entry=entry,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
-            # The debouncer prevents multiple rapid refresh requests from triggering repeated full data fetches from the backend.
+            # The debouncer prevents multiple rapid refresh
+            # requests from triggering repeated full data
+            # fetches from the backend.
             request_refresh_debouncer=Debouncer(
                 hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
 
+    @override
     async def _async_update_data(self) -> CieloData:
         """Fetch data from the API."""
         try:

@@ -4,7 +4,7 @@ import asyncio
 from contextlib import suppress
 import logging
 import socket
-from typing import cast
+from typing import cast, override
 
 from aiohttp import web
 
@@ -82,10 +82,12 @@ class UPNPResponderProtocol(asyncio.Protocol):
             "urn:schemas-upnp-org:device:basic:1", f"uuid:{HUE_UUID}"
         )
 
+    @override
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         """Set the transport."""
         self.transport = cast(asyncio.DatagramTransport, transport)
 
+    @override
     def connection_lost(self, exc: Exception | None) -> None:
         """Handle connection lost."""
 
@@ -169,7 +171,7 @@ async def async_create_upnp_datagram_endpoint(
 
     ssdp_socket.bind(("" if upnp_bind_multicast else host_ip_addr, BROADCAST_PORT))
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
 
     transport_protocol = await loop.create_datagram_endpoint(
         lambda: UPNPResponderProtocol(loop, ssdp_socket, advertise_ip, advertise_port),

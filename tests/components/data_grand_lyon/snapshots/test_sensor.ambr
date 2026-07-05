@@ -39,8 +39,8 @@
 # name: test_all_entities[sensor.c3_stop_100_next_departure_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'C3 - Stop 100 Next departure 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'C3 - Stop 100 Next departure 1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.c3_stop_100_next_departure_1',
@@ -90,7 +90,7 @@
 # name: test_all_entities[sensor.c3_stop_100_next_departure_1_direction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'C3 - Stop 100 Next departure 1 direction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'C3 - Stop 100 Next departure 1 direction',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.c3_stop_100_next_departure_1_direction',
@@ -107,7 +107,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'theoretical',
         'estimated',
       ]),
@@ -145,9 +145,9 @@
 # name: test_all_entities[sensor.c3_stop_100_next_departure_1_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'C3 - Stop 100 Next departure 1 type',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'C3 - Stop 100 Next departure 1 type',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'theoretical',
         'estimated',
       ]),
@@ -200,8 +200,8 @@
 # name: test_all_entities[sensor.c3_stop_100_next_departure_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'C3 - Stop 100 Next departure 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'C3 - Stop 100 Next departure 2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.c3_stop_100_next_departure_2',
@@ -251,7 +251,7 @@
 # name: test_all_entities[sensor.c3_stop_100_next_departure_2_direction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'C3 - Stop 100 Next departure 2 direction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'C3 - Stop 100 Next departure 2 direction',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.c3_stop_100_next_departure_2_direction',
@@ -268,7 +268,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'theoretical',
         'estimated',
       ]),
@@ -306,9 +306,9 @@
 # name: test_all_entities[sensor.c3_stop_100_next_departure_2_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'C3 - Stop 100 Next departure 2 type',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'C3 - Stop 100 Next departure 2 type',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'theoretical',
         'estimated',
       ]),
@@ -361,15 +361,15 @@
 # name: test_all_entities[sensor.c3_stop_100_next_departure_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'C3 - Stop 100 Next departure 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'C3 - Stop 100 Next departure 3',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.c3_stop_100_next_departure_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_entities[sensor.c3_stop_100_next_departure_3_direction-entry]
@@ -412,14 +412,14 @@
 # name: test_all_entities[sensor.c3_stop_100_next_departure_3_direction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'C3 - Stop 100 Next departure 3 direction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'C3 - Stop 100 Next departure 3 direction',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.c3_stop_100_next_departure_3_direction',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_entities[sensor.c3_stop_100_next_departure_3_type-entry]
@@ -429,7 +429,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'theoretical',
         'estimated',
       ]),
@@ -467,9 +467,9 @@
 # name: test_all_entities[sensor.c3_stop_100_next_departure_3_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'C3 - Stop 100 Next departure 3 type',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'C3 - Stop 100 Next departure 3 type',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'theoretical',
         'estimated',
       ]),
@@ -479,6 +479,363 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
+  })
+# ---
+# name: test_velov_all_entities[sensor.velo_v_1001_available_bikes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.velo_v_1001_available_bikes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Available bikes',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Available bikes',
+    'platform': 'data_grand_lyon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'available_bikes',
+    'unique_id': 'velov_1001-available_bikes',
+    'unit_of_measurement': 'bikes',
+  })
+# ---
+# name: test_velov_all_entities[sensor.velo_v_1001_available_bikes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "Vélo'v 1001 Available bikes",
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.velo_v_1001_available_bikes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '15',
+  })
+# ---
+# name: test_velov_all_entities[sensor.velo_v_1001_available_electrical_bikes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.velo_v_1001_available_electrical_bikes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Available electrical bikes',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Available electrical bikes',
+    'platform': 'data_grand_lyon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'available_electrical_bikes',
+    'unique_id': 'velov_1001-available_electrical_bikes',
+    'unit_of_measurement': 'bikes',
+  })
+# ---
+# name: test_velov_all_entities[sensor.velo_v_1001_available_electrical_bikes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "Vélo'v 1001 Available electrical bikes",
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.velo_v_1001_available_electrical_bikes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_velov_all_entities[sensor.velo_v_1001_available_mechanical_bikes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.velo_v_1001_available_mechanical_bikes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Available mechanical bikes',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Available mechanical bikes',
+    'platform': 'data_grand_lyon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'available_mechanical_bikes',
+    'unique_id': 'velov_1001-available_mechanical_bikes',
+    'unit_of_measurement': 'bikes',
+  })
+# ---
+# name: test_velov_all_entities[sensor.velo_v_1001_available_mechanical_bikes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "Vélo'v 1001 Available mechanical bikes",
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.velo_v_1001_available_mechanical_bikes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_velov_all_entities[sensor.velo_v_1001_available_stands-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.velo_v_1001_available_stands',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Available stands',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Available stands',
+    'platform': 'data_grand_lyon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'available_stands',
+    'unique_id': 'velov_1001-available_stands',
+    'unit_of_measurement': 'stands',
+  })
+# ---
+# name: test_velov_all_entities[sensor.velo_v_1001_available_stands-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "Vélo'v 1001 Available stands",
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'stands',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.velo_v_1001_available_stands',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_velov_all_entities[sensor.velo_v_1001_capacity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.velo_v_1001_capacity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Capacity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Capacity',
+    'platform': 'data_grand_lyon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'capacity',
+    'unique_id': 'velov_1001-capacity',
+    'unit_of_measurement': 'stands',
+  })
+# ---
+# name: test_velov_all_entities[sensor.velo_v_1001_capacity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "Vélo'v 1001 Capacity",
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'stands',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.velo_v_1001_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_velov_all_entities[sensor.velo_v_1001_electrical_internal_battery_bikes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.velo_v_1001_electrical_internal_battery_bikes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electrical internal battery bikes',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Electrical internal battery bikes',
+    'platform': 'data_grand_lyon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electrical_internal_battery_bikes',
+    'unique_id': 'velov_1001-electrical_internal_battery_bikes',
+    'unit_of_measurement': 'bikes',
+  })
+# ---
+# name: test_velov_all_entities[sensor.velo_v_1001_electrical_internal_battery_bikes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "Vélo'v 1001 Electrical internal battery bikes",
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.velo_v_1001_electrical_internal_battery_bikes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_velov_all_entities[sensor.velo_v_1001_electrical_removable_battery_bikes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.velo_v_1001_electrical_removable_battery_bikes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electrical removable battery bikes',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Electrical removable battery bikes',
+    'platform': 'data_grand_lyon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electrical_removable_battery_bikes',
+    'unique_id': 'velov_1001-electrical_removable_battery_bikes',
+    'unit_of_measurement': 'bikes',
+  })
+# ---
+# name: test_velov_all_entities[sensor.velo_v_1001_electrical_removable_battery_bikes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "Vélo'v 1001 Electrical removable battery bikes",
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.velo_v_1001_electrical_removable_battery_bikes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
   })
 # ---

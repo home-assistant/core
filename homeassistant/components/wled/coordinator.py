@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for WLED."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from wled import (
     WLED,
@@ -81,6 +81,15 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             self.data is not None and len(self.data.state.segments) > 1
         )
 
+    @property
+    def segment_ids(self) -> set[int]:
+        """Return the set of segment IDs."""
+        return {
+            segment.segment_id
+            for segment in self.data.state.segments.values()
+            if segment.segment_id is not None
+        }
+
     @callback
     def _use_websocket(self) -> None:
         """Use WebSocket for updates, instead of polling."""
@@ -88,29 +97,35 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         async def listen() -> None:
             """Listen for state changes via WebSocket."""
             try:
-                await self.wled.connect()
-            except WLEDError as err:
-                self.logger.info(err)
+                try:
+                    await self.wled.connect()
+                except WLEDError as err:
+                    self.logger.info(err)
+                    return
+
+                try:
+                    # Stop polling as long as we have a websocket. WS will push
+                    # updates to us
+                    self.update_interval = None
+                    await self.wled.listen(callback=self.async_set_updated_data)
+                except WLEDConnectionClosedError as err:
+                    self.last_update_success = False
+                    self.logger.info(err)
+                except WLEDError as err:
+                    self.last_update_success = False
+                    self.async_update_listeners()
+                    self.logger.error(err)
+                finally:
+                    # Pull data immediately and restart polling
+                    self.update_interval = SCAN_INTERVAL
+                    self.hass.async_create_task(self.async_request_refresh())
+
+                # Ensure we are disconnected
+                await self.wled.disconnect()
+            finally:
                 if self.unsub:
                     self.unsub()
                     self.unsub = None
-                return
-
-            try:
-                await self.wled.listen(callback=self.async_set_updated_data)
-            except WLEDConnectionClosedError as err:
-                self.last_update_success = False
-                self.logger.info(err)
-            except WLEDError as err:
-                self.last_update_success = False
-                self.async_update_listeners()
-                self.logger.error(err)
-
-            # Ensure we are disconnected
-            await self.wled.disconnect()
-            if self.unsub:
-                self.unsub()
-                self.unsub = None
 
         async def close_websocket(_: Event) -> None:
             """Close WebSocket connection."""
@@ -127,6 +142,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             self.hass, listen(), "wled-listen"
         )
 
+    @override
     async def _async_update_data(self) -> WLEDDevice:
         """Fetch data from WLED."""
         try:
@@ -182,6 +198,7 @@ class WLEDReleasesDataUpdateCoordinator(DataUpdateCoordinator[Releases]):
             update_interval=RELEASES_SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> Releases:
         """Fetch release data from WLED."""
         try:

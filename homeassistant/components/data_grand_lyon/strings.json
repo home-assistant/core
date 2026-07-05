@@ -46,24 +46,95 @@
   "config_subentries": {
     "stop": {
       "abort": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "entry_type": "Transit stop",
+      "error": {
+        "invalid_stop_id": "Stop ID must be a number."
+      },
       "initiate_flow": {
         "user": "Add transit stop"
       },
       "step": {
+        "pick_line": {
+          "data": {
+            "line": "Line"
+          }
+        },
         "user": {
           "data": {
-            "line": "Line",
-            "stop_id": "Stop ID"
+            "stop_id": "Stop"
+          },
+          "data_description": {
+            "stop_id": "Search by stop name, address or city, or enter a stop ID directly."
+          }
+        }
+      }
+    },
+    "velov_station": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "entry_type": "Vélo'v station",
+      "error": {
+        "invalid_station_id": "Station ID must be a number."
+      },
+      "initiate_flow": {
+        "user": "Add Vélo'v station"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "station_id": "Station"
+          },
+          "data_description": {
+            "station_id": "Search by station name, address or city, or enter a station ID directly."
           }
         }
       }
     }
   },
   "entity": {
+    "binary_sensor": {
+      "station_open": {
+        "name": "Station open"
+      }
+    },
     "sensor": {
+      "available_bikes": {
+        "name": "Available bikes",
+        "unit_of_measurement": "bikes"
+      },
+      "available_electrical_bikes": {
+        "name": "Available electrical bikes",
+        "unit_of_measurement": "[%key:component::data_grand_lyon::entity::sensor::available_bikes::unit_of_measurement%]"
+      },
+      "available_mechanical_bikes": {
+        "name": "Available mechanical bikes",
+        "unit_of_measurement": "[%key:component::data_grand_lyon::entity::sensor::available_bikes::unit_of_measurement%]"
+      },
+      "available_stands": {
+        "name": "Available stands",
+        "unit_of_measurement": "stands"
+      },
+      "capacity": {
+        "name": "Capacity",
+        "unit_of_measurement": "[%key:component::data_grand_lyon::entity::sensor::available_stands::unit_of_measurement%]"
+      },
+      "electrical_internal_battery_bikes": {
+        "name": "Electrical internal battery bikes",
+        "unit_of_measurement": "[%key:component::data_grand_lyon::entity::sensor::available_bikes::unit_of_measurement%]"
+      },
+      "electrical_removable_battery_bikes": {
+        "name": "Electrical removable battery bikes",
+        "unit_of_measurement": "[%key:component::data_grand_lyon::entity::sensor::available_bikes::unit_of_measurement%]"
+      },
       "next_departure_1": {
         "name": "Next departure 1"
       },
@@ -109,8 +180,11 @@
     "auth_failed": {
       "message": "Authentication failed for Data Grand Lyon."
     },
-    "update_failed_all_stops": {
-      "message": "Error fetching Data Grand Lyon data: all requests failed."
+    "update_failed_tcl": {
+      "message": "Error fetching TCL departures from Data Grand Lyon."
+    },
+    "update_failed_velov": {
+      "message": "Error fetching Vélo'v stations from Data Grand Lyon."
     }
   }
 }

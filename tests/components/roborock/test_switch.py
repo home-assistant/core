@@ -255,3 +255,64 @@ async def test_a01_switch_unknown_state(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "unknown"
+
+
+async def test_q10_do_not_disturb_switch_success(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q10_vacuum: FakeDevice,
+) -> None:
+    """Test turning Q10 Do Not Disturb on and off."""
+    entity_id = "switch.roborock_q10_s5_do_not_disturb"
+
+    assert hass.states.get(entity_id) is not None
+
+    await hass.services.async_call(
+        "switch",
+        SERVICE_TURN_OFF,
+        service_data=None,
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        "switch",
+        SERVICE_TURN_ON,
+        service_data=None,
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+
+    assert fake_q10_vacuum.b01_q10_properties is not None
+    assert fake_q10_vacuum.b01_q10_properties.do_not_disturb.enable.call_count == 1
+    assert fake_q10_vacuum.b01_q10_properties.do_not_disturb.disable.call_count == 1
+
+
+async def test_q10_do_not_disturb_switch_failure(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q10_vacuum: FakeDevice,
+) -> None:
+    """Test a failure while updating Q10 Do Not Disturb."""
+    entity_id = "switch.roborock_q10_s5_do_not_disturb"
+    assert fake_q10_vacuum.b01_q10_properties is not None
+    fake_q10_vacuum.b01_q10_properties.do_not_disturb.enable.side_effect = (
+        roborock.exceptions.RoborockTimeout
+    )
+
+    assert hass.states.get(entity_id) is not None
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "switch",
+            SERVICE_TURN_ON,
+            service_data=None,
+            blocking=True,
+            target={"entity_id": entity_id},
+        )

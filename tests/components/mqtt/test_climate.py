@@ -8,7 +8,7 @@ from unittest.mock import call, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import climate, mqtt
+from homeassistant.components import climate
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
@@ -34,6 +34,7 @@ from homeassistant.components.mqtt.climate import (
 )
 from homeassistant.components.mqtt.const import (
     DEFAULT_CLIMATE_INITIAL_TEMPERATURE as DEFAULT_INITIAL_TEMPERATURE,
+    DOMAIN,
 )
 from homeassistant.const import ATTR_TEMPERATURE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -83,7 +84,7 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 ENTITY_CLIMATE = "climate.test"
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         climate.DOMAIN: {
             "name": "test",
             "mode_command_topic": "mode-topic",
@@ -1421,7 +1422,7 @@ async def test_get_target_temperature_low_high_with_templates(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 climate.DOMAIN: {
                     "name": "test",
                     "mode_command_topic": "mode-topic",
@@ -1430,7 +1431,9 @@ async def test_get_target_temperature_low_high_with_templates(
                     "temperature_low_command_topic": "temperature-low-topic",
                     "temperature_high_command_topic": "temperature-high-topic",
                     "fan_mode_command_topic": "fan-mode-topic",
-                    "swing_horizontal_mode_command_topic": "swing-horizontal-mode-topic",
+                    "swing_horizontal_mode_command_topic": (
+                        "swing-horizontal-mode-topic"
+                    ),
                     "swing_mode_command_topic": "swing-mode-topic",
                     "preset_mode_command_topic": "preset-mode-topic",
                     "preset_modes": [
@@ -1586,7 +1589,7 @@ async def test_get_with_templates(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 climate.DOMAIN: {
                     "name": "test",
                     "mode_command_topic": "mode-topic",
@@ -1596,7 +1599,9 @@ async def test_get_with_templates(
                     "temperature_low_command_topic": "temperature-low-topic",
                     "temperature_high_command_topic": "temperature-high-topic",
                     "fan_mode_command_topic": "fan-mode-topic",
-                    "swing_horizontal_mode_command_topic": "swing-horizontal-mode-topic",
+                    "swing_horizontal_mode_command_topic": (
+                        "swing-horizontal-mode-topic"
+                    ),
                     "swing_mode_command_topic": "swing-mode-topic",
                     "preset_mode_command_topic": "preset-mode-topic",
                     "preset_modes": [
@@ -1613,7 +1618,9 @@ async def test_get_with_templates(
                     "power_command_template": "power: {{ value }}",
                     "preset_mode_command_template": "preset_mode: {{ value }}",
                     "mode_command_template": "mode: {{ value }}",
-                    "swing_horizontal_mode_command_template": "swing_horizontal_mode: {{ value }}",
+                    "swing_horizontal_mode_command_template": (
+                        "swing_horizontal_mode: {{ value }}"
+                    ),
                     "swing_mode_command_template": "swing_mode: {{ value }}",
                     "temperature_command_template": "temp: {{ value }}",
                     "temperature_high_command_template": "temp_hi: {{ value }}",
@@ -2015,7 +2022,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 climate.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -2068,7 +2075,7 @@ async def test_encoding_subscribable_topics(
     attribute_value: Any,
 ) -> None:
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][climate.DOMAIN])
+    config = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][climate.DOMAIN])
     await help_test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry,
@@ -2085,7 +2092,7 @@ async def test_discovery_removal_climate(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered climate."""
-    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][climate.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG[DOMAIN][climate.DOMAIN])
     await help_test_discovery_removal(hass, mqtt_mock_entry, climate.DOMAIN, data)
 
 
@@ -2166,7 +2173,7 @@ async def test_entity_id_update_subscriptions(
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             climate.DOMAIN: {
                 "name": "test",
                 "mode_state_topic": "test-topic",
@@ -2193,7 +2200,7 @@ async def test_entity_debug_info_message(
 ) -> None:
     """Test MQTT debug info."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             climate.DOMAIN: {
                 "name": "test",
                 "mode_command_topic": "command-topic",
@@ -2356,8 +2363,8 @@ async def test_publishing_with_custom_encoding(
     domain = climate.DOMAIN
     config = copy.deepcopy(DEFAULT_CONFIG)
     if topic != "preset_mode_command_topic":
-        del config[mqtt.DOMAIN][domain]["preset_mode_command_topic"]
-        del config[mqtt.DOMAIN][domain]["preset_modes"]
+        del config[DOMAIN][domain]["preset_mode_command_topic"]
+        del config[DOMAIN][domain]["preset_modes"]
 
     await help_test_publishing_with_custom_encoding(
         hass,
@@ -2378,7 +2385,7 @@ async def test_publishing_with_custom_encoding(
     [
         (  # test_valid_humidity_min_max
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     climate.DOMAIN: {
                         "name": "test",
                         "min_humidity": 20,
@@ -2390,7 +2397,7 @@ async def test_publishing_with_custom_encoding(
         ),
         (  # test_invalid_humidity_min_max_1
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     climate.DOMAIN: {
                         "name": "test",
                         "min_humidity": 0,
@@ -2402,7 +2409,7 @@ async def test_publishing_with_custom_encoding(
         ),
         (  # test_invalid_humidity_min_max_2
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     climate.DOMAIN: {
                         "name": "test",
                         "max_humidity": 20,
@@ -2414,7 +2421,7 @@ async def test_publishing_with_custom_encoding(
         ),
         (  # test_valid_humidity_state
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     climate.DOMAIN: {
                         "name": "test",
                         "target_humidity_state_topic": "humidity-state",
@@ -2426,7 +2433,7 @@ async def test_publishing_with_custom_encoding(
         ),
         (  # test_invalid_humidity_state
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     climate.DOMAIN: {
                         "name": "test",
                         "target_humidity_state_topic": "humidity-state",
@@ -2497,7 +2504,9 @@ async def test_unload_entry(
                     "current_temperature_topic": "current-temperature-topic",
                     "preset_mode_state_topic": "preset-mode-state-topic",
                     "preset_modes": ["eco", "away"],
-                    "swing_horizontal_mode_state_topic": "swing-horizontal-mode-state-topic",
+                    "swing_horizontal_mode_state_topic": (
+                        "swing-horizontal-mode-state-topic"
+                    ),
                     "swing_mode_state_topic": "swing-mode-state-topic",
                     "target_humidity_state_topic": "target-humidity-state-topic",
                     "temperature_high_state_topic": "temperature-high-state-topic",
@@ -2567,8 +2576,8 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )
 
 

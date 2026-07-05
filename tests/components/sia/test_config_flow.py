@@ -163,7 +163,7 @@ async def test_form_start_user(flow_at_user_step: ConfigFlowResult) -> None:
 
 
 async def test_form_start_account(flow_at_add_account_step: ConfigFlowResult) -> None:
-    """Start the form and check if you get the right id and schema for the additional account step."""
+    """Test the additional account step form id and schema."""
     assert flow_at_add_account_step["step_id"] == "add_account"
     assert flow_at_add_account_step["errors"] is None
     assert flow_at_add_account_step["data_schema"] == ACCOUNT_SCHEMA
@@ -310,6 +310,30 @@ async def test_unknown_account(hass: HomeAssistant, flow_at_user_step) -> None:
         assert result_err["step_id"] == "add_account"
         assert result_err["errors"] == {"base": "unknown"}
         assert result_err["data_schema"] == ACCOUNT_SCHEMA
+
+
+async def test_options_not_loaded(hass: HomeAssistant) -> None:
+    """Test options flow works when entry is not loaded."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=BASE_OUT["data"],
+        options=BASE_OUT["options"],
+        title="SIA Alarm on port 7777",
+        entry_id=BASIS_CONFIG_ENTRY_ID,
+        version=1,
+    )
+    config_entry.add_to_hass(hass)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "options"
+
+    updated = await hass.config_entries.options.async_configure(
+        result["flow_id"], BASIC_OPTIONS
+    )
+    assert updated["type"] is FlowResultType.CREATE_ENTRY
+    assert updated["data"] == {
+        CONF_ACCOUNTS: {BASIC_CONFIG[CONF_ACCOUNT]: BASIC_OPTIONS}
+    }
 
 
 async def test_options_basic(hass: HomeAssistant) -> None:

@@ -13,10 +13,9 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     other_states,
     parametrize_target_entities,
@@ -27,30 +26,10 @@ from tests.components.common import (
 
 @pytest.fixture
 async def target_alarm_control_panels(hass: HomeAssistant) -> dict[str, list[str]]:
-    """Create multiple alarm control panel entities associated with different targets."""
+    """Create alarm control panel entities for different targets."""
     return await target_entities(hass, "alarm_control_panel")
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "alarm_control_panel.armed",
-        "alarm_control_panel.armed_away",
-        "alarm_control_panel.armed_home",
-        "alarm_control_panel.armed_night",
-        "alarm_control_panel.armed_vacation",
-        "alarm_control_panel.disarmed",
-        "alarm_control_panel.triggered",
-    ],
-)
-async def test_alarm_control_panel_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the ACP triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -80,7 +59,6 @@ async def test_alarm_control_panel_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("alarm_control_panel"),
@@ -153,7 +131,7 @@ async def test_alarm_control_panel_trigger_options_validation(
         ),
     ],
 )
-async def test_alarm_control_panel_state_trigger_behavior_any(
+async def test_alarm_control_panel_state_trigger_behavior_each(
     hass: HomeAssistant,
     target_alarm_control_panels: dict[str, list[str]],
     trigger_target_config: dict,
@@ -163,8 +141,12 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the alarm control panel state trigger fires when any alarm control panel state changes to a specific state."""
-    await assert_trigger_behavior_any(
+    """Test alarm control panel state trigger.
+
+    Fires when any alarm control panel state changes to a
+    specific state.
+    """
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_alarm_control_panels,
         trigger_target_config=trigger_target_config,
@@ -176,7 +158,6 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("alarm_control_panel"),
@@ -259,7 +240,11 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the alarm control panel state trigger fires when the first alarm control panel changes to a specific state."""
+    """Test alarm control panel state trigger.
+
+    Fires when the first alarm control panel changes to a
+    specific state.
+    """
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_alarm_control_panels,
@@ -272,7 +257,6 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("alarm_control_panel"),
@@ -345,7 +329,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
         ),
     ],
 )
-async def test_alarm_control_panel_state_trigger_behavior_last(
+async def test_alarm_control_panel_state_trigger_behavior_all(
     hass: HomeAssistant,
     target_alarm_control_panels: dict[str, list[str]],
     trigger_target_config: dict,
@@ -355,8 +339,12 @@ async def test_alarm_control_panel_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the alarm_control_panel state trigger fires when the last alarm_control_panel changes to a specific state."""
-    await assert_trigger_behavior_last(
+    """Test alarm_control_panel state trigger.
+
+    Fires when the last alarm_control_panel changes to a
+    specific state.
+    """
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_alarm_control_panels,
         trigger_target_config=trigger_target_config,

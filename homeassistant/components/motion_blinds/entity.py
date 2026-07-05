@@ -1,5 +1,7 @@
 """Support for Motionblinds using their WLAN API."""
 
+from typing import override
+
 from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, MotionGateway
 from motionblinds.motion_blinds import MotionBlind
 
@@ -86,6 +88,7 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
             )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if self.coordinator.data is None:
@@ -97,11 +100,13 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
 
         return self.coordinator.data[self._blind.mac][ATTR_AVAILABLE]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to multicast pushes and register signal handler."""
         self._blind.Register_callback(self.unique_id, self.schedule_update_ha_state)
         await super().async_added_to_hass()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
         self._blind.Remove_callback(self.unique_id)
@@ -133,7 +138,8 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
                 self._blind.angle == prev_angle for prev_angle in self._previous_angles
             )
         ):
-            # keep updating the position @self._update_interval_moving until the position does not change.
+            # keep updating the position @self._update_interval_moving
+            # until the position does not change.
             self._requesting_position = async_call_later(
                 self.hass,
                 self._update_interval_moving,
@@ -145,7 +151,7 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
             self._requesting_position = None
 
     async def async_request_position_till_stop(self, delay: int | None = None) -> None:
-        """Request the position of the blind every self._update_interval_moving seconds until it stops moving."""
+        """Request the position of the blind at intervals until it stops moving."""
         if delay is None:
             delay = self._update_interval_moving
 

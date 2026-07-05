@@ -7,14 +7,13 @@ from surepy.enums import Location
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 import voluptuous as vol
 
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_LOCATION, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
     ATTR_FLAP_ID,
-    ATTR_LOCATION,
     ATTR_LOCK_STATE,
     ATTR_PET_NAME,
     DOMAIN,
@@ -56,6 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SurePetcareConfigEntry) 
             ),
         }
     )
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_SET_LOCK_STATE,
@@ -74,6 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SurePetcareConfigEntry) 
             ),
         }
     )
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_SET_PET_LOCATION,

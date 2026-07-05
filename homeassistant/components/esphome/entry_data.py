@@ -166,6 +166,8 @@ class RuntimeEntryData:
     )
     loaded_platforms: set[Platform] = field(default_factory=set)
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    # Set once the first connection has finished scanner setup or teardown.
+    first_connect_done: asyncio.Event = field(default_factory=asyncio.Event)
     _storage_contents: StoreData | None = None
     _pending_storage: Callable[[], StoreData] | None = None
     assist_pipeline_update_callbacks: list[CALLBACK_TYPE] = field(default_factory=list)
@@ -212,7 +214,7 @@ class RuntimeEntryData:
         entity_info_type: type[EntityInfo],
         callback_: Callable[[list[EntityInfo]], None],
     ) -> CALLBACK_TYPE:
-        """Register to receive callbacks when static info changes for an EntityInfo type."""
+        """Register to receive callbacks when static info changes."""
         callbacks = self.entity_info_callbacks.setdefault(entity_info_type, [])
         callbacks.append(callback_)
         return partial(callbacks.remove, callback_)
@@ -223,7 +225,7 @@ class RuntimeEntryData:
         static_info: EntityInfo,
         callback_: Callable[[EntityInfo], None],
     ) -> CALLBACK_TYPE:
-        """Register to receive callbacks when static info is updated for a specific key."""
+        """Register callbacks when static info is updated for a specific key."""
         callback_key = (type(static_info), static_info.device_id, static_info.key)
         callbacks = self.entity_info_key_updated_callbacks.setdefault(callback_key, [])
         callbacks.append(callback_)
@@ -534,7 +536,7 @@ class RuntimeEntryData:
         self,
         callback_: Callable[[AssistSatelliteConfiguration], None],
     ) -> CALLBACK_TYPE:
-        """Register to receive callbacks when the Assist satellite's configuration is updated."""
+        """Register callbacks when the Assist satellite's configuration is updated."""
         self.assist_satellite_config_update_callbacks.append(callback_)
         return partial(self.assist_satellite_config_update_callbacks.remove, callback_)
 
@@ -551,7 +553,7 @@ class RuntimeEntryData:
         self,
         callback_: Callable[[list[str]], None],
     ) -> CALLBACK_TYPE:
-        """Register to receive callbacks when the Assist satellite's wake word is set."""
+        """Register callbacks when the Assist satellite's wake word is set."""
         self.assist_satellite_set_wake_words_callbacks.append(callback_)
         return partial(self.assist_satellite_set_wake_words_callbacks.remove, callback_)
 

@@ -1,7 +1,7 @@
 """Config flow for BSB-LAN integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from bsblan import BSBLAN, BSBLANAuthError, BSBLANConfig, BSBLANError
 import voluptuous as vol
@@ -40,6 +40,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         self.password: str | None = None
         self._auth_required = True
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -55,6 +56,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self._validate_and_create(user_input)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -101,7 +103,8 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_PORT: self.port,
                     }
                 )
-                # No auth needed, so we can proceed to a confirmation step without fields
+                # No auth needed, so we can proceed to a
+                # confirmation step without fields
                 self._auth_required = False
 
         # Proceed to get credentials
@@ -366,7 +369,8 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                 format_mac(self.mac), raise_on_progress=raise_on_progress
             )
 
-        # Skip unique_id configuration check during reauth to prevent "already_configured" abort
+        # Skip unique_id configuration check during reauth
+        # to prevent "already_configured" abort
         if not is_reauth:
             # Always allow updating host/port for both user and discovery flows
             # This ensures connectivity is maintained when devices change IP addresses

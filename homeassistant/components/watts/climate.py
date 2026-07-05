@@ -1,8 +1,10 @@
 """Climate platform for Watts Vision integration."""
 
+from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
+from visionpluspython.exceptions import WattsVisionError
 from visionpluspython.models import ThermostatDevice, ThermostatMode
 
 from homeassistant.components.climate import (
@@ -13,7 +15,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -117,16 +119,19 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
             self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.device.current_temperature
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature setpoint."""
         return self.device.setpoint
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac mode."""
         return THERMOSTAT_MODE_TO_HVAC.get(
@@ -134,17 +139,20 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
         )
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current HVAC action."""
         return HVAC_ACTION_TO_HA.get(self.device.hvac_action)
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         return THERMOSTAT_MODE_TO_PRESET.get(
             _parse_thermostat_mode(self.device.thermostat_mode)
         )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         mode = PRESET_MODE_TO_THERMOSTAT[preset_mode]
@@ -168,6 +176,7 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
 
         await self.coordinator.async_refresh()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -194,6 +203,48 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
 
         await self.coordinator.async_refresh()
 
+    async def async_activate_timer_mode(
+        self, temperature: float, duration: timedelta
+    ) -> None:
+        """Activate timer mode with a target temperature and duration."""
+        if not self._attr_min_temp <= temperature <= self._attr_max_temp:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="timer_temperature_out_of_range",
+                translation_placeholders={
+                    "temperature": str(temperature),
+                    "min_temp": str(self._attr_min_temp),
+                    "max_temp": str(self._attr_max_temp),
+                },
+            )
+
+        duration_minutes, remainder = divmod(duration, timedelta(minutes=1))
+        if remainder:
+            duration_minutes += 1
+
+        try:
+            await self.coordinator.client.activate_thermostat_timer(
+                self.device_id, temperature, duration_minutes
+            )
+        except (WattsVisionError, ValueError, RuntimeError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="activate_timer_mode_error",
+            ) from err
+
+        _LOGGER.debug(
+            "Successfully activated timer mode: %s%s for %d min on %s",
+            temperature,
+            self.temperature_unit,
+            duration_minutes,
+            self.device_id,
+        )
+
+        self.coordinator.trigger_fast_polling()
+
+        await self.coordinator.async_refresh()
+
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         mode = HVAC_MODE_TO_THERMOSTAT[hvac_mode]

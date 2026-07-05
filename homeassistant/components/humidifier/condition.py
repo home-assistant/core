@@ -1,10 +1,17 @@
 """Provides conditions for humidifiers."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_MODE, CONF_OPTIONS, PERCENTAGE, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_MODE,
+    CONF_MODE,
+    CONF_OPTIONS,
+    PERCENTAGE,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -26,8 +33,6 @@ from .const import (
     HumidifierAction,
     HumidifierEntityFeature,
 )
-
-CONF_MODE = "mode"
 
 IS_MODE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
@@ -52,6 +57,7 @@ class IsTargetHumidityCondition(EntityNumericalConditionBase):
     _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_HUMIDITY)}
     _valid_unit = PERCENTAGE
 
+    @override
     def _should_include(self, state: State) -> bool:
         """Skip humidifier entities that do not expose a target humidity."""
         return (
@@ -73,6 +79,7 @@ class IsModeCondition(EntityStateConditionBase):
             assert config.options is not None
         self._states = set(config.options[CONF_MODE])
 
+    @override
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities of this domain."""
         entities = super().entity_filter(entities)

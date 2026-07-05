@@ -5,7 +5,7 @@ from collections import defaultdict
 from collections.abc import Awaitable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from aiohasupervisor import SupervisorError, SupervisorNotFoundError
 from aiohasupervisor.models import (
@@ -70,6 +70,7 @@ from .const import (
     UPDATE_KEY_SUPERVISOR,
     SupervisorEntityModel,
 )
+from .exceptions import HassioNotReadyError
 from .handler import get_supervisor_client
 from .jobs import SupervisorJobs
 
@@ -180,44 +181,50 @@ def _installed_addon_from_complete(info: InstalledAddonComplete) -> InstalledAdd
 
 
 @callback
-def get_info(hass: HomeAssistant) -> dict[str, Any] | None:
+def get_info(hass: HomeAssistant) -> dict[str, Any]:
     """Return generic information from Supervisor.
 
     Async friendly.
     """
     info = hass.data.get(DATA_INFO)
-    return info.to_dict() if info is not None else None
+    if info is None:
+        raise HassioNotReadyError
+    return info.to_dict()
 
 
 @callback
-def get_host_info(hass: HomeAssistant) -> dict[str, Any] | None:
+def get_host_info(hass: HomeAssistant) -> dict[str, Any]:
     """Return generic host information.
 
     Async friendly.
     """
     info = hass.data.get(DATA_HOST_INFO)
-    return info.to_dict() if info is not None else None
+    if info is None:
+        raise HassioNotReadyError
+    return info.to_dict()
 
 
 @callback
-def get_store(hass: HomeAssistant) -> dict[str, Any] | None:
+def get_store(hass: HomeAssistant) -> dict[str, Any]:
     """Return store information.
 
     Async friendly.
     """
     info = hass.data.get(DATA_STORE)
-    return info.to_dict() if info is not None else None
+    if info is None:
+        raise HassioNotReadyError
+    return info.to_dict()
 
 
 @callback
-def get_supervisor_info(hass: HomeAssistant) -> dict[str, Any] | None:
+def get_supervisor_info(hass: HomeAssistant) -> dict[str, Any]:
     """Return Supervisor information.
 
     Async friendly.
     """
     info = hass.data.get(DATA_SUPERVISOR_INFO)
     if info is None:
-        return None
+        raise HassioNotReadyError
     result = info.to_dict()
     # Deprecated 2026.4.0: Folding repositories and addons into supervisor_info
     # for backwards compatibility. Can be removed after deprecation period.
@@ -229,17 +236,19 @@ def get_supervisor_info(hass: HomeAssistant) -> dict[str, Any] | None:
 
 
 @callback
-def get_network_info(hass: HomeAssistant) -> dict[str, Any] | None:
+def get_network_info(hass: HomeAssistant) -> dict[str, Any]:
     """Return Host Network information.
 
     Async friendly.
     """
     info = hass.data.get(DATA_NETWORK_INFO)
-    return info.to_dict() if info is not None else None
+    if info is None:
+        raise HassioNotReadyError
+    return info.to_dict()
 
 
 @callback
-def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any] | None] | None:
+def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any] | None]:
     """Return Addons info.
 
     Async friendly.
@@ -248,7 +257,7 @@ def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any] | None] | N
         DATA_ADDONS_INFO
     )
     if addons_info is None:
-        return None
+        raise HassioNotReadyError
     # Converting these fields for compatibility as that is what was returned here.
     # We'll leave it this way as long as these component APIs continue to return
     # dictionaries. If/when we switch to using the aiohasupervisor models for everything
@@ -266,13 +275,15 @@ def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any] | None] | N
 
 
 @callback
-def get_addons_list(hass: HomeAssistant) -> list[dict[str, Any]] | None:
+def get_addons_list(hass: HomeAssistant) -> list[dict[str, Any]]:
     """Return list of installed addons and subset of details for each.
 
     Async friendly.
     """
     addons = hass.data.get(DATA_ADDONS_LIST)
-    return [addon.to_dict() for addon in addons] if addons is not None else None
+    if addons is None:
+        raise HassioNotReadyError
+    return [addon.to_dict() for addon in addons]
 
 
 @callback
@@ -309,23 +320,27 @@ def get_supervisor_stats(hass: HomeAssistant) -> dict[str, Any]:
 
 
 @callback
-def get_os_info(hass: HomeAssistant) -> dict[str, Any] | None:
+def get_os_info(hass: HomeAssistant) -> dict[str, Any]:
     """Return OS information.
 
     Async friendly.
     """
     info = hass.data.get(DATA_OS_INFO)
-    return info.to_dict() if info is not None else None
+    if info is None:
+        raise HassioNotReadyError
+    return info.to_dict()
 
 
 @callback
-def get_core_info(hass: HomeAssistant) -> dict[str, Any] | None:
+def get_core_info(hass: HomeAssistant) -> dict[str, Any]:
     """Return Home Assistant Core information from Supervisor.
 
     Async friendly.
     """
     info = hass.data.get(DATA_CORE_INFO)
-    return info.to_dict() if info is not None else None
+    if info is None:
+        raise HassioNotReadyError
+    return info.to_dict()
 
 
 @callback
@@ -476,6 +491,7 @@ class HassioStatsDataUpdateCoordinator(DataUpdateCoordinator[HassioStatsData]):
             lambda: defaultdict(set)
         )
 
+    @override
     async def _async_update_data(self) -> HassioStatsData:
         """Update stats data via library."""
         try:
@@ -596,6 +612,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         self.supervisor_client = get_supervisor_client(hass)
         self.jobs = jobs
 
+    @override
     async def _async_update_data(self) -> HassioAddonData:
         """Update data via library."""
         is_first_update = not self.data
@@ -708,6 +725,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
 
         return _remove
 
+    @override
     async def _async_refresh(
         self,
         log_failures: bool = True,
@@ -780,10 +798,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         )
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
-        if info := self.hass.data.get(DATA_INFO):
-            self.is_hass_os = info.hassos is not None
-        else:
-            self.is_hass_os = False
+        self.is_hass_os = False
         self.supervisor_client = get_supervisor_client(hass)
         self.jobs = SupervisorJobs(hass)
         self._dispatcher_disconnect = async_dispatcher_connect(
@@ -800,6 +815,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         ):
             self.config_entry.async_create_task(self.hass, self.async_request_refresh())
 
+    @override
     async def _async_update_data(self) -> HassioMainData:
         """Update data via library."""
         is_first_update = not self.data
@@ -843,6 +859,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
             raise UpdateFailed(f"Error on Supervisor API: {err}") from err
 
         # Build clean coordinator data
+        self.is_hass_os = info.hassos is not None
         new_data = HassioMainData(
             core=core_info,
             supervisor=supervisor_info,
@@ -902,6 +919,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
 
         return new_data
 
+    @override
     async def _async_refresh(
         self,
         log_failures: bool = True,
@@ -928,8 +946,9 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
             log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
 
-    @callback
-    def unload(self) -> None:
-        """Clean up when config entry unloaded."""
+    @override
+    async def async_shutdown(self) -> None:
+        """Shut down and clean up when config entry unloaded."""
+        await super().async_shutdown()
         self._dispatcher_disconnect()
         self.jobs.unload()

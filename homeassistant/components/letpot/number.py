@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from letpot.deviceclient import LetPotDeviceClient
 from letpot.models import DeviceFeature, LetPotDeviceStatus, LetPotGardenStatus
@@ -98,7 +98,7 @@ async def async_setup_entry(
     entry: LetPotConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up LetPot number entities based on a config entry and device status/features."""
+    """Set up LetPot number entities."""
     coordinators = entry.runtime_data
     async_add_entities(
         LetPotNumberEntity[LetPotGardenStatus](coordinator, description)
@@ -123,19 +123,26 @@ class LetPotNumberEntity[_DataT: LetPotDeviceStatus](
         """Initialize LetPot number entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{coordinator.device.serial_number}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}"
+            f"_{coordinator.device.serial_number}"
+            f"_{description.key}"
+        )
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum available value."""
         return self.entity_description.max_value_fn(self.coordinator)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the number value."""
         return self.entity_description.value_fn(self.coordinator)
 
     @exception_handler
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change the number value."""
         return await self.entity_description.set_value_fn(

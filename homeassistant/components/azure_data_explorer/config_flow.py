@@ -1,7 +1,7 @@
 """Config flow for Azure Data Explorer integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
 import voluptuous as vol
@@ -61,6 +61,7 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -72,9 +73,14 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             errors = await self.validate_input(user_input)
             if not errors:
+                cluster = user_input[CONF_ADX_CLUSTER_INGEST_URI].replace(
+                    "https://", ""
+                )
+                db = user_input[CONF_ADX_DATABASE_NAME]
+                table = user_input[CONF_ADX_TABLE_NAME]
                 return self.async_create_entry(
                     data=user_input,
-                    title=f"{user_input[CONF_ADX_CLUSTER_INGEST_URI].replace('https://', '')} / {user_input[CONF_ADX_DATABASE_NAME]} ({user_input[CONF_ADX_TABLE_NAME]})",
+                    title=f"{cluster} / {db} ({table})",
                     options=DEFAULT_OPTIONS,
                 )
 
