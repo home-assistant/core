@@ -109,7 +109,6 @@ class ONVIFDevice:
             password=self.config_entry.data[CONF_PASSWORD],
         )
 
-        # Cleanup on failed setup relies on self.events existing before any await
         assert self.config_entry.unique_id
         self.events = EventManager(self.hass, self.device, self.config_entry, self.name)
 
