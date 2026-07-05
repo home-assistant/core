@@ -6,16 +6,6 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "step": {
-      "user": {
-        "data": {
-          "access_token": "[%key:common::config_flow::data::access_token%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
-        "data_description": {
-          "access_token": "You can get this token by activating the SMS API in your online account.",
-          "username": "This is the id given by FreeMobile to access your online account."
-        }
-      },
       "reauth_confirm": {
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]"
@@ -33,6 +23,16 @@
           "access_token": "[%key:component::free_mobile::config::step::user::data_description::access_token%]"
         },
         "title": "Reconfigure Free Mobile"
+      },
+      "user": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "access_token": "You can get this token by activating the SMS API in your online account.",
+          "username": "This is the id given by FreeMobile to access your online account."
+        }
       }
     }
   },
