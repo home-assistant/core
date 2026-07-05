@@ -83,9 +83,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OKOKScaleConfigEntry) ->
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(
-        coordinator.async_start()
-    )  # Only start after all platforms have had a chance to subscribe
+    # Only start after all platforms have had a chance to subscribe
+    entry.async_on_unload(coordinator.async_start())
 
     return True
 
