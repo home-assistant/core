@@ -68,7 +68,11 @@ class FlowItCoordinator(DataUpdateCoordinator[FlowItCoordinatorData]):
         try:
             await self.vmc.refresh_state()
         except FlowItAuthError as err:
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
         except (FlowItConnectionError, FlowItResponseError) as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         else:
