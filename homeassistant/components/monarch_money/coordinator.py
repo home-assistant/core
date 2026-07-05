@@ -8,10 +8,10 @@ from typing import override
 from aiohttp import ClientResponseError
 from gql.transport.exceptions import TransportServerError
 from monarchmoney import LoginFailedException
-from typedmonarchmoney import TypedMonarchMoney
-from typedmonarchmoney.models import (
+from typedmonarchmoney import (
     MonarchAccount,
     MonarchCashflowSummary,
+    MonarchMoneyTyped,
     MonarchSubscription,
 )
 
@@ -44,7 +44,7 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
         self,
         hass: HomeAssistant,
         config_entry: MonarchMoneyConfigEntry,
-        client: TypedMonarchMoney,
+        client: MonarchMoneyTyped,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(

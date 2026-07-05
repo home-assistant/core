@@ -5,8 +5,7 @@ from typing import Any, override
 
 from monarchmoney import LoginFailedException, RequireMFAException
 from monarchmoney.monarchmoney import SESSION_FILE
-from typedmonarchmoney import TypedMonarchMoney
-from typedmonarchmoney.models import MonarchSubscription
+from typedmonarchmoney import MonarchMoneyTyped, MonarchSubscription
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -62,15 +61,14 @@ async def validate_login(
         email = data[CONF_EMAIL]
     if not password:
         password = data[CONF_PASSWORD]
-    monarch_client = TypedMonarchMoney()
+    monarch_client = MonarchMoneyTyped()
     if CONF_MFA_CODE in data:
         mfa_code = data[CONF_MFA_CODE]
         LOGGER.debug("Attempting to authenticate with MFA code")
         try:
             await monarch_client.multi_factor_authenticate(email, password, mfa_code)
-        except KeyError as err:
-            # A bug in the backing lib that I don't control
-            # throws a KeyError if the MFA code is wrong
+        except (KeyError, RequireMFAException, LoginFailedException) as err:
+            # Backing library MFA failures can surface as a KeyError or auth error.
             LOGGER.debug("Bad MFA Code")
             raise BadMFA from err
     else:

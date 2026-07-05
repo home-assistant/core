@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
-from typedmonarchmoney.models import (
+from typedmonarchmoney import (
     MonarchAccount,
     MonarchCashflowSummary,
     MonarchSubscription,
@@ -58,11 +58,11 @@ def mock_config_api() -> Generator[AsyncMock]:
 
     with (
         patch(
-            "homeassistant.components.monarch_money.config_flow.TypedMonarchMoney",
+            "homeassistant.components.monarch_money.config_flow.MonarchMoneyTyped",
             autospec=True,
         ) as mock_class,
         patch(
-            "homeassistant.components.monarch_money.TypedMonarchMoney", new=mock_class
+            "homeassistant.components.monarch_money.MonarchMoneyTyped", new=mock_class
         ),
     ):
         instance = mock_class.return_value
