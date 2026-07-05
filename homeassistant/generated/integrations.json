@@ -3887,6 +3887,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "llama_cpp": {
+      "name": "llama.cpp",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "llamalab_automate": {
       "name": "LlamaLab Automate",
       "integration_type": "hub",
@@ -4139,12 +4145,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "melcloud_home": {
-      "name": "MELCloud Home",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "melissa": {
       "name": "Melissa",
       "integration_type": "hub",
@@ -4338,6 +4338,12 @@
           "iot_class": "cloud_polling",
           "name": "MELCloud"
         },
+        "melcloud_home": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "MELCloud Home"
+        },
         "mitsubishi_comfort": {
           "integration_type": "hub",
           "config_flow": true,
@@ -4370,9 +4376,14 @@
       "iot_class": "local_polling"
     },
     "modbus": {
-      "name": "Modbus",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "modbus_connection": {
+      "name": "Modbus Connection",
+      "integration_type": "hub",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "modem_callerid": {
@@ -8495,6 +8506,7 @@
     "mawaqit",
     "min_max",
     "mobile_app",
+    "modbus",
     "moehlenhoff_alpha2",
     "mold_indicator",
     "moon",

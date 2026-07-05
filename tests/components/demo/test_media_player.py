@@ -615,3 +615,31 @@ async def test_browse(
     assert msg["result"]["title"] == "media"
     assert msg["result"]["media_class"] == "directory"
     assert len(msg["result"]["children"])
+
+
+async def test_search(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the media player search delegates to media source."""
+    entity = "media_player.browse"
+
+    await async_setup_component(hass, "media_source", {"media_source": {}})
+    assert await async_setup_component(
+        hass, MP_DOMAIN, {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    websocket_client = await hass_ws_client(hass)
+    await websocket_client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/search_media",
+            "entity_id": entity,
+            "search_query": "test",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    assert [item["title"] for item in msg["result"]["result"]] == ["test.mp3"]
