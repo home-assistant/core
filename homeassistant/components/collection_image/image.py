@@ -35,17 +35,17 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Collection Image image entities."""
-    if media := entry.data.get(CONF_MEDIA):
-        async_add_entities(
-            [
-                CollectionImageImageEntity(
-                    name=entry.title,
-                    media_content_id=media.get("media_content_id"),
-                    unique_id=entry.entry_id,
-                    hass=hass,
-                )
-            ]
-        )
+    media = entry.data[CONF_MEDIA]
+    async_add_entities(
+        [
+            CollectionImageImageEntity(
+                name=entry.title,
+                media_content_id=media["media_content_id"],
+                unique_id=entry.entry_id,
+                hass=hass,
+            )
+        ]
+    )
 
 
 class CollectionImageImageEntity(ImageEntity):
