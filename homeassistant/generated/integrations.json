@@ -4139,12 +4139,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "melcloud_home": {
-      "name": "MELCloud Home",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "melissa": {
       "name": "Melissa",
       "integration_type": "hub",
@@ -4338,6 +4332,12 @@
           "iot_class": "cloud_polling",
           "name": "MELCloud"
         },
+        "melcloud_home": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "MELCloud Home"
+        },
         "mitsubishi_comfort": {
           "integration_type": "hub",
           "config_flow": true,
@@ -4372,6 +4372,12 @@
     "modbus": {
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "modbus_connection": {
+      "name": "Modbus Connection",
+      "integration_type": "hub",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "modem_callerid": {
