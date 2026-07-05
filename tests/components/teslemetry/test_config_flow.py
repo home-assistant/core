@@ -13,7 +13,12 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 
-from homeassistant.components.teslemetry.const import AUTHORIZE_URL, DOMAIN, TOKEN_URL
+from homeassistant.components.teslemetry.const import (
+    AUTHORIZE_URL,
+    DOMAIN,
+    REGISTER_URL,
+    TOKEN_URL,
+)
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -139,6 +144,13 @@ async def test_reauth(
     assert result
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+    # Reauth must reuse the client registered during the original setup, not
+    # register a new one.
+    register_calls = [
+        call for call in aioclient_mock.mock_calls if str(call[1]) == REGISTER_URL
+    ]
+    assert len(register_calls) == 1
 
 
 @pytest.mark.usefixtures("current_request_with_host")
