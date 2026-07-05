@@ -159,7 +159,7 @@ async def test_configure_service_with_faulty_entity(
         SERVICE_DATA: {},
     }
 
-    with pytest.raises(HomeAssistantError, match="Could not find entity"):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CONFIGURE_DEVICE,
@@ -167,6 +167,8 @@ async def test_configure_service_with_faulty_entity(
             blocking=True,
         )
 
+    assert err.value.translation_key == "entity_not_found"
+    assert err.value.translation_placeholders == {"entity_id": "light.nonexisting"}
     assert len(aioclient_mock.mock_calls) == 0
 
 
