@@ -63,7 +63,7 @@ class VictronBaseEntity(Entity):
 
     @property
     def native_unit_of_measurement(self) -> str | None:
-        """Return the metric unit before entity registration."""
+        """Return the native unit of measurement."""
         if self._metric.metric_type == MetricType.COST:
             return self.hass.config.currency
 
