@@ -176,6 +176,34 @@ async def test_search_media_exceptions(
     assert exc_info.value.translation_key == "radio_browser_error"
 
 
+async def test_search_media_not_ready(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, patch_radios
+) -> None:
+    """Test search config entry not ready."""
+
+    with patch(
+        "homeassistant.components.radio_browser.RadioBrowser",
+        autospec=True,
+    ) as mock_browser:
+        mock_browser.return_value.stats.side_effect = RadioBrowserError
+        mock_config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    source = await async_get_media_source(hass)
+    patch_radios(source)
+
+    with pytest.raises(BrowseError) as exc_info:
+        await source.async_search_media(
+            MediaSourceItem(hass, DOMAIN, f"{media_source.URI_SCHEME}{DOMAIN}", None),
+            SearchMediaQuery(search_query="my search"),
+        )
+    assert exc_info.value.translation_key == "config_entry_not_ready"
+
+
 @pytest.mark.parametrize(
     "exception",
     [DNSError, RadioBrowserError],
