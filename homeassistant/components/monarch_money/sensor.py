@@ -50,6 +50,9 @@ MONARCH_MONEY_VALUE_SENSORS: tuple[MonarchMoneyAccountSensorEntityDescription, .
     ),
 )
 
+# Account types that used to be balance sensors before the typed client update.
+LEGACY_BALANCE_ACCOUNT_TYPES = {"real_estate", "other_asset"}
+
 # Most accounts are balance sensors
 MONARCH_MONEY_SENSORS: tuple[MonarchMoneyAccountSensorEntityDescription, ...] = (
     MonarchMoneyAccountSensorEntityDescription(
@@ -157,7 +160,7 @@ async def async_setup_entry(
             account,
         )
         for account in mm_coordinator.value_accounts
-        if account.type in {"real_estate", "real-estate"}
+        if account.type in LEGACY_BALANCE_ACCOUNT_TYPES
         for sensor_description in MONARCH_MONEY_SENSORS
     )
 
