@@ -86,7 +86,7 @@ class LitterRobotNightLight(LitterRobotEntity[LitterRobot5], LightEntity):
         """Turn on the night light, applying any requested color or brightness."""
         mode = self.robot.night_light_mode
         brightness = self.robot.night_light_brightness
-        color: str | tuple[int, int, int] = self.robot.night_light_color or "#FFFFFF"
+        color = self.robot.night_light_rgb_color or (255, 255, 255)
 
         if ATTR_RGB_COLOR in kwargs:
             color = kwargs[ATTR_RGB_COLOR]
