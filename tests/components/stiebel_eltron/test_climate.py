@@ -169,6 +169,33 @@ async def test_climate_entity_set_temperature(
     mock_lwz_api.set_target_temp.assert_awaited_with(23.5)
 
 
+async def test_climate_entity_set_hvac_mode_handles_api_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lwz_api: MagicMock,
+) -> None:
+    """Test setting HVAC mode handles API exception."""
+    mock_lwz_api.get_operation.return_value = None
+    await _setup_integration(hass, mock_config_entry)
+
+    mock_lwz_api.set_operation.side_effect = ModbusException("write failed")
+    with pytest.raises(HomeAssistantError):
+        await async_set_hvac_mode(hass, HVACMode.AUTO, CLIMATE_ENTITY_ID)
+
+
+async def test_climate_entity_set_preset_mode_handles_api_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lwz_api: MagicMock,
+) -> None:
+    """Test setting preset mode handles API exception."""
+    await _setup_integration(hass, mock_config_entry)
+
+    mock_lwz_api.set_operation.side_effect = ModbusException("write failed")
+    with pytest.raises(HomeAssistantError):
+        await async_set_preset_mode(hass, PRESET_COMFORT, CLIMATE_ENTITY_ID)
+
+
 async def test_climate_entity_set_temperature_handles_api_exception(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
