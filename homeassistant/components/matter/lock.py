@@ -127,12 +127,11 @@ class MatterLock(MatterEntity, LockEntity):
             case (
                 clusters.DoorLock.Events.DoorLockAlarm.event_id
             ):  # Lock cluster event 0
-                if node_event_data.get("alarmCode") == 0:  # lock is jammed
-                    if (
-                        self._optimistic_timer
-                        and not self._optimistic_timer.cancelled()
-                    ):
-                        self._optimistic_timer.cancel()
+                if (
+                    node_event_data.get("alarmCode")
+                    == clusters.DoorLock.Enums.AlarmCodeEnum.kLockJammed
+                ):
+                    self._reset_optimistic_state(write_state=False)
                     self._attr_is_jammed = True
                     self.async_write_ha_state()
             case (
