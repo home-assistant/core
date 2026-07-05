@@ -5,25 +5,25 @@ import logging
 from typing import Any, NamedTuple, override
 
 from miio import Device as MiioDevice
-from miio.fan_common import LedBrightness as FanLedBrightness
-from miio.integrations.airpurifier.dmaker.airfresh_t2017 import (
+from miio.integrations.dmaker.airfresh.airfresh_t2017 import (
     DisplayOrientation as AirfreshT2017DisplayOrientation,
     PtcLevel as AirfreshT2017PtcLevel,
 )
-from miio.integrations.airpurifier.zhimi.airfresh import (
+from miio.integrations.zhimi.airpurifier.airfresh import (
     LedBrightness as AirfreshLedBrightness,
 )
-from miio.integrations.airpurifier.zhimi.airpurifier import (
+from miio.integrations.zhimi.airpurifier.airpurifier import (
     LedBrightness as AirpurifierLedBrightness,
     OperationMode as AirpurifierOperationMode,
 )
-from miio.integrations.airpurifier.zhimi.airpurifier_miot import (
+from miio.integrations.zhimi.airpurifier.airpurifier_miot import (
     LedBrightness as AirpurifierMiotLedBrightness,
 )
-from miio.integrations.humidifier.zhimi.airhumidifier import (
+from miio.integrations.zhimi.fan.fan import LedBrightness as FanLedBrightness
+from miio.integrations.zhimi.humidifier.airhumidifier import (
     LedBrightness as AirhumidifierLedBrightness,
 )
-from miio.integrations.humidifier.zhimi.airhumidifier_miot import (
+from miio.integrations.zhimi.humidifier.airhumidifier_miot import (
     LedBrightness as AirhumidifierMiotLedBrightness,
 )
 

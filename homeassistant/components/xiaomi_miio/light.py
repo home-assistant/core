@@ -16,12 +16,11 @@ from miio import (
     PhilipsEyecare,
     PhilipsMoonlight,
 )
-from miio.gateway.devices.light import LightBulb
-from miio.gateway.gateway import (
+from miio.integrations.lumi.gateway.devices.light import LightBulb
+from miio.integrations.lumi.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
     GATEWAY_MODEL_AC_V3,
-    GatewayException,
 )
 import voluptuous as vol
 
@@ -1103,7 +1102,7 @@ class XiaomiGatewayLight(LightEntity):
             state_dict = await self.hass.async_add_executor_job(
                 self._gateway.light.rgb_status
             )
-        except GatewayException as ex:
+        except DeviceException as ex:
             if self._attr_available:
                 self._attr_available = False
                 _LOGGER.error(

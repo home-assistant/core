@@ -7,25 +7,29 @@ import math
 from typing import Any, override
 
 from miio import Device as MiioDevice
-from miio.fan_common import (
-    MoveDirection as FanMoveDirection,
-    OperationMode as FanOperationMode,
-)
-from miio.integrations.airpurifier.dmaker.airfresh_t2017 import (
+from miio.integrations.dmaker.airfresh.airfresh_t2017 import (
     OperationMode as AirfreshOperationModeT2017,
 )
-from miio.integrations.airpurifier.zhimi.airfresh import (
+from miio.integrations.dmaker.fan.fan import (
+    FanStatusP5,
+    OperationMode as FanP5OperationMode,
+)
+from miio.integrations.dmaker.fan.fan_miot import (
+    FanStatusMiot,
+    OperationMode as FanOperationMode,
+    OperationModeMiot as FanMiotOperationMode,
+)
+from miio.integrations.zhimi.airpurifier.airfresh import (
     OperationMode as AirfreshOperationMode,
 )
-from miio.integrations.airpurifier.zhimi.airpurifier import (
+from miio.integrations.zhimi.airpurifier.airpurifier import (
     OperationMode as AirpurifierOperationMode,
 )
-from miio.integrations.airpurifier.zhimi.airpurifier_miot import (
+from miio.integrations.zhimi.airpurifier.airpurifier_miot import (
     OperationMode as AirpurifierMiotOperationMode,
 )
-from miio.integrations.fan.dmaker.fan import FanStatusP5
-from miio.integrations.fan.dmaker.fan_miot import FanStatusMiot
-from miio.integrations.fan.zhimi.zhimi_miot import (
+from miio.integrations.zhimi.fan.fan import MoveDirection as FanMoveDirection
+from miio.integrations.zhimi.fan.zhimi_miot import (
     OperationModeFanZA5 as FanZA5OperationMode,
 )
 import voluptuous as vol
@@ -1142,7 +1146,7 @@ class XiaomiFanP5(XiaomiGenericFan):
     @override
     def operation_mode_class(self):
         """Hold operation mode class."""
-        return FanOperationMode
+        return FanP5OperationMode
 
     @callback
     @override
@@ -1197,6 +1201,12 @@ class XiaomiFanMiot(XiaomiGenericFan):
     def operation_mode_class(self) -> type[FanOperationMode]:
         """Hold operation mode class."""
         return FanOperationMode
+
+    @property
+    @override
+    def preset_modes(self) -> list[str]:
+        """Get the list of available preset modes."""
+        return [mode.name for mode in FanMiotOperationMode]
 
     @callback
     @override

@@ -5,8 +5,9 @@ import logging
 from construct.core import ChecksumError
 from micloud import MiCloud
 from micloud.micloudexception import MiCloudAccessDenied
-from miio import DeviceException, gateway
-from miio.gateway.gateway import GATEWAY_MODEL_EU
+from miio import DeviceException
+from miio.integrations.lumi.gateway import gateway
+from miio.integrations.lumi.gateway.gateway import GATEWAY_MODEL_EU
 
 from .const import (
     CONF_CLOUD_COUNTRY,

@@ -6,13 +6,12 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 from miio import AirQualityMonitor, Device as MiioDevice, DeviceException
-from miio.gateway.gateway import (
+from miio.integrations.lumi.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
     GATEWAY_MODEL_AC_V3,
     GATEWAY_MODEL_AQARA,
     GATEWAY_MODEL_EU,
-    GatewayException,
 )
 
 from homeassistant.components.sensor import (
@@ -1021,7 +1020,7 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
                 self._gateway.get_illumination
             )
             self._attr_available = True
-        except GatewayException as ex:
+        except DeviceException as ex:
             if self._attr_available:
                 self._attr_available = False
                 _LOGGER.error(

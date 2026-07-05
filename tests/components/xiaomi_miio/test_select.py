@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from arrow import utcnow
-from miio.integrations.airpurifier.dmaker.airfresh_t2017 import (
+from miio.integrations.dmaker.airfresh.airfresh_t2017 import (
     DisplayOrientation,
     PtcLevel,
 )

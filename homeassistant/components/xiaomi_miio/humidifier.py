@@ -5,13 +5,13 @@ import math
 from typing import Any, override
 
 from miio import Device as MiioDevice
-from miio.integrations.humidifier.deerma.airhumidifier_mjjsq import (
+from miio.integrations.deerma.humidifier.airhumidifier_mjjsq import (
     OperationMode as AirhumidifierMjjsqOperationMode,
 )
-from miio.integrations.humidifier.zhimi.airhumidifier import (
+from miio.integrations.zhimi.humidifier.airhumidifier import (
     OperationMode as AirhumidifierOperationMode,
 )
-from miio.integrations.humidifier.zhimi.airhumidifier_miot import (
+from miio.integrations.zhimi.humidifier.airhumidifier_miot import (
     OperationMode as AirhumidifierMiotOperationMode,
 )
 
