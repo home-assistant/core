@@ -3,6 +3,7 @@
 import logging
 from pathlib import Path
 import random
+from typing import override
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.components.media_player import (
@@ -132,6 +133,7 @@ class CollectionImageImageEntity(ImageEntity):
         set_unavailable()
         return
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Initialize the first image after entity has been created."""
 
@@ -140,6 +142,7 @@ class CollectionImageImageEntity(ImageEntity):
 
         self.async_on_remove(async_at_started(self.hass, get_next_image_on_start))
 
+    @override
     def image(self) -> bytes | None:
         """Return bytes of image."""
         if self.path:
