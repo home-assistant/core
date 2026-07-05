@@ -2752,6 +2752,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "harman_luxury": {
+      "name": "Harman Luxury Audio",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "harvey": {
       "name": "Harvey",
       "integration_type": "virtual",
