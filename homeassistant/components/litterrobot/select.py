@@ -24,14 +24,14 @@ _CastTypeT = TypeVar("_CastTypeT", int, float, str)
 # brightness mapping below). These presets are verified on hardware to render
 # true at all brightness levels and are offered as known-good options while the
 # light's RGB picker stays available for custom colors.
-NIGHT_LIGHT_PRESETS: dict[str, str] = {
-    "red": "#FF0000",
-    "green": "#00FF00",
-    "blue": "#0000FF",
-    "cyan": "#00FFFF",
-    "magenta": "#FF00FF",
-    "yellow": "#FFFF00",
-    "white": "#FFFFFF",
+NIGHT_LIGHT_PRESETS: dict[str, tuple[int, int, int]] = {
+    "red": (255, 0, 0),
+    "green": (0, 255, 0),
+    "blue": (0, 0, 255),
+    "cyan": (0, 255, 255),
+    "magenta": (255, 0, 255),
+    "yellow": (255, 255, 0),
+    "white": (255, 255, 255),
 }
 
 # The LR5 globe LED renders brightness non-monotonically (a firmware quirk also
@@ -43,13 +43,10 @@ LR5_GLOBE_BRIGHTNESS: dict[str, int] = {"low": 10, "medium": 100, "high": 75}
 
 def _active_night_light_preset(robot: LitterRobot5) -> str | None:
     """Return the preset matching the current color, or None for a custom color."""
-    if (color := robot.night_light_color) is None:
+    if (rgb := robot.night_light_rgb_color) is None:
         return None
-    # The device may echo an 8-digit #RRGGBBAA value; compare on the RGB part.
-    normalized = "#" + color.lstrip("#").upper()[:6]
     return next(
-        (name for name, value in NIGHT_LIGHT_PRESETS.items() if value == normalized),
-        None,
+        (name for name, value in NIGHT_LIGHT_PRESETS.items() if value == rgb), None
     )
 
 

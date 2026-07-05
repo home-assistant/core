@@ -196,7 +196,7 @@ async def test_litterrobot_5_night_light_preset(
     )
     # Selecting a preset writes the color while preserving mode and brightness.
     robot.set_night_light_settings.assert_awaited_once_with(
-        mode=NightLightMode.AUTO, brightness=50, color="#00FFFF"
+        mode=NightLightMode.AUTO, brightness=50, color=(0, 255, 255)
     )
 
 

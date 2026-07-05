@@ -72,7 +72,7 @@ async def test_turn_on_color(
         blocking=True,
     )
     robot.set_night_light_settings.assert_awaited_once_with(
-        mode=NightLightMode.AUTO, brightness=50, color="#FF0000"
+        mode=NightLightMode.AUTO, brightness=50, color=(255, 0, 0)
     )
 
 
