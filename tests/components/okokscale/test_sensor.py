@@ -34,7 +34,13 @@ from tests.components.bluetooth import (
 
 
 @pytest.mark.parametrize(
-    ("mock_config_entry", "service_info", "enity_id_base", "weight", "signal_strength"),
+    (
+        "mock_config_entry",
+        "service_info",
+        "entity_id_base",
+        "weight",
+        "signal_strength",
+    ),
     [
         (
             MockConfigEntry(domain=DOMAIN, unique_id=OKOK_F0_ADDRESS),
@@ -66,7 +72,7 @@ async def test_sensors(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     service_info: BluetoothServiceInfo,
-    enity_id_base: str,
+    entity_id_base: str,
     weight: float,
     signal_strength: int,
 ) -> None:
@@ -79,11 +85,11 @@ async def test_sensors(
     inject_bluetooth_service_info(hass, service_info)
     await hass.async_block_till_done()
 
-    state = hass.states.get(f"{enity_id_base}_weight")
+    state = hass.states.get(f"{entity_id_base}_weight")
     assert state is not None
     assert state.state == str(weight)
 
-    state = hass.states.get(f"{enity_id_base}_signal_strength")
+    state = hass.states.get(f"{entity_id_base}_signal_strength")
     assert state is not None
     assert state.state == str(signal_strength)
 
