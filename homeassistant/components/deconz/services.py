@@ -1,8 +1,7 @@
 """deCONZ services."""
 
-from typing import TYPE_CHECKING
-
 from pydeconz.utils import normalize_bridge_id
+from pydeconz import errors
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -18,9 +17,6 @@ from homeassistant.util.read_only_dict import ReadOnlyDict
 from .const import CONF_BRIDGE_ID, DOMAIN
 from .hub import DeconzHub
 from .util import get_master_hub
-
-if TYPE_CHECKING:
-    from . import DeconzConfigEntry
 
 
 DECONZ_SERVICES = "deconz_services"
@@ -151,7 +147,7 @@ async def async_configure_service(hub: DeconzHub, data: ReadOnlyDict) -> None:
 
     try:
         await hub.api.request("put", field, json=data)
-    except Exception as err:
+    except (TimeoutError, errors.RequestError, errors.ResponseError) as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="configure_failed",
@@ -164,13 +160,12 @@ async def async_refresh_devices_service(hub: DeconzHub) -> None:
 
     try:
         await hub.api.refresh_state()
-    except Exception as err:
+    except (TimeoutError, errors.RequestError, errors.ResponseError) as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="device_refresh_failed",
         ) from err
     finally:
-        hub.load_ignored_devices()
         hub.ignore_state_updates = False
 
 
