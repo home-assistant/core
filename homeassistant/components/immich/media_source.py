@@ -1,14 +1,19 @@
 """Immich as a media source."""
 
 from logging import getLogger
-from typing import override
+from typing import TypedDict, override
 
 from aiohttp.web import HTTPNotFound, Request, Response, StreamResponse
 from aioimmich.assets.models import ImmichAsset
 from aioimmich.exceptions import ImmichError, ImmichForbiddenError
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.media_player import BrowseError, MediaClass
+from homeassistant.components.media_player import (
+    BrowseError,
+    MediaClass,
+    SearchMedia,
+    SearchMediaQuery,
+)
 from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
@@ -47,6 +52,60 @@ class ImmichMediaSourceIdentifier:
         self.mime_type = parts[5] if len(parts) > 3 else None
 
 
+class ImmichSmartSearchArgs(TypedDict, total=False):
+    """Type for smart search arguments."""
+
+    query: str
+    album_ids: list[str]
+    person_ids: list[str]
+    tag_ids: list[str]
+    is_favorite: bool
+    is_not_in_album: bool
+
+
+def _parse_assets(
+    assets: list[ImmichAsset], identifier: ImmichMediaSourceIdentifier
+) -> list[BrowseMediaSource]:
+    """Parse list of ImmichAsset to list of BrowseMediaSource."""
+    ret: list[BrowseMediaSource] = []
+    for asset in assets:
+        if not (mime_type := asset.original_mime_type) or not mime_type.startswith(
+            ("image/", "video/")
+        ):
+            continue
+
+        if mime_type.startswith("image/"):
+            media_class = MediaClass.IMAGE
+            can_play = False
+            thumb_mime_type = mime_type
+        else:
+            media_class = MediaClass.VIDEO
+            can_play = True
+            thumb_mime_type = "image/jpeg"
+
+        ret.append(
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=(
+                    f"{identifier.unique_id}|"
+                    f"{identifier.collection}|"
+                    f"{identifier.collection_id}|"
+                    f"{asset.asset_id}|"
+                    f"{asset.original_file_name}|"
+                    f"{mime_type}"
+                ),
+                media_class=media_class,
+                media_content_type=mime_type,
+                title=asset.original_file_name,
+                can_play=can_play,
+                can_expand=False,
+                thumbnail=f"/immich/{identifier.unique_id}/{asset.asset_id}/thumbnail/{thumb_mime_type}",
+            )
+        )
+
+    return ret
+
+
 class ImmichMediaSource(MediaSource):
     """Provide Immich as media sources."""
 
@@ -67,6 +126,11 @@ class ImmichMediaSource(MediaSource):
             raise BrowseError(
                 translation_domain=DOMAIN, translation_key="not_configured"
             )
+
+        can_search = False
+        if item.identifier:
+            can_search = bool(ImmichMediaSourceIdentifier(item.identifier).unique_id)
+
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=None,
@@ -75,13 +139,14 @@ class ImmichMediaSource(MediaSource):
             title="Immich",
             can_play=False,
             can_expand=True,
+            can_search=can_search,
             children_media_class=MediaClass.DIRECTORY,
             children=[
                 *await self._async_build_immich(item, entries),
             ],
         )
 
-    async def _async_build_immich(  # noqa: C901
+    async def _async_build_immich(
         self, item: MediaSourceItem, entries: list[ConfigEntry]
     ) -> list[BrowseMediaSource]:
         """Handle browsing different immich instances."""
@@ -287,43 +352,7 @@ class ImmichMediaSource(MediaSource):
             except ImmichError:
                 return []
 
-        ret: list[BrowseMediaSource] = []
-        for asset in assets:
-            if not (mime_type := asset.original_mime_type) or not mime_type.startswith(
-                ("image/", "video/")
-            ):
-                continue
-
-            if mime_type.startswith("image/"):
-                media_class = MediaClass.IMAGE
-                can_play = False
-                thumb_mime_type = mime_type
-            else:
-                media_class = MediaClass.VIDEO
-                can_play = True
-                thumb_mime_type = "image/jpeg"
-
-            ret.append(
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=(
-                        f"{identifier.unique_id}|"
-                        f"{identifier.collection}|"
-                        f"{identifier.collection_id}|"
-                        f"{asset.asset_id}|"
-                        f"{asset.original_file_name}|"
-                        f"{mime_type}"
-                    ),
-                    media_class=media_class,
-                    media_content_type=mime_type,
-                    title=asset.original_file_name,
-                    can_play=can_play,
-                    can_expand=False,
-                    thumbnail=f"/immich/{identifier.unique_id}/{asset.asset_id}/thumbnail/{thumb_mime_type}",
-                )
-            )
-
-        return ret
+        return _parse_assets(assets, identifier)
 
     @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
@@ -350,6 +379,41 @@ class ImmichMediaSource(MediaSource):
             ),
             identifier.mime_type,
         )
+
+    @override
+    async def async_search_media(
+        self, item: MediaSourceItem, query: SearchMediaQuery
+    ) -> SearchMedia:
+        """Search media."""
+        identifier = ImmichMediaSourceIdentifier(item.identifier)
+        entry: ImmichConfigEntry | None = (
+            self.hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, identifier.unique_id
+            )
+        )
+        assert entry
+        immich_api = entry.runtime_data.api
+
+        search_args: ImmichSmartSearchArgs = {"query": query.search_query}
+        if identifier.collection == "albums":
+            search_args["is_not_in_album"] = False
+            if album_id := identifier.collection_id:
+                search_args["album_ids"] = [album_id]
+
+        elif identifier.collection == "people" and (
+            person_id := identifier.collection_id
+        ):
+            search_args["person_ids"] = [person_id]
+
+        elif identifier.collection == "tags" and (tag_id := identifier.collection_id):
+            search_args["tag_ids"] = [tag_id]
+
+        elif identifier.collection == "favorites":
+            search_args["is_favorite"] = True
+
+        results = await immich_api.search.async_smart_search(**search_args)
+
+        return SearchMedia(result=_parse_assets(results, identifier))
 
 
 class ImmichMediaView(HomeAssistantView):
