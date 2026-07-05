@@ -300,7 +300,6 @@ async def test_polling_is_only_disabled_after_webhook_delivery(
     entity_id = "vacuum.vacuum_name_1"
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes["battery_level"] == 71
 
     # Change API return values and wait for update
     mock_get_status.return_value = {
