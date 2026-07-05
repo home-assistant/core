@@ -52,9 +52,30 @@ class TeslemetryImplementation(
         """Extra data that needs to be appended to the token resolve request."""
         data: dict = {
             "name": self.hass.config.location_name,
+            "software_id": SOFTWARE_ID,
+            "software_version": __version__,
         }
         data.update(super().extra_token_resolve_data)
         return data
+
+    @override
+    async def _async_refresh_token(self, token: dict) -> dict:
+        """Refresh a token.
+
+        Software metadata is re-sent on every refresh so the server can pick
+        up a software_version change after a Home Assistant upgrade.
+        """
+        new_token = await self._token_request(
+            {
+                "grant_type": "refresh_token",
+                "client_id": self.client_id,
+                "refresh_token": token["refresh_token"],
+                "software_id": SOFTWARE_ID,
+                "software_version": __version__,
+            }
+        )
+
+        return {**token, **new_token}
 
 
 async def async_ensure_client_credential(hass: HomeAssistant) -> None:

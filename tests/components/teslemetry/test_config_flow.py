@@ -17,9 +17,11 @@ from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
     DOMAIN,
     REGISTER_URL,
+    SOFTWARE_ID,
     TOKEN_URL,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -96,6 +98,13 @@ async def test_oauth_flow(
     assert result["data"]["token"]["type"] == response["type"]
     assert result["data"]["token"]["expires_in"] == response["expires_in"]
     assert "expires_at" in result["result"].data["token"]
+
+    token_calls = [
+        call for call in aioclient_mock.mock_calls if str(call[1]) == TOKEN_URL
+    ]
+    assert len(token_calls) == 1
+    assert token_calls[0][2]["software_id"] == SOFTWARE_ID
+    assert token_calls[0][2]["software_version"] == __version__
 
 
 @pytest.mark.usefixtures("current_request_with_host")
