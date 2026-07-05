@@ -261,7 +261,6 @@ class MatterLock(MatterEntity, LockEntity):
         ):
             self._attr_is_locked = False
             self._attr_is_open = False
-            # for future investigation - maybe kNotFullyLocked should be treated as jammed.
             self._attr_is_jammed = False
         else:
             # Treat any other state as unknown.
