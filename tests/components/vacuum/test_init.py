@@ -1,7 +1,6 @@
 """The tests for the Vacuum entity integration."""
 
 from dataclasses import asdict
-import logging
 from typing import Any
 
 import pytest
@@ -31,7 +30,6 @@ from . import (
     help_async_setup_entry_init,
     help_async_unload_entry,
 )
-from .common import async_start
 
 from tests.common import (
     MockConfigEntry,
