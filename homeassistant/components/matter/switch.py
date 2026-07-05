@@ -7,6 +7,7 @@ from typing import Any, override
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import ClusterCommand, NullValue
 from matter_server.client.models import device_types
+from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -223,16 +224,28 @@ class MatterAlarmEnabledSwitch(MatterSwitch):
                 alarmsToEnableDisable=alarms_enabled,
             )
         )
+        # Optimistically update the local cache to avoid a race condition
+        # when the visual and audible alarm switches (which share this
+        # attribute) are toggled in quick succession, before the subscription
+        # report for the first command arrives.
+        alarms_enabled_path = create_attribute_path_from_attribute(
+            endpoint_id=self._endpoint.endpoint_id,
+            attribute=clusters.BooleanStateConfiguration.Attributes.AlarmsEnabled,
+        )
+        self._endpoint.set_attribute_value(alarms_enabled_path, alarms_enabled)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn alarm mode on."""
         await self._async_set_alarm_enabled(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn alarm mode off."""
         await self._async_set_alarm_enabled(False)
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         alarm_mode = self.entity_description.alarm_mode
