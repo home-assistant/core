@@ -1,0 +1,59 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "access_token": "You can get this token by activating the SMS API in your online account.",
+          "username": "This is the id given by FreeMobile to access your online account."
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "access_token": "[%key:component::free_mobile::config::step::user::data_description::access_token%]"
+        },
+        "title": "Reauthenticate Free Mobile"
+      },
+      "reconfigure": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "access_token": "[%key:component::free_mobile::config::step::user::data_description::access_token%]"
+        },
+        "title": "Reconfigure Free Mobile"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Wrong username or access token."
+    },
+    "missing_parameter": {
+      "message": "At least one parameter is missing."
+    },
+    "rate_limit_exceeded": {
+      "message": "Too many SMS sent in a short time."
+    },
+    "server_error": {
+      "message": "Free Mobile server error, try again later."
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_error": {
+      "description": "YAML configuration for Free Mobile is being deprecated, but an error occurred while importing your existing configuration.\n\nVerify that the YAML configuration is valid, then restart Home Assistant to try again. Alternatively remove the Free Mobile YAML configuration from your `configuration.yaml` file and continue to [set up the integration]({url}) manually.\n\n**Configuration that could not be imported:**\n\n```{config}```",
+      "title": "Failed to import Free Mobile YAML configuration"
+    }
+  }
+}
