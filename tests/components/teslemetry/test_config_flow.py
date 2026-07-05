@@ -13,19 +13,14 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 
-from homeassistant.components.teslemetry.const import (
-    AUTHORIZE_URL,
-    CLIENT_ID,
-    DOMAIN,
-    TOKEN_URL,
-)
+from homeassistant.components.teslemetry.const import AUTHORIZE_URL, DOMAIN, TOKEN_URL
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import setup_platform
-from .const import CONFIG_V1, UNIQUE_ID
+from .const import CONFIG_V1, DCR_CLIENT_ID, UNIQUE_ID
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -61,7 +56,7 @@ async def test_oauth_flow(
     parsed_url = urlparse(result["url"])
     parsed_query = parse_qs(parsed_url.query)
     assert parsed_query["response_type"][0] == "code"
-    assert parsed_query["client_id"][0] == CLIENT_ID
+    assert parsed_query["client_id"][0] == DCR_CLIENT_ID
     assert parsed_query["redirect_uri"][0] == REDIRECT
     assert parsed_query["state"][0] == state
     assert parsed_query["code_challenge"][0]

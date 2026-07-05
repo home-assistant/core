@@ -17,10 +17,6 @@ from tesla_fleet_api.exceptions import (
 from tesla_fleet_api.teslemetry import Teslemetry
 from teslemetry_stream import TeslemetryStream
 
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -54,6 +50,7 @@ from .coordinator import (
 )
 from .helpers import async_update_device_sw_version, flatten
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
+from .oauth import async_ensure_client_credential
 from .services import async_setup_services
 
 PLATFORMS: Final = [
@@ -79,11 +76,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telemetry integration."""
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(CLIENT_ID, "", name="Teslemetry"),
-    )
+    await async_ensure_client_credential(hass)
     async_setup_services(hass)
     return True
 

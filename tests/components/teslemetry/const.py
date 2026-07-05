@@ -7,6 +7,7 @@ from tests.common import load_json_object_fixture
 
 UNIQUE_ID = "abc-123"
 CONFIG_V1 = {CONF_ACCESS_TOKEN: "abc-123"}
+DCR_CLIENT_ID = "dcr_aG9tZWFzc2lzdGFudA_test1234abcd"
 
 WAKE_UP_ONLINE = {"response": {"state": TeslemetryState.ONLINE}, "error": None}
 

@@ -12,10 +12,6 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.teslemetry import Teslemetry
 
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
@@ -24,7 +20,8 @@ from homeassistant.config_entries import (
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CLIENT_ID, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
+from .oauth import async_ensure_client_credential
 
 
 class OAuth2FlowHandler(
@@ -52,11 +49,7 @@ class OAuth2FlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
-        await async_import_client_credential(
-            self.hass,
-            DOMAIN,
-            ClientCredential(CLIENT_ID, "", name="Teslemetry"),
-        )
+        await async_ensure_client_credential(self.hass)
         return await super().async_step_user()
 
     @override
