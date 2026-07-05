@@ -433,20 +433,16 @@ class ImmichMediaSource(MediaSource):
         LOGGER.debug("search args:%s", search_args)
 
         try:
-            LOGGER.debug("try")
             results = await immich_api.search.async_smart_search(**search_args)
         except ImmichForbiddenError as err:
-            LOGGER.debug("except %s", err)
             raise BrowseError(
                 translation_domain=DOMAIN,
                 translation_key="missing_api_permission",
                 translation_placeholders={"msg": str(err)},
             ) from err
-        except ImmichError as err:
-            LOGGER.debug("except %s", err)
+        except ImmichError:
             return SearchMedia(result=[])
 
-        LOGGER.debug("finish %s", results)
         return SearchMedia(result=_parse_assets(results, identifier))
 
 
