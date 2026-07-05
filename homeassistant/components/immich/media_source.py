@@ -4,7 +4,7 @@ from logging import getLogger
 from typing import TypedDict, override
 
 from aiohttp.web import HTTPNotFound, Request, Response, StreamResponse
-from aioimmich.assets.models import ImmichAsset
+from aioimmich.assets.models import AssetType, ImmichAsset
 from aioimmich.exceptions import ImmichError, ImmichForbiddenError
 
 from homeassistant.components.http import HomeAssistantView
@@ -56,11 +56,18 @@ class ImmichSmartSearchArgs(TypedDict, total=False):
     """Type for smart search arguments."""
 
     query: str
+    asset_type: AssetType
     album_ids: list[str]
     person_ids: list[str]
     tag_ids: list[str]
     is_favorite: bool
     is_not_in_album: bool
+
+
+MEDIA_CLASS_ASSET_TYPE_MAPPING = {
+    MediaClass.IMAGE: AssetType.IMAGE,
+    MediaClass.VIDEO: AssetType.VIDEO,
+}
 
 
 def _parse_assets(
@@ -410,6 +417,15 @@ class ImmichMediaSource(MediaSource):
 
         elif identifier.collection == "favorites":
             search_args["is_favorite"] = True
+
+        if q_classes := query.media_filter_classes:
+            selected_supported_classes = list(
+                set(q_classes) & set(MEDIA_CLASS_ASSET_TYPE_MAPPING)
+            )
+            if len(selected_supported_classes) == 1:
+                search_args["asset_type"] = MEDIA_CLASS_ASSET_TYPE_MAPPING[
+                    selected_supported_classes[0]
+                ]
 
         results = await immich_api.search.async_smart_search(**search_args)
 
