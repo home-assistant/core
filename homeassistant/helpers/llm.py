@@ -6,7 +6,6 @@ from dataclasses import dataclass, field as dc_field
 from datetime import timedelta
 from decimal import Decimal
 from enum import Enum
-from functools import cache, partial
 from operator import attrgetter
 from typing import Any, cast, override
 
@@ -122,10 +121,12 @@ def async_render_no_api_prompt(hass: HomeAssistant) -> str:
 @singleton("llm")
 @callback
 def _async_get_apis(hass: HomeAssistant) -> dict[str, API]:
-    """Get all the LLM APIs."""
-    return {
-        LLM_API_ASSIST: AssistAPI(hass=hass),
-    }
+    """Return the registry of LLM APIs.
+
+    APIs are registered by their owning integration; the Assist API is
+    registered by the ``llm`` integration during setup.
+    """
+    return {}
 
 
 @callback
@@ -481,13 +482,14 @@ class AssistAPI(API):
             id=LLM_API_ASSIST,
             name="Assist",
         )
-        self.cached_slugify = cache(
-            partial(unicode_slug.slugify, separator="_", lowercase=False)
-        )
 
     @override
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
         """Return the instance of the API."""
+        # Imported here to avoid a circular import: the llm integration imports
+        # the framework (Tool, the APIs) from this helper module.
+        from homeassistant.components import llm as llm_integration  # noqa: PLC0415
+
         if llm_context.assistant:
             exposed_entities: dict | None = _get_exposed_entities(
                 self.hass, llm_context.assistant, include_state=False
@@ -495,29 +497,41 @@ class AssistAPI(API):
         else:
             exposed_entities = None
 
+        llm_tools = await llm_integration.async_get_tools(
+            self.hass, llm_context, self.id
+        )
+
         return APIInstance(
             api=self,
-            api_prompt=self._async_get_api_prompt(llm_context, exposed_entities),
+            api_prompt=self._async_get_api_prompt(
+                llm_context, exposed_entities, llm_tools.prompt
+            ),
             llm_context=llm_context,
-            tools=self._async_get_tools(llm_context, exposed_entities),
+            tools=llm_tools.tools,
             custom_serializer=selector_serializer,
         )
 
     @callback
     def _async_get_api_prompt(
-        self, llm_context: LLMContext, exposed_entities: dict | None
+        self,
+        llm_context: LLMContext,
+        exposed_entities: dict | None,
+        extra_prompt: str | None,
     ) -> str:
+        prompt_parts: list[str | None]
         if not exposed_entities or not exposed_entities["entities"]:
-            return NO_ENTITIES_PROMPT
+            prompt_parts = [NO_ENTITIES_PROMPT]
+        else:
+            prompt_parts = [
+                DEVICE_CONTROL_TOOL_USAGE_PROMPT,
+                DYNAMIC_CONTEXT_PROMPT,
+                *self._async_get_exposed_entities_prompt(exposed_entities),
+                self._async_get_voice_satellite_area_prompt(llm_context),
+                self._async_get_no_timer_prompt(llm_context),
+            ]
 
-        # Collect all parts, filtering out any None values
-        prompt_parts = [
-            DEVICE_CONTROL_TOOL_USAGE_PROMPT,
-            DYNAMIC_CONTEXT_PROMPT,
-            *self._async_get_exposed_entities_prompt(exposed_entities),
-            self._async_get_voice_satellite_area_prompt(llm_context),
-            self._async_get_no_timer_prompt(llm_context),
-        ]
+        if extra_prompt:
+            prompt_parts.append(extra_prompt)
 
         # Filter out None and empty strings before joining
         return "\n".join([part for part in prompt_parts if part])
@@ -578,76 +592,6 @@ class AssistAPI(API):
             prompt.append(yaml_util.dump(list(exposed_entities["entities"].values())))
 
         return prompt
-
-    @callback
-    def _async_get_tools(
-        self, llm_context: LLMContext, exposed_entities: dict | None
-    ) -> list[Tool]:
-        """Return a list of LLM tools."""
-        ignore_intents = self.IGNORE_INTENTS
-        if not llm_context.device_id or not async_device_supports_timers(
-            self.hass, llm_context.device_id
-        ):
-            ignore_intents = ignore_intents | {
-                intent.INTENT_START_TIMER,
-                intent.INTENT_CANCEL_TIMER,
-                intent.INTENT_INCREASE_TIMER,
-                intent.INTENT_DECREASE_TIMER,
-                intent.INTENT_PAUSE_TIMER,
-                intent.INTENT_UNPAUSE_TIMER,
-                intent.INTENT_TIMER_STATUS,
-            }
-
-        intent_handlers = [
-            intent_handler
-            for intent_handler in intent.async_get(self.hass)
-            if intent_handler.intent_type not in ignore_intents
-        ]
-
-        exposed_domains: set[str] | None = None
-        if exposed_entities is not None:
-            exposed_domains = {
-                info["domain"] for info in exposed_entities["entities"].values()
-            }
-
-            intent_handlers = [
-                intent_handler
-                for intent_handler in intent_handlers
-                if intent_handler.platforms is None
-                or intent_handler.platforms & exposed_domains
-            ]
-
-        tools: list[Tool] = [
-            IntentTool(self.cached_slugify(intent_handler.intent_type), intent_handler)
-            for intent_handler in intent_handlers
-        ]
-
-        tools.append(GetDateTimeTool())
-
-        if exposed_entities:
-            if exposed_entities[CALENDAR_DOMAIN]:
-                names = []
-                for info in exposed_entities[CALENDAR_DOMAIN].values():
-                    names.extend(info["names"].split(", "))
-                tools.append(CalendarGetEventsTool(names))
-
-            if exposed_domains is not None and TODO_DOMAIN in exposed_domains:
-                names = []
-                for info in exposed_entities["entities"].values():
-                    if info["domain"] != TODO_DOMAIN:
-                        continue
-                    names.extend(info["names"].split(", "))
-                tools.append(TodoGetItemsTool(names))
-
-            tools.extend(
-                ScriptTool(self.hass, script_entity_id)
-                for script_entity_id in exposed_entities[SCRIPT_DOMAIN]
-            )
-
-        if exposed_domains:
-            tools.append(GetLiveContextTool())
-
-        return tools
 
 
 def _get_exposed_entities(

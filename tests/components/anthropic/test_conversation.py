@@ -59,6 +59,7 @@ from homeassistant.components.anthropic.const import (
 from homeassistant.components.anthropic.entity import CitationDetails, ContentDetails
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
+from homeassistant.components.llm import LLMTools
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -319,7 +320,7 @@ async def test_prompt_caching_automatic(
     assert isinstance(system, str)
 
 
-@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
 @pytest.mark.parametrize(
     ("tool_call_json_parts", "expected_call_tool_args"),
     [
@@ -356,7 +357,7 @@ async def test_function_call(
     )
     mock_tool.async_call.return_value = "Test response"
 
-    mock_get_tools.return_value = [mock_tool]
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
     mock_create_stream.return_value = [
         (
@@ -416,7 +417,7 @@ async def test_function_call(
     )
 
 
-@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
 async def test_function_exception(
     mock_get_tools,
     hass: HomeAssistant,
@@ -436,7 +437,7 @@ async def test_function_exception(
     )
     mock_tool.async_call.side_effect = HomeAssistantError("Test tool exception")
 
-    mock_get_tools.return_value = [mock_tool]
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
     mock_create_stream.return_value = [
         (
@@ -847,7 +848,7 @@ async def test_redacted_thinking(
     assert chat_log.content[1:] == snapshot
 
 
-@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
 async def test_extended_thinking_tool_call(
     mock_get_tools,
     hass: HomeAssistant,
@@ -879,7 +880,7 @@ async def test_extended_thinking_tool_call(
     )
     mock_tool.async_call.return_value = "Test response"
 
-    mock_get_tools.return_value = [mock_tool]
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
     mock_create_stream.return_value = [
         (

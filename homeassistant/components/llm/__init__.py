@@ -13,7 +13,7 @@ from typing import Protocol
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
-from homeassistant.helpers.llm import LLMContext, Tool
+from homeassistant.helpers.llm import AssistAPI, LLMContext, Tool, async_register_api
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
@@ -54,6 +54,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_PLATFORMS] = LazyIntegrationPlatforms(
         hass, DOMAIN, _process_llm_tools_platform
     )
+    async_register_api(hass, AssistAPI(hass))
     return True
 
 
