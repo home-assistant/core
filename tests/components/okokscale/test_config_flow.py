@@ -101,7 +101,7 @@ async def test_async_step_user_with_found_devices(
     assert result["result"].unique_id == OKOK_F0_ADDRESS
 
 
-async def async_step_user_already_configured(
+async def test_async_step_user_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
