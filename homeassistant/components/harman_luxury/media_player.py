@@ -84,7 +84,7 @@ class HarmanLuxuryMediaPlayer(
         """Return the state of the device."""
         data = self.coordinator.data
         if not data.online:
-            return MediaPlayerState.STANDBY
+            return MediaPlayerState.OFF
         return _PLAY_STATE_MAP.get(data.play_state, MediaPlayerState.ON)
 
     @property

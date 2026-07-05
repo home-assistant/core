@@ -21,7 +21,7 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_STANDBY, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -103,13 +103,13 @@ async def test_transport_commands(
     mock_client.async_control.assert_awaited_once_with(command)
 
 
-async def test_standby_state(
+async def test_off_state(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test the player reports standby when the device is not online."""
+    """Test the player reports off when the device is not online."""
     mock_client.async_get_state.return_value = replace(PLAYER_STATE, online=False)
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get(ENTITY_ID).state == STATE_STANDBY
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
 
 async def test_media_play_when_paused(
