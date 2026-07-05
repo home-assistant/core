@@ -1,11 +1,4 @@
-"""The LLM integration.
-
-Owns the Assist API and the LLM tools platform: integrations contribute tools
-to the LLM APIs through an ``<integration>/llm.py`` platform with an
-``async_get_tools`` hook. The platforms are loaded lazily and queried per
-request. The framework (``Tool``, the API base classes) lives in
-``homeassistant.helpers.llm``.
-"""
+"""The LLM integration."""
 
 from dataclasses import dataclass
 import logging
@@ -111,11 +104,7 @@ class AssistAPI(API):
 
     @override
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
-        """Return the instance of the API.
-
-        The tools and the prompt are both contributed by the LLM tools
-        platforms; this API only aggregates them.
-        """
+        """Return the instance of the API."""
         llm_tools = await async_get_tools(self.hass, llm_context, self.id)
 
         return APIInstance(

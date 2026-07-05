@@ -315,12 +315,7 @@ class GetLiveContextTool(Tool):
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
 ) -> LLMTools | None:
-    """Return the GetLiveContext tool and the smart home context prompt.
-
-    The tool is always offered; it reports when nothing is exposed at call time.
-    The prompt (live context guidance plus the static overview of exposed
-    entities) is only contributed when something is exposed.
-    """
+    """Return the GetLiveContext tool and the smart home context prompt."""
     if api_id != LLM_API_ASSIST:
         return None
 
