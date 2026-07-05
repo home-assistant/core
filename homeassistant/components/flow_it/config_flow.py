@@ -1,7 +1,7 @@
 """Config flow for Flow-it integration."""
 
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 from flow_it_api.client import FlowItVMCMachine
 from flow_it_api.exceptions import FlowItAuthError, FlowItConnectionError
