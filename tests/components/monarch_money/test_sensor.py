@@ -34,7 +34,7 @@ async def test_value_account_keeps_legacy_balance_entity(
     entity_registry: er.EntityRegistry,
     mock_config_api: AsyncMock,
 ) -> None:
-    """Test real-estate accounts keep their old balance entity when already present."""
+    """Test real-estate accounts keep their legacy balance entity and new value entity."""
     legacy_unique_id = f"{mock_config_entry.unique_id}_90000000020_balance"
     value_unique_id = f"{mock_config_entry.unique_id}_90000000020_value"
 
@@ -51,6 +51,4 @@ async def test_value_account_keeps_legacy_balance_entity(
         await hass.async_block_till_done()
 
     assert entity_registry.async_get_entity_id("sensor", DOMAIN, legacy_unique_id)
-    assert (
-        entity_registry.async_get_entity_id("sensor", DOMAIN, value_unique_id) is None
-    )
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, value_unique_id)

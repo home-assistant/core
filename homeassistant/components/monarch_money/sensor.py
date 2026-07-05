@@ -15,11 +15,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CURRENCY_DOLLAR, PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
 from .coordinator import MonarchMoneyConfigEntry
 from .entity import MonarchMoneyAccountEntity, MonarchMoneyCashFlowEntity
 
@@ -110,21 +108,6 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneyCashflowSensorEntityDescription, ...
 )
 
 
-def _has_legacy_balance_entity(
-    entity_registry: er.EntityRegistry,
-    subscription_id: str,
-    account: MonarchAccount,
-) -> bool:
-    """Return whether the account already has the legacy balance entity."""
-    legacy_unique_id = (
-        f"{subscription_id}_{account.id}_{MONARCH_MONEY_SENSORS[0].translation_key}"
-    )
-    return (
-        entity_registry.async_get_entity_id("sensor", DOMAIN, legacy_unique_id)
-        is not None
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MonarchMoneyConfigEntry,
@@ -132,7 +115,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Monarch Money sensors for config entries."""
     mm_coordinator = config_entry.runtime_data
-    entity_registry = er.async_get(hass)
 
     entity_list: list[MonarchMoneySensor | MonarchMoneyCashFlowSensor] = [
         MonarchMoneyCashFlowSensor(
@@ -166,13 +148,17 @@ async def async_setup_entry(
             account,
         )
         for account in mm_coordinator.value_accounts
-        for sensor_description in (
-            MONARCH_MONEY_SENSORS
-            if _has_legacy_balance_entity(
-                entity_registry, mm_coordinator.subscription_id, account
-            )
-            else MONARCH_MONEY_VALUE_SENSORS
+        for sensor_description in MONARCH_MONEY_VALUE_SENSORS
+    )
+    entity_list.extend(
+        MonarchMoneySensor(
+            mm_coordinator,
+            sensor_description,
+            account,
         )
+        for account in mm_coordinator.value_accounts
+        if account.type in {"real_estate", "real-estate"}
+        for sensor_description in MONARCH_MONEY_SENSORS
     )
 
     async_add_entities(entity_list)
