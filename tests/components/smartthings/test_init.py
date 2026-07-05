@@ -178,48 +178,33 @@ async def test_create_subscription(
     )
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(SmartThingsSinkError("Sink error"), id="sink-error"),
+        pytest.param(
+            SmartThingsConnectionError("Connection error"), id="connection-error"
+        ),
+    ],
+)
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
-async def test_create_subscription_sink_error(
+async def test_create_subscription_error(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
+    exception: SmartThingsConnectionError | SmartThingsSinkError,
 ) -> None:
     """Test handling an error when creating a subscription."""
     assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
 
-    devices.create_subscription.side_effect = SmartThingsSinkError("Sink error")
+    devices.create_subscription.side_effect = exception
 
     await setup_integration(hass, mock_config_entry)
 
     devices.subscribe.assert_not_called()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
-
-
-@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
-async def test_create_subscription_connection_error(
-    hass: HomeAssistant,
-    devices: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test handling a connection error when creating a subscription."""
-    assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
-
-    devices.create_subscription.side_effect = SmartThingsConnectionError(
-        "Connection error"
-    )
-
-    await setup_integration(hass, mock_config_entry)
-
-    devices.subscribe.assert_not_called()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert (
-        mock_config_entry.reason
-        == "Could not create new subscription: Connection error"
-    )
+    assert mock_config_entry.reason == "Could not create new subscription"
     assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
 
 
