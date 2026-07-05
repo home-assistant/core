@@ -7,6 +7,7 @@ import pytest
 import voluptuous as vol
 
 from pydeconz.errors import RequestError
+from unittest.mock import AsyncMock, Mock
 from homeassistant.components.deconz.const import (
     CONF_BRIDGE_ID,
     CONF_MASTER_GATEWAY,
@@ -446,9 +447,9 @@ async def test_service_refresh_devices_failure(
     hub = config_entry_setup.runtime_data
 
     hub.api.refresh_state = AsyncMock(side_effect=TimeoutError)
-    hub.load_ignored_devices = AsyncMock()
+    hub.load_ignored_devices = Mock()
 
-    with pytest.raises(HomeAssistantError, match="device_refresh_failed"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_DEVICE_REFRESH,
@@ -456,5 +457,7 @@ async def test_service_refresh_devices_failure(
             blocking=True,
         )
 
+    assert exc_info.value.translation_key == "device_refresh_failed"
+
     assert hub.ignore_state_updates is False
-    hub.load_ignored_devices.assert_awaited_once()
+    hub.load_ignored_devices.assert_called_once()
