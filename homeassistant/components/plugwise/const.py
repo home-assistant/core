@@ -13,7 +13,6 @@ LOGGER = logging.getLogger(__package__)
 ANNA_WITH_ADAM: Final = "anna_with_adam"
 API: Final = "api"
 AVAILABLE: Final = "available"
-DEV_CLASS: Final = "dev_class"
 FLOW_SMILE: Final = "smile (Adam/Anna/P1)"
 FLOW_STRETCH: Final = "stretch (Stretch)"
 FLOW_TYPE: Final = "flow_type"
