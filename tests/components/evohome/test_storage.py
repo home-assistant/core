@@ -127,7 +127,7 @@ async def test_auth_tokens_past(
 ) -> None:
     """Test credentials manager when cache contains expired data for this user."""
 
-    # make this access token to have expired in the past...
+    # Make this access token have expired in the past...
     _, dt_str = dt_pair(dt_util.now() - timedelta(hours=1))
 
     test_data = TEST_STORAGE_DATA[idx].copy()  # shallow copy is OK here
@@ -160,7 +160,7 @@ async def test_auth_tokens_diff(
 ) -> None:
     """Test credentials manager when cache contains data for a different user."""
 
-    # make this access token to be for a different user...
+    # Make this access token be for a different user...
     hass_storage[DOMAIN] = DOMAIN_STORAGE_ROOT | {"data": TEST_STORAGE_DATA[idx]}
     config[CONF_USERNAME] = f"new_{USERNAME}"
 
