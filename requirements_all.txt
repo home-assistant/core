@@ -281,6 +281,9 @@ aiogithubapi==26.0.0
 # homeassistant.components.guardian
 aioguardian==2026.01.1
 
+# homeassistant.components.harman_luxury
+aioharmanluxury==0.1.0
+
 # homeassistant.components.harmony
 aioharmony==1.0.8
 

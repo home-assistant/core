@@ -1,0 +1,61 @@
+"""Data update coordinator for Harman Luxury."""
+
+from datetime import timedelta
+import logging
+from typing import override
+
+from aioharmanluxury import (
+    DeviceInfo,
+    HarmanLuxuryClient,
+    HarmanLuxuryError,
+    HarmanLuxuryState,
+)
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+_LOGGER = logging.getLogger(__name__)
+
+type HarmanLuxuryConfigEntry = ConfigEntry[HarmanLuxuryCoordinator]
+
+_SCAN_INTERVAL = timedelta(seconds=5)
+
+
+class HarmanLuxuryCoordinator(DataUpdateCoordinator[HarmanLuxuryState]):
+    """Poll a Harman Luxury device for its live player state."""
+
+    config_entry: HarmanLuxuryConfigEntry
+    device_info: DeviceInfo
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: HarmanLuxuryConfigEntry,
+        client: HarmanLuxuryClient,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=config_entry.title,
+            update_interval=_SCAN_INTERVAL,
+        )
+        self.client = client
+
+    @override
+    async def _async_setup(self) -> None:
+        """Fetch static device identity once."""
+        try:
+            self.device_info = await self.client.async_get_info()
+        except HarmanLuxuryError as err:
+            raise UpdateFailed(str(err)) from err
+
+    @override
+    async def _async_update_data(self) -> HarmanLuxuryState:
+        """Fetch the latest player state."""
+        try:
+            return await self.client.async_get_state()
+        except HarmanLuxuryError as err:
+            raise UpdateFailed(str(err)) from err
