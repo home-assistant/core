@@ -7,14 +7,12 @@ import voluptuous as vol
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import async_browse_media
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_NAME
 from homeassistant.helpers.selector import MediaSelector
 
 from .const import CONF_MEDIA, DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): str,
         vol.Required(CONF_MEDIA): MediaSelector({"accept": ["directory"]}),
     }
 )
@@ -47,7 +45,8 @@ class CollectionImageConfigFlow(ConfigFlow, domain=DOMAIN):
                         item.media_class == MediaClass.IMAGE for item in browse.children
                     ):
                         return self.async_create_entry(
-                            title=user_input[CONF_NAME], data=user_input
+                            title=f"{browse.title or 'Unnamed'} collection",
+                            data=user_input,
                         )
 
                     errors["media"] = "selected_media_no_images"

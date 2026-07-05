@@ -12,7 +12,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 async def _assert_successful_configure(
     hass: HomeAssistant, previous_step: config_entries.ConfigFlowResult
-):
+) -> None:
     with (
         patch(
             "homeassistant.components.collection_image.async_setup_entry",
@@ -25,7 +25,7 @@ async def _assert_successful_configure(
                 identifier=None,
                 media_class="",
                 media_content_type="",
-                title="",
+                title="My pictures",
                 can_play=False,
                 can_expand=True,
                 children=[
@@ -44,7 +44,6 @@ async def _assert_successful_configure(
         result = await hass.config_entries.flow.async_configure(
             previous_step["flow_id"],
             {
-                "name": "Random Photo",
                 "media": {
                     "media_content_id": "media-source://mymedia",
                     "media_content_type": "",
@@ -53,9 +52,8 @@ async def _assert_successful_configure(
         )
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Random Photo"
+    assert result.get("title") == "My pictures collection"
     assert result.get("data") == {
-        "name": "Random Photo",
         "media": {
             "media_content_id": "media-source://mymedia",
             "media_content_type": "",
@@ -107,7 +105,6 @@ async def test_config_flow_with_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "name": "Random Photo",
                 "media": {
                     "media_content_id": "media-source://mymedia_empty",
                     "media_content_type": "",
@@ -144,7 +141,6 @@ async def test_config_flow_with_exception(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "name": "Random Photo",
                 "media": {
                     "media_content_id": "media-source://mymedia",
                     "media_content_type": "",
