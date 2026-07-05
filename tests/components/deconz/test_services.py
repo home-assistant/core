@@ -2,12 +2,12 @@
 
 from collections.abc import Callable
 from typing import Any
+from unittest.mock import AsyncMock, Mock
 
+from pydeconz.errors import RequestError
 import pytest
 import voluptuous as vol
 
-from pydeconz.errors import RequestError
-from unittest.mock import AsyncMock, Mock
 from homeassistant.components.deconz.const import (
     CONF_BRIDGE_ID,
     CONF_MASTER_GATEWAY,
@@ -417,16 +417,18 @@ async def test_remove_orphaned_entries_service(
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_configure_service_request_error(
     hass: HomeAssistant,
-    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test configure service handles API request errors."""
+    hub = config_entry_setup.runtime_data
+
+    hub.api.request = AsyncMock(side_effect=RequestError)
+
     data = {
         SERVICE_FIELD: "/lights/2",
         CONF_BRIDGE_ID: BRIDGE_ID,
         SERVICE_DATA: {"on": True},
     }
-
-    mock_put_request("/lights/2").exception = RequestError
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
@@ -460,4 +462,4 @@ async def test_service_refresh_devices_failure(
     assert exc_info.value.translation_key == "device_refresh_failed"
 
     assert hub.ignore_state_updates is False
-    hub.load_ignored_devices.assert_called_once()
+    hub.load_ignored_devices.assert_not_called()
