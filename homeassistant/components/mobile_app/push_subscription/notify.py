@@ -107,7 +107,7 @@ async def _send_subscription_push(
                     response.status,
                 )
     except TimeoutError, ClientError:
-        # Silent pushes are best-effort; the next state change retries.
+        #  Silent pushes are best-effort; the next state change retries.
         _LOGGER.debug(
             "Failed to send subscription push to %s", entry.title, exc_info=True
         )
