@@ -1,6 +1,7 @@
 """Helper base entities for integrations that consume RF transmitters."""
 
 import logging
+from typing import override
 
 from rf_protocols import RadioFrequencyCommand
 
@@ -88,6 +89,7 @@ class RadioFrequencyTransmitterConsumerEntity(Entity):
     _attr_should_poll = False
     _rf_transmitter_entity_id: str
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to RF entity state changes."""
         await super().async_added_to_hass()
