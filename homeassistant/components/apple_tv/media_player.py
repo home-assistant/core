@@ -119,7 +119,7 @@ def entity_ids_by_output_device_id(
 
     for config_entry in hass.config_entries.async_entries(DOMAIN):
         if (
-            config_entry.state == ConfigEntryState.LOADED
+            config_entry.state is ConfigEntryState.LOADED
             and config_entry.unique_id is not None
         ):
             entity_id = entity_registry.async_get_entity_id(
@@ -767,6 +767,7 @@ class AppleTvMediaPlayer(
             if app_id := self._app_list.get(source):
                 await self.atv.apps.launch_app(app_id)
 
+    @override
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
 
@@ -814,6 +815,7 @@ class AppleTvMediaPlayer(
                 },
             )
 
+    @override
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
         if (atv := self.atv) is None:
@@ -831,7 +833,7 @@ class AppleTvMediaPlayer(
             # player's group, so we need to find the leader and ask it to remove us.
             for config_entry in self.hass.config_entries.async_entries(DOMAIN):
                 if (
-                    config_entry.state == ConfigEntryState.LOADED
+                    config_entry.state is ConfigEntryState.LOADED
                     and (mgr := config_entry.runtime_data) is not None
                     and (leader_atv := mgr.atv) is not None
                     and output_device_id
