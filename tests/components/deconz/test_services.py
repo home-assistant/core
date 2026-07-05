@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from types import MappingProxyType
 from typing import Any
-from unittest.mock import Mock
 
 from pydeconz.errors import RequestError
 import pytest
