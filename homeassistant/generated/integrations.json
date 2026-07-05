@@ -7811,12 +7811,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "volvooncall": {
-      "name": "Volvo On Call",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "w800rf32": {
       "name": "WGL Designs W800RF32",
       "integration_type": "hub",
