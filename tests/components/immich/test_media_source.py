@@ -261,9 +261,8 @@ async def test_browse_media_collections_error(
     with patch("homeassistant.components.immich.PLATFORMS", []):
         await setup_integration(hass, mock_config_entry)
 
-    item = MediaSourceItem(
-        hass, DOMAIN, f"{mock_config_entry.unique_id}|{collection}", None
-    )
+    identifier = f"{mock_config_entry.unique_id}|{collection}"
+    item = MediaSourceItem(hass, DOMAIN, identifier, None)
     source = await async_get_media_source(hass)
 
     # test generic ImmichError
@@ -281,7 +280,7 @@ async def test_browse_media_collections_error(
     root_media_source = await source.async_browse_media(item)
 
     assert root_media_source
-    assert root_media_source.identifier is None
+    assert root_media_source.identifier == identifier
     assert len(root_media_source.children) == 0
 
     # test specific ImmichForbiddenError
@@ -321,10 +320,11 @@ async def test_browse_media_collection_items_error(
     with patch("homeassistant.components.immich.PLATFORMS", []):
         await setup_integration(hass, mock_config_entry)
 
+    identifier = f"{mock_config_entry.unique_id}|{collection}|721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"
     item = MediaSourceItem(
         hass,
         DOMAIN,
-        f"{mock_config_entry.unique_id}|{collection}|721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
+        identifier,
         None,
     )
     source = await async_get_media_source(hass)
@@ -344,7 +344,7 @@ async def test_browse_media_collection_items_error(
     root_media_source = await source.async_browse_media(item)
 
     assert root_media_source
-    assert root_media_source.identifier is None
+    assert root_media_source.identifier == identifier
     assert len(root_media_source.children) == 0
 
     # test specific ImmichForbiddenError

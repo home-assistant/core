@@ -140,7 +140,7 @@ class ImmichMediaSource(MediaSource):
 
         return BrowseMediaSource(
             domain=DOMAIN,
-            identifier=None,
+            identifier=item.identifier,
             media_class=MediaClass.DIRECTORY,
             media_content_type=MediaClass.IMAGE,
             title="Immich",
