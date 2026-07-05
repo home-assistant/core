@@ -24,7 +24,7 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import CONF_MEDIA, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Collection Image image entities."""
-    if media := entry.data.get("media"):
+    if media := entry.data.get(CONF_MEDIA):
         async_add_entities(
             [
                 CollectionImageImageEntity(
@@ -137,7 +137,7 @@ class CollectionImageImageEntity(ImageEntity):
     async def async_added_to_hass(self) -> None:
         """Initialize the first image after entity has been created."""
 
-        async def get_next_image_on_start(_event=None) -> None:
+        async def get_next_image_on_start(_hass: HomeAssistant) -> None:
             await self.get_next_image()
 
         self.async_on_remove(async_at_started(self.hass, get_next_image_on_start))
