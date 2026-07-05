@@ -188,7 +188,7 @@ async def test_assist_api(
     )
     assert str(tool) == "<IntentTool - test_intent>"
 
-    api = llm._async_get_apis(hass)["assist"]
+    api = next(api for api in llm.async_get_apis(hass) if api.id == "assist")
     instance = llm.APIInstance(
         api=api,
         api_prompt="",
