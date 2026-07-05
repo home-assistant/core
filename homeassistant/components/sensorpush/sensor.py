@@ -1,6 +1,6 @@
 """Support for sensorpush ble sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from sensorpush_ble import DeviceClass, DeviceKey, SensorUpdate, Units
 
@@ -121,6 +121,7 @@ class SensorPushBluetoothSensorEntity(
     """Representation of a sensorpush ble sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

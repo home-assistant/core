@@ -1,8 +1,6 @@
 """Config flow to configure the AdGuard Home integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 import voluptuous as vol
@@ -59,6 +57,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -104,6 +103,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:

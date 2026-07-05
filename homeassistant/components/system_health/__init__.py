@@ -1,7 +1,5 @@
 """Support for System health ."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Awaitable, Callable
 import dataclasses
@@ -14,12 +12,11 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import (
-    aiohttp_client,
-    config_validation as cv,
-    integration_platform,
-)
+from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.frame import ReportBehavior, report_usage
+from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +25,12 @@ DOMAIN = "system_health"
 INFO_CALLBACK_TIMEOUT = 5
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+# Lazily loaded system health platforms. hass.data[DOMAIN] holds registrations
+# from the deprecated async_register_info path.
+DATA_SYSTEM_HEALTH_PLATFORMS: HassKey[
+    LazyIntegrationPlatforms[SystemHealthRegistration]
+] = HassKey("system_health_platforms")
 
 
 class SystemHealthProtocol(Protocol):
@@ -49,32 +52,38 @@ def async_register_info(
 
     Deprecated.
     """
-    _LOGGER.warning(
-        "Calling system_health.async_register_info is deprecated; Add a system_health"
-        " platform instead"
+    report_usage(
+        "calls system_health.async_register_info, which is deprecated; "
+        "add a system_health platform instead",
+        breaks_in_ha_version="2027.1",
+        core_behavior=ReportBehavior.LOG,
+        exclude_integrations={DOMAIN},
     )
-    hass.data.setdefault(DOMAIN, {})
-    SystemHealthRegistration(hass, domain).async_register_info(info_callback)
+    registrations = hass.data.setdefault(DOMAIN, {})
+    registration = SystemHealthRegistration(hass, domain)
+    registration.async_register_info(info_callback)
+    registrations[domain] = registration
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the System Health component."""
     websocket_api.async_register_command(hass, handle_info)
     hass.data.setdefault(DOMAIN, {})
-
-    await integration_platform.async_process_integration_platforms(
-        hass, DOMAIN, _register_system_health_platform
+    hass.data[DATA_SYSTEM_HEALTH_PLATFORMS] = LazyIntegrationPlatforms(
+        hass, DOMAIN, _process_system_health_platform
     )
 
     return True
 
 
 @callback
-def _register_system_health_platform(
+def _process_system_health_platform(
     hass: HomeAssistant, integration_domain: str, platform: SystemHealthProtocol
-) -> None:
-    """Register a system health platform."""
-    platform.async_register(hass, SystemHealthRegistration(hass, integration_domain))
+) -> SystemHealthRegistration:
+    """Process a system health platform."""
+    registration = SystemHealthRegistration(hass, integration_domain)
+    platform.async_register(hass, registration)
+    return registration
 
 
 async def get_integration_info(
@@ -102,7 +111,14 @@ async def get_integration_info(
 async def _registered_domain_data(
     hass: HomeAssistant,
 ) -> AsyncGenerator[tuple[str, dict[str, Any]]]:
-    registrations: dict[str, SystemHealthRegistration] = hass.data[DOMAIN]
+    platform_registrations = await hass.data[
+        DATA_SYSTEM_HEALTH_PLATFORMS
+    ].async_get_platforms()
+    # hass.data[DOMAIN] holds registrations from the deprecated direct path.
+    # Sort so the reported order is deterministic regardless of load order.
+    registrations: dict[str, SystemHealthRegistration] = dict(
+        sorted({**hass.data[DOMAIN], **platform_registrations}.items())
+    )
     for domain, domain_data in zip(
         registrations,
         await asyncio.gather(
@@ -264,7 +280,6 @@ class SystemHealthRegistration:
         """Register an info callback."""
         self.info_callback = info_callback
         self.manage_url = manage_url
-        self.hass.data[DOMAIN][self.domain] = self
 
 
 async def async_check_can_reach_url(

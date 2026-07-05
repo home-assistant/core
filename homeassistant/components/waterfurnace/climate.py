@@ -1,8 +1,6 @@
 """Support for WaterFurnace climate entity."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from waterfurnace.waterfurnace import WFException
 
@@ -98,6 +96,7 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
         self._attr_unique_id = coordinator.unit
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature based on current mode."""
         if self.hvac_mode == HVACMode.COOL:
@@ -105,6 +104,7 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
         return HEATING_MIN
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature based on current mode."""
         if self.hvac_mode == HVACMode.HEAT:
@@ -112,26 +112,31 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
         return COOLING_MAX
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current room temperature."""
         return self.coordinator.data.tstatroomtemp
 
     @property
+    @override
     def current_humidity(self) -> float | None:
         """Return the current humidity."""
         return self.coordinator.data.tstatrelativehumidity
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode."""
         return ACTIVE_MODE_TO_HVAC.get(self.coordinator.data.activesettings.mode)
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current HVAC action."""
         return FURNACE_MODE_TO_ACTION.get(self.coordinator.data.mode)
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the target temperature (single setpoint modes)."""
         if self.hvac_mode == HVACMode.COOL:
@@ -141,6 +146,7 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature_high(self) -> float | None:
         """Return the upper bound target temperature (Heat/Cool mode)."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
@@ -148,6 +154,7 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature_low(self) -> float | None:
         """Return the lower bound target temperature (Heat/Cool mode)."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
@@ -155,10 +162,12 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def target_humidity(self) -> float | None:
         """Return the target humidity."""
         return self.coordinator.data.tstathumidsetpoint
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
         try:
@@ -168,6 +177,7 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
         except (WFException, ValueError) as err:
             raise HomeAssistantError(f"Failed to set HVAC mode: {err}") from err
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature(s)."""
         if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
@@ -202,6 +212,7 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
             else:
                 client.set_heating_setpoint(temp)
 
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set the target humidity."""
         try:

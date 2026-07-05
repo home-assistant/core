@@ -1,9 +1,7 @@
 """MediaPlayer platform for SlimProto Player integration."""
 
-from __future__ import annotations
-
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from aioslimproto.client import PlayerState, SlimClient
 from aioslimproto.models import EventType, SlimEvent
@@ -112,6 +110,7 @@ class SlimProtoPlayer(MediaPlayerEntity):
             )
         self.update_attributes()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.update_attributes()
@@ -130,11 +129,13 @@ class SlimProtoPlayer(MediaPlayerEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return availability of entity."""
         return self.player.connected
 
     @property
+    @override
     def state(self) -> MediaPlayerState:
         """Return current state."""
         if not self.player.powered:
@@ -164,35 +165,43 @@ class SlimProtoPlayer(MediaPlayerEntity):
             self._attr_media_image_url = None
         self._attr_media_content_type = "music"
 
+    @override
     async def async_media_play(self) -> None:
         """Send play command to device."""
         await self.player.play()
 
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command to device."""
         await self.player.pause()
 
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command to device."""
         await self.player.stop()
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Send new volume_level to device."""
         volume = round(volume * 100)
         await self.player.volume_set(volume)
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         await self.player.mute(mute)
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn on device."""
         await self.player.power(True)
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off device."""
         await self.player.power(False)
 
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -212,6 +221,7 @@ class SlimProtoPlayer(MediaPlayerEntity):
 
         await self.player.play_url(media_id, mime_type=to_send_media_type)
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,

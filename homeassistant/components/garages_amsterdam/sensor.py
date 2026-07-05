@@ -1,9 +1,8 @@
 """Sensor platform for Garages Amsterdam."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from odp_amsterdam import Garage
 
@@ -93,6 +92,7 @@ class GaragesAmsterdamSensor(GaragesAmsterdamEntity, SensorEntity):
         self._attr_unique_id = f"{garage_name}-{description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if sensor is available."""
         return self.coordinator.last_update_success and (
@@ -100,6 +100,7 @@ class GaragesAmsterdamSensor(GaragesAmsterdamEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(

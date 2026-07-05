@@ -1,6 +1,6 @@
 """Support for Lutron Caseta scenes."""
 
-from typing import Any
+from typing import Any, override
 
 from pylutron_caseta.smartbridge import Smartbridge
 
@@ -42,8 +42,9 @@ class LutronCasetaScene(Scene):
             identifiers={(DOMAIN, data.bridge_device["serial"])},
         )
         self._attr_name = scene["name"]
-        self._attr_unique_id = f"scene_{bridge_unique_id}_{self._scene_id}"
+        self._attr_unique_id = f"scene_{bridge_unique_id}_{self._scene_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         await self._bridge.activate_scene(self._scene_id)

@@ -1,10 +1,9 @@
 """DataUpdateCoordinator for Qube Heat Pump."""
 
-from __future__ import annotations
-
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from python_qube_heatpump import QubeClient
 from python_qube_heatpump.models import QubeState
@@ -20,7 +19,16 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-class QubeCoordinator(DataUpdateCoordinator[QubeState]):
+@dataclass
+class QubeData:
+    """Data from the Qube coordinator."""
+
+    state: QubeState
+    switches: dict[str, bool | None]
+    sg_ready_mode: str | None
+
+
+class QubeCoordinator(DataUpdateCoordinator[QubeData]):
     """Qube Heat Pump data coordinator."""
 
     def __init__(
@@ -36,16 +44,19 @@ class QubeCoordinator(DataUpdateCoordinator[QubeState]):
             config_entry=entry,
         )
 
-    async def _async_update_data(self) -> QubeState:
+    @override
+    async def _async_update_data(self) -> QubeData:
         """Fetch data from the device."""
         try:
-            data = await self.client.get_all_data()
+            state = await self.client.get_all_data()
+            switches = await self.client.read_all_switches()
+            sg_ready_mode = await self.client.get_sg_ready_mode()
         except (ConnectionError, TimeoutError, OSError) as exc:
             raise UpdateFailed(
                 f"Error communicating with Qube heat pump: {exc}"
             ) from exc
 
-        if data is None:
+        if state is None:
             raise UpdateFailed("No data received from Qube heat pump")
 
-        return data
+        return QubeData(state=state, switches=switches, sg_ready_mode=sg_ready_mode)

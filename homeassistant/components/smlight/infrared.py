@@ -1,11 +1,11 @@
 """Infrared platform for SLZB-Ultima."""
 
-from __future__ import annotations
+from typing import override
 
 from pysmlight.exceptions import SmlightError
 from pysmlight.models import IRPayload
 
-from homeassistant.components.infrared import InfraredCommand, InfraredEntity
+from homeassistant.components.infrared import InfraredCommand, InfraredEmitterEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -29,16 +29,17 @@ async def async_setup_entry(
         async_add_entities([SmInfraredEntity(coordinator)])
 
 
-class SmInfraredEntity(SmEntity, InfraredEntity):
-    """Representation of a SLZB-Ultima infrared."""
+class SmInfraredEntity(SmEntity, InfraredEmitterEntity):
+    """Representation of a SLZB-Ultima infrared emitter."""
 
     _attr_translation_key = "infrared_emitter"
 
     def __init__(self, coordinator: SmDataUpdateCoordinator) -> None:
         """Initialize the SLZB-Ultima infrared."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.unique_id}-infrared-emitter"
+        self._attr_unique_id = f"{coordinator.unique_id}-infrared-emitter"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
+    @override
     async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command."""
         # pysmlight's IRPayload.from_raw_timings expects positive durations,

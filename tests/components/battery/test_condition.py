@@ -9,6 +9,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_OFF,
     STATE_ON,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 
@@ -16,7 +17,6 @@ from tests.components.common import (
     ConditionStateDescription,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
     assert_condition_options_supported,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
@@ -32,33 +32,22 @@ _BATTERY_UNIT_ATTRS = {ATTR_UNIT_OF_MEASUREMENT: "%"}
 @pytest.fixture
 async def target_binary_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple binary sensor entities associated with different targets."""
-    return await target_entities(hass, "binary_sensor")
+    return await target_entities(
+        hass, "binary_sensor", entity_category=EntityCategory.DIAGNOSTIC
+    )
 
 
 @pytest.fixture
 async def target_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple sensor entities associated with different targets."""
-    return await target_entities(hass, "sensor")
+    return await target_entities(
+        hass, "sensor", entity_category=EntityCategory.DIAGNOSTIC
+    )
 
 
-@pytest.mark.parametrize(
-    "condition",
-    [
-        "battery.is_low",
-        "battery.is_not_low",
-        "battery.is_charging",
-        "battery.is_not_charging",
-        "battery.is_level",
-    ],
-)
-async def test_battery_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Test the battery conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
+_LEVEL_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -66,6 +55,7 @@ async def test_battery_conditions_gated_by_labs_flag(
         ("battery.is_not_low", {}, True, True),
         ("battery.is_charging", {}, True, True),
         ("battery.is_not_charging", {}, True, True),
+        ("battery.is_level", _LEVEL_THRESHOLD, True, True),
     ],
 )
 async def test_battery_condition_options_validation(
@@ -85,7 +75,6 @@ async def test_battery_condition_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -142,7 +131,6 @@ async def test_battery_binary_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -199,7 +187,6 @@ async def test_battery_binary_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -235,7 +222,6 @@ async def test_battery_is_level_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),

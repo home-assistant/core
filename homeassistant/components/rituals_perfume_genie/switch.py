@@ -1,10 +1,8 @@
 """Support for Rituals Perfume Genie switches."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pyrituals import Diffuser
 
@@ -68,12 +66,14 @@ class RitualsSwitchEntity(DiffuserEntity, SwitchEntity):
         super().__init__(coordinator, description)
         self._attr_is_on = description.is_on_fn(coordinator.diffuser)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.entity_description.turn_on_fn(self.coordinator.diffuser)
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.entity_description.turn_off_fn(self.coordinator.diffuser)
@@ -81,6 +81,7 @@ class RitualsSwitchEntity(DiffuserEntity, SwitchEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_is_on = self.entity_description.is_on_fn(self.coordinator.diffuser)

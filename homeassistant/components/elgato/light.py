@@ -1,8 +1,6 @@
 """Support for Elgato lights."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -60,11 +58,13 @@ class ElgatoLight(ElgatoEntity, LightEntity):
             self._attr_max_color_temp_kelvin = 6500  # 153 Mireds
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 1..255."""
         return round((self.coordinator.data.state.brightness * 255) / 100)
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
         if (mired_temperature := self.coordinator.data.state.temperature) is None:
@@ -72,6 +72,7 @@ class ElgatoLight(ElgatoEntity, LightEntity):
         return color_util.color_temperature_mired_to_kelvin(mired_temperature)
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self.coordinator.data.state.hue is not None:
@@ -80,6 +81,7 @@ class ElgatoLight(ElgatoEntity, LightEntity):
         return ColorMode.COLOR_TEMP
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         return (
@@ -88,17 +90,20 @@ class ElgatoLight(ElgatoEntity, LightEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the light."""
         return self.coordinator.data.state.on
 
     @elgato_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self.coordinator.client.light(on=False)
         await self.coordinator.async_request_refresh()
 
     @elgato_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         temperature_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)

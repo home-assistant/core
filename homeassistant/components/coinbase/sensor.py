@@ -1,8 +1,7 @@
 """Support for Coinbase sensors."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.core import HomeAssistant
@@ -130,7 +129,7 @@ class AccountSensor(SensorEntity):
                 continue
             self._attr_name = f"Coinbase {account[API_ACCOUNT_NAME]}"
             self._attr_unique_id = (
-                f"coinbase-{account[API_ACCOUNT_ID]}-wallet-"
+                f"coinbase-{account[API_ACCOUNT_ID]}-wallet-"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
                 f"{account[API_ACCOUNT_CURRENCY]}"
             )
             self._attr_native_value = account[API_ACCOUNT_AMOUNT]
@@ -156,10 +155,13 @@ class AccountSensor(SensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes of the sensor."""
         return {
-            ATTR_NATIVE_BALANCE: f"{self._native_balance} {self._coinbase_data.exchange_base}",
+            ATTR_NATIVE_BALANCE: (
+                f"{self._native_balance} {self._coinbase_data.exchange_base}"
+            ),
         }
 
     def update(self) -> None:
@@ -201,7 +203,7 @@ class ExchangeRateSensor(SensorEntity):
         self._currency = exchange_currency
         self._attr_name = f"{exchange_currency} Exchange Rate"
         self._attr_unique_id = (
-            f"coinbase-{coinbase_data.user_id}-xe-{exchange_currency}"
+            f"coinbase-{coinbase_data.user_id}-xe-{exchange_currency}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )
         self._precision = precision
         self._attr_icon = CURRENCY_ICONS.get(exchange_currency, DEFAULT_COIN_ICON)

@@ -1,14 +1,12 @@
 """Config flow for Apple TV integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import deque
 from collections.abc import Awaitable, Callable, Mapping
 from ipaddress import ip_address
 import logging
 from random import randrange
-from typing import Any, Self
+from typing import Any, Self, override
 
 from pyatv import exceptions, pair, scan
 from pyatv.const import DeviceModel, PairingRequirement, Protocol
@@ -116,6 +114,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> SchemaOptionsFlowHandler:
@@ -181,6 +180,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="restore_device")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -211,6 +211,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -295,6 +296,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.hass.config_entries.flow.async_has_matching_flow(self):
             raise AbortFlow("already_in_progress")
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         if (
@@ -362,7 +364,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
             "name": self.atv.name,
             "type": (
                 dev_info.raw_model
-                if dev_info.model == DeviceModel.Unknown and dev_info.raw_model
+                if dev_info.model is DeviceModel.Unknown and dev_info.raw_model
                 else model_str(dev_info.model)
             ),
         }
@@ -449,12 +451,12 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_password()
 
         # Figure out, depending on protocol, what kind of pairing is needed
-        if service.pairing == PairingRequirement.Unsupported:
+        if service.pairing is PairingRequirement.Unsupported:
             _LOGGER.debug("%s does not support pairing", self.protocol)
             return await self.async_pair_next_protocol()
-        if service.pairing == PairingRequirement.Disabled:
+        if service.pairing is PairingRequirement.Disabled:
             return await self.async_step_protocol_disabled()
-        if service.pairing == PairingRequirement.NotNeeded:
+        if service.pairing is PairingRequirement.NotNeeded:
             _LOGGER.debug("%s does not require pairing", self.protocol)
             self.credentials[self.protocol.value] = None
             return await self.async_pair_next_protocol()
@@ -465,7 +467,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         pair_args: dict[str, Any] = {}
         if self.protocol in {Protocol.AirPlay, Protocol.Companion, Protocol.DMAP}:
             pair_args["name"] = "Home Assistant"
-        if self.protocol == Protocol.DMAP:
+        if self.protocol is Protocol.DMAP:
             pair_args["zeroconf"] = await zeroconf.async_get_instance(self.hass)
 
         # Initiate the pairing process

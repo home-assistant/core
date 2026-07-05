@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .conftest import TEST_DEVICE_1, TEST_DEVICE_1_SN
+from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -162,3 +162,69 @@ async def test_offline_device(
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state != STATE_UNAVAILABLE
+
+
+async def test_switch_communication(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test switching Communication."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "switch.echo_test_communications"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert mock_amazon_devices_client.set_communication_status.call_count == 1
+
+    device_data = deepcopy(TEST_DEVICE_1)
+    device_data.communication_settings = {
+        "announcements": "ON",
+        "communications": "OFF",
+        "dropin": "All",
+    }
+
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_1_SN: device_data
+    }
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    device_data.communication_settings = {
+        "announcements": "ON",
+        "communications": "ON",
+        "dropin": "All",
+    }
+
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_1_SN: device_data
+    }
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_amazon_devices_client.set_communication_status.call_count == 2
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON

@@ -1,10 +1,9 @@
 """Provides tag scanning for MQTT."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import functools
 import logging
+from typing import override
 
 import voluptuous as vol
 
@@ -127,6 +126,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
             self, hass, discovery_data, device_id, config_entry, LOG_NAME
         )
 
+    @override
     async def async_update(self, discovery_data: MQTTDiscoveryPayload) -> None:
         """Handle MQTT tag discovery updates."""
         # Update tag scanner
@@ -173,6 +173,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
         )
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
+    @override
     async def async_tear_down(self) -> None:
         """Cleanup tag scanner."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]

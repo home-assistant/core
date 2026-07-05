@@ -1,11 +1,10 @@
 """Update coordinators for Yardian."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 import datetime
 import logging
+from typing import override
 
 from pyyardian import AsyncYardianClient, NetworkException, NotAuthorizedException
 from pyyardian.typing import OperationInfo
@@ -81,6 +80,7 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
             serial_number=self._serial,
         )
 
+    @override
     async def _async_update_data(self) -> YardianCoordinatorData:
         """Fetch data from Yardian device."""
         _LOGGER.debug(

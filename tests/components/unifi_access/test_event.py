@@ -1,7 +1,5 @@
 """Tests for the UniFi Access event platform."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Generator
 from unittest.mock import MagicMock, patch
 
@@ -819,7 +817,7 @@ async def test_remote_view_doorbell_ring_by_door_name_fallback(
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test access.remote_view falls back to door_name lookup when device_id is unmapped."""
+    """Test remote_view falls back to door_name when device_id is unmapped."""
     handlers = _get_ws_handlers(mock_client)
 
     remote_view_msg = RemoteView(
@@ -840,7 +838,7 @@ async def test_remote_view_unknown_device_and_door_ignored(
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test access.remote_view is ignored when both device_id and door_name are unknown."""
+    """Test remote_view is ignored when device_id and door_name are unknown."""
     handlers = _get_ws_handlers(mock_client)
 
     remote_view_msg = RemoteView(
@@ -861,7 +859,7 @@ async def test_remote_view_device_mapping_via_device_update(
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test access.remote_view resolves device_id populated by access.data.device.update."""
+    """Test remote_view resolves device_id populated by data.device.update."""
     handlers = _get_ws_handlers(mock_client)
 
     device_update_msg = DeviceUpdate(
@@ -893,7 +891,7 @@ async def test_remote_view_device_mapping_via_v2_device_update(
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test access.remote_view resolves device_id populated by access.data.v2.device.update."""
+    """Test remote_view resolves device_id from data.v2.device.update."""
     handlers = _get_ws_handlers(mock_client)
 
     v2_device_update_msg = V2DeviceUpdate(
@@ -1166,7 +1164,7 @@ async def test_logs_add_no_device_and_no_enriched_door_id_ignored(
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test logs.add event is ignored when neither device mapping nor door_id resolves."""
+    """Test logs.add is ignored when neither device mapping nor door_id resolves."""
     handlers = _get_ws_handlers(mock_client)
 
     log_msg = LogAdd(
@@ -1230,7 +1228,7 @@ async def test_logs_add_direction(
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test direction attribute is included in access event from logs.add when present."""
+    """Test direction attribute is included in event from logs.add."""
     handlers = _get_ws_handlers(mock_client)
     await _populate_device_mapping(handlers)
 

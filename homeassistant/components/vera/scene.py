@@ -1,8 +1,6 @@
 """Support for Vera scenes."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import pyvera as veraApi
 
@@ -47,11 +45,13 @@ class VeraScene(Scene):
         """Update the scene status."""
         self.vera_scene.refresh()
 
+    @override
     def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         self.vera_scene.activate()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the scene."""
         return {"vera_scene_id": self.vera_scene.vera_scene_id}

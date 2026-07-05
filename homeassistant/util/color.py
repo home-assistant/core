@@ -1,7 +1,5 @@
 """Color util methods."""
 
-from __future__ import annotations
-
 import colorsys
 import math
 from typing import NamedTuple
@@ -410,7 +408,7 @@ def match_max_scale(
         factor = 0.0
     else:
         factor = max_in / max_out
-    return tuple(int(round(i * factor)) for i in output_colors)
+    return tuple(round(i * factor) for i in output_colors)
 
 
 def color_rgb_to_rgbw(r: int, g: int, b: int) -> tuple[int, int, int, int]:
@@ -490,8 +488,8 @@ def color_rgbww_to_rgb(
 
 
 def color_rgb_to_hex(r: int, g: int, b: int) -> str:
-    """Return a RGB color from a hex color string."""
-    return f"{round(r):02x}{round(g):02x}{round(b):02x}"
+    """Return a hex color string from RGB integer values."""
+    return f"{r:02x}{g:02x}{b:02x}"
 
 
 def rgb_hex_to_rgb_list(hex_string: str) -> list[int]:

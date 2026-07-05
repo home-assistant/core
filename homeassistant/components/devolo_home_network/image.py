@@ -1,10 +1,9 @@
 """Platform for image integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
+from typing import override
 
 from devolo_plc_api import wifi_qr_code
 from devolo_plc_api.device_api import WifiGuestAccessGet
@@ -76,6 +75,7 @@ class DevoloImageEntity(DevoloCoordinatorEntity[WifiGuestAccessGet], ImageEntity
         self._data = self.coordinator.data
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if (
@@ -86,6 +86,7 @@ class DevoloImageEntity(DevoloCoordinatorEntity[WifiGuestAccessGet], ImageEntity
             self._attr_image_last_updated = dt_util.utcnow()
         super()._handle_coordinator_update()
 
+    @override
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
         return self.entity_description.image_func(self.coordinator.data)

@@ -1,6 +1,6 @@
 """The output limit which can be set in the APsystems local API integration."""
 
-from __future__ import annotations
+from typing import override
 
 from aiohttp import ClientConnectorError
 
@@ -55,6 +55,7 @@ class ApSystemsMaxOutputNumber(ApSystemsEntity, NumberEntity):
             self._attr_available = True
             self._attr_native_value = status
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the desired output power."""
         self._attr_native_value = await self._api.set_max_power(int(value))

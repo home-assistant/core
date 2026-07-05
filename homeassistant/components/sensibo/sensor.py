@@ -1,11 +1,9 @@
 """Sensor platform for Sensibo integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pysensibo.model import MotionSensor, PureAQI, SensiboDevice
 
@@ -16,13 +14,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfDensity,
     UnitOfElectricPotential,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -89,7 +85,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
     SensiboMotionSensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.humidity,
     ),
@@ -183,7 +179,7 @@ AIRQ_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     SensiboDeviceSensorEntityDescription(
         key="airq_tvoc",
         translation_key="airq_tvoc",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.tvoc,
         extra_fn=None,
@@ -192,7 +188,7 @@ AIRQ_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         key="airq_co2",
         translation_key="airq_co2",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.co2,
         extra_fn=None,
@@ -204,7 +200,7 @@ ELEMENT_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     SensiboDeviceSensorEntityDescription(
         key="pm25",
         device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.pm25,
         extra_fn=None,
@@ -212,7 +208,7 @@ ELEMENT_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     SensiboDeviceSensorEntityDescription(
         key="tvoc",
         translation_key="tvoc",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.tvoc,
         extra_fn=None,
@@ -220,14 +216,14 @@ ELEMENT_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     SensiboDeviceSensorEntityDescription(
         key="co2",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.co2,
         extra_fn=None,
     ),
     SensiboDeviceSensorEntityDescription(
         key="ethanol",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="ethanol",
         value_fn=lambda data: data.etoh,
@@ -317,6 +313,7 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
         self._attr_unique_id = f"{sensor_id}-{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         if TYPE_CHECKING:
@@ -344,11 +341,13 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return value of sensor."""
         return self.entity_description.value_fn(self.device_data)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional attributes."""
         if self.entity_description.extra_fn is not None:

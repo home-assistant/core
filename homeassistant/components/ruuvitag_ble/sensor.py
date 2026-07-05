@@ -1,6 +1,6 @@
 """Support for RuuviTag sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from sensor_state_data import (
     DeviceKey,
@@ -199,7 +199,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Ruuvi BLE sensors."""
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
@@ -209,7 +209,9 @@ async def async_setup_entry(
             RuuvitagBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class RuuvitagBluetoothSensorEntity(
@@ -221,6 +223,7 @@ class RuuvitagBluetoothSensorEntity(
     """Representation of a Ruuvi BLE sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
