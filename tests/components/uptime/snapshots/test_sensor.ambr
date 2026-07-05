@@ -2,8 +2,8 @@
 # name: test_uptime_sensor
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Uptime',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Uptime',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.uptime',
@@ -38,7 +38,7 @@
     'object_id_base': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': None,
     'platform': 'uptime',

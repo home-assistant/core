@@ -2,16 +2,16 @@
 
 from copy import deepcopy
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components.rest import create_rest_data_from_config
-from homeassistant.components.rest.data import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.rest.data import (  # pylint: disable=home-assistant-component-root-import
     DEFAULT_TIMEOUT,
 )
-from homeassistant.components.rest.schema import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.rest.schema import (  # pylint: disable=home-assistant-component-root-import
     DEFAULT_METHOD,
     METHODS,
 )
@@ -69,7 +69,7 @@ from homeassistant.helpers.trigger_template_entity import CONF_AVAILABILITY
 
 from . import COMBINED_SCHEMA
 from .const import (
-    CONF_ADVANCED,
+    CONF_ADDITIONAL,
     CONF_AUTH,
     CONF_ENCODING,
     CONF_INDEX,
@@ -118,7 +118,7 @@ RESOURCE_SETUP = vol.Schema(
             ),
             data_entry_flow.SectionConfig(collapsed=True),
         ),
-        vol.Required(CONF_ADVANCED): data_entry_flow.section(
+        vol.Required(CONF_ADDITIONAL): data_entry_flow.section(
             vol.Schema(
                 {
                     vol.Optional(CONF_HEADERS): ObjectSelector(),
@@ -147,7 +147,7 @@ SENSOR_SETTINGS = vol.Schema(
             ),
             vol.Coerce(int),
         ),
-        vol.Required(CONF_ADVANCED): data_entry_flow.section(
+        vol.Required(CONF_ADDITIONAL): data_entry_flow.section(
             vol.Schema(
                 {
                     vol.Optional(CONF_ATTRIBUTE): TextSelector(),
@@ -189,6 +189,8 @@ SENSOR_SETTINGS = vol.Schema(
     }
 )
 SENSOR_SETUP = vol.Schema(
+    # Name field is no longer allowed in config flow schemas
+    # pylint: disable-next=home-assistant-config-flow-name-field
     {vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector()}
 ).extend(SENSOR_SETTINGS.schema)
 
@@ -198,7 +200,7 @@ async def validate_rest_setup(
 ) -> dict[str, Any]:
     """Validate rest setup."""
     config = deepcopy(user_input)
-    config.update(config.pop(CONF_ADVANCED, {}))
+    config.update(config.pop(CONF_ADDITIONAL, {}))
     config.update(config.pop(CONF_AUTH, {}))
     rest_config: dict[str, Any] = COMBINED_SCHEMA(config)
     try:
@@ -215,22 +217,25 @@ async def validate_rest_setup(
 class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Scrape configuration flow."""
 
-    VERSION = 2
+    VERSION = 3
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> ScrapeOptionFlow:
         """Get the options flow for this handler."""
         return ScrapeOptionFlow()
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {"entity": ScrapeSubentryFlowHandler}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -250,6 +255,7 @@ class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
         """Start subentry flow after creating main entry."""
         subentry_result = await self.hass.config_entries.subentries.async_init(

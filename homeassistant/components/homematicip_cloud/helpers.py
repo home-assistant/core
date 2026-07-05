@@ -44,7 +44,9 @@ def handle_errors[_HomematicipGenericEntityT: HomematicipGenericEntity, **_P](
                 json.dumps(result),
             )
             raise HomeAssistantError(
-                f"Error while execute function {func.__name__}: {result.get('errorCode')}. See log for more information."
+                f"Error while execute function {func.__name__}:"
+                f" {result.get('errorCode')}."
+                " See log for more information."
             )
 
     return inner

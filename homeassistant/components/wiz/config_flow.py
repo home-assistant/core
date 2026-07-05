@@ -1,7 +1,7 @@
 """Config flow for WiZ Platform."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pywizlight import wizlight
 from pywizlight.discovery import DiscoveredBulb
@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.util.network import is_ip_address
@@ -20,8 +20,6 @@ from .discovery import async_discover_devices
 from .utils import _short_mac, name_from_bulb_type_and_mac
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_DEVICE = "device"
 
 
 class WizConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -36,6 +34,7 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_devices: dict[str, DiscoveredBulb] = {}
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -45,6 +44,7 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await self._async_handle_discovery()
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: dict[str, str]
     ) -> ConfigFlowResult:
@@ -79,6 +79,8 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
                 exc_info=True,
             )
             raise AbortFlow("cannot_connect") from ex
+        finally:
+            await bulb.async_close()
         self._name = name_from_bulb_type_and_mac(bulbtype, device.mac_address)
 
     async def async_step_discovery_confirm(
@@ -116,6 +118,8 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
                 bulbtype = await bulb.get_bulbtype()
             except WIZ_CONNECT_EXCEPTIONS:
                 return self.async_abort(reason="cannot_connect")
+            finally:
+                await bulb.async_close()
 
             return self.async_create_entry(
                 title=name_from_bulb_type_and_mac(bulbtype, device.mac_address),
@@ -146,6 +150,7 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -180,6 +185,8 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
                         title=name,
                         data=user_input,
                     )
+                finally:
+                    await bulb.async_close()
 
         return self.async_show_form(
             step_id="user",

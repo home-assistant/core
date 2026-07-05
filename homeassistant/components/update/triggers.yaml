@@ -5,7 +5,7 @@
   fields:
     behavior:
       required: true
-      default: any
+      default: each
       selector:
         automation_behavior:
           mode: trigger
@@ -15,4 +15,4 @@
       selector:
         duration:
 
-update_became_available: *trigger_common
+became_available: *trigger_common

@@ -1,6 +1,6 @@
 """Support for KNX switch entities."""
 
-from typing import Any
+from typing import Any, override
 
 from xknx.devices import Switch as XknxSwitch
 
@@ -75,6 +75,7 @@ class _KnxSwitch(SwitchEntity, RestoreEntity):
 
     _device: XknxSwitch
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
@@ -85,14 +86,17 @@ class _KnxSwitch(SwitchEntity, RestoreEntity):
                 self._device.switch.value = last_state.state == STATE_ON
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return bool(self._device.state)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._device.set_on()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._device.set_off()

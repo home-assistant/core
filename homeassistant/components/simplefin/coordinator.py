@@ -1,7 +1,7 @@
 """Data update coordinator for the SimpleFIN integration."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from simplefin4py import FinancialData, SimpleFin
 from simplefin4py.exceptions import SimpleFinAuthError, SimpleFinPaymentRequiredError
@@ -34,6 +34,7 @@ class SimpleFinDataUpdateCoordinator(DataUpdateCoordinator[FinancialData]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> Any:
         """Fetch data for all accounts."""
         try:
@@ -43,6 +44,8 @@ class SimpleFinDataUpdateCoordinator(DataUpdateCoordinator[FinancialData]):
 
         except SimpleFinPaymentRequiredError as err:
             LOGGER.warning(
-                "There is a billing issue with your SimpleFin account, contact Simplefin to address this issue"
+                "There is a billing issue with your SimpleFin"
+                " account, contact SimpleFin to address"
+                " this issue"
             )
             raise UpdateFailed from err

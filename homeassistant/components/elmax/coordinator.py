@@ -3,6 +3,7 @@
 from asyncio import timeout
 from datetime import timedelta
 import logging
+from typing import override
 
 from elmax_api.exceptions import (
     ElmaxApiError,
@@ -96,6 +97,7 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
         """Set the client library instance for Elmax API."""
         self._client = client
 
+    @override
     async def _async_update_data(self):
         try:
             async with timeout(DEFAULT_TIMEOUT):
@@ -130,7 +132,8 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
         # Store a dictionary for fast endpoint state access
         self._state_by_endpoint = {k.endpoint_id: k for k in status.all_endpoints}
 
-        # If panel supports it and a it hasn't been registered yet, register the push notification handler
+        # If panel supports it and it hasn't been registered yet,
+        # register the push notification handler
         if status.push_feature and self._push_notification_handler is None:
             self._register_push_notification_handler()
 
@@ -162,6 +165,7 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
     async def _push_handler(self, status: PanelStatus) -> None:
         self._fire_data_update(status)
 
+    @override
     async def async_shutdown(self) -> None:
         """Cancel any scheduled call, and ignore new runs."""
         if self._push_notification_handler is not None:

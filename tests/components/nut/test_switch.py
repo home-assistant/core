@@ -50,7 +50,7 @@ async def test_switch_ups(
         list_commands_return_value=list_commands_return_value,
     )
 
-    switch = hass.states.get("switch.ups1_power_outlet_1")
+    switch = hass.states.get("switch.device_location_ups1_power_outlet_1")
     assert not switch
 
 
@@ -95,7 +95,7 @@ async def test_switch_pdu_dynamic_outlets(
         run_command=run_command,
     )
 
-    entity_id = "switch.ups1_power_outlet_a1"
+    entity_id = "switch.device_location_ups1_power_outlet_a1"
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == f"{unique_id_base}_outlet.1.load.poweronoff"
@@ -122,10 +122,10 @@ async def test_switch_pdu_dynamic_outlets(
 
     run_command.assert_called_with("ups1", "outlet.1.load.on")
 
-    switch = hass.states.get("switch.ups1_power_outlet_25")
+    switch = hass.states.get("switch.device_location_ups1_power_outlet_25")
     assert not switch
 
-    switch = hass.states.get("switch.ups1_power_outlet_a25")
+    switch = hass.states.get("switch.device_location_ups1_power_outlet_a25")
     assert not switch
 
 

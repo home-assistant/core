@@ -2,7 +2,7 @@
 
 import datetime
 import logging
-from typing import cast
+from typing import cast, override
 
 from aiohttp import ClientSession
 from google.oauth2.credentials import Credentials
@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class AsyncConfigEntryAuth(AbstractAuth):
-    """Provide Google Nest Device Access authentication tied to an OAuth2 based config entry."""
+    """Provide Google Nest Device Access auth tied to an OAuth2 config entry."""
 
     def __init__(
         self,
@@ -42,11 +42,13 @@ class AsyncConfigEntryAuth(AbstractAuth):
         self._client_id = client_id
         self._client_secret = client_secret
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token for SDM API."""
         await self._oauth_session.async_ensure_token_valid()
         return cast(str, self._oauth_session.token["access_token"])
 
+    @override
     async def async_get_creds(self) -> Credentials:
         """Return an OAuth credential for Pub/Sub Subscriber.
 
@@ -87,10 +89,12 @@ class AccessTokenAuthImpl(AbstractAuth):
         super().__init__(websession, host)
         self._access_token = access_token
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return the access token."""
         return self._access_token
 
+    @override
     async def async_get_creds(self) -> Credentials:
         """Return an OAuth credential for Pub/Sub Subscriber."""
         return Credentials(  # type: ignore[no-untyped-call]

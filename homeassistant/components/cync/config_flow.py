@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pycync import Auth
 from pycync.exceptions import AuthFailedError, CyncError, TwoFactorRequiredError
@@ -40,6 +40,7 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
 
     cync_auth: Auth = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -88,7 +89,7 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Dialog that informs the user that reauth is required and prompts for their Cync credentials."""
+        """Inform the user that reauth is required and prompt for Cync credentials."""
         errors: dict[str, str] = {}
 
         reauth_entry = self._get_reauth_entry()

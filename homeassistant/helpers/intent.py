@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from enum import Enum, StrEnum, auto
 from itertools import groupby
 import logging
-from typing import Any
+from typing import Any, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -194,9 +194,14 @@ class MatchFailedError(IntentError):
         self.constraints = constraints
         self.preferences = preferences
 
+    @override
     def __str__(self) -> str:
         """Return string representation."""
-        return f"<MatchFailedError result={self.result}, constraints={self.constraints}, preferences={self.preferences}>"
+        return (
+            f"<MatchFailedError result={self.result},"
+            f" constraints={self.constraints},"
+            f" preferences={self.preferences}>"
+        )
 
 
 class NoStatesMatchedError(MatchFailedError):
@@ -258,7 +263,10 @@ class MatchFailedReason(Enum):
     """Floor name from constraint does not exist."""
 
     DUPLICATE_NAME = auto()
-    """Two or more entities matched the same name constraint and could not be disambiguated."""
+    """Two or more entities matched the same name constraint.
+
+    Could not be disambiguated.
+    """
 
     MULTIPLE_TARGETS = auto()
     """Two or more entities matched when a single target is required."""
@@ -286,7 +294,10 @@ class MatchTargetsResult:
     """List of matched entity states."""
 
     no_match_name: str | None = None
-    """Name of invalid area/floor or duplicate name when match fails for those reasons."""
+    """Name of invalid area/floor or duplicate name.
+
+    Used when match fails for those reasons.
+    """
 
     areas: list[ar.AreaEntry] = field(default_factory=list)
     """Areas that were targeted."""
@@ -346,7 +357,7 @@ class MatchTargetsConstraints:
 
 @dataclass
 class MatchTargetsPreferences:
-    """Preferences used to disambiguate duplicate name matches in async_match_targets."""
+    """Preferences to disambiguate duplicate name matches."""
 
     area_id: str | None = None
     """Id of area to use when deduplicating names."""
@@ -778,7 +789,10 @@ def async_match_states(
     states: list[State] | None = None,
     assistant: str | None = None,
 ) -> Iterable[State]:
-    """Simplified interface to async_match_targets that returns states matching the constraints."""
+    """Return states matching the constraints.
+
+    Simplified interface to async_match_targets.
+    """
     result = async_match_targets(
         hass,
         constraints=MatchTargetsConstraints(
@@ -842,6 +856,7 @@ class IntentHandler:
         """Handle the intent."""
         raise NotImplementedError
 
+    @override
     def __repr__(self) -> str:
         """Represent a string of an intent handler."""
         return f"<{self.__class__.__name__} - {self.intent_type}>"
@@ -926,6 +941,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         )
 
     @cached_property
+    @override
     def slot_schema(self) -> dict:
         """Return a slot schema."""
         domain_validator = (
@@ -990,6 +1006,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         """Get the domain and service name to call."""
         raise NotImplementedError
 
+    @override
     async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the hass intent."""
         hass = intent_obj.hass
@@ -1217,6 +1234,7 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         self.domain = domain
         self.service = service
 
+    @override
     def get_domain_and_service(
         self, intent_obj: Intent, state: State
     ) -> tuple[str, str]:
@@ -1414,7 +1432,7 @@ class IntentResponse:
     def async_set_states(
         self, matched_states: list[State], unmatched_states: list[State] | None = None
     ) -> None:
-        """Set entity states that were matched or not matched during intent handling (query)."""
+        """Set matched/unmatched entity states during intent handling."""
         self.matched_states = matched_states
         self.unmatched_states = unmatched_states or []
 
@@ -1440,7 +1458,7 @@ class IntentResponse:
 
         response_data: dict[str, Any] = {}
 
-        if self.response_type == IntentResponseType.ERROR:
+        if self.response_type is IntentResponseType.ERROR:
             assert self.error_code is not None, "error code is required"
             response_data["code"] = self.error_code.value
         else:

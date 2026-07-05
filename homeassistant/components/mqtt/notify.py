@@ -1,5 +1,7 @@
 """Support for MQTT notify."""
 
+from typing import override
+
 import voluptuous as vol
 
 from homeassistant.components import notify
@@ -52,16 +54,18 @@ async def async_setup_entry(
 
 
 class MqttNotify(MqttEntity, NotifyEntity):
-    """Representation of a notification entity service that can send messages using MQTT."""
+    """Notification entity that can send messages using MQTT."""
 
     _default_name = DEFAULT_NAME
     _entity_id_format = notify.ENTITY_ID_FORMAT
 
     @staticmethod
+    @override
     def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._command_template = MqttCommandTemplate(
@@ -69,12 +73,15 @@ class MqttNotify(MqttEntity, NotifyEntity):
         ).async_render
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
         payload = self._command_template(message)

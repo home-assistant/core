@@ -9,7 +9,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.hue import config_flow, const
+from homeassistant.components.hue import DOMAIN, config_flow, const
 from homeassistant.components.hue.errors import CannotConnect
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -104,7 +104,7 @@ async def test_manual_flow_works(hass: HomeAssistant) -> None:
     disc_bridge = get_discovered_bridge(bridge_id="id-1234", host="2.2.2.2")
 
     MockConfigEntry(
-        domain="hue", source=config_entries.SOURCE_IGNORE, unique_id="bla"
+        domain=DOMAIN, source=config_entries.SOURCE_IGNORE, unique_id="bla"
     ).add_to_hass(hass)
 
     with patch(
@@ -155,7 +155,7 @@ async def test_manual_flow_works(hass: HomeAssistant) -> None:
 async def test_manual_flow_bridge_exist(hass: HomeAssistant) -> None:
     """Test config flow aborts on already configured bridges."""
     MockConfigEntry(
-        domain="hue", unique_id="id-1234", data={"host": "2.2.2.2"}
+        domain=DOMAIN, unique_id="id-1234", data={"host": "2.2.2.2"}
     ).add_to_hass(hass)
 
     with patch(
@@ -199,7 +199,7 @@ async def test_flow_all_discovered_bridges_exist(
     create_mock_api_discovery(aioclient_mock, [(mock_host, mock_id)])
 
     MockConfigEntry(
-        domain="hue", unique_id=mock_id, data={"host": mock_host}
+        domain=DOMAIN, unique_id=mock_id, data={"host": mock_host}
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -216,7 +216,7 @@ async def test_flow_bridges_discovered(
     """Test config flow discovers two bridges."""
     # Add ignored config entry. Should still show up as option.
     MockConfigEntry(
-        domain="hue", source=config_entries.SOURCE_IGNORE, unique_id="bla"
+        domain=DOMAIN, source=config_entries.SOURCE_IGNORE, unique_id="bla"
     ).add_to_hass(hass)
 
     create_mock_api_discovery(
@@ -243,7 +243,7 @@ async def test_flow_two_bridges_discovered_one_new(
     """Test config flow discovers two bridges."""
     create_mock_api_discovery(aioclient_mock, [("1.2.3.4", "bla"), ("5.6.7.8", "beer")])
     MockConfigEntry(
-        domain="hue", unique_id="bla", data={"host": "1.2.3.4"}
+        domain=DOMAIN, unique_id="bla", data={"host": "1.2.3.4"}
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -372,14 +372,14 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(
     """
     create_mock_api_discovery(aioclient_mock, [("2.2.2.2", "id-1234")])
     orig_entry = MockConfigEntry(
-        domain="hue",
+        domain=DOMAIN,
         data={"host": "0.0.0.0", "api_key": "123456789"},
         unique_id="id-1234",
     )
     orig_entry.add_to_hass(hass)
 
     MockConfigEntry(
-        domain="hue",
+        domain=DOMAIN,
         data={"host": "1.2.3.4", "api_key": "123456789"},
         unique_id="id-5678",
     ).add_to_hass(hass)
@@ -387,7 +387,7 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(
     assert len(hass.config_entries.async_entries("hue")) == 2
 
     result = await hass.config_entries.flow.async_init(
-        "hue",
+        DOMAIN,
         data={"host": "2.2.2.2"},
         context={"source": config_entries.SOURCE_IMPORT},
     )
@@ -452,7 +452,7 @@ async def test_bridge_homekit(
 async def test_bridge_import_already_configured(hass: HomeAssistant) -> None:
     """Test if a import flow aborts if host is already configured."""
     MockConfigEntry(
-        domain="hue", unique_id="aabbccddeeff", data={"host": "0.0.0.0"}
+        domain=DOMAIN, unique_id="aabbccddeeff", data={"host": "0.0.0.0"}
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -471,7 +471,7 @@ async def test_bridge_homekit_already_configured(
     """Test if a HomeKit discovered bridge has already been configured."""
     create_mock_api_discovery(aioclient_mock, [("0.0.0.0", "aabbccddeeff")])
     MockConfigEntry(
-        domain="hue", unique_id="aabbccddeeff", data={"host": "0.0.0.0"}
+        domain=DOMAIN, unique_id="aabbccddeeff", data={"host": "0.0.0.0"}
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -495,7 +495,7 @@ async def test_bridge_homekit_already_configured(
 async def test_options_flow_v1(hass: HomeAssistant) -> None:
     """Test options config flow for a V1 bridge."""
     entry = MockConfigEntry(
-        domain="hue",
+        domain=DOMAIN,
         unique_id="aabbccddeeff",
         data={"host": "0.0.0.0"},
     )
@@ -544,7 +544,7 @@ async def test_options_flow_v2(
 ) -> None:
     """Test options config flow for a V2 bridge."""
     entry = MockConfigEntry(
-        domain="hue",
+        domain=DOMAIN,
         unique_id="aabbccddeeff",
         data={"host": "0.0.0.0", "api_version": 2},
     )
@@ -608,7 +608,7 @@ async def test_bridge_zeroconf_already_exists(
         aioclient_mock, [("0.0.0.0", "ecb5faabcabc"), ("192.168.1.217", "ecb5faabcabc")]
     )
     entry = MockConfigEntry(
-        domain="hue",
+        domain=DOMAIN,
         source=config_entries.SOURCE_HOMEKIT,
         data={"host": "0.0.0.0"},
         unique_id="ecb5faabcabc",

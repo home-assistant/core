@@ -11,6 +11,7 @@ from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
+from homeassistant.const import CONF_MODEL
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
@@ -20,13 +21,13 @@ from . import OllamaConfigEntry
 from .const import (
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
-    CONF_MODEL,
     CONF_NUM_CTX,
     CONF_THINK,
     DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
     DEFAULT_NUM_CTX,
     DOMAIN,
+    KEEP_ALIVE_FOREVER,
 )
 from .models import MessageHistory, MessageRole
 
@@ -141,9 +142,11 @@ async def _transform_stream(
 
     response: message=Message(role="assistant", content="Paris")
     response: message=Message(role="assistant", content=".")
-    response: message=Message(role="assistant", content=""), done: True, done_reason: "stop"
+    response: message=Message(role="assistant", content=""),
+        done: True, done_reason: "stop"
     response: message=Message(role="assistant", tool_calls=[...])
-    response: message=Message(role="assistant", content=""), done: True, done_reason: "stop"
+    response: message=Message(role="assistant", content=""),
+        done: True, done_reason: "stop"
 
     This generator conforms to the chatlog delta stream expectations in that it
     yields deltas, then the role only once the response is done.
@@ -241,8 +244,21 @@ class OllamaBaseLLMEntity(Entity):
                     messages=list(message_history.messages),
                     tools=tools,
                     stream=True,
-                    # keep_alive requires specifying unit. In this case, seconds
-                    keep_alive=f"{settings.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)}s",
+                    # keep_alive: -1 is a special sentinel meaning "keep loaded
+                    # forever" and must be passed as the integer -1, not as a
+                    # duration string ("-1s" would be treated as an invalid
+                    # negative duration by the Ollama server).  All other values
+                    # are expressed as a duration string with a seconds suffix.
+                    keep_alive=(
+                        keep_alive_seconds
+                        if (
+                            keep_alive_seconds := int(
+                                settings.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)
+                            )
+                        )
+                        == KEEP_ALIVE_FOREVER
+                        else f"{keep_alive_seconds}s"
+                    ),
                     options={CONF_NUM_CTX: settings.get(CONF_NUM_CTX, DEFAULT_NUM_CTX)},
                     think=settings.get(CONF_THINK),
                     format=output_format,

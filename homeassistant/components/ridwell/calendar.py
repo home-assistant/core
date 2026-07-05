@@ -1,6 +1,7 @@
 """Support for Ridwell calendars."""
 
 import datetime
+from typing import override
 
 from aioridwell.model import PickupCategory, RidwellAccount, RidwellPickupEvent
 
@@ -28,7 +29,7 @@ def async_get_calendar_event_from_pickup_event(
     calendar_preference = config_entry.options.get(CONF_CALENDAR_TITLE, False)
     for pickup in pickup_event.pickups:
         pickup_items.append(f"{pickup.name} (quantity: {pickup.quantity})")
-        if pickup.category == PickupCategory.ROTATING:
+        if pickup.category is PickupCategory.ROTATING:
             rotating_category = pickup.name
             break
 
@@ -49,7 +50,8 @@ def async_get_calendar_event_from_pickup_event(
         # Include only a basic title for the event.
         summary = summary_base
     else:
-        # Default to pickup status if no selection is made (e.g., scheduled, skipped, etc).
+        # Default to pickup status if no selection is made
+        # (e.g., scheduled, skipped, etc).
         summary = f"{summary_base} ({pickup_event_state})"
 
     return CalendarEvent(
@@ -90,12 +92,14 @@ class RidwellCalendar(RidwellEntity, CalendarEntity):
         self._event: CalendarEvent | None = None
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return async_get_calendar_event_from_pickup_event(
             self.next_pickup_event, self.coordinator.config_entry
         )
 
+    @override
     async def async_get_events(
         self,
         hass: HomeAssistant,

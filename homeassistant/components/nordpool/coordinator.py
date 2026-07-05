@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import aiohttp
 from pynordpool import (
@@ -69,6 +69,7 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
         LOGGER.debug("Next listener update at %s", next_run)
         return next_run
 
+    @override
     async def async_shutdown(self) -> None:
         """Cancel any scheduled call, and ignore new runs."""
         await super().async_shutdown()
@@ -117,6 +118,7 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
             return self.data
         raise UpdateFailed(translation_domain=DOMAIN, translation_key="no_day_data")
 
+    @override
     async def _async_update_data(self) -> DeliveryPeriodsData:
         """Fetch the latest data from the source."""
         return await self.handle_data()
@@ -164,3 +166,8 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
         """Return the current day data."""
         current_day = dt_util.now().date()
         return self.data.entries[current_day]
+
+    def get_data_tomorrow(self) -> DeliveryPeriodData | None:
+        """Return tomorrow's day data if available."""
+        tomorrow = dt_util.now().date() + timedelta(days=1)
+        return self.data.entries.get(tomorrow)

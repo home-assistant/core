@@ -1,6 +1,6 @@
 """Config flow for Tilt Pi integration."""
 
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from tiltpi import TiltPiClient, TiltPiError
@@ -30,6 +30,7 @@ class TiltPiConfigFlow(ConfigFlow, domain=DOMAIN):
             return "cannot_connect"
         return None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

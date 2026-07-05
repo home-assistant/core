@@ -1,7 +1,7 @@
 """Support for SolarEdge Monitoring API."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from aiosolaredge import SolarEdge
 
@@ -153,6 +153,22 @@ SENSOR_TYPES = [
         device_class=SensorDeviceClass.POWER,
     ),
     SolarEdgeSensorEntityDescription(
+        key="grid_flow_direction",
+        json_key="grid_flow_direction",
+        translation_key="grid_flow_direction",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["export", "import"],
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="storage_flow_direction",
+        json_key="storage_flow_direction",
+        translation_key="storage_flow_direction",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["charge", "discharge"],
+    ),
+    SolarEdgeSensorEntityDescription(
         key="purchased_energy",
         json_key="Purchased",
         translation_key="purchased_energy",
@@ -199,7 +215,7 @@ SENSOR_TYPES = [
     ),
     SolarEdgeSensorEntityDescription(
         key="storage_level",
-        json_key="STORAGE",
+        json_key="storage_level",
         translation_key="storage_level",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -371,8 +387,8 @@ class SolarEdgeSensorFactory:
         for key in ("power_consumption", "solar_power", "grid_power", "storage_power"):
             self.services[key] = (SolarEdgePowerFlowSensor, flow)
 
-        for key in ("storage_level",):
-            self.services[key] = (SolarEdgeStorageLevelSensor, flow)
+        for key in ("storage_level", "grid_flow_direction", "storage_flow_direction"):
+            self.services[key] = (SolarEdgeOverviewSensor, flow)
 
         for key in (
             "purchased_energy",
@@ -470,6 +486,7 @@ class SolarEdgeOverviewSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API overview sensor."""
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self.data_service.data.get(self.entity_description.json_key)
@@ -479,16 +496,19 @@ class SolarEdgeDetailsSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API details sensor."""
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self.data_service.attributes
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self.data_service.data.get(self.entity_description.json_key)
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         if not self.data_service.site_id:
@@ -500,11 +520,13 @@ class SolarEdgeInventorySensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API inventory sensor."""
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         return self.data_service.attributes.get(self.entity_description.json_key)
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self.data_service.data.get(self.entity_description.json_key)
@@ -521,14 +543,17 @@ class SolarEdgeEnergyDetailsSensor(SolarEdgeSensorEntity):
         """Initialize the power flow sensor."""
         super().__init__(sensor_type, data_service)
 
-        self._attr_native_unit_of_measurement = data_service.unit
+        if data_service.unit is not None:
+            self._attr_native_unit_of_measurement = data_service.unit
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         return self.data_service.attributes.get(self.entity_description.json_key)
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self.data_service.data.get(self.entity_description.json_key)
@@ -547,37 +572,27 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensorEntity):
         """Initialize the power flow sensor."""
         super().__init__(description, data_service)
 
-        self._attr_native_unit_of_measurement = data_service.unit
+        if data_service.unit is not None:
+            self._attr_native_unit_of_measurement = data_service.unit
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         return self.data_service.attributes.get(self.entity_description.json_key)
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self.data_service.data.get(self.entity_description.json_key)
-
-
-class SolarEdgeStorageLevelSensor(SolarEdgeSensorEntity):
-    """Representation of an SolarEdge Monitoring API storage level sensor."""
-
-    _attr_device_class = SensorDeviceClass.BATTERY
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the state of the sensor."""
-        attr = self.data_service.attributes.get(self.entity_description.json_key)
-        if attr and "soc" in attr:
-            return attr["soc"]
-        return None
 
 
 class SolarEdgeStorageDataSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge aggregate storage data sensor."""
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.data_service.data.get(self.entity_description.json_key)
@@ -605,6 +620,7 @@ class SolarEdgeBatterySensor(SolarEdgeSensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.data_service.data.get(

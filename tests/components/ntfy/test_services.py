@@ -24,7 +24,6 @@ from homeassistant.components.ntfy.services import (
     ATTR_DELAY,
     ATTR_EMAIL,
     ATTR_FILENAME,
-    ATTR_ICON,
     ATTR_MARKDOWN,
     ATTR_PRIORITY,
     ATTR_SEQUENCE_ID,
@@ -34,7 +33,7 @@ from homeassistant.components.ntfy.services import (
     SERVICE_PUBLISH,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -210,7 +209,9 @@ async def test_send_message_exception(
             {
                 ATTR_ATTACH: "https://example.com/Epic Sax Guy 10 Hours.mp4",
                 ATTR_ATTACH_FILE: {
-                    "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+                    "media_content_id": (
+                        "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+                    ),
                     "media_content_type": "video/mp4",
                 },
             },
@@ -328,7 +329,9 @@ async def test_ntfy_publish_attachment_upload(
         {
             ATTR_ENTITY_ID: "notify.mytopic",
             ATTR_ATTACH_FILE: {
-                "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+                "media_content_id": (
+                    "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+                ),
                 "media_content_type": "video/mp4",
             },
         },
@@ -346,7 +349,7 @@ async def test_ntfy_publish_upload_camera_snapshot(
     config_entry: MockConfigEntry,
     mock_aiontfy: AsyncMock,
 ) -> None:
-    """Test publishing ntfy message via ntfy.publish action with camera snapshot upload."""
+    """Test ntfy.publish action with camera snapshot upload."""
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -384,7 +387,7 @@ async def test_ntfy_publish_upload_media_source_not_supported(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test publishing ntfy message via ntfy.publish action with unsupported media source."""
+    """Test ntfy.publish action with unsupported media source."""
 
     assert await async_setup_component(hass, "tts", {})
     config_entry.add_to_hass(hass)
