@@ -179,6 +179,14 @@ async def test_lock(
     assert state
     assert state.state == LockState.JAMMED
 
+    # test the jammed state clears on a subsequent known lock state update
+    set_node_attribute(matter_node, 1, 257, 0, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("lock.mock_door_lock")
+    assert state
+    assert state.state == LockState.LOCKED
+
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_lock_requires_pin(
