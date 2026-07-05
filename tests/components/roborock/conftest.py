@@ -238,6 +238,15 @@ def create_b01_q10_trait() -> Mock:
     q10_trait.button_light.enable = AsyncMock()
     q10_trait.button_light.disable = AsyncMock()
 
+    q10_trait.volume = AsyncMock()
+    q10_trait.volume.volume = 50
+    volume_notify = attach_update_listeners(q10_trait.volume)
+
+    async def _set_volume(volume: int) -> None:
+        q10_trait.volume.volume = volume
+        volume_notify()
+
+    q10_trait.volume.set_volume = AsyncMock(side_effect=_set_volume)
     q10_trait.map = Mock()
     q10_trait.map.rooms = [
         Q10Room(id=9, raw_name="rr_bedroom", pixel_value=36, pixel_count=100),
