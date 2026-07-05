@@ -114,11 +114,21 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle any discovery."""
         self._async_abort_entries_match({CONF_HOST: ip_address})
 
-        if not hostname.startswith(("irobot-", "roomba-")):
+        self.host = ip_address
+
+        # Actively probe the device at this IP for its real blid. This is
+        # authoritative and handles two cases where the hostname can't be
+        # trusted: some routers substitute a user-assigned friendly name
+        # for the DHCP/mDNS hostname instead of irobot-<blid>/roomba-<blid>,
+        # and even a well-formed hostname's blid may be truncated if the
+        # hostname exceeds length limits somewhere in the chain.
+        if devices := await _async_discover_roombas(self.hass, self.host):
+            self.blid = devices[0].blid
+        elif hostname.startswith(("irobot-", "roomba-")):
+            self.blid = _async_blid_from_hostname(hostname)
+        else:
             return self.async_abort(reason="not_irobot_device")
 
-        self.host = ip_address
-        self.blid = _async_blid_from_hostname(hostname)
         await self.async_set_unique_id(self.blid)
         self._abort_if_unique_id_configured(updates={CONF_HOST: ip_address})
 

@@ -178,9 +178,7 @@ LIFX_EFFECT_MORPH_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
         ATTR_SPEED: vol.All(vol.Coerce(int), vol.Clamp(min=1, max=25)),
-        vol.Exclusive(ATTR_THEME, COLOR_GROUP): vol.Optional(
-            vol.In(ThemeLibrary().themes)
-        ),
+        vol.Exclusive(ATTR_THEME, COLOR_GROUP): vol.In(ThemeLibrary().themes),
         vol.Exclusive(ATTR_PALETTE, COLOR_GROUP): vol.All(
             cv.ensure_list, [HSBK_SCHEMA]
         ),
@@ -192,7 +190,7 @@ LIFX_EFFECT_MOVE_SCHEMA = cv.make_entity_service_schema(
         **LIFX_EFFECT_SCHEMA,
         ATTR_SPEED: vol.All(vol.Coerce(float), vol.Clamp(min=0.1, max=60)),
         ATTR_DIRECTION: vol.In(EFFECT_MOVE_DIRECTIONS),
-        ATTR_THEME: vol.Optional(vol.In(ThemeLibrary().themes)),
+        vol.Optional(ATTR_THEME): vol.In(ThemeLibrary().themes),
     }
 )
 
@@ -211,9 +209,7 @@ LIFX_PAINT_THEME_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
         ATTR_TRANSITION: vol.All(vol.Coerce(int), vol.Clamp(min=1, max=3600)),
-        vol.Exclusive(ATTR_THEME, COLOR_GROUP): vol.Optional(
-            vol.In(ThemeLibrary().themes)
-        ),
+        vol.Exclusive(ATTR_THEME, COLOR_GROUP): vol.In(ThemeLibrary().themes),
         vol.Exclusive(ATTR_PALETTE, COLOR_GROUP): vol.All(
             cv.ensure_list, [HSBK_SCHEMA]
         ),

@@ -77,6 +77,7 @@ __all__ = [
     "CoverEntity",
     "CoverEntityDescription",
     "CoverEntityFeature",
+    "CoverEntityStateAttribute",
     "CoverState",
     "make_cover_closed_trigger",
     "make_cover_is_closed_condition",

@@ -43,7 +43,7 @@ class NetgearUpdateEntity(
     ) -> None:
         """Initialize a Netgear device."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.router.serial_number}-update"
+        self._attr_unique_id = f"{coordinator.router.serial_number}-update"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
     @override
