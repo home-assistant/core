@@ -8,9 +8,7 @@ rules:
     comment: This integration does not poll.
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: exempt
-    comment: Work in progress
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
