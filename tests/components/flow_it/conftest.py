@@ -7,8 +7,9 @@ from flow_it_api.models import MachineStatusResponse
 import pytest
 
 from homeassistant.components.flow_it.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
-from tests.common import load_json_value_fixture
+from tests.common import MockConfigEntry, load_json_value_fixture
 
 
 def get_mock_vmc(
@@ -54,3 +55,20 @@ def mock_flow_it() -> Generator[AsyncMock]:
         ),
     ):
         yield mock
+
+
+@pytest.fixture
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a mock config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Flow-it Device",
+        unique_id="00:11:22:33:44:55",
+        data={
+            "host": "http://1.1.1.1",
+            "username": "api",
+            "password": "test-password",
+        },
+    )
+    entry.add_to_hass(hass)
+    return entry
