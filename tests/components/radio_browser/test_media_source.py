@@ -144,11 +144,11 @@ async def test_search_media(
     patch_radios(source)
 
     result = await source.async_search_media(
-        MediaSourceItem(hass, "immich", f"{media_source.URI_SCHEME}{DOMAIN}", None),
+        MediaSourceItem(hass, DOMAIN, f"{media_source.URI_SCHEME}{DOMAIN}", None),
         SearchMediaQuery(search_query="my search"),
     )
 
-    source.radios.search.assert_awaited_with(name="my search")
+    source.radios.search.assert_awaited_with(name="my search", hide_broken=True)
     assert len(result.result) == 5
 
 
@@ -170,7 +170,7 @@ async def test_search_media_exceptions(
     source.radios.search.side_effect = exception
     with pytest.raises(BrowseError) as exc_info:
         await source.async_search_media(
-            MediaSourceItem(hass, "immich", f"{media_source.URI_SCHEME}{DOMAIN}", None),
+            MediaSourceItem(hass, DOMAIN, f"{media_source.URI_SCHEME}{DOMAIN}", None),
             SearchMediaQuery(search_query="my search"),
         )
     assert exc_info.value.translation_key == "radio_browser_error"

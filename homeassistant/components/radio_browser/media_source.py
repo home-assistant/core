@@ -144,9 +144,7 @@ class RadioMediaSource(MediaSource):
             return SearchMedia(
                 result=self._async_build_stations(
                     radios,
-                    await radios.search(
-                        name=query.search_query,
-                    ),
+                    await radios.search(name=query.search_query, hide_broken=True),
                 )
             )
         except (DNSError, RadioBrowserError) as e:
