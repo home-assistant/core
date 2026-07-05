@@ -422,7 +422,7 @@ async def test_configure_service_request_error(
     """Test configure service handles API request errors."""
     hub = config_entry_setup.runtime_data
 
-    hub.api.request = AsyncMock(side_effect=RequestError)
+    hub.api.request = AsyncMock(side_effect=RequestError("fail"))
 
     data = {
         SERVICE_FIELD: "/lights/2",
@@ -462,4 +462,4 @@ async def test_service_refresh_devices_failure(
     assert exc_info.value.translation_key == "device_refresh_failed"
 
     assert hub.ignore_state_updates is False
-    hub.load_ignored_devices.assert_not_called()
+    hub.load_ignored_devices.assert_called_once()

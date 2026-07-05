@@ -1,7 +1,7 @@
 """deCONZ services."""
 
-from pydeconz.utils import normalize_bridge_id
 from pydeconz import errors
+from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -17,7 +17,6 @@ from homeassistant.util.read_only_dict import ReadOnlyDict
 from .const import CONF_BRIDGE_ID, DOMAIN
 from .hub import DeconzHub
 from .util import get_master_hub
-
 
 DECONZ_SERVICES = "deconz_services"
 
