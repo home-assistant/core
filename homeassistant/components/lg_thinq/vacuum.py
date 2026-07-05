@@ -106,7 +106,6 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
     _attr_supported_features = (
         VacuumEntityFeature.SEND_COMMAND
         | VacuumEntityFeature.STATE
-        | VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.START
         | VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.RETURN_HOME
@@ -120,19 +119,12 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
         # Update state.
         self._attr_activity = ROBOT_STATUS_TO_HA.get(self.data.current_state)
 
-        # Update battery.
-        if (level := self.data.battery) is not None:
-            self._attr_battery_level = (
-                level if isinstance(level, int) else ROBOT_BATT_TO_HA.get(level, 0)
-            )
-
         _LOGGER.debug(
-            "[%s:%s] update status: %s -> %s (battery_level=%s)",
+            "[%s:%s] update status: %s -> %s",
             self.coordinator.device_name,
             self.property_id,
             self.data.current_state,
             self.state,
-            self.battery_level,
         )
 
     @override
