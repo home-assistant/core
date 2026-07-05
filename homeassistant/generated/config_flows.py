@@ -469,6 +469,7 @@ FLOWS = {
         "mjpeg",
         "moat",
         "mobile_app",
+        "modbus_connection",
         "modem_callerid",
         "modern_forms",
         "moehlenhoff_alpha2",
