@@ -148,7 +148,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     assert (host, port, username, password) == (HOST, PORT, USERNAME, PASSWORD)
 
 
-async def test_stop_device_stops_existing_event_manager(
+async def test_unload_entry_stops_event_manager(
     hass: HomeAssistant,
 ) -> None:
     """Test that unload stops the event manager even when capabilities.events is False."""
@@ -162,10 +162,10 @@ async def test_stop_device_stops_existing_event_manager(
     mock_device.events.async_stop.assert_awaited_once()
 
 
-async def test_stop_device_when_setup_fails_before_events_created(
+async def test_setup_failure_runs_cleanup(
     hass: HomeAssistant,
 ) -> None:
-    """Test cleanup runs when setup fails before the event manager exists."""
+    """Test cleanup completes when setup fails before events are started."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=NAME,
