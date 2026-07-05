@@ -28,6 +28,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.const import CONF_UUID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -170,16 +171,17 @@ async def async_setup_entry(
     prayer_time_coordinator = config_entry.runtime_data.prayer_time_coordinator
 
     prayer_data = prayer_time_coordinator.data
+    mosque_uuid = config_entry.data[CONF_UUID]
 
     entities: list[SensorEntity] = []
 
     # Mosque Sensor
-    entities.append(MyMosqueSensor(mosque_coordinator))
+    entities.append(MyMosqueSensor(mosque_coordinator, mosque_uuid))
 
     # Prayer Time Sensors
     entities.extend(
         [
-            MawaqitPrayerTimeSensor(prayer_time_coordinator, desc)
+            MawaqitPrayerTimeSensor(prayer_time_coordinator, desc, mosque_uuid)
             for desc in PRAYER_TIME_SENSOR_DESCRIPTIONS
         ]
     )
@@ -187,7 +189,7 @@ async def async_setup_entry(
     # Register Jumua Prayer Time Sensors
     entities.extend(
         [
-            MawaqitPrayerTimeSensor(prayer_time_coordinator, desc)
+            MawaqitPrayerTimeSensor(prayer_time_coordinator, desc, mosque_uuid)
             for desc in JUMUA_PRAYER_TIME_SENSOR_DESCRIPTIONS
             if prayer_data and desc.get_value(prayer_data) is not None
         ]
@@ -201,7 +203,7 @@ async def async_setup_entry(
     ):
         entities.extend(
             [
-                MawaqitPrayerTimeSensor(prayer_time_coordinator, desc)
+                MawaqitPrayerTimeSensor(prayer_time_coordinator, desc, mosque_uuid)
                 for desc in IQAMA_PRAYER_TIME_SENSOR_DESCRIPTIONS
             ]
         )
@@ -209,7 +211,7 @@ async def async_setup_entry(
     # Register Next Prayer Sensors
     entities.extend(
         [
-            NextPrayerSensor(prayer_time_coordinator, desc)
+            NextPrayerSensor(prayer_time_coordinator, desc, mosque_uuid)
             for desc in NEXT_SALAT_SENSOR_DESCRIPTION
         ]
     )
@@ -225,11 +227,11 @@ class MyMosqueSensor(SensorEntity, CoordinatorEntity[MosqueCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: MosqueCoordinator) -> None:
+    def __init__(self, coordinator: MosqueCoordinator, mosque_uuid: str) -> None:
         """Initialize the mosque sensor."""
         super().__init__(coordinator)
         self.entity_description = MOSQUE_SENSOR_DESCRIPTION
-        self._attr_unique_id = self.entity_description.key.lower()
+        self._attr_unique_id = f"{mosque_uuid}_{self.entity_description.key.lower()}"
 
     @property
     @override
@@ -257,11 +259,12 @@ class MawaqitPrayerTimeSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordina
         self,
         coordinator: PrayerTimeCoordinator,
         sensor_description: MawaqitPrayerTimeSensorEntityDescription,
+        mosque_uuid: str,
     ) -> None:
         """Initialize the prayer time sensor."""
         super().__init__(coordinator)
         self.entity_description = sensor_description
-        self._attr_unique_id = self.entity_description.key.lower()
+        self._attr_unique_id = f"{mosque_uuid}_{self.entity_description.key.lower()}"
 
     @property
     @override
@@ -295,12 +298,17 @@ class NextPrayerSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordinator]):
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: PrayerTimeCoordinator, description: SensorEntityDescription
+        self,
+        coordinator: PrayerTimeCoordinator,
+        description: SensorEntityDescription,
+        mosque_uuid: str,
     ) -> None:
         """Initialize the sensor with a specific description."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"next_prayer_{self.entity_description.key.lower()}"
+        self._attr_unique_id = (
+            f"{mosque_uuid}_next_prayer_{self.entity_description.key.lower()}"
+        )
         self._next_prayer_index: int | None = None
         self._next_prayer_time: datetime | None = None
 
