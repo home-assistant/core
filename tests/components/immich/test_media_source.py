@@ -121,11 +121,12 @@ async def test_browse_media_get_root(
 
     # get root
     item = MediaSourceItem(hass, DOMAIN, "", None)
-    result = await source.async_browse_media(item)
+    root_media_source = await source.async_browse_media(item)
 
-    assert result
-    assert len(result.children) == 1
-    media_file = result.children[0]
+    assert root_media_source
+    assert root_media_source.can_search is False
+    assert len(root_media_source.children) == 1
+    media_file = root_media_source.children[0]
     assert isinstance(media_file, BrowseMedia)
     assert media_file.title == "Someone"
     assert media_file.media_content_id == (
@@ -134,33 +135,34 @@ async def test_browse_media_get_root(
 
     # get collections
     item = MediaSourceItem(hass, DOMAIN, "e7ef5713-9dab-4bd4-b899-715b0ca4379e", None)
-    result = await source.async_browse_media(item)
+    root_media_source = await source.async_browse_media(item)
 
-    assert result
-    assert len(result.children) == 4
+    assert root_media_source
+    assert root_media_source.can_search is True
+    assert len(root_media_source.children) == 4
 
-    media_file = result.children[0]
+    media_file = root_media_source.children[0]
     assert isinstance(media_file, BrowseMedia)
     assert media_file.title == "albums"
     assert media_file.media_content_id == (
         "media-source://immich/e7ef5713-9dab-4bd4-b899-715b0ca4379e|albums"
     )
 
-    media_file = result.children[1]
+    media_file = root_media_source.children[1]
     assert isinstance(media_file, BrowseMedia)
     assert media_file.title == "favorites"
     assert media_file.media_content_id == (
         "media-source://immich/e7ef5713-9dab-4bd4-b899-715b0ca4379e|favorites|favorites"
     )
 
-    media_file = result.children[2]
+    media_file = root_media_source.children[2]
     assert isinstance(media_file, BrowseMedia)
     assert media_file.title == "people"
     assert media_file.media_content_id == (
         "media-source://immich/e7ef5713-9dab-4bd4-b899-715b0ca4379e|people"
     )
 
-    media_file = result.children[3]
+    media_file = root_media_source.children[3]
     assert isinstance(media_file, BrowseMedia)
     assert media_file.title == "tags"
     assert media_file.media_content_id == (
@@ -215,12 +217,13 @@ async def test_browse_media_collections(
     item = MediaSourceItem(
         hass, DOMAIN, f"{mock_config_entry.unique_id}|{collection}", None
     )
-    result = await source.async_browse_media(item)
+    root_media_source = await source.async_browse_media(item)
 
-    assert result
-    assert len(result.children) == len(children)
+    assert root_media_source
+    assert root_media_source.can_search is True
+    assert len(root_media_source.children) == len(children)
     for idx, child in enumerate(children):
-        media_file = result.children[idx]
+        media_file = root_media_source.children[idx]
         assert isinstance(media_file, BrowseMedia)
         assert media_file.title == child["title"]
         assert media_file.media_content_id == (
@@ -269,11 +272,11 @@ async def test_browse_media_collections_error(
         }
     )
 
-    result = await source.async_browse_media(item)
+    root_media_source = await source.async_browse_media(item)
 
-    assert result
-    assert result.identifier is None
-    assert len(result.children) == 0
+    assert root_media_source
+    assert root_media_source.identifier is None
+    assert len(root_media_source.children) == 0
 
     # test specific ImmichForbiddenError
     getattr(
@@ -332,11 +335,11 @@ async def test_browse_media_collection_items_error(
         }
     )
 
-    result = await source.async_browse_media(item)
+    root_media_source = await source.async_browse_media(item)
 
-    assert result
-    assert result.identifier is None
-    assert len(result.children) == 0
+    assert root_media_source
+    assert root_media_source.identifier is None
+    assert len(root_media_source.children) == 0
 
     # test specific ImmichForbiddenError
     getattr(
@@ -468,13 +471,13 @@ async def test_browse_media_collection_get_items(
         f"{mock_config_entry.unique_id}|{collection}|{collection_id}",
         None,
     )
-    result = await source.async_browse_media(item)
+    root_media_source = await source.async_browse_media(item)
 
-    assert result
-    assert len(result.children) == len(children)
+    assert root_media_source
+    assert len(root_media_source.children) == len(children)
 
     for idx, child in enumerate(children):
-        media_file = result.children[idx]
+        media_file = root_media_source.children[idx]
         assert isinstance(media_file, BrowseMedia)
         assert media_file.identifier == (
             f"{mock_config_entry.unique_id}|{collection}|{collection_id}|"
