@@ -1,10 +1,13 @@
 """Support for buttons."""
 
+from dataclasses import dataclass
 from typing import Final, override
 
-from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY
-
-from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityDescription
@@ -17,11 +20,20 @@ from .entity import AmazonEntity, AmazonServiceEntity
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
+
+@dataclass(frozen=True, kw_only=True)
+class AmazonButtonEntityDescription(ButtonEntityDescription):
+    """Amazon Devices button entity description."""
+
+    capability: str
+
+
 DEVICE_BUTTONS: Final = {
-    EntityDescription(
+    AmazonButtonEntityDescription(
         key="restart",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
+        capability="ALEXA_DEVICE_REBOOT",
     ),
 }
 
@@ -54,7 +66,7 @@ async def async_setup_entry(
                 AmazonDeviceButton(coordinator, serial_num, button_desc)
                 for button_desc in DEVICE_BUTTONS
                 for serial_num in new_devices
-                if coordinator.data[serial_num].device_family != SPEAKER_GROUP_FAMILY
+                if button_desc.capability in coordinator.data[serial_num].capabilities
             )
 
     _check_routines_devices()
