@@ -11,8 +11,8 @@ from monarchmoney import LoginFailedException
 from typedmonarchmoney import (
     MonarchAccount,
     MonarchCashflowSummary,
-    MonarchMoneyTyped,
     MonarchSubscription,
+    TypedMonarchMoney,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -44,7 +44,7 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
         self,
         hass: HomeAssistant,
         config_entry: MonarchMoneyConfigEntry,
-        client: MonarchMoneyTyped,
+        client: TypedMonarchMoney,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(

@@ -58,11 +58,11 @@ def mock_config_api() -> Generator[AsyncMock]:
 
     with (
         patch(
-            "homeassistant.components.monarch_money.config_flow.MonarchMoneyTyped",
+            "homeassistant.components.monarch_money.config_flow.TypedMonarchMoney",
             autospec=True,
         ) as mock_class,
         patch(
-            "homeassistant.components.monarch_money.MonarchMoneyTyped", new=mock_class
+            "homeassistant.components.monarch_money.TypedMonarchMoney", new=mock_class
         ),
     ):
         instance = mock_class.return_value

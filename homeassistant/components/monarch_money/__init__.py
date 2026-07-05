@@ -1,6 +1,6 @@
 """The Monarch Money integration."""
 
-from typedmonarchmoney import MonarchMoneyTyped
+from typedmonarchmoney import TypedMonarchMoney
 
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -14,7 +14,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: MonarchMoneyConfigEntry
 ) -> bool:
     """Set up Monarch Money from a config entry."""
-    monarch_client = MonarchMoneyTyped(token=entry.data.get(CONF_TOKEN))
+    monarch_client = TypedMonarchMoney(token=entry.data.get(CONF_TOKEN))
 
     mm_coordinator = MonarchMoneyDataUpdateCoordinator(hass, entry, monarch_client)
     await mm_coordinator.async_config_entry_first_refresh()
