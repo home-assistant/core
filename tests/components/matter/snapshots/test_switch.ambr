@@ -25,7 +25,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:bullhorn',
+    'original_icon': None,
     'original_name': 'Audible alarm enabled',
     'platform': 'matter',
     'previous_unique_id': None,
@@ -40,7 +40,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KLIPPBOK water leak sensor Audible alarm enabled',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:bullhorn',
     }),
     'context': <ANY>,
     'entity_id': 'switch.klippbok_water_leak_sensor_audible_alarm_enabled',
@@ -76,7 +75,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alarm-light',
+    'original_icon': None,
     'original_name': 'Visual alarm enabled',
     'platform': 'matter',
     'previous_unique_id': None,
@@ -91,7 +90,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KLIPPBOK water leak sensor Visual alarm enabled',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:alarm-light',
     }),
     'context': <ANY>,
     'entity_id': 'switch.klippbok_water_leak_sensor_visual_alarm_enabled',

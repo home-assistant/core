@@ -255,7 +255,7 @@ class MatterAlarmEnabledSwitch(MatterSwitch):
             )
             or 0
         )
-        self._attr_available = self._endpoint.node.available and bool(
+        self._attr_available = self._attr_available and bool(
             alarms_supported & alarm_mode
         )
 
@@ -424,8 +424,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterAlarmEnabledSwitchEntityDescription(
             key="BooleanStateConfigurationVisualAlarmEnabled",
             entity_category=EntityCategory.CONFIG,
-            icon="mdi:alarm-light",
-            name="Visual alarm enabled",
             translation_key="visual_alarm_enabled",
             alarm_mode=ALARM_MODE_VISUAL,
         ),
@@ -446,8 +444,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterAlarmEnabledSwitchEntityDescription(
             key="BooleanStateConfigurationAudibleAlarmEnabled",
             entity_category=EntityCategory.CONFIG,
-            icon="mdi:bullhorn",
-            name="Audible alarm enabled",
             translation_key="audible_alarm_enabled",
             alarm_mode=ALARM_MODE_AUDIBLE,
         ),
