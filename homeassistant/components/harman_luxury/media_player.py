@@ -47,6 +47,8 @@ class HarmanLuxuryMediaPlayer(
     _attr_has_entity_name = True
     _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
+    # The device volume is 0..99, so step by one native unit.
+    _attr_volume_step = 1 / 99
 
     # Volume is always controllable. Transport availability is source-dependent
     # (Spotify Connect / AirPlay are sender-controlled), so it is advertised

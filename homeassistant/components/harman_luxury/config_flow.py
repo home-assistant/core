@@ -3,7 +3,7 @@
 from typing import Any, override
 from urllib.parse import urlparse
 
-from aioharmanluxury import HarmanLuxuryClient, HarmanLuxuryError
+from aioharmanluxury import DeviceInfo, HarmanLuxuryClient, HarmanLuxuryError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -22,15 +22,13 @@ class HarmanLuxuryConfigFlow(ConfigFlow, domain=DOMAIN):
     _host: str
     _name: str
 
-    async def _async_get_name(self, host: str) -> str | None:
-        """Return the device name, or ``None`` if it cannot be reached."""
+    async def _async_get_info(self, host: str) -> DeviceInfo | None:
+        """Return the device info, or ``None`` if it cannot be reached."""
         client = HarmanLuxuryClient(host, async_get_clientsession(self.hass))
         try:
-            info = await client.async_get_info()
+            return await client.async_get_info()
         except HarmanLuxuryError:
             return None
-        await self.async_set_unique_id(info.serial)
-        return info.name
 
     @override
     async def async_step_user(
@@ -39,12 +37,13 @@ class HarmanLuxuryConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            name = await self._async_get_name(user_input[CONF_HOST])
-            if name is None:
+            info = await self._async_get_info(user_input[CONF_HOST])
+            if info is None:
                 errors["base"] = "cannot_connect"
             else:
+                await self.async_set_unique_id(info.serial)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=name, data=user_input)
+                return self.async_create_entry(title=info.name, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -63,13 +62,13 @@ class HarmanLuxuryConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(serial)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
-        name = await self._async_get_name(host)
-        if name is None:
+        info = await self._async_get_info(host)
+        if info is None:
             return self.async_abort(reason="cannot_connect")
 
         self._host = host
-        self._name = name
-        self.context["title_placeholders"] = {"name": name}
+        self._name = info.name
+        self.context["title_placeholders"] = {"name": info.name}
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
