@@ -124,6 +124,17 @@ class MatterLock(MatterEntity, LockEntity):
         # Handle the DoorLock events
         node_event_data: dict[str, int] = node_event.data or {}
         match node_event.event_id:
+            case (
+                clusters.DoorLock.Events.DoorLockAlarm.event_id
+            ):  # Lock cluster event 0
+                if node_event_data.get("alarmCode") == 0:  # lock is jammed
+                    if (
+                        self._optimistic_timer
+                        and not self._optimistic_timer.cancelled()
+                    ):
+                        self._optimistic_timer.cancel()
+                    self._attr_is_jammed = True
+                    self.async_write_ha_state()
             case clusters.DoorLock.Events.LockOperation.event_id:
                 operation_source: int = node_event_data.get("operationSource", -1)
                 source_name = DOOR_LOCK_OPERATION_SOURCE.get(
@@ -167,9 +178,14 @@ class MatterLock(MatterEntity, LockEntity):
             )
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
-        await self.send_device_command(
+        command_result = await self.send_device_command(
             command=clusters.DoorLock.Commands.LockDoor(code_bytes),
             timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
+        )
+        LOGGER.debug(
+            "LockDoor command result: %s for %s",
+            command_result,
+            self.entity_id,
         )
 
     @override
@@ -190,14 +206,24 @@ class MatterLock(MatterEntity, LockEntity):
             # if the lock reports it has separate unbolt support,
             # the unlock command should unbolt only on the unlock command
             # and unlatch on the HA 'open' command.
-            await self.send_device_command(
+            command_result = await self.send_device_command(
                 command=clusters.DoorLock.Commands.UnboltDoor(code_bytes),
                 timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
             )
+            LOGGER.debug(
+                "UnboltDoor command result: %s for %s",
+                command_result,
+                self.entity_id,
+            )
         else:
-            await self.send_device_command(
+            command_result = await self.send_device_command(
                 command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
                 timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
+            )
+            LOGGER.debug(
+                "UnlockDoor command result: %s for %s",
+                command_result,
+                self.entity_id,
             )
 
     @override
@@ -213,9 +239,14 @@ class MatterLock(MatterEntity, LockEntity):
         )
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
-        await self.send_device_command(
+        command_result = await self.send_device_command(
             command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
             timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
+        )
+        LOGGER.debug(
+            "UnlockDoor command result: %s for %s",
+            command_result,
+            self.entity_id,
         )
 
     @callback
@@ -237,15 +268,17 @@ class MatterLock(MatterEntity, LockEntity):
         if lock_state == clusters.DoorLock.Enums.DlLockState.kUnlatched:
             self._attr_is_locked = False
             self._attr_is_open = True
+            self.attr_is_jammed = False
         elif lock_state == clusters.DoorLock.Enums.DlLockState.kLocked:
             self._attr_is_locked = True
             self._attr_is_open = False
-        elif lock_state in (
-            clusters.DoorLock.Enums.DlLockState.kUnlocked,
-            clusters.DoorLock.Enums.DlLockState.kNotFullyLocked,
-        ):
+            self.attr_is_jammed = False
+        elif lock_state == clusters.DoorLock.Enums.DlLockState.kUnlocked:
             self._attr_is_locked = False
             self._attr_is_open = False
+            self.attr_is_jammed = False
+        elif lock_state == clusters.DoorLock.Enums.DlLockState.kNotFullyLocked:
+            self.attr_is_jammed = True
         else:
             # Treat any other state as unknown.
             # NOTE: A null state can happen during device startup.
