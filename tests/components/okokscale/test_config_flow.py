@@ -10,7 +10,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
-from . import ADDRESS, NOT_OKOK_SERVICE_INFO, OKOK_C0_SERVICE_INFO, TITLE
+from . import (
+    NOT_OKOK_SERVICE_INFO,
+    OKOK_20_SERVICE_INFO,
+    OKOK_20_TITLE,
+    OKOK_C0_SERVICE_INFO,
+    OKOK_C0_TITLE,
+    OKOK_F0_ADDRESS,
+    OKOK_F0_SERVICE_INFO,
+    OKOK_F0_TITLE,
+)
 
 from tests.common import MockConfigEntry
 
@@ -19,14 +28,25 @@ DISCOVERY = (
 )
 
 
+@pytest.mark.parametrize(
+    ("service_info", "title"),
+    [
+        (OKOK_F0_SERVICE_INFO, OKOK_F0_TITLE),
+        (OKOK_20_SERVICE_INFO, OKOK_20_TITLE),
+        (OKOK_C0_SERVICE_INFO, OKOK_C0_TITLE),
+    ],
+)
 async def test_async_step_bluetooth_valid_device(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    service_info: BluetoothServiceInfo,
+    title: str,
 ) -> None:
     """Test discovery via bluetooth with a valid device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=OKOK_C0_SERVICE_INFO,
+        data=service_info,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
@@ -34,25 +54,17 @@ async def test_async_step_bluetooth_valid_device(
         result["flow_id"], user_input={}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TITLE
+    assert result["title"] == title
     assert result["data"] == {}
-    assert result["result"].unique_id == ADDRESS
+    assert result["result"].unique_id == service_info.address
 
 
-@pytest.mark.parametrize(
-    "service_info",
-    [
-        NOT_OKOK_SERVICE_INFO,
-    ],
-)
-async def test_async_step_bluetooth_not_supported(
-    hass: HomeAssistant, service_info: BluetoothServiceInfo
-) -> None:
+async def test_async_step_bluetooth_not_supported(hass: HomeAssistant) -> None:
     """Test bluetooth discovery rejects advertisements that are not supported."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=service_info,
+        data=NOT_OKOK_SERVICE_INFO,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_supported"
@@ -72,7 +84,7 @@ async def test_async_step_user_with_found_devices(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test setup from service info cache with devices found."""
-    with patch(DISCOVERY, return_value=[OKOK_C0_SERVICE_INFO]):
+    with patch(DISCOVERY, return_value=[OKOK_F0_SERVICE_INFO]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -81,30 +93,21 @@ async def test_async_step_user_with_found_devices(
     assert result["step_id"] == "user"
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"address": ADDRESS},
+        user_input={"address": OKOK_F0_ADDRESS},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TITLE
+    assert result["title"] == OKOK_F0_TITLE
     assert result["data"] == {}
-    assert result["result"].unique_id == ADDRESS
+    assert result["result"].unique_id == OKOK_F0_ADDRESS
 
 
-@pytest.mark.parametrize(
-    ("discovered", "existing_entry"),
-    [
-        ([OKOK_C0_SERVICE_INFO], True),
-    ],
-)
-async def test_async_step_user_already_configured(
+async def async_step_user_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    discovered: list[BluetoothServiceInfo],
-    existing_entry: bool,
 ) -> None:
     """Test the user step aborts when the discovered device is already configured."""
-    if existing_entry:
-        mock_config_entry.add_to_hass(hass)
-    with patch(DISCOVERY, return_value=discovered):
+    mock_config_entry.add_to_hass(hass)
+    with patch(DISCOVERY, return_value=[OKOK_F0_SERVICE_INFO]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -121,7 +124,7 @@ async def test_async_step_bluetooth_devices_already_setup(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=OKOK_C0_SERVICE_INFO,
+        data=OKOK_F0_SERVICE_INFO,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -132,7 +135,7 @@ async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=OKOK_C0_SERVICE_INFO,
+        data=OKOK_F0_SERVICE_INFO,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
@@ -140,7 +143,7 @@ async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=OKOK_C0_SERVICE_INFO,
+        data=OKOK_F0_SERVICE_INFO,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
@@ -152,7 +155,7 @@ async def test_async_step_user_device_added_between_steps(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the device gets added via another flow between steps."""
-    with patch(DISCOVERY, return_value=[OKOK_C0_SERVICE_INFO]):
+    with patch(DISCOVERY, return_value=[OKOK_F0_SERVICE_INFO]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -164,7 +167,7 @@ async def test_async_step_user_device_added_between_steps(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"address": ADDRESS},
+        user_input={"address": OKOK_F0_ADDRESS},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -176,12 +179,12 @@ async def test_async_step_user_replace_ignored(
     """Test setup from service info can replace an ignored entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=ADDRESS,
+        unique_id=OKOK_F0_ADDRESS,
         source=SOURCE_IGNORE,
         data={},
     )
     entry.add_to_hass(hass)
-    with patch(DISCOVERY, return_value=[OKOK_C0_SERVICE_INFO]):
+    with patch(DISCOVERY, return_value=[OKOK_F0_SERVICE_INFO]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -190,11 +193,11 @@ async def test_async_step_user_replace_ignored(
     assert result["step_id"] == "user"
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"address": ADDRESS},
+        user_input={"address": OKOK_F0_ADDRESS},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TITLE
-    assert result["result"].unique_id == ADDRESS
+    assert result["title"] == OKOK_F0_TITLE
+    assert result["result"].unique_id == OKOK_F0_ADDRESS
 
 
 async def test_async_step_user_takes_precedence_over_discovery(
@@ -204,12 +207,12 @@ async def test_async_step_user_takes_precedence_over_discovery(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=OKOK_C0_SERVICE_INFO,
+        data=OKOK_F0_SERVICE_INFO,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
-    with patch(DISCOVERY, return_value=[OKOK_C0_SERVICE_INFO]):
+    with patch(DISCOVERY, return_value=[OKOK_F0_SERVICE_INFO]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -218,11 +221,11 @@ async def test_async_step_user_takes_precedence_over_discovery(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"address": ADDRESS},
+        user_input={"address": OKOK_F0_ADDRESS},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TITLE
-    assert result["result"].unique_id == ADDRESS
+    assert result["title"] == OKOK_F0_TITLE
+    assert result["result"].unique_id == OKOK_F0_ADDRESS
 
     # Verify the original discovery flow was aborted.
     assert not hass.config_entries.flow.async_progress(DOMAIN)

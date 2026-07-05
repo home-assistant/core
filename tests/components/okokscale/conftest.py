@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.okokscale.const import DOMAIN
 
-from . import ADDRESS
+from . import OKOK_F0_ADDRESS
 
 from tests.common import MockConfigEntry
 
@@ -30,4 +30,4 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
-    return MockConfigEntry(domain=DOMAIN, unique_id=ADDRESS)
+    return MockConfigEntry(domain=DOMAIN, unique_id=OKOK_F0_ADDRESS)
