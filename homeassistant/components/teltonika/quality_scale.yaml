@@ -59,7 +59,9 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: done
   docs-use-cases: todo
-  dynamic-devices: done
+  dynamic-devices:
+    status: exempt
+    comment: Integration only has static hardware devices
   entity-category: todo
   entity-device-class: done
   entity-disabled-by-default: todo
