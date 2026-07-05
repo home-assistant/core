@@ -6,11 +6,12 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import AUTHORIZE_URL, DOMAIN, REGISTER_URL, TOKEN_URL
+from .const import AUTHORIZE_URL, DOMAIN, REGISTER_URL, SOFTWARE_ID, TOKEN_URL
 
 
 class TeslemetryImplementation(
@@ -72,7 +73,14 @@ async def async_ensure_client_credential(hass: HomeAssistant) -> None:
         return
 
     session = async_get_clientsession(hass)
-    response = await session.post(REGISTER_URL, json={"client_name": "Home Assistant"})
+    response = await session.post(
+        REGISTER_URL,
+        json={
+            "client_name": "Home Assistant",
+            "software_id": SOFTWARE_ID,
+            "software_version": __version__,
+        },
+    )
     response.raise_for_status()
     registration = await response.json()
 

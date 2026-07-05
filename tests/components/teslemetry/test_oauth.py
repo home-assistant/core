@@ -4,8 +4,9 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.teslemetry.const import DOMAIN, REGISTER_URL
+from homeassistant.components.teslemetry.const import DOMAIN, REGISTER_URL, SOFTWARE_ID
 from homeassistant.components.teslemetry.oauth import async_ensure_client_credential
+from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
@@ -31,6 +32,11 @@ async def test_registers_new_client(
         call for call in aioclient_mock.mock_calls if str(call[1]) == REGISTER_URL
     ]
     assert len(register_calls) == 1
+    assert register_calls[0][2] == {
+        "client_name": "Home Assistant",
+        "software_id": SOFTWARE_ID,
+        "software_version": __version__,
+    }
 
 
 async def test_reuses_existing_client(
