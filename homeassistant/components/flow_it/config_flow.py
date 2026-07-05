@@ -1,7 +1,7 @@
 """Config flow for Flow-it integration."""
 
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from flow_it_api.client import FlowItVMCMachine
 from flow_it_api.exceptions import FlowItAuthError, FlowItConnectionError
@@ -79,21 +79,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(
-            {
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): TextSelector(
-                    TextSelectorConfig(
-                        type=TextSelectorType.TEXT, autocomplete="username"
-                    )
-                ),
-                vol.Required(CONF_PASSWORD): TextSelector(
-                    TextSelectorConfig(
-                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
-                    )
-                ),
-            }
-        ), errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): str,
+                    vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.TEXT, autocomplete="username"
+                        )
+                    ),
+                    vol.Required(CONF_PASSWORD): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD,
+                            autocomplete="current-password",
+                        )
+                    ),
+                }
+            ),
+            errors=errors,
         )
 
     async def async_step_zeroconf_confirm(
@@ -103,12 +106,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             host = self._discovery_info[CONF_HOST]
-            username = user_input[CONF_USERNAME]
-            password = user_input[CONF_PASSWORD]
-
             if not URL(host).scheme:
                 host = str(URL.build(scheme="http", host=host))
 
+            data = {
+                CONF_HOST: host,
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
 
             try:
                 info = await validate_input(self.hass, data)
@@ -122,11 +127,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(info["unique_id"])
                 self._abort_if_unique_id_configured(updates=data)
-                return self.async_create_entry(title=info["title"], data= {
-                CONF_HOST: host,
-                CONF_USERNAME: username,
-                CONF_PASSWORD: password,
-            })
+                return self.async_create_entry(
+                    title=info["title"],
+                    data=data,
+                )
 
         data_schema = vol.Schema(
             {
