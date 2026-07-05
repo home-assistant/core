@@ -401,20 +401,14 @@ class ProtectDeviceSmartDetectEventEntity(
             self.async_write_ha_state()
 
 
-# A key-fob button press is delivered over the public events websocket as a
-# ``sensorButtonPressed`` event (captured from real USL-FOB hardware, paired via
-# a LinkStation bridge): the event's ``device`` is the fob itself, and the
-# pressed button is in ``metadata.button``. A fob paired to an alarm hub routes
-# its press through the hub, which is a separate device with its own id, so that
-# path is deferred to the alarm-hub work rather than handled here.
+# A fob button press arrives as a ``sensorButtonPressed`` event whose ``device``
+# is the fob and whose ``metadata.button`` is the pressed button.
 _FOB_BUTTON_EVENT_TYPES = (EventType.SENSOR_BUTTON_PRESSED,)
 
-# Real hardware reports an empty ``feature_flags.buttons`` (the fob does not
-# advertise which buttons it has), so the event entity declares the full button
-# vocabulary. It is built from ``EventButtonType`` (the enum carried in
-# ``metadata.button``, which is matched against below) so the declared types and
-# the matched value cannot drift apart. Each type is the button's snake_case
-# enum name (e.g. ``alarm_hub_button``) so it is a valid HA translation key.
+# The fob does not advertise its buttons (``feature_flags.buttons`` is empty), so
+# the entity declares the whole vocabulary. Built from ``EventButtonType`` (the
+# enum matched below against ``metadata.button``) so the declared types cannot
+# drift from what is matched; ``.name.lower()`` yields a valid HA translation key.
 _FOB_EVENT_TYPES: list[str] = [
     button.name.lower()
     for button in EventButtonType
