@@ -713,7 +713,7 @@ async def test_search_media(
     mock_config_entry: MockConfigEntry,
     identifier: str,
     query: SearchMediaQuery,
-    expected_smart_search_call,
+    expected_smart_search_call: dict[str, str | bool | list[str]],
 ) -> None:
     """Test search_media."""
     assert await async_setup_component(hass, "media_source", {})
