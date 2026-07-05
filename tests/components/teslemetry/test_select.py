@@ -16,7 +16,7 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.teslemetry.coordinator import ENERGY_INFO_INTERVAL
-from homeassistant.components.teslemetry.select import LOW
+from homeassistant.components.teslemetry.select import LEVEL, LOW, MEDIUM, OFF
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -181,6 +181,68 @@ async def test_select_services(hass: HomeAssistant, mock_vehicle_data) -> None:
         state = hass.states.get(entity_id)
         assert state.state == EnergyExportMode.BATTERY_OK.value
         call.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "seat_position"),
+    [
+        ("select.test_seat_cooler_front_left", 1),
+        ("select.test_seat_cooler_front_right", 2),
+    ],
+)
+async def test_seat_cooler_services(
+    hass: HomeAssistant,
+    mock_metadata: AsyncMock,
+    mock_vehicle_data: AsyncMock,
+    entity_id: str,
+    seat_position: int,
+) -> None:
+    """Test the seat cooler entities send the 1-indexed seat position.
+
+    remote_seat_cooler_request is 1-indexed (front-left=1, front-right=2),
+    unlike the 0-indexed Seat enum used for the seat heaters.
+    """
+    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][VEHICLE_VIN]["config"] = {"has_seat_cooling": True}
+    mock_metadata.return_value = metadata
+
+    await setup_platform(hass, [Platform.SELECT])
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.remote_seat_cooler_request",
+        return_value=COMMAND_OK,
+    ) as call:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: LOW},
+            blocking=True,
+        )
+        assert hass.states.get(entity_id).state == LOW
+        call.assert_called_once_with(seat_position, LEVEL[LOW])
+
+
+async def test_seat_cooler_polling(
+    hass: HomeAssistant,
+    mock_metadata: AsyncMock,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test the seat cooler entities read polled state from seat_fan_front_*."""
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][VEHICLE_VIN]["polling"] = True
+    metadata["vehicles"][VEHICLE_VIN]["config"] = {"has_seat_cooling": True}
+    mock_metadata.return_value = metadata
+
+    data = deepcopy(VEHICLE_DATA_ALT)
+    data["response"]["climate_state"]["seat_fan_front_left"] = 2
+    data["response"]["climate_state"]["seat_fan_front_right"] = 0
+    mock_vehicle_data.return_value = data
+
+    await setup_platform(hass, [Platform.SELECT])
+
+    assert hass.states.get("select.test_seat_cooler_front_left").state == MEDIUM
+    assert hass.states.get("select.test_seat_cooler_front_right").state == OFF
 
 
 @pytest.mark.parametrize("response", COMMAND_ERRORS)
