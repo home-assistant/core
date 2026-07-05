@@ -78,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OKOKScaleConfigEntry) ->
         # We will take advertisements from non-connectable devices
         # since we will trade the BLEDevice for a connectable one
         # if we need to poll it
-        connectable=True,
+        connectable=False,
     )
 
     entry.runtime_data = coordinator
