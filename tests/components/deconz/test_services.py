@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 import voluptuous as vol
 
+from pydeconz.errors import RequestError
 from homeassistant.components.deconz.const import (
     CONF_BRIDGE_ID,
     CONF_MASTER_GATEWAY,
@@ -411,3 +412,49 @@ async def test_remove_orphaned_entries_service(
         )
         == 2  # Light and switch battery
     )
+
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_configure_service_request_error(
+    hass: HomeAssistant,
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+) -> None:
+    """Test configure service handles API request errors."""
+    data = {
+        SERVICE_FIELD: "/lights/2",
+        CONF_BRIDGE_ID: BRIDGE_ID,
+        SERVICE_DATA: {"on": True},
+    }
+
+    mock_put_request("/lights/2").exception = RequestError
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CONFIGURE_DEVICE,
+            service_data=data,
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "configure_failed"
+
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_service_refresh_devices_failure(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Test refresh service resets ignore_state_updates on failure."""
+    hub = config_entry_setup.runtime_data
+
+    hub.api.refresh_state = AsyncMock(side_effect=TimeoutError)
+    hub.load_ignored_devices = AsyncMock()
+
+    with pytest.raises(HomeAssistantError, match="device_refresh_failed"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_DEVICE_REFRESH,
+            service_data={CONF_BRIDGE_ID: BRIDGE_ID},
+            blocking=True,
+        )
+
+    assert hub.ignore_state_updates is False
+    hub.load_ignored_devices.assert_awaited_once()
