@@ -1,9 +1,12 @@
 """Platform for light integration."""
 
-from typing import Any, override
+from typing import Any, NoReturn, override
 
 from boschshcpy import SHCLight, SHCMicromoduleDimmer
+from boschshcpy.device import SHCDevice
+from boschshcpy.exceptions import SHCException
 from boschshcpy.services_impl import PowerSwitchService
+from requests.exceptions import RequestException
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -13,6 +16,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import (
     color_hs_to_RGB,
@@ -22,9 +26,21 @@ from homeassistant.util.color import (
 )
 
 from . import BoschConfigEntry
+from .const import DOMAIN
 from .entity import SHCEntity
 
 PARALLEL_UPDATES = 1
+
+
+def _raise_write_error(
+    device: SHCDevice, translation_key: str, err: SHCException | RequestException
+) -> NoReturn:
+    """Convert a boschshcpy device-write failure into a translated HomeAssistantError."""
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key=translation_key,
+        translation_placeholders={"name": device.name, "error": str(err)},
+    ) from err
 
 
 async def async_setup_entry(
@@ -53,25 +69,11 @@ async def async_setup_entry(
             parent_id=session.information.unique_id,
             entry_id=config_entry.entry_id,
         )
-        for device in session.device_helper.hue_lights
-    )
-
-    entities.extend(
-        SHCColorLight(
-            device=device,
-            parent_id=session.information.unique_id,
-            entry_id=config_entry.entry_id,
+        for device in (
+            *session.device_helper.hue_lights,
+            *session.device_helper.ledvance_lights,
+            *session.device_helper.micromodule_dimmers,
         )
-        for device in session.device_helper.ledvance_lights
-    )
-
-    entities.extend(
-        SHCColorLight(
-            device=device,
-            parent_id=session.information.unique_id,
-            entry_id=config_entry.entry_id,
-        )
-        for device in session.device_helper.micromodule_dimmers
     )
 
     async_add_entities(entities)
@@ -93,12 +95,18 @@ class SHCOnOffLight(SHCEntity, LightEntity):
     @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        self._device.switchstate = True
+        try:
+            self._device.switchstate = True
+        except (SHCException, RequestException) as err:
+            _raise_write_error(self._device, "light_turn_on_failed", err)
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        self._device.switchstate = False
+        try:
+            self._device.switchstate = False
+        except (SHCException, RequestException) as err:
+            _raise_write_error(self._device, "light_turn_off_failed", err)
 
 
 class SHCColorLight(SHCEntity, LightEntity):
@@ -212,29 +220,44 @@ class SHCColorLight(SHCEntity, LightEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on, optionally setting brightness / colour."""
         if not self.is_on:
-            self._device.binarystate = True
+            try:
+                self._device.binarystate = True
+            except (SHCException, RequestException) as err:
+                _raise_write_error(self._device, "light_turn_on_failed", err)
 
         if ATTR_BRIGHTNESS in kwargs and self._device.supports_brightness:
             # Convert HA 0-255 → Bosch 0-100, clamped to a minimum of 1: HA's
             # lowest turn-on brightness is 1, and round(1 * 100 / 255) is 0,
             # which is the Bosch "off" value.
-            self._device.brightness = max(round(kwargs[ATTR_BRIGHTNESS] * 100 / 255), 1)
+            brightness = max(round(kwargs[ATTR_BRIGHTNESS] * 100 / 255), 1)
+            try:
+                self._device.brightness = brightness
+            except (SHCException, RequestException) as err:
+                _raise_write_error(self._device, "light_turn_on_failed", err)
 
         if ATTR_COLOR_TEMP_KELVIN in kwargs and (
             self._device.supports_color_temp or self._device.supports_color_hsb
         ):
-            self._device.color = color_temperature_kelvin_to_mired(
-                kwargs[ATTR_COLOR_TEMP_KELVIN]
-            )
+            mireds = color_temperature_kelvin_to_mired(kwargs[ATTR_COLOR_TEMP_KELVIN])
+            try:
+                self._device.color = mireds
+            except (SHCException, RequestException) as err:
+                _raise_write_error(self._device, "light_turn_on_failed", err)
             self._attr_color_mode = ColorMode.COLOR_TEMP
 
         if ATTR_HS_COLOR in kwargs and self._device.supports_color_hsb:
             hue, saturation = kwargs[ATTR_HS_COLOR]
             red, green, blue = color_hs_to_RGB(hue, saturation)
-            self._device.rgb = (red << 16) | (green << 8) | blue
+            try:
+                self._device.rgb = (red << 16) | (green << 8) | blue
+            except (SHCException, RequestException) as err:
+                _raise_write_error(self._device, "light_turn_on_failed", err)
             self._attr_color_mode = ColorMode.HS
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        self._device.binarystate = False
+        try:
+            self._device.binarystate = False
+        except (SHCException, RequestException) as err:
+            _raise_write_error(self._device, "light_turn_off_failed", err)

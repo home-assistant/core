@@ -1,9 +1,10 @@
 """Tests for the Bosch SHC light platform."""
 
 from collections.abc import Callable
-from unittest.mock import MagicMock, create_autospec, patch
+from unittest.mock import MagicMock, PropertyMock, create_autospec, patch
 
 from boschshcpy import SHCLight, SHCLightSwitch, SHCMicromoduleDimmer
+from boschshcpy.exceptions import SHCException
 from boschshcpy.services_impl import PowerSwitchService
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -19,6 +20,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -272,3 +274,126 @@ async def test_color_light_initial_mode_from_capabilities(
     (entity_id,) = hass.states.async_entity_ids(LIGHT_DOMAIN)
 
     assert hass.states.get(entity_id).attributes["color_mode"] == expected
+
+
+@pytest.mark.parametrize(
+    (
+        "device_helper_attr",
+        "make_device",
+        "service",
+        "service_data",
+        "property_name",
+        "read_value",
+    ),
+    [
+        pytest.param(
+            "micromodule_light_attached",
+            lambda: _make_onoff_device("mla-serial", "mla-id"),
+            SERVICE_TURN_ON,
+            {},
+            "switchstate",
+            PowerSwitchService.State.OFF,
+            id="onoff_turn_on",
+        ),
+        pytest.param(
+            "micromodule_light_attached",
+            lambda: _make_onoff_device("mla-serial", "mla-id"),
+            SERVICE_TURN_OFF,
+            {},
+            "switchstate",
+            PowerSwitchService.State.OFF,
+            id="onoff_turn_off",
+        ),
+        pytest.param(
+            "ledvance_lights",
+            lambda: _make_color_device(
+                SHCLight, "lv-serial", "lv-id", supports_color_temp=True
+            ),
+            SERVICE_TURN_ON,
+            {},
+            "binarystate",
+            False,
+            id="color_turn_on",
+        ),
+        pytest.param(
+            "ledvance_lights",
+            lambda: _make_color_device(
+                SHCLight, "lv-serial", "lv-id", supports_color_temp=True
+            ),
+            SERVICE_TURN_OFF,
+            {},
+            "binarystate",
+            True,
+            id="color_turn_off",
+        ),
+        pytest.param(
+            "ledvance_lights",
+            lambda: _make_color_device(
+                SHCLight, "lv-serial", "lv-id", supports_color_temp=True
+            ),
+            SERVICE_TURN_ON,
+            {ATTR_BRIGHTNESS: 128},
+            "brightness",
+            80,
+            id="color_turn_on_brightness",
+        ),
+        pytest.param(
+            "ledvance_lights",
+            lambda: _make_color_device(
+                SHCLight, "lv-serial", "lv-id", supports_color_temp=True
+            ),
+            SERVICE_TURN_ON,
+            {ATTR_COLOR_TEMP_KELVIN: 3000},
+            "color",
+            250,
+            id="color_turn_on_color_temp",
+        ),
+        pytest.param(
+            "hue_lights",
+            lambda: _make_color_device(
+                SHCLight, "hue-serial", "hue-id", supports_color_hsb=True
+            ),
+            SERVICE_TURN_ON,
+            {ATTR_HS_COLOR: (30.0, 100.0)},
+            "rgb",
+            0,
+            id="color_turn_on_hs_color",
+        ),
+    ],
+)
+async def test_light_action_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    device_helper_attr: str,
+    make_device: Callable[[], MagicMock],
+    service: str,
+    service_data: dict[str, object],
+    property_name: str,
+    read_value: object,
+) -> None:
+    """A library error while writing a light property surfaces as a HomeAssistantError."""
+    device = make_device()
+    setattr(mock_session.device_helper, device_helper_attr, [device])
+
+    def _raise_on_write(*args: object) -> object:
+        if args:
+            raise SHCException("Test error")
+        return read_value
+
+    setattr(
+        type(device),
+        property_name,
+        PropertyMock(side_effect=_raise_on_write),
+    )
+
+    await _setup_light_platform(hass, mock_config_entry, mock_session)
+    (entity_id,) = hass.states.async_entity_ids(LIGHT_DOMAIN)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id, **service_data},
+            blocking=True,
+        )

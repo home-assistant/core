@@ -72,5 +72,13 @@
         "name": "Routing"
       }
     }
+  },
+  "exceptions": {
+    "light_turn_off_failed": {
+      "message": "Failed to turn off {name}: {error}"
+    },
+    "light_turn_on_failed": {
+      "message": "Failed to turn on {name}: {error}"
+    }
   }
 }
