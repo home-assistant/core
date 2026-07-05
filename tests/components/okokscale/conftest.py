@@ -30,4 +30,10 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
-    return MockConfigEntry(domain=DOMAIN, unique_id=OKOK_F0_ADDRESS)
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=OKOK_F0_ADDRESS,
+        data={},
+        version=1,
+        minor_version=2,
+    )
