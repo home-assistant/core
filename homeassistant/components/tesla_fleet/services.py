@@ -75,14 +75,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the Tesla Fleet services."""
 
     async def time_of_use(call: ServiceCall) -> None:
-        """Configure time-of-use settings on an energy site.
-
-        Wraps the Tesla Fleet API
-        ``POST /api/1/energy_sites/{site_id}/time_of_use_settings`` endpoint.
-        Pass the ``tariff_content_v2`` payload as ``tou_settings``; the
-        outer ``tariff_content_v2`` wrapper is stripped automatically if
-        present.
-        """
+        """Configure time-of-use settings on an energy site."""
         device = async_get_device_for_service_call(hass, call)
         config = async_get_config_for_device(hass, device)
         site = async_get_energy_site_for_entry(hass, device, config)
