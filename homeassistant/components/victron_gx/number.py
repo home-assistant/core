@@ -85,6 +85,12 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
         if metric.step is not None:
             self._attr_native_step = metric.step
 
+    @property
+    @override
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the native unit of measurement."""
+        return self._resolve_native_unit_of_measurement()
+
     @callback
     @override
     def _on_update_cb(self, value: Any) -> None:
