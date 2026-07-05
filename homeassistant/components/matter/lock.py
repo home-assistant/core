@@ -135,7 +135,9 @@ class MatterLock(MatterEntity, LockEntity):
                         self._optimistic_timer.cancel()
                     self._attr_is_jammed = True
                     self.async_write_ha_state()
-            case clusters.DoorLock.Events.LockOperation.event_id:
+            case (
+                clusters.DoorLock.Events.LockOperation.event_id
+            ):  # Lock cluster event 2
                 operation_source: int = node_event_data.get("operationSource", -1)
                 source_name = DOOR_LOCK_OPERATION_SOURCE.get(
                     operation_source, "Unknown"
@@ -268,17 +270,19 @@ class MatterLock(MatterEntity, LockEntity):
         if lock_state == clusters.DoorLock.Enums.DlLockState.kUnlatched:
             self._attr_is_locked = False
             self._attr_is_open = True
-            self.attr_is_jammed = False
+            self._attr_is_jammed = False
         elif lock_state == clusters.DoorLock.Enums.DlLockState.kLocked:
             self._attr_is_locked = True
             self._attr_is_open = False
-            self.attr_is_jammed = False
-        elif lock_state == clusters.DoorLock.Enums.DlLockState.kUnlocked:
+            self._attr_is_jammed = False
+        elif lock_state in (
+            clusters.DoorLock.Enums.DlLockState.kUnlocked,
+            clusters.DoorLock.Enums.DlLockState.kNotFullyLocked,
+        ):
             self._attr_is_locked = False
             self._attr_is_open = False
-            self.attr_is_jammed = False
-        elif lock_state == clusters.DoorLock.Enums.DlLockState.kNotFullyLocked:
-            self.attr_is_jammed = True
+            # for future investigation - maybe kNotFullyLocked should be treated as jammed.
+            self._attr_is_jammed = False
         else:
             # Treat any other state as unknown.
             # NOTE: A null state can happen during device startup.
