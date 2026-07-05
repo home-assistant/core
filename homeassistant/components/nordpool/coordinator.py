@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the Nord Pool integration."""
 
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from typing import TYPE_CHECKING, override
 
 import aiohttp
@@ -55,9 +55,20 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
 
     def get_next_data_interval(self, now: datetime) -> datetime:
         """Compute next time an update should occur."""
-        next_data_run = now + timedelta(hours=1)
-        next_run = next_data_run.replace(minute=0, second=0, microsecond=0)
-        LOGGER.debug("Next data update at %s", next_run.astimezone(NORDPOOL_TIMEZONE))
+        if self.has_current_day_data and self.has_tomorrow_data:
+            _date = dt_util.now().date() + timedelta(days=1)
+            _time = time(hour=0, minute=0, second=0)
+            next_data_run = datetime.combine(_date, _time, NORDPOOL_TIMEZONE)
+        else:
+            next_data_run = dt_util.utcnow() + timedelta(hours=1)
+        next_run = datetime(
+            next_data_run.year,
+            next_data_run.month,
+            next_data_run.day,
+            next_data_run.hour,
+            tzinfo=dt_util.UTC,
+        )
+        LOGGER.debug("Next data update at %s", next_run)
         return next_run
 
     def get_next_15_interval(self, now: datetime) -> datetime:
@@ -104,6 +115,12 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
             self.async_set_update_error(err)
             return
         self.async_set_updated_data(data)
+        if self.has_current_day_data and self.has_tomorrow_data:
+            self.data_unsub = async_track_point_in_utc_time(
+                self.hass,
+                self.fetch_data,
+                self.get_next_data_interval(dt_util.utcnow()),
+            )
 
     async def handle_data(self, initial: bool = False) -> DeliveryPeriodsData:
         """Fetch data from Nord Pool."""
@@ -173,3 +190,19 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
         """Return tomorrow's day data if available."""
         tomorrow = get_nordpool_current_time().date() + timedelta(days=1)
         return self.data.entries.get(tomorrow)
+
+    @property
+    def has_current_day_data(self) -> bool:
+        """Return True if current day's data is available."""
+        current_day = dt_util.now().date()
+        if self.data and self.data.entries:
+            return current_day in self.data.entries
+        return False
+
+    @property
+    def has_tomorrow_data(self) -> bool:
+        """Return True if tomorrow's data is available."""
+        tomorrow = dt_util.now().date() + timedelta(days=1)
+        if self.data and self.data.entries:
+            return tomorrow in self.data.entries
+        return False

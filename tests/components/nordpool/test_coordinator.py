@@ -1,11 +1,14 @@
 """The test for the Nord Pool coordinator."""
 
 from datetime import timedelta
+from http import HTTPStatus
+from typing import Any
 from unittest.mock import patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 from pynordpool import (
+    API,
     NordPoolAuthenticationError,
     NordPoolClient,
     NordPoolEmptyResponseError,
@@ -27,6 +30,7 @@ from homeassistant.setup import async_setup_component
 from . import ENTRY_CONFIG
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.freeze_time("2025-10-01T10:00:00+02:00")
@@ -35,8 +39,46 @@ async def test_coordinator(
     get_client: NordPoolClient,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+    load_json: list[dict[str, Any]],
 ) -> None:
     """Test the Nord Pool coordinator with errors."""
+    responses = list(load_json)
+    aioclient_mock.clear_requests()
+    aioclient_mock.request(
+        "GET",
+        url=API + "/DayAheadPrices",
+        params={
+            "date": "2025-09-30",
+            "market": "DayAhead",
+            "deliveryArea": "SE3,SE4",
+            "currency": "SEK",
+        },
+        json=responses[1],
+    )
+    aioclient_mock.request(
+        "GET",
+        url=API + "/DayAheadPrices",
+        params={
+            "date": "2025-10-01",
+            "market": "DayAhead",
+            "deliveryArea": "SE3,SE4",
+            "currency": "SEK",
+        },
+        json=responses[0],
+    )
+    aioclient_mock.request(
+        "GET",
+        url=API + "/DayAheadPrices",
+        params={
+            "date": "2025-10-02",
+            "market": "DayAhead",
+            "deliveryArea": "SE3,SE4",
+            "currency": "SEK",
+        },
+        status=HTTPStatus.NO_CONTENT,
+    )
+
     await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -223,3 +265,135 @@ async def test_coordinator(
         state = hass.states.get("sensor.nord_pool_se3_current_price")
         assert state.state == STATE_UNAVAILABLE
         assert "Data for current day is missing" in caplog.text
+
+
+@pytest.mark.freeze_time("2025-10-01T10:05:00+00:00")
+async def test_coordinator_update_data(
+    hass: HomeAssistant,
+    get_client: NordPoolClient,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+    load_json: list[dict[str, Any]],
+) -> None:
+    """Test the Nord Pool coordinator with errors."""
+    responses = list(load_json)
+    aioclient_mock.clear_requests()
+    aioclient_mock.request(
+        "GET",
+        url=API + "/DayAheadPrices",
+        params={
+            "date": "2025-09-30",
+            "market": "DayAhead",
+            "deliveryArea": "SE3,SE4",
+            "currency": "SEK",
+        },
+        json=responses[1],
+    )
+    aioclient_mock.request(
+        "GET",
+        url=API + "/DayAheadPrices",
+        params={
+            "date": "2025-10-01",
+            "market": "DayAhead",
+            "deliveryArea": "SE3,SE4",
+            "currency": "SEK",
+        },
+        json=responses[0],
+    )
+    aioclient_mock.request(
+        "GET",
+        url=API + "/DayAheadPrices",
+        params={
+            "date": "2025-10-02",
+            "market": "DayAhead",
+            "deliveryArea": "SE3,SE4",
+            "currency": "SEK",
+        },
+        status=HTTPStatus.NO_CONTENT,
+    )
+
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=ENTRY_CONFIG,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get("sensor.nord_pool_se3_current_price")
+    assert state.state == "0.67405"
+    assert "Next data update at 2025-10-01 11:00:00+00:00" in caplog.text
+    assert "Next listener update at 2025-10-01 10:15:00+00:00" in caplog.text
+
+    caplog.clear()
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("sensor.nord_pool_se3_current_price")
+    assert state.state == "0.63736"
+    assert "Next data update at 2025-10-01 12:00:00+00:00" in caplog.text
+    assert "Next listener update at 2025-10-01 11:15:00+00:00" in caplog.text
+
+    caplog.clear()
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("sensor.nord_pool_se3_current_price")
+    assert state.state == "0.62233"
+    assert "Next data update at 2025-10-01 13:00:00+00:00" in caplog.text
+    assert "Next listener update at 2025-10-01 12:15:00+00:00" in caplog.text
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.request(
+        "GET",
+        url=API + "/DayAheadPrices",
+        params={
+            "date": "2025-09-30",
+            "market": "DayAhead",
+            "deliveryArea": "SE3,SE4",
+            "currency": "SEK",
+        },
+        json=responses[1],
+    )
+    aioclient_mock.request(
+        "GET",
+        url=API + "/DayAheadPrices",
+        params={
+            "date": "2025-10-01",
+            "market": "DayAhead",
+            "deliveryArea": "SE3,SE4",
+            "currency": "SEK",
+        },
+        json=responses[0],
+    )
+    aioclient_mock.request(
+        "GET",
+        url=API + "/DayAheadPrices",
+        params={
+            "date": "2025-10-02",
+            "market": "DayAhead",
+            "deliveryArea": "SE3,SE4",
+            "currency": "SEK",
+        },
+        json=responses[2],
+    )
+
+    caplog.clear()
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("sensor.nord_pool_se3_current_price")
+    assert state.state == "0.6294"
+    assert "Next data update at 2025-10-02 00:00:00+00:00" in caplog.text
+    assert "Next listener update at 2025-10-01 13:15:00+00:00" in caplog.text
+
+    caplog.clear()
+    freezer.tick(timedelta(minutes=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("sensor.nord_pool_se3_current_price")
+    assert state.state == "0.72953"
+    assert "Next data update" not in caplog.text
+    assert "Next listener update at 2025-10-01 13:30:00+00:00" in caplog.text
