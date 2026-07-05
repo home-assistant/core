@@ -155,7 +155,7 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Step when user initializes a integration.
+        """Step when user initializes an integration.
 
         A single serial port selector handles both local serial devices and
         network connections; a network meter can be reached by entering a URL
