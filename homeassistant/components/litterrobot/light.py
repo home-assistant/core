@@ -26,14 +26,6 @@ NIGHT_LIGHT_DESCRIPTION = LightEntityDescription(
 )
 
 
-def _hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
-    """Convert a color hex string into an RGB tuple."""
-    value = hex_color.lstrip("#")
-    if len(value) == 3:
-        value = "".join(component * 2 for component in value)
-    return int(value[0:2], 16), int(value[2:4], 16), int(value[4:6], 16)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LitterRobotConfigEntry,
@@ -86,9 +78,7 @@ class LitterRobotNightLight(LitterRobotEntity[LitterRobot5], LightEntity):
     @override
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the color of the night light."""
-        if (color := self.robot.night_light_color) is None:
-            return None
-        return _hex_to_rgb(color)
+        return self.robot.night_light_rgb_color
 
     @whisker_command
     @override
@@ -96,11 +86,10 @@ class LitterRobotNightLight(LitterRobotEntity[LitterRobot5], LightEntity):
         """Turn on the night light, applying any requested color or brightness."""
         mode = self.robot.night_light_mode
         brightness = self.robot.night_light_brightness
-        color = self.robot.night_light_color or "#FFFFFF"
+        color: str | tuple[int, int, int] = self.robot.night_light_color or "#FFFFFF"
 
         if ATTR_RGB_COLOR in kwargs:
-            rgb = kwargs[ATTR_RGB_COLOR]
-            color = f"#{rgb[0]:02X}{rgb[1]:02X}{rgb[2]:02X}"
+            color = kwargs[ATTR_RGB_COLOR]
 
         if ATTR_BRIGHTNESS in kwargs:
             brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
