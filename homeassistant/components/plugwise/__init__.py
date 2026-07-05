@@ -42,10 +42,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) ->
 
 @callback
 def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None:
-    """Migrate Plugwise entity entries to new unique IDs.
-    """
+    """Migrate Plugwise entity entries to new unique IDs."""
     if entry.domain == Platform.CLIMATE and entry.unique_id.endswith("-climate"):
         return {"new_unique_id": entry.unique_id.replace("-climate", "-thermostat")}
+
     if entry.domain == Platform.BINARY_SENSOR and entry.unique_id.endswith(
         "-slave_boiler_state"
     ):
@@ -54,12 +54,14 @@ def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None
                 "-slave_boiler_state", "-secondary_boiler_state"
             )
         }
+
     if entry.domain == Platform.SENSOR and entry.unique_id.endswith(
         "-relative_humidity"
     ):
         return {
             "new_unique_id": entry.unique_id.replace("-relative_humidity", "-humidity")
         }
+
     if entry.domain == Platform.SWITCH and entry.unique_id.endswith("-plug"):
         return {"new_unique_id": entry.unique_id.replace("-plug", "-relay")}
 
