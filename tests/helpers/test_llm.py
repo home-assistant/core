@@ -711,9 +711,9 @@ Static Context: An overview of the areas and the devices in this smart home:
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
-        f"""{first_part_prompt}
-{dynamic_context_prompt}
+        f"""{dynamic_context_prompt}
 {stateless_exposed_entities_prompt}
+{first_part_prompt}
 {area_prompt}
 {no_timer_prompt}"""
     )
@@ -736,9 +736,9 @@ Static Context: An overview of the areas and the devices in this smart home:
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
-        f"""{first_part_prompt}
-{dynamic_context_prompt}
+        f"""{dynamic_context_prompt}
 {stateless_exposed_entities_prompt}
+{first_part_prompt}
 {area_prompt}
 {no_timer_prompt}"""
     )
@@ -753,9 +753,9 @@ Static Context: An overview of the areas and the devices in this smart home:
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
-        f"""{first_part_prompt}
-{dynamic_context_prompt}
+        f"""{dynamic_context_prompt}
 {stateless_exposed_entities_prompt}
+{first_part_prompt}
 {area_prompt}
 {no_timer_prompt}"""
     )
@@ -766,9 +766,9 @@ Static Context: An overview of the areas and the devices in this smart home:
     api = await llm.async_get_api(hass, "assist", llm_context)
     # The no_timer_prompt is gone
     assert api.api_prompt == (
-        f"""{first_part_prompt}
-{dynamic_context_prompt}
+        f"""{dynamic_context_prompt}
 {stateless_exposed_entities_prompt}
+{first_part_prompt}
 {area_prompt}"""
     )
 
