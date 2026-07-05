@@ -853,7 +853,7 @@ dremel3dpy==2.1.1
 dropmqttapi==1.0.3
 
 # homeassistant.components.dsmr
-dsmr-parser==1.9.0
+dsmr-parser==1.11.0
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.7
