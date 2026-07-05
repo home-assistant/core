@@ -24,6 +24,7 @@ from homeassistant.components.deconz.services import (
     SERVICE_REMOVE_ORPHANED_ENTRIES,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -451,7 +452,7 @@ async def test_service_refresh_devices_failure(
     config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test refresh service handles request failures."""
-    
+
     url = (
         f"http://{config_entry_data[CONF_HOST]}:"
         f"{config_entry_data[CONF_PORT]}/api/"

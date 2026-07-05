@@ -150,9 +150,7 @@ def fixture_get_request(
         url = f"http://{host or _host}:{_port}/api/{_api_key}"
         aioclient_mock.get(
             url,
-            json=deconz_payload | {"config": config_payload}
-            if json is None
-            else json,
+            json=deconz_payload | {"config": config_payload} if json is None else json,
             exc=exc,
             headers={"content-type": CONTENT_TYPE_JSON},
         )
