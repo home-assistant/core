@@ -62,6 +62,7 @@ from .const import (
     DOMAIN,
     DSMR_PROTOCOL,
     LOGGER,
+    RFXTRX_DSMR_PROTOCOL,
 )
 
 EVENT_FIRST_TELEGRAM = "dsmr_first_telegram_{}"
@@ -781,46 +782,44 @@ async def async_setup_entry(
 
     # Creates an asyncio.Protocol factory for reading DSMR telegrams and calls
     # update_entities_telegram to update entities on arrival. A port starting
-    # with "/" is a local serial device, which doesn't need a liveness check.
-    # Anything else is a special URL for a network connection that can drop
-    # silently, so we enable a keep-alive watchdog that closes the connection
-    # (triggering a reconnect) when no telegram arrives in time.
+    # with "/" is a local serial device, which doesn't need a liveness check;
+    # anything else is a network connection that can drop silently, so it gets a
+    # keep-alive watchdog that closes the connection (triggering a reconnect)
+    # when no telegram arrives in time.
     protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
-    if port.startswith("/"):
-        if protocol == DSMR_PROTOCOL:
-            create_reader = create_dsmr_reader
+    if protocol == RFXTRX_DSMR_PROTOCOL:
+        if port.startswith("/"):
+            reader_factory = partial(
+                create_rfxtrx_dsmr_reader,
+                port,
+                dsmr_version,
+                update_entities_telegram,
+                loop=hass.loop,
+            )
         else:
-            create_reader = create_rfxtrx_dsmr_reader
-        reader_factory = partial(
-            create_reader,
-            port,
-            dsmr_version,
-            update_entities_telegram,
-            loop=hass.loop,
-        )
-    elif protocol == DSMR_PROTOCOL:
-        # create_dsmr_reader opens any URL (socket://, esphome://, ...) and
-        # supports the keep-alive watchdog directly.
+            # The RFXtrx serial reader has no keep-alive support, so the network
+            # host and port are fed to the dedicated TCP reader instead.
+            address = urlparse(port)
+            reader_factory = partial(
+                create_rfxtrx_tcp_dsmr_reader,
+                address.hostname,
+                address.port,
+                dsmr_version,
+                update_entities_telegram,
+                loop=hass.loop,
+                keep_alive_interval=60,
+            )
+    else:
+        # create_dsmr_reader opens both local devices and any URL (socket://,
+        # esphome://, ...); the only difference is the keep-alive watchdog.
+        keep_alive = {} if port.startswith("/") else {"keep_alive_interval": 60}
         reader_factory = partial(
             create_dsmr_reader,
             port,
             dsmr_version,
             update_entities_telegram,
             loop=hass.loop,
-            keep_alive_interval=60,
-        )
-    else:
-        # The RFXtrx serial reader has no keep-alive support, so the network host
-        # and port are fed to the dedicated TCP reader instead.
-        address = urlparse(port)
-        reader_factory = partial(
-            create_rfxtrx_tcp_dsmr_reader,
-            address.hostname,
-            address.port,
-            dsmr_version,
-            update_entities_telegram,
-            loop=hass.loop,
-            keep_alive_interval=60,
+            **keep_alive,
         )
 
     async def connect_and_reconnect() -> None:
