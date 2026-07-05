@@ -226,14 +226,9 @@ class MatterLock(MatterEntity, LockEntity):
         )
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
-        command_result = await self.send_device_command(
+        await self.send_device_command(
             command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
             timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
-        )
-        LOGGER.debug(
-            "UnlockDoor command result: %s for %s",
-            command_result,
-            self.entity_id,
         )
 
     @callback
