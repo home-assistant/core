@@ -2,6 +2,12 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+from easywave_home_control.codec import MeasurementType, SensorTelegramEvent
+from easywave_home_control.codec.common import TimerDuration
+from easywave_home_control.codec.sensors import (
+    SensorMeasurementPayload,
+    SensorPayloadFormat,
+)
 import pytest
 
 from homeassistant.components.easywave.const import DEVICE_SCAN_INTERVAL, DOMAIN
@@ -246,7 +252,121 @@ async def test_update_data_generic_exception(
     assert coordinator.is_offline is True
 
 
-# ── async_shutdown ──────────────────────────────────────────────────────────
+# ── telegram listener ───────────────────────────────────────────────────────
+
+
+async def test_telegram_listener_restarts_after_loop_exit(
+    hass: HomeAssistant,
+    coordinator: EasywaveCoordinator,
+) -> None:
+    """A finished listener task must not block future starts."""
+    entity = MagicMock()
+    coordinator._sensor_entities.append(entity)
+    coordinator.is_offline = False
+
+    coordinator._start_telegram_listener()
+    first_task = coordinator._listener_task
+    assert first_task is not None
+
+    await coordinator._clear_listener_task()
+    assert coordinator._listener_task is None
+
+    coordinator._start_telegram_listener()
+    assert coordinator._listener_task is not None
+    assert coordinator._listener_task is not first_task
+
+
+async def test_dispatch_sensor_telegram_updates_matching_entity(
+    coordinator: EasywaveCoordinator,
+) -> None:
+    """Sensor measurements are routed to the matching entity."""
+    entity = MagicMock()
+    entity.sensor_serial = "aa" * 32
+    coordinator._sensor_entities.append(entity)
+
+    payload = SensorMeasurementPayload(
+        version=0,
+        has_battery=True,
+        battery_level=7,
+        wire_measurement_type=5,
+        measurement_type=MeasurementType.TEMPERATURE,
+        payload_format=SensorPayloadFormat.NEO,
+        should_ignore=False,
+        has_reference=False,
+        raw_value=2630,
+        reference_value=0,
+        max_interval=TimerDuration(mantissa=0, exponent=0, factor_minutes=15.0),
+    )
+    event = SensorTelegramEvent(
+        sensor_serial=bytes.fromhex(entity.sensor_serial),
+        payload=payload,
+    )
+
+    coordinator._dispatch_sensor_telegram(event)
+
+    entity.handle_telegram.assert_called_once_with(event)
+
+
+async def test_dispatch_sensor_telegram_updates_flagged_payload(
+    coordinator: EasywaveCoordinator,
+) -> None:
+    """Measurements with should_ignore still update sensor entities."""
+    entity = MagicMock()
+    entity.sensor_serial = "bb" * 32
+    coordinator._sensor_entities.append(entity)
+
+    payload = SensorMeasurementPayload(
+        version=0,
+        has_battery=True,
+        battery_level=7,
+        wire_measurement_type=5,
+        measurement_type=MeasurementType.TEMPERATURE,
+        payload_format=SensorPayloadFormat.NEO,
+        should_ignore=True,
+        has_reference=False,
+        raw_value=2630,
+        reference_value=0,
+        max_interval=TimerDuration(mantissa=0, exponent=0, factor_minutes=15.0),
+    )
+    event = SensorTelegramEvent(
+        sensor_serial=bytes.fromhex(entity.sensor_serial),
+        payload=payload,
+    )
+
+    coordinator._dispatch_sensor_telegram(event)
+
+    entity.handle_telegram.assert_called_once_with(event)
+
+
+async def test_dispatch_sensor_telegram_matches_serial_case_insensitively(
+    coordinator: EasywaveCoordinator,
+) -> None:
+    """Configured sensor serials match regardless of hex case."""
+    entity = MagicMock()
+    entity.sensor_serial = ("AA" * 16).upper()
+    coordinator._sensor_entities.append(entity)
+
+    payload = SensorMeasurementPayload(
+        version=0,
+        has_battery=True,
+        battery_level=7,
+        wire_measurement_type=5,
+        measurement_type=MeasurementType.TEMPERATURE,
+        payload_format=SensorPayloadFormat.NEO,
+        should_ignore=False,
+        has_reference=False,
+        raw_value=2630,
+        reference_value=0,
+        max_interval=TimerDuration(mantissa=0, exponent=0, factor_minutes=15.0),
+    )
+    event = SensorTelegramEvent(
+        sensor_serial=bytes.fromhex(entity.sensor_serial.lower()),
+        payload=payload,
+    )
+
+    coordinator._dispatch_sensor_telegram(event)
+
+    entity.handle_telegram.assert_called_once_with(event)
 
 
 async def test_async_shutdown(

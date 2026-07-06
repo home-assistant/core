@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.easywave.const import (
+    ALLOWED_COUNTRIES_868MHZ,
     DOMAIN,
     FREQUENCY_868MHZ,
     FREQUENCY_ALLOWED_COUNTRIES,
@@ -39,7 +40,9 @@ class TestCountryValidation:
 
     def test_all_allowed_countries_in_frequency_list(self) -> None:
         """Test that all expected 868MHz countries are in the list."""
-        allowed = FREQUENCY_ALLOWED_COUNTRIES[FREQUENCY_868MHZ]
+        allowed = ALLOWED_COUNTRIES_868MHZ
+
+        assert allowed is FREQUENCY_ALLOWED_COUNTRIES[FREQUENCY_868MHZ]
 
         essential_eu = {"DE", "FR", "IT", "ES", "NL", "BE", "AT", "CZ", "PL"}
         assert essential_eu.issubset(allowed)

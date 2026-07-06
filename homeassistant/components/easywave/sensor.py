@@ -3,14 +3,24 @@
 import logging
 from typing import Any, override
 
-from easywave_home_control.codec import ButtonPushEvent, ButtonReleaseEvent
+from easywave_home_control.codec import (
+    ButtonPushEvent,
+    ButtonReleaseEvent,
+    SensorMeasurementPayload,
+    SensorTelegramEvent,
+)
 
 from homeassistant.components.sensor import (
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EntityCategory
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STARTED,
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfTemperature,
+)
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -23,14 +33,20 @@ from .const import (
     CONF_ENTRY_TYPE,
     CONF_GROUPING_MODE,
     CONF_OPERATING_TYPE,
+    CONF_SENSOR_CAPABILITIES,
     CONF_SWITCH_MODE,
     DOMAIN,
+    ENTRY_TYPE_NEO_SENSOR,
     ENTRY_TYPE_TRANSMITTER,
     TRANSMITTER_GROUPING_GROUP,
     TRANSMITTER_SWITCH_IMPULSE,
 )
 from .coordinator import EasywaveCoordinator
-from .entity import EasywaveDeviceEntry, EasywaveTransmitterEntity
+from .entity import (
+    EasywaveDeviceEntry,
+    EasywaveNeoSensorEntity,
+    EasywaveTransmitterEntity,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,23 +56,35 @@ async def async_setup_entry(
     entry: EasywaveConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Easywave sensors for gateway and device subentries."""
+    """Set up Easywave sensors for the gateway and configured devices."""
     # Gateway status sensor — always one per gateway entry.
     coordinator = entry.runtime_data.coordinator
     async_add_entities([EasywaveGatewaySensor(entry, coordinator)])
 
-    # Per-subentry sensors: type-1 group-mode transmitters only.
-    for subentry in get_devices(entry):
-        if subentry.data.get(CONF_ENTRY_TYPE) != ENTRY_TYPE_TRANSMITTER:
-            continue
-        if str(subentry.data.get(CONF_OPERATING_TYPE, "1")) != "1":
-            continue
-        grouping_mode: str = str(subentry.data.get(CONF_GROUPING_MODE, "single"))
-        if grouping_mode != TRANSMITTER_GROUPING_GROUP:
-            continue
-        last_button = EasywaveTransmitterLastButtonSensor(entry, subentry)
-        battery = EasywaveTransmitterBatterySensor(entry, subentry)
-        async_add_entities([last_button, battery])
+    for device in get_devices(entry):
+        entry_type = device.data.get(CONF_ENTRY_TYPE)
+        if entry_type == ENTRY_TYPE_TRANSMITTER:
+            if str(device.data.get(CONF_OPERATING_TYPE, "1")) != "1":
+                continue
+            grouping_mode: str = str(
+                device.data.get(CONF_GROUPING_MODE, TRANSMITTER_GROUPING_GROUP)
+            )
+            if grouping_mode != TRANSMITTER_GROUPING_GROUP:
+                continue
+            last_button = EasywaveTransmitterLastButtonSensor(entry, device)
+            battery = EasywaveTransmitterBatterySensor(entry, device)
+            async_add_entities([last_button, battery])
+        elif entry_type == ENTRY_TYPE_NEO_SENSOR:
+            capabilities = device.data.get(CONF_SENSOR_CAPABILITIES, 0)
+            neo_entities: list[SensorEntity] = []
+            if (capabilities >> 4) & 1:
+                neo_entities.append(EasywaveNeoSensorTemperatureSensor(entry, device))
+            if (capabilities >> 5) & 1:
+                neo_entities.append(EasywaveNeoSensorHumiditySensor(entry, device))
+            if neo_entities:
+                async_add_entities(neo_entities)
+
+    coordinator.ensure_telegram_listener()
 
 
 class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity):
@@ -244,14 +272,12 @@ class EasywaveTransmitterLastButtonSensor(EasywaveTransmitterEntity, RestoreSens
     def __init__(
         self,
         entry: EasywaveConfigEntry,
-        subentry: EasywaveDeviceEntry,
+        device: EasywaveDeviceEntry,
     ) -> None:
         """Initialize the last-button sensor."""
-        super().__init__(entry, subentry, "last_button")
-        button_count: int = min(subentry.data.get(CONF_BUTTON_COUNT, 4), 4)
-        switch_mode: str = subentry.data.get(
-            CONF_SWITCH_MODE, TRANSMITTER_SWITCH_IMPULSE
-        )
+        super().__init__(entry, device, "last_button")
+        button_count: int = min(device.data.get(CONF_BUTTON_COUNT, 4), 4)
+        switch_mode: str = device.data.get(CONF_SWITCH_MODE, TRANSMITTER_SWITCH_IMPULSE)
         options = list(_BUTTON_STATES[:button_count])
         if switch_mode == TRANSMITTER_SWITCH_IMPULSE:
             options.append(_BUTTON_STATE_RELEASED)
@@ -324,11 +350,9 @@ class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor)
 
     _CLEAR_THRESHOLD = 2
 
-    def __init__(
-        self, entry: EasywaveConfigEntry, subentry: EasywaveDeviceEntry
-    ) -> None:
+    def __init__(self, entry: EasywaveConfigEntry, device: EasywaveDeviceEntry) -> None:
         """Initialize the transmitter battery sensor."""
-        super().__init__(entry, subentry, "battery_warning")
+        super().__init__(entry, device, "battery_warning")
         self._native_value: str | None = None
         self._ok_streak: int = 0
 
@@ -376,7 +400,7 @@ class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor)
             if self._native_value != _BATTERY_STATE_LOW:
                 self._native_value = _BATTERY_STATE_LOW
                 self.async_write_ha_state()
-                self._coordinator.fire_device_event(self._subentry_id, "battery_low")
+                self._coordinator.fire_device_event(self._device_id, "battery_low")
             return
         if self._native_value == _BATTERY_STATE_OK:
             return
@@ -385,4 +409,92 @@ class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor)
             self._native_value = _BATTERY_STATE_OK
             self._ok_streak = 0
             self.async_write_ha_state()
-            self._coordinator.fire_device_event(self._subentry_id, "battery_normal")
+            self._coordinator.fire_device_event(self._device_id, "battery_normal")
+
+
+class EasywaveNeoSensorTemperatureSensor(EasywaveNeoSensorEntity, RestoreSensor):
+    """Temperature measurement from an Easywave neo sensor."""
+
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_translation_key = "neo_sensor_temperature"
+
+    def __init__(self, entry: EasywaveConfigEntry, device: EasywaveDeviceEntry) -> None:
+        """Initialize the temperature sensor."""
+        super().__init__(entry, device, "temperature")
+        self._attr_native_value: float | None = None
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the last known temperature."""
+        if (last_data := await self.async_get_last_sensor_data()) is not None:
+            if isinstance(last_data.native_value, (int, float)):
+                self._attr_native_value = float(last_data.native_value)
+        await super().async_added_to_hass()
+
+    @override
+    @property
+    def native_value(self) -> float | None:
+        """Return the current temperature."""
+        return self._attr_native_value
+
+    @override
+    @callback
+    def handle_telegram(self, event: SensorTelegramEvent) -> None:
+        """Update temperature from a measurement telegram."""
+        if not isinstance(event.payload, SensorMeasurementPayload):
+            return
+        value = event.payload.temperature_celsius
+        if value is None:
+            return
+        self._attr_native_value = value
+        _LOGGER.debug(
+            "Updated temperature for sensor %s to %s",
+            self._sensor_serial,
+            value,
+        )
+        self.async_write_ha_state()
+
+
+class EasywaveNeoSensorHumiditySensor(EasywaveNeoSensorEntity, RestoreSensor):
+    """Humidity measurement from an Easywave neo sensor."""
+
+    _attr_device_class = SensorDeviceClass.HUMIDITY
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_translation_key = "neo_sensor_humidity"
+
+    def __init__(self, entry: EasywaveConfigEntry, device: EasywaveDeviceEntry) -> None:
+        """Initialize the humidity sensor."""
+        super().__init__(entry, device, "humidity")
+        self._attr_native_value: float | None = None
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the last known humidity."""
+        if (last_data := await self.async_get_last_sensor_data()) is not None:
+            if isinstance(last_data.native_value, (int, float)):
+                self._attr_native_value = float(last_data.native_value)
+        await super().async_added_to_hass()
+
+    @override
+    @property
+    def native_value(self) -> float | None:
+        """Return the current humidity."""
+        return self._attr_native_value
+
+    @override
+    @callback
+    def handle_telegram(self, event: SensorTelegramEvent) -> None:
+        """Update humidity from a measurement telegram."""
+        if not isinstance(event.payload, SensorMeasurementPayload):
+            return
+        value = event.payload.humidity_percent
+        if value is None:
+            return
+        self._attr_native_value = value
+        _LOGGER.debug(
+            "Updated humidity for sensor %s to %s",
+            self._sensor_serial,
+            value,
+        )
+        self.async_write_ha_state()

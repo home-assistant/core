@@ -3,32 +3,23 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_get_gateway_serial": "Could not retrieve gateway serial from the RX11. Please try again.",
-      "code_send_failed": "Could not send the learning command to the receiver. Please try again.",
-      "device_added": "The device was successfully added to the gateway.",
-      "device_not_connected": "The RX11 transceiver is not connected. Please ensure it is plugged in.",
+      "device_added": "The device **{device_name}** is now available and entities have been created.",
+      "device_not_connected": "The RX11 USB Transceiver is not connected.\n\nTo add a new device, the RX11 must be reachable.\nPlease check the USB connection.",
+      "frequency_not_permitted": "This device operates on {frequency}, which is not permitted in your configured Home Assistant region ({country}).",
       "learning_cancelled": "Learning mode was cancelled.",
-      "no_available_receivers": "All 99 receiver slots on the RX11 are already in use.",
-      "no_device_learned": "No transmitter was detected.",
+      "no_device_learned": "No device was detected.",
       "no_devices_found": "No serial ports found. Make sure the RX11 USB Transceiver is plugged in and recognized by the system."
     },
     "error": {
+      "cannot_connect": "Could not connect to the RX11 USB Transceiver. Make sure it is plugged in and no other application is using the port.",
       "cannot_get_gateway_serial": "Could not retrieve gateway serial from the RX11. Please try again.",
       "device_no_longer_available": "The selected device is no longer available. Please try again."
     },
     "progress": {
-      "waiting_for_transmitter": "Waiting for a transmitter telegram..."
+      "waiting_for_sensor": "🔄 Waiting for learn signal... Press the learn button on the Easywave neo sensor NOW!",
+      "waiting_for_transmitter": "🔄 Waiting for transmitter signal... Press a button on the Easywave transmitter NOW!"
     },
     "step": {
-      "add_receiver": {
-        "description": "Which operating mode would you like to use?",
-        "menu_option_descriptions": {
-          "mode_universal": "Switching impulses can be triggered for all 4 usable transmit codes."
-        },
-        "menu_options": {
-          "mode_universal": "UNIVERSAL (4-Button)"
-        },
-        "title": "Operating Mode"
-      },
       "button_count_select": {
         "description": "Please specify the number of available buttons.",
         "menu_option_descriptions": {
@@ -38,10 +29,11 @@
           "buttons_4": "The transmitter/channel has 4 buttons with button codes A, B, C and D."
         },
         "menu_options": {
-          "buttons_1": "1 button",
-          "buttons_2": "2 buttons",
-          "buttons_3": "3 buttons",
-          "buttons_4": "4 buttons"
+          "buttons_1": "⚪ 1 Button",
+          "buttons_2": "⚪ 2 Buttons",
+          "buttons_3": "⚪ 3 Buttons",
+          "buttons_4": "⚪ 4 Buttons",
+          "transmitter_learn_intro": "⬅️ Back"
         },
         "title": "Button Count"
       },
@@ -49,25 +41,37 @@
         "description": "Detected device:\n**{name} ({serial_number})**\n\nPort: {device}",
         "title": "Set up RX11 USB Transceiver"
       },
-      "init": {
+      "device_select": {
         "description": "Which device would you like to add?",
         "menu_options": {
-          "add_receiver": "Easywave receiver",
-          "add_transmitter": "Easywave transmitter"
+          "neo_sensor": "⚪ Easywave neo Sensor",
+          "transmitter": "⚪ Easywave Transmitter"
         },
         "title": "Device Selection"
       },
-      "learn": {
-        "description": "Press a button on the Easywave transmitter now. The RX11 is listening for signals...",
-        "title": "Learning transmitter"
+      "learn_sensor": {
+        "title": "Press Learn Button!"
       },
-      "learn_timeout": {
-        "description": "No transmitter signal was received within the timeout period.",
+      "learn_timeout_sensor": {
+        "description": "No radio signal received!\nReduce the distance between sensor and server and try again.",
         "menu_options": {
-          "abort_learn": "Cancel",
-          "learn": "Try again"
+          "abort_learn": "❌ Cancel",
+          "learn": "🔄 Learn Sensor",
+          "sensor_learn_intro": "⬅️ Back"
         },
-        "title": "No Signal Received"
+        "title": "Timeout"
+      },
+      "learn_timeout_transmitter": {
+        "description": "No radio signal received!\nReduce the distance between transmitter and server and try again.",
+        "menu_options": {
+          "abort_learn": "❌ Cancel",
+          "learn": "🔄 Learn Transmitter",
+          "transmitter_learn_intro": "⬅️ Back"
+        },
+        "title": "Timeout"
+      },
+      "learn_transmitter": {
+        "title": "Press transmitter button!"
       },
       "ports": {
         "data": {
@@ -79,27 +83,23 @@
         "description": "Select the serial port of the RX11 USB Transceiver.",
         "title": "Select Easywave device"
       },
-      "receiver_confirm_learning": {
-        "description": "Did the LED on the receiver light up steadily for ~4 seconds, or otherwise acknowledge the learning process (refer to the receiver manual)? If not, you can repeat sending the learning telegram.",
-        "menu_options": {
-          "receiver_learn_start": "No, repeat sending the learning command",
-          "receiver_name": "Yes, the receiver acknowledged learning"
-        },
-        "title": "Confirm learning"
-      },
-      "receiver_name": {
+      "sensor_confirm": {
         "data": {
           "title": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
-          "title": "The name for the receiver device."
+          "title": "The name for this Easywave neo sensor."
         },
-        "description": "The receiver was successfully programmed. Make sure the receiver has left programming mode (the LED must no longer blink). Enter a name for the new device.",
-        "title": "Name receiver"
+        "description": "The sensor was successfully learned!\n\nDetected sensors:\n{sensor_list}\n\nEnter a name for the new device:",
+        "title": "Learning Successful"
       },
-      "receiver_prepare": {
-        "description": "Put your Easywave receiver into programming mode now by pressing the program button on the receiver. Refer to the receiver's manual for the correct programming mode for this operating mode.\n\nClick OK once the receiver is in programming mode and the LED is blinking. The integration will then send a learning telegram so the receiver can pair with this gateway.",
-        "title": "Prepare receiver"
+      "sensor_learn_intro": {
+        "description": "Home Assistant automatically detects which measurement data the sensor provides.\n\nPlease press the learn button on the back of the sensor in the next step.",
+        "menu_options": {
+          "device_select": "⬅️ Back",
+          "learn": "▶️ Learn Sensor"
+        },
+        "title": "Learn Sensor"
       },
       "transmitter_confirm": {
         "data": {
@@ -108,39 +108,20 @@
         "data_description": {
           "title": "The name for this transmitter device."
         },
-        "description": "An Easywave transmitter was detected. Give it a name.",
-        "title": "Transmitter Detected"
+        "description": "The transmitter was successfully learned!\n\nEnter a name for the new device:",
+        "title": "Learning Successful"
+      },
+      "transmitter_learn_intro": {
+        "description": "Please specify the number of buttons in the next step, then press a button on the Easywave transmitter.",
+        "menu_options": {
+          "button_count_select": "▶️ Continue",
+          "device_select": "⬅️ Back"
+        },
+        "title": "Learn Transmitter"
       }
-    }
-  },
-  "device_automation": {
-    "trigger_type": {
-      "battery_low": "Battery low",
-      "battery_normal": "Battery OK",
-      "gateway_connected": "Gateway connected",
-      "gateway_disconnected": "Gateway disconnected",
-      "state_a": "Changed to state 'Button A'",
-      "state_b": "Changed to state 'Button B'",
-      "state_c": "Changed to state 'Button C'",
-      "state_d": "Changed to state 'Button D'",
-      "state_released": "Changed to state 'Not pressed'"
     }
   },
   "entity": {
-    "button": {
-      "universal_a": {
-        "name": "Button A"
-      },
-      "universal_b": {
-        "name": "Button B"
-      },
-      "universal_c": {
-        "name": "Button C"
-      },
-      "universal_d": {
-        "name": "Button D"
-      }
-    },
     "sensor": {
       "battery_warning": {
         "name": "Battery",
@@ -150,11 +131,17 @@
         }
       },
       "gateway_status": {
-        "name": "Connection Status",
+        "name": "Connection status",
         "state": {
           "connected": "Connected",
-          "disconnected": "Not Connected"
+          "disconnected": "Disconnected"
         }
+      },
+      "neo_sensor_humidity": {
+        "name": "Humidity"
+      },
+      "neo_sensor_temperature": {
+        "name": "Temperature"
       },
       "transmitter_last_button": {
         "name": "State",
@@ -170,8 +157,15 @@
   },
   "issues": {
     "frequency_not_permitted": {
-      "description": "This Easywave hardware operates on **{frequency}**, which is **not permitted** in your configured Home Assistant region (**{country}**).\n\nThe integration has been disabled for regulatory compliance.\n\nIf you believe this is incorrect, verify your country setting under **Settings → System → General → Country**. The 868 MHz band is permitted in EU/EEA countries, the UK, Switzerland, Norway, Iceland, and Liechtenstein.",
+      "description": "This Easywave hardware operates on **{frequency}**, which is **not permitted** in your configured Home Assistant region (**{country}**).\n\nThe integration has been disabled for regulatory compliance.\n\nIf you believe this is incorrect, verify your country setting under **Settings → System → General → Country**. The 868 MHz band is permitted in EU/EEA countries, the UK, Switzerland, Norway, and Liechtenstein.",
       "title": "Easywave: {frequency} not permitted in {country}"
+    }
+  },
+  "selector": {
+    "sensor_type": {
+      "options": {
+        "unknown": "Unknown"
+      }
     }
   }
 }

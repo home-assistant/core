@@ -1,18 +1,18 @@
 """Pytest configuration and fixtures for Easywave Core tests."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from homeassistant.components.easywave.const import (
     CONF_BUTTON_COUNT,
+    CONF_DEVICE_DATA,
     CONF_DEVICE_PATH,
+    CONF_DEVICE_TITLE,
     CONF_ENTRY_TYPE,
-    CONF_GATEWAY_INDEX,
-    CONF_GATEWAY_SERIAL,
     CONF_OPERATING_TYPE,
-    CONF_RECEIVER_KIND,
     CONF_TRANSMITTER_SERIAL,
     CONF_USB_MANUFACTURER,
     CONF_USB_PID,
@@ -20,10 +20,9 @@ from homeassistant.components.easywave.const import (
     CONF_USB_SERIAL_NUMBER,
     CONF_USB_VID,
     DOMAIN,
-    ENTRY_TYPE_RECEIVER,
     ENTRY_TYPE_TRANSMITTER,
-    RECEIVER_KIND_UNIVERSAL,
 )
+from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from tests.common import MockConfigEntry
@@ -37,78 +36,60 @@ MOCK_ENTRY_DATA = {
     CONF_USB_PRODUCT: "RX11 USB Transceiver",
 }
 
-MOCK_GATEWAY_SERIAL = "00" * 14 + "abcd"
 MOCK_TRANSMITTER_SERIAL = "aa" * 16
+MOCK_TRANSMITTER_DEVICE_ID = f"transmitter_{MOCK_TRANSMITTER_SERIAL}"
+MOCK_NEO_SENSOR_SERIAL = "bb" * 16
+MOCK_NEO_SENSOR_DEVICE_ID = f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}"
+
+
+def _device_record(
+    device_id: str,
+    title: str,
+    data: dict[str, Any],
+) -> dict[str, Any]:
+    """Return a device record for config entry options."""
+    return {
+        CONF_DEVICE_ID: device_id,
+        CONF_DEVICE_TITLE: title,
+        CONF_DEVICE_DATA: data,
+    }
 
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock gateway ConfigEntry."""
     return MockConfigEntry(
-        version=1,
+        version=2,
         domain=DOMAIN,
         title="Easywave Gateway",
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
-    )
-
-
-MOCK_RECEIVER_SUBENTRY_ID = "receiver_subentry_01"
-MOCK_TRANSMITTER_SUBENTRY_ID = "transmitter_subentry_01"
-
-
-@pytest.fixture
-def mock_config_entry_with_receiver() -> MockConfigEntry:
-    """Return a gateway ConfigEntry with a receiver device in options."""
-    return MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        title="Easywave Gateway",
-        data=MOCK_ENTRY_DATA,
-        source="usb",
-        unique_id="easywave_12345",
-        options={
-            "devices": [
-                {
-                    "id": MOCK_RECEIVER_SUBENTRY_ID,
-                    "title": "Test Receiver",
-                    "unique_id": f"receiver_{MOCK_GATEWAY_SERIAL}_0",
-                    "data": {
-                        CONF_ENTRY_TYPE: ENTRY_TYPE_RECEIVER,
-                        CONF_GATEWAY_INDEX: 0,
-                        CONF_GATEWAY_SERIAL: MOCK_GATEWAY_SERIAL,
-                        CONF_RECEIVER_KIND: RECEIVER_KIND_UNIVERSAL,
-                    },
-                }
-            ]
-        },
     )
 
 
 @pytest.fixture
 def mock_config_entry_with_transmitter() -> MockConfigEntry:
-    """Return a gateway ConfigEntry with a transmitter device in options."""
+    """Return a gateway ConfigEntry with a transmitter device."""
     return MockConfigEntry(
-        version=1,
+        version=2,
         domain=DOMAIN,
         title="Easywave Gateway",
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
         options={
-            "devices": [
-                {
-                    "id": MOCK_TRANSMITTER_SUBENTRY_ID,
-                    "title": "Test Transmitter",
-                    "unique_id": f"transmitter_{MOCK_TRANSMITTER_SERIAL}",
-                    "data": {
+            CONF_DEVICES: [
+                _device_record(
+                    MOCK_TRANSMITTER_DEVICE_ID,
+                    "Test Transmitter",
+                    {
                         CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
                         CONF_TRANSMITTER_SERIAL: MOCK_TRANSMITTER_SERIAL,
                         CONF_OPERATING_TYPE: "1",
                         CONF_BUTTON_COUNT: 4,
                     },
-                }
+                )
             ]
         },
     )

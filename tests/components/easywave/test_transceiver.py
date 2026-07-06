@@ -6,6 +6,8 @@ import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from easywave_home_control import RX11ErrorCode
+from easywave_home_control.codec import SensorTelegramEvent
+from easywave_home_control.codec.sensors import SensorLearnPayload
 import pytest
 import serial
 
@@ -1000,3 +1002,43 @@ async def test_send_command_failure(
         result = await transceiver.send_command(bytes(16), 0)
 
     assert result is False
+
+
+async def test_receive_telegram_uses_ew_rcv_ex(
+    transceiver: RX11Transceiver,
+    mock_device: MagicMock,
+) -> None:
+    """Neo sensor telegrams are received via EW_RCV_EX."""
+    learn_event = SensorTelegramEvent(
+        sensor_serial=b"\xaa" * 16,
+        payload=SensorLearnPayload(
+            version=0,
+            has_battery=True,
+            battery_level=7,
+            capabilities=0,
+        ),
+    )
+    mock_device.ew_rcv_ex_request = AsyncMock(
+        return_value=(
+            RX11ErrorCode.SUCCESS,
+            0x02,
+            learn_event.sensor_serial,
+            bytes(8),
+        )
+    )
+    mock_device.ewb_rcv_request = AsyncMock()
+    mock_device.cancel_all_io_requests = AsyncMock()
+
+    with (
+        _patch_device(mock_device),
+        patch(
+            "homeassistant.components.easywave.transceiver.parse_ewb_rcv_result",
+            return_value=learn_event,
+        ),
+    ):
+        await transceiver.connect()
+        result = await transceiver.receive_telegram(timeout=1.0)
+
+    assert result is learn_event
+    mock_device.ew_rcv_ex_request.assert_awaited_once()
+    mock_device.ewb_rcv_request.assert_not_called()

@@ -35,54 +35,55 @@ CONF_USB_MANUFACTURER: Final = "usb_manufacturer"
 CONF_USB_PRODUCT: Final = "usb_product"
 
 # ── Radio Frequency / Regulatory Compliance ─────────────────────────────────
-# RX11 operates at 868 MHz (EU ISM band). Only permitted in CEPT countries.
+# Home Assistant requires integrations to verify that RF hardware is permitted
+# in the user's configured country. The RX11 USB Transceiver operates on
+# 868 MHz (EU ISM band), which is only allowed in CEPT member countries.
 FREQUENCY_868MHZ: Final = "868 MHz"
 
-FREQUENCY_ALLOWED_COUNTRIES: Final = {
-    FREQUENCY_868MHZ: frozenset(
-        {
-            # EU Member States (CEPT)
-            "AT",
-            "BE",
-            "BG",
-            "HR",
-            "CY",
-            "CZ",
-            "DK",
-            "EE",
-            "FI",
-            "FR",
-            "DE",
-            "GR",
-            "HU",
-            "IE",
-            "IT",
-            "LV",
-            "LT",
-            "LU",
-            "MT",
-            "NL",
-            "PL",
-            "PT",
-            "RO",
-            "SK",
-            "SI",
-            "ES",
-            "SE",
-            # CEPT Members (non-EU)
-            "CH",
-            "NO",
-            "IS",
-            "LI",
-            # UK (post-Brexit)
-            "GB",
-            "UK",
-        }
-    ),
-}
+ALLOWED_COUNTRIES_868MHZ: Final = frozenset(
+    {
+        # EU Member States (CEPT)
+        "AT",
+        "BE",
+        "BG",
+        "HR",
+        "CY",
+        "CZ",
+        "DK",
+        "EE",
+        "FI",
+        "FR",
+        "DE",
+        "GR",
+        "HU",
+        "IE",
+        "IT",
+        "LV",
+        "LT",
+        "LU",
+        "MT",
+        "NL",
+        "PL",
+        "PT",
+        "RO",
+        "SK",
+        "SI",
+        "ES",
+        "SE",
+        # CEPT Members (non-EU)
+        "CH",
+        "NO",
+        "IS",
+        "LI",
+        # UK (post-Brexit)
+        "GB",
+        "UK",
+    }
+)
 
-# Legacy constant for backward compatibility
-ALLOWED_COUNTRIES_868MHZ: Final = FREQUENCY_ALLOWED_COUNTRIES[FREQUENCY_868MHZ]
+FREQUENCY_ALLOWED_COUNTRIES: Final = {
+    FREQUENCY_868MHZ: ALLOWED_COUNTRIES_868MHZ,
+}
 
 
 def is_country_allowed_for_frequency(frequency: str, country_code: str | None) -> bool:
@@ -117,26 +118,29 @@ def get_frequency_for_pid(pid: int | None) -> str | None:
     return None
 
 
-# Event fired for transmitter button presses (consumed by device_trigger).
+# Event fired for gateway/battery state changes (usable in event automations).
 EVENT_EASYWAVE: Final = f"{DOMAIN}_event"
 
-# ── Config Entry / Subentry Types ────────────────────────────────────────────
+# ── Config Entry / Device Storage ────────────────────────────────────────────
+CONF_DEVICE_TITLE: Final = "title"
+CONF_DEVICE_DATA: Final = "data"
+
 CONF_ENTRY_TYPE: Final = "entry_type"
 
-ENTRY_TYPE_RECEIVER: Final = "receiver"
+SUBENTRY_TYPE_TRANSMITTER: Final = "transmitter"
+SUBENTRY_TYPE_NEO_SENSOR: Final = "neo_sensor"
+
 ENTRY_TYPE_TRANSMITTER: Final = "transmitter"
-
-
-# ── Receiver Configuration Keys ──────────────────────────────────────────────
-CONF_GATEWAY_INDEX: Final = "gateway_index"
-CONF_GATEWAY_SERIAL: Final = "gateway_serial"
-CONF_RECEIVER_KIND: Final = "receiver_kind"
-
-# Receiver kinds (operating modes)
-RECEIVER_KIND_UNIVERSAL: Final = "universal_4button"
+ENTRY_TYPE_NEO_SENSOR: Final = "neo_sensor"
 
 # ── Transmitter Configuration Keys ───────────────────────────────────────────
 CONF_TRANSMITTER_SERIAL: Final = "transmitter_serial"
+
+# ── EWneo Sensor Configuration Keys ────────────────────────────────────────────
+CONF_SENSOR_SERIAL: Final = "sensor_serial"
+CONF_SENSOR_CAPABILITIES: Final = "sensor_capabilities"
+
+# ── Transmitter operating configuration ─────────────────────────────────────
 CONF_OPERATING_TYPE: Final = "operating_type"
 CONF_BUTTON_COUNT: Final = "button_count"
 CONF_GROUPING_MODE: Final = "grouping_mode"

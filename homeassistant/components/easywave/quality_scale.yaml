@@ -18,7 +18,9 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  docs-triggers: done
+  "docs-triggers":
+    status: exempt
+    comment: Device triggers are not exposed while only the sensor platform is included.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done

@@ -52,10 +52,11 @@ def test_frequency_allowed_countries() -> None:
     assert "CH" in allowed  # Switzerland
 
 
-def test_allowed_countries_868mhz_legacy() -> None:
-    """Test ALLOWED_COUNTRIES_868MHZ backward compatibility."""
-    assert FREQUENCY_ALLOWED_COUNTRIES[FREQUENCY_868MHZ] == ALLOWED_COUNTRIES_868MHZ
+def test_allowed_countries_868mhz() -> None:
+    """Test the 868 MHz regulatory allowlist used for compliance checks."""
+    assert FREQUENCY_ALLOWED_COUNTRIES[FREQUENCY_868MHZ] is ALLOWED_COUNTRIES_868MHZ
     assert "DE" in ALLOWED_COUNTRIES_868MHZ
+    assert "US" not in ALLOWED_COUNTRIES_868MHZ
 
 
 def test_is_country_allowed_for_frequency_allowed() -> None:

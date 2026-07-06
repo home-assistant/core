@@ -8,6 +8,7 @@ import time
 
 from easywave_home_control import RX11Device, RX11ErrorCode
 from easywave_home_control.codec import EwbRcvEvent, parse_ewb_rcv_result
+from easywave_home_control.codec.exceptions import CodecError
 import serial
 import serial.tools.list_ports
 
@@ -572,27 +573,27 @@ class RX11Transceiver:
     async def receive_telegram(self, timeout: float = 30.0) -> EwbRcvEvent | None:
         """Wait for any EW/EWneo telegram (transmitter or sensor).
 
-        Uses ewb_rcv_request (EWB_RCV) which catches all telegram types:
-        - ButtonPushEvent: EW transmitter button press
-        - ButtonReleaseEvent: EW transmitter button release
-        - SensorTelegramEvent: EWneo sensor data
-
-        Returns a typed EwbRcvEvent parsed by the codec, or None on timeout/error.
+        Uses ew_rcv_ex_request (EW_RCV_EX) which receives neo sensor measurements
+        and classic Easywave button telegrams. EWB_RCV alone does not deliver
+        STH01 sensor payloads reliably.
         """
         if not self._device or not self.is_connected:
             return None
 
         try:
-            raw = await self._device.ewb_rcv_request(timeout=timeout)
+            raw = await self._device.ew_rcv_ex_request(timeout=timeout)
             error_code = raw[0]
             if error_code == RX11ErrorCode.SUCCESS:
-                return parse_ewb_rcv_result(raw)
+                try:
+                    return parse_ewb_rcv_result(raw)
+                except CodecError as err:
+                    _LOGGER.debug("Failed to parse received telegram: %s", err)
         except _SERIAL_OR_OS_ERRORS as err:
             _LOGGER.debug("Error receiving telegram: %s", err)
         except TimeoutError:
             _LOGGER.debug("Receive telegram timed out")
 
-        # ewb_rcv_request uses req.wait() directly without removing the request
+        # ew_rcv_ex_request uses req.wait() directly without removing the request
         # on timeout.  Flush any orphaned requests so retries start clean.
         # Acquire _io_cancel_lock so we do not flush while a health-check ping
         # is in flight (that would cancel the ping and cause a false failure).
@@ -611,5 +612,6 @@ class RX11Transceiver:
         """
         if not self._device or not self.is_connected:
             return
-        with contextlib.suppress(*_SERIAL_OR_OS_ERRORS):
-            await self._device.cancel_all_io_requests()
+        async with self._io_cancel_lock:
+            with contextlib.suppress(*_SERIAL_OR_OS_ERRORS):
+                await self._device.cancel_all_io_requests()

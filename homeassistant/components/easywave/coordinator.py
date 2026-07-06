@@ -10,24 +10,27 @@ from easywave_home_control.codec import (
     ButtonPushEvent,
     ButtonReleaseEvent,
     EwbRcvEvent,
+    SensorMeasurementPayload,
+    SensorTelegramEvent,
 )
+from easywave_home_control.codec.sensors import SensorLearnPayload
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    DEVICE_SCAN_INTERVAL,
-    DOMAIN,
-    EVENT_EASYWAVE,
-    TRANSMITTER_GROUPING_GROUP,
-)
+from .const import DEVICE_SCAN_INTERVAL, DOMAIN, EVENT_EASYWAVE
 from .transceiver import RX11Transceiver
 
 if TYPE_CHECKING:
     from . import EasywaveConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _serial_hex_matches(device_serial: bytes, configured_serial: str) -> bool:
+    """Return True when a telegram serial matches configured device data."""
+    return device_serial.hex().lower() == configured_serial.lower()
 
 
 class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -52,6 +55,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.transceiver = transceiver
         self.is_offline = not transceiver.is_connected
         self._transmitter_entities: list[Any] = []
+        self._sensor_entities: list[Any] = []
         self._listener_task: asyncio.Task[None] | None = None
 
     @override
@@ -140,6 +144,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if not self.transceiver.is_connected:
                 _LOGGER.warning("Connection lost, entering offline mode")
                 self.is_offline = True
+                self._stop_telegram_listener()
                 return {
                     "is_connected": False,
                     "device_path": None,
@@ -162,7 +167,10 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_shutdown(self) -> None:
         """Shutdown coordinator and disconnect transceiver."""
         try:
-            self._stop_telegram_listener()
+            task = self._stop_telegram_listener()
+            if task is not None:
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
             await self.transceiver.dispose()
             _LOGGER.debug("Coordinator shutdown complete")
         except (OSError, TimeoutError) as err:
@@ -173,13 +181,13 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @property
     def _has_telegram_listeners(self) -> bool:
         """Return True if any entities need telegram listening."""
-        return bool(self._transmitter_entities)
+        return bool(self._transmitter_entities or self._sensor_entities)
 
     def register_transmitter_entities(self, entities: list[Any]) -> None:
         """Register transmitter event entities for telegram dispatching."""
         self._transmitter_entities.extend(entities)
-        if entities and not self.is_offline:
-            self._start_telegram_listener()
+        if entities:
+            self.ensure_telegram_listener()
 
     def unregister_transmitter_entity(self, entity: Any) -> None:
         """Remove a single transmitter entity from telegram dispatching."""
@@ -188,19 +196,49 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not self._has_telegram_listeners:
             self._stop_telegram_listener()
 
+    def register_sensor_entities(self, entities: list[Any]) -> None:
+        """Register neo sensor entities for telegram dispatching."""
+        self._sensor_entities.extend(entities)
+        if entities:
+            self.ensure_telegram_listener()
+
+    def unregister_sensor_entity(self, entity: Any) -> None:
+        """Remove a single neo sensor entity from telegram dispatching."""
+        with contextlib.suppress(ValueError):
+            self._sensor_entities.remove(entity)
+        if not self._has_telegram_listeners:
+            self._stop_telegram_listener()
+
+    def ensure_telegram_listener(self) -> None:
+        """Start the telegram listener when entities are registered."""
+        if self._has_telegram_listeners and not self.is_offline:
+            self._start_telegram_listener()
+
     def _start_telegram_listener(self) -> None:
         """Start the background telegram listener task."""
-        if self._listener_task is not None:
+        if self._listener_task is not None and not self._listener_task.done():
             return
-        self._listener_task = self.hass.async_create_background_task(
-            self._telegram_listener_loop(), "easywave_telegram_listener"
+        if not self._has_telegram_listeners or self.is_offline:
+            return
+        self._listener_task = self.config_entry.async_create_background_task(
+            self.hass,
+            self._telegram_listener_loop(),
+            "easywave_telegram_listener",
         )
 
-    def _stop_telegram_listener(self) -> None:
-        """Stop the background telegram listener task."""
-        if self._listener_task is not None:
-            self._listener_task.cancel()
-            self._listener_task = None
+    def _stop_telegram_listener(self) -> asyncio.Task[None] | None:
+        """Cancel the listener and return the task so callers can await it."""
+        if self._listener_task is None:
+            return None
+        task = self._listener_task
+        self._listener_task = None
+        if not task.done():
+            task.cancel()
+        return task
+
+    async def _clear_listener_task(self) -> None:
+        """Clear the listener task reference after the loop exits."""
+        self._listener_task = None
 
     async def suspend_telegram_listener(self) -> None:
         """Pause the telegram listener so a learning task has exclusive hardware access.
@@ -208,9 +246,10 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         Stops the listener task and cancels any EWB_RCV that was in-flight on the
         hardware, leaving a clean slate for the learning loop.
         """
-        self._stop_telegram_listener()
-        # Yield so the task cancellation is processed before we flush the hardware.
-        await asyncio.sleep(0)
+        task = self._stop_telegram_listener()
+        if task is not None:
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
         await self.transceiver.cancel_pending_receives()
 
     def resume_telegram_listener(self) -> None:
@@ -220,19 +259,25 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _telegram_listener_loop(self) -> None:
         """Continuously listen for all EW/EWneo telegrams and dispatch."""
-        while not self.is_offline and self._has_telegram_listeners:
-            try:
-                telegram = await self.transceiver.receive_telegram(timeout=30.0)
-                if telegram is None:
-                    # Timeout, loop again
-                    continue
-                self._dispatch_telegram(telegram)
-            except asyncio.CancelledError:
-                break
-            except (OSError, TimeoutError) as err:
-                _LOGGER.debug("Telegram listener error: %s", err)
-                await asyncio.sleep(5.0)
+        try:
+            while not self.is_offline and self._has_telegram_listeners:
+                try:
+                    telegram = await self.transceiver.receive_telegram(timeout=30.0)
+                    if telegram is None:
+                        continue
+                    self._dispatch_telegram(telegram)
+                except asyncio.CancelledError:
+                    break
+                except (OSError, TimeoutError) as err:
+                    _LOGGER.debug("Telegram listener error: %s", err)
+                    await asyncio.sleep(5.0)
+                except Exception:
+                    _LOGGER.exception("Unexpected error in telegram listener")
+                    await asyncio.sleep(1.0)
+        finally:
+            await self._clear_listener_task()
 
+    @callback
     def _dispatch_telegram(self, event: EwbRcvEvent) -> None:
         """Dispatch a received telegram to the matching entity."""
         if isinstance(event, ButtonPushEvent):
@@ -240,64 +285,73 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._dispatch_button_push(event)
         elif isinstance(event, ButtonReleaseEvent):
             self._dispatch_button_release(event)
+        elif isinstance(event, SensorTelegramEvent):
+            self._dispatch_sensor_telegram(event)
         else:
             _LOGGER.debug("Unhandled telegram event type: %s", type(event).__name__)
 
+    @callback
     def _dispatch_button_push(self, event: ButtonPushEvent) -> None:
         """Dispatch a button push event to matching entities."""
         serial_hex = event.transmitter_serial.hex()
         is_low_battery = event.function == ButtonFunction.LOW_BATTERY
 
-        matched_subentry_id: str | None = None
-        matched_operating_type: str | None = None
-        matched_grouping_mode: str | None = None
         for entity in list(self._transmitter_entities):
-            if entity.transmitter_serial == serial_hex:
+            if _serial_hex_matches(event.transmitter_serial, entity.transmitter_serial):
                 entity.handle_telegram(event)
                 entity.handle_battery_status(is_low_battery)
-                if matched_subentry_id is None:
-                    matched_subentry_id = getattr(entity, "subentry_id", None)
-                    matched_operating_type = getattr(entity, "operating_type", None)
-                    matched_grouping_mode = getattr(entity, "grouping_mode", None)
-        if matched_subentry_id is None:
+        if not any(
+            _serial_hex_matches(event.transmitter_serial, entity.transmitter_serial)
+            for entity in self._transmitter_entities
+        ):
             _LOGGER.debug("Received EW push from unknown transmitter: %s", serial_hex)
-            return
-        if not is_low_battery:
-            self._fire_transmitter_event(
-                matched_subentry_id,
-                matched_operating_type,
-                matched_grouping_mode,
-                event,
-            )
 
+    @callback
     def _dispatch_button_release(self, event: ButtonReleaseEvent) -> None:
         """Dispatch a button release event to matching entities."""
-        serial_hex = event.transmitter_serial.hex()
-
-        matched_subentry_id: str | None = None
-        matched_operating_type: str | None = None
-        matched_grouping_mode: str | None = None
         for entity in list(self._transmitter_entities):
-            if entity.transmitter_serial == serial_hex:
+            if _serial_hex_matches(event.transmitter_serial, entity.transmitter_serial):
                 entity.handle_telegram(event)
-                if matched_subentry_id is None:
-                    matched_subentry_id = getattr(entity, "subentry_id", None)
-                    matched_operating_type = getattr(entity, "operating_type", None)
-                    matched_grouping_mode = getattr(entity, "grouping_mode", None)
-        if matched_subentry_id is None:
-            return
-        self._fire_transmitter_event(
-            matched_subentry_id,
-            matched_operating_type,
-            matched_grouping_mode,
-            event,
-        )
 
-    def fire_device_event(self, subentry_id: str, event_type: str) -> None:
-        """Fire an HA event for a device-level trigger (e.g. battery_low)."""
+    @callback
+    def _dispatch_sensor_telegram(self, event: SensorTelegramEvent) -> None:
+        """Dispatch a neo sensor measurement to matching entities."""
+        serial_hex = event.sensor_serial.hex()
+        if isinstance(event.payload, SensorLearnPayload):
+            _LOGGER.debug(
+                "Received EWneo learn telegram from %s at runtime",
+                serial_hex,
+            )
+            return
+        if not isinstance(event.payload, SensorMeasurementPayload):
+            _LOGGER.debug(
+                "Received EWneo telegram from %s with unsupported payload type %s",
+                serial_hex,
+                type(event.payload).__name__,
+            )
+            return
+
+        matched = False
+        for entity in list(self._sensor_entities):
+            if _serial_hex_matches(event.sensor_serial, entity.sensor_serial):
+                entity.handle_telegram(event)
+                matched = True
+        if not matched:
+            configured = sorted(
+                {entity.sensor_serial.lower() for entity in self._sensor_entities}
+            )
+            _LOGGER.debug(
+                "Received EWneo measurement from unknown sensor %s "
+                "(configured sensors: %s)",
+                serial_hex,
+                ", ".join(configured) if configured else "none",
+            )
+
+    def fire_device_event(self, device_id: str, event_type: str) -> None:
+        """Fire a homeassistant event for gateway/battery state changes."""
         device_registry = dr.async_get(self.hass)
         device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry_id)}
+            identifiers={(DOMAIN, device_id)}
         )
         if device_entry is None:
             return
@@ -305,35 +359,3 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             EVENT_EASYWAVE,
             {"device_id": device_entry.id, "type": event_type},
         )
-
-    def _fire_transmitter_event(
-        self,
-        subentry_id: str,
-        operating_type: str | None,
-        grouping_mode: str | None,
-        event: ButtonPushEvent | ButtonReleaseEvent,
-    ) -> None:
-        """Fire an HA event so device triggers can react to button presses."""
-        device_registry = dr.async_get(self.hass)
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry_id)}
-        )
-        if device_entry is None:
-            return
-
-        if operating_type == "1" and grouping_mode == TRANSMITTER_GROUPING_GROUP:
-            if isinstance(event, ButtonPushEvent):
-                button_letter = "abcd"[event.button] if event.button < 4 else None
-                if button_letter:
-                    self.hass.bus.async_fire(
-                        EVENT_EASYWAVE,
-                        {
-                            "device_id": device_entry.id,
-                            "type": f"state_{button_letter}",
-                        },
-                    )
-            elif isinstance(event, ButtonReleaseEvent):
-                self.hass.bus.async_fire(
-                    EVENT_EASYWAVE,
-                    {"device_id": device_entry.id, "type": "state_released"},
-                )

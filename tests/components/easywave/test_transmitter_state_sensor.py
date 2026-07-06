@@ -13,37 +13,37 @@ from homeassistant.components.easywave.const import (
     ENTRY_TYPE_TRANSMITTER,
     TRANSMITTER_GROUPING_GROUP,
 )
+from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_ENTRY_DATA, MOCK_TRANSMITTER_SERIAL
+from .conftest import MOCK_ENTRY_DATA, MOCK_TRANSMITTER_SERIAL, _device_record
 
 from tests.common import MockConfigEntry
 
-MOCK_SUBENTRY_ID = "binary_sensor_subentry_test"
+MOCK_DEVICE_ID = f"transmitter_{MOCK_TRANSMITTER_SERIAL}"
 
 
 def _make_gateway(extra_data: dict[str, object]) -> MockConfigEntry:
-    """Return a gateway entry with a transmitter subentry using given data."""
+    """Return a gateway entry with a transmitter device using given data."""
     return MockConfigEntry(
-        version=1,
+        version=2,
         domain=DOMAIN,
         title="Easywave Gateway",
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
         options={
-            "devices": [
-                {
-                    "id": MOCK_SUBENTRY_ID,
-                    "title": "Test Transmitter",
-                    "unique_id": f"transmitter_{MOCK_TRANSMITTER_SERIAL}",
-                    "data": {
+            CONF_DEVICES: [
+                _device_record(
+                    MOCK_DEVICE_ID,
+                    "Test Transmitter",
+                    {
                         CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
                         CONF_TRANSMITTER_SERIAL: MOCK_TRANSMITTER_SERIAL,
                         **extra_data,
                     },
-                }
+                )
             ]
         },
     )
@@ -114,9 +114,12 @@ async def test_last_button_sensor_restores_state(hass: HomeAssistant) -> None:
 
     registry = er.async_get(hass)
     entity_id = registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{MOCK_SUBENTRY_ID}_last_button"
+        "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_last_button"
     )
     assert entity_id is not None
+    entry = registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.config_subentry_id is None
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "b"

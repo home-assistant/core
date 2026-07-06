@@ -19,13 +19,13 @@ from homeassistant.components.easywave.entity import (
 )
 
 
-def test_transmitter_entity_unique_id_with_subentry_id() -> None:
-    """Ensure transmitter entity generates unique_id from subentry_id."""
+def test_transmitter_entity_unique_id_with_device_id() -> None:
+    """Ensure transmitter entity generates unique_id from device_id."""
     entry_mock = MagicMock()
     entry_mock.entry_id = "test_entry_123"
 
-    subentry = EasywaveDeviceEntry(
-        subentry_id="my_transmitter_id",
+    device = EasywaveDeviceEntry(
+        device_id="my_transmitter_id",
         title="Test Transmitter",
         data={
             CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
@@ -37,5 +37,5 @@ def test_transmitter_entity_unique_id_with_subentry_id() -> None:
         },
     )
 
-    entity = EasywaveTransmitterEntity(entry_mock, subentry, "test_suffix")
+    entity = EasywaveTransmitterEntity(entry_mock, device, "test_suffix")
     assert entity._attr_unique_id == "my_transmitter_id_test_suffix"
