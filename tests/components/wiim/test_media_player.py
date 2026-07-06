@@ -51,7 +51,7 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 import homeassistant.components.wiim as wiim_component
-from homeassistant.components.wiim.const import DATA_WIIM, DOMAIN
+from homeassistant.components.wiim.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
 
@@ -60,6 +60,52 @@ from . import fire_general_update, fire_transport_update, setup_integration
 from tests.common import MockConfigEntry
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.test_wiim_device"
+
+
+def _build_mock_wiim_device(
+    *,
+    udn: str,
+    name: str,
+    ip_address: str,
+    base_device: MagicMock,
+) -> AsyncMock:
+    """Build a mocked WiiM device for a second integration entry."""
+    device = AsyncMock(spec=WiimDevice)
+    device.udn = udn
+    device.name = name
+    device.model_name = "WiiM Pro"
+    device.manufacturer = "Linkplay Tech"
+    device.firmware_version = "4.8.523456"
+    device.ip_address = ip_address
+    device.http_api_url = f"http://{ip_address}:8080"
+    device.presentation_url = f"http://{ip_address}:8080/web_interface"
+    device.available = True
+    device.volume = 40
+    device.is_muted = False
+    device.supports_http_api = False
+    device.playing_status = PlayingStatus.STOPPED
+    device.play_mode = "Network"
+    device.loop_state = WiimLoopState(
+        repeat=WiimRepeatMode.OFF,
+        shuffle=False,
+    )
+    device.output_mode = "speaker"
+    device.current_media = None
+    device.supported_input_modes = base_device.supported_input_modes
+    device.supported_output_modes = base_device.supported_output_modes
+    device.async_get_transport_capabilities = AsyncMock(
+        return_value=WiimTransportCapabilities(
+            can_next=False,
+            can_previous=False,
+            can_repeat=False,
+            can_shuffle=False,
+        )
+    )
+    device.general_event_callback = None
+    device.av_transport_event_callback = None
+    device.rendering_control_event_callback = None
+    device.play_queue_event_callback = None
+    return device
 
 
 async def test_state_machine_updates_from_device_callbacks(
@@ -443,41 +489,12 @@ async def test_group_refresh_dispatcher_sends_to_followers_and_refreshes_member(
     mock_wiim_controller: MagicMock,
 ) -> None:
     """Test leader group refresh signal makes a real follower entity refresh."""
-    follower_device = AsyncMock(spec=WiimDevice)
-    follower_device.udn = "uuid:follower-1234"
-    follower_device.name = "Follower WiiM Device"
-    follower_device.model_name = "WiiM Pro"
-    follower_device.manufacturer = "Linkplay Tech"
-    follower_device.firmware_version = "4.8.523456"
-    follower_device.ip_address = "192.168.1.101"
-    follower_device.http_api_url = "http://192.168.1.101:8080"
-    follower_device.presentation_url = "http://192.168.1.101:8080/web_interface"
-    follower_device.available = True
-    follower_device.volume = 40
-    follower_device.is_muted = False
-    follower_device.supports_http_api = False
-    follower_device.playing_status = PlayingStatus.STOPPED
-    follower_device.play_mode = "Network"
-    follower_device.loop_state = WiimLoopState(
-        repeat=WiimRepeatMode.OFF,
-        shuffle=False,
+    follower_device = _build_mock_wiim_device(
+        udn="uuid:follower-1234",
+        name="Follower WiiM Device",
+        ip_address="192.168.1.101",
+        base_device=mock_wiim_device,
     )
-    follower_device.output_mode = "speaker"
-    follower_device.current_media = None
-    follower_device.supported_input_modes = mock_wiim_device.supported_input_modes
-    follower_device.supported_output_modes = mock_wiim_device.supported_output_modes
-    follower_device.async_get_transport_capabilities = AsyncMock(
-        return_value=WiimTransportCapabilities(
-            can_next=False,
-            can_previous=False,
-            can_repeat=False,
-            can_shuffle=False,
-        )
-    )
-    follower_device.general_event_callback = None
-    follower_device.av_transport_event_callback = None
-    follower_device.rendering_control_event_callback = None
-    follower_device.play_queue_event_callback = None
 
     wiim_component.async_create_wiim_device.side_effect = [
         mock_wiim_device,
@@ -843,10 +860,41 @@ async def test_join_and_unjoin_services_use_resolved_member_udns(
     mock_wiim_controller: MagicMock,
 ) -> None:
     """Test grouping services call the controller with resolved UDNs."""
+    follower_device = _build_mock_wiim_device(
+        udn="uuid:follower-1234",
+        name="Follower WiiM Device",
+        ip_address="192.168.1.101",
+        base_device=mock_wiim_device,
+    )
+    second_follower_device = _build_mock_wiim_device(
+        udn="uuid:follower-5678",
+        name="Second Follower WiiM Device",
+        ip_address="192.168.1.102",
+        base_device=mock_wiim_device,
+    )
+    wiim_component.async_create_wiim_device.side_effect = [
+        mock_wiim_device,
+        follower_device,
+        second_follower_device,
+    ]
+    follower_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.101"},
+        title=follower_device.name,
+        unique_id=follower_device.udn,
+    )
+    second_follower_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.102"},
+        title=second_follower_device.name,
+        unique_id=second_follower_device.udn,
+    )
+
     await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, follower_config_entry)
+    await setup_integration(hass, second_follower_config_entry)
+
     follower_entity_id = "media_player.follower_wiim_device"
-    wiim_data = hass.data[DATA_WIIM]
-    wiim_data.entity_id_to_udn_map[follower_entity_id] = "uuid:follower-1234"
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
@@ -863,7 +911,7 @@ async def test_join_and_unjoin_services_use_resolved_member_udns(
     )
 
     mock_wiim_controller.async_join_group.assert_awaited_once_with(
-        mock_wiim_device.udn, ["uuid:follower-1234"]
+        mock_wiim_device.udn, [follower_device.udn]
     )
     mock_wiim_controller.async_join_group.reset_mock()
 
@@ -878,7 +926,6 @@ async def test_join_and_unjoin_services_use_resolved_member_udns(
     )
     leader_device.current_media = None
     second_follower_entity_id = "media_player.second_follower_wiim_device"
-    wiim_data.entity_id_to_udn_map[second_follower_entity_id] = "uuid:follower-5678"
     mock_wiim_controller.get_group_snapshot.return_value = WiimGroupSnapshot(
         role=WiimGroupRole.FOLLOWER,
         leader_udn=leader_device.udn,
@@ -902,7 +949,7 @@ async def test_join_and_unjoin_services_use_resolved_member_udns(
     )
 
     mock_wiim_controller.async_join_group.assert_awaited_once_with(
-        leader_device.udn, ["uuid:follower-5678"]
+        leader_device.udn, [second_follower_device.udn]
     )
     mock_wiim_controller.async_join_group.reset_mock()
 
