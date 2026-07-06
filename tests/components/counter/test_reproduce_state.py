@@ -14,11 +14,13 @@ async def test_reproducing_states(
 ) -> None:
     """Test reproducing Counter states."""
     hass.states.async_set("counter.entity", "5", {})
-    hass.states.async_set("counter.entity_attr", "8", {})
+    hass.states.async_set(
+        "counter.entity_attr", "8", {"minimum": 5, "maximum": 15, "step": 3}
+    )
 
     set_value_calls = async_mock_service(hass, DOMAIN, "set_value")
 
-    # These calls should do nothing as entities already in desired state
+    # These calls should do nothing as entity already in desired state
     await async_reproduce_state(
         hass,
         [
@@ -40,7 +42,7 @@ async def test_reproducing_states(
         hass,
         [
             State("counter.entity", "2"),
-            State("counter.entity_attr", "7"),
+            State("counter.entity_attr", "7", {"minimum": 3, "maximum": 21, "step": 5}),
             # Should not raise
             State("counter.non_existing", "6"),
         ],
