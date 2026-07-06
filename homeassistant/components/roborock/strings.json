@@ -604,11 +604,17 @@
       }
     },
     "switch": {
+      "button_light": {
+        "name": "Indicator light"
+      },
       "child_lock": {
         "name": "Child lock"
       },
       "dnd_switch": {
         "name": "Do not disturb"
+      },
+      "dust_collection": {
+        "name": "Dust collection"
       },
       "off_peak_switch": {
         "name": "Off-peak charging"
