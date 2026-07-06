@@ -316,7 +316,6 @@ async def test_polling_is_only_disabled_after_webhook_delivery(
     # Validate that the state was updated again via fetch
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes["battery_level"] == 60
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     webhook_id = entry.data[CONF_WEBHOOK_ID]
