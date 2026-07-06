@@ -1,7 +1,9 @@
 """Config flow for the Free Mobile integration."""
 
+from http import HTTPStatus
 from typing import Any, override
 
+from freesms import FreeClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -13,7 +15,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, VALIDATION_MESSAGE
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -55,18 +57,40 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+        errors: dict[str, str] = {}
         if user_input is not None:
             self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
-            return self.async_create_entry(
-                title=user_input[CONF_USERNAME],
-                data=user_input,
+            errors = await self._async_validate_credentials(
+                user_input[CONF_USERNAME], user_input[CONF_ACCESS_TOKEN]
             )
+            if not errors:
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME],
+                    data=user_input,
+                )
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=STEP_USER_DATA_SCHEMA, suggested_values=user_input
             ),
+            errors=errors,
         )
+
+    async def _async_validate_credentials(
+        self, username: str, access_token: str
+    ) -> dict[str, str]:
+        """Validate credentials by sending a test SMS."""
+        try:
+            resp = await self.hass.async_add_executor_job(
+                lambda: FreeClient(username, access_token).send_sms(VALIDATION_MESSAGE)
+            )
+        except Exception:  # noqa: BLE001
+            return {"base": "unknown"}
+        if resp.status_code == HTTPStatus.FORBIDDEN:
+            return {"base": "invalid_auth"}
+        if resp.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
+            return {"base": "server_error"}
+        return {}
 
     async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Import config from yaml."""

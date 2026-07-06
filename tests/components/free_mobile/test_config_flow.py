@@ -1,7 +1,8 @@
 """Test the Free Mobile config flow."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from http import HTTPStatus
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -25,7 +26,15 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup
 
 
-async def test_flow_user(hass: HomeAssistant) -> None:
+@pytest.fixture
+def mock_send_sms() -> Generator[MagicMock]:
+    """Mock the Free Mobile SMS client's send_sms call."""
+    with patch("freesms.FreeClient.send_sms") as mock:
+        mock.return_value = MagicMock(status_code=HTTPStatus.OK)
+        yield mock
+
+
+async def test_flow_user(hass: HomeAssistant, mock_send_sms: MagicMock) -> None:
     """Test user initialized flow creates an entry titled after the username."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -56,6 +65,52 @@ async def test_flow_user_username_already_configured(hass: HomeAssistant) -> Non
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("status_code", "error_key"),
+    [
+        pytest.param(HTTPStatus.FORBIDDEN, "invalid_auth", id="invalid_auth"),
+        pytest.param(
+            HTTPStatus.INTERNAL_SERVER_ERROR, "server_error", id="server_error"
+        ),
+    ],
+)
+async def test_flow_user_validation_error(
+    hass: HomeAssistant,
+    mock_send_sms: MagicMock,
+    status_code: HTTPStatus,
+    error_key: str,
+) -> None:
+    """Test the user flow shows an error when credential validation fails."""
+    mock_send_sms.return_value = MagicMock(status_code=status_code)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_key}
+
+
+async def test_flow_user_validation_unknown_error(
+    hass: HomeAssistant, mock_send_sms: MagicMock
+) -> None:
+    """Test the user flow shows an unknown error when send_sms raises."""
+    mock_send_sms.side_effect = Exception("unexpected")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
 
 
 async def test_flow_import_dedup_by_title_same_name_is_rejected(
