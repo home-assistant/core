@@ -6,7 +6,7 @@ from typing import Any, Self, override
 
 import voluptuous as vol
 
-from homeassistant.const import (
+from homeassistant.const import (  # noqa : F401
     ATTR_EDITABLE,
     ATTR_MODE,
     CONF_ICON,
@@ -23,6 +23,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
+
+from .const import InputNumberEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -203,7 +205,13 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
     """Representation of a slider."""
 
     _unrecorded_attributes = frozenset(
-        {ATTR_EDITABLE, ATTR_MAX, ATTR_MIN, ATTR_MODE, ATTR_STEP}
+        {
+            InputNumberEntityStateAttribute.EDITABLE,
+            InputNumberEntityStateAttribute.MAX,
+            InputNumberEntityStateAttribute.MIN,
+            InputNumberEntityStateAttribute.MODE,
+            InputNumberEntityStateAttribute.STEP,
+        }
     )
 
     _attr_should_poll = False
@@ -281,12 +289,12 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
-            ATTR_INITIAL: self._config.get(CONF_INITIAL),
-            ATTR_EDITABLE: self.editable,
-            ATTR_MIN: self._minimum,
-            ATTR_MAX: self._maximum,
-            ATTR_STEP: self._step,
-            ATTR_MODE: self._config[CONF_MODE],
+            InputNumberEntityStateAttribute.INITIAL: self._config.get(CONF_INITIAL),
+            InputNumberEntityStateAttribute.EDITABLE: self.editable,
+            InputNumberEntityStateAttribute.MIN: self._minimum,
+            InputNumberEntityStateAttribute.MAX: self._maximum,
+            InputNumberEntityStateAttribute.STEP: self._step,
+            InputNumberEntityStateAttribute.MODE: self._config[CONF_MODE],
         }
 
     @override
