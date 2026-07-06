@@ -2493,7 +2493,7 @@ pyqwikswitch==0.93
 pyrail==0.4.1
 
 # homeassistant.components.rainbird
-pyrainbird==6.3.1
+pyrainbird==6.5.0
 
 # homeassistant.components.playstation_network
 pyrate-limiter==4.4.0
@@ -2728,7 +2728,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==5.25.0
+python-roborock==5.26.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
