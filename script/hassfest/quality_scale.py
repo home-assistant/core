@@ -2093,7 +2093,7 @@ SCHEMA = vol.Schema(
     {
         vol.Required("rules"): vol.Schema(
             {
-                vol.Optional(rule.name): vol.Any(
+                vol.Required(rule.name): vol.Any(
                     vol.In(["todo", "done"]),
                     vol.Schema(
                         {
