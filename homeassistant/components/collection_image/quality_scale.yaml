@@ -93,9 +93,7 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations:
-    status: exempt
-    comment: Name is user specified.
+  entity-translations: todo
   exception-translations: done
   icon-translations:
     status: exempt

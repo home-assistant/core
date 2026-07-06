@@ -105,13 +105,15 @@ class CollectionImageImageEntity(ImageEntity):
                 set_unavailable()
                 return
 
-            self.path = resolved.path
             if resolved.url:
+                self.path = None
                 self._attr_image_url = async_process_play_media_url(
                     self.hass, resolved.url
                 )
             else:
+                self.path = resolved.path
                 self._attr_image_url = UNDEFINED
+
             self._attr_content_type = resolved.mime_type
             self._attr_available = True
             self._attr_image_last_updated = dt_util.utcnow()
