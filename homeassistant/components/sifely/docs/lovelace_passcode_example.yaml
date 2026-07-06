@@ -1,0 +1,37 @@
+# Sifely 密码管理 — Lovelace 配置示例
+#
+# 集成已内置自定义卡片 sifely-passcode-card，会随集成自动加载，
+# 无需手动添加前端资源（重启 HA 后生效）。
+#
+# 卡片以表格展示密码列表，右上角「+ 新增密码」按钮弹出表单，
+# 每行带删除按钮。数据通过 sifely.list_passcodes 服务获取，
+# 新增/删除调用 sifely.add_passcode / sifely.delete_passcode。
+#
+# ================================================================
+# 一、密码管理卡片
+# ================================================================
+#
+# 在仪表盘中添加以下卡片（编辑仪表盘 → 添加卡片 → 手动 / 原始配置编辑器）。
+# entity 填你的锁实体，卡片会自动从其 lock_id 属性识别锁 ID。
+
+type: custom:sifely-passcode-card
+entity: lock.front_door   # 替换为你的锁 entity_id
+title: 智能锁密码
+
+# ================================================================
+# 二、完整仪表盘视图示例（锁状态 + 电量 + 密码管理）
+# ================================================================
+#
+# views:
+#   - title: 智能锁管理
+#     path: sifely
+#     cards:
+#       - type: entities
+#         title: 门锁状态
+#         entities:
+#           - entity: lock.front_door           # 替换为你的锁 entity_id
+#           - entity: sensor.front_door_battery  # 电量
+#
+#       - type: custom:sifely-passcode-card
+#         entity: lock.front_door
+#         title: 智能锁密码
