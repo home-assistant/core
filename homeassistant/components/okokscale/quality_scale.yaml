@@ -3,9 +3,7 @@ rules:
   action-setup:
     status: exempt
     comment: There are no custom actions
-  appropriate-polling:
-    status: exempt
-    comment: This integration does not poll.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
