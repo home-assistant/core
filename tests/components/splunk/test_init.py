@@ -120,10 +120,8 @@ async def test_yaml_import_without_filter(
     assert entries[0].source == SOURCE_IMPORT
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_yaml_import_defaults_ssl_on(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry", "mock_hass_splunk")
+async def test_yaml_import_defaults_ssl_on(hass: HomeAssistant) -> None:
     """Test YAML import defaults to SSL enabled when the field is omitted."""
     assert await async_setup_component(
         hass,

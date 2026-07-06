@@ -59,9 +59,8 @@ async def test_user_flow_success(
     assert mock_hass_splunk.check.call_count == 2
 
 
-async def test_user_flow_defaults_ssl_on(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_hass_splunk")
+async def test_user_flow_defaults_ssl_on(hass: HomeAssistant) -> None:
     """Test a new entry defaults to SSL enabled when the field is omitted."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -280,8 +279,9 @@ async def test_reconfigure_flow_success(
     assert mock_config_entry.title == "new-splunk.example.com:9088"
 
 
+@pytest.mark.usefixtures("mock_hass_splunk")
 async def test_reconfigure_flow_preserves_stored_ssl(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reconfigure pre-fills the stored SSL value, not the schema default."""
     mock_config_entry.add_to_hass(hass)
