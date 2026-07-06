@@ -35,10 +35,9 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
 )
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_my_pv_client", "mock_setup_entry")
 async def test_step_user(
     hass: HomeAssistant,
-    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test if we get the local setup form."""
     result = await hass.config_entries.flow.async_init(
@@ -64,10 +63,10 @@ async def test_step_user(
     assert result["result"].unique_id == ELWA2_SERIAL_NUMBER
 
 
+@pytest.mark.usefixtures("mock_my_pv_client")
 async def test_step_user_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test for user configuration that is already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -207,7 +206,6 @@ async def test_step_auth_cannot_connect(
 @pytest.mark.usefixtures("mock_setup_entry", "mock_my_pv_client")
 async def test_step_dhcp(
     hass: HomeAssistant,
-    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test for DHCP discovery that does not require a password."""
 
