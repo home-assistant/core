@@ -20,7 +20,7 @@ from homeassistant.components.mawaqit.sensor import (
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.core import HomeAssistant
 
-from .conftest import build_prayer_data
+from .conftest import MOCK_UUID, build_prayer_data
 
 from tests.common import MockConfigEntry
 
@@ -217,11 +217,11 @@ async def test_prayer_sensors_return_valid_state(
 @pytest.mark.parametrize(
     ("sensor_cls", "coordinator_spec", "extra_args"),
     [
-        (MyMosqueSensor, MosqueCoordinator, []),
+        (MyMosqueSensor, MosqueCoordinator, [MOCK_UUID]),
         (
             MawaqitPrayerTimeSensor,
             PrayerTimeCoordinator,
-            [PRAYER_TIME_SENSOR_DESCRIPTIONS[0]],
+            [PRAYER_TIME_SENSOR_DESCRIPTIONS[0], MOCK_UUID],
         ),
     ],
 )
@@ -245,14 +245,16 @@ def test_prayer_time_sensor_native_value_raises() -> None:
         device_class=SensorDeviceClass.TIMESTAMP,
         get_value=MagicMock(side_effect=KeyError("missing")),
     )
-    sensor = MawaqitPrayerTimeSensor(coordinator, desc)
+    sensor = MawaqitPrayerTimeSensor(coordinator, desc, MOCK_UUID)
     assert sensor.native_value is None
 
 
 def test_next_prayer_sensor_native_value_unhandled_key() -> None:
     """Test NextPrayerSensor returns None for a description key it does not handle."""
     coordinator = MagicMock(spec=PrayerTimeCoordinator)
-    sensor = NextPrayerSensor(coordinator, SensorEntityDescription(key="unhandled"))
+    sensor = NextPrayerSensor(
+        coordinator, SensorEntityDescription(key="unhandled"), MOCK_UUID
+    )
     sensor._next_prayer_index = 2
     sensor._next_prayer_time = datetime(2025, 4, 10, 12, 30)
     assert sensor.native_value is None
