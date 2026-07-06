@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for Wibeee energy monitors."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 from xml.etree.ElementTree import ParseError as XMLParseError

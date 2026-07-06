@@ -9,8 +9,6 @@ For each discovered phase, entities are created only for ``SENSOR_TYPES``
 whose keys are present in the initial phase data.
 """
 
-from __future__ import annotations
-
 import logging
 
 from pywibeee import WibeeeDeviceInfo
