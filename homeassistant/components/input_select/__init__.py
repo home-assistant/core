@@ -17,7 +17,7 @@ from homeassistant.components.select import (
     SelectEntity,
     SelectEntityCapabilityAttribute,
 )
-from homeassistant.const import (  # noqa : F401
+from homeassistant.const import (  # noqa: F401
     ATTR_EDITABLE,
     CONF_ICON,
     CONF_ID,
