@@ -93,6 +93,41 @@ def mock_omie_results_jan15() -> OMIEResults:
 
 
 @pytest.fixture
+def mock_omie_results_oct26_dst() -> OMIEResults:
+    """Return mock OMIEResults for 2025-10-26, the 25-hour CET DST fall-back day."""
+    test_date = dt.date(2025, 10, 26)
+    spot_data = SpotData(
+        url="https://example.com?date=2025-10-26",
+        market_date=test_date.isoformat(),
+        header="Test Data Oct 26",
+        es_pt_total_power=[],
+        es_purchases_power=[],
+        pt_purchases_power=[],
+        es_sales_power=[],
+        pt_sales_power=[],
+        es_pt_power=[],
+        es_to_pt_exports_power=[],
+        es_from_pt_imports_power=[],
+        es_spot_price=[
+            price_enc(country=34, day=26, hour=h, minute=m)
+            for h in range(25)
+            for m in (0, 15, 30, 45)
+        ],
+        pt_spot_price=[
+            price_enc(country=351, day=26, hour=h, minute=m)
+            for h in range(25)
+            for m in (0, 15, 30, 45)
+        ],
+    )
+    return OMIEResults(
+        updated_at=dt.datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+        market_date=test_date,
+        contents=spot_data,
+        raw=json.dumps(spot_data),
+    )
+
+
+@pytest.fixture
 def mock_omie_results_jan16() -> OMIEResults:
     """Return mock OMIEResults for 2024-01-16."""
     test_date = dt.date(2024, 1, 16)

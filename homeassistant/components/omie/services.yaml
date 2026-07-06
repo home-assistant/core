@@ -1,0 +1,16 @@
+get_prices_for_date:
+  fields:
+    date:
+      required: true
+      selector:
+        date:
+    country:
+      required: true
+      default: both
+      selector:
+        select:
+          options:
+            - es
+            - pt
+            - both
+          translation_key: country
