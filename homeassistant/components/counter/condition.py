@@ -3,7 +3,7 @@
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.condition import Condition, make_entity_numerical_condition
 
-DOMAIN = "counter"
+from .const import DOMAIN
 
 CONDITIONS: dict[str, type[Condition]] = {
     "is_value": make_entity_numerical_condition(DOMAIN),

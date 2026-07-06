@@ -2,6 +2,8 @@
 
 from enum import StrEnum
 
+DOMAIN = "counter"
+
 
 class CounterEntityStateAttribute(StrEnum):
     """State attributes for counter entities."""
