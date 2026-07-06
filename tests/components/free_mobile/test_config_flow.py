@@ -69,33 +69,33 @@ async def test_flow_user_username_already_configured(hass: HomeAssistant) -> Non
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize(
-    ("second_name", "expected_type", "expected_reason"),
-    [
-        pytest.param(
-            "Maman",
-            FlowResultType.ABORT,
-            "already_configured",
-            id="same_name_is_rejected",
-        ),
-        pytest.param(
-            "Papa",
-            FlowResultType.CREATE_ENTRY,
-            None,
-            id="distinct_name_allows_shared_username",
-        ),
-    ],
-)
-async def test_flow_import_dedup_by_title(
+async def test_flow_import_dedup_by_title_same_name_is_rejected(
     hass: HomeAssistant,
-    second_name: str,
-    expected_type: FlowResultType,
-    expected_reason: str | None,
 ) -> None:
-    """Test import dedup by title.
+    """Test importing the same title twice is rejected, even with a shared username."""
+    first_import = {**MOCK_CONFIG, CONF_NAME: "Maman"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=first_import
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Maman"
 
-    A shared username with a distinct name (legacy multi-account YAML
-    setups) is still allowed.
+    second_import = {**MOCK_CONFIG, CONF_NAME: "Maman"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=second_import
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_flow_import_dedup_by_title_distinct_name_allows_shared_username(
+    hass: HomeAssistant,
+) -> None:
+    """Test a distinct name allows importing a shared username.
+
+    This preserves legacy multi-account YAML setups where several named
+    notify services share the same Free Mobile username.
     """
     first_import = {**MOCK_CONFIG, CONF_NAME: "Maman"}
     result = await hass.config_entries.flow.async_init(
@@ -104,16 +104,13 @@ async def test_flow_import_dedup_by_title(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Maman"
 
-    second_import = {**MOCK_CONFIG, CONF_NAME: second_name}
+    second_import = {**MOCK_CONFIG, CONF_NAME: "Papa"}
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=second_import
     )
 
-    assert result["type"] is expected_type
-    if expected_reason is not None:
-        assert result["reason"] == expected_reason
-    else:
-        assert result["title"] == second_name
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Papa"
 
 
 async def test_flow_import_no_name_uses_username_as_title(hass: HomeAssistant) -> None:
