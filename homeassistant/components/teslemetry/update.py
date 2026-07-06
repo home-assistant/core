@@ -212,7 +212,7 @@ class TeslemetryStreamingUpdateEntity(
         self.async_write_ha_state()
 
     def _async_handle_software_update_scheduled_start_time(
-        self, value: str | None
+        self, value: int | None
     ) -> None:
         """Handle software update scheduled start time."""
 
