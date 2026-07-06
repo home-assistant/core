@@ -5,7 +5,7 @@ from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -66,7 +66,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         if CONF_BRIDGE_ID in service_data:
             bridge_id = normalize_bridge_id(service_data[CONF_BRIDGE_ID])
 
-            hub = next(
+            hub: DeconzHub | None = next(
                 (
                     entry.runtime_data
                     for entry in hass.config_entries.async_loaded_entries(DOMAIN)
@@ -76,7 +76,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             )
 
             if hub is None:
-                raise HomeAssistantError(
+                raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="gateway_not_found",
                     translation_placeholders={
@@ -88,7 +88,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             try:
                 hub = get_master_hub(hass)
             except ValueError as err:
-                raise HomeAssistantError(
+                raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="no_master_gateway",
                 ) from err
@@ -136,7 +136,7 @@ async def async_configure_service(hub: DeconzHub, data: ReadOnlyDict) -> None:
         try:
             field = hub.deconz_ids[entity_id] + field
         except KeyError as err:
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="entity_not_found",
                 translation_placeholders={
@@ -146,8 +146,8 @@ async def async_configure_service(hub: DeconzHub, data: ReadOnlyDict) -> None:
 
     try:
         await hub.api.request("put", field, json=data)
-    except (TimeoutError, errors.RequestError, errors.ResponseError) as err:
-        raise HomeAssistantError(
+    except (TimeoutError, errors.pydeconzException) as err:
+        raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="configure_failed",
         ) from err
@@ -160,8 +160,8 @@ async def async_refresh_devices_service(hub: DeconzHub) -> None:
     try:
         await hub.api.refresh_state()
         hub.load_ignored_devices()
-    except (TimeoutError, errors.RequestError, errors.ResponseError) as err:
-        raise HomeAssistantError(
+    except (TimeoutError, errors.pydeconzException) as err:
+        raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="device_refresh_failed",
         ) from err
