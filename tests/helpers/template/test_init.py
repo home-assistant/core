@@ -1018,6 +1018,14 @@ async def test_parse_result_bare_enum_unchanged(
     assert render(hass, template_string, _ENUM_VARS) == expected
 
 
+async def test_parse_result_resolves_enum_keys_in_state_attributes(
+    hass: HomeAssistant,
+) -> None:
+    """State attributes (a ReadOnlyDict) with StrEnum keys resolve when rendered."""
+    hass.states.async_set("light.test", "on", {_Color.RED: "rainbow"})
+    assert render(hass, "{{ states.light.test.attributes }}") == {"red": "rainbow"}
+
+
 @pytest.mark.parametrize(
     "template_string",
     [

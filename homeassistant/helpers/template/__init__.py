@@ -35,6 +35,7 @@ from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
+from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
 
 from .context import (
@@ -276,6 +277,7 @@ def _parse_result(render_result: str) -> Any:
     return render_result
 
 
+_FINALIZE_DICT_TYPES = (dict, ReadOnlyDict)
 _FINALIZE_CONTAINER_TYPES = (list, set, tuple)
 
 
@@ -288,12 +290,14 @@ def _finalize_output(value: Any, _nested: bool = False) -> Any:
     underlying value before the container is stringified. Only StrEnum/IntEnum
     are handled: their value is a literal-safe scalar that already matches their
     bare str() output, so nested and top-level rendering stay consistent. A bare
-    member is left untouched. Only exact built-in container types are rebuilt so
-    namedtuples, result wrappers, and other subclasses are untouched.
+    member is left untouched. ReadOnlyDict is handled explicitly since state
+    attributes use it; other dict subclasses, namedtuples, and result wrappers
+    are left untouched to avoid rebuilding types that don't take an iterable
+    constructor or carry their own str().
     """
     if _nested and isinstance(value, (StrEnum, IntEnum)):
         return value.value
-    if type(value) is dict:
+    if type(value) in _FINALIZE_DICT_TYPES:
         return {
             _finalize_output(key, True): _finalize_output(item, True)
             for key, item in value.items()
