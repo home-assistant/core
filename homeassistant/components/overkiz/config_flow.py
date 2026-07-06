@@ -575,8 +575,11 @@ class OverkizConfigFlow(
         if self._api_type == APIType.LOCAL:
             self._host = entry_data[CONF_HOST]
             self._verify_ssl = entry_data[CONF_VERIFY_SSL]
-        # Rexel cloud reauth re-runs the OAuth2 flow; there is no stored username.
-        elif self._server != Server.REXEL:
+        # Rexel and Somfy cloud reauth re-run their own login; no stored username.
+        elif self._server not in {Server.REXEL, Server.SOMFY}:
             self._user = entry_data[CONF_USERNAME]
+
+        if self._server == Server.SOMFY:
+            return await self.async_step_somfy()
 
         return await self.async_step_user(dict(entry_data))
