@@ -103,6 +103,18 @@ async def test_update_unique_id(
         unique_id=f"{OKOK_F0_ADDRESS}-battery",
         config_entry=config_entry,
     )
+    impedance_entity: er.RegistryEntry = entity_registry.async_get_or_create(
+        domain=SENSOR_DOMAIN,
+        platform=DOMAIN,
+        unique_id=f"{OKOK_F0_ADDRESS}-impedance",
+        config_entry=config_entry,
+    )
+    signal_strength_entity: er.RegistryEntry = entity_registry.async_get_or_create(
+        domain=SENSOR_DOMAIN,
+        platform=DOMAIN,
+        unique_id=f"{OKOK_F0_ADDRESS}-signal_strength",
+        config_entry=config_entry,
+    )
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -115,3 +127,9 @@ async def test_update_unique_id(
 
     entity_migrated = entity_registry.async_get(battery_entity.entity_id)
     assert entity_migrated.unique_id == f"{OKOK_F0_ADDRESS}-battery_percent"
+
+    entity_migrated = entity_registry.async_get(impedance_entity.entity_id)
+    assert entity_migrated.unique_id == f"{OKOK_F0_ADDRESS}-impedance"
+
+    entity_migrated = entity_registry.async_get(signal_strength_entity.entity_id)
+    assert entity_migrated.unique_id == f"{OKOK_F0_ADDRESS}-signal_strength"

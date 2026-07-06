@@ -103,14 +103,14 @@ async def async_migrate_entry(
         @callback
         def migrate_unique_id(
             entity_entry: er.RegistryEntry,
-        ) -> dict[str, Any]:
+        ) -> dict[str, Any] | None:
             """Migrate the unique ID to a new format."""
             unique_id = entity_entry.unique_id
             if unique_id.endswith("-battery"):
-                unique_id += "_percent"
-            elif unique_id.endswith("-weight"):
-                unique_id = unique_id[:-7] + "-mass"
-            return {"new_unique_id": unique_id}
+                return {"new_unique_id": unique_id + "_percent"}
+            if unique_id.endswith("-weight"):
+                return {"new_unique_id": unique_id[:-7] + "-mass"}
+            return None
 
         await er.async_migrate_entries(hass, config_entry.entry_id, migrate_unique_id)
 
