@@ -20,7 +20,7 @@ from homeassistant.components.teslemetry.coordinator import (
     ENERGY_INFO_INTERVAL,
     VEHICLE_INTERVAL,
 )
-from homeassistant.components.teslemetry.select import LEVEL, LOW, MEDIUM, OFF
+from homeassistant.components.teslemetry.select import HIGH, LEVEL, LOW, MEDIUM, OFF
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -411,11 +411,11 @@ async def test_steering_wheel_heat_out_of_range(
     ],
     value: int,
 ) -> None:
-    """A steering wheel level above the modeled options maps to unknown.
+    """A steering wheel level above the modeled options clamps to the top one.
 
     Tesla reports steering_wheel_heat_level 3 on some vehicles even though only
-    off/low/high (0-2) are modeled; the extra level must resolve to unknown
-    rather than raising IndexError while updating the entity.
+    off/low/high (0-2) are modeled; the extra level must clamp to the nearest
+    known level (high) rather than raising IndexError while updating the entity.
     """
     freezer.move_to("2024-01-01 00:00:00+00:00")
     mock_metadata.return_value = metadata
@@ -426,7 +426,7 @@ async def test_steering_wheel_heat_out_of_range(
     await hass.async_block_till_done()
 
     state = hass.states.get("select.test_steering_wheel_heater")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == HIGH
 
 
 async def test_export_rule_restore(
