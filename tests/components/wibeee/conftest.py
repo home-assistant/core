@@ -9,10 +9,8 @@ import pytest
 
 from homeassistant.components.wibeee.const import (
     CONF_MAC_ADDRESS,
-    CONF_UPDATE_MODE,
     CONF_WIBEEE_ID,
     DOMAIN,
-    MODE_LOCAL_PUSH,
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -38,29 +36,16 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_MAC_ADDRESS: MOCK_MAC,
             CONF_WIBEEE_ID: MOCK_WIBEEE_ID,
         },
-        options={
-            CONF_UPDATE_MODE: MODE_LOCAL_PUSH,
-        },
-        version=2,
+        options={},
+        version=1,
     )
-
-
-@pytest.fixture(autouse=True)
-def mock_wibeee_local_ip() -> Generator[AsyncMock]:
-    """Mock the network helpers used by the wibeee config flow."""
-    with patch(
-        "homeassistant.components.wibeee.config_flow._get_local_ip",
-        new_callable=AsyncMock,
-        return_value="192.168.1.50",
-    ) as mock:
-        yield mock
 
 
 @pytest.fixture(name="loaded_entry")
 async def load_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_wibeee_api,
+    mock_wibeee_api: MagicMock,
 ) -> MockConfigEntry:
     """Set up the Wibeee integration in Home Assistant."""
     mock_config_entry.add_to_hass(hass)
@@ -86,7 +71,7 @@ def _setup_mock_api(api: MagicMock) -> None:
         return_value=MagicMock(
             wibeee_id=MOCK_WIBEEE_ID,
             mac_addr=MOCK_MAC,
-            mac_addr_formatted=MOCK_MAC.upper(),
+            mac_addr_formatted=MOCK_MAC,
             mac_addr_short="2233",
             model=MOCK_MODEL,
             firmware_version=MOCK_FIRMWARE,
@@ -99,8 +84,6 @@ def _setup_mock_api(api: MagicMock) -> None:
             "fase4": {"vrms": "230.5", "p_activa": "277"},
         }
     )
-    api.async_configure_push_server = AsyncMock(return_value=True)
-    api.async_get_push_server_config = AsyncMock(return_value={"mac": MOCK_MAC})
     api.async_fetch_device_diagnostics = AsyncMock(return_value={"host": MOCK_HOST})
     api.async_fetch_status = AsyncMock(
         return_value={"model": MOCK_MODEL, "webversion": MOCK_FIRMWARE}
@@ -130,6 +113,6 @@ def mock_wibeee_api() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_wibeee_api_config_flow(mock_wibeee_api) -> MagicMock:
+def mock_wibeee_api_config_flow(mock_wibeee_api: MagicMock) -> MagicMock:
     """Mock for config flow (alias for mock_wibeee_api)."""
     return mock_wibeee_api

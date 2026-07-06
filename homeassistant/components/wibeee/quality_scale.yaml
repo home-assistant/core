@@ -27,40 +27,46 @@ rules:
   action-exceptions:
     status: exempt
     comment: This integration does not provide service actions.
-  config-entry-unloading: done
-  docs-configuration-parameters: done
-  docs-installation-parameters: done
-  entity-unavailable: done
-  integration-owner: done
-  log-when-unavailable: done
-  parallel-updates: done
+  config-entry-unloading: todo
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration has no configuration options.
+  docs-installation-parameters: todo
+  entity-unavailable: todo
+  integration-owner: todo
+  log-when-unavailable: todo
+  parallel-updates: todo
   reauthentication-flow:
     status: exempt
     comment: Device uses unauthenticated local HTTP; no credentials to re-auth.
-  test-coverage: done
+  test-coverage: todo
 
   # Gold
-  devices: done
-  diagnostics: done
-  discovery-update-info: done
-  discovery: done
-  docs-data-update: done
-  docs-examples: done
-  docs-known-limitations: done
-  docs-supported-devices: done
-  docs-supported-functions: done
-  docs-troubleshooting: done
-  docs-use-cases: done
+  devices: todo
+  diagnostics: todo
+  discovery-update-info: todo
+  discovery: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
   dynamic-devices:
     status: exempt
     comment: Device phases are fixed hardware; no dynamic device addition.
   entity-category: done
-  entity-device-class: done
-  entity-disabled-by-default: done
-  entity-translations: done
-  exception-translations: done
-  icon-translations: done
-  reconfiguration-flow: done
+  entity-device-class: todo
+  entity-disabled-by-default: todo
+  entity-translations: todo
+  exception-translations:
+    status: exempt
+    comment: >-
+      The integration does not raise translated exceptions; it exposes only
+      read-only sensors and has no service actions.
+  icon-translations: todo
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: No known scenarios requiring repair flows.
@@ -69,8 +75,6 @@ rules:
     comment: Devices correspond to fixed hardware phases; no stale device scenario.
 
   # Platinum
-  async-dependency: done
-  inject-websession:
-    status: done
-    comment: aiohttp session is passed from HA to the API client.
-  strict-typing: done
+  async-dependency: todo
+  inject-websession: todo
+  strict-typing: todo

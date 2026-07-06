@@ -23,13 +23,6 @@ async def async_get_config_entry_diagnostics(
     device_info = runtime.device_info
     coordinator = runtime.coordinator
 
-    # Gather push server config if available
-    push_config: dict[str, Any] | None = None
-    try:
-        push_config = await runtime.api.async_get_push_server_config()
-    except Exception:  # noqa: BLE001
-        push_config = {"error": "Could not retrieve push server config"}
-
     # Gather device configuration variables from values.xml and status.xml
     device_diagnostics: dict[str, Any] = {}
     try:
@@ -55,9 +48,6 @@ async def async_get_config_entry_diagnostics(
             "update_interval": str(coordinator.update_interval),
             "data": _redact_coordinator_data(coordinator.data),
         },
-        "push_server_config": (
-            async_redact_data(push_config, TO_REDACT) if push_config else None
-        ),
     }
 
     return diag

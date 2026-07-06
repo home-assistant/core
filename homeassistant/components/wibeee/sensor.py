@@ -2,17 +2,11 @@
 
 Creates sensor entities for each phase and sensor type detected on the
 Wibeee energy monitor device. All sensors are ``CoordinatorEntity``
-instances backed by a single ``WibeeeCoordinator``:
+instances backed by a single polling ``WibeeeCoordinator``.
 
-- **Polling mode**: Coordinator periodically fetches status.xml.
-- **Push mode**: Coordinator receives data via ``async_push_update()``.
-
-Entity creation strategy:
-    Phases are **discovered** from the initial data fetch (hardware-dependent).
-    For each discovered phase, entities are created only for ``SENSOR_TYPES``
-    whose keys are present in the initial phase data.
-
-Documentation: https://github.com/fquinto/pywibeee
+Phases are discovered from the initial data fetch (hardware-dependent).
+For each discovered phase, entities are created only for ``SENSOR_TYPES``
+whose keys are present in the initial phase data.
 """
 
 from __future__ import annotations
@@ -28,15 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import WibeeeConfigEntry
-from .const import (
-    CONF_UPDATE_MODE,
-    DOMAIN,
-    KNOWN_MODELS,
-    MODE_LOCAL_PUSH,
-    PUSH_REFRESHABLE_SENSOR_KEYS,
-    SENSOR_TYPES,
-    WibeeeSensorEntityDescription,
-)
+from .const import DOMAIN, KNOWN_MODELS, SENSOR_TYPES, WibeeeSensorEntityDescription
 from .coordinator import WibeeeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,19 +71,7 @@ async def async_setup_entry(
         return
 
     # Build entities: discovered phases x sensor types present in data.
-    # In push mode, restrict to keys the push parser can refresh; otherwise
-    # any extra sensor (THD, angle, capacitive-reactive, ...) would become
-    # unavailable as soon as the first push update arrives.
-    is_push_mode = (
-        entry.options.get(CONF_UPDATE_MODE, MODE_LOCAL_PUSH) == MODE_LOCAL_PUSH
-    )
-    eligible_sensor_types: dict[str, WibeeeSensorEntityDescription] = (
-        {k: v for k, v in SENSOR_TYPES.items() if k in PUSH_REFRESHABLE_SENSOR_KEYS}
-        if is_push_mode
-        else SENSOR_TYPES
-    )
-
-    # Process fase4 (Total) first to ensure the parent device exists
+    # Process fase4 (Total) first to ensure the parent device exists.
     sorted_phases = sorted(
         discovered_phases,
         key=lambda p: (0 if p == "fase4" else 1, p),
@@ -111,7 +85,7 @@ async def async_setup_entry(
         )
         for phase_key in sorted_phases
         if isinstance(data.get(phase_key), dict)
-        for sensor_key, description in eligible_sensor_types.items()
+        for sensor_key, description in SENSOR_TYPES.items()
         if sensor_key in data[phase_key]
     ]
 
@@ -155,15 +129,15 @@ def _build_device_info(device_info: WibeeeDeviceInfo, phase_key: str) -> dr.Devi
 
 
 # ---------------------------------------------------------------------------
-# Unified sensor entity (polling + push)
+# Sensor entity
 # ---------------------------------------------------------------------------
 
 
 class WibeeeSensor(CoordinatorEntity[WibeeeCoordinator], SensorEntity):
-    """Wibeee sensor entity backed by a coordinator.
+    """Wibeee sensor entity backed by the polling coordinator.
 
-    Works for both polling and push modes. The coordinator provides
-    the data; the sensor reads its specific phase/key from it.
+    The coordinator provides the data; the sensor reads its specific
+    phase/key from it.
     """
 
     _attr_has_entity_name = True

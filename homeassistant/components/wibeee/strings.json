@@ -7,23 +7,10 @@
       "wrong_device": "The device at this address has a different MAC address than the one being reconfigured"
     },
     "error": {
-      "auto_configure_failed": "Failed to auto-configure the device for Local Push. You can configure it manually via the device web interface.",
       "no_device_info": "Could not connect to the WiBeee device. Verify the IP address and that the device is powered on.",
       "unknown": "An unknown error occurred."
     },
     "step": {
-      "mode": {
-        "data": {
-          "auto_configure": "Auto-configure device for Local Push",
-          "update_mode": "Update mode"
-        },
-        "data_description": {
-          "auto_configure": "If enabled, the integration will automatically configure your WiBeee to send data to this Home Assistant instance (IP and HTTP port). The device will restart to apply changes.",
-          "update_mode": "**Local Push** (recommended): The device sends data to Home Assistant in real time (faster, lower latency). **Polling**: Home Assistant periodically asks the device for data (simple, no device changes needed)."
-        },
-        "description": "Choose how the integration receives data from the device.",
-        "title": "Update mode"
-      },
       "reconfigure": {
         "data": {
           "host": "Hostname or IP address"
@@ -72,25 +59,6 @@
       "thd_voltage_harmonic_5": { "name": "THD Voltage Harmonic 5" },
       "thd_voltage_harmonic_7": { "name": "THD Voltage Harmonic 7" },
       "thd_voltage_harmonic_9": { "name": "THD Voltage Harmonic 9" }
-    }
-  },
-  "options": {
-    "error": {
-      "auto_configure_failed": "Failed to auto-configure the device for Local Push. You can configure it manually via the device web interface."
-    },
-    "step": {
-      "init": {
-        "data": {
-          "auto_configure": "Auto-configure device for Local Push",
-          "update_mode": "Update mode"
-        },
-        "data_description": {
-          "auto_configure": "Automatically configure the WiBeee to send data to this Home Assistant instance.",
-          "update_mode": "**Local Push** (recommended): Device sends data to HA in real time. **Polling**: Periodically fetch data."
-        },
-        "description": "Configure update settings",
-        "title": "WiBeee integration options"
-      }
     }
   }
 }
