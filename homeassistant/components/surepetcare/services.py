@@ -29,9 +29,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
             hass, DOMAIN, None
         )
         coordinator = entry.runtime_data
-        flap_id = call.data[ATTR_FLAP_ID]
-        if flap_id not in coordinator.data:
-            raise ServiceValidationError(f"Unknown Sure Petcare flap ID: {flap_id}")
+        if call.data[ATTR_FLAP_ID] not in coordinator.data:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_flap_id",
+                translation_placeholders={"flap_id": call.data[ATTR_FLAP_ID]},
+            )
         await coordinator.handle_set_lock_state(call)
 
     async def handle_set_pet_location(call: ServiceCall) -> None:
@@ -40,9 +43,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
             hass, DOMAIN, None
         )
         coordinator = entry.runtime_data
-        pet_name = call.data[ATTR_PET_NAME]
-        if pet_name not in coordinator.get_pets():
-            raise ServiceValidationError(f"Unknown Sure Petcare pet: {pet_name}")
+        if call.data[ATTR_PET_NAME] not in coordinator.get_pets():
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_pet_name",
+                translation_placeholders={"pet_name": call.data[ATTR_PET_NAME]},
+            )
         await coordinator.handle_set_pet_location(call)
 
     hass.services.async_register(
