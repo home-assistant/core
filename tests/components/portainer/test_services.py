@@ -20,7 +20,7 @@ from homeassistant.components.portainer.services import (
     ATTR_TIMEOUT,
     SERVICE_PRUNE_IMAGES,
     SERVICE_RECREATE_CONTAINER,
-    _get_endpoint_id,
+    _async_get_device,
 )
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
@@ -297,17 +297,14 @@ async def test_service_prune_images_device_gone(
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test _get_endpoint_id raises when the device ID no longer exists in the registry."""
+    """Test _async_get_device raises when the device ID no longer exists in the registry."""
     await setup_integration(hass, mock_config_entry)
-    loaded_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-    assert loaded_entry is not None
 
     mock_call = MagicMock()
     mock_call.hass = hass
-    mock_call.data = {ATTR_DEVICE_ID: "nonexistent_device_id"}
 
     with pytest.raises(ServiceValidationError):
-        await _get_endpoint_id(mock_call, loaded_entry)
+        _async_get_device(mock_call, "nonexistent_device_id")
     mock_portainer_client.images_prune.assert_not_called()
 
 
