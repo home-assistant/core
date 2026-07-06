@@ -51,14 +51,22 @@ def _make_homekit_info(md: str, host: str | None = None) -> SimpleNamespace:
 @pytest.fixture
 def mock_entry_setup() -> Generator[None]:
     """Patch climate platform setup and discovery-service start for entry-creating tests."""
+
+    async def _async_start_discovery_service(
+        request_hass: HomeAssistant,
+    ) -> object | None:
+        if disco := request_hass.data.get(DATA_DISCOVERY_SERVICE):
+            return disco
+        return None
+
     with (
         patch(
             "homeassistant.components.izone.climate.async_setup_entry",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.izone.async_start_discovery_service",
-            return_value=None,
+            "homeassistant.components.izone.discovery.async_start_discovery_service",
+            side_effect=_async_start_discovery_service,
         ),
     ):
         yield
@@ -69,7 +77,7 @@ def mock_izone_timeouts() -> Generator[None]:
     """Mock iZone timeout constants to speed up tests."""
     with (
         patch(
-            "homeassistant.components.izone.config_flow.TIMEOUT_DISCOVERY",
+            "homeassistant.components.izone.discovery.TIMEOUT_DISCOVERY",
             0.01,
         ),
         patch(
@@ -86,7 +94,7 @@ async def test_user_discovery_success(
     """Test user flow confirms and creates an entry for a discovered controller."""
     controller = _make_controller("000000001", "192.0.2.55")
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={controller.device_uid: controller},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -112,7 +120,7 @@ async def test_user_discovery_default_selects_first_and_queues_other(
     both = {first.device_uid: first, second.device_uid: second}
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value=both,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -153,7 +161,7 @@ async def test_broadcast_skips_already_configured_controller(
     ).add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={
             configured_controller.device_uid: configured_controller,
             unconfigured_controller.device_uid: unconfigured_controller,
@@ -182,7 +190,7 @@ async def test_user_discovery_skips_yaml_excluded_controllers(
     hass.data[DATA_CONFIG] = {"exclude": [excluded_controller.device_uid]}
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={
             excluded_controller.device_uid: excluded_controller,
             allowed_controller.device_uid: allowed_controller,
@@ -210,7 +218,7 @@ async def test_broadcast_multiple_unconfigured_shows_choice(
     second_controller = _make_controller("000000001", "192.0.2.2")
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={
             first_controller.device_uid: first_controller,
             second_controller.device_uid: second_controller,
@@ -258,7 +266,7 @@ async def test_select_controller_aborts_when_choices_missing(
     second_controller = _make_controller("000000002", "192.0.2.2")
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={
             first_controller.device_uid: first_controller,
             second_controller.device_uid: second_controller,
@@ -285,7 +293,7 @@ async def test_select_controller_aborts_when_uid_not_in_choices(
     second_controller = _make_controller("000000002", "192.0.2.2")
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={
             first_controller.device_uid: first_controller,
             second_controller.device_uid: second_controller,
@@ -312,7 +320,7 @@ async def test_select_controller_creates_selected_uid_and_queues_others(
     second_controller = _make_controller("000000001", "192.0.2.2")
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={
             first_controller.device_uid: first_controller,
             second_controller.device_uid: second_controller,
@@ -356,7 +364,7 @@ async def test_broadcast_aborts_when_all_discovered_are_configured(
     ).add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={configured_controller.device_uid: configured_controller},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -385,7 +393,7 @@ async def test_user_flow_aborts_when_all_discovered_are_ignored(
     ).add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={ignored_controller.device_uid: ignored_controller},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -489,7 +497,7 @@ async def test_import_aborts_when_another_izone_flow_in_progress(
     """Test YAML import does not overlap discovery with an active user flow."""
     controller = _make_controller("000000001", "192.0.2.1")
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={controller.device_uid: controller},
     ):
         user_flow = await hass.config_entries.flow.async_init(
@@ -515,7 +523,7 @@ async def test_homekit_confirm_uses_discovered_host(
     controller = _make_controller(ip="192.0.2.3")
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={controller.device_uid: controller},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -555,7 +563,7 @@ async def test_homekit_fans_out_other_discovered_controllers(
     other_controller = _make_controller("000000002", "192.0.2.4")
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={
             matched_controller.device_uid: matched_controller,
             other_controller.device_uid: other_controller,
@@ -606,7 +614,7 @@ async def test_homekit_flow_sets_device_uid_once(
 
     with (
         patch(
-            "homeassistant.components.izone.config_flow.async_discover_controllers",
+            "homeassistant.components.izone.discovery.async_discover_controllers",
             return_value={controller.device_uid: controller},
         ),
         patch.object(
@@ -632,7 +640,7 @@ async def test_homekit_aborts_while_user_confirm_is_open(
     """HomeKit onboarding for same UID is blocked while a user flow is already active."""
     controller = _make_controller("000000001", "192.0.2.3")
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={controller.device_uid: controller},
     ):
         user_flow = await hass.config_entries.flow.async_init(
@@ -657,7 +665,7 @@ async def test_user_broadcast_aborts_when_homekit_flow_in_progress(
     """Test user broadcast discovery aborts when a HomeKit flow is already active."""
     controller = _make_controller("000000001", "192.0.2.3")
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={controller.device_uid: controller},
     ):
         homekit_flow = await hass.config_entries.flow.async_init(
@@ -691,7 +699,7 @@ async def test_homekit_aborts_when_uid_already_configured(
     ).add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
     ) as mock_discover_controllers:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -720,7 +728,7 @@ async def test_homekit_aborts_when_uid_configured_during_discovery(
         return {controller.device_uid: controller}
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         side_effect=_discover_with_midflight_config,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -738,7 +746,7 @@ async def test_homekit_aborts_when_uid_not_found_in_discovery(
 ) -> None:
     """Test HomeKit aborts when the discovered UID cannot be found via iZone discovery."""
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -756,7 +764,7 @@ async def test_homekit_aborts_when_controller_unavailable_during_discovery_wait(
 ) -> None:
     """HomeKit aborts when the advertised UID is not found during iZone discovery."""
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -772,7 +780,7 @@ async def test_homekit_aborts_when_controller_unavailable_during_discovery_wait(
 async def test_user_flow_aborts_when_no_controllers_found(hass: HomeAssistant) -> None:
     """User flow aborts when broadcast discovery returns no controllers."""
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -789,7 +797,7 @@ async def test_user_flow_abort_when_discovery_service_cannot_start(
 ) -> None:
     """User flow aborts when discovery startup fails."""
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         side_effect=OSError,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -805,7 +813,7 @@ async def test_user_discovery_with_shared_service_without_matches_aborts(
 ) -> None:
     """User flow aborts when discovery refresh returns no controllers."""
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -835,7 +843,7 @@ async def test_homekit_without_model_does_not_start_discovery(
 ) -> None:
     """Test HomeKit flow does not trigger iZone discovery for a non-iZone model."""
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
     ) as mock_discover_controllers:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -855,7 +863,7 @@ async def test_homekit_aborts_when_matching_uid_not_discovered(
     controller = _make_controller("000000003", "192.0.2.33")
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={controller.device_uid: controller},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -871,7 +879,7 @@ async def test_homekit_aborts_when_matching_uid_not_discovered(
 async def test_homekit_aborts_when_nothing_found(hass: HomeAssistant) -> None:
     """Test HomeKit aborts when iZone discovery finds no controllers."""
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -891,7 +899,7 @@ async def test_homekit_aborts_when_discovered_uid_missing(
     different_controller = _make_controller("000000002", "192.0.2.44")
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={different_controller.device_uid: different_controller},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -911,7 +919,7 @@ async def test_homekit_flow_aborts_at_confirm_when_controller_disappears(
     controller = _make_controller("000000001", "192.0.2.3")
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={controller.device_uid: controller},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -924,7 +932,7 @@ async def test_homekit_flow_aborts_at_confirm_when_controller_disappears(
     assert result["step_id"] == "confirm"
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={},
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -938,7 +946,7 @@ async def test_homekit_aborts_when_discovery_startup_fails(
 ) -> None:
     """Test HomeKit flow aborts when discovery service cannot start."""
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         side_effect=OSError,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -1043,7 +1051,7 @@ async def test_runtime_integration_discovery_starts_confirm_flow(
     ).add_to_hass(hass)
     new_ctrl = _make_controller("000000002", "192.0.2.2")
 
-    config_flow.async_note_integration_discovery(hass, new_ctrl)
+    izone_discovery.async_note_integration_discovery(hass, new_ctrl)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     progress = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -1072,7 +1080,7 @@ async def test_integration_discovery_confirm_creates_entry(
     assert result["step_id"] == "confirm"
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={controller.device_uid: controller},
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -1099,7 +1107,7 @@ async def test_runtime_integration_discovery_skips_yaml_excluded_uid(
     with patch(
         "homeassistant.helpers.discovery_flow.async_create_flow"
     ) as mock_create_flow:
-        config_flow.async_note_integration_discovery(hass, excluded_ctrl)
+        izone_discovery.async_note_integration_discovery(hass, excluded_ctrl)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_create_flow.assert_not_called()
@@ -1117,7 +1125,7 @@ async def test_runtime_integration_discovery_skips_when_uid_already_configured(
     ).add_to_hass(hass)
     ctrl = _make_controller("000000002", "192.0.2.2")
 
-    config_flow.async_note_integration_discovery(hass, ctrl)
+    izone_discovery.async_note_integration_discovery(hass, ctrl)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -1135,7 +1143,7 @@ async def test_runtime_integration_discovery_skips_for_ignored_unique_id(
     ).add_to_hass(hass)
     ctrl = _make_controller("000000002", "192.0.2.2")
 
-    config_flow.async_note_integration_discovery(hass, ctrl)
+    izone_discovery.async_note_integration_discovery(hass, ctrl)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -1154,7 +1162,7 @@ async def test_runtime_integration_discovery_skips_during_user_select_controller
     first = _make_controller("000000002", "192.0.2.2")
     second = _make_controller("000000003", "192.0.2.3")
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={first.device_uid: first, second.device_uid: second},
     ):
         user_flow = await hass.config_entries.flow.async_init(
@@ -1168,7 +1176,7 @@ async def test_runtime_integration_discovery_skips_during_user_select_controller
     with patch(
         "homeassistant.helpers.discovery_flow.async_create_flow"
     ) as mock_create_flow:
-        config_flow.async_note_integration_discovery(hass, new_ctrl)
+        izone_discovery.async_note_integration_discovery(hass, new_ctrl)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_create_flow.assert_not_called()
@@ -1183,7 +1191,7 @@ async def test_runtime_integration_discovery_skips_during_user_confirm(
     one = {first.device_uid: first}
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value=one,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -1191,7 +1199,7 @@ async def test_runtime_integration_discovery_skips_during_user_confirm(
         )
         assert result["step_id"] == "confirm"
 
-    config_flow.async_note_integration_discovery(hass, second)
+    izone_discovery.async_note_integration_discovery(hass, second)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     progress = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -1338,7 +1346,7 @@ async def test_async_discover_controllers_starts_shared_service_when_missing(
         "homeassistant.components.izone.discovery.async_start_discovery_service",
         return_value=service,
     ) as mock_start:
-        controllers = await config_flow.async_discover_controllers(hass)
+        controllers = await izone_discovery.async_discover_controllers(hass)
 
     assert list(controllers) == ["000000001"]
     mock_start.assert_awaited_once()
@@ -1358,7 +1366,9 @@ async def test_async_discover_controllers_refresh_after_start_calls_fetch_contro
         "homeassistant.components.izone.discovery.async_start_discovery_service",
         return_value=service,
     ) as mock_start:
-        controllers = await config_flow.async_discover_controllers(hass, refresh=True)
+        controllers = await izone_discovery.async_discover_controllers(
+            hass, refresh=True
+        )
 
     assert list(controllers) == ["000000001"]
     mock_start.assert_awaited_once()
@@ -1371,7 +1381,7 @@ async def test_async_discover_controllers_refresh_calls_fetch_controllers(
     """Refresh without UID delegates to fetch_controllers with timeout."""
     service = _setup_shared_discovery(hass)  # start with no controllers
 
-    controllers = await config_flow.async_discover_controllers(hass, refresh=True)
+    controllers = await izone_discovery.async_discover_controllers(hass, refresh=True)
 
     assert controllers == {}
     service.pi_disco.fetch_controllers.assert_awaited_once_with(timeout=ANY)
@@ -1389,7 +1399,7 @@ async def test_async_discover_controllers_waits_for_requested_uid(
 
     service.pi_disco.fetch_controller.side_effect = _fetch_and_add
 
-    controllers = await config_flow.async_discover_controllers(
+    controllers = await izone_discovery.async_discover_controllers(
         hass,
         refresh=True,
         wait_for_uid="000000777",
@@ -1410,7 +1420,7 @@ async def test_async_discover_controllers_returns_empty_when_start_fails(
         ),
         pytest.raises(OSError),
     ):
-        await config_flow.async_discover_controllers(hass, refresh=True)
+        await izone_discovery.async_discover_controllers(hass, refresh=True)
 
 
 def test_flow_uid_for_matching_returns_none_when_no_uid() -> None:
@@ -1443,7 +1453,7 @@ async def test_homekit_aborts_for_yaml_excluded_uid_without_discovery(
     hass.data[DATA_CONFIG] = {"exclude": ["000000001"]}
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers"
+        "homeassistant.components.izone.discovery.async_discover_controllers"
     ) as mock_discover_controllers:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -1468,7 +1478,7 @@ async def test_homekit_aborts_for_ignored_uid(
     ).add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers"
+        "homeassistant.components.izone.discovery.async_discover_controllers"
     ) as mock_discover_controllers:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -1488,7 +1498,7 @@ async def test_confirm_aborts_invalid_flow_state_when_controller_data_missing(
     controller = _make_controller("000000001", "192.0.2.1")
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={controller.device_uid: controller},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -1510,7 +1520,7 @@ async def test_confirm_aborts_when_refresh_discovers_no_controllers(
     controller = _make_controller("000000001", "192.0.2.1")
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={controller.device_uid: controller},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -1520,7 +1530,7 @@ async def test_confirm_aborts_when_refresh_discovers_no_controllers(
     flow = hass.config_entries.flow._progress[result["flow_id"]]
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={},
     ):
         result = await flow.async_step_confirm({})
@@ -1536,7 +1546,7 @@ async def test_confirm_aborts_when_unique_id_is_not_string(
     controller = _make_controller("000000001", "192.0.2.1")
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={controller.device_uid: controller},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -1547,7 +1557,7 @@ async def test_confirm_aborts_when_unique_id_is_not_string(
     flow.context["unique_id"] = None
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={controller.device_uid: controller},
     ):
         result = await flow.async_step_confirm({})
@@ -1563,7 +1573,7 @@ async def test_confirm_aborts_when_unique_id_controller_not_found(
     controller = _make_controller("000000001", "192.0.2.1")
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={controller.device_uid: controller},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -1574,7 +1584,7 @@ async def test_confirm_aborts_when_unique_id_controller_not_found(
     flow.context["unique_id"] = "000009999"
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={controller.device_uid: controller},
     ):
         result = await flow.async_step_confirm({})
@@ -1590,7 +1600,7 @@ async def test_confirm_aborts_when_discovery_startup_fails(
     controller = _make_controller("000000001", "192.0.2.1")
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         return_value={controller.device_uid: controller},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -1600,7 +1610,7 @@ async def test_confirm_aborts_when_discovery_startup_fails(
     flow = hass.config_entries.flow._progress[result["flow_id"]]
 
     with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        "homeassistant.components.izone.discovery.async_discover_controllers",
         side_effect=OSError,
     ):
         result = await flow.async_step_confirm({})
@@ -1676,9 +1686,9 @@ async def test_async_migrate_entry_clears_legacy_data(
     controller = _make_controller("000000001")
 
     with (
-        patch("homeassistant.components.izone.async_start_discovery_service"),
+        patch("homeassistant.components.izone.discovery.async_start_discovery_service"),
         patch(
-            "homeassistant.components.izone.config_flow.async_discover_controllers",
+            "homeassistant.components.izone.discovery.async_discover_controllers",
             return_value={"000000001": controller},
         ),
         patch(
@@ -1713,7 +1723,7 @@ async def test_async_migrate_entry_does_not_raise_on_discovery_failure(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.izone.async_start_discovery_service",
+        "homeassistant.components.izone.discovery.async_start_discovery_service",
         side_effect=OSError,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -1743,9 +1753,9 @@ async def test_async_migrate_entry_does_not_raise_for_multiple_eligible(
     controller2 = _make_controller("000000002", "192.0.2.2")
 
     with (
-        patch("homeassistant.components.izone.async_start_discovery_service"),
+        patch("homeassistant.components.izone.discovery.async_start_discovery_service"),
         patch(
-            "homeassistant.components.izone.config_flow.async_discover_controllers",
+            "homeassistant.components.izone.discovery.async_discover_controllers",
             return_value={
                 "000000001": controller1,
                 "000000002": controller2,
@@ -1773,7 +1783,7 @@ async def test_setup_entry_raises_not_ready_when_discovery_service_fails(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.izone.async_start_discovery_service",
+        "homeassistant.components.izone.discovery.async_start_discovery_service",
         new=AsyncMock(side_effect=OSError),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -1807,11 +1817,11 @@ async def test_setup_entry_resolves_legacy_uid_and_updates_title(
 
     with (
         patch(
-            "homeassistant.components.izone.async_start_discovery_service",
+            "homeassistant.components.izone.discovery.async_start_discovery_service",
             new=AsyncMock(return_value=None),
         ),
         patch(
-            "homeassistant.components.izone.config_flow.async_discover_controllers",
+            "homeassistant.components.izone.discovery.async_discover_controllers",
             return_value={controller.device_uid: controller},
         ),
         patch.object(
@@ -1856,11 +1866,11 @@ async def test_setup_entry_raises_not_ready_for_legacy_entry_on_discovery_failur
 
     with (
         patch(
-            "homeassistant.components.izone.async_start_discovery_service",
+            "homeassistant.components.izone.discovery.async_start_discovery_service",
             new=AsyncMock(return_value=None),
         ),
         patch(
-            "homeassistant.components.izone.config_flow.async_discover_controllers",
+            "homeassistant.components.izone.discovery.async_discover_controllers",
             return_value=return_value,
             side_effect=side_effect,
         ),
@@ -1896,11 +1906,11 @@ async def test_setup_entry_raises_config_error_for_legacy_entry_with_multiple_el
 
     with (
         patch(
-            "homeassistant.components.izone.async_start_discovery_service",
+            "homeassistant.components.izone.discovery.async_start_discovery_service",
             new=AsyncMock(return_value=None),
         ),
         patch(
-            "homeassistant.components.izone.config_flow.async_discover_controllers",
+            "homeassistant.components.izone.discovery.async_discover_controllers",
             return_value=controllers,
         ),
     ):
@@ -1947,11 +1957,11 @@ async def test_setup_entry_picks_eligible_controller_after_filtering_for_legacy_
 
     with (
         patch(
-            "homeassistant.components.izone.async_start_discovery_service",
+            "homeassistant.components.izone.discovery.async_start_discovery_service",
             new=AsyncMock(return_value=None),
         ),
         patch(
-            "homeassistant.components.izone.config_flow.async_discover_controllers",
+            "homeassistant.components.izone.discovery.async_discover_controllers",
             return_value=controllers,
         ),
         patch.object(
@@ -2000,11 +2010,11 @@ async def test_setup_entry_raises_not_ready_for_legacy_entry_when_no_eligible_af
 
     with (
         patch(
-            "homeassistant.components.izone.async_start_discovery_service",
+            "homeassistant.components.izone.discovery.async_start_discovery_service",
             new=AsyncMock(return_value=None),
         ),
         patch(
-            "homeassistant.components.izone.config_flow.async_discover_controllers",
+            "homeassistant.components.izone.discovery.async_discover_controllers",
             return_value={"000000001": controller},
         ),
     ):

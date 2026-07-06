@@ -10,9 +10,8 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from . import config_flow
+from . import discovery
 from .const import DATA_CONFIG, DOMAIN
-from .discovery import async_start_discovery_service
 
 PLATFORMS = [Platform.CLIMATE]
 
@@ -47,7 +46,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
     try:
-        await async_start_discovery_service(hass)
+        await discovery.async_start_discovery_service(hass)
     except OSError as err:
         raise ConfigEntryNotReady("iZone discovery service failed to start") from err
 
@@ -67,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # start), so OSError here means fetch_controllers() itself failed — rare but
         # kept as a defensive guard.
         try:
-            controllers = await config_flow.async_discover_controllers(hass)
+            controllers = await discovery.async_discover_controllers(hass)
         except OSError as err:
             raise ConfigEntryNotReady(
                 "iZone discovery failed while resolving legacy config entry"

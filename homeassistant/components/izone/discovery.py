@@ -7,15 +7,15 @@ import logging
 import pizone
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EXCLUDE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_EXCLUDE, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, discovery_flow
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.typing import ConfigType
 
-from .config_flow import async_note_integration_discovery
 from .const import (
     DATA_CONFIG,
     DATA_DISCOVERY_SERVICE,
@@ -26,9 +26,80 @@ from .const import (
     DISPATCH_CONTROLLER_UPDATE,
     DISPATCH_ZONE_UPDATE,
     DOMAIN,
+    TIMEOUT_DISCOVERY,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_discover_controllers(
+    hass: HomeAssistant,
+    *,
+    refresh: bool = False,
+    wait_for_uid: str | None = None,
+) -> dict[str, pizone.Controller]:
+    """Return currently known controllers, optionally waiting for a UID during rescan.
+
+    If ``refresh`` is true, waits for fresh discovery data using the pizone library's
+    built-in coalescing and cool-down logic. When ``wait_for_uid`` is provided, returns
+    as soon as that specific controller appears (or after the timeout).
+
+    If discovery is not yet running, it is started first.
+
+    Raises:
+        OSError: Discovery service failed to start or controller fetch failed.
+    """
+    disco = await async_start_discovery_service(hass)
+    assert disco.pi_disco is not None
+
+    if not refresh:
+        return await disco.pi_disco.fetch_controllers()
+
+    if wait_for_uid is not None:
+        await disco.pi_disco.fetch_controller(wait_for_uid, timeout=TIMEOUT_DISCOVERY)
+        return await disco.pi_disco.fetch_controllers()
+
+    return await disco.pi_disco.fetch_controllers(timeout=TIMEOUT_DISCOVERY)
+
+
+def yaml_excluded_uids(hass: HomeAssistant) -> set[str]:
+    """Return controller UIDs listed in deprecated YAML ``exclude``."""
+    conf: ConfigType | None = hass.data.get(DATA_CONFIG)
+    if not conf:
+        return set()
+    return set(conf.get(CONF_EXCLUDE, ()))
+
+
+@callback
+def async_note_integration_discovery(
+    hass: HomeAssistant, ctrl: pizone.Controller
+) -> None:
+    """Start a config flow when the shared discovery service reports a controller."""
+    if ctrl.device_uid in yaml_excluded_uids(hass):
+        return
+    if _async_blocks_runtime_integration_discovery(hass):
+        return
+    discovery_flow.async_create_flow(
+        hass,
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_INTEGRATION_DISCOVERY,
+            "unique_id": ctrl.device_uid,
+        },
+        data={CONF_HOST: ctrl.device_ip},
+    )
+
+
+@callback
+def _async_blocks_runtime_integration_discovery(hass: HomeAssistant) -> bool:
+    """Return True when an interactive setup flow should own the UI."""
+    for flw in hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, include_uninitialized=True
+    ):
+        src = flw["context"].get("source")
+        if src == config_entries.SOURCE_USER:
+            return True
+    return False
 
 
 class DiscoveryService(pizone.Listener):
@@ -132,8 +203,7 @@ async def async_start_discovery_service(hass: HomeAssistant) -> DiscoveryService
 @callback
 def _async_is_ignored_or_excluded_uid(hass: HomeAssistant, uid: str) -> bool:
     """Return True when UID is excluded by YAML or ignored/disabled by config entries."""
-    conf = hass.data.get(DATA_CONFIG)
-    if conf and uid in conf.get(CONF_EXCLUDE, []):
+    if uid in yaml_excluded_uids(hass):
         return True
 
     return any(

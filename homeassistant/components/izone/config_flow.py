@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_EXCLUDE, CONF_HOST
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.selector import (
@@ -19,85 +19,14 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import DATA_CONFIG, DOMAIN, TIMEOUT_DISCOVERY
+from . import discovery as izone_discovery
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 SELECTED_CONTROLLER_UID = "selected_controller_uid"
-
-
-async def async_discover_controllers(
-    hass: HomeAssistant,
-    *,
-    refresh: bool = False,
-    wait_for_uid: str | None = None,
-) -> dict[str, pizone.Controller]:
-    """Return currently known controllers, optionally waiting for a UID during rescan.
-
-    If ``refresh`` is true, waits for fresh discovery data using the pizone library's
-    built-in coalescing and cool-down logic.  When ``wait_for_uid`` is provided, returns
-    as soon as that specific controller appears (or after the timeout).
-
-    If discovery is not yet running, it is started first.
-
-    Raises:
-        OSError: Discovery service failed to start or controller fetch failed.
-    """
-    from .discovery import async_start_discovery_service  # noqa: PLC0415
-
-    disco = await async_start_discovery_service(hass)
-    assert disco.pi_disco is not None
-
-    if not refresh:
-        return await disco.pi_disco.fetch_controllers()
-
-    if wait_for_uid is not None:
-        await disco.pi_disco.fetch_controller(wait_for_uid, timeout=TIMEOUT_DISCOVERY)
-        return await disco.pi_disco.fetch_controllers()
-
-    return await disco.pi_disco.fetch_controllers(timeout=TIMEOUT_DISCOVERY)
-
-
-def _yaml_excluded_uids(hass: HomeAssistant) -> set[str]:
-    """Return controller UIDs listed in deprecated YAML ``exclude``."""
-    conf: ConfigType | None = hass.data.get(DATA_CONFIG)
-    if not conf:
-        return set()
-    return set(conf.get(CONF_EXCLUDE, ()))
-
-
-@callback
-def async_note_integration_discovery(
-    hass: HomeAssistant, ctrl: pizone.Controller
-) -> None:
-    """Start a config flow when the shared discovery service reports a controller."""
-    if ctrl.device_uid in _yaml_excluded_uids(hass):
-        return
-    if _async_blocks_runtime_integration_discovery(hass):
-        return
-    discovery_flow.async_create_flow(
-        hass,
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_INTEGRATION_DISCOVERY,
-            "unique_id": ctrl.device_uid,
-        },
-        data={CONF_HOST: ctrl.device_ip},
-    )
-
-
-@callback
-def _async_blocks_runtime_integration_discovery(hass: HomeAssistant) -> bool:
-    """Return True when an interactive setup flow should own the UI."""
-    for flw in hass.config_entries.flow.async_progress_by_handler(
-        DOMAIN, include_uninitialized=True
-    ):
-        src = flw["context"].get("source")
-        if src == config_entries.SOURCE_USER:
-            return True
-    return False
 
 
 def _flow_uid_for_matching(flow: ConfigFlow) -> str | None:
@@ -142,10 +71,8 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._async_in_progress(include_uninitialized=True):
             return self.async_abort(reason="already_in_progress")
 
-        from .discovery import async_start_discovery_service  # noqa: PLC0415
-
         try:
-            await async_start_discovery_service(self.hass)
+            await izone_discovery.async_start_discovery_service(self.hass)
         except OSError:
             _LOGGER.debug("Unable to start iZone discovery from import", exc_info=True)
             return self.async_abort(reason="discovery_failed")
@@ -172,7 +99,9 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_in_progress")
 
         try:
-            controllers = await async_discover_controllers(self.hass, refresh=True)
+            controllers = await izone_discovery.async_discover_controllers(
+                self.hass, refresh=True
+            )
         except OSError:
             _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
             return self.async_abort(reason="discovery_failed")
@@ -262,7 +191,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
         device_uid = model.split(" ", 1)[1]
 
-        if device_uid in _yaml_excluded_uids(self.hass):
+        if device_uid in izone_discovery.yaml_excluded_uids(self.hass):
             return self.async_abort(reason="no_devices_found")
 
         # async_set_unique_id + _abort_if_unique_id_configured handles both existing
@@ -274,7 +203,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # A HomeKit advertisement implies a specific UID is on the LAN.  Wait for it.
         try:
-            controllers = await async_discover_controllers(
+            controllers = await izone_discovery.async_discover_controllers(
                 self.hass,
                 refresh=True,
                 wait_for_uid=device_uid,
@@ -306,7 +235,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         host = discovery_info.get(CONF_HOST)
         if not isinstance(uid, str) or not isinstance(host, str):
             return self.async_abort(reason="no_devices_found")
-        if uid in _yaml_excluded_uids(self.hass):
+        if uid in izone_discovery.yaml_excluded_uids(self.hass):
             return self.async_abort(reason="no_devices_found")
 
         await self.async_set_unique_id(uid)
@@ -347,7 +276,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         try:
-            controllers = await async_discover_controllers(self.hass)
+            controllers = await izone_discovery.async_discover_controllers(self.hass)
         except OSError:
             _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
             return self.async_abort(reason="discovery_failed")
@@ -399,7 +328,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         hass: HomeAssistant, controllers: dict[str, pizone.Controller]
     ) -> dict[str, pizone.Controller]:
         """Remove UIDs listed in deprecated YAML ``exclude``."""
-        excluded = _yaml_excluded_uids(hass)
+        excluded = izone_discovery.yaml_excluded_uids(hass)
         if not excluded:
             return controllers
         return {
