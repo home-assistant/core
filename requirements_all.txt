@@ -2510,6 +2510,9 @@ pyrituals==0.0.7
 # homeassistant.components.thread
 pyroute2==0.9.6
 
+# homeassistant.components.rtl_433
+pyrtl_433==0.1.1
+
 # homeassistant.components.rympro
 pyrympro==0.0.9
 
