@@ -341,7 +341,6 @@ async def test_media_error(
 
 async def test_unresolvable(
     hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test when resolving an image fails."""
