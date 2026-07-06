@@ -1,0 +1,29 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "dhcp_software": "DHCP software"
+        },
+        "data_description": {
+          "dhcp_software": "The DHCP server running on the router, used to resolve device hostnames."
+        }
+      }
+    }
+  },
+  "issues": {
+    "yaml_import_cannot_connect": {
+      "title": "YAML import failed: cannot connect",
+      "description": "The YAML configuration for OpenWrt (ubus) at `{host}` could not be imported because the connection failed.\n\nPlease check that `{host}` is reachable, update your `configuration.yaml` if needed, and restart Home Assistant."
+    }
+  }
+}
