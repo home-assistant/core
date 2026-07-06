@@ -7,7 +7,7 @@ from typing import Any, Literal, override
 
 import voluptuous as vol
 
-from homeassistant.const import (
+from homeassistant.const import (  # noqa : F401
     ATTR_EDITABLE,
     CONF_ICON,
     CONF_ID,
@@ -40,7 +40,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util import dt as dt_util
 
-from .const import (
+from .const import (  # noqa : F401
     ATTR_NEXT_EVENT,
     CONF_ALL_DAYS,
     CONF_DATA,
@@ -50,6 +50,8 @@ from .const import (
     LOGGER,
     SERVICE_GET,
     WEEKDAY_TO_CONF,
+    ScheduleEntityCapabilityAttribute,
+    ScheduleEntityStateAttribute,
 )
 
 STORAGE_VERSION = 1
@@ -256,7 +258,10 @@ class Schedule(CollectionEntity):
     """Schedule entity."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_EDITABLE, ATTR_NEXT_EVENT}
+        {
+            ScheduleEntityCapabilityAttribute.EDITABLE,
+            ScheduleEntityStateAttribute.NEXT_EVENT,
+        }
     )
 
     _attr_has_entity_name = True
@@ -269,7 +274,9 @@ class Schedule(CollectionEntity):
     def __init__(self, config: ConfigType, editable: bool) -> None:
         """Initialize a schedule."""
         self._config = ENTITY_SCHEMA(config)
-        self._attr_capability_attributes = {ATTR_EDITABLE: editable}
+        self._attr_capability_attributes = {
+            ScheduleEntityCapabilityAttribute.EDITABLE: editable
+        }
         self._attr_icon = self._config.get(CONF_ICON)
         self._attr_name = self._config[CONF_NAME]
         self._attr_unique_id = self._config[CONF_ID]
@@ -380,7 +387,7 @@ class Schedule(CollectionEntity):
                 break
 
         self._attr_extra_state_attributes = {
-            ATTR_NEXT_EVENT: next_event,
+            ScheduleEntityStateAttribute.NEXT_EVENT: next_event,
         }
 
         if current_data:
