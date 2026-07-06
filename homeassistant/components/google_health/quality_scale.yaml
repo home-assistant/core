@@ -63,9 +63,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices:
-    status: exempt
-    comment: This integration has a static device.
+  dynamic-devices: todo
   entity-category:
     status: exempt
     comment: All entities are user-facing primary sensors.
@@ -76,9 +74,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: exempt
-    comment: Reconfiguration is not supported or needed.
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: This integration does not raise repair issues.
