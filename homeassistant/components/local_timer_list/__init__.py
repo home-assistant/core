@@ -1,7 +1,7 @@
 """The Local Timer list integration.
 
-Creates an in-memory timer list entity (provided by the ``timer_list`` base
-platform) for each config entry, so users can create timer lists from the UI.
+Creates an in-memory timer list entity for each config entry, so users can
+create timer lists from the UI.
 """
 
 from homeassistant.config_entries import ConfigEntry
