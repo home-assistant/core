@@ -211,8 +211,8 @@ class InputNumber(collection.CollectionEntity, NumberEntity, RestoreEntity):
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize an input number."""
-        self._initial_value = config.get(CONF_INITIAL)
-        self._attr_native_value: float | None = self._initial_value
+        self._initial_value: float | None = config.get(CONF_INITIAL)
+        self._attr_native_value = self._initial_value
         self._update_config_attributes(config)
 
     def _update_config_attributes(self, config: ConfigType) -> None:
