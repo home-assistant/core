@@ -39,11 +39,11 @@
 # name: test_cover_entities_snapshot[cloud_nexity_rail_din_europe.json][cover.maple_residence_hallway_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Hallway Shutter',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Shutter',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.maple_residence_hallway_shutter',
@@ -93,11 +93,11 @@
 # name: test_cover_entities_snapshot[cloud_nexity_rail_din_europe.json][cover.maple_residence_hallway_shutter_low_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Hallway Shutter Low speed',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Shutter Low speed',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.maple_residence_hallway_shutter_low_speed',
@@ -147,11 +147,11 @@
 # name: test_cover_entities_snapshot[cloud_nexity_rail_din_europe.json][cover.maple_residence_nursery_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Nursery Shutter',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Shutter',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.maple_residence_nursery_shutter',
@@ -201,11 +201,11 @@
 # name: test_cover_entities_snapshot[cloud_nexity_rail_din_europe.json][cover.maple_residence_nursery_shutter_low_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Nursery Shutter Low speed',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Shutter Low speed',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.maple_residence_nursery_shutter_low_speed',
@@ -255,11 +255,11 @@
 # name: test_cover_entities_snapshot[cloud_nexity_rail_din_europe.json][cover.maple_residence_office_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Office Shutter',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.maple_residence_office_shutter',
@@ -309,11 +309,11 @@
 # name: test_cover_entities_snapshot[cloud_nexity_rail_din_europe.json][cover.maple_residence_office_shutter_low_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Office Shutter Low speed',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter Low speed',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.maple_residence_office_shutter_low_speed',
@@ -363,11 +363,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][cover.palm_court_jaloezie-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'blind',
-      'friendly_name': 'Jaloezie',
-      'is_closed': None,
-      'supported_features': <CoverEntityFeature: 123>,
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jaloezie',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 123>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.palm_court_jaloezie',
@@ -417,11 +417,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][cover.palm_court_kitchen_sheer_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'blind',
-      'friendly_name': 'Kitchen Sheer Screen',
-      'is_closed': None,
-      'supported_features': <CoverEntityFeature: 123>,
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Sheer Screen',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 123>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.palm_court_kitchen_sheer_screen',
@@ -471,11 +471,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][cover.palm_court_kitchen_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'shutter',
-      'friendly_name': 'Kitchen Shutter',
-      'is_closed': None,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Shutter',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.palm_court_kitchen_shutter',
@@ -525,11 +525,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][cover.palm_court_office_venetian_blind-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'blind',
-      'friendly_name': 'Office Venetian Blind',
-      'is_closed': None,
-      'supported_features': <CoverEntityFeature: 123>,
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Venetian Blind',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 123>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.palm_court_office_venetian_blind',
@@ -579,11 +579,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][cover.palm_court_patio_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'shutter',
-      'friendly_name': 'Patio Shutter',
-      'is_closed': None,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Shutter',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.palm_court_patio_shutter',
@@ -633,11 +633,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.loft_loft_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'window',
-      'friendly_name': 'Loft Window',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Loft Window',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.loft_loft_window',
@@ -687,11 +687,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.loft_studio_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'window',
-      'friendly_name': 'Studio Window',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Studio Window',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.loft_studio_window',
@@ -741,11 +741,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.playroom_laundry_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 50,
-      'device_class': 'blind',
-      'friendly_name': 'Laundry Screen',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 50,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laundry Screen',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.playroom_laundry_screen',
@@ -795,11 +795,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.playroom_pantry_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'blind',
-      'friendly_name': 'Pantry Screen',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pantry Screen',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.playroom_pantry_screen',
@@ -849,11 +849,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.playroom_playroom_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'blind',
-      'friendly_name': 'Playroom Screen',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Playroom Screen',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.playroom_playroom_screen',
@@ -903,11 +903,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.playroom_workshop_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'blind',
-      'friendly_name': 'Workshop Screen',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Workshop Screen',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.playroom_workshop_screen',
@@ -957,11 +957,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.study_study_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'blind',
-      'friendly_name': 'Study Screen',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Screen',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.study_study_screen',
@@ -1011,12 +1011,12 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.veranda_basement_roller_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 80,
-      'current_tilt_position': 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Basement Roller Shutter',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 80,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Basement Roller Shutter',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.veranda_basement_roller_shutter',
@@ -1066,12 +1066,12 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.veranda_veranda_roller_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'current_tilt_position': 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Veranda Roller Shutter',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 255>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Veranda Roller Shutter',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.veranda_veranda_roller_shutter',
@@ -1121,11 +1121,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.dining_room_studio_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'shutter',
-      'friendly_name': 'Studio Shutter',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Studio Shutter',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.dining_room_studio_shutter',
@@ -1175,11 +1175,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.garage_dining_room_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'shutter',
-      'friendly_name': 'Dining Room Shutter',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Shutter',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.garage_dining_room_shutter',
@@ -1229,11 +1229,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.garage_guest_room_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'shutter',
-      'friendly_name': 'Guest Room Shutter',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Guest Room Shutter',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.garage_guest_room_shutter',
@@ -1283,11 +1283,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.guest_bedroom_kids_room_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'shutter',
-      'friendly_name': 'Kids Room Shutter',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kids Room Shutter',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.guest_bedroom_kids_room_shutter',
@@ -1337,11 +1337,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.kids_room_kitchen_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Kitchen Shutter',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Shutter',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.kids_room_kitchen_shutter',
@@ -1391,11 +1391,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.kids_room_office_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'shutter',
-      'friendly_name': 'Office Shutter',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.kids_room_office_shutter',
@@ -1445,11 +1445,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.kids_room_patio_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'shutter',
-      'friendly_name': 'Patio Shutter',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Shutter',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.kids_room_patio_shutter',
@@ -1499,10 +1499,10 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_basement_garage_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'Basement Garage Door',
-      'is_closed': None,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Basement Garage Door',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_basement_garage_door',
@@ -1552,11 +1552,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_bedroom_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'window',
-      'friendly_name': 'Bedroom Window',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Window',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_bedroom_window',
@@ -1564,6 +1564,60 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_bioclimatic_pergola-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.living_room_bioclimatic_pergola',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 128>,
+    'translation_key': None,
+    'unique_id': 'ogp://1234-1234-6233/10943109',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_bioclimatic_pergola-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 11,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'awning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bioclimatic Pergola',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 128>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.living_room_bioclimatic_pergola',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_cyclic_garage_door-entry]
@@ -1606,10 +1660,10 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_cyclic_garage_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'Cyclic Garage Door',
-      'is_closed': None,
-      'supported_features': <CoverEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cyclic Garage Door',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_cyclic_garage_door',
@@ -1659,10 +1713,10 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_garage_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'Garage Door',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Door',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_garage_door',
@@ -1712,10 +1766,10 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_garden_gate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gate',
-      'friendly_name': 'Garden Gate',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Gate',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_garden_gate',
@@ -1765,11 +1819,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_main_garage_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'garage',
-      'friendly_name': 'Main Garage Door',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main Garage Door',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_main_garage_door',
@@ -1819,10 +1873,10 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_ogp_garage_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'OGP Garage Door',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OGP Garage Door',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_ogp_garage_door',
@@ -1872,10 +1926,10 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_ogp_gate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gate',
-      'friendly_name': 'OGP Gate',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OGP Gate',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_ogp_gate',
@@ -1925,10 +1979,10 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_partial_garage_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'Partial Garage Door',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Partial Garage Door',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_partial_garage_door',
@@ -1978,11 +2032,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_pergola_awning-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 20,
-      'device_class': 'awning',
-      'friendly_name': 'Pergola Awning',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 20,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'awning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pergola Awning',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_pergola_awning',
@@ -2032,11 +2086,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_rts_garage_door_4t-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'garage',
-      'friendly_name': 'RTS Garage Door 4T',
-      'is_closed': None,
-      'supported_features': <CoverEntityFeature: 3>,
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RTS Garage Door 4T',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_rts_garage_door_4t',
@@ -2086,11 +2140,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_rts_gate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'gate',
-      'friendly_name': 'RTS Gate',
-      'is_closed': None,
-      'supported_features': <CoverEntityFeature: 3>,
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RTS Gate',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_rts_gate',
@@ -2140,11 +2194,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_side_garage_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'garage',
-      'friendly_name': 'Side Garage Door',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Side Garage Door',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_side_garage_door',
@@ -2194,10 +2248,10 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_sliding_gate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gate',
-      'friendly_name': 'Sliding Gate',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sliding Gate',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_sliding_gate',
@@ -2247,11 +2301,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_somfy_pergola-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'awning',
-      'friendly_name': 'Somfy Pergola',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'awning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Somfy Pergola',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_somfy_pergola',
@@ -2301,10 +2355,10 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_swinging_gate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gate',
-      'friendly_name': 'Swinging Gate',
-      'is_closed': None,
-      'supported_features': <CoverEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Swinging Gate',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_swinging_gate',
@@ -2354,11 +2408,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.main_bedroom_bedroom_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'shutter',
-      'friendly_name': 'Bedroom Blinds',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Blinds',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.main_bedroom_bedroom_blinds',
@@ -2408,12 +2462,12 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.main_bedroom_bedroom_venetian_blind-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'current_tilt_position': 62,
-      'device_class': 'blind',
-      'friendly_name': 'Bedroom Venetian Blind',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 143>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 62,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 143>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.main_bedroom_bedroom_venetian_blind',
@@ -2463,11 +2517,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.office_garden_house_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'shutter',
-      'friendly_name': 'Garden House Shutter',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden House Shutter',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.office_garden_house_shutter',
@@ -2517,11 +2571,11 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.reading_nook_living_room_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'shutter',
-      'friendly_name': 'Living Room Shutter',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Shutter',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.reading_nook_living_room_shutter',
@@ -2571,11 +2625,11 @@
 # name: test_cover_entities_snapshot[local_somfy_connexoon_europe.json][cover.terrace_awning-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'awning',
-      'friendly_name': 'Terrace Awning',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'awning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrace Awning',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.terrace_awning',
@@ -2625,12 +2679,12 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.bathroom_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'current_tilt_position': 68,
-      'device_class': 'blind',
-      'friendly_name': 'Bathroom Blinds',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bathroom Blinds',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.bathroom_blinds',
@@ -2680,12 +2734,12 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.bedroom_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'current_tilt_position': 68,
-      'device_class': 'blind',
-      'friendly_name': 'Bedroom Blinds',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Blinds',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.bedroom_blinds',
@@ -2735,12 +2789,12 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.dining_room_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'current_tilt_position': 69,
-      'device_class': 'blind',
-      'friendly_name': 'Dining Room Blinds',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 255>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 69,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Blinds',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.dining_room_blinds',
@@ -2790,12 +2844,12 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.garage_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'current_tilt_position': 69,
-      'device_class': 'blind',
-      'friendly_name': 'Garage Blinds',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 69,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Blinds',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.garage_blinds',
@@ -2845,12 +2899,12 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.guest_room_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'current_tilt_position': 68,
-      'device_class': 'blind',
-      'friendly_name': 'Guest Room Blinds',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Guest Room Blinds',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.guest_room_blinds',
@@ -2900,12 +2954,12 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.hallway_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'current_tilt_position': 68,
-      'device_class': 'blind',
-      'friendly_name': 'Hallway Blinds',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Blinds',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.hallway_blinds',
@@ -2955,12 +3009,12 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.kitchen_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'current_tilt_position': 68,
-      'device_class': 'blind',
-      'friendly_name': 'Kitchen Blinds',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Blinds',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.kitchen_blinds',
@@ -3010,12 +3064,12 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.living_room_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'current_tilt_position': 68,
-      'device_class': 'blind',
-      'friendly_name': 'Living Room Blinds',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Blinds',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_blinds',
@@ -3065,12 +3119,12 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.master_bedroom_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'current_tilt_position': 68,
-      'device_class': 'blind',
-      'friendly_name': 'Master Bedroom Blinds',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master Bedroom Blinds',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.master_bedroom_blinds',
@@ -3120,12 +3174,12 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.nursery_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'current_tilt_position': 69,
-      'device_class': 'blind',
-      'friendly_name': 'Nursery Blinds',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 69,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Blinds',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.nursery_blinds',
@@ -3175,12 +3229,12 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.office_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 15,
-      'current_tilt_position': 68,
-      'device_class': 'blind',
-      'friendly_name': 'Office Blinds',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 15,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Blinds',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.office_blinds',
@@ -3230,12 +3284,12 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.study_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'current_tilt_position': 72,
-      'device_class': 'blind',
-      'friendly_name': 'Study Blinds',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 72,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Blinds',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.study_blinds',
@@ -3285,11 +3339,11 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.back_door_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Back Door Shutter',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back Door Shutter',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.back_door_shutter',
@@ -3339,11 +3393,11 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.front_door_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Front Door Shutter',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Shutter',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.front_door_shutter',
@@ -3393,11 +3447,11 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.roof_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'window',
-      'friendly_name': 'Roof Window',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roof Window',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.roof_window',
@@ -3447,11 +3501,11 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.roof_window_low_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'window',
-      'friendly_name': 'Roof Window Low speed',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roof Window Low speed',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.roof_window_low_speed',
@@ -3501,11 +3555,11 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][cover.attic_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'curtain',
-      'friendly_name': 'Attic Curtain',
-      'is_closed': None,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'curtain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Attic Curtain',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.attic_curtain',
@@ -3555,11 +3609,11 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][cover.conservatory_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 86,
-      'device_class': 'blind',
-      'friendly_name': 'Conservatory Screen',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 86,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Conservatory Screen',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.conservatory_screen',
@@ -3609,11 +3663,11 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][cover.library_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 86,
-      'device_class': 'blind',
-      'friendly_name': 'Library Screen',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 86,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Library Screen',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.library_screen',
@@ -3663,11 +3717,11 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][cover.patio_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'window',
-      'friendly_name': 'Patio Window',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Window',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.patio_window',
@@ -3717,11 +3771,11 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][cover.sunroom_shades-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'blind',
-      'friendly_name': 'Sunroom Shades',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sunroom Shades',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.sunroom_shades',
@@ -3771,11 +3825,11 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][cover.terrace_awning-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 86,
-      'device_class': 'blind',
-      'friendly_name': 'Terrace Awning',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 86,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrace Awning',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.terrace_awning',
@@ -3825,11 +3879,11 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.bedroom_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'blind',
-      'friendly_name': 'Bedroom Screen',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Screen',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.bedroom_screen',
@@ -3879,11 +3933,11 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.dining_room_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'blind',
-      'friendly_name': 'Dining Room Screen',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Screen',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.dining_room_screen',
@@ -3933,10 +3987,10 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.garage_door_rollixo-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'Garage Door Rollixo',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Door Rollixo',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.garage_door_rollixo',
@@ -3986,11 +4040,11 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.garden_pergola-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_tilt_position': 0,
-      'device_class': 'awning',
-      'friendly_name': 'Garden Pergola',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 240>,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'awning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Pergola',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 240>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.garden_pergola',
@@ -4040,11 +4094,11 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.kitchen_pergola-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'awning',
-      'friendly_name': 'Kitchen Pergola',
-      'is_closed': None,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'awning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Pergola',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.kitchen_pergola',
@@ -4094,11 +4148,11 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.living_room_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'curtain',
-      'friendly_name': 'Living Room Curtain',
-      'is_closed': None,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'curtain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Curtain',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_curtain',
@@ -4148,12 +4202,12 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.living_room_venetian_blind-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'current_tilt_position': 100,
-      'device_class': 'blind',
-      'friendly_name': 'Living Room Venetian Blind',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 143>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Venetian Blind',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 143>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.living_room_venetian_blind',
@@ -4203,11 +4257,11 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.office_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'blind',
-      'friendly_name': 'Office Screen',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Screen',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.office_screen',

@@ -1,12 +1,20 @@
 """Service calls for the Teslemetry integration."""
 
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 from voluptuous import All, Range
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    ATTR_ID,
+    ATTR_LOCATION,
+    ATTR_NAME,
+    ATTR_TIME,
+    CONF_DEVICE_ID,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -15,23 +23,20 @@ from .const import DOMAIN
 from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
+if TYPE_CHECKING:
+    from . import TeslemetryConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
 # Attributes
-# pylint: disable-next=home-assistant-duplicate-const
-ATTR_ID = "id"
 ATTR_GPS = "gps"
 ATTR_TYPE = "type"
 ATTR_VALUE = "value"
-# pylint: disable-next=home-assistant-duplicate-const
-ATTR_LOCATION = "location"
 ATTR_LOCALE = "locale"
 ATTR_ORDER = "order"
 ATTR_TIMESTAMP = "timestamp"
 ATTR_FIELDS = "fields"
 ATTR_ENABLE = "enable"
-# pylint: disable-next=home-assistant-duplicate-const
-ATTR_TIME = "time"
 ATTR_PIN = "pin"
 ATTR_TOU_SETTINGS = "tou_settings"
 ATTR_PRECONDITIONING_ENABLED = "preconditioning_enabled"
@@ -44,8 +49,6 @@ ATTR_DAYS_OF_WEEK = "days_of_week"
 ATTR_START_TIME = "start_time"
 ATTR_END_TIME = "end_time"
 ATTR_ONE_TIME = "one_time"
-# pylint: disable-next=home-assistant-duplicate-const
-ATTR_NAME = "name"
 ATTR_PRECONDITION_TIME = "precondition_time"
 
 # Services
@@ -79,38 +82,47 @@ def async_get_device_for_service_call(
 
 def async_get_config_for_device(
     hass: HomeAssistant, device_entry: dr.DeviceEntry
-) -> ConfigEntry:
+) -> TeslemetryConfigEntry:
     """Get the config entry related to a device entry."""
-    config_entry: ConfigEntry
     for entry_id in device_entry.config_entries:
         if entry := hass.config_entries.async_get_entry(entry_id):
             if entry.domain == DOMAIN:
-                config_entry = entry
-    return config_entry
+                return entry
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="no_config_entry_for_device",
+        translation_placeholders={"device_id": device_entry.id},
+    )
 
 
 def async_get_vehicle_for_entry(
-    hass: HomeAssistant, device: dr.DeviceEntry, config: ConfigEntry
+    hass: HomeAssistant, device: dr.DeviceEntry, config: TeslemetryConfigEntry
 ) -> TeslemetryVehicleData:
     """Get the vehicle data for a config entry."""
-    vehicle_data: TeslemetryVehicleData
     assert device.serial_number is not None
     for vehicle in config.runtime_data.vehicles:
         if vehicle.vin == device.serial_number:
-            vehicle_data = vehicle
-    return vehicle_data
+            return vehicle
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="no_vehicle_data_for_device",
+        translation_placeholders={"device_id": device.id},
+    )
 
 
 def async_get_energy_site_for_entry(
-    hass: HomeAssistant, device: dr.DeviceEntry, config: ConfigEntry
+    hass: HomeAssistant, device: dr.DeviceEntry, config: TeslemetryConfigEntry
 ) -> TeslemetryEnergyData:
     """Get the energy site data for a config entry."""
-    energy_data: TeslemetryEnergyData
     assert device.serial_number is not None
     for energysite in config.runtime_data.energysites:
         if str(energysite.id) == device.serial_number:
-            energy_data = energysite
-    return energy_data
+            return energysite
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="no_energy_site_data_for_device",
+        translation_placeholders={"device_id": device.id},
+    )
 
 
 @callback

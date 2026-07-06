@@ -1,6 +1,6 @@
 """Platform for Lunatone sensor integration."""
 
-from typing import Final
+from typing import Final, override
 
 from lunatone_rest_api_client import Sensor
 from lunatone_rest_api_client.models import SensorAddressType, SensorType
@@ -12,11 +12,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -32,7 +30,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     SensorType.AIR_HUMIDITY: SensorEntityDescription(
         key="air_humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorType.AIR_PRESSURE: SensorEntityDescription(
@@ -49,7 +47,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     SensorType.ECO2: SensorEntityDescription(
         key="eco2",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorType.LIGHT: SensorEntityDescription(
@@ -67,7 +65,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     SensorType.VOC: SensorEntityDescription(
         key="voc",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
@@ -147,11 +145,13 @@ class LunatoneSensor(
         return self.coordinator.data[self._sensor_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._sensor_id in self.coordinator.data
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the measurement value of the sensor."""
         return self.sensor.data.value

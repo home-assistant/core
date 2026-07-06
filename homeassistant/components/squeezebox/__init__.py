@@ -30,7 +30,6 @@ from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceEntry,
     DeviceEntryType,
-    format_mac,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -89,7 +88,7 @@ type SqueezeboxConfigEntry = ConfigEntry[SqueezeboxData]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the component."""
+    """Set up the integration."""
     async_setup_services(hass)
     return True
 
@@ -180,7 +179,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     version = (STATUS_QUERY_VERSION in status and status[STATUS_QUERY_VERSION]) or None
     # mac can be missing
     mac_connect = (
-        {(CONNECTION_NETWORK_MAC, format_mac(status[STATUS_QUERY_MAC]))}
+        {(CONNECTION_NETWORK_MAC, status[STATUS_QUERY_MAC])}
         if STATUS_QUERY_MAC in status
         else None
     )

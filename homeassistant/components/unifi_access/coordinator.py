@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 import logging
 import math
-from typing import Any, cast
+from typing import Any, cast, override
 import unicodedata
 
 from unifi_access_api import (
@@ -169,6 +169,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             self.data = updated_data
             self.async_update_listeners()
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the WebSocket connection for push updates."""
         handlers: dict[str, WsMessageHandler] = {
@@ -188,6 +189,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             on_disconnect=self._on_ws_disconnect,
         )
 
+    @override
     async def _async_update_data(self) -> UnifiAccessData:
         """Fetch all doors and emergency status from the API."""
         try:
@@ -197,17 +199,25 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
                     self.client.get_emergency_status(),
                 )
         except ApiAuthError as err:
-            # pylint: disable-next=home-assistant-exception-not-translated
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_auth",
+            ) from err
         except ApiConnectionError as err:
-            # pylint: disable-next=home-assistant-exception-not-translated
-            raise UpdateFailed(f"Error connecting to API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_connection",
+            ) from err
         except ApiError as err:
-            # pylint: disable-next=home-assistant-exception-not-translated
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_api",
+            ) from err
         except TimeoutError as err:
-            # pylint: disable-next=home-assistant-exception-not-translated
-            raise UpdateFailed("Timeout communicating with UniFi Access API") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_timeout",
+            ) from err
 
         previous_lock_rules = self.data.door_lock_rules.copy() if self.data else {}
         door_lock_rules: dict[str, DoorLockRuleStatus] = {}

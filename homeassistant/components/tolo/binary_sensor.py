@@ -1,5 +1,7 @@
 """TOLO Sauna binary sensors."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -43,6 +45,7 @@ class ToloFlowInBinarySensor(ToloSaunaCoordinatorEntity, BinarySensorEntity):
         self._attr_unique_id = f"{entry.entry_id}_flow_in"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if flow in valve is open."""
         return self.coordinator.data.status.flow_in
@@ -64,6 +67,7 @@ class ToloFlowOutBinarySensor(ToloSaunaCoordinatorEntity, BinarySensorEntity):
         self._attr_unique_id = f"{entry.entry_id}_flow_out"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if flow out valve is open."""
         return self.coordinator.data.status.flow_out

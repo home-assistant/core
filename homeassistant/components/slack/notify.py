@@ -3,7 +3,7 @@
 import asyncio
 import logging
 import os
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict, cast, override
 from urllib.parse import urlparse
 
 from aiohttp import BasicAuth
@@ -271,6 +271,7 @@ class SlackNotificationService(BaseNotificationService):
             elif isinstance(result, ClientError):
                 _LOGGER.error("Error while sending message to %s: %r", target, result)
 
+    @override
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to Slack."""
         data = kwargs.get(ATTR_DATA) or {}

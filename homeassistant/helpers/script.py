@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from functools import partial
 import itertools
 import logging
-from typing import Any, Literal, TypedDict, cast, overload
+from typing import Any, Literal, TypedDict, cast, overload, override
 
 import async_interrupt
 from propcache.api import cached_property
@@ -400,10 +400,16 @@ class _ConditionFail(_HaltScript):
 class _StopScript(_HaltScript):
     """Throw if script needs to stop."""
 
-    def __init__(self, message: str, response: Any) -> None:
+    def __init__(
+        self,
+        message: str,
+        response: Any,
+        conversation_response: str | None | UndefinedType = UNDEFINED,
+    ) -> None:
         """Initialize a halt exception."""
         super().__init__(message)
         self.response = response
+        self.conversation_response = conversation_response
 
 
 class _ScriptRun:
@@ -480,6 +486,10 @@ class _ScriptRun:
                 raise
 
             response = err.response
+
+            # Bubble up child conversation response
+            if err.conversation_response is not UNDEFINED:
+                self._conversation_response = err.conversation_response
 
         except Exception:
             script_execution_set("error")
@@ -979,7 +989,7 @@ class _ScriptRun:
                 ) from ex
         else:
             response = None
-        raise _StopScript(stop, response)
+        raise _StopScript(stop, response, self._conversation_response)
 
     ## Variable actions ##
 
@@ -1330,6 +1340,7 @@ class _QueuedScriptRun(_ScriptRun):
 
     lock_acquired = False
 
+    @override
     async def async_run(self) -> ScriptRunResult | None:
         """Run script."""
         # Wait for previous run, if any, to finish by attempting to acquire the script's
@@ -1346,6 +1357,7 @@ class _QueuedScriptRun(_ScriptRun):
         # We've acquired the lock so we can go ahead and start the run.
         return await super().async_run()
 
+    @override
     def _finish(self) -> None:
         if self.lock_acquired:
             self._script._queue_lck.release()  # noqa: SLF001

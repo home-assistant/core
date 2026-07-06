@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 import voluptuous as vol
 
@@ -11,11 +11,13 @@ from homeassistant.components import persistent_notification, websocket_api
 from homeassistant.components.device_tracker import (
     ATTR_IN_ZONES,
     ATTR_SOURCE_TYPE,
+    ATTR_TRACKING_TYPE,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     SourceType,
+    TrackingType,
 )
 from homeassistant.components.zone import ENTITY_ID_HOME
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     ATTR_EDITABLE,
     ATTR_GPS_ACCURACY,
     ATTR_ID,
@@ -51,7 +53,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import DOMAIN
+from .const import DOMAIN, PersonEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -184,6 +186,7 @@ UPDATE_FIELDS: VolDictType = {
 class PersonStore(Store):
     """Person storage."""
 
+    @override
     async def _async_migrate_func(
         self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
     ) -> dict[str, Any]:
@@ -210,6 +213,7 @@ class PersonStorageCollection(collection.DictStorageCollection):
         super().__init__(store, id_manager)
         self.yaml_collection = yaml_collection
 
+    @override
     async def _async_load_data(self) -> collection.SerializedStorageCollection | None:
         """Load the data.
 
@@ -227,6 +231,7 @@ class PersonStorageCollection(collection.DictStorageCollection):
 
         return data
 
+    @override
     async def async_load(self) -> None:
         """Load the Storage collection."""
         await super().async_load()
@@ -266,6 +271,7 @@ class PersonStorageCollection(collection.DictStorageCollection):
                 },
             )
 
+    @override
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(data)
@@ -276,10 +282,12 @@ class PersonStorageCollection(collection.DictStorageCollection):
         return data
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict[str, str]) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
+    @override
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
@@ -304,6 +312,7 @@ class PersonStorageCollection(collection.DictStorageCollection):
 class PersonStorageCollectionWebsocket(collection.DictStorageCollectionWebsocket):
     """Class to expose storage collection management over websocket."""
 
+    @override
     def ws_list_item(
         self,
         hass: HomeAssistant,
@@ -416,7 +425,9 @@ class Person(
 ):
     """Represent a tracked person."""
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_DEVICE_TRACKERS})
+    _entity_component_unrecorded_attributes = frozenset(
+        {PersonEntityStateAttribute.DEVICE_TRACKERS}
+    )
 
     _attr_should_poll = False
     editable: bool
@@ -443,6 +454,7 @@ class Person(
         self.device_trackers = self._config[CONF_DEVICE_TRACKERS]
 
     @classmethod
+    @override
     def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         person = cls(config)
@@ -450,17 +462,19 @@ class Person(
         return person
 
     @classmethod
+    @override
     def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         person = cls(config)
         person.editable = False
         return person
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register device trackers."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():
-            self._parse_source_state(state, state)
+            self._parse_source_state(state)
 
         if self.hass.is_running:
             # Update person now if hass is already running.
@@ -479,6 +493,7 @@ class Person(
             # as there are attributes that can already be set
             self._update_extra_state_attributes()
 
+    @override
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._async_update_config(config)
@@ -510,39 +525,32 @@ class Person(
     @callback
     def _update_state(self) -> None:
         """Update the state."""
-        latest_non_gps_home = latest_not_home = latest_gps = latest = coordinates = None
+        latest_connected = latest_legacy_home = latest_not_home = latest_gps = None
         for entity_id in self._config[CONF_DEVICE_TRACKERS]:
             state = self.hass.states.get(entity_id)
 
             if not state or state.state in IGNORE_STATES:
                 continue
 
-            if state.attributes.get(ATTR_SOURCE_TYPE) == SourceType.GPS:
+            if state.attributes.get(
+                ATTR_TRACKING_TYPE
+            ) == TrackingType.CONNECTION and state.attributes.get(ATTR_IN_ZONES):
+                latest_connected = _get_latest(latest_connected, state)
+            elif state.attributes.get(ATTR_SOURCE_TYPE) == SourceType.GPS:
                 latest_gps = _get_latest(latest_gps, state)
             elif state.state == STATE_HOME:
-                latest_non_gps_home = _get_latest(latest_non_gps_home, state)
+                # Legacy scanner without tracking type
+                latest_legacy_home = _get_latest(latest_legacy_home, state)
             else:
                 latest_not_home = _get_latest(latest_not_home, state)
 
-        if latest_non_gps_home:
-            latest = latest_non_gps_home
-            if (
-                latest_non_gps_home.attributes.get(ATTR_LATITUDE) is None
-                and latest_non_gps_home.attributes.get(ATTR_LONGITUDE) is None
-                and (home_zone := self.hass.states.get(ENTITY_ID_HOME))
-            ):
-                coordinates = home_zone
-            else:
-                coordinates = latest_non_gps_home
-        elif latest_gps:
-            latest = latest_gps
-            coordinates = latest_gps
-        else:
-            latest = latest_not_home
-            coordinates = latest_not_home
+        # A scanner (e.g. a router or beacon) that reports
+        # being in a zone is the most reliable presence signal, so it
+        # takes precedence over everything else.
+        latest = latest_connected or latest_legacy_home or latest_gps or latest_not_home
 
-        if latest and coordinates:
-            self._parse_source_state(latest, coordinates)
+        if latest:
+            self._parse_source_state(latest)
         else:
             self._attr_state = None
             self._source = None
@@ -555,38 +563,53 @@ class Person(
         self.async_write_ha_state()
 
     @callback
-    def _parse_source_state(self, state: State, coordinates: State) -> None:
+    def _parse_source_state(self, state: State) -> None:
         """Parse source state and set person attributes.
 
         This is a device tracker state or the restored person state.
         """
         self._attr_state = state.state
         self._source = state.entity_id
-        self._latitude = coordinates.attributes.get(ATTR_LATITUDE)
-        self._longitude = coordinates.attributes.get(ATTR_LONGITUDE)
-        self._gps_accuracy = coordinates.attributes.get(ATTR_GPS_ACCURACY)
-        self._in_zones = coordinates.attributes.get(ATTR_IN_ZONES, [])
+        self._latitude = state.attributes.get(ATTR_LATITUDE)
+        self._longitude = state.attributes.get(ATTR_LONGITUDE)
+        self._gps_accuracy = state.attributes.get(ATTR_GPS_ACCURACY)
+        self._in_zones = state.attributes.get(ATTR_IN_ZONES, [])
+
+        # A legacy scanner (one that doesn't report in_zones) reports "home"
+        # without coordinates. Use the home zone's coordinates for backwards
+        # compatibility with legacy zone conditions and triggers. Modern
+        # trackers report in_zones and keep their own (possibly absent)
+        # coordinates.
+        if (
+            ATTR_IN_ZONES not in state.attributes
+            and state.state == STATE_HOME
+            and self._latitude is None
+            and self._longitude is None
+            and (home_zone := self.hass.states.get(ENTITY_ID_HOME)) is not None
+        ):
+            self._latitude = home_zone.attributes.get(ATTR_LATITUDE)
+            self._longitude = home_zone.attributes.get(ATTR_LONGITUDE)
 
     @callback
     def _update_extra_state_attributes(self) -> None:
         """Update extra state attributes."""
         data: dict[str, Any] = {
-            ATTR_EDITABLE: self.editable,
-            ATTR_ID: self.unique_id,
-            ATTR_DEVICE_TRACKERS: self.device_trackers,
-            ATTR_IN_ZONES: self._in_zones,
+            PersonEntityStateAttribute.EDITABLE: self.editable,
+            PersonEntityStateAttribute.ID: self.unique_id,
+            PersonEntityStateAttribute.DEVICE_TRACKERS: self.device_trackers,
+            PersonEntityStateAttribute.IN_ZONES: self._in_zones,
         }
 
         if self._latitude is not None:
-            data[ATTR_LATITUDE] = self._latitude
+            data[PersonEntityStateAttribute.LATITUDE] = self._latitude
         if self._longitude is not None:
-            data[ATTR_LONGITUDE] = self._longitude
+            data[PersonEntityStateAttribute.LONGITUDE] = self._longitude
         if self._gps_accuracy is not None:
-            data[ATTR_GPS_ACCURACY] = self._gps_accuracy
+            data[PersonEntityStateAttribute.GPS_ACCURACY] = self._gps_accuracy
         if self._source is not None:
-            data[ATTR_SOURCE] = self._source
+            data[PersonEntityStateAttribute.SOURCE] = self._source
         if (user_id := self._config.get(CONF_USER_ID)) is not None:
-            data[ATTR_USER_ID] = user_id
+            data[PersonEntityStateAttribute.USER_ID] = user_id
 
         self._attr_extra_state_attributes = data
 

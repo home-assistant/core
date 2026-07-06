@@ -1,7 +1,7 @@
 """Arcam media player."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from arcam.fmj import SourceCodes
 
@@ -64,6 +64,7 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
             self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device.
 
@@ -77,12 +78,14 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         return MediaPlayerState.ON if power else MediaPlayerState.OFF
 
     @convert_exception
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         await self._state.set_mute(mute)
         self.async_write_ha_state()
 
     @convert_exception
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select a specific source."""
         try:
@@ -98,6 +101,7 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         self.async_write_ha_state()
 
     @convert_exception
+    @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select a specific source."""
         try:
@@ -112,24 +116,28 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         self.async_write_ha_state()
 
     @convert_exception
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._state.set_volume(round(volume * 99.0))
         self.async_write_ha_state()
 
     @convert_exception
+    @override
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
         await self._state.inc_volume()
         self.async_write_ha_state()
 
     @convert_exception
+    @override
     async def async_volume_down(self) -> None:
         """Turn volume up for media player."""
         await self._state.dec_volume()
         self.async_write_ha_state()
 
     @convert_exception
+    @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         if self._state.get_power() is not None:
@@ -140,10 +148,12 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
             self.hass.bus.async_fire(EVENT_TURN_ON, {ATTR_ENTITY_ID: self.entity_id})
 
     @convert_exception
+    @override
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._state.set_power(False)
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -180,6 +190,7 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         )
 
     @convert_exception
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -196,6 +207,7 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
             )
 
     @property
+    @override
     def source(self) -> str | None:
         """Return the current input source."""
         if (value := self._state.get_source()) is None:
@@ -203,11 +215,13 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         return value.name
 
     @property
+    @override
     def source_list(self) -> list[str]:
         """List of available input sources."""
         return [x.name for x in self._state.get_source_list()]
 
     @property
+    @override
     def sound_mode(self) -> str | None:
         """Name of the current sound mode."""
         if (value := self._state.get_decode_mode()) is None:
@@ -215,6 +229,7 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         return value.name
 
     @property
+    @override
     def sound_mode_list(self) -> list[str] | None:
         """List of available sound modes."""
         if (values := self._state.get_decode_modes()) is None:
@@ -222,6 +237,7 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         return [x.name for x in values]
 
     @property
+    @override
     def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
         if (value := self._state.get_mute()) is None:
@@ -229,6 +245,7 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         return value
 
     @property
+    @override
     def volume_level(self) -> float | None:
         """Volume level of device."""
         if (value := self._state.get_volume()) is None:
@@ -236,6 +253,7 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         return value / 99.0
 
     @property
+    @override
     def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         source = self._state.get_source()
@@ -246,6 +264,7 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         return value
 
     @property
+    @override
     def media_content_id(self) -> str | None:
         """Content type of current playing media."""
         source = self._state.get_source()
@@ -260,27 +279,30 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         return value
 
     @property
+    @override
     def media_channel(self) -> str | None:
         """Channel currently playing."""
         source = self._state.get_source()
-        if source == SourceCodes.DAB:
+        if source is SourceCodes.DAB:
             value = self._state.get_dab_station()
-        elif source == SourceCodes.FM:
+        elif source is SourceCodes.FM:
             value = self._state.get_rds_information()
         else:
             value = None
         return value
 
     @property
+    @override
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
-        if self._state.get_source() == SourceCodes.DAB:
+        if self._state.get_source() is SourceCodes.DAB:
             value = self._state.get_dls_pdt()
         else:
             value = None
         return value
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Title of current playing media."""
         if (source := self._state.get_source()) is None:

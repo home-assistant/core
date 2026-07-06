@@ -1,7 +1,7 @@
 """Provides climate entities for Home Connect."""
 
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
@@ -127,6 +127,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         )
 
     @property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
         hvac_modes = [
@@ -144,6 +145,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         return hvac_modes
 
     @property
+    @override
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         active_clean = (
@@ -156,6 +158,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         )
 
     @property
+    @override
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = ClimateEntityFeature(0)
@@ -177,6 +180,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             "Updated %s (fan mode), new state: %s", self.entity_id, self.fan_mode
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -199,6 +203,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             )
         )
 
+    @override
     def update_native_value(self) -> None:
         """Set the HVAC Mode and preset mode values."""
         event = self.appliance.events.get(EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM)
@@ -221,6 +226,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         )
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         option_value = None
@@ -235,6 +241,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         )
 
     @property
+    @override
     def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes."""
         if (
@@ -257,6 +264,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             return list(FAN_MODES_OPTIONS.keys())
         return None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the device on."""
         try:
@@ -266,17 +274,16 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
                 value=BSH_POWER_ON,
             )
         except HomeConnectError as err:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="power_on",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     "appliance_name": self.appliance.info.name,
-                    "value": BSH_POWER_ON,
                 },
             ) from err
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the device off."""
         try:
@@ -312,6 +319,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             ) from err
         _LOGGER.debug("Updated %s, new state: %s", self.entity_id, self.state)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode is HVACMode.OFF:
@@ -319,10 +327,12 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         else:
             await self._set_program(HVAC_MODES_PROGRAMS_MAP[hvac_mode])
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self._set_program(PRESET_MODES_PROGRAMS_MAP[preset_mode])
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         await super().async_set_option_with_key(

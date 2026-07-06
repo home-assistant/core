@@ -1,5 +1,7 @@
 """Support for Modern Forms Binary Sensors."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -64,6 +66,7 @@ class ModernFormsLightSleepTimerActive(ModernFormsBinarySensor):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the timer."""
         return not (
@@ -95,6 +98,7 @@ class ModernFormsFanSleepTimerActive(ModernFormsBinarySensor):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the timer."""
         return not (

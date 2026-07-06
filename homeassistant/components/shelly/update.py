@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Final, cast
+from typing import Any, Final, cast, override
 
 from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
@@ -180,11 +180,13 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         self._in_progress_old_version: str | None = None
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Version currently in use."""
         return cast(str, self.block_coordinator.device.status["update"]["old_version"])
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         new_version = self.entity_description.latest_version(
@@ -196,10 +198,12 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         return self.installed_version
 
     @property
+    @override
     def in_progress(self) -> bool:
         """Update installation in progress."""
         return self._in_progress_old_version == self.installed_version
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -232,6 +236,7 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         else:
             LOGGER.debug("Result of OTA update call: %s", result)
 
+    @override
     def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
         """Return True if available version is newer then installed version.
 
@@ -272,6 +277,7 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             coordinator.device.gen, coordinator.model, description.beta
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -294,11 +300,13 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             self.async_write_ha_state()
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Version currently in use."""
         return cast(str, self.coordinator.device.shelly["ver"])
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         new_version = self.entity_description.latest_version(self.sub_status)
@@ -308,15 +316,18 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         return self.installed_version
 
     @property
+    @override
     def in_progress(self) -> bool:
         """Update installation in progress."""
         return self._ota_in_progress
 
     @property
+    @override
     def update_percentage(self) -> int | None:
         """Update installation progress."""
         return self._ota_progress_percentage
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -344,14 +355,10 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
                 translation_placeholders={"device": self.coordinator.name},
             ) from err
         except RpcCallError as err:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="ota_update_rpc_error",
-                translation_placeholders={
-                    "entity": self.entity_id,
-                    "device": self.coordinator.name,
-                },
+                translation_placeholders={"device": self.coordinator.name},
             ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
@@ -368,12 +375,14 @@ class RpcSleepingUpdateEntity(
 
     entity_description: RpcUpdateDescription
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self.last_state = await self.async_get_last_state()
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Version currently in use."""
         if self.coordinator.device.initialized:
@@ -385,6 +394,7 @@ class RpcSleepingUpdateEntity(
         return self.last_state.attributes.get(ATTR_INSTALLED_VERSION)
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         if self.coordinator.device.initialized:
@@ -400,6 +410,7 @@ class RpcSleepingUpdateEntity(
         return self.last_state.attributes.get(ATTR_LATEST_VERSION)
 
     @property
+    @override
     def release_url(self) -> str | None:
         """URL to the full release notes."""
         if not self.coordinator.device.initialized:

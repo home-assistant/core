@@ -1,6 +1,7 @@
 """Tests for Samsung TV config flow."""
 
 from copy import deepcopy
+import dataclasses
 from ipaddress import ip_address
 import socket
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
@@ -1035,6 +1036,20 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["data"][CONF_MODEL] == "82GXARRS"
     assert result["data"][CONF_PORT] == 8002
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
+
+
+async def test_zeroconf_ignores_soundbar_by_name(hass: HomeAssistant) -> None:
+    """Test zeroconf flow aborts early when the service name contains 'Soundbar'."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=dataclasses.replace(
+            MOCK_ZEROCONF_DATA, name="Q-Series Soundbar._airplay._tcp.local."
+        ),
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
 @pytest.mark.usefixtures("remote_websocket", "remote_encrypted_websocket_failing")

@@ -1,9 +1,9 @@
 """Roborock Coordinator."""
 
-from dataclasses import dataclass
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from propcache.api import cached_property
 from roborock import B01Props
@@ -21,7 +21,7 @@ from roborock.roborock_message import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONNECTIONS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -57,14 +57,38 @@ MIN_UNAVAILABLE_DURATION = timedelta(minutes=2)
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
 class RoborockCoordinators:
     """Roborock coordinators type."""
 
-    v1: list[RoborockDataUpdateCoordinator]
-    a01: list[RoborockDataUpdateCoordinatorA01]
-    b01_q7: list[RoborockB01Q7UpdateCoordinator]
-    b01_q10: list[RoborockB01Q10UpdateCoordinator]
+    def __init__(
+        self,
+    ) -> None:
+        """Initialize."""
+        self._coordinators: dict[
+            str,
+            RoborockDataUpdateCoordinator
+            | RoborockDataUpdateCoordinatorA01
+            | RoborockB01Q7UpdateCoordinator
+            | RoborockB01Q10UpdateCoordinator,
+        ] = {}
+
+    def add(
+        self,
+        coordinator: RoborockDataUpdateCoordinator
+        | RoborockDataUpdateCoordinatorA01
+        | RoborockB01Q7UpdateCoordinator
+        | RoborockB01Q10UpdateCoordinator,
+    ) -> None:
+        """Add a coordinator."""
+        self._coordinators[coordinator.duid] = coordinator
+
+    def __contains__(self, duid: str) -> bool:
+        """Check if a coordinator exists by DUID."""
+        return duid in self._coordinators
+
+    def keys(self) -> list[str]:
+        """Return DUIDs of all registered coordinators."""
+        return list(self._coordinators.keys())
 
     def values(
         self,
@@ -76,6 +100,42 @@ class RoborockCoordinators:
     ]:
         """Return all coordinators."""
         return self.v1 + self.a01 + self.b01_q7 + self.b01_q10
+
+    @property
+    def v1(self) -> list[RoborockDataUpdateCoordinator]:
+        """Return V1 coordinators."""
+        return [
+            coord
+            for coord in self._coordinators.values()
+            if isinstance(coord, RoborockDataUpdateCoordinator)
+        ]
+
+    @property
+    def a01(self) -> list[RoborockDataUpdateCoordinatorA01]:
+        """Return A01 coordinators."""
+        return [
+            coord
+            for coord in self._coordinators.values()
+            if isinstance(coord, RoborockDataUpdateCoordinatorA01)
+        ]
+
+    @property
+    def b01_q7(self) -> list[RoborockB01Q7UpdateCoordinator]:
+        """Return Q7 coordinators."""
+        return [
+            coord
+            for coord in self._coordinators.values()
+            if isinstance(coord, RoborockB01Q7UpdateCoordinator)
+        ]
+
+    @property
+    def b01_q10(self) -> list[RoborockB01Q10UpdateCoordinator]:
+        """Return Q10 coordinators."""
+        return [
+            coord
+            for coord in self._coordinators.values()
+            if isinstance(coord, RoborockB01Q10UpdateCoordinator)
+        ]
 
 
 type RoborockConfigEntry = ConfigEntry[RoborockCoordinators]
@@ -106,17 +166,17 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         self.properties_api = properties_api
         self.device_info = get_device_info(device)
         if mac := properties_api.network_info.mac:
-            self.device_info[ATTR_CONNECTIONS] = {
-                (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))
-            }
+            self.device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, mac)}
         self.last_update_state: str | None = None
         # Keep track of last attempt to refresh maps/rooms to know when to try again.
-        self._last_home_update_attempt: datetime
+        self._last_home_update_attempt = dt_util.utcnow()
         self.last_home_update: datetime | None = None
         # Tracks the last successful update to control when we report failure
         # to the base class. This is reset on successful data update.
         self._last_update_success_time: datetime | None = None
         self._has_connected_locally: bool = False
+        self._unsubs: list[Callable[[], None]] = []
+        self._setup_completed = False
 
     @cached_property
     def dock_device_info(self) -> DeviceInfo:
@@ -135,13 +195,13 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
             sw_version=self._device.device_info.fv,
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         await self._verify_api()
         try:
             await self.properties_api.status.refresh()
         except RoborockException as err:
-            _LOGGER.debug("Failed to update data during setup: %s", err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",
@@ -161,15 +221,22 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
             _LOGGER.info("Home discovery skipped while device is busy/cleaning")
         except RoborockException as err:
             _LOGGER.debug("Failed to get maps: %s", err)
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
-                translation_placeholders={"error": str(err)},
             ) from err
         else:
             # Force a map refresh on first setup
             self.last_home_update = dt_util.utcnow() - IMAGE_CACHE_INTERVAL
+
+        self._unsubs.append(
+            self.properties_api.status.add_update_listener(self._handle_trait_update)
+        )
+        self._unsubs.append(
+            self.properties_api.consumables.add_update_listener(
+                self._handle_trait_update
+            )
+        )
 
     async def update_map(self) -> None:
         """Update the currently selected map."""
@@ -228,9 +295,14 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         )
         _LOGGER.debug("Updated device properties")
 
+    @override
     async def _async_update_data(self) -> DeviceState | None:
         """Update data via library."""
-        await self._verify_api()
+        if not self._setup_completed:
+            await self._async_setup()
+            self._setup_completed = True
+        else:
+            await self._verify_api()
         try:
             # Update device props and standard api information
             await self._update_device_prop()
@@ -268,12 +340,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         self.last_update_state = self.properties_api.status.state_name
         self._last_update_success_time = dt_util.utcnow()
         _LOGGER.debug("Data update successful %s", self._last_update_success_time)
-        return DeviceState(
-            status=self.properties_api.status,
-            dnd_timer=self.properties_api.dnd,
-            consumable=self.properties_api.consumables,
-            clean_summary=self.properties_api.clean_summary,
-        )
+        return self._device_state
 
     def _should_suppress_update_failure(self) -> bool:
         """Determine if we should suppress update failure reporting.
@@ -291,6 +358,32 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         failure_duration = dt_util.utcnow() - self._last_update_success_time
         _LOGGER.debug("Update failure duration: %s", failure_duration)
         return failure_duration < MIN_UNAVAILABLE_DURATION
+
+    @property
+    def _device_state(self) -> DeviceState:
+        """Return the current device state."""
+        return DeviceState(
+            status=self.properties_api.status,
+            dnd_timer=self.properties_api.dnd,
+            consumable=self.properties_api.consumables,
+            clean_summary=self.properties_api.clean_summary,
+        )
+
+    @callback
+    def _handle_trait_update(self) -> None:
+        """Handle trait updates from push notifications."""
+        _LOGGER.debug("Trait updated, updating coordinator data")
+        self.async_set_updated_data(self._device_state)
+        # We optimize streaming updates to catch state transitions immediately, but
+        # secondary updates (like refreshing the map) can happen on their own interval.
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Shutdown coordinator and unsubscribe update listeners."""
+        await super().async_shutdown()
+        for unsub in self._unsubs:
+            unsub()
+        self._unsubs.clear()
 
     async def get_routines(self) -> list[HomeDataScene]:
         """Get routines."""
@@ -433,6 +526,7 @@ class RoborockWashingMachineUpdateCoordinator(
             RoborockZeoProtocol.SOUND_SET,
         ]
 
+    @override
     async def _async_update_data(
         self,
     ) -> dict[RoborockZeoProtocol, StateType]:
@@ -471,6 +565,7 @@ class RoborockWetDryVacUpdateCoordinator(
             RoborockDyadDataProtocol.TOTAL_RUN_TIME,
         ]
 
+    @override
     async def _async_update_data(
         self,
     ) -> dict[RoborockDyadDataProtocol, StateType]:
@@ -552,6 +647,7 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
             RoborockB01Props.QUANTITY,
         ]
 
+    @override
     async def _async_update_data(
         self,
     ) -> B01Props:
@@ -604,6 +700,7 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
         self.api = api
         self.device_info = get_device_info(device)
 
+    @override
     async def _async_update_data(self) -> None:
         """Request a status push from the device.
 
@@ -634,3 +731,11 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
     def device(self) -> RoborockDevice:
         """Get the RoborockDevice."""
         return self._device
+
+
+type RoborockCoordinatorType = (
+    RoborockDataUpdateCoordinator
+    | RoborockDataUpdateCoordinatorA01[Any]
+    | RoborockB01Q7UpdateCoordinator
+    | RoborockB01Q10UpdateCoordinator
+)

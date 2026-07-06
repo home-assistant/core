@@ -115,12 +115,13 @@ async def async_setup_entry(
     # Match devices based on the widget and protocol.
     # #ie Hitachi Air To Air Heat Pumps
     entities_based_on_widget_and_protocol: list[Entity] = [
-        WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY[device.widget][device.protocol](
-            device.device_url, data.coordinator
-        )
+        WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY[device.widget][
+            device.identifier.protocol
+        ](device.device_url, data.coordinator)
         for device in data.platforms[Platform.CLIMATE]
         if device.widget in WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY
-        and device.protocol in WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY[device.widget]
+        and device.identifier.protocol
+        in WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY[device.widget]
     ]
 
     async_add_entities(

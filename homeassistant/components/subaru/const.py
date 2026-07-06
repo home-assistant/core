@@ -29,6 +29,7 @@ VEHICLE_STATUS = "vehicle_status"
 API_GEN_1 = "g1"
 API_GEN_2 = "g2"
 API_GEN_3 = "g3"
+API_GEN_4 = "g4"
 MANUFACTURER = "Subaru"
 
 PLATFORMS = [
@@ -38,12 +39,8 @@ PLATFORMS = [
     Platform.SENSOR,
 ]
 
-# pylint: disable-next=home-assistant-duplicate-const
-SERVICE_LOCK = "lock"
 SERVICE_REMOTE_START = "remote_start"
 SERVICE_REMOTE_STOP = "remote_stop"
-# pylint: disable-next=home-assistant-duplicate-const
-SERVICE_UNLOCK = "unlock"
 SERVICE_UNLOCK_SPECIFIC_DOOR = "unlock_specific_door"
 
 ATTR_DOOR = "door"
