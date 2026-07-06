@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_LOCATION
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import (
@@ -31,7 +31,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         coordinator = entry.runtime_data
         flap_id = call.data[ATTR_FLAP_ID]
         if flap_id not in coordinator.data:
-            raise HomeAssistantError(f"Unknown Sure Petcare flap ID: {flap_id}")
+            raise ServiceValidationError(f"Unknown Sure Petcare flap ID: {flap_id}")
         await coordinator.handle_set_lock_state(call)
 
     async def handle_set_pet_location(call: ServiceCall) -> None:
@@ -42,7 +42,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         coordinator = entry.runtime_data
         pet_name = call.data[ATTR_PET_NAME]
         if pet_name not in coordinator.get_pets():
-            raise HomeAssistantError(f"Unknown Sure Petcare pet: {pet_name}")
+            raise ServiceValidationError(f"Unknown Sure Petcare pet: {pet_name}")
         await coordinator.handle_set_pet_location(call)
 
     hass.services.async_register(
