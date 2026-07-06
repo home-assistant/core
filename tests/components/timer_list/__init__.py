@@ -6,7 +6,6 @@ from typing import override
 
 from homeassistant.components.timer_list import (
     DOMAIN,
-    TimerFinishAction,
     TimerItem,
     TimerListEntity,
     TimerListEntityFeature,
@@ -32,6 +31,7 @@ ALL_FEATURES = (
 )
 
 _FINISHED_STATUSES = (TimerStatus.FINISHED, TimerStatus.CANCELLED)
+MAX_ARCHIVED_TIMERS = 10
 
 
 class MockFlow(ConfigFlow):
@@ -62,13 +62,7 @@ class MockTimerListEntity(TimerListEntity):
         return list(self._timers.values())
 
     @override
-    async def async_start_timer(
-        self,
-        *,
-        name: str | None,
-        duration: timedelta,
-        finish_action: TimerFinishAction,
-    ) -> str:
+    async def async_start_timer(self, *, name: str | None, duration: timedelta) -> str:
         """Create and start a new timer, returning its id."""
         now = dt_util.utcnow()
         timer_id = ulid_util.ulid_now()
@@ -76,7 +70,6 @@ class MockTimerListEntity(TimerListEntity):
             timer_id=timer_id,
             name=name,
             status=TimerStatus.ACTIVE,
-            finish_action=finish_action,
             duration=duration,
             created_at=now,
             finishes_at=now + duration,
@@ -112,7 +105,7 @@ class MockTimerListEntity(TimerListEntity):
 
     @override
     async def async_cancel_timer(self, timer_id: str) -> None:
-        """Cancel a timer."""
+        """Cancel a timer, archiving it in the ``cancelled`` state."""
         timer = self._get_timer(timer_id)
         self._unschedule(timer_id)
         timer.status = TimerStatus.CANCELLED
@@ -120,9 +113,7 @@ class MockTimerListEntity(TimerListEntity):
         timer.remaining = None
         timer.finished_at = dt_util.utcnow()
         self._notify(TimerListEventType.CANCELLED, timer)
-        if timer.finish_action != TimerFinishAction.ARCHIVE:
-            del self._timers[timer_id]
-            self._notify(TimerListEventType.REMOVED, timer)
+        self._enforce_archive_limit()
 
     @override
     async def async_cancel_all_timers(self) -> None:
@@ -201,7 +192,7 @@ class MockTimerListEntity(TimerListEntity):
 
     @callback
     def _async_timer_finished(self, timer_id: str, now: datetime) -> None:
-        """Handle a timer reaching its finish time."""
+        """Handle a timer reaching its finish time, archiving it."""
         self._cancel_callbacks.pop(timer_id, None)
         if (timer := self._timers.get(timer_id)) is None:
             return
@@ -211,18 +202,25 @@ class MockTimerListEntity(TimerListEntity):
         timer.remaining = None
         timer.finished_at = dt_util.utcnow()
         self._notify(TimerListEventType.FINISHED, timer)
+        self._enforce_archive_limit()
 
-        if timer.finish_action == TimerFinishAction.REMOVE:
-            self._timers.pop(timer_id, None)
+    @callback
+    def _enforce_archive_limit(self) -> None:
+        """Evict the oldest archived timers beyond ``MAX_ARCHIVED_TIMERS``."""
+        archived = sorted(
+            (
+                timer
+                for timer in self._timers.values()
+                if timer.status in _FINISHED_STATUSES
+            ),
+            key=lambda timer: timer.finished_at or dt_util.utcnow(),
+        )
+        excess = len(archived) - MAX_ARCHIVED_TIMERS
+        if excess <= 0:
+            return
+        for timer in archived[:excess]:
+            del self._timers[timer.timer_id]
             self._notify(TimerListEventType.REMOVED, timer)
-        elif timer.finish_action == TimerFinishAction.RESTART:
-            restarted_at = dt_util.utcnow()
-            timer.status = TimerStatus.ACTIVE
-            timer.created_at = restarted_at
-            timer.finishes_at = restarted_at + timer.duration
-            timer.finished_at = None
-            self._schedule(timer)
-            self._notify(TimerListEventType.STARTED, timer)
 
     @override
     async def async_will_remove_from_hass(self) -> None:

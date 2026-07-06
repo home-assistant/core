@@ -66,12 +66,12 @@ async def _setup_automation(hass: HomeAssistant, trigger_type: str) -> None:
     await hass.async_block_till_done()
 
 
-async def _start_timer(hass: HomeAssistant, finish_action: str = "remove") -> str:
+async def _start_timer(hass: HomeAssistant) -> str:
     """Start a timer and return its id."""
     result = await hass.services.async_call(
         DOMAIN,
         "start_timer",
-        {"duration": {"seconds": 60}, "finish_action": finish_action},
+        {"duration": {"seconds": 60}},
         target={ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
         return_response=True,

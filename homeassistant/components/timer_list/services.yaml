@@ -14,15 +14,6 @@ start_timer:
       example: "00:05:00"
       selector:
         duration:
-    finish_action:
-      default: remove
-      selector:
-        select:
-          translation_key: finish_action
-          options:
-            - remove
-            - archive
-            - restart
 pause_timer:
   target:
     entity:

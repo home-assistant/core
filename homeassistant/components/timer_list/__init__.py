@@ -35,12 +35,10 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_DURATION,
-    ATTR_FINISH_ACTION,
     ATTR_STATUS,
     ATTR_TIMER_ID,
     DATA_COMPONENT,
     DOMAIN,
-    TimerFinishAction,
     TimerListEntityFeature,
     TimerListEventType,
     TimerListServices,
@@ -67,11 +65,8 @@ class TimerItem:
     status: TimerStatus
     """Current status of the timer."""
 
-    finish_action: TimerFinishAction
-    """What happens to the timer once it finishes."""
-
     duration: timedelta
-    """Original duration the timer was created with (used by ``restart``)."""
+    """Original duration the timer was created with."""
 
     created_at: datetime
     """When the timer was (re)started, in UTC."""
@@ -109,7 +104,6 @@ def timer_to_dict(item: TimerItem, now: datetime) -> dict[str, Any]:
         ATTR_TIMER_ID: item.timer_id,
         ATTR_NAME: item.name,
         ATTR_STATUS: item.status.value,
-        ATTR_FINISH_ACTION: item.finish_action.value,
         "duration": item.duration.total_seconds(),
         "created_at": item.created_at.isoformat(),
         "finishes_at": item.finishes_at.isoformat() if item.finishes_at else None,
@@ -132,9 +126,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {
             vol.Optional(ATTR_NAME): cv.string,
             vol.Required(ATTR_DURATION): cv.positive_time_period,
-            vol.Optional(
-                ATTR_FINISH_ACTION, default=TimerFinishAction.REMOVE
-            ): vol.Coerce(TimerFinishAction),
         },
         _async_start_timer,
         required_features=[TimerListEntityFeature.START_TIMER],
@@ -238,13 +229,7 @@ class TimerListEntity(Entity):
         """Return the timers in the list."""
         raise NotImplementedError
 
-    async def async_start_timer(
-        self,
-        *,
-        name: str | None,
-        duration: timedelta,
-        finish_action: TimerFinishAction,
-    ) -> str:
+    async def async_start_timer(self, *, name: str | None, duration: timedelta) -> str:
         """Create and start a new timer, returning its id."""
         raise NotImplementedError
 
@@ -311,7 +296,6 @@ async def _async_start_timer(
     timer_id = await entity.async_start_timer(
         name=call.data.get(ATTR_NAME),
         duration=call.data[ATTR_DURATION],
-        finish_action=call.data[ATTR_FINISH_ACTION],
     )
     return {ATTR_TIMER_ID: timer_id}
 
