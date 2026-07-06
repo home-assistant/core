@@ -49,9 +49,11 @@ if TYPE_CHECKING:
 
 PLATFORMS = [
     Platform.BUTTON,
+    Platform.IMAGE,
     Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.SELECT,
+    Platform.SENSOR,
     Platform.SWITCH,
     Platform.TEXT,
 ]
@@ -73,6 +75,7 @@ class MusicAssistantEntryData:
     listen_task: asyncio.Task
     discovered_players: set[str] = field(default_factory=set)
     platform_handlers: dict[Platform, PlayerAddCallback] = field(default_factory=dict)
+    party_handlers: dict[Platform, Callable[[str], None]] = field(default_factory=dict)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -245,12 +248,63 @@ async def async_setup_entry(  # noqa: C901
     player_ids = {player.player_id for player in all_player_configs}
     dev_reg = dr.async_get(hass)
     dev_entries = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
+    party_provider = mass.get_provider("party")
+    party_instance_id = None
+    if party_provider and isinstance(party_provider.instance_id, str):
+        party_instance_id = party_provider.instance_id
+
     for device in dev_entries:
         for identifier in device.identifiers:
-            if identifier[0] == DOMAIN and identifier[1] not in player_ids:
+            if (
+                identifier[0] == DOMAIN
+                and identifier[1] not in player_ids
+                and identifier[1] != party_instance_id
+            ):
                 dev_reg.async_update_device(
                     device.id, remove_config_entry_id=entry.entry_id
                 )
+
+    def add_party_mode(instance_id: str) -> None:
+        """Handle adding Party Mode as HA device + entities."""
+        # run callback for each platform
+        for callback in entry.runtime_data.party_handlers.values():
+            callback(instance_id)
+
+    def remove_party_mode(instance_id: str) -> None:
+        """Handle removing Party Mode as HA device + entities."""
+        dev_reg = dr.async_get(hass)
+        if hass_device := dev_reg.async_get_device({(DOMAIN, instance_id)}):
+            dev_reg.async_update_device(
+                hass_device.id, remove_config_entry_id=entry.entry_id
+            )
+
+    # We use a mutable container to track if party mode was previously seen
+    party_mode_state = {"instance_id": party_instance_id}
+
+    if party_instance_id:
+        add_party_mode(party_instance_id)
+
+    def handle_providers_updated(event: MassEvent) -> None:
+        """Handle Mass Providers Updated event."""
+        current_party_provider = mass.get_provider("party")
+        current_instance_id = None
+        if current_party_provider and isinstance(
+            current_party_provider.instance_id, str
+        ):
+            current_instance_id = current_party_provider.instance_id
+
+        # If it was added
+        if current_instance_id and not party_mode_state["instance_id"]:
+            party_mode_state["instance_id"] = current_instance_id
+            add_party_mode(current_instance_id)
+        # If it was removed
+        elif not current_instance_id and party_mode_state["instance_id"]:
+            remove_party_mode(party_mode_state["instance_id"])
+            party_mode_state["instance_id"] = None
+
+    entry.async_on_unload(
+        mass.subscribe(handle_providers_updated, EventType.PROVIDERS_UPDATED)
+    )
 
     return True
 

@@ -54,6 +54,11 @@
         "name": "Favorite current song"
       }
     },
+    "image": {
+      "party_mode_qr": {
+        "name": "Party mode guest QR code"
+      }
+    },
     "media_player": {
       "media_player": {
         "state_attributes": {
@@ -221,6 +226,11 @@
         }
       }
     },
+    "sensor": {
+      "party_mode_url": {
+        "name": "Party mode guest URL"
+      }
+    },
     "switch": {
       "adaptive_drc": {
         "name": "Adaptive DRC"
@@ -239,6 +249,24 @@
       },
       "party_mode": {
         "name": "Party mode"
+      },
+      "party_mode_anti_burn_in": {
+        "name": "Party mode anti burn-in"
+      },
+      "party_mode_enable_add_queue": {
+        "name": "Party mode enable guest add to queue"
+      },
+      "party_mode_enable_boost": {
+        "name": "Party mode enable guest boost"
+      },
+      "party_mode_enable_guest_access": {
+        "name": "Party mode enable guest access"
+      },
+      "party_mode_enable_rate_limiting": {
+        "name": "Party mode enable rate limiting"
+      },
+      "party_mode_karaoke_mode": {
+        "name": "Party mode karaoke mode"
       },
       "pure_direct": {
         "name": "Pure direct"

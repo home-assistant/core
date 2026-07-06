@@ -2959,6 +2959,9 @@ screenlogicpy==0.10.2
 # homeassistant.components.backup
 securetar==2026.4.1
 
+# homeassistant.components.music_assistant
+segno==1.6.1
+
 # homeassistant.components.sendgrid
 sendgrid==6.8.2
 
