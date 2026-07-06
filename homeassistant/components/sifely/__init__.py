@@ -5,8 +5,6 @@ the Sifely Cloud API. Configured from the UI by signing in with a Sifely
 account; tokens are cached in the config entry.
 """
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.const import (

@@ -1,7 +1,5 @@
 """Sensor platform for the Sifely smart lock integration."""
 
-from __future__ import annotations
-
 from typing import Any, override
 
 from homeassistant.components.sensor import (
