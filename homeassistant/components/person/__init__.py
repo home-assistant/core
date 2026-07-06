@@ -17,7 +17,7 @@ from homeassistant.components.device_tracker import (
     TrackingType,
 )
 from homeassistant.components.zone import ENTITY_ID_HOME
-from homeassistant.const import (  # noqa : F401
+from homeassistant.const import (  # noqa: F401
     ATTR_EDITABLE,
     ATTR_GPS_ACCURACY,
     ATTR_ID,
