@@ -6,11 +6,6 @@ from typing import Any
 import pytest
 
 from homeassistant.components.counter import (
-    ATTR_EDITABLE,
-    ATTR_INITIAL,
-    ATTR_MAXIMUM,
-    ATTR_MINIMUM,
-    ATTR_STEP,
     CONF_ICON,
     CONF_INITIAL,
     CONF_MAXIMUM,
@@ -127,8 +122,8 @@ async def test_config_options(hass: HomeAssistant) -> None:
     assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World"
     assert state_2.attributes.get(ATTR_ICON) == "mdi:work"
 
-    assert state_3.attributes.get(ATTR_INITIAL) == DEFAULT_INITIAL
-    assert state_3.attributes.get(ATTR_STEP) == DEFAULT_STEP
+    assert state_3.attributes.get("initial") == DEFAULT_INITIAL
+    assert state_3.attributes.get("step") == DEFAULT_STEP
 
 
 async def test_methods(hass: HomeAssistant) -> None:
@@ -442,7 +437,7 @@ async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert int(state.state) == 10
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
-    assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes.get("editable")
 
 
 async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
@@ -464,11 +459,11 @@ async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> N
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert int(state.state) == 10
     assert state.attributes[ATTR_FRIENDLY_NAME] == "from storage"
-    assert state.attributes[ATTR_EDITABLE] is True
+    assert state.attributes["editable"] is True
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert int(state.state) == 5
-    assert state.attributes[ATTR_EDITABLE] is False
+    assert state.attributes["editable"] is False
 
 
 async def test_ws_list(
@@ -559,9 +554,9 @@ async def test_update_min_max(
     state = hass.states.get(input_entity_id)
     assert state is not None
     assert int(state.state) == 15
-    assert state.attributes[ATTR_MAXIMUM] == 100
-    assert state.attributes[ATTR_MINIMUM] == 10
-    assert state.attributes[ATTR_STEP] == 3
+    assert state.attributes["maximum"] == 100
+    assert state.attributes["minimum"] == 10
+    assert state.attributes["step"] == 3
     assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
 
     client = await hass_ws_client(hass)
@@ -581,9 +576,9 @@ async def test_update_min_max(
 
     state = hass.states.get(input_entity_id)
     assert int(state.state) == 19
-    assert state.attributes[ATTR_MINIMUM] == 19
-    assert state.attributes[ATTR_MAXIMUM] == 100
-    assert state.attributes[ATTR_STEP] == 3
+    assert state.attributes["minimum"] == 19
+    assert state.attributes["maximum"] == 100
+    assert state.attributes["step"] == 3
 
     updated_settings = settings | {"maximum": 5, "minimum": 2, "step": 5}
     await client.send_json(
@@ -600,9 +595,9 @@ async def test_update_min_max(
 
     state = hass.states.get(input_entity_id)
     assert int(state.state) == 5
-    assert state.attributes[ATTR_MINIMUM] == 2
-    assert state.attributes[ATTR_MAXIMUM] == 5
-    assert state.attributes[ATTR_STEP] == 5
+    assert state.attributes["minimum"] == 2
+    assert state.attributes["maximum"] == 5
+    assert state.attributes["step"] == 5
 
     updated_settings = settings | {"maximum": None, "minimum": None, "step": 6}
     await client.send_json(
@@ -619,9 +614,9 @@ async def test_update_min_max(
 
     state = hass.states.get(input_entity_id)
     assert int(state.state) == 5
-    assert ATTR_MINIMUM not in state.attributes
-    assert ATTR_MAXIMUM not in state.attributes
-    assert state.attributes[ATTR_STEP] == 6
+    assert "minimum" not in state.attributes
+    assert "maximum" not in state.attributes
+    assert state.attributes["step"] == 6
 
 
 async def test_create(
@@ -651,6 +646,6 @@ async def test_create(
 
     state = hass.states.get(input_entity_id)
     assert int(state.state) == 0
-    assert ATTR_MINIMUM not in state.attributes
-    assert ATTR_MAXIMUM not in state.attributes
-    assert state.attributes[ATTR_STEP] == 1
+    assert "minimum" not in state.attributes
+    assert "maximum" not in state.attributes
+    assert state.attributes["step"] == 1
