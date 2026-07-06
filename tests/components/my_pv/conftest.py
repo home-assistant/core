@@ -42,15 +42,11 @@ def mock_my_pv_client() -> Generator[AsyncMock]:
     """Mock the my-PV client across the integration."""
     with (
         patch(
-            "my_pv.MyPVLocalDevice",
+            "homeassistant.components.my_pv.MyPVLocalDevice",
             autospec=True,
         ) as mock_client,
         patch(
             "homeassistant.components.my_pv.config_flow.MyPVLocalDevice",
-            new=mock_client,
-        ),
-        patch(
-            "homeassistant.components.my_pv.MyPVLocalDevice",
             new=mock_client,
         ),
     ):

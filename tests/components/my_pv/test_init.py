@@ -1,5 +1,7 @@
 """Test the my-PV init."""
 
+from unittest.mock import AsyncMock
+
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -20,6 +22,22 @@ async def test_async_setup_entry_success(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_async_setup_entry_cannot_connect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_my_pv_client: AsyncMock,
+) -> None:
+    """Test successful setup of a config entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_my_pv_client.connect.return_value = False
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures("mock_my_pv_client")
