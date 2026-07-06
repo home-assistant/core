@@ -38,7 +38,9 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions:
+    status: exempt
+    comment: There are no custom actions
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
@@ -46,7 +48,9 @@ rules:
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: todo
-  reauthentication-flow: todo
+  reauthentication-flow:
+    status: exempt
+    comment: This integration does not require authentication.
   test-coverage: todo
 
   # Gold
