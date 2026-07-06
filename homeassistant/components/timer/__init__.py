@@ -7,7 +7,7 @@ from typing import Any, Self, override
 
 import voluptuous as vol
 
-from homeassistant.const import (
+from homeassistant.const import (  # noqa : F401
     ATTR_EDITABLE,
     ATTR_ENTITY_ID,
     CONF_ICON,
@@ -25,6 +25,8 @@ import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util import dt as dt_util
+
+from .const import TimerEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -256,16 +258,20 @@ class Timer(collection.CollectionEntity, RestoreEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs: dict[str, Any] = {
-            ATTR_DURATION: _format_timedelta(self._running_duration),
-            ATTR_EDITABLE: self.editable,
-            ATTR_LAST_TRANSITION: self._last_transition,
+            TimerEntityStateAttribute.DURATION: _format_timedelta(
+                self._running_duration
+            ),
+            TimerEntityStateAttribute.EDITABLE: self.editable,
+            TimerEntityStateAttribute.LAST_TRANSITION: self._last_transition,
         }
         if self._end is not None:
-            attrs[ATTR_FINISHES_AT] = self._end.isoformat()
+            attrs[TimerEntityStateAttribute.FINISHES_AT] = self._end.isoformat()
         if self._remaining is not None:
-            attrs[ATTR_REMAINING] = _format_timedelta(self._remaining)
+            attrs[TimerEntityStateAttribute.REMAINING] = _format_timedelta(
+                self._remaining
+            )
         if self._restore:
-            attrs[ATTR_RESTORE] = self._restore
+            attrs[TimerEntityStateAttribute.RESTORE] = self._restore
 
         return attrs
 
