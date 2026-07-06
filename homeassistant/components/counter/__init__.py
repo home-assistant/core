@@ -27,7 +27,6 @@ ATTR_INITIAL = "initial"
 ATTR_STEP = "step"
 ATTR_MINIMUM = "minimum"
 ATTR_MAXIMUM = "maximum"
-
 VALUE = "value"
 
 CONF_INITIAL = "initial"
