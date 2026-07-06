@@ -84,6 +84,7 @@ from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    EVENT_VALUE_UPDATED,
     LOGGER,
     USER_AGENT,
 )
@@ -470,6 +471,9 @@ def async_register_api(hass: HomeAssistant) -> None:
         hass, websocket_subscribe_controller_statistics
     )
     websocket_api.async_register_command(hass, websocket_subscribe_node_statistics)
+    websocket_api.async_register_command(
+        hass, websocket_subscribe_config_parameter_updates
+    )
     websocket_api.async_register_command(hass, websocket_hard_reset_controller)
     websocket_api.async_register_command(hass, websocket_node_capabilities)
     websocket_api.async_register_command(hass, websocket_invoke_cc_api)
@@ -1129,9 +1133,11 @@ async def websocket_provision_smart_start_node(
             name=device_name,
             manufacturer=manufacturer,
             model=model,
-            via_device=get_device_id(driver, driver.controller.own_node)
-            if driver.controller.own_node
-            else None,
+            via_device=(
+                get_device_id(driver, driver.controller.own_node)
+                if driver.controller.own_node
+                else None
+            ),
         )
         dev_reg.async_update_device(
             device.id, area_id=msg.get(AREA_ID), name_by_user=device_name
@@ -2816,6 +2822,59 @@ async def websocket_subscribe_node_statistics(
                 "source": "node",
                 "nodeId": node.node_id,
                 **_get_node_statistics_dict(hass, node.statistics),
+            },
+        )
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/subscribe_config_parameter_updates",
+        vol.Required(DEVICE_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_get_node
+async def websocket_subscribe_config_parameter_updates(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    node: Node,
+) -> None:
+    """Subscribe to the config parameter value updates for a node."""
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        unsub()
+
+    @callback
+    def forward_values(event: dict) -> None:
+        if event["value"].command_class != CommandClass.CONFIGURATION:
+            return
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    v.value_id: v.value
+                    for v in node.values.values()
+                    if v.command_class == CommandClass.CONFIGURATION
+                },
+            )
+        )
+
+    msg[DATA_UNSUBSCRIBE] = unsub = node.on(EVENT_VALUE_UPDATED, forward_values)
+    connection.subscriptions[msg["id"]] = async_cleanup
+
+    connection.send_result(msg[ID])
+    connection.send_message(
+        websocket_api.event_message(
+            msg[ID],
+            {
+                val.value_id: val.value
+                for val in node.values.values()
+                if val.command_class == CommandClass.CONFIGURATION
             },
         )
     )

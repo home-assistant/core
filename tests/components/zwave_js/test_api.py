@@ -5102,6 +5102,92 @@ async def test_subscribe_node_statistics(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
+async def test_subscribe_config_parameter_updates(
+    hass: HomeAssistant,
+    multisensor_6,
+    integration,
+    client,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the subscribe_config_parameter_updates command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+    multisensor_6_device = get_device(hass, multisensor_6)
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/subscribe_config_parameter_updates",
+            DEVICE_ID: multisensor_6_device.id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    msg = await ws_client.receive_json()
+    initial_state = {
+        value.value_id: value.value
+        for value in multisensor_6.values.values()
+        if value.command_class == 112
+    }
+    assert msg["event"] == initial_state
+
+    # Fire value updated
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": multisensor_6.node_id,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 2,
+                "newValue": 1,
+                "prevValue": 0,
+                "propertyName": "Stay Awake in Battery Mode",
+            },
+        },
+    )
+    client.driver.controller.receive_event(event)
+    msg = await ws_client.receive_json()
+    # The initial state is no longer right since the temperature has been updated
+    assert msg["event"] != initial_state
+    assert msg["event"]["52-112-0-2"] == 1
+
+    # Test sending command with improper entry ID fails
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/subscribe_config_parameter_updates",
+            DEVICE_ID: "fake_device",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/subscribe_config_parameter_updates",
+            DEVICE_ID: multisensor_6_device.id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
 async def test_hard_reset_controller(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
