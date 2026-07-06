@@ -283,11 +283,7 @@ async def test_reconfigure_flow_success(
 async def test_reconfigure_flow_preserves_stored_ssl(
     hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test reconfigure pre-fills the stored SSL value, not the schema default.
-
-    The stored entry has SSL disabled; flipping the new-entry default to on must
-    not silently enable SSL for an existing user who opens the reconfigure form.
-    """
+    """Test reconfigure pre-fills the stored SSL value, not the schema default."""
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
