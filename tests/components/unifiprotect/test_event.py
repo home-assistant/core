@@ -41,9 +41,9 @@ TEST_VEHICLE_EVENT_DELAY = 0.05
 
 @pytest.fixture(autouse=True)
 def short_vehicle_delay():
-    """Use a short delay for vehicle event tests."""
+    """Use a short delay for thumbnail-enriched smart detect event tests."""
     with patch(
-        "homeassistant.components.unifiprotect.event.VEHICLE_EVENT_DELAY_SECONDS",
+        "homeassistant.components.unifiprotect.event.SMART_DETECT_EVENT_DELAY_SECONDS",
         TEST_VEHICLE_EVENT_DELAY,
     ):
         yield
@@ -1738,3 +1738,163 @@ async def test_aiport_no_event_entities(
     # AI Port should not create any camera-specific event entities
     # (doorbell, motion, etc.)
     assert_entity_counts(hass, Platform.EVENT, 0, 0)
+
+
+async def test_face_detection_recognized(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """Test face detection event exposes the recognized (matched) name."""
+
+    doorbell.feature_flags.smart_detect_types.append(SmartDetectObjectType.FACE)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+    # Face capability adds one more event entity to the doorbell.
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture_event(event: HAEvent) -> None:
+        events.append(event)
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, EVENT_DESCRIPTIONS[5]
+    )
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture_event)
+
+    # Create event with a face thumbnail carrying a matched name (UFP 6.0+),
+    # plus a person thumbnail that must be ignored.
+    event = Event(
+        model=ModelType.EVENT,
+        id="test_face_event_id",
+        type=EventType.SMART_DETECT,
+        start=fixed_now - timedelta(seconds=1),
+        end=None,
+        score=100,
+        smart_detect_types=[],
+        smart_detect_event_ids=[],
+        camera_id=doorbell.id,
+        api=ufp.api,
+        metadata={
+            "detected_thumbnails": [
+                {
+                    "type": "face",
+                    "confidence": 87,
+                    "clock_best_wall": fixed_now,
+                    "cropped_id": "test_thumb_id",
+                    "group": {
+                        "id": "face_group_1",
+                        "matched_name": "John Doe",
+                        "confidence": 87,
+                    },
+                },
+                {
+                    "type": "person",  # Should be ignored
+                    "confidence": 100,
+                    "clock_best_wall": fixed_now,
+                    "cropped_id": "test_thumb_id_person",
+                },
+            ]
+        },
+    )
+
+    new_camera = doorbell.model_copy()
+    new_camera.last_smart_detect_event_id = "test_face_event_id"
+    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
+    ufp.api.bootstrap.events = {event.id: event}
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = event
+    ufp.ws_msg(mock_msg)
+
+    # Wait for the timer
+    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    await hass.async_block_till_done()
+
+    # Should have received a face detection event with the matched name
+    assert len(events) == 1
+    state = events[0].data["new_state"]
+    assert state
+    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+    assert state.attributes[ATTR_EVENT_ID] == "test_face_event_id"
+    assert state.attributes["confidence"] == 87
+    assert state.attributes["detected_name"] == "John Doe"
+
+    unsub()
+
+
+async def test_face_detection_unrecognized(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """Test face detection event without a match omits the detected name."""
+
+    doorbell.feature_flags.smart_detect_types.append(SmartDetectObjectType.FACE)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture_event(event: HAEvent) -> None:
+        events.append(event)
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, EVENT_DESCRIPTIONS[5]
+    )
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture_event)
+
+    # Face thumbnail with no group and no name: an unrecognized face.
+    event = Event(
+        model=ModelType.EVENT,
+        id="test_face_unknown_id",
+        type=EventType.SMART_DETECT,
+        start=fixed_now - timedelta(seconds=1),
+        end=None,
+        score=100,
+        smart_detect_types=[],
+        smart_detect_event_ids=[],
+        camera_id=doorbell.id,
+        api=ufp.api,
+        metadata={
+            "detected_thumbnails": [
+                {
+                    "type": "face",
+                    "confidence": 60,
+                    "clock_best_wall": fixed_now,
+                    "cropped_id": "test_thumb_id",
+                }
+            ]
+        },
+    )
+
+    new_camera = doorbell.model_copy()
+    new_camera.last_smart_detect_event_id = "test_face_unknown_id"
+    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
+    ufp.api.bootstrap.events = {event.id: event}
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = event
+    ufp.ws_msg(mock_msg)
+
+    # Wait for the timer
+    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    await hass.async_block_till_done()
+
+    # Event fires (a face was detected) but carries no recognized name.
+    assert len(events) == 1
+    state = events[0].data["new_state"]
+    assert state
+    assert state.attributes[ATTR_EVENT_ID] == "test_face_unknown_id"
+    assert state.attributes["confidence"] == 60
+    assert "detected_name" not in state.attributes
+
+    unsub()

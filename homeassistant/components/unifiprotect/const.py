@@ -88,9 +88,11 @@ EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED: Final = "not_identified"
 EVENT_TYPE_NFC_SCANNED: Final = "scanned"
 EVENT_TYPE_VEHICLE_DETECTED: Final = "detected"
 EVENT_TYPE_PACKAGE_DETECTED: Final = "detected"
+EVENT_TYPE_FACE_DETECTED: Final = "detected"
 
-# Delay in seconds before firing vehicle event after last thumbnail
-VEHICLE_EVENT_DELAY_SECONDS: Final = 3
+# Delay in seconds before firing a thumbnail-enriched smart detect event
+# (vehicle/face) after the last thumbnail, so recognition data can arrive.
+SMART_DETECT_EVENT_DELAY_SECONDS: Final = 3
 
 KEYRINGS_ULP_ID: Final = "ulp_id"
 KEYRINGS_USER_STATUS: Final = "user_status"
