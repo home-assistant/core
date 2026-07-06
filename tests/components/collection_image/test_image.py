@@ -27,7 +27,6 @@ async def test_image(
     with freeze_time("2025-11-08T12:00:00.000"):
         config_entry = MockConfigEntry(
             data={
-                "name": "Random Image",
                 "media": {
                     "media_content_id": "media-source://mymedia",
                     "media_content_type": "",
@@ -105,7 +104,6 @@ async def test_image_during_startup(
         hass.set_state(CoreState.starting)
         config_entry = MockConfigEntry(
             data={
-                "name": "Random Image",
                 "media": {
                     "media_content_id": "media-source://mymedia",
                     "media_content_type": "",
@@ -190,7 +188,6 @@ async def test_image_url(
     with freeze_time("2025-11-08T12:00:00.000"):
         config_entry = MockConfigEntry(
             data={
-                "name": "Random Image",
                 "media": {
                     "media_content_id": "media-source://mymedia",
                     "media_content_type": "",
@@ -266,7 +263,6 @@ async def test_no_images(
     """Test when there are no images in the media folder."""
     config_entry = MockConfigEntry(
         data={
-            "name": "Random No Image",
             "media": {
                 "media_content_id": "media-source://mymedia/nopictures",
                 "media_content_type": "",
@@ -317,7 +313,6 @@ async def test_media_error(
     """Test when media browse throws an error."""
     config_entry = MockConfigEntry(
         data={
-            "name": "Random No Image",
             "media": {
                 "media_content_id": "media-source://badpath",
                 "media_content_type": "",
@@ -346,13 +341,11 @@ async def test_media_error(
 
 async def test_unresolvable(
     hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test when resolving an image fails."""
     config_entry = MockConfigEntry(
         data={
-            "name": "Random Image",
             "media": {
                 "media_content_id": "media-source://mymedia",
                 "media_content_type": "",
@@ -409,7 +402,6 @@ async def test_image_file_read_error(
     with freeze_time("2025-11-08T12:00:00.000"):
         config_entry = MockConfigEntry(
             data={
-                "name": "Random Image",
                 "media": {
                     "media_content_id": "media-source://mymedia",
                     "media_content_type": "",
