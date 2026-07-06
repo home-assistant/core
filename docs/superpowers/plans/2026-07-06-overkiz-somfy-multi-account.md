@@ -19,6 +19,7 @@
 - Config entry stores **token only** — no username/password on disk.
 - Devcontainer test command form:
   `devcontainer exec --workspace-folder /Users/mick/Projects/home-assistant-core uv run pytest <args>`
+- **The `pyoverkiz` `feat/somfy-multi-account` branch design is NOT final.** As you implement, record every point of friction, awkward API surface, bug, or improvement idea in `docs/superpowers/notes/pyoverkiz-somfy-multi-account-feedback.md` (create it in Task 1). This file feeds back into the library PR; it is not part of the HA change and is never committed to the integration.
 
 ---
 
@@ -30,6 +31,32 @@
 
 **Interfaces:**
 - Produces: `SomfyTokenCredentials`, `Server.SOMFY`, `client.discover_gateways()`, `client.select_gateway()`, `client.to_credentials()` become importable from the installed `pyoverkiz`.
+
+- [ ] **Step 0: Create the pyoverkiz feedback notes file**
+
+Create `docs/superpowers/notes/pyoverkiz-somfy-multi-account-feedback.md` with this skeleton. Append to it throughout every later task whenever the library API is awkward, buggy, under-documented, or could be improved. Record: what you were doing, what the library did, and what would have been better. Do NOT commit this file — it is out-of-tree feedback for the library PR.
+
+```markdown
+# pyoverkiz `feat/somfy-multi-account` — integration feedback
+
+_Findings while wiring the branch into Home Assistant. Design is not final._
+
+## API friction / awkwardness
+
+- (none yet)
+
+## Bugs / unexpected behavior
+
+- (none yet)
+
+## Docs / typing gaps
+
+- (none yet)
+
+## Improvement ideas
+
+- (none yet)
+```
 
 - [ ] **Step 1: Point the requirement at the branch**
 
@@ -967,6 +994,10 @@ Expected: all hooks pass (ruff, mypy, pylint, hassfest, prettier).
 - [ ] **Step 3: Fix any issues and commit**
 
 If any check fails, fix inline and commit with a descriptive message. Do not amend earlier commits.
+
+- [ ] **Step 4: Consolidate pyoverkiz feedback**
+
+Review `docs/superpowers/notes/pyoverkiz-somfy-multi-account-feedback.md`, tidy the accumulated notes into clear, actionable points, and summarize the top findings back to the user so they can feed them into the library PR. Do not commit this file to the integration.
 
 ---
 
