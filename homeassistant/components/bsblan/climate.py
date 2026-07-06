@@ -2,7 +2,7 @@
 
 from typing import Any, Final, override
 
-from bsblan import BSBLANError, State, get_hvac_action_category
+from bsblan import BSBLANError, EntityInfo, State, get_hvac_action_category
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -54,6 +54,14 @@ BSBLAN_TO_HA_HVAC_MODE: Final[dict[int, HVACMode]] = {
 }
 
 
+def _resolve_temperature_bound(*sources: EntityInfo[float] | None) -> float | None:
+    """Return the first usable temperature bound from the given sources."""
+    for source in sources:
+        if source is not None and source.value is not None:
+            return source.value
+    return None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BSBLanConfigEntry,
@@ -97,12 +105,23 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         else:
             self._attr_unique_id = f"{mac}-climate-{circuit}"
 
-        # Set temperature range from per-circuit static data
+        # Set temperature range from per-circuit static data. Standard BSB/LPB
+        # circuits expose the bounds via heating_protective_setpoint (714) and
+        # comfort_setpoint_max (716); min_temp/max_temp (15006/15007) exist
+        # only on PPS devices. Inactive parameters ("---") have value None.
         if (static := data.static.get(circuit)) is not None:
-            if (min_temp := static.min_temp) is not None and min_temp.value is not None:
-                self._attr_min_temp = min_temp.value
-            if (max_temp := static.max_temp) is not None and max_temp.value is not None:
-                self._attr_max_temp = max_temp.value
+            if (
+                min_temp := _resolve_temperature_bound(
+                    static.heating_protective_setpoint, static.min_temp
+                )
+            ) is not None:
+                self._attr_min_temp = min_temp
+            if (
+                max_temp := _resolve_temperature_bound(
+                    static.comfort_setpoint_max, static.max_temp
+                )
+            ) is not None:
+                self._attr_max_temp = max_temp
         self._attr_temperature_unit = data.fast_coordinator.client.get_temperature_unit
 
     @property
