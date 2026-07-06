@@ -2435,4 +2435,5 @@ async def test_history_conversion_skips_whitespace_content(
         {"role": "user", "content": "What shape is a donut?"},
         {"role": "assistant", "content": "Round."},
         {"role": "user", "content": "Are you sure?"},
+        {"role": "assistant", "content": "Yes, I am sure!"},
     ]
