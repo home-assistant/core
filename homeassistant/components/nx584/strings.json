@@ -25,7 +25,7 @@
   },
   "options": {
     "error": {
-      "invalid_zone_options": "Exclude zones must be a list of zone numbers, and zone types must be a mapping of zone numbers to binary sensor device classes."
+      "invalid_zone_options": "Excluded zones must be a YAML list of zone numbers (for example `[3, 5]`), and zone types must be a YAML mapping of zone numbers to binary sensor device classes (for example `3: motion`)."
     },
     "step": {
       "init": {
@@ -34,9 +34,10 @@
           "zone_types": "Zone device classes"
         },
         "data_description": {
-          "exclude_zones": "List of zone numbers to exclude from Home Assistant, for example: 2, 7.",
-          "zone_types": "Mapping of zone numbers to a binary sensor device class, for example: zone 3 mapped to motion. Zones not listed default to opening."
-        }
+          "exclude_zones": "Zone numbers to exclude from Home Assistant, as a YAML list, for example:\n```yaml\n- 3\n- 5\n```\nor using brackets: `[3, 5]`.",
+          "zone_types": "Mapping of zone numbers to a binary sensor device class, as a YAML mapping, for example:\n```yaml\n1: opening\n2: motion\n4: opening\n```\nZones not listed default to opening."
+        },
+        "description": "Values are entered using YAML syntax."
       }
     }
   },
