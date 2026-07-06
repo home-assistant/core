@@ -3489,7 +3489,7 @@ async def test_get_raw_config_parameter(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_subscribe_config_parameters(
+async def test_subscribe_config_parameter_updates(
     hass: HomeAssistant,
     multisensor_6,
     integration,
@@ -3504,14 +3504,14 @@ async def test_subscribe_config_parameters(
     await ws_client.send_json(
         {
             ID: 1,
-            TYPE: "zwave_js/subscribe_config_parameters",
+            TYPE: "zwave_js/subscribe_config_parameter_updates",
             DEVICE_ID: multisensor_6_device.id,
         }
     )
 
     msg = await ws_client.receive_json()
     assert msg["success"]
-    msg["result"] = None
+    assert msg["result"] is None
 
     # Fire value updated
     event = Event(
@@ -3564,7 +3564,7 @@ async def test_subscribe_config_parameters(
     await ws_client.send_json(
         {
             ID: 2,
-            TYPE: "zwave_js/subscribe_config_parameters",
+            TYPE: "zwave_js/subscribe_config_parameter_updates",
             DEVICE_ID: "fake_device",
         }
     )
@@ -3580,7 +3580,7 @@ async def test_subscribe_config_parameters(
     await ws_client.send_json(
         {
             ID: 4,
-            TYPE: "zwave_js/subscribe_config_parameters",
+            TYPE: "zwave_js/subscribe_config_parameter_updates",
             DEVICE_ID: multisensor_6_device.id,
         }
     )
