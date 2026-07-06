@@ -1,0 +1,46 @@
+name: Set up uv and managed Python
+description: >-
+  Pins uv (avoids the raw.githubusercontent.com manifest fetch on cache miss)
+  and proactively installs the requested Python so cached venvs created with
+  `uv venv` resolve their interpreter symlinks in jobs that only restore the
+  venv. setup-uv alone only sets UV_PYTHON, it does not actually fetch the
+  interpreter until uv first uses it, so jobs that just activate the venv
+  blow up with broken symlinks on cache hit.
+
+inputs:
+  python-version:
+    description: The Python version uv should install and use.
+    required: true
+  uv-version:
+    description: The uv version setup-uv should install.
+    required: true
+
+outputs:
+  python-version:
+    description: The Python version uv reports as installed.
+    value: ${{ steps.uv.outputs.python-version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up uv
+      id: uv
+      uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+      with:
+        version: ${{ inputs.uv-version }}
+        python-version: ${{ inputs.python-version }}
+        # Persist astral's managed Python across jobs so 'uv venv' below is
+        # fast on the second job onwards.
+        cache-python: true
+        # Lint-only and codegen jobs touch no Python deps, so the post-step
+        # cache save would otherwise abort the job.
+        ignore-nothing-to-cache: true
+    # setup-uv only sets UV_PYTHON; it does not fetch the interpreter until uv
+    # first uses it. Jobs that only restore and activate a cached venv never
+    # trigger that lazy install, so without this step they hit broken
+    # interpreter symlinks on a cache hit.
+    - name: Install Python interpreter
+      shell: bash
+      env:
+        PYTHON_VERSION: ${{ inputs.python-version }}
+      run: uv python install "${PYTHON_VERSION}"

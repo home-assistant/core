@@ -16,6 +16,20 @@ MOCK_USER_INPUT = {
     CONF_PASSWORD: "thatyouevenlookedheretoseethepassword",
 }
 
+MOCK_REAUTH_INPUT = {
+    CONF_EMAIL: "new_user@example.com",
+    CONF_PASSWORD: "newpassword",
+}
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.melcloud_home.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
 
 @pytest.fixture
 def mock_melcloud_client() -> Generator[AsyncMock]:

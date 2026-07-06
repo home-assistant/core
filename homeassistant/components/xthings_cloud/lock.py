@@ -1,6 +1,6 @@
 """Lock platform for Xthings Cloud."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant
@@ -29,19 +29,23 @@ class XthingsCloudLock(XthingsCloudEntity, LockEntity):
     """Xthings Cloud lock entity."""
 
     @property
+    @override
     def is_locked(self) -> bool | None:
         """Return true if lock is locked."""
         return self.device_data["status"].get("locked")
 
     @property
+    @override
     def is_jammed(self) -> bool | None:
         """Return true if lock is jammed."""
         return self.device_data["status"].get("jammed")
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         await self.coordinator.client.async_lock_lock(self._device_id)
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         await self.coordinator.client.async_lock_unlock(self._device_id)

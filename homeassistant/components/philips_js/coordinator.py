@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 from haphilipsjs import (
     AutenticationFailure,
@@ -125,11 +126,13 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             self._notify_future = asyncio.create_task(self._notify_task())
 
     @callback
+    @override
     def _unschedule_refresh(self) -> None:
         """Remove data update."""
         super()._unschedule_refresh()
         self._async_notify_stop()
 
+    @override
     async def _async_update_data(self):
         """Fetch the latest data from the source."""
         try:

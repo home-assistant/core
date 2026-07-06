@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 
 from . import remove_config_entry
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.fixture
@@ -78,147 +78,25 @@ def mock_hub_refresh() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_hub_configuration_test() -> Generator[AsyncMock]:
-    """Override WebControlPro.configuration."""
+async def mock_hub_configuration(
+    request: pytest.FixtureRequest, hass: HomeAssistant
+) -> AsyncGenerator[AsyncMock]:
+    """Override WebControlPro._getConfiguration with a param fixture file."""
     with patch(
         "wmspro.webcontrol.WebControlPro._getConfiguration",
-        return_value=load_json_object_fixture("config_test.json", DOMAIN),
+        return_value=await async_load_json_object_fixture(hass, request.param, DOMAIN),
     ) as mock_hub_configuration:
         yield mock_hub_configuration
 
 
 @pytest.fixture
-def mock_hub_configuration_prod_awning_dimmer() -> Generator[AsyncMock]:
-    """Override WebControlPro._getConfiguration."""
-    with patch(
-        "wmspro.webcontrol.WebControlPro._getConfiguration",
-        return_value=load_json_object_fixture("config_prod_awning_dimmer.json", DOMAIN),
-    ) as mock_hub_configuration:
-        yield mock_hub_configuration
-
-
-@pytest.fixture
-def mock_hub_configuration_prod_awning_valance() -> Generator[AsyncMock]:
-    """Override WebControlPro._getConfiguration."""
-    with patch(
-        "wmspro.webcontrol.WebControlPro._getConfiguration",
-        return_value=load_json_object_fixture(
-            "config_prod_awning_valance.json", DOMAIN
-        ),
-    ) as mock_hub_configuration:
-        yield mock_hub_configuration
-
-
-@pytest.fixture
-def mock_hub_configuration_prod_load_switch() -> Generator[AsyncMock]:
-    """Override WebControlPro._getConfiguration."""
-    with patch(
-        "wmspro.webcontrol.WebControlPro._getConfiguration",
-        return_value=load_json_object_fixture("config_prod_load_switch.json", DOMAIN),
-    ) as mock_hub_configuration:
-        yield mock_hub_configuration
-
-
-@pytest.fixture
-def mock_hub_configuration_prod_roller_shutter() -> Generator[AsyncMock]:
-    """Override WebControlPro._getConfiguration."""
-    with patch(
-        "wmspro.webcontrol.WebControlPro._getConfiguration",
-        return_value=load_json_object_fixture(
-            "config_prod_roller_shutter.json", DOMAIN
-        ),
-    ) as mock_hub_configuration:
-        yield mock_hub_configuration
-
-
-@pytest.fixture
-def mock_hub_configuration_prod_slat_drive() -> Generator[AsyncMock]:
-    """Override WebControlPro._getConfiguration."""
-    with patch(
-        "wmspro.webcontrol.WebControlPro._getConfiguration",
-        return_value=load_json_object_fixture("config_prod_slat_drive.json", DOMAIN),
-    ) as mock_hub_configuration:
-        yield mock_hub_configuration
-
-
-@pytest.fixture
-def mock_hub_configuration_prod_slat_rotate() -> Generator[AsyncMock]:
-    """Override WebControlPro._getConfiguration."""
-    with patch(
-        "wmspro.webcontrol.WebControlPro._getConfiguration",
-        return_value=load_json_object_fixture("config_prod_slat_rotate.json", DOMAIN),
-    ) as mock_hub_configuration:
-        yield mock_hub_configuration
-
-
-@pytest.fixture
-def mock_hub_status_prod_awning() -> Generator[AsyncMock]:
-    """Override WebControlPro._getStatus."""
+async def mock_hub_status(
+    request: pytest.FixtureRequest, hass: HomeAssistant
+) -> AsyncGenerator[AsyncMock]:
+    """Override WebControlPro._getStatus with a param fixture file."""
     with patch(
         "wmspro.webcontrol.WebControlPro._getStatus",
-        return_value=load_json_object_fixture("status_prod_awning.json", DOMAIN),
-    ) as mock_hub_status:
-        yield mock_hub_status
-
-
-@pytest.fixture
-def mock_hub_status_prod_dimmer() -> Generator[AsyncMock]:
-    """Override WebControlPro._getStatus."""
-    with patch(
-        "wmspro.webcontrol.WebControlPro._getStatus",
-        return_value=load_json_object_fixture("status_prod_dimmer.json", DOMAIN),
-    ) as mock_hub_status:
-        yield mock_hub_status
-
-
-@pytest.fixture
-def mock_hub_status_prod_load_switch() -> Generator[AsyncMock]:
-    """Override WebControlPro._getStatus."""
-    with patch(
-        "wmspro.webcontrol.WebControlPro._getStatus",
-        return_value=load_json_object_fixture("status_prod_load_switch.json", DOMAIN),
-    ) as mock_hub_status:
-        yield mock_hub_status
-
-
-@pytest.fixture
-def mock_hub_status_prod_roller_shutter() -> Generator[AsyncMock]:
-    """Override WebControlPro._getStatus."""
-    with patch(
-        "wmspro.webcontrol.WebControlPro._getStatus",
-        return_value=load_json_object_fixture(
-            "status_prod_roller_shutter.json", DOMAIN
-        ),
-    ) as mock_hub_status:
-        yield mock_hub_status
-
-
-@pytest.fixture
-def mock_hub_status_prod_slat_drive() -> Generator[AsyncMock]:
-    """Override WebControlPro._getStatus."""
-    with patch(
-        "wmspro.webcontrol.WebControlPro._getStatus",
-        return_value=load_json_object_fixture("status_prod_slat_drive.json", DOMAIN),
-    ) as mock_hub_status:
-        yield mock_hub_status
-
-
-@pytest.fixture
-def mock_hub_status_prod_slat_rotate() -> Generator[AsyncMock]:
-    """Override WebControlPro._getStatus."""
-    with patch(
-        "wmspro.webcontrol.WebControlPro._getStatus",
-        return_value=load_json_object_fixture("status_prod_slat_rotate.json", DOMAIN),
-    ) as mock_hub_status:
-        yield mock_hub_status
-
-
-@pytest.fixture
-def mock_hub_status_prod_valance() -> Generator[AsyncMock]:
-    """Override WebControlPro._getStatus."""
-    with patch(
-        "wmspro.webcontrol.WebControlPro._getStatus",
-        return_value=load_json_object_fixture("status_prod_valance.json", DOMAIN),
+        return_value=await async_load_json_object_fixture(hass, request.param, DOMAIN),
     ) as mock_hub_status:
         yield mock_hub_status
 
@@ -229,8 +107,8 @@ def mock_dest_refresh() -> Generator[AsyncMock]:
     with patch(
         "wmspro.destination.Destination.refresh",
         return_value=True,
-    ) as mock_hub_status:
-        yield mock_hub_status
+    ) as mock_dest_refresh:
+        yield mock_dest_refresh
 
 
 @pytest.fixture

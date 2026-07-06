@@ -1,6 +1,6 @@
 """Config flow for AirTouch4."""
 
-from typing import Any
+from typing import Any, override
 
 from airtouch4pyapi import AirTouch, AirTouchStatus
 import voluptuous as vol
@@ -18,6 +18,7 @@ class AirtouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

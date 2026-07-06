@@ -9,6 +9,9 @@
           'MICROPHONE',
         ]),
         'communication_settings': dict({
+          'announcements': 'ON',
+          'communications': 'ON',
+          'dropin': 'All',
         }),
         'device_cluster_members': dict({
           'echo_test_serial_number': 'echo_test_device_id',
@@ -82,6 +85,9 @@
           'MICROPHONE',
         ]),
         'communication_settings': dict({
+          'announcements': 'ON',
+          'communications': 'ON',
+          'dropin': 'All',
         }),
         'device_cluster_members': dict({
           'echo_test_serial_number': 'echo_test_device_id',
@@ -155,6 +161,9 @@
           'MICROPHONE',
         ]),
         'communication_settings': dict({
+          'announcements': 'ON',
+          'communications': 'ON',
+          'dropin': 'All',
         }),
         'device_cluster_members': dict({
           'echo_test_serial_number': 'echo_test_device_id',

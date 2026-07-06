@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import wraps
-from typing import Any, Literal, overload
+from typing import Any, Literal, overload, override
 
 from homeassistant.core import ServiceResponse
 from homeassistant.util import dt as dt_util
@@ -43,6 +43,7 @@ class TraceElement:
         self._last_variables = variables_cv.get() or {}
         self.update_variables(variables)
 
+    @override
     def __repr__(self) -> str:
         """Container for trace data."""
         return str(self.as_dict())

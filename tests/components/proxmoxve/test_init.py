@@ -11,11 +11,7 @@ from requests.exceptions import ConnectTimeout, SSLError
 from homeassistant.components.proxmoxve.const import (
     AUTH_PAM,
     CONF_AUTH_METHOD,
-    CONF_CONTAINERS,
-    CONF_NODE,
-    CONF_NODES,
     CONF_REALM,
-    CONF_VMS,
     DOMAIN,
 )
 from homeassistant.components.proxmoxve.coordinator import (
@@ -32,52 +28,12 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.helpers.issue_registry as ir
-from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry, async_load_json_array_fixture
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_config_import(
-    hass: HomeAssistant,
-    mock_proxmox_client: MagicMock,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test sensor initialization."""
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: [
-                {
-                    CONF_HOST: "127.0.0.1",
-                    CONF_PORT: 8006,
-                    CONF_REALM: "pam",
-                    CONF_USERNAME: "test_user@pam",
-                    CONF_PASSWORD: "test_password",
-                    CONF_VERIFY_SSL: True,
-                    CONF_NODES: [
-                        {
-                            CONF_NODE: "pve1",
-                            CONF_VMS: [100, 101],
-                            CONF_CONTAINERS: [200, 201],
-                        },
-                    ],
-                }
-            ]
-        },
-    )
-
-    await hass.async_block_till_done()
-
-    assert len(issue_registry.issues) == 1
-    assert (HOMEASSISTANT_DOMAIN, "deprecated_yaml") in issue_registry.issues
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 @pytest.mark.parametrize(
@@ -371,4 +327,42 @@ async def test_new_container_creates_entity(
             )
         )
         > initial_count
+    )
+
+
+async def test_stale_devices_removed(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that devices are removed when their resource disappears."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    entry_id = mock_config_entry.entry_id
+    assert device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{entry_id}_vm_100")}
+    )
+    assert device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{entry_id}_vm_101")}
+    )
+
+    # VM 100 is gone, VM 101 remains
+    mock_proxmox_client._node_mock.qemu.get.return_value = [
+        vm
+        for vm in await async_load_json_array_fixture(hass, "nodes/qemu.json", DOMAIN)
+        if vm["vmid"] != 100
+    ]
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, f"{entry_id}_vm_100")})
+        is None
+    )
+    assert device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{entry_id}_vm_101")}
     )

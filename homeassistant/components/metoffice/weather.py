@@ -1,7 +1,7 @@
 """Support for UK Met Office weather service."""
 
 from datetime import datetime
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -191,6 +191,7 @@ class MetOfficeWeather(
         self._attr_unique_id = hass_data.coordinates
 
     @property
+    @override
     def condition(self) -> str | None:
         """Return the current condition."""
         weather_now = self.coordinator.data.now()
@@ -201,6 +202,7 @@ class MetOfficeWeather(
         return None
 
     @property
+    @override
     def native_temperature(self) -> float | None:
         """Return the platform temperature."""
         weather_now = self.coordinator.data.now()
@@ -208,6 +210,7 @@ class MetOfficeWeather(
         return float(value) if value is not None else None
 
     @property
+    @override
     def native_dew_point(self) -> float | None:
         """Return the dew point."""
         weather_now = self.coordinator.data.now()
@@ -215,6 +218,7 @@ class MetOfficeWeather(
         return float(value) if value is not None else None
 
     @property
+    @override
     def native_pressure(self) -> float | None:
         """Return the mean sea-level pressure."""
         weather_now = self.coordinator.data.now()
@@ -222,6 +226,7 @@ class MetOfficeWeather(
         return float(value) if value is not None else None
 
     @property
+    @override
     def humidity(self) -> float | None:
         """Return the relative humidity."""
         weather_now = self.coordinator.data.now()
@@ -229,6 +234,7 @@ class MetOfficeWeather(
         return float(value) if value is not None else None
 
     @property
+    @override
     def uv_index(self) -> float | None:
         """Return the UV index."""
         weather_now = self.coordinator.data.now()
@@ -236,6 +242,7 @@ class MetOfficeWeather(
         return float(value) if value is not None else None
 
     @property
+    @override
     def native_visibility(self) -> float | None:
         """Return the visibility."""
         weather_now = self.coordinator.data.now()
@@ -243,6 +250,7 @@ class MetOfficeWeather(
         return float(value) if value is not None else None
 
     @property
+    @override
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         weather_now = self.coordinator.data.now()
@@ -250,6 +258,7 @@ class MetOfficeWeather(
         return float(value) if value is not None else None
 
     @property
+    @override
     def wind_bearing(self) -> float | None:
         """Return the wind bearing."""
         weather_now = self.coordinator.data.now()
@@ -257,6 +266,7 @@ class MetOfficeWeather(
         return float(value) if value is not None else None
 
     @callback
+    @override
     def _async_forecast_daily(self) -> list[WeatherForecast] | None:
         """Return the daily forecast in native units."""
         coordinator = cast(
@@ -274,6 +284,7 @@ class MetOfficeWeather(
         ]
 
     @callback
+    @override
     def _async_forecast_hourly(self) -> list[WeatherForecast] | None:
         """Return the hourly forecast in native units."""
         coordinator = cast(
@@ -292,6 +303,7 @@ class MetOfficeWeather(
         ]
 
     @callback
+    @override
     def _async_forecast_twice_daily(self) -> list[WeatherForecast] | None:
         """Return the twice daily forecast in native units."""
         coordinator = cast(
