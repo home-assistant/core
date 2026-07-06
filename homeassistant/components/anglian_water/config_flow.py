@@ -1,14 +1,13 @@
 """Config flow for the Anglian Water integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import CookieJar
 from pyanglianwater import AnglianWater
 from pyanglianwater.auth import MSOB2CAuth
 from pyanglianwater.exceptions import (
+    ConsentRequiredError,
     InvalidAccountIdError,
     SelfAssertedError,
     SmartMeterUnavailableError,
@@ -38,7 +37,7 @@ async def validate_credentials(auth: MSOB2CAuth) -> str | MSOB2CAuth:
     """Validate the provided credentials."""
     try:
         await auth.send_login_request()
-    except SelfAssertedError:
+    except ConsentRequiredError, SelfAssertedError:
         return "invalid_auth"
     except Exception:
         _LOGGER.exception("Unexpected exception")
@@ -87,6 +86,7 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
         self.accounts: list[selector.SelectOptionDict] = []
         self.user_input: dict[str, Any] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

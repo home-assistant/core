@@ -1,13 +1,11 @@
 """Support for interfacing with the XBMC/Kodi JSON-RPC API."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 from functools import wraps
 import logging
 import re
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from jsonrpc_base.jsonrpc import ProtocolError, TransportError
 from pykodi import CannotConnectError
@@ -235,6 +233,7 @@ class KodiEntity(MediaPlayerEntity):
             await self._connection.close()
 
     @property
+    @override
     def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self._kodi_is_off:
@@ -248,6 +247,7 @@ class KodiEntity(MediaPlayerEntity):
 
         return MediaPlayerState.PLAYING
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Connect the websocket if needed."""
         if not self._connection.can_subscribe:
@@ -390,11 +390,13 @@ class KodiEntity(MediaPlayerEntity):
             self._reset_state([])
 
     @property
+    @override
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state."""
         return not self._connection.can_subscribe
 
     @property
+    @override
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         if "volume" in self._app_properties:
@@ -402,16 +404,19 @@ class KodiEntity(MediaPlayerEntity):
         return None
 
     @property
+    @override
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._app_properties.get("muted")
 
     @property
+    @override
     def media_content_id(self):
         """Content ID of current playing media."""
         return self._item.get("uniqueid", None)
 
     @property
+    @override
     def media_content_type(self):
         """Content type of current playing media.
 
@@ -423,6 +428,7 @@ class KodiEntity(MediaPlayerEntity):
         return item_type
 
     @property
+    @override
     def media_duration(self):
         """Duration of current playing media in seconds."""
         if self._properties.get("live"):
@@ -438,6 +444,7 @@ class KodiEntity(MediaPlayerEntity):
         )
 
     @property
+    @override
     def media_position(self):
         """Position of current playing media in seconds."""
         if (time := self._properties.get("time")) is None:
@@ -446,11 +453,13 @@ class KodiEntity(MediaPlayerEntity):
         return time["hours"] * 3600 + time["minutes"] * 60 + time["seconds"]
 
     @property
+    @override
     def media_position_updated_at(self):
         """Last valid time of media position."""
         return self._media_position_updated_at
 
     @property
+    @override
     def media_image_url(self):
         """Image url of current playing media."""
         if (thumbnail := self._item.get("thumbnail")) is None:
@@ -459,6 +468,7 @@ class KodiEntity(MediaPlayerEntity):
         return self._kodi.thumbnail_url(thumbnail)
 
     @property
+    @override
     def media_title(self):
         """Title of current playing media."""
         # find a string we can use as a title
@@ -466,26 +476,31 @@ class KodiEntity(MediaPlayerEntity):
         return item.get("title") or item.get("label") or item.get("file")
 
     @property
+    @override
     def media_series_title(self):
         """Title of series of current playing media, TV show only."""
         return self._item.get("showtitle")
 
     @property
+    @override
     def media_season(self):
         """Season of current playing media, TV show only."""
         return self._item.get("season")
 
     @property
+    @override
     def media_episode(self):
         """Episode of current playing media, TV show only."""
         return self._item.get("episode")
 
     @property
+    @override
     def media_album_name(self):
         """Album name of current playing media, music track only."""
         return self._item.get("album")
 
     @property
+    @override
     def media_artist(self):
         """Artist of current playing media, music track only."""
         if artists := self._item.get("artist"):
@@ -494,6 +509,7 @@ class KodiEntity(MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_album_artist(self):
         """Album artist of current playing media, music track only."""
         if artists := self._item.get("albumartist"):
@@ -502,6 +518,7 @@ class KodiEntity(MediaPlayerEntity):
         return None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
         state_attr: dict[str, str | None] = {}
@@ -516,72 +533,86 @@ class KodiEntity(MediaPlayerEntity):
 
         return state_attr
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         _LOGGER.debug("Firing event to turn on device")
         self.hass.bus.async_fire(EVENT_TURN_ON, {ATTR_ENTITY_ID: self.entity_id})
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
         _LOGGER.debug("Firing event to turn off device")
         self.hass.bus.async_fire(EVENT_TURN_OFF, {ATTR_ENTITY_ID: self.entity_id})
 
     @cmd
+    @override
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
         await self._kodi.volume_up()
 
     @cmd
+    @override
     async def async_volume_down(self) -> None:
         """Volume down the media player."""
         await self._kodi.volume_down()
 
     @cmd
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._kodi.set_volume_level(int(volume * 100))
 
     @cmd
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         await self._kodi.mute(mute)
 
     @cmd
+    @override
     async def async_media_play_pause(self) -> None:
         """Pause media on media player."""
         await self._kodi.play_pause()
 
     @cmd
+    @override
     async def async_media_play(self) -> None:
         """Play media."""
         await self._kodi.play()
 
     @cmd
+    @override
     async def async_media_pause(self) -> None:
         """Pause the media player."""
         await self._kodi.pause()
 
     @cmd
+    @override
     async def async_media_stop(self) -> None:
         """Stop the media player."""
         await self._kodi.stop()
 
     @cmd
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._kodi.next_track()
 
     @cmd
+    @override
     async def async_media_previous_track(self) -> None:
         """Send next track command."""
         await self._kodi.previous_track()
 
     @cmd
+    @override
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         await self._kodi.media_seek(position)
 
     @cmd
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -626,6 +657,7 @@ class KodiEntity(MediaPlayerEntity):
             await self._kodi.play_file(media_id)
 
     @cmd
+    @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Set shuffle mode, for the first player."""
         if self._no_active_players:
@@ -670,6 +702,7 @@ class KodiEntity(MediaPlayerEntity):
             )
         return result
 
+    @override
     async def async_clear_playlist(self) -> None:
         """Clear default playlist (i.e. playlistid=0)."""
         await self._kodi.clear_playlist()
@@ -782,6 +815,7 @@ class KodiEntity(MediaPlayerEntity):
 
         return sorted(out, key=lambda out: out[1], reverse=True)
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -825,6 +859,7 @@ class KodiEntity(MediaPlayerEntity):
             )
         return response
 
+    @override
     async def async_get_browse_image(
         self,
         media_content_type: MediaType | str,

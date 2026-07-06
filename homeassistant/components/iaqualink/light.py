@@ -1,8 +1,6 @@
 """Support for Aqualink pool lights."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from iaqualink.device import AqualinkLight
 
@@ -46,7 +44,6 @@ class HassAqualinkLight(AqualinkEntity[AqualinkLight], LightEntity):
     ) -> None:
         """Initialize AquaLink light."""
         super().__init__(coordinator, dev)
-        self._attr_name = dev.label
         if dev.supports_effect:
             self._attr_effect_list = list(dev.supported_effects)
             self._attr_supported_features = LightEntityFeature.EFFECT
@@ -57,11 +54,13 @@ class HassAqualinkLight(AqualinkEntity[AqualinkLight], LightEntity):
         self._attr_supported_color_modes = {color_mode}
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the light is on or off."""
         return self.dev.is_on
 
     @refresh_system
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light.
 
@@ -70,28 +69,41 @@ class HassAqualinkLight(AqualinkEntity[AqualinkLight], LightEntity):
         """
         # For now I'm assuming lights support either effects or brightness.
         if effect_name := kwargs.get(ATTR_EFFECT):
-            await await_or_reraise(self.dev.set_effect_by_name(effect_name))
+            await await_or_reraise(
+                self.hass,
+                self.coordinator.config_entry,
+                self.dev.set_effect_by_name(effect_name),
+            )
         elif brightness := kwargs.get(ATTR_BRIGHTNESS):
             # Aqualink supports percentages in 25% increments.
-            pct = int(round(brightness * 4.0 / 255)) * 25
-            await await_or_reraise(self.dev.set_brightness(pct))
+            pct = round(brightness * 4.0 / 255) * 25
+            await await_or_reraise(
+                self.hass, self.coordinator.config_entry, self.dev.set_brightness(pct)
+            )
         else:
-            await await_or_reraise(self.dev.turn_on())
+            await await_or_reraise(
+                self.hass, self.coordinator.config_entry, self.dev.turn_on()
+            )
 
     @refresh_system
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        await await_or_reraise(self.dev.turn_off())
+        await await_or_reraise(
+            self.hass, self.coordinator.config_entry, self.dev.turn_off()
+        )
 
     @property
+    @override
     def brightness(self) -> int:
         """Return current brightness of the light.
 
         The scale needs converting between 0-100 and 0-255.
         """
-        return self.dev.brightness * 255 / 100
+        return round(self.dev.brightness * 255 / 100)
 
     @property
+    @override
     def effect(self) -> str:
         """Return the current light effect if supported."""
         return self.dev.effect

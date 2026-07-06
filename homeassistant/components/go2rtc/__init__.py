@@ -1,12 +1,11 @@
 """The go2rtc component."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 from secrets import token_hex
 import shutil
 from tempfile import mkdtemp
+from typing import override
 
 from aiohttp import BasicAuth, ClientSession, UnixConnector
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
@@ -67,7 +66,7 @@ from .const import (
     RECOMMENDED_VERSION,
 )
 from .server import Server
-from .util import get_go2rtc_unix_socket_path
+from .util import get_camera_identifier, get_go2rtc_unix_socket_path
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +75,7 @@ _AUTH = "auth"
 
 
 def _validate_auth(config: dict) -> dict:
-    """Validate that username and password are only set when a URL is configured or when debug UI is enabled."""
+    """Validate username/password only when URL is configured or debug UI enabled."""
     auth_exists = CONF_USERNAME in config
     debug_ui_enabled = config.get(CONF_DEBUG_UI, False)
 
@@ -85,7 +84,8 @@ def _validate_auth(config: dict) -> dict:
 
     if auth_exists and CONF_URL not in config and not debug_ui_enabled:
         raise vol.Invalid(
-            "Username and password can only be set when a URL is configured or debug_ui is true"
+            "Username and password can only be set when a URL is"
+            " configured or debug_ui is true"
         )
 
     return config
@@ -175,6 +175,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await server.start()
         except Exception:  # noqa: BLE001
             _LOGGER.warning("Could not start go2rtc server", exc_info=True)
+            await session.close()
             return False
 
         async def on_stop(event: Event) -> None:
@@ -279,6 +280,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         self._supported_schemes: set[str] = set()
 
     @property
+    @override
     def domain(self) -> str:
         """Return the integration domain of the provider."""
         return DOMAIN
@@ -288,10 +290,12 @@ class WebRTCProvider(CameraWebRTCProvider):
         self._supported_schemes = await self._rest_client.schemes.list()
 
     @callback
+    @override
     def async_is_supported(self, stream_source: str) -> bool:
         """Return if this provider is supports the Camera as source."""
         return stream_source.partition(":")[0] in self._supported_schemes
 
+    @override
     async def async_handle_async_webrtc_offer(
         self,
         camera: Camera,
@@ -307,7 +311,7 @@ class WebRTCProvider(CameraWebRTCProvider):
             return
 
         self._sessions[session_id] = ws_client = Go2RtcWsClient(
-            self._session, self._url, source=camera.entity_id
+            self._session, self._url, source=get_camera_identifier(camera)
         )
 
         @callback
@@ -328,6 +332,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         config = camera.async_get_webrtc_client_configuration()
         await ws_client.send(WebRTCOffer(offer_sdp, config.configuration.ice_servers))
 
+    @override
     async def async_on_webrtc_candidate(
         self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
@@ -339,11 +344,13 @@ class WebRTCProvider(CameraWebRTCProvider):
             _LOGGER.debug("Unknown session %s. Ignoring candidate", session_id)
 
     @callback
+    @override
     def async_close_session(self, session_id: str) -> None:
         """Close the session."""
         ws_client = self._sessions.pop(session_id)
         self._hass.async_create_task(ws_client.close())
 
+    @override
     async def async_get_image(
         self,
         camera: Camera,
@@ -353,7 +360,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         """Get an image from the camera."""
         await self._update_stream_source(camera)
         return await self._rest_client.get_jpeg_snapshot(
-            camera.entity_id, width, height
+            get_camera_identifier(camera), width, height
         )
 
     async def _update_stream_source(self, camera: Camera) -> None:
@@ -364,7 +371,8 @@ class WebRTCProvider(CameraWebRTCProvider):
 
         if camera.platform.platform_name == "generic":
             # This is a workaround to use ffmpeg for generic cameras
-            # A proper fix will be added in the future together with supporting multiple streams per camera
+            # A proper fix will be added in the future together
+            # with supporting multiple streams per camera
             stream_source = "ffmpeg:" + stream_source
 
         if not self.async_is_supported(stream_source):
@@ -398,18 +406,20 @@ class WebRTCProvider(CameraWebRTCProvider):
                     stream_source += "#rotate=90"
 
         streams = await self._rest_client.streams.list()
+        identifier = get_camera_identifier(camera)
 
-        if (stream := streams.get(camera.entity_id)) is None or not any(
+        if (stream := streams.get(identifier)) is None or not any(
             stream_source == producer.url for producer in stream.producers
         ):
             await self._rest_client.streams.add(
-                camera.entity_id,
+                identifier,
                 [
                     stream_source,
                     # We are setting any ffmpeg rtsp related logs to debug
-                    # Connection problems to the camera will be logged by the first stream
+                    # Connection problems to the camera will be
+                    # logged by the first stream
                     # Therefore setting it to debug will not hide any important logs
-                    f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+                    f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
                 ],
             )
 

@@ -2,6 +2,7 @@
 
 import logging
 import time
+from typing import override
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -11,6 +12,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
@@ -49,7 +51,8 @@ def format_condition(condition: str, force_day: bool = False) -> str:
     """Return condition from dict CONDITION_MAP."""
     mapped_condition = CONDITION_MAP.get(condition, condition)
     if force_day and mapped_condition == ATTR_CONDITION_CLEAR_NIGHT:
-        # Meteo-France can return clear night condition instead of sunny for daily weather, so we map it to sunny
+        # Meteo-France can return clear night condition instead
+        # of sunny for daily weather, so we map it to sunny
         return ATTR_CONDITION_SUNNY
     return mapped_condition
 
@@ -99,9 +102,11 @@ class MeteoFranceWeather(
         super().__init__(coordinator)
         self._attr_name = self.coordinator.data.position["name"]
         self._mode = mode
-        self._attr_unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}"
+        pos = self.coordinator.data.position
+        self._attr_unique_id = f"{pos['lat']},{pos['lon']}"
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         super()._handle_coordinator_update()
@@ -111,6 +116,7 @@ class MeteoFranceWeather(
         )
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         assert self.platform.config_entry and self.platform.config_entry.unique_id
@@ -123,6 +129,7 @@ class MeteoFranceWeather(
         )
 
     @property
+    @override
     def condition(self) -> str:
         """Return the current condition."""
         return format_condition(
@@ -130,31 +137,37 @@ class MeteoFranceWeather(
         )
 
     @property
+    @override
     def native_temperature(self) -> float:
         """Return the temperature."""
         return self.coordinator.data.current_forecast["T"]["value"]
 
     @property
+    @override
     def native_pressure(self) -> float:
         """Return the pressure."""
         return self.coordinator.data.current_forecast["sea_level"]
 
     @property
+    @override
     def humidity(self) -> float:
         """Return the humidity."""
         return self.coordinator.data.current_forecast["humidity"]
 
     @property
+    @override
     def native_wind_speed(self) -> float:
         """Return the wind speed."""
         return self.coordinator.data.current_forecast["wind"]["speed"]
 
     @property
+    @override
     def native_wind_gust_speed(self) -> float | None:
         """Return the wind gust speed."""
         return self.coordinator.data.current_forecast["wind"].get("gust")
 
     @property
+    @override
     def wind_bearing(self) -> float | None:
         """Return the wind bearing."""
         wind_bearing = self.coordinator.data.current_forecast["wind"]["direction"]
@@ -184,6 +197,9 @@ class MeteoFranceWeather(
                         ATTR_FORECAST_NATIVE_TEMP: forecast["T"]["value"],
                         ATTR_FORECAST_NATIVE_PRECIPITATION: forecast["rain"].get("1h"),
                         ATTR_FORECAST_NATIVE_WIND_SPEED: forecast["wind"]["speed"],
+                        ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: forecast["wind"].get(
+                            "gust"
+                        ),
                         ATTR_FORECAST_WIND_BEARING: forecast["wind"]["direction"]
                         if forecast["wind"]["direction"] != -1
                         else None,
@@ -191,7 +207,8 @@ class MeteoFranceWeather(
                 )
         else:
             for forecast in self.coordinator.data.daily_forecast:
-                # stop when we don't have a weather condition (can happen around last days of forecast, max 14)
+                # stop when we don't have a weather condition
+                # (can happen around last days of forecast, max 14)
                 if not forecast.get("weather12H"):
                     break
                 forecast_data.append(
@@ -212,10 +229,12 @@ class MeteoFranceWeather(
                 )
         return forecast_data
 
+    @override
     async def async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
         return self._forecast(FORECAST_MODE_DAILY)
 
+    @override
     async def async_forecast_hourly(self) -> list[Forecast]:
         """Return the hourly forecast in native units."""
         return self._forecast(FORECAST_MODE_HOURLY)

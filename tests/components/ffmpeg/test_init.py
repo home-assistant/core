@@ -217,7 +217,7 @@ async def test_async_get_image_with_width_height(hass: HomeAssistant) -> None:
 async def test_async_get_image_with_extra_cmd_overlapping_width_height(
     hass: HomeAssistant,
 ) -> None:
-    """Test fetching an image with and extra_cmd with width and height and a specific width and height."""
+    """Test fetching an image with extra_cmd with width/height."""
     with assert_setup_component(1):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 

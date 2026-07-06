@@ -29,16 +29,18 @@ VEHICLE_STATUS = "vehicle_status"
 API_GEN_1 = "g1"
 API_GEN_2 = "g2"
 API_GEN_3 = "g3"
+API_GEN_4 = "g4"
 MANUFACTURER = "Subaru"
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.DEVICE_TRACKER,
     Platform.LOCK,
     Platform.SENSOR,
 ]
 
-SERVICE_LOCK = "lock"
-SERVICE_UNLOCK = "unlock"
+SERVICE_REMOTE_START = "remote_start"
+SERVICE_REMOTE_STOP = "remote_stop"
 SERVICE_UNLOCK_SPECIFIC_DOOR = "unlock_specific_door"
 
 ATTR_DOOR = "door"

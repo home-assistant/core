@@ -1,10 +1,8 @@
 """TemplateEntity utility class."""
 
-from __future__ import annotations
-
 import itertools
 import logging
-from typing import Any
+from typing import Any, override
 
 import jinja2
 import voluptuous as vol
@@ -16,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.components.sensor.helpers import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.sensor.helpers import (  # pylint: disable=home-assistant-component-root-import
     async_parse_date_datetime,
 )
 from homeassistant.const import (
@@ -29,7 +27,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
@@ -108,7 +106,10 @@ TEMPLATE_SENSOR_BASE_SCHEMA = vol.Schema(
 
 
 class ValueTemplate(Template):
-    """Class to hold a value_template and manage caching and rendering it with 'value' in variables."""
+    """Class to hold a value_template.
+
+    Manages caching and rendering it with 'value' in variables.
+    """
 
     @classmethod
     def from_template(cls, template: Template) -> ValueTemplate:
@@ -137,7 +138,11 @@ class ValueTemplate(Template):
                 self.template, compiled, **variables
             ).strip()
         except jinja2.TemplateError as ex:
-            message = f"Error parsing value for {entity_id}: {ex} (value: {variables['value']}, template: {self.template})"
+            message = (
+                f"Error parsing value for {entity_id}:"
+                f" {ex} (value: {variables['value']},"
+                f" template: {self.template})"
+            )
             logger = logging.getLogger(
                 f"{__package__}.{entity_id.split('.', maxsplit=1)[0]}"
             )
@@ -199,26 +204,31 @@ class TriggerBaseEntity(Entity):
         self._available = True
 
     @property
+    @override
     def name(self) -> str | None:
         """Name of the entity."""
         return self._rendered.get(CONF_NAME)
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return unique ID of the entity."""
         return self._unique_id
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return icon."""
         return self._rendered.get(CONF_ICON)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return entity picture."""
         return self._rendered.get(CONF_PICTURE)
 
     @property
+    @override
     def available(self) -> bool:
         """Return availability of the entity."""
         if self._availability_template is None:
@@ -227,6 +237,7 @@ class TriggerBaseEntity(Entity):
         return self._available
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return extra attributes."""
         return self._rendered.get(CONF_ATTRIBUTES)
@@ -234,21 +245,6 @@ class TriggerBaseEntity(Entity):
     def _set_unique_id(self, unique_id: str | None) -> None:
         """Set unique id."""
         self._unique_id = unique_id
-
-    def restore_attributes(self, last_state: State) -> None:
-        """Restore attributes."""
-        for conf_key, attr in CONF_TO_ATTRIBUTE.items():
-            if conf_key not in self._config or attr not in last_state.attributes:
-                continue
-            self._rendered[conf_key] = last_state.attributes[attr]
-
-        if CONF_ATTRIBUTES in self._config:
-            extra_state_attributes = {}
-            for attr in self._config[CONF_ATTRIBUTES]:
-                if attr not in last_state.attributes:
-                    continue
-                extra_state_attributes[attr] = last_state.attributes[attr]
-            self._rendered[CONF_ATTRIBUTES] = extra_state_attributes
 
     def _template_variables(self, run_variables: dict[str, Any] | None = None) -> dict:
         """Render template variables."""
@@ -363,7 +359,8 @@ class ManualTriggerEntity(TriggerBaseEntity):
     ) -> dict[str, Any]:
         """Render template variables.
 
-        Implementing class should call this first in update method to render variables for templates.
+        Implementing class should call this first in update
+        method to render variables for templates.
         Ex: variables = self._render_template_variables_with_value(payload)
         """
         run_variables: dict[str, Any] = {"value": value}
@@ -403,12 +400,13 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
     def _set_native_value_with_possible_timestamp(self, value: Any) -> None:
         """Set native value with possible timestamp.
 
-        If self.device_class is `date` or `timestamp`,
+        If self.device_class is `date`, `timestamp`, or `uptime`,
         it will try to parse the value to a date/datetime object.
         """
         if self.device_class not in (
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
+            SensorDeviceClass.UPTIME,
         ):
             self._attr_native_value = value
         elif value is not None:

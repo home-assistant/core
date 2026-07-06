@@ -1,5 +1,7 @@
 """Support for WeMo binary sensors."""
 
+from typing import override
+
 from pywemo import Insight, Maker, StandbyState
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -42,6 +44,7 @@ class MakerBinarySensor(WemoEntity, BinarySensorEntity):
     wemo: Maker
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the Maker's sensor is pulled low."""
         return self.wemo.has_sensor != 0 and self.wemo.sensor_state == 0
@@ -54,6 +57,7 @@ class InsightBinarySensor(WemoBinarySensor):
     wemo: Insight
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true device connected to the Insight Switch is on."""
         return super().is_on and self.wemo.standby_state == StandbyState.ON

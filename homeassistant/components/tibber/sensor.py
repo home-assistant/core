@@ -1,11 +1,9 @@
 """Support for Tibber sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from tibber import FatalHttpExceptionError, RetryableHttpExceptionError, TibberHome
@@ -700,6 +698,7 @@ class TibberDataAPISensor(CoordinatorEntity[TibberDataAPICoordinator], SensorEnt
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the device."""
         sensors = self.coordinator.sensors_by_device.get(self._device_id, {})
@@ -725,6 +724,7 @@ class TibberSensor(SensorEntity):
         self._model: str | None = None
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         device_info = DeviceInfo(
@@ -750,7 +750,7 @@ class TibberSensorElPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator=coordinator, tibber_home=tibber_home)
-        self._attr_available = False
+        self._price_data_available = False
         self._attr_native_unit_of_measurement = tibber_home.price_unit
         self._attr_extra_state_attributes = {
             "app_nickname": None,
@@ -769,17 +769,30 @@ class TibberSensorElPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator
         self._model = "Price Sensor"
 
         self._device_name = self._home_name
+        self._update_attributes()
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the sensor is available."""
+        return super().available and self._price_data_available
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
+        self._update_attributes()
+        super()._handle_coordinator_update()
+
+    @callback
+    def _update_attributes(self) -> None:
         """Handle updated data from the coordinator."""
         data = self.coordinator.data
         if not data or (
             (home_data := data.get(self._tibber_home.home_id)) is None
             or (current_price := home_data.get("current_price")) is None
         ):
-            self._attr_available = False
-            self.async_write_ha_state()
+            self._price_data_available = False
+            self._attr_native_value = None
             return
 
         self._attr_native_unit_of_measurement = home_data.get(
@@ -800,8 +813,7 @@ class TibberSensorElPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator
         self._attr_extra_state_attributes["estimated_annual_consumption"] = home_data[
             "estimated_annual_consumption"
         ]
-        self._attr_available = True
-        self.async_write_ha_state()
+        self._price_data_available = True
 
 
 class TibberDataSensor(TibberSensor, CoordinatorEntity[TibberDataCoordinator]):
@@ -826,6 +838,7 @@ class TibberDataSensor(TibberSensor, CoordinatorEntity[TibberDataCoordinator]):
         self._device_name = self._home_name
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value of the sensor."""
         return getattr(self._tibber_home, self.entity_description.key)  # type: ignore[no-any-return]
@@ -854,11 +867,13 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
             self._attr_native_unit_of_measurement = tibber_home.currency
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._tibber_home.rt_subscription_running
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         if not (live_measurement := self.coordinator.get_live_measurement()):
             return
@@ -976,7 +991,7 @@ class TibberRtEntityCreator:
             self._async_add_entities(new_entities)
 
 
-class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-class-module
+class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=home-assistant-enforce-class-module
     """Handle Tibber realtime data."""
 
     def __init__(

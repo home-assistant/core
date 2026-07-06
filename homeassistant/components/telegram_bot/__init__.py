@@ -1,7 +1,5 @@
 """Support to send and receive Telegram messages."""
 
-from __future__ import annotations
-
 import logging
 from typing import Protocol, cast
 
@@ -62,6 +60,7 @@ from .const import (
     ATTR_DIRECTORY_PATH,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
+    ATTR_DRAFT_ID,
     ATTR_FILE,
     ATTR_FILE_ID,
     ATTR_FILE_NAME,
@@ -129,6 +128,7 @@ from .const import (
     SERVICE_SEND_LOCATION,
     SERVICE_SEND_MEDIA_GROUP,
     SERVICE_SEND_MESSAGE,
+    SERVICE_SEND_MESSAGE_DRAFT,
     SERVICE_SEND_PHOTO,
     SERVICE_SEND_POLL,
     SERVICE_SEND_STICKER,
@@ -174,6 +174,19 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.All(
             vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
         }
     ),
+)
+
+SERVICE_SCHEMA_SEND_MESSAGE_DRAFT = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+        vol.Optional(ATTR_CHAT_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+        vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
+        vol.Required(ATTR_DRAFT_ID): vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Required(ATTR_MESSAGE): cv.string,
+        vol.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
+    }
 )
 
 SERVICE_SCHEMA_SEND_CHAT_ACTION = vol.All(
@@ -424,6 +437,7 @@ SERVICE_SCHEMA_DOWNLOAD_FILE = vol.Schema(
 
 SERVICE_MAP: dict[str, VolSchemaType] = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
+    SERVICE_SEND_MESSAGE_DRAFT: SERVICE_SCHEMA_SEND_MESSAGE_DRAFT,
     SERVICE_SEND_CHAT_ACTION: SERVICE_SCHEMA_SEND_CHAT_ACTION,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_MEDIA_GROUP: SERVICE_SCHEMA_SEND_MEDIA_GROUP,
@@ -615,6 +629,8 @@ async def _call_service(
         await notify_service.set_message_reaction(context=service.context, **kwargs)
     elif service_name == SERVICE_EDIT_MESSAGE_MEDIA:
         await notify_service.edit_message_media(context=service.context, **kwargs)
+    elif service_name == SERVICE_SEND_MESSAGE_DRAFT:
+        await notify_service.send_message_draft(context=service.context, **kwargs)
     elif service_name == SERVICE_DOWNLOAD_FILE:
         return await notify_service.download_file(context=service.context, **kwargs)
     else:
@@ -632,7 +648,8 @@ def _deprecate_timeout(service: ServiceCall) -> None:
     if ATTR_TIMEOUT not in service.data:
         return
 
-    # default: service was called using frontend such as developer tools or automation editor
+    # default: service was called using frontend such as
+    # developer tools or automation editor
     service_call_origin = "call_service"
 
     origin = service.context.origin_event
@@ -673,10 +690,6 @@ async def async_migrate_entry(
         version,
         minor_version,
     )
-
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
 
     # version 1.1: to add default API endpoint
     if version == 1 and minor_version == 1:
@@ -769,7 +782,8 @@ def _build_targets(
             )
 
         if not chat_ids and not targets:
-            # no targets from service data, so we default to the first allowed chat IDs of the config entry
+            # no targets from service data, so we default
+            # to the first allowed chat IDs of the config entry
             subentries = list(config_entry.subentries.values())
             if not subentries:
                 raise ServiceValidationError(
@@ -841,7 +855,8 @@ def _warn_chat_id_migration(service: ServiceCall) -> set[int]:
         else service.data[ATTR_TARGET]
     )
 
-    # default: service was called using frontend such as developer tools or automation editor
+    # default: service was called using frontend such as
+    # developer tools or automation editor
     service_call_origin = "call_service"
 
     origin = service.context.origin_event
@@ -867,9 +882,23 @@ def _warn_chat_id_migration(service: ServiceCall) -> set[int]:
             "chat_ids": ", ".join(str(chat_id) for chat_id in chat_ids),
             "action_origin": service_call_origin,
             "telegram_bot_entities_url": "/config/entities?domain=telegram_bot",
-            "example_old": f"```yaml\naction: {service.service}\ndata:\n  target:  # to be updated\n    - 1234567890\n...\n```",
-            "example_new_entity_id": f"```yaml\naction: {service.service}\ndata:\n  entity_id:\n    - notify.telegram_bot_1234567890_1234567890  # replace with your notify entity\n...\n```",
-            "example_new_chat_id": f"```yaml\naction: {service.service}\ndata:\n  chat_id:\n    - 1234567890  # replace with your chat_id\n...\n```",
+            "example_old": (
+                f"```yaml\naction: {service.service}\ndata:\n"
+                "  target:  # to be updated\n"
+                "    - 1234567890\n...\n```"
+            ),
+            "example_new_entity_id": (
+                f"```yaml\naction: {service.service}\ndata:\n"
+                "  entity_id:\n"
+                "    - notify.telegram_bot_1234567890_1234567890"
+                "  # replace with your notify entity\n...\n```"
+            ),
+            "example_new_chat_id": (
+                f"```yaml\naction: {service.service}\ndata:\n"
+                "  chat_id:\n"
+                "    - 1234567890"
+                "  # replace with your chat_id\n...\n```"
+            ),
         },
         learn_more_url="https://github.com/home-assistant/core/pull/154868",
     )
@@ -883,6 +912,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     try:
         await bot.get_me()
     except InvalidToken as err:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryAuthFailed("Invalid API token for Telegram Bot.") from err
     except TelegramError as err:
         raise ConfigEntryNotReady from err
@@ -916,6 +946,7 @@ async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) ->
     if entry.runtime_data.old_config_data != entry.data:
         # Reload if config data has changed
         hass.config_entries.async_schedule_reload(entry.entry_id)
+        return
 
     # reload entities
     await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

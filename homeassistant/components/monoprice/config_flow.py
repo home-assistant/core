@@ -1,12 +1,10 @@
 """Config flow for Monoprice 6-Zone Amplifier integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pymonoprice import get_monoprice
-from serial import SerialException
+from serialx import SerialException
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -18,6 +16,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import SerialPortSelector
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
@@ -44,7 +43,9 @@ SOURCES = [
 
 OPTIONS_FOR_DATA: VolDictType = {vol.Optional(source): str for source in SOURCES}
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_PORT): str, **OPTIONS_FOR_DATA})
+DATA_SCHEMA = vol.Schema(
+    {vol.Required(CONF_PORT): SerialPortSelector(), **OPTIONS_FOR_DATA}
+)
 
 
 @callback
@@ -82,6 +83,7 @@ class MonoPriceConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -104,6 +106,7 @@ class MonoPriceConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> MonopriceOptionsFlowHandler:

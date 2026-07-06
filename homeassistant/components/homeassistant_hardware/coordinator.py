@@ -1,9 +1,8 @@
 """Home Assistant hardware firmware update coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiohttp import ClientSession
 from ha_silabs_firmware_client import (
@@ -44,6 +43,7 @@ class FirmwareUpdateCoordinator(DataUpdateCoordinator[FirmwareManifest]):
 
         self.client = FirmwareUpdateClient(url, session)
 
+    @override
     async def _async_update_data(self) -> FirmwareManifest:
         try:
             return await self.client.async_update_data()

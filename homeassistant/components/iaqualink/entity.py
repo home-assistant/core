@@ -1,6 +1,6 @@
 """Component to embed Aqualink devices."""
 
-from __future__ import annotations
+from typing import override
 
 from iaqualink.device import AqualinkDevice
 
@@ -22,6 +22,9 @@ class AqualinkEntity[AqualinkDeviceT: AqualinkDevice](
     entity update flow.
     """
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(
         self, coordinator: AqualinkDataUpdateCoordinator, dev: AqualinkDeviceT
     ) -> None:
@@ -38,6 +41,7 @@ class AqualinkEntity[AqualinkDeviceT: AqualinkDevice](
         )
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Return whether the state is based on actual reading from the device."""
         return self.dev.system.online in [False, None]

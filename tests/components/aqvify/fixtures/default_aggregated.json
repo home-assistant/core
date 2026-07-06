@@ -1,0 +1,15 @@
+[
+  {
+    "dateTime": "2026-06-12T07:00:00+00:00",
+    "minWaterLevel": -8.362291,
+    "maxWaterLevel": -7.557013,
+    "avgWaterLevel": -7.898354683333333,
+    "validGroundWaterLevel": null,
+    "inFlow": 24.473591893096195,
+    "outVolume": 8.36433457791729,
+    "minMeterValue": 18.637709,
+    "maxMeterValue": 19.442987,
+    "avgMeterValue": 19.101645316666666,
+    "validGroundMeterValue": null
+  }
+]

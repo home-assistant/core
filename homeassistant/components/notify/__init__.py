@@ -1,7 +1,5 @@
 """Provides functionality to notify people."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from enum import IntFlag
 from functools import partial
@@ -149,6 +147,7 @@ class NotifyEntity(RestoreEntity):
         self.__dict__.pop("state", None)
         self.__last_notified_isoformat = state
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the notify entity is added to hass."""
         await super().async_internal_added_to_hass()

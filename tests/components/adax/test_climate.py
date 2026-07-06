@@ -9,12 +9,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -34,8 +29,8 @@ async def test_climate_cloud(
     await setup_integration(hass, mock_cloud_config_entry)
     mock_adax_cloud.fetch_rooms_info.assert_called_once()
 
-    assert len(hass.states.async_entity_ids(Platform.CLIMATE)) == 1
-    entity_id = hass.states.async_entity_ids(Platform.CLIMATE)[0]
+    assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 1
+    entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
 
     state = hass.states.get(entity_id)
 
@@ -69,8 +64,8 @@ async def test_climate_local(
     await setup_integration(hass, mock_local_config_entry)
     mock_adax_local.get_status.assert_called_once()
 
-    assert len(hass.states.async_entity_ids(Platform.CLIMATE)) == 1
-    entity_id = hass.states.async_entity_ids(Platform.CLIMATE)[0]
+    assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 1
+    entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -100,8 +95,8 @@ async def test_climate_local_initial_state_from_first_refresh(
     """Test that local climate state is initialized from first refresh data."""
     await setup_integration(hass, mock_local_config_entry)
 
-    assert len(hass.states.async_entity_ids(Platform.CLIMATE)) == 1
-    entity_id = hass.states.async_entity_ids(Platform.CLIMATE)[0]
+    assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 1
+    entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
 
     state = hass.states.get(entity_id)
     assert state
@@ -120,8 +115,8 @@ async def test_climate_local_initial_state_off_from_first_refresh(
 
     await setup_integration(hass, mock_local_config_entry)
 
-    assert len(hass.states.async_entity_ids(Platform.CLIMATE)) == 1
-    entity_id = hass.states.async_entity_ids(Platform.CLIMATE)[0]
+    assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 1
+    entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
 
     state = hass.states.get(entity_id)
     assert state
@@ -138,7 +133,7 @@ async def test_climate_local_set_hvac_mode_updates_state_immediately(
     """Test local hvac mode service updates both device and state immediately."""
     await setup_integration(hass, mock_local_config_entry)
 
-    entity_id = hass.states.async_entity_ids(Platform.CLIMATE)[0]
+    entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -181,7 +176,7 @@ async def test_climate_local_set_temperature_when_off_does_not_change_hvac_mode(
     """Test setting target temperature while off does not send command or turn on."""
     await setup_integration(hass, mock_local_config_entry)
 
-    entity_id = hass.states.async_entity_ids(Platform.CLIMATE)[0]
+    entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -219,7 +214,7 @@ async def test_climate_local_set_temperature_when_heat_calls_device(
     """Test setting target temperature while heating calls local API."""
     await setup_integration(hass, mock_local_config_entry)
 
-    entity_id = hass.states.async_entity_ids(Platform.CLIMATE)[0]
+    entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
     state = hass.states.get(entity_id)
     assert state
     assert state.state == HVACMode.HEAT

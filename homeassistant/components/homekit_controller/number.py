@@ -4,7 +4,7 @@ These are mostly used where a HomeKit accessory exposes additional non-standard
 characteristics that don't map to a Home Assistant feature.
 """
 
-from __future__ import annotations
+from typing import override
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
@@ -26,11 +26,13 @@ from .connection import HKDevice
 from .entity import CharacteristicEntity
 
 NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
-    CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL,
-        name="Spray Quantity",
-        translation_key="spray_quantity",
-        entity_category=EntityCategory.CONFIG,
+    CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: (
+        NumberEntityDescription(
+            key=CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL,
+            name="Spray Quantity",
+            translation_key="spray_quantity",
+            entity_category=EntityCategory.CONFIG,
+        )
     ),
     CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION: NumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION,
@@ -110,36 +112,43 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
         super().__init__(conn, info, char)
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device if any."""
         if name := self.accessory.name:
             return f"{name} {self.entity_description.name}"
         return f"{self.entity_description.name}"
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [self._char.type]
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the minimum value."""
         return self._char.minValue or DEFAULT_MIN_VALUE
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum value."""
         return self._char.maxValue or DEFAULT_MAX_VALUE
 
     @property
+    @override
     def native_step(self) -> float:
         """Return the increment/decrement step."""
         return self._char.minStep or DEFAULT_STEP
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the current characteristic value."""
         return self._char.value
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the characteristic to this value."""
         await self.async_put_characteristics(

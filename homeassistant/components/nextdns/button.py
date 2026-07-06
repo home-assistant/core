@@ -1,6 +1,6 @@
 """Support for the NextDNS service."""
 
-from __future__ import annotations
+from typing import override
 
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
@@ -40,6 +40,7 @@ async def async_setup_entry(
 class NextDnsButton(NextDnsEntity, ButtonEntity):
     """Define an NextDNS button."""
 
+    @override
     async def async_press(self) -> None:
         """Trigger cleaning logs."""
         try:

@@ -1,16 +1,15 @@
 """Config flow to configure esphome component."""
 
-from __future__ import annotations
-
 from collections import OrderedDict
 from collections.abc import Mapping
 import json
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aioesphomeapi import (
     APIClient,
     APIConnectionError,
+    BluetoothProxyFeature,
     DeviceInfo,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
@@ -22,6 +21,7 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
+from homeassistant.components.bluetooth import BluetoothScanningMode
 from homeassistant.config_entries import (
     SOURCE_ESPHOME,
     SOURCE_IGNORE,
@@ -40,6 +40,11 @@ from homeassistant.data_entry_flow import AbortFlow, FlowResultType
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.importlib import async_import_module
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -49,10 +54,12 @@ from homeassistant.util.json import json_loads_object
 
 from .const import (
     CONF_ALLOW_SERVICE_CALLS,
+    CONF_BLUETOOTH_SCANNING_MODE,
     CONF_DEVICE_NAME,
     CONF_NOISE_PSK,
     CONF_SUBSCRIBE_LOGS,
     DEFAULT_ALLOW_SERVICE_CALLS,
+    DEFAULT_BLUETOOTH_SCANNING_MODE,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DEFAULT_PORT,
     DOMAIN,
@@ -69,6 +76,18 @@ _LOGGER = logging.getLogger(__name__)
 
 ZERO_NOISE_PSK = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
 DEFAULT_NAME = "ESPHome"
+
+_BLUETOOTH_SCANNING_MODE_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[
+            BluetoothScanningMode.AUTO.value,
+            BluetoothScanningMode.ACTIVE.value,
+            BluetoothScanningMode.PASSIVE.value,
+        ],
+        translation_key="bluetooth_scanning_mode",
+        mode=SelectSelectorMode.DROPDOWN,
+    )
+)
 
 
 class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -116,6 +135,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -158,7 +178,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 expected_mac = format_mac(self._reauth_entry.unique_id)
                 actual_mac = format_mac(self._device_mac)
                 if expected_mac != actual_mac:
-                    # Different device at the same IP - do not offer to remove encryption
+                    # Different device at the same IP -
+                    # do not offer to remove encryption
                     return self._async_abort_wrong_device(
                         self._reauth_entry, expected_mac, actual_mac
                     )
@@ -294,6 +315,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={"name": self._async_get_human_readable_name()},
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -332,7 +354,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             ble_mac = wifi_mac_to_bluetooth_mac(mac_address)
             improv_ble.async_register_next_flow(self.hass, ble_mac, self.flow_id)
             _LOGGER.debug(
-                "Notified Improv BLE of flow %s for BLE MAC %s (derived from WiFi MAC %s)",
+                "Notified Improv BLE of flow %s for BLE MAC %s"
+                " (derived from WiFi MAC %s)",
                 self.flow_id,
                 ble_mac,
                 mac_address,
@@ -405,6 +428,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
@@ -444,6 +468,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -457,6 +482,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         # for configured devices.
         return self.async_abort(reason="already_configured")
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -533,7 +559,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 unique_id=self.unique_id,
                 data=self._async_make_config_data(),
                 options={
-                    CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+                    CONF_ALLOW_SERVICE_CALLS: (
+                        DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS
+                    ),
                 },
             )
         await self.hass.config_entries.async_remove(
@@ -917,6 +945,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ESPHomeConfigEntry,
     ) -> OptionsFlowHandler:
@@ -934,18 +963,44 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        data_schema = vol.Schema(
-            {
+        options = self.config_entry.options
+        schema: dict[Any, Any] = {
+            vol.Required(
+                CONF_ALLOW_SERVICE_CALLS,
+                default=options.get(
+                    CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS
+                ),
+            ): bool,
+            vol.Required(
+                CONF_SUBSCRIBE_LOGS,
+                default=options.get(CONF_SUBSCRIBE_LOGS, False),
+            ): bool,
+        }
+        if _entry_has_bluetooth_scanner(self.config_entry):
+            schema[
                 vol.Required(
-                    CONF_ALLOW_SERVICE_CALLS,
-                    default=self.config_entry.options.get(
-                        CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS
+                    CONF_BLUETOOTH_SCANNING_MODE,
+                    default=options.get(
+                        CONF_BLUETOOTH_SCANNING_MODE, DEFAULT_BLUETOOTH_SCANNING_MODE
                     ),
-                ): bool,
-                vol.Required(
-                    CONF_SUBSCRIBE_LOGS,
-                    default=self.config_entry.options.get(CONF_SUBSCRIBE_LOGS, False),
-                ): bool,
-            }
+                )
+            ] = _BLUETOOTH_SCANNING_MODE_SELECTOR
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(schema))
+
+
+@callback
+def _entry_has_bluetooth_scanner(entry: ESPHomeConfigEntry) -> bool:
+    """Return True if the entry exposes a bluetooth proxy scanner or has one saved."""
+    # Keep showing the option if it was previously saved, even when the
+    # device is offline or stops advertising the feature flag, so the
+    # saved value isn't silently dropped on the next options save.
+    if CONF_BLUETOOTH_SCANNING_MODE in entry.options:
+        return True
+    if entry.state is ConfigEntryState.LOADED and (
+        device_info := entry.runtime_data.device_info
+    ):
+        flags = device_info.bluetooth_proxy_feature_flags_compat(
+            entry.runtime_data.api_version
         )
-        return self.async_show_form(step_id="init", data_schema=data_schema)
+        return bool(flags & BluetoothProxyFeature.FEATURE_STATE_AND_MODE)
+    return False

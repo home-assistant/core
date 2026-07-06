@@ -1,7 +1,5 @@
 """Module to handle installing requirements."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 import contextlib
@@ -67,7 +65,7 @@ async def async_process_requirements(
     """Install the requirements for a component or platform.
 
     This method is a coroutine. It will raise RequirementsNotFound
-    if an requirement can't be satisfied.
+    if a requirement can't be satisfied.
     """
     await _async_get_manager(hass).async_process_requirements(
         name, requirements, is_built_in
@@ -254,7 +252,7 @@ class RequirementsManager:
         """Install the requirements for a component or platform.
 
         This method is a coroutine. It will raise RequirementsNotFound
-        if an requirement can't be satisfied.
+        if a requirement can't be satisfied.
         """
         if DEPRECATED_PACKAGES or self.hass.config.skip_pip_packages:
             all_requirements = {
