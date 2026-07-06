@@ -8,7 +8,12 @@ from pyoverkiz.enums import OverkizState
 from pyoverkiz.models import Event
 import pytest
 
-from homeassistant.components.climate import ATTR_HVAC_ACTION, HVACAction
+from homeassistant.components.climate import (
+    ATTR_HVAC_ACTION,
+    ATTR_PRESET_MODE,
+    HVACAction,
+    HVACMode,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -25,6 +30,14 @@ VALVE = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "io://1234-5678-1698/15702199#1",
     "climate.maple_residence_garden_radiator",
+)
+
+# Atlantic MODBUSLINK heater that does not expose core:RegulationModeState,
+# io:TargetHeatingLevelState. See https://github.com/home-assistant/core/issues/175812.
+MODBUSLINK_HEATER = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch.json",
+    "modbuslink://1234-5678-5643/1#1",
+    "climate.living_room_heater",
 )
 
 
@@ -71,6 +84,20 @@ async def test_valve_hvac_action_none_state(
     state = hass.states.get(VALVE.entity_id)
     assert state is not None
     assert state.attributes.get(ATTR_HVAC_ACTION) is None
+
+
+async def test_modbuslink_heater_loads_without_regulation_mode(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test Atlantic MODBUSLINK heater loads when optional states are missing."""
+    await setup_overkiz_integration(fixture=MODBUSLINK_HEATER.fixture)
+
+    state = hass.states.get(MODBUSLINK_HEATER.entity_id)
+    assert state is not None
+    assert state.state == HVACMode.HEAT
+    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.OFF
+    assert state.attributes.get(ATTR_PRESET_MODE) is None
 
 
 UNKNOWN_DEVICE_URL = "zigbee://1234-5678-1698/65535"
