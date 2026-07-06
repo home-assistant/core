@@ -1,6 +1,5 @@
 """Support for Xiaomi Smart WiFi Socket and Smart Power Strip."""
 
-import asyncio
 from dataclasses import dataclass
 from functools import partial
 import logging
@@ -15,7 +14,6 @@ from miio import (
 )
 from miio.gateway.devices.switch import Switch
 from miio.powerstrip import PowerMode
-import voluptuous as vol
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -23,8 +21,6 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_MODE,
     ATTR_MODEL,
     ATTR_TEMPERATURE,
     CONF_DEVICE,
@@ -33,15 +29,13 @@ from homeassistant.const import (
     CONF_TOKEN,
     EntityCategory,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
-    DOMAIN,
     FEATURE_FLAGS_AIRFRESH,
     FEATURE_FLAGS_AIRFRESH_A1,
     FEATURE_FLAGS_AIRFRESH_T2017,
@@ -113,20 +107,16 @@ from .const import (
     MODELS_HUMIDIFIER_MJJSQ,
     MODELS_PURIFIER_MIIO,
     MODELS_PURIFIER_MIOT,
-    SERVICE_SET_POWER_MODE,
-    SERVICE_SET_POWER_PRICE,
-    SERVICE_SET_WIFI_LED_OFF,
-    SERVICE_SET_WIFI_LED_ON,
     SUCCESS,
+    SWITCH_DATA_KEY as DATA_KEY,
 )
 from .coordinator import GatewayDeviceCoordinator
 from .entity import XiaomiCoordinatedMiioEntity, XiaomiGatewayDevice, XiaomiMiioEntity
-from .typing import ServiceMethodDetails, XiaomiMiioConfigEntry
+from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Xiaomi Miio Switch"
-DATA_KEY = "switch.xiaomi_miio"
 
 MODEL_POWER_STRIP_V2 = "zimi.powerstrip.v2"
 MODEL_PLUG_V3 = "chuangmi.plug.v3"
@@ -153,7 +143,6 @@ ATTR_LOAD_POWER = "load_power"
 ATTR_POWER = "power"
 ATTR_POWER_MODE = "power_mode"
 ATTR_POWER_PRICE = "power_price"
-ATTR_PRICE = "price"
 ATTR_PTC = "ptc"
 ATTR_WIFI_LED = "wifi_led"
 
@@ -170,29 +159,6 @@ FEATURE_FLAGS_POWER_STRIP_V1 = (
 FEATURE_FLAGS_POWER_STRIP_V2 = FEATURE_SET_WIFI_LED | FEATURE_SET_POWER_PRICE
 
 FEATURE_FLAGS_PLUG_V3 = FEATURE_SET_WIFI_LED
-
-SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
-
-SERVICE_SCHEMA_POWER_MODE = SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_MODE): vol.All(vol.In(["green", "normal"]))}
-)
-
-SERVICE_SCHEMA_POWER_PRICE = SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_PRICE): cv.positive_float}
-)
-
-SERVICE_TO_METHOD = {
-    SERVICE_SET_WIFI_LED_ON: ServiceMethodDetails(method="async_set_wifi_led_on"),
-    SERVICE_SET_WIFI_LED_OFF: ServiceMethodDetails(method="async_set_wifi_led_off"),
-    SERVICE_SET_POWER_MODE: ServiceMethodDetails(
-        method="async_set_power_mode",
-        schema=SERVICE_SCHEMA_POWER_MODE,
-    ),
-    SERVICE_SET_POWER_PRICE: ServiceMethodDetails(
-        method="async_set_power_price",
-        schema=SERVICE_SCHEMA_POWER_PRICE,
-    ),
-}
 
 MODEL_TO_FEATURES_MAP = {
     MODEL_AIRFRESH_A1: FEATURE_FLAGS_AIRFRESH_A1,
@@ -484,42 +450,6 @@ async def async_setup_other_entry(
                     "and provide the following data: %s"
                 ),
                 model,
-            )
-
-        async def async_service_handler(service: ServiceCall) -> None:
-            """Map services to methods on XiaomiPlugGenericSwitch."""
-            method = SERVICE_TO_METHOD[service.service]
-            params = {
-                key: value
-                for key, value in service.data.items()
-                if key != ATTR_ENTITY_ID
-            }
-            if entity_ids := service.data.get(ATTR_ENTITY_ID):
-                devices = [
-                    device
-                    for device in hass.data[DATA_KEY].values()
-                    if device.entity_id in entity_ids
-                ]
-            else:
-                devices = hass.data[DATA_KEY].values()
-
-            update_tasks = []
-            for device in devices:
-                if not hasattr(device, method.method):
-                    continue
-                await getattr(device, method.method)(**params)
-                update_tasks.append(
-                    asyncio.create_task(device.async_update_ha_state(True))
-                )
-
-            if update_tasks:
-                await asyncio.wait(update_tasks)
-
-        for plug_service, method in SERVICE_TO_METHOD.items():
-            schema = method.schema or SERVICE_SCHEMA
-            # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-            hass.services.async_register(
-                DOMAIN, plug_service, async_service_handler, schema=schema
             )
 
     async_add_entities(entities)
