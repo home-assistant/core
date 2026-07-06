@@ -72,7 +72,7 @@ rules:
   repair-issues: todo
   stale-devices:
     status: exempt
-    comment: Integration only has static hardware devices
+    comment: Integration only has static hardware devices, single device per config entry
 
   # Platinum
   async-dependency: todo
