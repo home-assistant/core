@@ -55,7 +55,7 @@ from zwave_js_server.model.utils import (
     async_parse_qr_code_string,
     async_try_parse_dsk_from_qr_code_string,
 )
-from zwave_js_server.model.value import ConfigurationValueFormat
+from zwave_js_server.model.value import ConfigurationValueFormat, Value
 from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
@@ -2082,14 +2082,7 @@ async def websocket_subscribe_config_parameter_updates(
     msg: dict[str, Any],
     node: Node,
 ) -> None:
-    """Subscribe to the config parameter value updates for a node."""
-
-    def _values_dict() -> dict[str, Any]:
-        return {
-            value.value_id: value.value
-            for value in node.values.values()
-            if value.command_class == CommandClass.CONFIGURATION
-        }
+    """Subscribe to value updates for the config parameters of a node."""
 
     @callback
     def async_cleanup() -> None:
@@ -2099,15 +2092,19 @@ async def websocket_subscribe_config_parameter_updates(
 
     @callback
     def forward_values(event: dict) -> None:
-        if event["value"].command_class != CommandClass.CONFIGURATION:
+        value: Value = event["value"]
+        if value.command_class != CommandClass.CONFIGURATION:
             return
-        connection.send_message(websocket_api.event_message(msg[ID], _values_dict()))
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID], {"id": value.value_id, "value": value.value}
+            )
+        )
 
     msg[DATA_UNSUBSCRIBE] = unsubs = [node.on(EVENT_VALUE_UPDATED, forward_values)]
     connection.subscriptions[msg["id"]] = async_cleanup
 
     connection.send_result(msg[ID])
-    connection.send_message(websocket_api.event_message(msg[ID], _values_dict()))
 
 
 @websocket_api.require_admin
