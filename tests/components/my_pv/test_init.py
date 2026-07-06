@@ -31,7 +31,7 @@ async def test_async_setup_entry_cannot_connect(
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
 ) -> None:
-    """Test successful setup of a config entry."""
+    """Test setup of a config entry when unable to connect."""
     mock_config_entry.add_to_hass(hass)
 
     mock_my_pv_client.connect.return_value = False
@@ -47,7 +47,7 @@ async def test_async_setup_entry_auth_error(
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
 ) -> None:
-    """Test successful setup of a config entry."""
+    """Test setup of a config entry when authentication fails."""
     mock_config_entry.add_to_hass(hass)
 
     mock_my_pv_client.connect.side_effect = MyPVAuthenticationError()
@@ -64,7 +64,7 @@ async def test_async_setup_entry_failed_first_refresh(
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
 ) -> None:
-    """Test successful setup of a config entry."""
+    """Test setup of a config entry when first refresh fails."""
     mock_config_entry.add_to_hass(hass)
 
     with (
