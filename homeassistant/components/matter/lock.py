@@ -124,9 +124,7 @@ class MatterLock(MatterEntity, LockEntity):
         # Handle the DoorLock events
         node_event_data: dict[str, int] = node_event.data or {}
         match node_event.event_id:
-            case (
-                clusters.DoorLock.Events.DoorLockAlarm.event_id
-            ):  # Lock cluster event 0
+            case clusters.DoorLock.Events.DoorLockAlarm.event_id:
                 if (
                     node_event_data.get("alarmCode")
                     == clusters.DoorLock.Enums.AlarmCodeEnum.kLockJammed
@@ -134,9 +132,7 @@ class MatterLock(MatterEntity, LockEntity):
                     self._reset_optimistic_state(write_state=False)
                     self._attr_is_jammed = True
                     self.async_write_ha_state()
-            case (
-                clusters.DoorLock.Events.LockOperation.event_id
-            ):  # Lock cluster event 2
+            case clusters.DoorLock.Events.LockOperation.event_id:
                 operation_source: int = node_event_data.get("operationSource", -1)
                 source_name = DOOR_LOCK_OPERATION_SOURCE.get(
                     operation_source, "Unknown"
