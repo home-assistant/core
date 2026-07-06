@@ -1,7 +1,7 @@
 """Support for Meteo-France raining forecast sensor."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from meteofrance_api.helpers import (
     get_warning_text_status_from_indice_color,
@@ -237,9 +237,11 @@ class MeteoFranceSensor[_DataT: Rain | Forecast | CurrentPhenomenons](
         if hasattr(coordinator.data, "position"):
             city_name = coordinator.data.position["name"]
             self._attr_name = f"{city_name} {description.name}"
-            self._attr_unique_id = f"{coordinator.data.position['lat']},{coordinator.data.position['lon']}_{description.key}"
+            pos = coordinator.data.position
+            self._attr_unique_id = f"{pos['lat']},{pos['lon']}_{description.key}"
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         assert self.platform.config_entry and self.platform.config_entry.unique_id
@@ -252,6 +254,7 @@ class MeteoFranceSensor[_DataT: Rain | Forecast | CurrentPhenomenons](
         )
 
     @property
+    @override
     def native_value(self):
         """Return the state."""
         path = self.entity_description.data_path.split(":")
@@ -260,7 +263,9 @@ class MeteoFranceSensor[_DataT: Rain | Forecast | CurrentPhenomenons](
         # Specific case for probability forecast
         if path[0] == "probability_forecast":
             if len(path) == 3:
-                # This is a fix compared to other entitty as first index is always null in API result for unknown reason
+                # This is a fix compared to other entity as
+                # first index is always null in API result
+                # for unknown reason
                 value = _find_first_probability_forecast_not_null(data, path)
             else:
                 value = data[0][path[1]]
@@ -281,6 +286,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor[Rain]):
     """Representation of a Meteo-France rain sensor."""
 
     @property
+    @override
     def native_value(self):
         """Return the state."""
         # search first cadran with rain
@@ -291,6 +297,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor[Rain]):
         return dt_util.utc_from_timestamp(next_rain["dt"]) if next_rain else None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         reference_dt = self.coordinator.data.forecast[0]["dt"]
@@ -318,6 +325,7 @@ class MeteoFranceAlertSensor(MeteoFranceSensor[CurrentPhenomenons]):
         self._attr_unique_id = self._attr_name
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state."""
         return get_warning_text_status_from_indice_color(
@@ -325,6 +333,7 @@ class MeteoFranceAlertSensor(MeteoFranceSensor[CurrentPhenomenons]):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {

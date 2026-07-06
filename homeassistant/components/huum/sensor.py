@@ -1,5 +1,7 @@
 """Sensor platform for Huum sauna integration."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -37,6 +39,7 @@ class HuumTemperatureSensor(HuumBaseEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_temperature"
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the current temperature."""
         return self.coordinator.data.temperature

@@ -4,7 +4,7 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import logging
 from time import time
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from aiohttp import ClientTimeout
 from aiowebdav2.exceptions import UnauthorizedError, WebDavError
@@ -20,6 +20,7 @@ from homeassistant.components.backup import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_dumps
+from homeassistant.util.async_ import gather_with_limited_concurrency
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 
 from . import WebDavConfigEntry
@@ -29,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 BACKUP_TIMEOUT = ClientTimeout(connect=10, total=43200)
 CACHE_TTL = 300
+METADATA_DOWNLOAD_CONCURRENCY = 4
 
 
 async def async_get_backup_agents(
@@ -116,6 +118,7 @@ class WebDavBackupAgent(BackupAgent):
         return self._entry.data.get(CONF_BACKUP_PATH, "")
 
     @handle_backup_errors
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -134,6 +137,7 @@ class WebDavBackupAgent(BackupAgent):
         )
 
     @handle_backup_errors
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -176,6 +180,7 @@ class WebDavBackupAgent(BackupAgent):
         self._cache_expiration = time()
 
     @handle_backup_errors
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -202,11 +207,13 @@ class WebDavBackupAgent(BackupAgent):
         self._cache_expiration = time()
 
     @handle_backup_errors
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         return list((await self._list_cached_metadata_files()).values())
 
     @handle_backup_errors
+    @override
     async def async_get_backup(
         self,
         backup_id: str,
@@ -237,11 +244,18 @@ class WebDavBackupAgent(BackupAgent):
         async def _list_metadata_files() -> dict[str, AgentBackup]:
             """List metadata files."""
             files = await self._client.list_files(self._backup_path)
+            metadata_contents = await gather_with_limited_concurrency(
+                METADATA_DOWNLOAD_CONCURRENCY,
+                *(
+                    _download_metadata(file_name)
+                    for file_name in files
+                    if file_name.endswith(".metadata.json")
+                ),
+            )
             return {
                 metadata_content.backup_id: metadata_content
-                for file_name in files
-                if file_name.endswith(".metadata.json")
-                if (metadata_content := await _download_metadata(file_name))
+                for metadata_content in metadata_contents
+                if metadata_content
             }
 
         self._cache_metadata_files = await _list_metadata_files()

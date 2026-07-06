@@ -2,7 +2,7 @@
 
 import datetime
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from soco.alarms import Alarm
 from soco.exceptions import SoCoSlaveException, SoCoUPnPException
@@ -155,7 +155,7 @@ async def async_setup_entry(
     def _get_switch_state(
         speaker: SonosSpeaker,
     ) -> tuple[list[str], str | None, bool | None]:
-        """Return all switch state needed for entity creation in a single executor call."""
+        """Return all switch state for entity creation."""
         return (
             available_soco_attributes(speaker),
             _get_tv_autoplay_state(speaker),
@@ -244,28 +244,33 @@ class SonosSwitchEntity(SonosPollingEntity, SwitchEntity):
             self._attr_entity_registry_enabled_default = False
             self._attr_should_poll = True
 
+    @override
     async def _async_fallback_poll(self) -> None:
         """Handle polling for subscription-based switches when subscription fails."""
         if not self.should_poll:
             await self.hass.async_add_executor_job(self.poll_state)
 
     @soco_error()
+    @override
     def poll_state(self) -> None:
         """Poll the current state of the switch."""
         state = getattr(self.soco, self.attribute_key)
         setattr(self.speaker, self.attribute_key, state)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
         if self.needs_coordinator and not self.speaker.is_coordinator:
             return cast(bool, getattr(self.speaker.coordinator, self.attribute_key))
         return cast(bool, getattr(self.speaker, self.attribute_key))
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self.send_command(True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self.send_command(False)
@@ -296,27 +301,32 @@ class SonosTVAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
         self._attr_unique_id = f"{speaker.soco.uid}-{ATTR_TV_AUTOPLAY}"
 
     @soco_error()
+    @override
     def poll_state(self) -> None:
         """Poll the current TV autoplay state from the device."""
         result = self.soco.deviceProperties.GetAutoplayRoomUUID(_TV_SOURCE)
         self.speaker.tv_autoplay = result.get("RoomUUID")
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the entity is available."""
         return super().available and self.speaker.tv_autoplay is not None
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if TV autoplay is enabled."""
         if self.speaker.tv_autoplay is None:
             return None
         return bool(self.speaker.tv_autoplay)
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Enable TV autoplay."""
         self._send_command(True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Disable TV autoplay."""
         self._send_command(False)
@@ -366,6 +376,7 @@ class SonosTVUngroupAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
         self._attr_unique_id = f"{speaker.soco.uid}-{ATTR_TV_UNGROUP_AUTOPLAY}"
 
     @soco_error()
+    @override
     def poll_state(self) -> None:
         """Poll the current ungroup-on-autoplay state from the device."""
         result = self.soco.deviceProperties.GetAutoplayLinkedZones(_TV_SOURCE)
@@ -377,19 +388,23 @@ class SonosTVUngroupAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
         self.speaker.tv_ungroup_autoplay = linked_zones == "0"
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the entity is available."""
         return super().available and self.speaker.tv_ungroup_autoplay is not None
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if ungroup on autoplay is enabled."""
         return self.speaker.tv_ungroup_autoplay
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Enable ungroup on autoplay."""
         self._send_command(True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Disable ungroup on autoplay."""
         self._send_command(False)
@@ -399,7 +414,8 @@ class SonosTVUngroupAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
         """Enable or disable ungroup on autoplay on the device."""
         try:
             self.soco.deviceProperties.SetAutoplayLinkedZones(
-                # enable=True (ungroup) → IncludeLinkedZones=0 (don't include linked zones)
+                # enable=True (ungroup) → IncludeLinkedZones=0
+                # (don't include linked zones)
                 [("IncludeLinkedZones", "0" if enable else "1"), *_TV_SOURCE]
             )
         except SoCoUPnPException as exc:
@@ -428,6 +444,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         self.household_id = speaker.household_id
         self.entity_id = ENTITY_ID_FORMAT.format(f"sonos_alarm_{self.alarm_id}")
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle switch setup when added to hass."""
         await super().async_added_to_hass()
@@ -458,6 +475,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         )
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         return (
@@ -465,6 +483,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             f" {str(self.alarm.start_time)[:5]}"
         )
 
+    @override
     async def _async_fallback_poll(self) -> None:
         """Call the central alarm polling method."""
         alarms: SonosAlarms = self.config_entry.runtime_data.alarms[self.household_id]
@@ -537,16 +556,19 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether this alarm is available."""
         return (self.alarm is not None) and self.speaker.available
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return state of Sonos alarm switch."""
         return self.alarm.enabled
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return attributes of Sonos alarm switch."""
         return {
@@ -560,10 +582,12 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             ATTR_INCLUDE_LINKED_ZONES: self.alarm.include_linked_zones,
         }
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn alarm switch on."""
         self._handle_switch_on_off(turn_on=True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn alarm switch off."""
         self._handle_switch_on_off(turn_on=False)

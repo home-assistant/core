@@ -16,7 +16,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.target import TargetEntityChangeTracker, TargetSelection
-from homeassistant.helpers.trigger import Trigger, TriggerActionRunner, TriggerConfig
+from homeassistant.helpers.trigger import (
+    Trigger,
+    TriggerActionRunner,
+    TriggerConfig,
+    TriggerNotTriggeredReporter,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from . import TodoItem, TodoListEntity
@@ -78,7 +83,7 @@ class ItemChangeListener(TargetEntityChangeTracker):
     @override
     @callback
     def _handle_entities_update(self, tracked_entities: set[str]) -> None:
-        """Restart the listeners when the list of entities of the tracked targets is updated."""
+        """Restart listeners when tracked target entities change."""
         if self._pending_listener_task:
             self._pending_listener_task.cancel()
         self._pending_listener_task = self._hass.async_create_task(
@@ -125,6 +130,7 @@ class ItemTriggerBase(Trigger, abc.ABC):
     """todo item trigger base."""
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -139,8 +145,11 @@ class ItemTriggerBase(Trigger, abc.ABC):
             assert config.target is not None
         self._target = config.target
 
+    @override
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
 
@@ -153,7 +162,7 @@ class ItemTriggerBase(Trigger, abc.ABC):
             functools.partial(self._handle_item_change, run_action=run_action),
             self._handle_entities_updated,
         )
-        return listener.async_setup()
+        return await listener.async_setup()
 
     @callback
     @abc.abstractmethod

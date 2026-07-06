@@ -1,6 +1,6 @@
 """Music Assistant Switch platform."""
 
-from typing import Any, Final
+from typing import Any, Final, override
 
 from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.player import PlayerOption, PlayerOptionType
@@ -73,7 +73,7 @@ async def async_setup_entry(
 
 
 class MusicAssistantPlayerConfigSwitch(MusicAssistantPlayerOptionEntity, SwitchEntity):
-    """Representation of a Switch entity to control player provider dependent settings."""
+    """Representation of a Switch entity to control player settings."""
 
     def __init__(
         self,
@@ -88,15 +88,18 @@ class MusicAssistantPlayerConfigSwitch(MusicAssistantPlayerOptionEntity, SwitchE
         self.entity_description = entity_description
 
     @catch_musicassistant_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Handle turn on command."""
         await self.mass.players.set_option(self.player_id, self.mass_option_key, True)
 
     @catch_musicassistant_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Handle turn off command."""
         await self.mass.players.set_option(self.player_id, self.mass_option_key, False)
 
+    @override
     def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Update on player option update."""
         self._attr_is_on = (

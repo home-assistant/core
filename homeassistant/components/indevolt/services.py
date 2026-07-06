@@ -30,7 +30,7 @@ RT_ACTION_SERVICE_SCHEMA: Final = vol.Schema(
         ),
         vol.Required("power"): vol.All(
             vol.Coerce(int),
-            vol.Range(min=1, max=2400),
+            vol.Range(min=0, max=2400),
         ),
     }
 )
@@ -185,7 +185,10 @@ def _raise_power_exceeds_max(power: int, max_power: int, generation: int) -> Nev
 
 
 def _raise_soc_below_minimum(target_soc: int, minimum_soc: int) -> Never:
-    """Raise a translated validation error when SOC is below the device's hard minimum."""
+    """Raise a translated validation error.
+
+    Called when SOC is below the device's hard minimum.
+    """
     raise ServiceValidationError(
         translation_domain=DOMAIN,
         translation_key="soc_below_minimum",

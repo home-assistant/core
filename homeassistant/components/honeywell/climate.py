@@ -1,7 +1,7 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 
 import datetime
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientConnectionError
 from aiosomecomfort import (
@@ -149,8 +149,9 @@ def remove_stale_devices(
                 break
 
         if device_id is None or device_id not in all_device_ids:
-            # If device_id is None an invalid device entry was found for this config entry.
-            # If the device_id is not in existing device ids it's a stale device entry.
+            # If device_id is None an invalid device entry was
+            # found for this config entry. If the device_id is not
+            # in existing device ids it's a stale device entry.
             # Remove config entry from this device entry in either case.
             device_registry.async_update_device(
                 device_entry.id, remove_config_entry_id=config_entry.entry_id
@@ -233,6 +234,7 @@ class HoneywellUSThermostat(ClimateEntity):
         self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         data: dict[str, Any] = {}
@@ -243,6 +245,7 @@ class HoneywellUSThermostat(ClimateEntity):
         return data
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         if self.hvac_mode == HVACMode.COOL:
@@ -261,6 +264,7 @@ class HoneywellUSThermostat(ClimateEntity):
         )
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         if self.hvac_mode == HVACMode.COOL:
@@ -279,16 +283,19 @@ class HoneywellUSThermostat(ClimateEntity):
         )
 
     @property
+    @override
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self._device.current_humidity
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
         return HW_MODE_TO_HVAC_MODE.get(self._device.system_mode)
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
         if self.hvac_mode == HVACMode.OFF:
@@ -296,11 +303,13 @@ class HoneywellUSThermostat(ClimateEntity):
         return HW_MODE_TO_HA_HVAC_ACTION.get(self._device.equipment_output_status)
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._device.current_temperature
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVACMode.COOL:
@@ -310,6 +319,7 @@ class HoneywellUSThermostat(ClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
@@ -317,6 +327,7 @@ class HoneywellUSThermostat(ClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
@@ -324,6 +335,7 @@ class HoneywellUSThermostat(ClimateEntity):
         return None
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if self._away and self._is_hold():
@@ -338,6 +350,7 @@ class HoneywellUSThermostat(ClimateEntity):
         return PRESET_NONE
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return HW_FAN_MODE_TO_HA.get(self._device.fan_mode)
@@ -399,6 +412,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 translation_placeholders={"temperature": temperature},
             ) from err
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if {HVACMode.COOL, HVACMode.HEAT} & set(self._hvac_mode_map):
@@ -423,6 +437,7 @@ class HoneywellUSThermostat(ClimateEntity):
                     translation_placeholders={"temperature": str(temperature)},
                 ) from err
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         try:
@@ -434,6 +449,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 translation_key="fan_mode_failed",
             ) from err
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         try:
@@ -471,7 +487,9 @@ class HoneywellUSThermostat(ClimateEntity):
 
         except SomeComfortError as err:
             _LOGGER.error(
-                "Temperature out of range. Mode: %s, Heat Temperature:  %.1f, Cool Temperature: %.1f",
+                "Temperature out of range. Mode: %s,"
+                " Heat Temperature:  %.1f,"
+                " Cool Temperature: %.1f",
                 mode,
                 self._heat_away_temp,
                 self._cool_away_temp,
@@ -528,6 +546,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 translation_key="stop_hold_failed",
             ) from err
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode == PRESET_AWAY:

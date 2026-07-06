@@ -1,7 +1,7 @@
 """Button platform for Sensibo integration."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -77,6 +77,7 @@ class SensiboDeviceButton(SensiboDeviceBaseEntity, ButtonEntity):
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self.async_send_api_call(

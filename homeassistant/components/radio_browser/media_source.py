@@ -1,6 +1,7 @@
 """Expose Radio Browser as a media source."""
 
 import mimetypes
+from typing import override
 
 from aiodns.error import DNSError
 import pycountry
@@ -53,10 +54,11 @@ class RadioMediaSource(MediaSource):
         """Return the radio browser."""
         return self.entry.runtime_data
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve selected Radio station to a streaming URL."""
 
-        if self.entry.state != ConfigEntryState.LOADED:
+        if self.entry.state is not ConfigEntryState.LOADED:
             raise Unresolvable(
                 translation_domain=DOMAIN,
                 translation_key="config_entry_not_ready",
@@ -80,13 +82,14 @@ class RadioMediaSource(MediaSource):
 
         return PlayMedia(station.url_resolved, mime_type)
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,
     ) -> BrowseMediaSource:
         """Return media."""
 
-        if self.entry.state != ConfigEntryState.LOADED:
+        if self.entry.state is not ConfigEntryState.LOADED:
             raise BrowseError(
                 translation_domain=DOMAIN,
                 translation_key="config_entry_not_ready",
@@ -171,7 +174,8 @@ class RadioMediaSource(MediaSource):
 
         # We show country in the root additionally, when there is no item
         if not item.identifier or category == "country":
-            # Trigger the lazy loading of the country database to happen inside the executor
+            # Trigger the lazy loading of the country database
+            # to happen inside the executor
             await self.hass.async_add_executor_job(lambda: len(pycountry.countries))
             countries = await radios.countries(order=Order.NAME)
             return [

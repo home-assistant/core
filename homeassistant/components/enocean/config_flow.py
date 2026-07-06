@@ -1,6 +1,7 @@
 """Config flows for the EnOcean integration."""
 
-from typing import Any
+import glob
+from typing import Any, override
 
 from enocean_async import Gateway
 import voluptuous as vol
@@ -67,6 +68,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         self.data: dict[str, Any] = {}
         self._ports: list[USBDevice] | None = None
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
         discovery_info.device = await self._async_set_unique_id(discovery_info)
@@ -122,6 +124,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         return self.async_abort(reason="invalid_dongle_path")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

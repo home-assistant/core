@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.weather import (
     Forecast,
@@ -64,46 +64,55 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
         )
 
     @property
+    @override
     def native_temperature(self) -> float | None:
         """Return the temperature."""
         return self.coordinator.data.current_conditions.temperature
 
     @property
+    @override
     def native_apparent_temperature(self) -> float | None:
         """Return the apparent temperature."""
         return self.coordinator.data.current_conditions.apparent_temperature
 
     @property
+    @override
     def humidity(self) -> int | None:
         """Return the humidity."""
         return self.coordinator.data.current_conditions.humidity
 
     @property
+    @override
     def native_pressure(self) -> float | None:
         """Return the pressure."""
         return self.coordinator.data.current_conditions.pressure
 
     @property
+    @override
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         return self.coordinator.data.current_conditions.wind_speed
 
     @property
+    @override
     def wind_bearing(self) -> int | None:
         """Return the wind bearing."""
         return self.coordinator.data.current_conditions.wind_bearing
 
     @property
+    @override
     def native_wind_gust_speed(self) -> float | None:
         """Return the wind gust speed."""
         return self.coordinator.data.current_conditions.wind_gust_speed
 
     @property
+    @override
     def cloud_coverage(self) -> int | None:
         """Return the cloud coverage."""
         return self.coordinator.data.current_conditions.cloud_coverage
 
     @property
+    @override
     def condition(self) -> str | None:
         """Return the current condition."""
         return self.coordinator.data.current_conditions.condition
@@ -125,9 +134,11 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
             cloud_coverage=forecast_data.cloud_coverage,
         )
 
+    @override
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast."""
-        # Using hourly data to create daily summaries, since daily data is not provided directly
+        # Using hourly data to create daily summaries, since
+        # daily data is not provided directly
         if not self.coordinator.data:
             return None
 
@@ -178,6 +189,7 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
 
         return daily_forecasts
 
+    @override
     async def async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast."""
         if not self.coordinator.data:

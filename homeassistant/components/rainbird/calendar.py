@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import logging
+from typing import override
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
@@ -65,6 +66,7 @@ class RainBirdCalendarEntity(
             self._attr_name = device_name
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         schedule = self.coordinator.data
@@ -83,6 +85,7 @@ class RainBirdCalendarEntity(
             rrule=program_event.rrule_str,
         )
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
@@ -106,6 +109,7 @@ class RainBirdCalendarEntity(
             for program_event in cursor
         ]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()

@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.update import (
     UpdateEntity,
@@ -62,6 +62,7 @@ class ServerStatusUpdate(LMSStatusEntity, UpdateEntity):
     """LMS Status update sensors via cooridnatior."""
 
     @property
+    @override
     def latest_version(self) -> str:
         """LMS Status directly from coordinator data."""
         return str(self.coordinator.data[self.entity_description.key])
@@ -73,16 +74,19 @@ class ServerStatusUpdateLMS(ServerStatusUpdate):
     title: str = SERVER_MODEL
 
     @property
+    @override
     def installed_version(self) -> str:
         """LMS Status directly from coordinator data."""
         return str(self.coordinator.data[STATUS_QUERY_VERSION])
 
     @property
+    @override
     def release_url(self) -> str:
         """LMS Update info page."""
         return str(self.coordinator.lms.generate_image_url("updateinfo.html"))
 
     @property
+    @override
     def release_summary(self) -> None | str:
         """If install is supported give some info."""
         return (
@@ -102,6 +106,7 @@ class ServerStatusUpdatePlugins(ServerStatusUpdate):
     _cancel_update: Callable | None = None
 
     @property
+    @override
     def supported_features(self) -> UpdateEntityFeature:
         """Support install if we can."""
         return (
@@ -111,17 +116,21 @@ class ServerStatusUpdatePlugins(ServerStatusUpdate):
         )
 
     @property
+    @override
     def release_summary(self) -> None | str:
         """If install is supported give some info."""
         rs = self.coordinator.data[UPDATE_PLUGINS_RELEASE_SUMMARY]
         return (
-            (rs or "")
-            + "The Plugins will be updated on the next restart triggered by selecting the Update button. Allow enough time for the service to restart. It will become briefly unavailable."
+            (rs or "") + "The Plugins will be updated on the next restart"
+            " triggered by selecting the Update button."
+            " Allow enough time for the service to restart."
+            " It will become briefly unavailable."
             if self.coordinator.can_server_restart
             else rs
         )
 
     @property
+    @override
     def release_url(self) -> str:
         """LMS Plugins info page."""
         return str(
@@ -131,6 +140,7 @@ class ServerStatusUpdatePlugins(ServerStatusUpdate):
         )
 
     @property
+    @override
     def in_progress(self) -> bool:
         """Are we restarting."""
         if self.latest_version == self.installed_version and self.restart_triggered:
@@ -140,6 +150,7 @@ class ServerStatusUpdatePlugins(ServerStatusUpdate):
             self.restart_triggered = False
         return self.restart_triggered
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:

@@ -25,9 +25,8 @@ from homeassistant.components.recorder.models import (
     StatisticResult,
 )
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     REVOLUTIONS_PER_MINUTE,
+    EntityStateAttribute,
     UnitOfIrradiance,
     UnitOfSoundPressure,
     UnitOfVolume,
@@ -46,10 +45,10 @@ from homeassistant.util.unit_conversion import BaseUnitConverter
 
 from .const import (
     AMBIGUOUS_UNITS,
-    ATTR_LAST_RESET,
-    ATTR_STATE_CLASS,
     DOMAIN,
     UNIT_CONVERTERS,
+    SensorEntityCapabilityAttribute,
+    SensorEntityStateAttribute,
     SensorStateClass,
     UnitOfVolumeFlowRate,
 )
@@ -92,7 +91,8 @@ WARN_NEGATIVE: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_total_increasing_nega
 # Keep track of entities for which a warning about unsupported unit has been logged
 WARN_UNSUPPORTED_UNIT: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_unsupported_unit")
 WARN_UNSTABLE_UNIT: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_unstable_unit")
-# Keep track of entities for which a warning about statistics mean algorithm change has been logged
+# Keep track of entities for which a warning about
+# statistics mean algorithm change has been logged
 WARN_STATISTICS_MEAN_CHANGED: HassKey[set[str]] = HassKey(
     f"{DOMAIN}_warn_statistics_mean_change"
 )
@@ -113,7 +113,11 @@ def _get_sensor_states(hass: HomeAssistant) -> list[State]:
     return [
         state
         for state in hass.states.all(DOMAIN)
-        if (state_class := state.attributes.get(ATTR_STATE_CLASS))
+        if (
+            state_class := state.attributes.get(
+                SensorEntityCapabilityAttribute.STATE_CLASS
+            )
+        )
         and (
             type(state_class) is SensorStateClass
             or try_parse_enum(SensorStateClass, state_class)
@@ -165,8 +169,8 @@ def _time_weighted_circular_mean(
 ) -> tuple[float, float]:
     """Calculate a time weighted circular mean.
 
-    The circular mean is calculated by weighting the states by duration in seconds between
-    state changes.
+    The circular mean is calculated by weighting the states
+    by duration in seconds between state changes.
     Note: there's no interpolation of values between state changes.
     """
     old_fstate: float | None = None
@@ -199,7 +203,10 @@ def _time_weighted_circular_mean(
 
 def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
     """Return a set of all units."""
-    return {item[1].attributes.get(ATTR_UNIT_OF_MEASUREMENT) for item in fstates}
+    return {
+        item[1].attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+        for item in fstates
+    }
 
 
 def _equivalent_units(
@@ -289,8 +296,8 @@ def _normalize_states(
     """Normalize units."""
     state_unit: str | None = None
     statistics_unit: str | None
-    state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-    device_class = fstates[0][1].attributes.get(ATTR_DEVICE_CLASS)
+    state_unit = fstates[0][1].attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+    device_class = fstates[0][1].attributes.get(EntityStateAttribute.DEVICE_CLASS)
     old_metadata = old_metadatas[entity_id][1] if entity_id in old_metadatas else None
     equivalent_units_for_entity = _collect_equivalent_units_for_entity(
         custom_units_for_entity
@@ -345,7 +352,7 @@ def _normalize_states(
 
         if state_unit != statistics_unit:
             unit_class = _get_unit_class(
-                fstates[0][1].attributes.get(ATTR_DEVICE_CLASS),
+                fstates[0][1].attributes.get(EntityStateAttribute.DEVICE_CLASS),
                 state_unit,
             )
         return unit_class, state_unit, fstates
@@ -356,7 +363,7 @@ def _normalize_states(
     valid_units = converter.VALID_UNITS
 
     for fstate, state in fstates:
-        state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
         # Exclude states with unsupported unit from statistics
         if state_unit not in valid_units:
             if WARN_UNSUPPORTED_UNIT not in hass.data:
@@ -407,11 +414,12 @@ def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
 def warn_dip(
     hass: HomeAssistant, entity_id: str, state: State, previous_fstate: float
 ) -> None:
-    """Log a warning once if a sensor with state class TOTAL_INCREASING has a decreasing value.
+    """Log a warning once if a sensor with TOTAL_INCREASING has a decreasing value.
 
-    The log will be suppressed until two dips have been seen to prevent warning due to
-    rounding issues with databases storing the state as a single precision float, which
-    was fixed in recorder DB version 20.
+    The log will be suppressed until two dips have been seen
+    to prevent warning due to rounding issues with databases
+    storing the state as a single precision float, which was
+    fixed in recorder DB version 20.
     """
     if SEEN_DIP not in hass.data:
         hass.data[SEEN_DIP] = set()
@@ -443,7 +451,7 @@ def warn_dip(
 
 
 def warn_negative(hass: HomeAssistant, entity_id: str, state: State) -> None:
-    """Log a warning once if a sensor with state class TOTAL_INCREASING has a negative value."""
+    """Log a warning once if a sensor with TOTAL_INCREASING has a negative value."""
     if WARN_NEGATIVE not in hass.data:
         hass.data[WARN_NEGATIVE] = set()
     if entity_id not in hass.data[WARN_NEGATIVE]:
@@ -488,7 +496,9 @@ def reset_detected(
 def _wanted_statistics(sensor_states: list[State]) -> dict[str, _StatisticsConfig]:
     """Prepare a dict with wanted statistics for entities."""
     return {
-        state.entity_id: DEFAULT_STATISTICS[state.attributes[ATTR_STATE_CLASS]]
+        state.entity_id: DEFAULT_STATISTICS[
+            state.attributes[SensorEntityCapabilityAttribute.STATE_CLASS]
+        ]
         for state in sensor_states
     }
 
@@ -599,7 +609,9 @@ def compile_statistics(  # noqa: C901
         )
         if not valid_float_states:
             continue
-        state_class: str = _state.attributes[ATTR_STATE_CLASS]
+        state_class: str = _state.attributes[
+            SensorEntityCapabilityAttribute.STATE_CLASS
+        ]
         to_process.append(
             (entity_id, unit_class, statistics_unit, state_class, valid_float_states)
         )
@@ -662,7 +674,8 @@ def compile_statistics(  # noqa: C901
                     hass.data[WARN_STATISTICS_MEAN_CHANGED].add(entity_id)
                     _LOGGER.warning(
                         (
-                            "The statistics mean algorithm for %s have changed from %s to %s."
+                            "The statistics mean algorithm for %s have"
+                            " changed from %s to %s."
                             " Generation of long term statistics will be suppressed"
                             " unless it changes back or go to %s to delete the old"
                             " statistics"
@@ -728,7 +741,8 @@ def compile_statistics(  # noqa: C901
                     state_class != SensorStateClass.TOTAL_INCREASING
                     and (
                         last_reset := _last_reset_as_utc_isoformat(
-                            state.attributes.get("last_reset"), entity_id
+                            state.attributes.get(SensorEntityStateAttribute.LAST_RESET),
+                            entity_id,
                         )
                     )
                     != old_last_reset
@@ -828,7 +842,7 @@ def list_statistic_ids(
             continue
 
         attributes = state.attributes
-        state_class = attributes[ATTR_STATE_CLASS]
+        state_class = attributes[SensorEntityCapabilityAttribute.STATE_CLASS]
         provided_statistics = DEFAULT_STATISTICS[state_class]
         if (
             statistic_type is not None
@@ -838,7 +852,7 @@ def list_statistic_ids(
 
         if (
             (has_sum := "sum" in provided_statistics.types)
-            and ATTR_LAST_RESET not in attributes
+            and SensorEntityStateAttribute.LAST_RESET not in attributes
             and state_class == SensorStateClass.MEASUREMENT
         ):
             continue
@@ -847,8 +861,10 @@ def list_statistic_ids(
         if "mean" in provided_statistics.types:
             mean_type = provided_statistics.mean_type
 
-        unit = attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        unit_class = _get_unit_class(attributes.get(ATTR_DEVICE_CLASS), unit)
+        unit = attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+        unit_class = _get_unit_class(
+            attributes.get(EntityStateAttribute.DEVICE_CLASS), unit
+        )
 
         result[entity_id] = {
             "mean_type": mean_type,
@@ -875,11 +891,12 @@ def _update_issues(
         entity_id = state.entity_id
         numeric = _is_numeric(state)
         state_class = try_parse_enum(
-            SensorStateClass, state.attributes.get(ATTR_STATE_CLASS)
+            SensorStateClass,
+            state.attributes.get(SensorEntityCapabilityAttribute.STATE_CLASS),
         )
-        state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
         state_unit_class = _get_unit_class(
-            state.attributes.get(ATTR_DEVICE_CLASS),
+            state.attributes.get(EntityStateAttribute.DEVICE_CLASS),
             state_unit,
         )
 
@@ -1045,7 +1062,8 @@ def validate_statistics(
     for state in sensor_states:
         entity_id = state.entity_id
         state_class = try_parse_enum(
-            SensorStateClass, state.attributes.get(ATTR_STATE_CLASS)
+            SensorStateClass,
+            state.attributes.get(SensorEntityCapabilityAttribute.STATE_CLASS),
         )
 
         if entity_id in metadatas:

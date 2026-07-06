@@ -2,10 +2,13 @@
 
 from collections.abc import Hashable, Iterable
 from enum import Enum
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
+from homeassistant.const import CONF_PAYLOAD
+
+from ..const import CONF_PAYLOAD_LENGTH, CONF_VALUE
 from ..dpt import HaDptClass, get_supported_dpts
 from ..validation import ga_validator, maybe_ga_validator, sync_state_validator
 from .const import CONF_DPT, CONF_GA_PASSIVE, CONF_GA_STATE, CONF_GA_WRITE
@@ -34,14 +37,16 @@ class KNXSelectorBase:
 
     def serialize(self) -> dict[str, Any]:
         """Serialize the selector to a dictionary."""
-        # don't use "name", "default", "optional" or "required" in base output
-        # as it will be overwritten by the parent keys attributes
-        # "schema" will be overwritten by knx serializer if `self.serialize_subschema` is True
+        # don't use "name", "default", "optional" or
+        # "required" in base output as it will be
+        # overwritten by the parent keys attributes
+        # "schema" will be overwritten by knx serializer
+        # if `self.serialize_subschema` is True
         raise NotImplementedError("Subclasses must implement this method.")
 
 
 class KNXSectionFlat(KNXSelectorBase):
-    """Generate a schema-neutral section with title and description for the following siblings."""
+    """Generate a schema-neutral section with title and description."""
 
     selector_type = "knx_section_flat"
     schema = vol.Schema(None)
@@ -53,6 +58,7 @@ class KNXSectionFlat(KNXSelectorBase):
         """Initialize the section."""
         self.collapsible = collapsible
 
+    @override
     def serialize(self) -> dict[str, Any]:
         """Serialize the selector to a dictionary."""
         return {
@@ -76,6 +82,7 @@ class KNXSection(KNXSelectorBase):
         self.collapsible = collapsible
         self.schema = vol.Schema(schema)
 
+    @override
     def serialize(self) -> dict[str, Any]:
         """Serialize the section to a dictionary."""
         return {
@@ -95,6 +102,7 @@ class GroupSelectOption(KNXSelectorBase):
         self.translation_key = translation_key
         self.schema = vol.Schema(schema)
 
+    @override
     def serialize(self) -> dict[str, Any]:
         """Serialize the group select option to a dictionary."""
         return {
@@ -110,6 +118,7 @@ class GroupSelectSchema(vol.Any):
     show proper invalid markers for sub-schema items in the UI.
     """
 
+    @override
     def _exec(self, funcs: Iterable, v: Any, path: list[Hashable] | None = None) -> Any:
         """Execute the validation functions."""
         errors: list[vol.Invalid] = []
@@ -143,6 +152,7 @@ class GroupSelect(KNXSelectorBase):
         self.collapsible = collapsible
         self.schema = GroupSelectSchema(*options)
 
+    @override
     def serialize(self) -> dict[str, Any]:
         """Serialize the group select to a dictionary."""
         return {
@@ -152,7 +162,11 @@ class GroupSelect(KNXSelectorBase):
 
 
 class GASelector(KNXSelectorBase):
-    """Selector for a KNX group address structure."""
+    """Selector for a KNX group address structure.
+
+    `dpt_required` optional dpt only apply to dpt-class lists, enums are always required.
+    `valid_dpt` is used in frontend to filter dropdown menu - no validation is done.
+    """
 
     selector_type = "knx_group_address"
 
@@ -164,6 +178,7 @@ class GASelector(KNXSelectorBase):
         write_required: bool = False,
         state_required: bool = False,
         dpt: type[Enum] | list[HaDptClass] | None = None,
+        dpt_required: bool = True,
         valid_dpt: str | Iterable[str] | None = None,
     ) -> None:
         """Initialize the group address selector."""
@@ -173,11 +188,12 @@ class GASelector(KNXSelectorBase):
         self.write_required = write_required
         self.state_required = state_required
         self.dpt = dpt
-        # valid_dpt is used in frontend to filter dropdown menu - no validation is done
+        self.dpt_required = dpt_required
         self.valid_dpt = (valid_dpt,) if isinstance(valid_dpt, str) else valid_dpt
 
         self.schema = self.build_schema()
 
+    @override
     def serialize(self) -> dict[str, Any]:
         """Serialize the selector to a dictionary."""
 
@@ -188,6 +204,7 @@ class GASelector(KNXSelectorBase):
         }
         if self.dpt is not None:
             if isinstance(self.dpt, list):
+                # optional / required is not passed to FE - only validated in BE
                 options["dptClasses"] = self.dpt
             else:
                 options["dptSelect"] = [
@@ -259,7 +276,8 @@ class GASelector(KNXSelectorBase):
         """Add DPT validator to the schema."""
         if self.dpt is not None:
             if isinstance(self.dpt, list):
-                schema[vol.Required(CONF_DPT)] = vol.In(get_supported_dpts())
+                marker = vol.Required if self.dpt_required else vol.Optional
+                schema[marker(CONF_DPT)] = vol.In(get_supported_dpts())
             else:
                 schema[vol.Required(CONF_DPT)] = vol.In(
                     {item.value for item in self.dpt}
@@ -278,6 +296,7 @@ class SyncStateSelector(KNXSelectorBase):
         """Initialize the sync state validator."""
         self.allow_false = allow_false
 
+    @override
     def serialize(self) -> dict[str, Any]:
         """Serialize the selector to a dictionary."""
         return {
@@ -285,8 +304,70 @@ class SyncStateSelector(KNXSelectorBase):
             "allow_false": self.allow_false,
         }
 
+    @override
     def __call__(self, data: Any) -> Any:
         """Validate the passed data."""
         if not self.allow_false and not data:
             raise vol.Invalid(f"Sync state cannot be {data}")
         return self.schema(data)
+
+
+class KnxPayloadSelector(KNXSelectorBase):
+    """Selector for KNX payload configuration.
+
+    Raw payloads are stored as hex strings.
+    """
+
+    schema = vol.Any(
+        {
+            vol.Required(CONF_VALUE): object,
+        },
+        {
+            vol.Required(CONF_PAYLOAD): str,
+            vol.Required(CONF_PAYLOAD_LENGTH): vol.All(int, vol.Range(min=0, max=14)),
+        },
+    )
+    selector_type = "knx_payload"
+
+    def __init__(self, ga_path: str) -> None:
+        """Initialize the KNX payload selector."""
+        self.ga_path = ga_path
+
+    @override
+    def serialize(self) -> dict[str, Any]:
+        """Serialize the selector to a dictionary."""
+        return {
+            "type": self.selector_type,
+            "ga_path": self.ga_path,
+        }
+
+    @override
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed data."""
+        validated = self.schema(data)
+        if CONF_PAYLOAD in validated and CONF_PAYLOAD_LENGTH in validated:
+            payload = validated[CONF_PAYLOAD]
+            payload_length = validated[CONF_PAYLOAD_LENGTH]
+            try:
+                int_payload = int(payload, 16)
+            except ValueError as ex:
+                raise vol.Invalid(f"Invalid payload format: {payload}") from ex
+            validated[CONF_PAYLOAD] = hex(int_payload)  # prepends "0x" if not present
+
+            if int_payload < 0:
+                raise vol.Invalid(f"Payload cannot be negative: {payload}")
+            if payload_length == 0:
+                # DPT 1,2,3 is marked length 0, has 6 bit size
+                if int_payload > 63:
+                    raise vol.Invalid(
+                        f"Payload exceeds DPT 1,2,3 limit of 0x3f (63): {payload}"
+                    )
+            else:
+                max_payload = (1 << (payload_length * 8)) - 1
+                if int_payload > max_payload:
+                    raise vol.Invalid(
+                        f"Payload {payload} exceeds possible maximum for "
+                        f"length {payload_length}: {hex(max_payload)}"
+                    )
+        # CONF_VALUE branch needs subvalidator as we don't have the DPT available here
+        return validated

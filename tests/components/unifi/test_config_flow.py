@@ -15,6 +15,7 @@ from homeassistant.components.unifi.const import (
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
+    CONF_MORE_OPTIONS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
@@ -318,6 +319,16 @@ async def test_reauth_flow_update_configuration(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
+    context = next(
+        flow["context"]
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
+    )
+    assert context["title_placeholders"] == {
+        "host": config_entry.data[CONF_HOST],
+        "name": config_entry.title,
+    }
+
     with patch(
         "homeassistant.components.unifi.UnifiHub.available", new_callable=PropertyMock
     ) as ws_mock:
@@ -377,70 +388,33 @@ async def test_reauth_flow_update_configuration_on_not_loaded_entry(
 @pytest.mark.parametrize("device_payload", [DEVICES])
 @pytest.mark.parametrize("wlan_payload", [WLANS])
 @pytest.mark.parametrize("dpi_group_payload", [DPI_GROUPS])
-async def test_advanced_option_flow(
+async def test_option_flow(
     hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
-    """Test advanced config flow options."""
+    """Test config flow options."""
     config_entry = config_entry_setup
 
-    result = await hass.config_entries.options.async_init(
-        config_entry.entry_id, context={"show_advanced_options": True}
-    )
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "configure_entity_sources"
-    assert not result["last_step"]
-    assert list(result["data_schema"].schema[CONF_CLIENT_SOURCE].options.keys()) == [
-        "00:00:00:00:00:01"
-    ]
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "device_tracker"
-    assert not result["last_step"]
-    assert list(result["data_schema"].schema[CONF_SSID_FILTER].options.keys()) == [
-        "",
-        "SSID 1",
-        "SSID 2",
-        "SSID 2_IOT",
-        "SSID 3",
-        "SSID 4",
-    ]
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_TRACK_CLIENTS: False,
-            CONF_TRACK_WIRED_CLIENTS: False,
-            CONF_TRACK_DEVICES: False,
-            CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3", "SSID 4"],
-            CONF_DETECTION_TIME: 100,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "client_control"
-    assert not result["last_step"]
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
-            CONF_DPI_RESTRICTIONS: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "statistics_sensors"
+    assert result["step_id"] == "init"
     assert result["last_step"]
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_ALLOW_BANDWIDTH_SENSORS: True,
-            CONF_ALLOW_UPTIME_SENSORS: True,
+            CONF_TRACK_CLIENTS: False,
+            CONF_TRACK_DEVICES: False,
+            CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
+            CONF_MORE_OPTIONS: {
+                CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"],
+                CONF_TRACK_WIRED_CLIENTS: False,
+                CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3", "SSID 4"],
+                CONF_DETECTION_TIME: 100,
+                CONF_DPI_RESTRICTIONS: False,
+                CONF_ALLOW_BANDWIDTH_SENSORS: True,
+                CONF_ALLOW_UPTIME_SENSORS: True,
+            },
         },
     )
 
@@ -460,44 +434,6 @@ async def test_advanced_option_flow(
     }
 
 
-@pytest.mark.parametrize("client_payload", [CLIENTS])
-async def test_simple_option_flow(
-    hass: HomeAssistant, config_entry_setup: MockConfigEntry
-) -> None:
-    """Test simple config flow options."""
-    config_entry = config_entry_setup
-
-    result = await hass.config_entries.options.async_init(
-        config_entry.entry_id, context={"show_advanced_options": False}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "simple_options"
-    assert result["last_step"]
-
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
-    ) as mock_reload:
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_TRACK_CLIENTS: False,
-                CONF_TRACK_DEVICES: False,
-                CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
-            },
-        )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_TRACK_CLIENTS: False,
-        CONF_TRACK_DEVICES: False,
-        CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
-    }
-    # Check there is no reload on updating these options
-    assert mock_reload.call_count == 0
-
-
 async def test_discover_unifi_positive(hass: HomeAssistant) -> None:
     """Verify positive run of UniFi discovery."""
     with patch("socket.gethostbyname", return_value="192.168.1.1"):
@@ -513,7 +449,9 @@ async def test_discover_unifi_negative(hass: HomeAssistant) -> None:
 INTEGRATION_DISCOVERY_INFO = {
     "source_ip": "10.0.0.1",
     "hw_addr": "e0:63:da:20:14:a9",
+    "name": "Dream Machine Pro",
     "hostname": "UniFi-Dream-Machine",
+    "product_name": "UDMPRO",
     "platform": "UCG-Ultra",
     "direct_connect_domain": "x.ui.direct",
 }
@@ -535,11 +473,52 @@ async def test_flow_integration_discovery(hass: HomeAssistant) -> None:
         for flow in hass.config_entries.flow.async_progress()
         if flow["flow_id"] == result["flow_id"]
     )
-    assert context["title_placeholders"] == {
-        "host": "x.ui.direct",
-        "site": "default",
-    }
     assert context["configuration_url"] == "https://x.ui.direct"
+
+
+@pytest.mark.parametrize(
+    ("extra_info", "expected_name"),
+    [
+        (
+            {
+                "name": "Dream Machine Pro",
+                "hostname": "UniFi-Dream-Machine",
+                "product_name": "UDMPRO",
+            },
+            "Dream Machine Pro",
+        ),
+        (
+            {"hostname": "UniFi-Dream-Machine", "product_name": "UDMPRO"},
+            "UniFi-Dream-Machine",
+        ),
+        ({"product_name": "UDMPRO"}, "UDMPRO"),
+        ({}, "UniFi Network"),
+    ],
+    ids=["name", "hostname", "product_name", "fallback"],
+)
+async def test_flow_integration_discovery_title(
+    hass: HomeAssistant, extra_info: dict[str, str], expected_name: str
+) -> None:
+    """Test discovery title priority: name, hostname, product_name, then fallback."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            "source_ip": "10.0.0.1",
+            "hw_addr": "e0:63:da:20:14:a9",
+            "direct_connect_domain": "x.ui.direct",
+            **extra_info,
+        },
+    )
+    context = next(
+        flow["context"]
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
+    )
+    assert context["title_placeholders"] == {
+        "host": "10.0.0.1",
+        "name": expected_name,
+    }
 
 
 @pytest.mark.usefixtures("config_entry")
@@ -571,16 +550,6 @@ async def test_flow_integration_discovery_uses_direct_connect_domain(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    context = next(
-        flow["context"]
-        for flow in hass.config_entries.flow.async_progress()
-        if flow["flow_id"] == result["flow_id"]
-    )
-    assert context["title_placeholders"] == {
-        "host": "x.ui.direct",
-        "site": "default",
-    }
-
     schema_defaults = {
         marker.schema: marker.default()
         for marker in result["data_schema"].schema
@@ -611,7 +580,7 @@ async def test_flow_integration_discovery_aborts_on_direct_connect_host(
 async def test_flow_integration_discovery_updates_existing_entry_on_rediscovery(
     hass: HomeAssistant,
 ) -> None:
-    """Test that an existing entry's host is refreshed when rediscovered with the same MAC."""
+    """Test existing entry's host is refreshed when rediscovered with same MAC."""
     old_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=format_mac(INTEGRATION_DISCOVERY_INFO["hw_addr"]),
@@ -673,6 +642,6 @@ async def test_flow_integration_discovery_gets_form_with_ignored_entry(
         if flow["flow_id"] == result["flow_id"]
     )
     assert context["title_placeholders"] == {
-        "host": "x.ui.direct",
-        "site": "default",
+        "host": "10.0.0.1",
+        "name": "Dream Machine Pro",
     }

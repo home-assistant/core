@@ -1,7 +1,7 @@
 """Config flow for Glances."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from glances_api.exceptions import (
     GlancesApiAuthorizationError,
@@ -78,6 +78,7 @@ class GlancesFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
