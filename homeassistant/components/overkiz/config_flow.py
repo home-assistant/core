@@ -527,7 +527,7 @@ class OverkizConfigFlow(
         data = {
             CONF_HUB: Server.SOMFY,
             CONF_API_TYPE: APIType.CLOUD,
-            # Stored to pre-fill the login form on reauth; the password is never persisted.
+            # Only stored to prefill on reauth
             CONF_USERNAME: self._user,
             CONF_REFRESH_TOKEN: credentials.refresh_token,
             CONF_SITE_OID: credentials.site_oid,
