@@ -103,5 +103,11 @@
     "unknown_device": {
       "message": "Unknown or unsupported device type for {device_id}: {error}"
     }
+  },
+  "issues": {
+    "meter_locked": {
+      "description": "The electricity meter {device_name} is not providing high-resolution data. You need to unlock the meter by entering the PIN provided by your electricity company. See the linked instructions for more details.",
+      "title": "Meter PIN Required"
+    }
   }
 }

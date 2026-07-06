@@ -69,9 +69,7 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues:
-    status: exempt
-    comment: This integration doesn't have any cases where raising an issue is needed.
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: One device per config entry; the device is removed when the entry is removed.

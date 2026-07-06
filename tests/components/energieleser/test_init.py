@@ -6,6 +6,7 @@ from energieleser import (
     EnergieleserConnectionError,
     EnergieleserError,
     EnergieleserUnknownDeviceError,
+    StromleserOneDevice,
 )
 import pytest
 
@@ -13,7 +14,7 @@ from homeassistant.components.energieleser.const import CONF_SW_VERSION, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .conftest import STROMLESER_DEVICE_ID, STROMLESER_SW_VERSION
 
@@ -89,3 +90,39 @@ async def test_device_exposes_discovery_sw_version(
     )
     assert device is not None
     assert device.sw_version == STROMLESER_SW_VERSION
+
+
+async def test_meter_locked_repair_issue(
+    hass: HomeAssistant,
+    mock_energieleser_client: AsyncMock,
+    mock_stromleser_device: StromleserOneDevice,
+    mock_locked_stromleser_device: StromleserOneDevice,
+    mock_stromleser_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test repair issue is created when meter is locked and deleted when unlocked."""
+    mock_energieleser_client.get_device.return_value = mock_locked_stromleser_device
+    mock_stromleser_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_stromleser_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_id = f"pin_locked_{mock_stromleser_config_entry.entry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_key == "meter_locked"
+    assert (
+        issue.learn_more_url
+        == "https://docs.energieleser.de/en/docs/stromleser-one/installation/preparation#unlock-meter-in-extended-mode"
+    )
+    assert issue.translation_placeholders == {
+        "device_name": mock_stromleser_config_entry.title,
+    }
+
+    # Simulate meter unlocking on next update
+    mock_energieleser_client.get_device.return_value = mock_stromleser_device
+    coordinator = mock_stromleser_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

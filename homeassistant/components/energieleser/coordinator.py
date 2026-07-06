@@ -9,11 +9,13 @@ from energieleser import (
     EnergieleserDevice,
     EnergieleserError,
     EnergieleserUnknownDeviceError,
+    StromleserOneDevice,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
@@ -77,4 +79,24 @@ class EnergieleserCoordinator(DataUpdateCoordinator[EnergieleserDevice]):
                     "error": str(err),
                 },
             ) from err
+
+        if isinstance(device, StromleserOneDevice):
+            issue_id = f"pin_locked_{self.config_entry.entry_id}"
+            if getattr(device, "pin_locked", False):
+                ir.async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    issue_id,
+                    is_fixable=False,
+                    is_persistent=False,
+                    learn_more_url="https://docs.energieleser.de/en/docs/stromleser-one/installation/preparation#unlock-meter-in-extended-mode",
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="meter_locked",
+                    translation_placeholders={
+                        "device_name": self.config_entry.title,
+                    },
+                )
+            else:
+                ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+
         return device

@@ -20,6 +20,7 @@
       'energy_import_tariff_2': None,
       'energy_import_tariff_3': None,
       'energy_import_tariff_4': None,
+      'pin_locked': False,
       'power_absolute': None,
       'power_active': dict({
         'unit': 'W',
