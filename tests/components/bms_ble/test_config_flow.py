@@ -172,7 +172,7 @@ async def test_device_setup(
 
     # check correct unique_id format of all sensor entries
     for entry in entities.get_entries_for_config_entry_id(result_detail.entry_id):
-        assert entry.unique_id.startswith(f"{DOMAIN}-cc:cc:cc:cc:cc:cc-")
+        assert entry.unique_id.startswith("cc:cc:cc:cc:cc:cc-")
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
