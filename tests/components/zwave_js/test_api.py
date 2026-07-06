@@ -5154,7 +5154,7 @@ async def test_subscribe_config_parameter_updates(
     )
     client.driver.controller.receive_event(event)
     msg = await ws_client.receive_json()
-    # The initial state is no longer right since the temperature has been updated
+    # The initial state is no longer right since a config parameter has been updated
     assert msg["event"] != initial_state
     assert msg["event"]["52-112-0-2"] == 1
 
