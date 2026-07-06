@@ -6296,6 +6296,12 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "rtl_433": {
+      "name": "rtl_433",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "rtorrent": {
       "name": "rTorrent",
       "integration_type": "hub",
