@@ -5,6 +5,7 @@
     'capabilities': list([
       'AUDIO_PLAYER',
       'MICROPHONE',
+      'ALEXA_DEVICE_REBOOT',
     ]),
     'device cluster members': dict({
       'echo_test_serial_number': 'echo_test_device_id',
@@ -43,6 +44,7 @@
           'capabilities': list([
             'AUDIO_PLAYER',
             'MICROPHONE',
+            'ALEXA_DEVICE_REBOOT',
           ]),
           'device cluster members': dict({
             'echo_test_serial_number': 'echo_test_device_id',

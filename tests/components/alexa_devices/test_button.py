@@ -14,7 +14,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
 
 from . import setup_integration
-from .const import TEST_USERNAME
+from .const import TEST_DEVICE_1, TEST_USERNAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -94,3 +94,21 @@ async def test_dynamic_entities(
     for routine in set(initial_routine) - set(updated_routines):
         entity_id = f"button.{slugify(TEST_USERNAME)}_{slugify(routine)}"
         assert hass.states.get(entity_id) is None
+
+
+async def test_restart_button(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test restart button."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: f"button.{slugify(TEST_DEVICE_1.account_name)}_restart"},
+        blocking=True,
+    )
+    mock_amazon_devices_client.restart_device.assert_called_once()
