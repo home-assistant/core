@@ -187,10 +187,52 @@ async def test_async_setup_entry_applies_options(
     )
 
 
+async def test_async_setup_entry_registers_bypass_services(
+    hass: HomeAssistant, fake_zones
+) -> None:
+    """Test the bypass/unbypass services target the correct zone's client."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 5007},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        mock.patch("homeassistant.components.nx584.client.Client") as mock_client_cls,
+        mock.patch("homeassistant.components.nx584.binary_sensor.NX584Watcher"),
+    ):
+        mock_client = mock_client_cls.return_value
+        mock_client.list_zones.return_value = fake_zones
+        mock_client.list_partitions.return_value = [
+            {"armed": False, "condition_flags": []}
+        ]
+        mock_client.get_version.return_value = "1.1"
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            DOMAIN,
+            "bypass",
+            {"entity_id": "binary_sensor.front"},
+            blocking=True,
+        )
+        mock_client.set_bypass.assert_called_once_with(1, True)
+
+        mock_client.set_bypass.reset_mock()
+        await hass.services.async_call(
+            DOMAIN,
+            "unbypass",
+            {"entity_id": "binary_sensor.front"},
+            blocking=True,
+        )
+        mock_client.set_bypass.assert_called_once_with(1, False)
+
+
 def test_nx584_zone_sensor_normal() -> None:
     """Test for the NX584 zone sensor."""
     zone = {"number": 1, "name": "foo", "state": True}
-    sensor = nx584.NX584ZoneSensor(zone, "motion")
+    sensor = nx584.NX584ZoneSensor(zone, "motion", mock.MagicMock())
     assert sensor.name == "foo"
     assert not sensor.should_poll
     assert sensor.is_on
@@ -204,7 +246,7 @@ def test_nx584_zone_sensor_normal() -> None:
 def test_nx584_zone_sensor_bypassed() -> None:
     """Test for the NX584 zone sensor."""
     zone = {"number": 1, "name": "foo", "state": True, "bypassed": True}
-    sensor = nx584.NX584ZoneSensor(zone, "motion")
+    sensor = nx584.NX584ZoneSensor(zone, "motion", mock.MagicMock())
     assert sensor.name == "foo"
     assert not sensor.should_poll
     assert sensor.is_on
@@ -217,14 +259,36 @@ def test_nx584_zone_sensor_bypassed() -> None:
     assert not sensor.extra_state_attributes["bypassed"]
 
 
+def test_nx584_zone_sensor_zone_bypass() -> None:
+    """Test that zone_bypass calls set_bypass with True."""
+    zone = {"number": 3, "name": "foo", "state": True}
+    client = mock.MagicMock()
+    sensor = nx584.NX584ZoneSensor(zone, "motion", client)
+
+    sensor.zone_bypass()
+
+    client.set_bypass.assert_called_once_with(3, True)
+
+
+def test_nx584_zone_sensor_zone_unbypass() -> None:
+    """Test that zone_unbypass calls set_bypass with False."""
+    zone = {"number": 3, "name": "foo", "state": True}
+    client = mock.MagicMock()
+    sensor = nx584.NX584ZoneSensor(zone, "motion", client)
+
+    sensor.zone_unbypass()
+
+    client.set_bypass.assert_called_once_with(3, False)
+
+
 @mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
 def test_nx584_watcher_process_zone_event(mock_update) -> None:
     """Test the processing of zone events."""
     zone1 = {"number": 1, "name": "foo", "state": True}
     zone2 = {"number": 2, "name": "bar", "state": True}
     zones = {
-        1: nx584.NX584ZoneSensor(zone1, "motion"),
-        2: nx584.NX584ZoneSensor(zone2, "motion"),
+        1: nx584.NX584ZoneSensor(zone1, "motion", mock.MagicMock()),
+        2: nx584.NX584ZoneSensor(zone2, "motion", mock.MagicMock()),
     }
     watcher = nx584.NX584Watcher(None, zones)
     watcher._process_zone_event({"zone": 1, "zone_state": False})
@@ -236,7 +300,7 @@ def test_nx584_watcher_process_zone_event(mock_update) -> None:
 def test_nx584_watcher_process_zone_event_updates_bypass(mock_update) -> None:
     """Test the processing of zone events updates bypass state."""
     zone = {"number": 1, "name": "foo", "state": True, "bypassed": False}
-    zones = {1: nx584.NX584ZoneSensor(zone, "motion")}
+    zones = {1: nx584.NX584ZoneSensor(zone, "motion", mock.MagicMock())}
     watcher = nx584.NX584Watcher(None, zones)
 
     watcher._process_zone_event(
@@ -321,7 +385,7 @@ def test_nx584_watcher_run_marks_zones_unavailable_on_connection_error(
 ) -> None:
     """Test zone sensors are marked unavailable when the host disconnects."""
     zone_sensor = nx584.NX584ZoneSensor(
-        {"number": 1, "name": "foo", "state": False}, "motion"
+        {"number": 1, "name": "foo", "state": False}, "motion", mock.MagicMock()
     )
     watcher = nx584.NX584Watcher(None, {1: zone_sensor})
 
@@ -338,7 +402,7 @@ def test_nx584_watcher_run_marks_zones_unavailable_on_connection_error(
 def test_nx584_watcher_run_marks_zones_available_after_reconnect(mock_update) -> None:
     """Test zone sensors become available again once the panel is reachable."""
     zone_sensor = nx584.NX584ZoneSensor(
-        {"number": 1, "name": "foo", "state": False}, "motion"
+        {"number": 1, "name": "foo", "state": False}, "motion", mock.MagicMock()
     )
     zone_sensor._attr_available = False
 

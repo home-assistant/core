@@ -25,3 +25,15 @@ unbypass_zone:
         number:
           min: 1
           max: 255
+
+bypass:
+  target:
+    entity:
+      integration: nx584
+      domain: binary_sensor
+
+unbypass:
+  target:
+    entity:
+      integration: nx584
+      domain: binary_sensor
