@@ -24,7 +24,9 @@ async def _evaluate(
     hass: HomeAssistant, config: ConfigType, phase_value: float
 ) -> bool | None:
     """Validate and evaluate a condition for a mocked astral phase value."""
-    with patch("homeassistant.helpers.moon.moon.phase", return_value=phase_value):
+    with patch(
+        "homeassistant.components.moon.helpers.moon.phase", return_value=phase_value
+    ):
         config = await condition.async_validate_condition_config(hass, config)
         checker = await condition.async_from_config(hass, config)
         return checker(hass)

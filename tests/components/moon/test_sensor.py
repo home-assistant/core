@@ -4,11 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.moon import (
+from homeassistant.components.moon.helpers import (
     STATE_FIRST_QUARTER,
     STATE_FULL_MOON,
     STATE_LAST_QUARTER,
@@ -18,6 +14,10 @@ from homeassistant.helpers.moon import (
     STATE_WAXING_CRESCENT,
     STATE_WAXING_GIBBOUS,
 )
+from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -46,7 +46,9 @@ async def test_moon_day(
     """Test the Moon sensor."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.helpers.moon.moon.phase", return_value=moon_value):
+    with patch(
+        "homeassistant.components.moon.helpers.moon.phase", return_value=moon_value
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

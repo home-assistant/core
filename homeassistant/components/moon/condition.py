@@ -11,10 +11,10 @@ from homeassistant.helpers.condition import (
     ConditionCheckParams,
     ConditionConfig,
 )
-from homeassistant.helpers.moon import MOON_PHASES, is_waxing, moon_phase
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_PHASE
+from .helpers import MOON_PHASES, is_waxing, moon_phase
 
 _STATE_CONDITION_SCHEMA = vol.Schema({vol.Required(CONF_OPTIONS, default=dict): {}})
 _IS_PHASE_CONDITION_SCHEMA = vol.Schema(

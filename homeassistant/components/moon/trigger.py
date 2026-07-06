@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_change
-from homeassistant.helpers.moon import MOON_PHASES, moon_phase
 from homeassistant.helpers.trigger import (
     Trigger,
     TriggerActionRunner,
@@ -18,6 +17,7 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_PHASE
+from .helpers import MOON_PHASES, moon_phase
 
 PHASE_ANY = "any"
 

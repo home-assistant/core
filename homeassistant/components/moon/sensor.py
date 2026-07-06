@@ -5,9 +5,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.moon import MOON_PHASES, moon_phase
 
 from .const import DOMAIN
+from .helpers import MOON_PHASES, moon_phase
 
 
 async def async_setup_entry(

@@ -13,7 +13,7 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-_PHASE = "homeassistant.helpers.moon.moon.phase"
+_PHASE = "homeassistant.components.moon.helpers.moon.phase"
 
 
 @pytest.fixture(autouse=True)
