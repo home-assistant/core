@@ -5,7 +5,7 @@ from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -147,7 +147,7 @@ async def async_configure_service(hub: DeconzHub, data: ReadOnlyDict) -> None:
     try:
         await hub.api.request("put", field, json=data)
     except (TimeoutError, errors.pydeconzException) as err:
-        raise ServiceValidationError(
+        raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="configure_failed",
         ) from err
@@ -161,7 +161,7 @@ async def async_refresh_devices_service(hub: DeconzHub) -> None:
         await hub.api.refresh_state()
         hub.load_ignored_devices()
     except (TimeoutError, errors.pydeconzException) as err:
-        raise ServiceValidationError(
+        raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="device_refresh_failed",
         ) from err
