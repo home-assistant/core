@@ -959,6 +959,8 @@ async def test_websocket_status(
             "alexa_default_expose": DEFAULT_EXPOSED_DOMAINS,
             "alexa_report_state": True,
             "google_report_state": True,
+            "onboarding_completed": False,
+            "onboarding_postponed_until": None,
             "remote_allow_remote_enable": True,
             "remote_enabled": False,
             "cloud_ice_servers_enabled": True,
@@ -989,6 +991,7 @@ async def test_websocket_status(
         "remote_certificate": None,
         "http_use_ssl": False,
         "active_subscription": True,
+        "is_onboarding_postponed": False,
     }
 
 
@@ -1082,6 +1085,7 @@ async def test_websocket_update_preferences(
     assert cloud.client.prefs.google_secure_devices_pin is None
     assert cloud.client.prefs.remote_allow_remote_enable is True
     assert cloud.client.prefs.cloud_ice_servers_enabled is True
+    assert cloud.client.prefs.onboarding_completed is False
 
     client = await hass_ws_client(hass)
 
@@ -1094,6 +1098,7 @@ async def test_websocket_update_preferences(
             "tts_default_voice": ["en-GB", "RyanNeural"],
             "remote_allow_remote_enable": False,
             "cloud_ice_servers_enabled": False,
+            "onboarding_completed": True,
         }
     )
     response = await client.receive_json()
@@ -1105,6 +1110,7 @@ async def test_websocket_update_preferences(
     assert cloud.client.prefs.remote_allow_remote_enable is False
     assert cloud.client.prefs.cloud_ice_servers_enabled is False
     assert cloud.client.prefs.tts_default_voice == ("en-GB", "RyanNeural")
+    assert cloud.client.prefs.onboarding_completed is True
 
 
 @pytest.mark.parametrize(
@@ -1233,6 +1239,33 @@ async def test_websocket_update_preferences_no_token(
 
     assert not response["success"]
     assert response["error"]["code"] == "alexa_relink"
+
+
+async def test_websocket_cloud_onboarding_postpone(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+    setup_cloud: None,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test postponing onboarding."""
+    client = await hass_ws_client(hass)
+
+    assert cloud.client.prefs.is_onboarding_postponed is False
+
+    await client.send_json_auto_id({"type": "cloud/onboarding/postpone"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["is_onboarding_postponed"] is True
+    assert cloud.client.prefs.onboarding_postponed_until is not None
+
+    freezer.tick(datetime.timedelta(hours=25))
+
+    await client.send_json_auto_id({"type": "cloud/status"})
+    response = await client.receive_json()
+
+    assert response["result"]["is_onboarding_postponed"] is False
 
 
 async def test_enabling_webhook(
@@ -1789,6 +1822,7 @@ async def test_support_package_requires_admin(
         {"type": "cloud/update_prefs", "alexa_report_state": True},
         {"type": "cloud/cloudhook/create", "webhook_id": "mock-webhook-id"},
         {"type": "cloud/cloudhook/delete", "webhook_id": "mock-webhook-id"},
+        {"type": "cloud/onboarding/postpone"},
     ],
 )
 async def test_ws_commands_require_admin(

@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from contextlib import suppress
 import dataclasses
+from datetime import timedelta
 from functools import wraps
 from http import HTTPStatus
 import json
@@ -39,6 +40,7 @@ from homeassistant.loader import (
     async_get_custom_components,
     async_get_loaded_integration,
 )
+from homeassistant.util import dt as dt_util
 from homeassistant.util.location import async_detect_location_info
 from homeassistant.util.package import async_get_installed_packages
 
@@ -57,6 +59,7 @@ from .const import (
     PREF_ENABLE_GOOGLE,
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
+    PREF_ONBOARDING_COMPLETED,
     PREF_REMOTE_ALLOW_REMOTE_ENABLE,
     PREF_TTS_DEFAULT_VOICE,
     REQUEST_TIMEOUT,
@@ -99,6 +102,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_remote_connect)
     websocket_api.async_register_command(hass, websocket_remote_disconnect)
     websocket_api.async_register_command(hass, websocket_webrtc_ice_servers)
+    websocket_api.async_register_command(hass, websocket_cloud_onboarding_postpone)
 
     websocket_api.async_register_command(hass, google_assistant_get)
     websocket_api.async_register_command(hass, google_assistant_list)
@@ -799,6 +803,7 @@ def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
         vol.Optional(PREF_TTS_DEFAULT_VOICE): vol.All(
             vol.Coerce(tuple), validate_language_voice
         ),
+        vol.Optional(PREF_ONBOARDING_COMPLETED): bool,
     }
 )
 @websocket_api.async_response
@@ -842,6 +847,23 @@ async def websocket_update_prefs(
     await cloud.client.prefs.async_update(**changes)
 
     connection.send_message(websocket_api.result_message(msg["id"]))
+
+
+@websocket_api.require_admin
+@_require_cloud_login
+@websocket_api.websocket_command({vol.Required("type"): "cloud/onboarding/postpone"})
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+async def websocket_cloud_onboarding_postpone(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle request to postpone onboarding."""
+    cloud = hass.data[DATA_CLOUD]
+    postponed_until = (dt_util.utcnow() + timedelta(hours=24)).isoformat()
+    await cloud.client.prefs.async_update(onboarding_postponed_until=postponed_until)
+    connection.send_result(msg["id"], await _account_data(hass, cloud))
 
 
 @websocket_api.require_admin
@@ -930,6 +952,7 @@ async def _account_data(
         "google_local_connected": google_config.is_local_connected,
         "logged_in": True,
         "prefs": client.prefs.as_dict(),
+        "is_onboarding_postponed": client.prefs.is_onboarding_postponed,
         "remote_certificate": certificate,
         "remote_certificate_status": remote.certificate_status,
         "remote_connected": remote.is_connected,

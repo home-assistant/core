@@ -15,6 +15,7 @@ from homeassistant.components.google_assistant.http import (  # pylint: disable=
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.util import dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
 
 from .const import (
@@ -41,6 +42,8 @@ from .const import (
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_GOOGLE_SETTINGS_VERSION,
     PREF_INSTANCE_ID,
+    PREF_ONBOARDING_COMPLETED,
+    PREF_ONBOARDING_POSTPONED_UNTIL,
     PREF_REMOTE_ALLOW_REMOTE_ENABLE,
     PREF_REMOTE_DOMAIN,
     PREF_TTS_DEFAULT_VOICE,
@@ -175,6 +178,8 @@ class CloudPreferences:
         google_settings_version: int | UndefinedType = UNDEFINED,
         remote_allow_remote_enable: bool | UndefinedType = UNDEFINED,
         remote_domain: str | None | UndefinedType = UNDEFINED,
+        onboarding_completed: bool | UndefinedType = UNDEFINED,
+        onboarding_postponed_until: str | None | UndefinedType = UNDEFINED,
         remote_enabled: bool | UndefinedType = UNDEFINED,
         tts_default_voice: tuple[str, str] | UndefinedType = UNDEFINED,
     ) -> None:
@@ -197,6 +202,8 @@ class CloudPreferences:
                     (PREF_GOOGLE_REPORT_STATE, google_report_state),
                     (PREF_GOOGLE_SECURE_DEVICES_PIN, google_secure_devices_pin),
                     (PREF_GOOGLE_SETTINGS_VERSION, google_settings_version),
+                    (PREF_ONBOARDING_COMPLETED, onboarding_completed),
+                    (PREF_ONBOARDING_POSTPONED_UNTIL, onboarding_postponed_until),
                     (PREF_REMOTE_ALLOW_REMOTE_ENABLE, remote_allow_remote_enable),
                     (PREF_REMOTE_DOMAIN, remote_domain),
                     (PREF_TTS_DEFAULT_VOICE, tts_default_voice),
@@ -247,6 +254,8 @@ class CloudPreferences:
             PREF_GOOGLE_DEFAULT_EXPOSE: self.google_default_expose,
             PREF_GOOGLE_REPORT_STATE: self.google_report_state,
             PREF_GOOGLE_SECURE_DEVICES_PIN: self.google_secure_devices_pin,
+            PREF_ONBOARDING_COMPLETED: self.onboarding_completed,
+            PREF_ONBOARDING_POSTPONED_UNTIL: self.onboarding_postponed_until,
             PREF_REMOTE_ALLOW_REMOTE_ENABLE: self.remote_allow_remote_enable,
             PREF_TTS_DEFAULT_VOICE: self.tts_default_voice,
         }
@@ -360,6 +369,28 @@ class CloudPreferences:
         return self._prefs.get(PREF_INSTANCE_ID)
 
     @property
+    def onboarding_completed(self) -> bool:
+        """Return if onboarding is completed."""
+        cloud_onboarding_completed: bool = self._prefs.get(
+            PREF_ONBOARDING_COMPLETED, False
+        )
+        return cloud_onboarding_completed
+
+    @property
+    def onboarding_postponed_until(self) -> str | None:
+        """Return the datetime until which onboarding is postponed."""
+        return self._prefs.get(PREF_ONBOARDING_POSTPONED_UNTIL)
+
+    @property
+    def is_onboarding_postponed(self) -> bool:
+        """Return if onboarding is currently postponed."""
+        if (postponed_until := self.onboarding_postponed_until) is None:
+            return False
+        if (parsed := dt_util.parse_datetime(postponed_until)) is None:
+            return False
+        return parsed > dt_util.utcnow()
+
+    @property
     def tts_default_voice(self) -> tuple[str, str]:
         """Return the default TTS voice.
 
@@ -430,6 +461,8 @@ class CloudPreferences:
             PREF_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
             PREF_INSTANCE_ID: uuid.uuid4().hex,
             PREF_GOOGLE_SECURE_DEVICES_PIN: None,
+            PREF_ONBOARDING_COMPLETED: False,
+            PREF_ONBOARDING_POSTPONED_UNTIL: None,
             PREF_REMOTE_DOMAIN: None,
             PREF_REMOTE_ALLOW_REMOTE_ENABLE: True,
             PREF_USERNAME: username,
