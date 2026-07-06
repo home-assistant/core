@@ -193,7 +193,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==14.1.9
+aioamazondevices==14.2.0
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -303,7 +303,7 @@ aiohue==4.8.1
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.16.0
+aioimmich==0.16.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -606,7 +606,7 @@ av==17.0.1
 avea==1.8.0
 
 # homeassistant.components.axis
-axis==72
+axis==74
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.7
@@ -1585,6 +1585,9 @@ mitsubishi-comfort==0.3.2
 # homeassistant.components.moat
 moat-ble==0.1.1
 
+# homeassistant.components.modbus_connection
+modbus-connection[tmodbus]==3.3.0
+
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.4.0
 
@@ -2490,7 +2493,7 @@ pyqwikswitch==0.93
 pyrail==0.4.1
 
 # homeassistant.components.rainbird
-pyrainbird==6.3.1
+pyrainbird==6.5.0
 
 # homeassistant.components.playstation_network
 pyrate-limiter==4.4.0
@@ -2619,7 +2622,7 @@ python-awair==0.2.5
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==6.1.5
+python-bsblan==6.1.6
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
@@ -2725,7 +2728,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==5.25.0
+python-roborock==5.26.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -3240,7 +3243,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==15.4.1
+uiprotect==15.4.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
