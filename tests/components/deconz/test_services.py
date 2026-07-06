@@ -188,7 +188,7 @@ async def test_calling_service_with_no_master_gateway_fails(
         SERVICE_DATA: {"on": True},
     }
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CONFIGURE_DEVICE,
@@ -196,6 +196,7 @@ async def test_calling_service_with_no_master_gateway_fails(
             blocking=True,
         )
 
+    assert err.value.translation_key == "no_master_gateway"
     assert len(aioclient_mock.mock_calls) == 0
 
 
