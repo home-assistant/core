@@ -6,6 +6,9 @@
         "description": "Home Assistant could not start EvolvIOT pairing. Check the EvolvIOT backend connection and retry.",
         "data": {
           "retry": "Retry pairing"
+        },
+        "data_description": {
+          "retry": "Start EvolvIOT pairing again."
         }
       },
       "pair": {
