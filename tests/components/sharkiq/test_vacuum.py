@@ -26,7 +26,6 @@ from homeassistant.components.sharkiq.vacuum import (
     FAN_SPEEDS_MAP,
 )
 from homeassistant.components.vacuum import (
-    ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST,
     SERVICE_LOCATE,
@@ -61,8 +60,7 @@ from tests.common import MockConfigEntry
 VAC_ENTITY_ID = f"vacuum.{SHARK_DEVICE_DICT['product_name'].lower()}"
 ROOM_LIST = ["Kitchen", "Living Room"]
 EXPECTED_FEATURES = (
-    VacuumEntityFeature.BATTERY
-    | VacuumEntityFeature.FAN_SPEED
+    VacuumEntityFeature.FAN_SPEED
     | VacuumEntityFeature.PAUSE
     | VacuumEntityFeature.RETURN_HOME
     | VacuumEntityFeature.START
@@ -168,7 +166,6 @@ async def test_simple_properties(
     ("attribute", "target_value"),
     [
         (ATTR_SUPPORTED_FEATURES, EXPECTED_FEATURES),
-        (ATTR_BATTERY_LEVEL, 50),
         (ATTR_FAN_SPEED, "Eco"),
         (ATTR_FAN_SPEED_LIST, list(FAN_SPEEDS_MAP)),
         (ATTR_ERROR_CODE, 7),
