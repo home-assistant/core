@@ -243,7 +243,7 @@ class TeslemetryStreamingUpdateEntity(
         if 0 < self._download_percentage < 100:
             self._attr_in_progress = True
             self._attr_update_percentage = self._download_percentage
-        elif 0 < self._install_percentage < 100:
+        elif 10 < self._install_percentage < 100:
             self._attr_in_progress = True
             self._attr_update_percentage = self._install_percentage
         else:

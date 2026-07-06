@@ -132,9 +132,9 @@ async def test_update_streaming(
     )
     await hass.async_block_till_done()
     state = hass.states.get("update.test_update")
-    # 1% installed is still in progress, not "not in progress" as with the old >10 threshold
-    assert state.attributes["in_progress"] is True
-    assert state.attributes["update_percentage"] == 1
+    # Install percentages up to 10% reflect Tesla's pre-installation step, not real progress
+    assert state.attributes["in_progress"] is False
+    assert state.attributes["update_percentage"] is None
     assert state == snapshot(name="ready")
 
     mock_add_listener.send(
@@ -171,7 +171,7 @@ async def test_update_streaming(
     )
     await hass.async_block_till_done()
     state = hass.states.get("update.test_update")
-    # 100% installed no longer sticks at in_progress
+    # 100% installed is complete, not in progress
     assert state.attributes["in_progress"] is False
     assert state.attributes["update_percentage"] is None
     assert state == snapshot(name="install_complete")
@@ -253,7 +253,6 @@ async def test_update_streaming_scheduled_not_clobbered(
 async def test_update_streaming_restore(
     hass: HomeAssistant,
     mock_vehicle_data: AsyncMock,
-    mock_add_listener: AsyncMock,
 ) -> None:
     """Test that the streaming update entity restores update_percentage, not install_percentage."""
 
@@ -321,9 +320,29 @@ async def test_update_streaming_restore(
                 Signal.SOFTWARE_UPDATE_INSTALLATION_PERCENT_COMPLETE: 1,
                 Signal.SOFTWARE_UPDATE_SCHEDULED_START_TIME: None,
             },
+            False,
+            None,
+            id="install_1pct_is_not_in_progress",
+        ),
+        pytest.param(
+            {
+                Signal.SOFTWARE_UPDATE_DOWNLOAD_PERCENT_COMPLETE: 100,
+                Signal.SOFTWARE_UPDATE_INSTALLATION_PERCENT_COMPLETE: 10,
+                Signal.SOFTWARE_UPDATE_SCHEDULED_START_TIME: None,
+            },
+            False,
+            None,
+            id="install_10pct_is_not_in_progress",
+        ),
+        pytest.param(
+            {
+                Signal.SOFTWARE_UPDATE_DOWNLOAD_PERCENT_COMPLETE: 100,
+                Signal.SOFTWARE_UPDATE_INSTALLATION_PERCENT_COMPLETE: 11,
+                Signal.SOFTWARE_UPDATE_SCHEDULED_START_TIME: None,
+            },
             True,
-            1,
-            id="install_1pct_is_in_progress",
+            11,
+            id="install_11pct_is_in_progress",
         ),
         pytest.param(
             {
