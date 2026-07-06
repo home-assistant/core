@@ -98,12 +98,6 @@
       }
     },
     "number": {
-      "max_dhw_temperature": {
-        "name": "Domestic hot water setpoint"
-      },
-      "maximum_boiler_temperature": {
-        "name": "Maximum boiler temperature setpoint"
-      },
       "temperature_offset": {
         "name": "Temperature offset"
       }
@@ -304,7 +298,26 @@
       "relay": {
         "name": "Relay"
       }
-    }
+    },
+    "water_heater": {
+        "boiler_temperature": {
+            "name": "Boiler temperature"
+        },
+        "dhw_temperature": {
+            "name": "DHW temperature",
+            "state_attributes": {
+              "dhw_modes": {
+                "state": {
+                  "auto": "Auto",
+                  "boost": "Boost",
+                  "comfort": "Comfort",
+                  "eco": "Eco",
+                  "off": "Off"
+              }
+            }
+          }
+        }
+     }
   },
   "exceptions": {
     "authentication_failed": {
