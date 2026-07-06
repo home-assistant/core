@@ -29,7 +29,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.overkiz.const import DOMAIN
+from homeassistant.components.overkiz.const import CONF_GATEWAY_ID, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -1408,8 +1408,12 @@ async def test_somfy_full_flow_multiple_sites(
         patch(
             "homeassistant.components.overkiz.config_flow.OverkizClient.discover_gateways",
             return_value=[
-                GatewayCandidate(gateway_id=TEST_GATEWAY_ID, label="Home"),
-                GatewayCandidate(gateway_id=TEST_GATEWAY_ID2, label="Cabin"),
+                GatewayCandidate(
+                    gateway_id=TEST_GATEWAY_ID, label="Home", country="NL"
+                ),
+                GatewayCandidate(
+                    gateway_id=TEST_GATEWAY_ID2, label="Cabin", country="FR"
+                ),
             ],
         ),
         patch(
@@ -1427,6 +1431,13 @@ async def test_somfy_full_flow_multiple_sites(
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "select_gateway"
+
+        # The gateway options are a dropdown labelled "<name> (<country>)".
+        options = result["data_schema"].schema[CONF_GATEWAY_ID].config["options"]
+        assert options == [
+            {"value": TEST_GATEWAY_ID, "label": "Home (NL)"},
+            {"value": TEST_GATEWAY_ID2, "label": "Cabin (FR)"},
+        ]
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"gateway_id": TEST_GATEWAY_ID2}

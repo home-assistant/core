@@ -40,6 +40,12 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -60,6 +66,14 @@ LOCAL_API_DOCS_URL = (
 TOKEN_DOCS_URL = (
     "https://www.home-assistant.io/integrations/overkiz/#login-to-overkiz-local-api"
 )
+
+
+def _gateway_option_label(candidate: GatewayCandidate) -> str:
+    """Return a gateway's display label, suffixed with its country when known."""
+    label = candidate.label or candidate.gateway_id
+    if candidate.country:
+        return f"{label} ({candidate.country})"
+    return label
 
 
 class OverkizConfigFlow(
@@ -402,12 +416,17 @@ class OverkizConfigFlow(
             step_id="select_gateway",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_GATEWAY_ID): vol.In(
-                        {
-                            candidate.gateway_id: candidate.label
-                            or candidate.gateway_id
-                            for candidate in candidates
-                        }
+                    vol.Required(CONF_GATEWAY_ID): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(
+                                    value=candidate.gateway_id,
+                                    label=_gateway_option_label(candidate),
+                                )
+                                for candidate in candidates
+                            ],
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
                     ),
                 }
             ),
