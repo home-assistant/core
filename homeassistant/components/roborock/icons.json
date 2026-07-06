@@ -123,11 +123,17 @@
       }
     },
     "switch": {
+      "button_light": {
+        "default": "mdi:lightbulb"
+      },
       "child_lock": {
         "default": "mdi:account-lock"
       },
       "dnd_switch": {
         "default": "mdi:bell-cancel"
+      },
+      "dust_collection": {
+        "default": "mdi:delete"
       },
       "off_peak_switch": {
         "default": "mdi:power-plug"

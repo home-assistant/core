@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from pymodbus.exceptions import ModbusException
 from pystiebeleltron import StiebelEltronModbusError
 
 from homeassistant.components.stiebel_eltron.const import DOMAIN
@@ -73,3 +74,18 @@ async def test_async_setup_entry_modbus_error(
 
     assert result is False
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_async_setup_entry_coordinator_update_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lwz_api: MagicMock,
+) -> None:
+    """Test setup retries when coordinator data update raises ModbusException."""
+    mock_lwz_api.async_update.side_effect = ModbusException("update failed")
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert result is False
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
