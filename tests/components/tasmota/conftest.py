@@ -1,7 +1,8 @@
 """Test fixtures for Tasmota component."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from aiogithubapi import GitHubReleaseModel
 from hatasmota.discovery import get_status_sensor_entities
 import pytest
 
@@ -34,6 +35,27 @@ def disable_status_sensor(status_sensor_disabled):
     """Disable Tasmota status sensor."""
     wraps = None if status_sensor_disabled else get_status_sensor_entities
     with patch("hatasmota.discovery.get_status_sensor_entities", wraps=wraps):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_github_api():
+    """Mock the GitHub release API to prevent network requests."""
+    mock_response = AsyncMock(
+        data=GitHubReleaseModel(
+            {
+                "tag_name": "v14.6.0",
+                "name": "Tasmota 14.6.0",
+                "html_url": "https://github.com/arendst/Tasmota/releases/tag/v14.6.0",
+                "body": "",
+            }
+        )
+    )
+
+    with patch(
+        "aiogithubapi.namespaces.releases.GitHubReleasesNamespace.latest",
+        new=AsyncMock(return_value=mock_response),
+    ):
         yield
 
 

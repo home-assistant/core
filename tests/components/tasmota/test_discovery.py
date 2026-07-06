@@ -644,7 +644,7 @@ async def test_same_topic(
     device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, configs[0]["mac"])}
     )
-    assert len(er.async_entries_for_device(entity_registry, device_entry.id, True)) == 1
+    assert len(er.async_entries_for_device(entity_registry, device_entry.id, True)) == 2
     device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, configs[1]["mac"])}
     )
@@ -697,7 +697,7 @@ async def test_same_topic(
     device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, configs[2]["mac"])}
     )
-    assert len(er.async_entries_for_device(entity_registry, device_entry.id, True)) == 1
+    assert len(er.async_entries_for_device(entity_registry, device_entry.id, True)) == 2
 
     # Verify the repairs issue has been updated
     issue = issue_registry.async_get_issue("tasmota", issue_id)
@@ -716,7 +716,7 @@ async def test_same_topic(
     device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, configs[1]["mac"])}
     )
-    assert len(er.async_entries_for_device(entity_registry, device_entry.id, True)) == 1
+    assert len(er.async_entries_for_device(entity_registry, device_entry.id, True)) == 2
 
     # Verify the repairs issue has been removed
     assert issue_registry.async_get_issue("tasmota", issue_id) is None
@@ -776,7 +776,7 @@ async def test_topic_no_prefix(
     device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, config["mac"])}
     )
-    assert len(er.async_entries_for_device(entity_registry, device_entry.id, True)) == 1
+    assert len(er.async_entries_for_device(entity_registry, device_entry.id, True)) == 2
 
     # Verify the repairs issue has been removed
     assert ("tasmota", issue_id) not in issue_registry.issues
