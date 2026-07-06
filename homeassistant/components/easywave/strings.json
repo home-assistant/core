@@ -29,11 +29,11 @@
           "buttons_4": "The transmitter/channel has 4 buttons with button codes A, B, C and D."
         },
         "menu_options": {
-          "buttons_1": "⚪ 1 Button",
-          "buttons_2": "⚪ 2 Buttons",
-          "buttons_3": "⚪ 3 Buttons",
-          "buttons_4": "⚪ 4 Buttons",
-          "transmitter_learn_intro": "⬅️ Back"
+          "buttons_1": "1 Button",
+          "buttons_2": "2 Buttons",
+          "buttons_3": "3 Buttons",
+          "buttons_4": "4 Buttons",
+          "transmitter_learn_intro": "Back"
         },
         "title": "Button Count"
       },
