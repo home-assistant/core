@@ -109,7 +109,6 @@ class ONVIFDevice:
             password=self.config_entry.data[CONF_PASSWORD],
         )
 
-        assert self.config_entry.unique_id
         self.events = EventManager(self.hass, self.device, self.config_entry, self.name)
 
         # Get all device info
