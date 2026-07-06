@@ -19,9 +19,14 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import DOMAIN, CounterEntityStateAttribute
+from .const import CounterEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_INITIAL = "initial"
+ATTR_STEP = "step"
+ATTR_MINIMUM = "minimum"
+ATTR_MAXIMUM = "maximum"
 
 VALUE = "value"
 
@@ -31,6 +36,7 @@ CONF_STEP = "step"
 
 DEFAULT_INITIAL = 0
 DEFAULT_STEP = 1
+DOMAIN = "counter"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
