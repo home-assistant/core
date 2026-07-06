@@ -6,11 +6,8 @@ from unittest.mock import MagicMock
 
 from homeassistant.components.wibeee.const import (
     CONF_MAC_ADDRESS,
-    CONF_UPDATE_MODE,
     CONF_WIBEEE_ID,
     DOMAIN,
-    MODE_LOCAL_PUSH,
-    MODE_POLLING,
 )
 from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -73,41 +70,10 @@ async def test_sensor_invalid_value(
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_sensors_push_mode_filters_polling_only_keys(
-    hass: HomeAssistant, mock_wibeee_api: MagicMock
-) -> None:
-    """Push mode must skip sensors whose keys cannot be refreshed via push."""
-    # Initial fetch reports a polling-only metric (angle) plus a push-refreshable
-    # one (p_activa). In push mode, only the latter should produce an entity.
-    mock_wibeee_api.async_fetch_sensors_data.return_value = {
-        "fase4": {"p_activa": "120", "angle": "33"},
-    }
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=MOCK_MAC,
-        title="Wibeee 2233",
-        data={
-            CONF_HOST: MOCK_HOST,
-            CONF_MAC_ADDRESS: MOCK_MAC,
-            CONF_WIBEEE_ID: MOCK_WIBEEE_ID,
-        },
-        options={CONF_UPDATE_MODE: MODE_LOCAL_PUSH},
-        version=2,
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.wibeee_2233_active_power") is not None
-    # angle is not push-refreshable, so the entity must not exist in push mode
-    assert hass.states.get("sensor.wibeee_2233_angle") is None
-
-
 async def test_sensors_polling_mode_keeps_all_keys(
     hass: HomeAssistant, mock_wibeee_api: MagicMock
 ) -> None:
-    """Polling mode keeps all sensors, including polling-only metrics."""
+    """Polling mode keeps all sensors, including disabled-by-default metrics."""
     mock_wibeee_api.async_fetch_sensors_data.return_value = {
         "fase4": {"p_activa": "120", "angle": "33"},
     }
@@ -121,8 +87,8 @@ async def test_sensors_polling_mode_keeps_all_keys(
             CONF_MAC_ADDRESS: MOCK_MAC,
             CONF_WIBEEE_ID: MOCK_WIBEEE_ID,
         },
-        options={CONF_UPDATE_MODE: MODE_POLLING},
-        version=2,
+        options={},
+        version=1,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
