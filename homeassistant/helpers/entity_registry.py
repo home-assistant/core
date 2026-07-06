@@ -934,9 +934,14 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
     Also maintains a count of enabled entries per config entry id.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the container."""
         super().__init__()
+        # hass is stored only so get_entries_for_device_id can expand a pre-migration
+        # composite device id to its split devices. Remove it, and restore the no-argument
+        # constructor, once the device registry deprecation period is over and composite
+        # device ids are no longer resolved.
+        self._hass = hass
         self._entry_ids: dict[str, RegistryEntry] = {}
         self._index: dict[tuple[str, str, str], str] = {}
         self._config_entry_id_index: RegistryIndexType = defaultdict(dict)
@@ -1002,13 +1007,41 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         return self._entry_ids.get(key)
 
     def get_entries_for_device_id(
-        self, device_id: str, include_disabled_entities: bool = False
+        self,
+        device_id: str,
+        include_disabled_entities: bool = False,
     ) -> list[RegistryEntry]:
-        """Get entries for device."""
+        """Get entries for device.
+
+        A device_id may be a pre-migration composite device id, which was split into one
+        device per config entry. The entries of the split devices are included, so a
+        lookup by the old composite id still finds the entities that were moved to the
+        split devices.
+        """
         data = self.data
+        device_registry = dr.async_get(self._hass)
+        if device_id in device_registry.devices:
+            # Fast path: a live device id resolves directly to its own entities
+            return [
+                entry
+                for key in self._device_id_index.get(device_id, ())
+                if not (entry := data[key]).disabled_by or include_disabled_entities
+            ]
+        # A pre-migration composite device id resolves to the entities of the split
+        # devices it was migrated into
+        device_ids = [
+            device_id,
+            *(
+                device.id
+                for device in device_registry.async_get_devices_for_composite_device_id(
+                    device_id
+                )
+            ),
+        ]
         return [
             entry
-            for key in self._device_id_index.get(device_id, ())
+            for a_device_id in device_ids
+            for key in self._device_id_index.get(a_device_id, ())
             if not (entry := data[key]).disabled_by or include_disabled_entities
         ]
 
@@ -2011,15 +2044,49 @@ class EntityRegistry(BaseRegistry):
     async def _async_load(self) -> None:
         """Load the entity registry."""
         # Device registry must be loaded before entity registry because
-        # migration and entity processing reference device names.
-        await dr.async_get(self.hass).async_wait_loaded()
+        # migration and entity processing reference device names, and because entities
+        # are moved to the correct device when a pre-migration composite device was
+        # split into one device per config entry.
+        device_registry = dr.async_get(self.hass)
+        await device_registry.async_wait_loaded()
 
         _async_setup_cleanup(self.hass, self)
         _async_setup_entity_restore(self.hass, self)
 
         data = await self._store.async_load()
-        entities = EntityRegistryItems()
+        entities = EntityRegistryItems(self.hass)
         deleted_entities: dict[tuple[str, str, str], DeletedRegistryEntry] = {}
+
+        # Move entities to the correct device when a pre-migration composite device was
+        # split into one device per config entry. This can be removed 12 months after
+        # the config entries split migration ships.
+        migrated_composite_device = False
+
+        def _split_device_id(
+            device_id: str | None,
+            config_entry_id: str | None,
+            config_subentry_id: str | None,
+        ) -> str | None:
+            """Map a device id to the split device matching the entity's config entry."""
+            # Note: check container membership, not async_get, which returns a restored
+            # composite for a composite device id
+            if device_id is None or device_id in device_registry.devices:
+                return device_id
+            successors = device_registry.async_get_devices_for_composite_device_id(
+                device_id
+            )
+            if not successors:
+                return device_id
+            for successor in successors:
+                if (
+                    successor.config_entry_id == config_entry_id
+                    and successor.config_subentry_id == config_subentry_id
+                ):
+                    return successor.id
+            for successor in successors:
+                if successor.config_entry_id == config_entry_id:
+                    return successor.id
+            return successors[0].id
 
         if data is not None:
             for entity in data["entities"]:
@@ -2048,11 +2115,19 @@ class EntityRegistry(BaseRegistry):
                     )
                     continue
 
+                device_id = _split_device_id(
+                    entity["device_id"],
+                    entity["config_entry_id"],
+                    entity["config_subentry_id"],
+                )
+                if device_id != entity["device_id"]:
+                    migrated_composite_device = True
+
                 original_name_unprefixed = _unprefix_original_name(
                     self.hass,
                     entity["original_name"],
                     entity["has_entity_name"],
-                    entity["device_id"],
+                    device_id,
                 )
 
                 entities[entity["entity_id"]] = RegistryEntry(
@@ -2065,7 +2140,7 @@ class EntityRegistry(BaseRegistry):
                     config_subentry_id=entity["config_subentry_id"],
                     created_at=datetime.fromisoformat(entity["created_at"]),
                     device_class=entity["device_class"],
-                    device_id=entity["device_id"],
+                    device_id=device_id,
                     disabled_by=RegistryEntryDisabler(entity["disabled_by"])
                     if entity["disabled_by"]
                     else None,
@@ -2163,6 +2238,10 @@ class EntityRegistry(BaseRegistry):
         self.deleted_entities = deleted_entities
         self.entities = entities
         self._entities_data = entities.data
+
+        # Persist entities moved off a split pre-migration composite device
+        if migrated_composite_device:
+            self.async_schedule_save()
 
     @override
     def _data_to_save(self) -> dict[str, Any]:
@@ -2300,7 +2379,11 @@ async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
 def async_entries_for_device(
     registry: EntityRegistry, device_id: str, include_disabled_entities: bool = False
 ) -> list[RegistryEntry]:
-    """Return entries that match a device."""
+    """Return entries that match a device.
+
+    A pre-migration composite device id resolves to the entries of the devices it was
+    split into.
+    """
     return registry.entities.get_entries_for_device_id(
         device_id, include_disabled_entities
     )

@@ -158,7 +158,9 @@ async def test_invalid_parameters(
     """Test invalid service parameters."""
 
     device_entry = dr.DeviceEntry(
-        id=TEST_DEVICE_1_ID, identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+        config_entry_id=mock_config_entry.entry_id,
+        id=TEST_DEVICE_1_ID,
+        identifiers={(DOMAIN, TEST_DEVICE_1_SN)},
     )
     mock_device_registry(
         hass,
@@ -214,7 +216,9 @@ async def test_invalid_info_skillparameters(
     """Test invalid info skill service parameters."""
 
     device_entry = dr.DeviceEntry(
-        id=TEST_DEVICE_1_ID, identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+        config_entry_id=mock_config_entry.entry_id,
+        id=TEST_DEVICE_1_ID,
+        identifiers={(DOMAIN, TEST_DEVICE_1_SN)},
     )
     mock_device_registry(
         hass,

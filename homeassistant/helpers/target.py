@@ -206,7 +206,15 @@ def async_extract_referenced_entity_ids(
             selected.missing_areas.add(area_id)
 
     for device_id in target_selection.device_ids:
-        if device_id not in dev_reg.devices:
+        if device_id in dev_reg.devices:
+            continue
+        # A pre-migration composite device id is no longer a device itself; it resolves
+        # to the devices it was split into so actions targeting it still trickle down.
+        if split_devices := dev_reg.async_get_devices_for_composite_device_id(
+            device_id
+        ):
+            selected.referenced_devices.update(device.id for device in split_devices)
+        else:
             selected.missing_devices.add(device_id)
 
     if target_selection.label_ids:
