@@ -9,7 +9,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import template, vacuum
 from homeassistant.components.template.vacuum import CONF_CLEAN_SEGMENTS, CONF_SEGMENTS
 from homeassistant.components.vacuum import (
-    ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
     Segment,
     VacuumActivity,
@@ -86,14 +85,12 @@ TEMPLATE_VACUUM_ACTIONS = {
 def _verify(
     hass: HomeAssistant,
     expected_state: str,
-    expected_battery_level: int | None = None,
     expected_fan_speed: str | None = None,
 ) -> None:
     """Verify vacuum's state and speed."""
     state = hass.states.get(TEST_VACUUM.entity_id)
     attributes = state.attributes
     assert state.state == expected_state
-    assert attributes.get(ATTR_BATTERY_LEVEL) == expected_battery_level
     assert attributes.get(ATTR_FAN_SPEED) == expected_fan_speed
 
 
@@ -192,88 +189,74 @@ async def setup_attributes_state_vacuum(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    ("style", "state_template", "extra_config", "parm1", "parm2"),
+    ("style", "state_template", "extra_config", "parm1"),
     [
         (
             ConfigurationStyle.MODERN,
             None,
             {"start": {"service": "script.vacuum_start"}},
             STATE_UNKNOWN,
-            None,
         ),
         (
             ConfigurationStyle.TRIGGER,
             None,
             {"start": {"service": "script.vacuum_start"}},
             STATE_UNKNOWN,
-            None,
         ),
         (
             ConfigurationStyle.MODERN,
             "{{ 'cleaning' }}",
             {
-                "battery_level": "{{ 100 }}",
                 "start": {"service": "script.vacuum_start"},
             },
             VacuumActivity.CLEANING,
-            100,
         ),
         (
             ConfigurationStyle.TRIGGER,
             "{{ 'cleaning' }}",
             {
-                "battery_level": "{{ 100 }}",
                 "start": {"service": "script.vacuum_start"},
             },
             VacuumActivity.CLEANING,
-            100,
         ),
         (
             ConfigurationStyle.MODERN,
             "{{ 'abc' }}",
             {
-                "battery_level": "{{ 101 }}",
                 "start": {"service": "script.vacuum_start"},
             },
             STATE_UNKNOWN,
-            None,
         ),
         (
             ConfigurationStyle.TRIGGER,
             "{{ 'abc' }}",
             {
-                "battery_level": "{{ 101 }}",
                 "start": {"service": "script.vacuum_start"},
             },
             STATE_UNKNOWN,
-            None,
         ),
         (
             ConfigurationStyle.MODERN,
             "{{ this_function_does_not_exist() }}",
             {
-                "battery_level": "{{ this_function_does_not_exist() }}",
                 "fan_speed": "{{ this_function_does_not_exist() }}",
                 "start": {"service": "script.vacuum_start"},
             },
             STATE_UNAVAILABLE,
-            None,
         ),
         (
             ConfigurationStyle.TRIGGER,
             "{{ this_function_does_not_exist() }}",
             {
-                "battery_level": "{{ this_function_does_not_exist() }}",
                 "fan_speed": "{{ this_function_does_not_exist() }}",
                 "start": {"service": "script.vacuum_start"},
             },
             STATE_UNAVAILABLE,
-            None,
         ),
     ],
 )
 @pytest.mark.usefixtures("setup_base_vacuum")
-async def test_valid_configs(hass: HomeAssistant, count, parm1, parm2) -> None:
+async def test_valid_configs(hass: HomeAssistant, count, parm1) -> None:
     """Test: configs."""
 
     # Ensure trigger entity templates are rendered
@@ -281,7 +264,7 @@ async def test_valid_configs(hass: HomeAssistant, count, parm1, parm2) -> None:
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all("vacuum")) == count
-    _verify(hass, parm1, parm2)
+    _verify(hass, parm1)
 
 
 @pytest.mark.parametrize("count", [0])
@@ -300,68 +283,6 @@ async def test_valid_configs(hass: HomeAssistant, count, parm1, parm2) -> None:
 async def test_invalid_configs(hass: HomeAssistant, count) -> None:
     """Test: configs."""
     assert len(hass.states.async_all("vacuum")) == count
-
-
-@pytest.mark.parametrize(
-    ("count", "state_template", "extra_config"),
-    [(1, "{{ states('sensor.test_state') }}", {})],
-)
-@pytest.mark.parametrize(
-    ("style", "attribute"),
-    [
-        (ConfigurationStyle.MODERN, "battery_level"),
-        (ConfigurationStyle.TRIGGER, "battery_level"),
-    ],
-)
-@pytest.mark.parametrize(
-    ("attribute_template", "expected"),
-    [
-        ("{{ '0' }}", 0),
-        ("{{ 100 }}", 100),
-        ("{{ 101 }}", None),
-        ("{{ -1 }}", None),
-        ("{{ 'foo' }}", None),
-    ],
-)
-@pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
-async def test_battery_level_template(
-    hass: HomeAssistant, expected: int | None
-) -> None:
-    """Test templates with values from other entities."""
-    await async_trigger(hass, TEST_STATE_ENTITY_ID)
-    _verify(hass, STATE_UNKNOWN, expected)
-
-
-@pytest.mark.parametrize(
-    ("count", "state_template", "extra_config", "attribute_template"),
-    [(1, "{{ states('sensor.test_state') }}", {}, "{{ 50 }}")],
-)
-@pytest.mark.parametrize(
-    ("style", "attribute", "issue_count"),
-    [
-        (ConfigurationStyle.MODERN, "battery_level", 1),
-        (ConfigurationStyle.TRIGGER, "battery_level", 1),
-    ],
-)
-@pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
-async def test_battery_level_template_repair(
-    hass: HomeAssistant,
-    issue_count: int,
-    issue_registry: ir.IssueRegistry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test battery_level template raises issue."""
-    await async_trigger(hass, TEST_STATE_ENTITY_ID, VacuumActivity.DOCKED)
-
-    assert len(issue_registry.issues) == issue_count
-    issue = issue_registry.async_get_issue(
-        "template", f"deprecated_battery_level_{TEST_VACUUM.entity_id}"
-    )
-    assert issue.domain == "template"
-    assert issue.severity == ir.IssueSeverity.WARNING
-    assert issue.translation_placeholders["entity_name"] == TEST_VACUUM.object_id
-    assert issue.translation_placeholders["entity_id"] == TEST_VACUUM.entity_id
-    assert "Detected that integration 'template' is setting the" not in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -396,7 +317,7 @@ async def test_battery_level_template_repair(
 async def test_fan_speed_template(hass: HomeAssistant, expected: str | None) -> None:
     """Test templates with values from other entities."""
     await async_trigger(hass, TEST_STATE_ENTITY_ID)
-    _verify(hass, STATE_UNKNOWN, None, expected)
+    _verify(hass, STATE_UNKNOWN, expected)
 
 
 @pytest.mark.parametrize(
