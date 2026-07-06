@@ -70,7 +70,7 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
             return self.async_create_entry(
-                title=f"{DOMAIN}_{user_input[CONF_USERNAME]}",
+                title=user_input[CONF_USERNAME],
                 data=user_input,
             )
         return self.async_show_form(

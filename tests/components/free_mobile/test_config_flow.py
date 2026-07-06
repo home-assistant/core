@@ -49,7 +49,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{DOMAIN}_{MOCK_CONFIG[CONF_USERNAME]}"
+    assert result["title"] == MOCK_CONFIG[CONF_USERNAME]
     assert result["data"] == MOCK_CONFIG
 
 
