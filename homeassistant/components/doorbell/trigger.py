@@ -10,7 +10,11 @@ from homeassistant.components.event import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
-from homeassistant.helpers.trigger import StatelessEntityTriggerBase, Trigger
+from homeassistant.helpers.trigger import (
+    NotTriggeredReasonReporter,
+    StatelessEntityTriggerBase,
+    Trigger,
+)
 
 
 class DoorbellRangTrigger(StatelessEntityTriggerBase):
@@ -19,7 +23,11 @@ class DoorbellRangTrigger(StatelessEntityTriggerBase):
     _domain_specs = {EVENT_DOMAIN: DomainSpec(device_class=EventDeviceClass.DOORBELL)}
 
     @override
-    def is_valid_state(self, state: State) -> bool:
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the event type is ring."""
         return state.attributes.get(ATTR_EVENT_TYPE) == DoorbellEventType.RING
 

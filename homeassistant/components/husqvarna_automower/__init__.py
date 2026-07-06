@@ -1,11 +1,15 @@
 """The Husqvarna Automower integration."""
 
 from aioautomower.session import AutomowerSession
-from aiohttp import ClientResponseError
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
@@ -68,9 +72,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) ->
     )
     try:
         await api_api.async_get_access_token()
-    except ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed from err
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed from err
+    except OAuth2TokenRequestError as err:
         raise ConfigEntryNotReady from err
 
     if "amc:api" not in entry.data["token"]["scope"]:
