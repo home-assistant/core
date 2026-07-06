@@ -18,6 +18,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import TeslemetryConfigEntry
 from .entity import TeslemetryVehiclePollingEntity, TeslemetryVehicleStreamEntity
+from .helpers import firmware_at_least
 from .models import TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -78,7 +79,9 @@ async def async_setup_entry(
 
     for vehicle in entry.runtime_data.vehicles:
         for description in DESCRIPTIONS:
-            if vehicle.poll or vehicle.firmware < description.streaming_firmware:
+            if vehicle.poll or not firmware_at_least(
+                vehicle.firmware, description.streaming_firmware
+            ):
                 if description.polling_prefix:
                     entities.append(
                         TeslemetryVehiclePollingDeviceTrackerEntity(

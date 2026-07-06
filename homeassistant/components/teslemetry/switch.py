@@ -25,7 +25,7 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
-from .helpers import handle_command, handle_vehicle_command
+from .helpers import firmware_at_least, handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -162,7 +162,9 @@ async def async_setup_entry(
 
     for vehicle in entry.runtime_data.vehicles:
         for description in VEHICLE_DESCRIPTIONS:
-            if vehicle.poll or vehicle.firmware < description.streaming_firmware:
+            if vehicle.poll or not firmware_at_least(
+                vehicle.firmware, description.streaming_firmware
+            ):
                 if description.polling:
                     entities.append(
                         TeslemetryVehiclePollingVehicleSwitchEntity(
