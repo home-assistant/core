@@ -31,7 +31,7 @@
         },
         "data_description": {
           "access_token": "You can get this token by activating the SMS API in your online account.",
-          "username": "This is the id given by FreeMobile to access your online account."
+          "username": "This is the ID given by Free Mobile to access your online account."
         }
       }
     }
