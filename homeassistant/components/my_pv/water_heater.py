@@ -2,6 +2,8 @@
 
 from typing import Any, override
 
+from my_pv import MyPVDeviceMainMode
+
 from homeassistant.components.water_heater import (
     STATE_ELECTRIC,
     WaterHeaterEntity,
@@ -27,10 +29,8 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
     entities = []
 
-    if (
-        coordinator.device.is_on is not None
-        and coordinator.device.current_temperature is not None
-        and (configuration := coordinator.device.get_setup_configuration("ww1target"))
+    if coordinator.device.supports_main_mode(MyPVDeviceMainMode.HOT_WATER) and (
+        configuration := coordinator.device.get_setup_configuration("ww1target")
     ):
         entity_description = WaterHeaterEntityDescription(
             key="temp1",
