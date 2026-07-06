@@ -1,9 +1,4 @@
-"""Config flow for izone.
-
-Module-level discovery helpers and :func:`async_note_integration_discovery` stay at
-module scope so tests and ``__init__.py`` migration can patch them without depending
-on :class:`IZoneConfigFlow`.
-"""
+"""Config flow for izone."""
 
 from collections.abc import Iterable
 import logging
@@ -30,13 +25,7 @@ from .const import DATA_CONFIG, DOMAIN, TIMEOUT_DISCOVERY
 
 _LOGGER = logging.getLogger(__name__)
 
-# --- Flow context keys (also used in tests) ---
-
 SELECTED_CONTROLLER_UID = "selected_controller_uid"
-
-# ---------------------------------------------------------------------------
-# On-demand discovery (module scope for migration + tests)
-# ---------------------------------------------------------------------------
 
 
 async def async_discover_controllers(
@@ -117,11 +106,6 @@ def _flow_uid_for_matching(flow: ConfigFlow) -> str | None:
     if isinstance(ctx_uid, str):
         return ctx_uid
     return None
-
-
-# ---------------------------------------------------------------------------
-# Config flow
-# ---------------------------------------------------------------------------
 
 
 class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):

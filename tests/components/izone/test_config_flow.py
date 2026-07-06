@@ -20,10 +20,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
-# ---------------------------------------------------------------------------
-# Shared helpers / fixtures
-# ---------------------------------------------------------------------------
-
 
 def _make_controller(uid: str = "000000001", ip: str = "192.0.2.1") -> Mock:
     """Return a minimal Mock iZone controller with uid and ip set."""
@@ -84,11 +80,6 @@ def mock_izone_timeouts() -> Generator[None]:
         yield
 
 
-# ---------------------------------------------------------------------------
-# Config flow - user source (broadcast discovery)
-# ---------------------------------------------------------------------------
-
-
 async def test_user_discovery_success(
     hass: HomeAssistant, mock_entry_setup: None
 ) -> None:
@@ -109,6 +100,7 @@ async def test_user_discovery_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000000001"
     assert result["data"] == {}
+    assert result["result"].unique_id == "000000001"
 
 
 async def test_user_discovery_default_selects_first_and_queues_other(
@@ -134,6 +126,7 @@ async def test_user_discovery_default_selects_first_and_queues_other(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000000001"
     assert result["data"] == {}
+    assert result["result"].unique_id == "000000001"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     progress = [
@@ -177,6 +170,7 @@ async def test_broadcast_skips_already_configured_controller(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000000002"
     assert result["data"] == {}
+    assert result["result"].unique_id == "000000002"
 
 
 async def test_user_discovery_skips_yaml_excluded_controllers(
@@ -205,6 +199,7 @@ async def test_user_discovery_skips_yaml_excluded_controllers(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000000002"
     assert result["data"] == {}
+    assert result["result"].unique_id == "000000002"
 
 
 async def test_broadcast_multiple_unconfigured_shows_choice(
@@ -239,6 +234,7 @@ async def test_broadcast_multiple_unconfigured_shows_choice(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000000001"
     assert result["data"] == {}
+    assert result["result"].unique_id == "000000001"
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -334,6 +330,7 @@ async def test_select_controller_creates_selected_uid_and_queues_others(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000000002"
+    assert result["result"].unique_id == "000000002"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     skipped_flows = [
@@ -420,6 +417,7 @@ async def test_reuses_existing_discovery_service(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000000002"
     assert result["data"] == {}
+    assert result["result"].unique_id == "000000002"
     mock_pizone_discovery.assert_not_called()
 
 
@@ -444,12 +442,8 @@ async def test_user_discovery_uses_shared_discovery_service(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000000002"
     assert result["data"] == {}
+    assert result["result"].unique_id == "000000002"
     mock_pizone_discovery.assert_not_called()
-
-
-# ---------------------------------------------------------------------------
-# Config flow - import source
-# ---------------------------------------------------------------------------
 
 
 async def test_import_starts_discovery_service(
@@ -514,11 +508,6 @@ async def test_import_aborts_when_another_izone_flow_in_progress(
     assert result["reason"] == "already_in_progress"
 
 
-# ---------------------------------------------------------------------------
-# Config flow - HomeKit source
-# ---------------------------------------------------------------------------
-
-
 async def test_homekit_confirm_uses_discovered_host(
     hass: HomeAssistant, mock_entry_setup: None
 ) -> None:
@@ -555,6 +544,7 @@ async def test_homekit_confirm_uses_discovered_host(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000000001"
     assert result["data"] == {}
+    assert result["result"].unique_id == "000000001"
 
 
 async def test_homekit_fans_out_other_discovered_controllers(
@@ -777,11 +767,6 @@ async def test_homekit_aborts_when_controller_unavailable_during_discovery_wait(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
-
-
-# ---------------------------------------------------------------------------
-# Error / edge-case paths
-# ---------------------------------------------------------------------------
 
 
 async def test_user_flow_aborts_when_no_controllers_found(hass: HomeAssistant) -> None:
@@ -1214,11 +1199,6 @@ async def test_runtime_integration_discovery_skips_during_user_confirm(
     assert progress[0]["context"]["source"] == config_entries.SOURCE_USER
 
 
-# ---------------------------------------------------------------------------
-# Lifecycle / setup integration
-# ---------------------------------------------------------------------------
-
-
 async def test_async_setup_starts_import_flow(hass: HomeAssistant) -> None:
     """Test YAML config triggers an import flow."""
     with (
@@ -1344,11 +1324,6 @@ async def test_async_maybe_stop_stops_when_only_disabled_entry_matches_controlle
 
     mock_stop.assert_awaited_once_with(hass)
     service.async_schedule_idle_stop.assert_not_called()
-
-
-# ---------------------------------------------------------------------------
-# Helper / internals unit tests
-# ---------------------------------------------------------------------------
 
 
 async def test_async_discover_controllers_starts_shared_service_when_missing(
@@ -1805,11 +1780,6 @@ async def test_setup_entry_raises_not_ready_when_discovery_service_fails(
         await hass.async_block_till_done()
 
     assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
-
-
-# ---------------------------------------------------------------------------
-# async_setup_entry - legacy v1-migrated entry (unique_id=DOMAIN) resolution
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
