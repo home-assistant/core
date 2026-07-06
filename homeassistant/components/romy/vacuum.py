@@ -38,8 +38,7 @@ FAN_SPEEDS: list[str] = [
 
 # Commonly supported features
 SUPPORT_ROMY_ROBOT = (
-    VacuumEntityFeature.BATTERY
-    | VacuumEntityFeature.RETURN_HOME
+    VacuumEntityFeature.RETURN_HOME
     | VacuumEntityFeature.STATE
     | VacuumEntityFeature.START
     | VacuumEntityFeature.STOP
@@ -76,7 +75,6 @@ class RomyVacuumEntity(RomyEntity, StateVacuumEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_fan_speed = FAN_SPEEDS[self.romy.fan_speed]
-        self._attr_battery_level = self.romy.battery_level
         if (status := self.romy.status) is None:
             self._attr_activity = None
             self.async_write_ha_state()
