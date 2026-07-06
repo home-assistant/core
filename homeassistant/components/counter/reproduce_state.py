@@ -8,9 +8,15 @@ from typing import Any
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import ATTR_MAXIMUM, ATTR_MINIMUM, ATTR_STEP, DOMAIN, SERVICE_SET_VALUE, VALUE
+from . import DOMAIN, SERVICE_SET_VALUE, VALUE, CounterEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTRS = {
+    "step": CounterEntityStateAttribute.STEP,
+    "minimum": CounterEntityStateAttribute.MINIMUM,
+    "maximum": CounterEntityStateAttribute.MAXIMUM,
+}
 
 
 async def _async_reproduce_state(
@@ -32,22 +38,17 @@ async def _async_reproduce_state(
         return
 
     # Return if we are already at the right state.
-    if (
-        cur_state.state == state.state
-        and cur_state.attributes.get(ATTR_MAXIMUM) == state.attributes.get(ATTR_MAXIMUM)
-        and cur_state.attributes.get(ATTR_MINIMUM) == state.attributes.get(ATTR_MINIMUM)
-        and cur_state.attributes.get(ATTR_STEP) == state.attributes.get(ATTR_STEP)
+    if cur_state.state == state.state and all(
+        cur_state.attributes.get(attr) == state.attributes.get(attr)
+        for attr in ATTRS.values()
     ):
         return
 
     service_data = {ATTR_ENTITY_ID: state.entity_id, VALUE: state.state}
     service = SERVICE_SET_VALUE
-    if ATTR_MAXIMUM in state.attributes:
-        service_data[ATTR_MAXIMUM] = state.attributes[ATTR_MAXIMUM]
-    if ATTR_MINIMUM in state.attributes:
-        service_data[ATTR_MINIMUM] = state.attributes[ATTR_MINIMUM]
-    if ATTR_STEP in state.attributes:
-        service_data[ATTR_STEP] = state.attributes[ATTR_STEP]
+    for arg, attr in ATTRS.items():
+        if attr in state.attributes:
+            service_data[arg] = state.attributes[attr]
 
     await hass.services.async_call(
         DOMAIN, service, service_data, context=context, blocking=True

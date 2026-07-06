@@ -5,8 +5,7 @@ from typing import Any, Self, override
 
 import voluptuous as vol
 
-from homeassistant.const import (  # noqa: F401
-    ATTR_EDITABLE,
+from homeassistant.const import (
     CONF_ICON,
     CONF_ID,
     CONF_MAXIMUM,
@@ -24,10 +23,6 @@ from .const import DOMAIN, CounterEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_INITIAL = "initial"
-ATTR_STEP = "step"
-ATTR_MINIMUM = "minimum"
-ATTR_MAXIMUM = "maximum"
 VALUE = "value"
 
 CONF_INITIAL = "initial"
