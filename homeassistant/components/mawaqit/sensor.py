@@ -162,7 +162,7 @@ NEXT_SALAT_SENSOR_DESCRIPTION = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    _hass: HomeAssistant,
     config_entry: MawaqitConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:

@@ -418,7 +418,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         {
                             **option,
                             vol.Required(
-                                CONF_UUID, default=list(self.mosques.keys())[0]
+                                CONF_UUID, default=next(iter(self.mosques)) # first mosque in the list
                             ): vol.In(nav_options),
                         }
                     ),
