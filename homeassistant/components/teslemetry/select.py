@@ -288,10 +288,13 @@ class TeslemetryVehiclePollingSelectEntity(
     def _async_update_attrs(self) -> None:
         """Handle updated data from the coordinator."""
         self._climate = bool(self.get("climate_state_is_climate_on"))
-        if not isinstance(self._value, int):
-            self._attr_current_option = None
+        value = self._value
+        # Tesla can report a level above the modeled options (e.g. steering
+        # wheel heat reports 3 with only off/low/high), so bound-check.
+        if isinstance(value, int) and 0 <= value < len(self.entity_description.options):
+            self._attr_current_option = self.entity_description.options[value]
         else:
-            self._attr_current_option = self.entity_description.options[self._value]
+            self._attr_current_option = None
 
 
 class TeslemetryStreamingSelectEntity(
@@ -335,10 +338,12 @@ class TeslemetryStreamingSelectEntity(
 
     def _value_callback(self, value: int | None) -> None:
         """Update the value of the entity."""
-        if value is None:
-            self._attr_current_option = None
-        else:
+        # Tesla can report a level above the modeled options (e.g. steering
+        # wheel heat reports 3 with only off/low/high), so bound-check.
+        if value is not None and 0 <= value < len(self.entity_description.options):
             self._attr_current_option = self.entity_description.options[value]
+        else:
+            self._attr_current_option = None
         self.async_write_ha_state()
 
     def _climate_callback(self, value: bool | None) -> None:
