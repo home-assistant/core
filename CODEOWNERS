@@ -590,6 +590,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/foscam/ @Foscam-wangzhengyu
 /tests/components/foscam/ @Foscam-wangzhengyu
 /homeassistant/components/free_mobile/ @bastgau
+/tests/components/free_mobile/ @bastgau
 /homeassistant/components/freebox/ @hacf-fr/reviewers @Quentame
 /tests/components/freebox/ @hacf-fr/reviewers @Quentame
 /homeassistant/components/freedompro/ @stefano055415
