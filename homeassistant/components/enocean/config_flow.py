@@ -1,6 +1,5 @@
 """Config flows for the EnOcean integration."""
 
-import glob
 from typing import Any, override
 
 from enocean_async import Gateway
