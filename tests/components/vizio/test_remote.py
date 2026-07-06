@@ -101,9 +101,6 @@ async def test_turn_on_off(
 
 @pytest.mark.parametrize(
     ("command", "expected_key"),
-    # Mix canonical, lowercase, and case-varied inputs to exercise the
-    # service's case-insensitive normalization in addition to the
-    # underlying key-press wire effect.
     [("BACK", "BACK"), ("ch_up", "CH_UP"), ("SMARTCAST", "SMARTCAST")],
 )
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
