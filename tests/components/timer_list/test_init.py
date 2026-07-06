@@ -173,33 +173,6 @@ async def test_cancel_timer_archives_timer(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("test_entity")
-async def test_cancel_all_timers(hass: HomeAssistant) -> None:
-    """Test cancelling all timers archives them."""
-    await _start_timer(hass)
-    await _start_timer(hass)
-
-    await _call(hass, "cancel_all_timers")
-
-    assert hass.states.get(TEST_ENTITY_ID).state == "0"
-    assert len(await _get_timers(hass)) == 2
-
-
-@pytest.mark.usefixtures("test_entity")
-async def test_clear_finished_timers(hass: HomeAssistant) -> None:
-    """Test clearing finished and cancelled timers."""
-    timer_id = await _start_timer(hass)
-    await _call(hass, "cancel_timer", timer_id=timer_id)
-    await _start_timer(hass)
-    assert len(await _get_timers(hass)) == 2
-
-    await _call(hass, "clear_finished_timers")
-
-    timers = await _get_timers(hass)
-    assert len(timers) == 1
-    assert timers[0]["status"] == "active"
-
-
-@pytest.mark.usefixtures("test_entity")
 async def test_archive_limit_evicts_oldest(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:

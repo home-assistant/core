@@ -50,12 +50,6 @@ cancel_timer:
       example: "01HZ8ABCDEF0123456789ABCDE"
       selector:
         text:
-cancel_all_timers:
-  target:
-    entity:
-      domain: timer_list
-      supported_features:
-        - timer_list.TimerListEntityFeature.CANCEL_TIMER
 add_time:
   target:
     entity:
@@ -100,10 +94,6 @@ remove_timer:
       example: "01HZ8ABCDEF0123456789ABCDE"
       selector:
         text:
-clear_finished_timers:
-  target:
-    entity:
-      domain: timer_list
 get_timers:
   target:
     entity:

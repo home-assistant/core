@@ -31,11 +31,9 @@ class TimerListServices(StrEnum):
     PAUSE_TIMER = "pause_timer"
     UNPAUSE_TIMER = "unpause_timer"
     CANCEL_TIMER = "cancel_timer"
-    CANCEL_ALL_TIMERS = "cancel_all_timers"
     ADD_TIME = "add_time"
     REMOVE_TIME = "remove_time"
     REMOVE_TIMER = "remove_timer"
-    CLEAR_FINISHED_TIMERS = "clear_finished_timers"
     GET_TIMERS = "get_timers"
 
 
