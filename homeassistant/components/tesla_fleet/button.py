@@ -8,9 +8,11 @@ from tesla_fleet_api.const import Scope
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TeslaFleetConfigEntry
+from .const import DOMAIN
 from .entity import TeslaFleetVehicleEntity
 from .helpers import handle_vehicle_command
 from .models import TeslaFleetVehicleData
@@ -48,10 +50,7 @@ DESCRIPTIONS: tuple[TeslaFleetButtonEntityDescription, ...] = (
     ),
     TeslaFleetButtonEntityDescription(
         key="homelink",
-        func=lambda self: self.api.trigger_homelink(
-            lat=self.coordinator.data["drive_state_latitude"],
-            lon=self.coordinator.data["drive_state_longitude"],
-        ),
+        func=lambda self: self.async_trigger_homelink(),
     ),
 )
 
@@ -88,6 +87,17 @@ class TeslaFleetButtonEntity(TeslaFleetVehicleEntity, ButtonEntity):
     @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
+
+    async def async_trigger_homelink(self) -> Any:
+        """Trigger Homelink, which requires the vehicle location."""
+        if (lat := self.coordinator.data.get("drive_state_latitude")) is None or (
+            lon := self.coordinator.data.get("drive_state_longitude")
+        ) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="homelink_no_location",
+            )
+        return await self.api.trigger_homelink(lat=lat, lon=lon)
 
     @override
     async def async_press(self) -> None:
