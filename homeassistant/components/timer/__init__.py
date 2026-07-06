@@ -7,7 +7,7 @@ from typing import Any, Self, override
 
 import voluptuous as vol
 
-from homeassistant.const import (  # noqa : F401
+from homeassistant.const import (  # noqa: F401
     ATTR_EDITABLE,
     ATTR_ENTITY_ID,
     CONF_ICON,
