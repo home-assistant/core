@@ -6,7 +6,13 @@
     "dev_class": "climate",
     "model": "ThermoZone",
     "name": "Slaapkamer",
-    "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
+    "preset_modes": [
+      "home",
+      "asleep",
+      "away",
+      "vacation",
+      "no_frost"
+    ],
     "select_schedule": null,
     "select_zone_profile": "active",
     "sensors": {
@@ -19,11 +25,19 @@
       "upper_bound": 99.9
     },
     "thermostats": {
-      "primary": ["1346fbd8498d4dbcab7e18d51b771f3d"],
-      "secondary": ["356b65335e274d769c338223e7af9c33"]
+      "primary": [
+        "1346fbd8498d4dbcab7e18d51b771f3d"
+      ],
+      "secondary": [
+        "356b65335e274d769c338223e7af9c33"
+      ]
     },
     "vendor": "Plugwise",
-    "zone_profiles": ["active", "off", "passive"]
+    "zone_profiles": [
+      "active",
+      "off",
+      "passive"
+    ]
   },
   "13228dab8ce04617af318a2888b3c548": {
     "active_preset": "home",
@@ -33,7 +47,13 @@
     "dev_class": "climate",
     "model": "ThermoZone",
     "name": "Woonkamer",
-    "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
+    "preset_modes": [
+      "home",
+      "asleep",
+      "away",
+      "vacation",
+      "no_frost"
+    ],
     "select_schedule": null,
     "select_zone_profile": "active",
     "sensors": {
@@ -46,11 +66,19 @@
       "upper_bound": 30.0
     },
     "thermostats": {
-      "primary": ["f61f1a2535f54f52ad006a3d18e459ca"],
-      "secondary": ["833de10f269c4deab58fb9df69901b4e"]
+      "primary": [
+        "f61f1a2535f54f52ad006a3d18e459ca"
+      ],
+      "secondary": [
+        "833de10f269c4deab58fb9df69901b4e"
+      ]
     },
     "vendor": "Plugwise",
-    "zone_profiles": ["active", "off", "passive"]
+    "zone_profiles": [
+      "active",
+      "off",
+      "passive"
+    ]
   },
   "1346fbd8498d4dbcab7e18d51b771f3d": {
     "available": true,
@@ -225,7 +253,11 @@
     },
     "dev_class": "gateway",
     "firmware": "3.2.8",
-    "gateway_modes": ["away", "full", "vacation"],
+    "gateway_modes": [
+      "away",
+      "full",
+      "vacation"
+    ],
     "hardware": "AME Smile 2.0 board",
     "location": "9e4433a9d69f40b3aefd15e74395eaec",
     "mac_address": "012345670001",
@@ -233,7 +265,12 @@
     "model_id": "smile_open_therm",
     "name": "Adam",
     "notifications": {},
-    "regulation_modes": ["heating", "off", "bleeding_cold", "bleeding_hot"],
+    "regulation_modes": [
+      "heating",
+      "off",
+      "bleeding_cold",
+      "bleeding_hot"
+    ],
     "select_gateway_mode": "full",
     "select_regulation_mode": "heating",
     "sensors": {
@@ -250,7 +287,13 @@
     "dev_class": "climate",
     "model": "ThermoZone",
     "name": "Kinderkamer",
-    "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
+    "preset_modes": [
+      "home",
+      "asleep",
+      "away",
+      "vacation",
+      "no_frost"
+    ],
     "select_schedule": null,
     "select_zone_profile": "active",
     "sensors": {
@@ -263,11 +306,19 @@
       "upper_bound": 99.9
     },
     "thermostats": {
-      "primary": ["6f3e9d7084214c21b9dfa46f6eeb8700"],
-      "secondary": ["d4496250d0e942cfa7aea3476e9070d5"]
+      "primary": [
+        "6f3e9d7084214c21b9dfa46f6eeb8700"
+      ],
+      "secondary": [
+        "d4496250d0e942cfa7aea3476e9070d5"
+      ]
     },
     "vendor": "Plugwise",
-    "zone_profiles": ["active", "off", "passive"]
+    "zone_profiles": [
+      "active",
+      "off",
+      "passive"
+    ]
   },
   "d4496250d0e942cfa7aea3476e9070d5": {
     "available": true,
@@ -301,7 +352,13 @@
     "dev_class": "climate",
     "model": "ThermoZone",
     "name": "Logeerkamer",
-    "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
+    "preset_modes": [
+      "home",
+      "asleep",
+      "away",
+      "vacation",
+      "no_frost"
+    ],
     "select_schedule": null,
     "select_zone_profile": "active",
     "sensors": {
@@ -314,11 +371,19 @@
       "upper_bound": 99.9
     },
     "thermostats": {
-      "primary": ["a6abc6a129ee499c88a4d420cc413b47"],
-      "secondary": ["1da4d325838e4ad8aac12177214505c9"]
+      "primary": [
+        "a6abc6a129ee499c88a4d420cc413b47"
+      ],
+      "secondary": [
+        "1da4d325838e4ad8aac12177214505c9"
+      ]
     },
     "vendor": "Plugwise",
-    "zone_profiles": ["active", "off", "passive"]
+    "zone_profiles": [
+      "active",
+      "off",
+      "passive"
+    ]
   },
   "e4684553153b44afbef2200885f379dc": {
     "available": true,
@@ -327,20 +392,27 @@
       "flame_state": false,
       "heating_state": false
     },
-    "dev_class": "heater_central",
-    "location": "9e4433a9d69f40b3aefd15e74395eaec",
-    "max_dhw_temperature": {
-      "lower_bound": 40.0,
-      "resolution": 0.01,
-      "setpoint": 60.0,
-      "upper_bound": 60.0
-    },
-    "maximum_boiler_temperature": {
+    "boiler_temperature": {
+      "current": 37.3,
       "lower_bound": 20.0,
       "resolution": 0.01,
       "setpoint": 90.0,
       "upper_bound": 90.0
     },
+    "dev_class": "heater_central",
+    "dhw_mode": "eco",
+    "dhw_modes": [
+      "comfort",
+      "eco"
+    ],
+    "dhw_temperature": {
+      "current": 37.3,
+      "lower_bound": 40.0,
+      "resolution": 0.01,
+      "setpoint": 60.0,
+      "upper_bound": 60.0
+    },
+    "location": "9e4433a9d69f40b3aefd15e74395eaec",
     "model": "Generic heater",
     "model_id": "10.20",
     "name": "OpenTherm",
@@ -348,11 +420,7 @@
       "intended_boiler_temperature": 0.0,
       "modulation_level": 0.0,
       "return_temperature": 37.1,
-      "water_pressure": 1.4,
-      "water_temperature": 37.3
-    },
-    "switches": {
-      "dhw_cm_switch": false
+      "water_pressure": 1.4
     },
     "vendor": "Remeha B.V."
   },

@@ -2,13 +2,12 @@
   "056ee145a816487eaa69243c3280f8bf": {
     "available": true,
     "binary_sensors": {
-      "cooling_state": true,
       "dhw_state": false,
-      "flame_state": false,
-      "heating_state": false
+      "flame_state": true,
+      "heating_state": true
     },
     "boiler_temperature": {
-      "current": 19.0,
+      "current": 43.0,
       "lower_bound": 25.0,
       "resolution": 0.01,
       "setpoint": 50.0,
@@ -24,8 +23,20 @@
     "name": "OpenTherm",
     "select_dhw_mode": "eco",
     "sensors": {
-      "intended_boiler_temperature": 17.5
+      "intended_boiler_temperature": 22.5
     }
+  },
+  "10016900610d4c7481df78c89606ef22": {
+    "available": true,
+    "dev_class": "valve_actuator_plug",
+    "location": "d9786723dbcf4f19b5c629a54629f9c7",
+    "model_id": "TS0011",
+    "name": "Aanvoer water afsluiter (nous lz3)",
+    "switches": {
+      "relay": false
+    },
+    "vendor": "_TZ3000_abjodzas",
+    "zigbee_mac_address": "A4C13862AF9917B1"
   },
   "14df5c4dc8cb4ba69f9d1ac0eaf7c5c6": {
     "available": true,
@@ -42,8 +53,8 @@
     "sensors": {
       "battery": 100,
       "humidity": 65.0,
-      "setpoint": 23.5,
-      "temperature": 24.2
+      "setpoint": 20.5,
+      "temperature": 19.7
     },
     "temperature_offset": {
       "lower_bound": -2.0,
@@ -68,8 +79,8 @@
     "name": "Tom Badkamer",
     "sensors": {
       "battery": 60,
-      "setpoint": 25.0,
-      "temperature": 24.8,
+      "setpoint": 20.0,
+      "temperature": 19.0,
       "temperature_difference": -0.4,
       "valve_position": 100.0
     },
@@ -82,6 +93,85 @@
     "vendor": "Plugwise",
     "zigbee_mac_address": "000D6F000C8FCBA0"
   },
+  "2568cc4b9c1e401495d4741a5f89bee1": {
+    "available": true,
+    "dev_class": "hometheater_plug",
+    "firmware": "2020-11-10T01:00:00+01:00",
+    "location": "f2bf9048bef64cc5b6d5110154e33c81",
+    "model": "Plug",
+    "model_id": "160-01",
+    "name": "Plug MediaTV",
+    "sensors": {
+      "electricity_consumed": 15.8,
+      "electricity_consumed_interval": 4.0,
+      "electricity_produced": 0.0,
+      "electricity_produced_interval": 0.0
+    },
+    "switches": {
+      "lock": true,
+      "relay": true
+    },
+    "vendor": "Plugwise",
+    "zigbee_mac_address": "000D6F000D13CBA1"
+  },
+  "29542b2b6a6a4169acecc15c72a599b8": {
+    "available": true,
+    "dev_class": "water_heater_vessel_plug",
+    "firmware": "2020-11-10T01:00:00+01:00",
+    "location": "8201a2ac4d1b4303bf994e18d67311eb",
+    "model": "Plug",
+    "model_id": "160-01",
+    "name": "Plug Thermex Boiler",
+    "sensors": {
+      "electricity_consumed": 0.69,
+      "electricity_consumed_interval": 0.0,
+      "electricity_produced": 0.0,
+      "electricity_produced_interval": 0.0
+    },
+    "switches": {
+      "lock": false,
+      "relay": true
+    },
+    "vendor": "Plugwise",
+    "zigbee_mac_address": "000D6F000D13CBA2"
+  },
+  "67d73d0bd469422db25a618a5fb8eeb0": {
+    "available": true,
+    "dev_class": "heater_central_plug",
+    "location": "b4f211175e124df59603412bafa77a34",
+    "model": "Aqara Smart Plug",
+    "model_id": "lumi.plug.maeu01",
+    "name": "SmartPlug Floor 0",
+    "sensors": {
+      "electricity_consumed_interval": 0.0
+    },
+    "switches": {
+      "lock": false,
+      "relay": true
+    },
+    "vendor": "LUMI",
+    "zigbee_mac_address": "54EF4410002C97F2"
+  },
+  "854f8a9b0e7e425db97f1f110e1ce4b3": {
+    "available": true,
+    "dev_class": "central_heating_pump_plug",
+    "firmware": "2020-11-10T01:00:00+01:00",
+    "location": "f2bf9048bef64cc5b6d5110154e33c81",
+    "model": "Plug",
+    "model_id": "160-01",
+    "name": "Plug Vloerverwarming",
+    "sensors": {
+      "electricity_consumed": 45.0,
+      "electricity_consumed_interval": 12.0,
+      "electricity_produced": 0.0,
+      "electricity_produced_interval": 0.0
+    },
+    "switches": {
+      "relay": true
+    },
+    "vendor": "Plugwise",
+    "zigbee_mac_address": "000D6F000D13CBA0"
+  },
   "ad4838d7d35c4d6ea796ee12ae5aedf8": {
     "dev_class": "thermostat",
     "location": "f2bf9048bef64cc5b6d5110154e33c81",
@@ -89,8 +179,8 @@
     "model_id": "143.1",
     "name": "Anna",
     "sensors": {
-      "setpoint": 23.5,
-      "temperature": 24.0
+      "setpoint": 20.5,
+      "temperature": 20.1
     },
     "vendor": "Plugwise"
   },
@@ -131,13 +221,12 @@
       "bleeding_cold",
       "heating",
       "off",
-      "bleeding_hot",
-      "cooling"
+      "bleeding_hot"
     ],
     "select_gateway_mode": "full",
-    "select_regulation_mode": "cooling",
+    "select_regulation_mode": "heating",
     "sensors": {
-      "outdoor_temperature": 29.65
+      "outdoor_temperature": 15.1
     },
     "vendor": "Plugwise",
     "zigbee_mac_address": "000D6F000D5ACBA0"
@@ -157,8 +246,8 @@
     "sensors": {
       "battery": 100,
       "humidity": 65.8,
-      "setpoint": 23.5,
-      "temperature": 23.8
+      "setpoint": 20.5,
+      "temperature": 20.4
     },
     "vendor": "Plugwise",
     "zigbee_mac_address": "70AC08FFFEE1CBA0"
@@ -177,8 +266,8 @@
     "name": "Lisa Badkamer",
     "sensors": {
       "battery": 71,
-      "setpoint": 25.0,
-      "temperature": 25.6
+      "setpoint": 20.0,
+      "temperature": 18.7
     },
     "temperature_offset": {
       "lower_bound": -2.0,
@@ -215,8 +304,8 @@
       "Test",
       "off"
     ],
-    "climate_mode": "cool",
-    "control_state": "cooling",
+    "climate_mode": "auto",
+    "control_state": "heating",
     "dev_class": "climate",
     "model": "ThermoZone",
     "name": "Living room",
@@ -227,17 +316,17 @@
       "home",
       "away"
     ],
-    "select_schedule": "off",
+    "select_schedule": "Weekschema",
     "select_zone_profile": "active",
     "sensors": {
       "electricity_consumed": 60.8,
       "electricity_produced": 0.0,
-      "temperature": 24.2
+      "temperature": 19.7
     },
     "thermostat": {
       "lower_bound": 1.0,
       "resolution": 0.01,
-      "setpoint": 23.5,
+      "setpoint": 20.5,
       "upper_bound": 35.0
     },
     "thermostats": {
@@ -264,8 +353,8 @@
       "Test",
       "off"
     ],
-    "climate_mode": "auto",
-    "control_state": "cooling",
+    "climate_mode": "heat",
+    "control_state": "idle",
     "dev_class": "climate",
     "model": "ThermoZone",
     "name": "Bathroom",
@@ -281,12 +370,12 @@
     "sensors": {
       "electricity_consumed": 0.0,
       "electricity_produced": 0.0,
-      "temperature": 25.8
+      "temperature": 18.7
     },
     "thermostat": {
       "lower_bound": 0.0,
       "resolution": 0.01,
-      "setpoint": 25.0,
+      "setpoint": 20.0,
       "upper_bound": 99.9
     },
     "thermostats": {

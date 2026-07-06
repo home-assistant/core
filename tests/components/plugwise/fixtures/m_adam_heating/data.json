@@ -6,28 +6,31 @@
       "flame_state": false,
       "heating_state": true
     },
-    "dev_class": "heater_central",
-    "location": "bc93488efab249e5bc54fd7e175a6f91",
-    "max_dhw_temperature": {
-      "lower_bound": 40.0,
-      "resolution": 0.01,
-      "setpoint": 60.0,
-      "upper_bound": 60.0
-    },
-    "maximum_boiler_temperature": {
+    "boiler_temperature": {
+      "current": 37.0,
       "lower_bound": 25.0,
       "resolution": 0.01,
       "setpoint": 50.0,
       "upper_bound": 95.0
     },
+    "dev_class": "heater_central",
+    "dhw_modes": [
+      "comfort",
+      "eco"
+    ],
+    "dhw_temperature": {
+      "current": 37.0,
+      "lower_bound": 40.0,
+      "resolution": 0.01,
+      "setpoint": 60.0,
+      "upper_bound": 60.0
+    },
+    "location": "bc93488efab249e5bc54fd7e175a6f91",
     "model": "Generic heater",
     "name": "OpenTherm",
+    "select_dhw_mode": "eco",
     "sensors": {
-      "intended_boiler_temperature": 38.1,
-      "water_temperature": 37.0
-    },
-    "switches": {
-      "dhw_cm_switch": false
+      "intended_boiler_temperature": 38.1
     }
   },
   "14df5c4dc8cb4ba69f9d1ac0eaf7c5c6": {
@@ -36,6 +39,7 @@
       "low_battery": false
     },
     "dev_class": "zone_thermostat",
+    "firmware": "2025-11-10T01:00:00+01:00",
     "hardware": "1",
     "location": "f2bf9048bef64cc5b6d5110154e33c81",
     "model": "Emma Pro",
@@ -117,7 +121,11 @@
     },
     "dev_class": "gateway",
     "firmware": "3.9.0",
-    "gateway_modes": ["away", "full", "vacation"],
+    "gateway_modes": [
+      "away",
+      "full",
+      "vacation"
+    ],
     "hardware": "AME Smile 2.0 board",
     "location": "bc93488efab249e5bc54fd7e175a6f91",
     "mac_address": "D40FB201CBA0",
@@ -125,7 +133,12 @@
     "model_id": "smile_open_therm",
     "name": "Adam",
     "notifications": {},
-    "regulation_modes": ["bleeding_cold", "heating", "off", "bleeding_hot"],
+    "regulation_modes": [
+      "bleeding_cold",
+      "heating",
+      "off",
+      "bleeding_hot"
+    ],
     "select_gateway_mode": "full",
     "select_regulation_mode": "heating",
     "sensors": {
@@ -212,7 +225,13 @@
     "dev_class": "climate",
     "model": "ThermoZone",
     "name": "Living room",
-    "preset_modes": ["vacation", "no_frost", "asleep", "home", "away"],
+    "preset_modes": [
+      "vacation",
+      "no_frost",
+      "asleep",
+      "home",
+      "away"
+    ],
     "select_schedule": "off",
     "select_zone_profile": "active",
     "sensors": {
@@ -235,7 +254,11 @@
       "secondary": []
     },
     "vendor": "Plugwise",
-    "zone_profiles": ["active", "off", "passive"]
+    "zone_profiles": [
+      "active",
+      "off",
+      "passive"
+    ]
   },
   "f871b8c4d63549319221e294e4f88074": {
     "active_preset": "vacation",
@@ -251,7 +274,13 @@
     "dev_class": "climate",
     "model": "ThermoZone",
     "name": "Bathroom",
-    "preset_modes": ["vacation", "no_frost", "asleep", "home", "away"],
+    "preset_modes": [
+      "vacation",
+      "no_frost",
+      "asleep",
+      "home",
+      "away"
+    ],
     "select_schedule": "off",
     "select_zone_profile": "passive",
     "sensors": {
@@ -266,10 +295,18 @@
       "upper_bound": 99.9
     },
     "thermostats": {
-      "primary": ["e2f4322d57924fa090fbbc48b3a140dc"],
-      "secondary": ["1772a4ea304041adb83f357b751341ff"]
+      "primary": [
+        "e2f4322d57924fa090fbbc48b3a140dc"
+      ],
+      "secondary": [
+        "1772a4ea304041adb83f357b751341ff"
+      ]
     },
     "vendor": "Plugwise",
-    "zone_profiles": ["active", "off", "passive"]
+    "zone_profiles": [
+      "active",
+      "off",
+      "passive"
+    ]
   }
 }

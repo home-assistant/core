@@ -1,7 +1,10 @@
 {
   "1e5e55b958ac445583602f767cb45942": {
     "active_preset": "home",
-    "available_schedules": ["Thermostat schedule", "off"],
+    "available_schedules": [
+      "Thermostat schedule",
+      "off"
+    ],
     "climate_mode": "heat",
     "control_state": "idle",
     "dev_class": "thermostat",
@@ -10,7 +13,13 @@
     "location": "5b13651d79c4454684fd268850b1bff8",
     "model": "ThermoTouch",
     "name": "Anna",
-    "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
+    "preset_modes": [
+      "home",
+      "asleep",
+      "away",
+      "vacation",
+      "no_frost"
+    ],
     "select_schedule": "off",
     "sensors": {
       "illuminance": 2.0,
@@ -39,18 +48,20 @@
       "heating_state": false
     },
     "dev_class": "heater_central",
+    "dhw_modes": [
+      "comfort",
+      "eco"
+    ],
     "location": "da7be222ab3b420c927f3e49fade0304",
     "model": "Generic heater",
     "model_id": "HR24",
     "name": "OpenTherm",
+    "select_dhw_mode": "comfort",
     "sensors": {
       "intended_boiler_temperature": 0.0,
       "modulation_level": 0.0,
       "water_pressure": 6.0,
       "water_temperature": 35.0
-    },
-    "switches": {
-      "dhw_cm_switch": true
     },
     "vendor": "Intergas"
   },

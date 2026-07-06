@@ -44,7 +44,13 @@
     "location": "0000aaaa0000aaaa0000aaaa0000aa00",
     "model": "ThermoTouch",
     "name": "Anna",
-    "preset_modes": ["away", "vacation", "asleep", "home", "no_frost"],
+    "preset_modes": [
+      "away",
+      "vacation",
+      "asleep",
+      "home",
+      "no_frost"
+    ],
     "select_schedule": null,
     "sensors": {
       "illuminance": 150.8,
