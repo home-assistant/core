@@ -14,11 +14,7 @@ from datetime import datetime, timedelta
 from enum import Enum, StrEnum
 import logging
 import time
-<<<<<<< HEAD
 from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict, override
-=======
-from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict
->>>>>>> db2b796c904 (Fix)
 
 import attr
 import voluptuous as vol
@@ -2382,7 +2378,7 @@ def async_config_entry_disabled_by_changed(
 @callback
 def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
     """Clean up device registry when entities removed."""
-    from . import category_registry as cr, event, label_registry as lr
+    from . import category_registry as cr, event, label_registry as lr  # noqa: PLC0415
 
     @callback
     def _removed_from_registry_filter(
