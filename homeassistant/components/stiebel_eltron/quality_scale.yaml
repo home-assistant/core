@@ -30,19 +30,8 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: |
-      `async_set_hvac_mode` returns early whenever a preset is active, but
-      every OperatingMode now maps to a preset, so the guard silently
-      blocks all HVAC mode changes on a real device. Fix in a follow-up PR.
-  config-entry-unloading:
-    status: todo
-    comment: |
-      `async_unload_entry` closes the Modbus connection before unloading
-      the platforms, leaving the entity able to service actions against a
-      closed client, and leaks the connection if the unload fails. Fix in
-      a follow-up PR.
+  action-exceptions: todo
+  config-entry-unloading: todo
   docs-configuration-parameters:
     status: exempt
     comment: Integration does not have an options flow.
