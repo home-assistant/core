@@ -15,7 +15,6 @@ DATA_COMPONENT: HassKey[EntityComponent[TimerListEntity]] = HassKey(DOMAIN)
 
 ATTR_TIMER_ID = "timer_id"
 ATTR_DURATION = "duration"
-ATTR_FINISH_ACTION = "finish_action"
 ATTR_FINISHES_AT = "finishes_at"
 ATTR_CREATED_AT = "created_at"
 ATTR_FINISHED_AT = "finished_at"
@@ -47,14 +46,6 @@ class TimerStatus(StrEnum):
     PAUSED = "paused"
     FINISHED = "finished"
     CANCELLED = "cancelled"
-
-
-class TimerFinishAction(StrEnum):
-    """What happens to a timer once it finishes."""
-
-    REMOVE = "remove"
-    ARCHIVE = "archive"
-    RESTART = "restart"
 
 
 class TimerListEventType(StrEnum):

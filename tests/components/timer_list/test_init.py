@@ -23,13 +23,9 @@ async def _start_timer(
     *,
     duration: int = 60,
     name: str | None = None,
-    finish_action: str = "remove",
 ) -> str:
     """Start a timer and return its id."""
-    data: dict[str, Any] = {
-        "duration": {"seconds": duration},
-        "finish_action": finish_action,
-    }
+    data: dict[str, Any] = {"duration": {"seconds": duration}}
     if name is not None:
         data[ATTR_NAME] = name
     result = await hass.services.async_call(
@@ -104,27 +100,11 @@ async def test_get_timers_status_filter(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("test_entity")
-async def test_finish_action_remove(
+async def test_timer_finishes_and_is_archived(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test a timer is removed after finishing with the remove action."""
-    await _start_timer(hass, duration=60, finish_action="remove")
-    assert hass.states.get(TEST_ENTITY_ID).state == "1"
-
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(TEST_ENTITY_ID).state == "0"
-    assert await _get_timers(hass) == []
-
-
-@pytest.mark.usefixtures("test_entity")
-async def test_finish_action_archive(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Test a timer is retained as finished with the archive action."""
-    await _start_timer(hass, duration=60, finish_action="archive")
+    """Test a finished timer is archived as ``finished``."""
+    await _start_timer(hass, duration=60)
 
     freezer.tick(timedelta(seconds=61))
     async_fire_time_changed(hass)
@@ -135,24 +115,6 @@ async def test_finish_action_archive(
     assert len(timers) == 1
     assert timers[0]["status"] == "finished"
     assert timers[0]["finished_at"] is not None
-
-
-@pytest.mark.usefixtures("test_entity")
-async def test_finish_action_restart(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Test a timer restarts itself with the restart action."""
-    timer_id = await _start_timer(hass, duration=60, finish_action="restart")
-
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(TEST_ENTITY_ID).state == "1"
-    timers = await _get_timers(hass)
-    assert len(timers) == 1
-    assert timers[0]["timer_id"] == timer_id
-    assert timers[0]["status"] == "active"
 
 
 @pytest.mark.usefixtures("test_entity")
@@ -190,7 +152,7 @@ async def test_add_and_remove_time(
 @pytest.mark.usefixtures("test_entity")
 async def test_remove_time_finishes_timer(hass: HomeAssistant) -> None:
     """Test removing more time than remaining finishes the timer immediately."""
-    timer_id = await _start_timer(hass, duration=60, finish_action="archive")
+    timer_id = await _start_timer(hass, duration=60)
 
     await _call(hass, "remove_time", timer_id=timer_id, duration={"seconds": 120})
 
@@ -199,19 +161,9 @@ async def test_remove_time_finishes_timer(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("test_entity")
-async def test_cancel_timer_remove(hass: HomeAssistant) -> None:
-    """Test cancelling a remove-action timer deletes it."""
-    timer_id = await _start_timer(hass, finish_action="remove")
-    await _call(hass, "cancel_timer", timer_id=timer_id)
-
-    assert hass.states.get(TEST_ENTITY_ID).state == "0"
-    assert await _get_timers(hass) == []
-
-
-@pytest.mark.usefixtures("test_entity")
-async def test_cancel_timer_archive(hass: HomeAssistant) -> None:
-    """Test cancelling an archive-action timer retains it as cancelled."""
-    timer_id = await _start_timer(hass, finish_action="archive")
+async def test_cancel_timer_archives_timer(hass: HomeAssistant) -> None:
+    """Test cancelling a timer retains it as cancelled."""
+    timer_id = await _start_timer(hass)
     await _call(hass, "cancel_timer", timer_id=timer_id)
 
     assert hass.states.get(TEST_ENTITY_ID).state == "0"
@@ -222,21 +174,20 @@ async def test_cancel_timer_archive(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("test_entity")
 async def test_cancel_all_timers(hass: HomeAssistant) -> None:
-    """Test cancelling all timers."""
+    """Test cancelling all timers archives them."""
     await _start_timer(hass)
-    await _start_timer(hass, finish_action="archive")
+    await _start_timer(hass)
 
     await _call(hass, "cancel_all_timers")
 
     assert hass.states.get(TEST_ENTITY_ID).state == "0"
-    # The archived timer is retained as cancelled, the remove timer is deleted.
-    assert len(await _get_timers(hass)) == 1
+    assert len(await _get_timers(hass)) == 2
 
 
 @pytest.mark.usefixtures("test_entity")
 async def test_clear_finished_timers(hass: HomeAssistant) -> None:
     """Test clearing finished and cancelled timers."""
-    timer_id = await _start_timer(hass, finish_action="archive")
+    timer_id = await _start_timer(hass)
     await _call(hass, "cancel_timer", timer_id=timer_id)
     await _start_timer(hass)
     assert len(await _get_timers(hass)) == 2
@@ -246,6 +197,25 @@ async def test_clear_finished_timers(hass: HomeAssistant) -> None:
     timers = await _get_timers(hass)
     assert len(timers) == 1
     assert timers[0]["status"] == "active"
+
+
+@pytest.mark.usefixtures("test_entity")
+async def test_archive_limit_evicts_oldest(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test only the 10 most recently archived timers are retained."""
+    timer_ids = []
+    for _ in range(11):
+        timer_id = await _start_timer(hass)
+        await _call(hass, "cancel_timer", timer_id=timer_id)
+        timer_ids.append(timer_id)
+        freezer.tick(timedelta(seconds=1))
+
+    timers = await _get_timers(hass)
+    assert len(timers) == 10
+    archived_ids = {timer["timer_id"] for timer in timers}
+    assert timer_ids[0] not in archived_ids
+    assert set(timer_ids[1:]) == archived_ids
 
 
 @pytest.mark.usefixtures("test_entity")
@@ -291,9 +261,6 @@ async def test_websocket_subscribe(
     await _call(hass, "cancel_timer", timer_id=timer_id)
     msg = await client.receive_json()
     assert msg["event"]["event_type"] == "cancelled"
-    # remove-action timers also emit a removed event after cancellation.
-    msg = await client.receive_json()
-    assert msg["event"]["event_type"] == "removed"
 
 
 @pytest.mark.usefixtures("test_entity")

@@ -10,13 +10,6 @@
     }
   },
   "selector": {
-    "finish_action": {
-      "options": {
-        "archive": "Archive",
-        "remove": "Remove",
-        "restart": "Restart"
-      }
-    },
     "status": {
       "options": {
         "active": "Active",
@@ -109,10 +102,6 @@
         "duration": {
           "description": "How long the timer should run for.",
           "name": "Duration"
-        },
-        "finish_action": {
-          "description": "What happens to the timer once it finishes.",
-          "name": "Finish action"
         },
         "name": {
           "description": "Optional name for the timer.",
