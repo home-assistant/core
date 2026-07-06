@@ -384,7 +384,7 @@ class GroupConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     @override
     def async_config_flow_finished(self, options: Mapping[str, Any]) -> None:
         """Hide the group members if requested."""
-        if options.get(CONF_HIDE_MEMBERS):
+        if options[CONF_HIDE_MEMBERS]:
             _async_hide_members(
                 self.hass, options[CONF_ENTITIES], er.RegistryEntryHider.INTEGRATION
             )
