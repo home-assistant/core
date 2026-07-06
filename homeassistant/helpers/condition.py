@@ -1,8 +1,7 @@
 """Offer reusable conditions."""
 
-from __future__ import annotations
-
 import abc
+import asyncio
 from collections import deque
 from collections.abc import Callable, Container, Coroutine, Generator, Iterable, Mapping
 from contextlib import contextmanager
@@ -16,12 +15,15 @@ import sys
 from typing import (
     TYPE_CHECKING,
     Any,
+    ClassVar,
     Final,
     Literal,
+    Never,
     Protocol,
     TypedDict,
     Unpack,
     cast,
+    final,
     overload,
     override,
 )
@@ -55,7 +57,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     WEEKDAYS,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import (
     ConditionError,
     ConditionErrorContainer,
@@ -86,6 +88,7 @@ from .automation import (
     move_options_fields_to_top_level,
 )
 from .integration_platform import async_process_integration_platforms
+from .recorder import get_instance
 from .selector import (
     NumericThresholdMode,
     NumericThresholdSelector,
@@ -93,7 +96,12 @@ from .selector import (
     NumericThresholdType,
     TargetSelector,
 )
-from .target import TargetSelection, async_extract_referenced_entity_ids
+from .target import (
+    TargetSelection,
+    TargetStateChangedData,
+    async_extract_referenced_entity_ids,
+    async_track_target_selector_state_change_event,
+)
 from .template import Template, render_complex
 from .trace import (
     TraceElement,
@@ -107,11 +115,24 @@ from .trace import (
 )
 from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType
 
+if TYPE_CHECKING:
+    from homeassistant.components.recorder import Recorder
+
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 FROM_CONFIG_FORMAT = "{}_from_config"
 VALIDATE_CONFIG_FORMAT = "{}_validate_config"
 
 _LOGGER = logging.getLogger(__name__)
+
+# Upper bound on the best-effort recorder query used to prime `for:` durations
+# at setup. If history can't be read within this window we fall back to the
+# conservative live-state anchor rather than blocking condition setup.
+HISTORY_PRIMING_TIMEOUT = 10
+
+# How far back the `for:` priming query reaches. Caps the cost of the query for
+# very long `for:` durations; beyond this we rely on the live-state anchor, so
+# such conditions may only become true once enough time has elapsed since setup.
+MAX_HISTORY_PRIMING_LOOKBACK = timedelta(hours=6)
 
 _PLATFORM_ALIASES: dict[str | None, str | None] = {
     "and": None,
@@ -132,9 +153,6 @@ INPUT_ENTITY_ID = re.compile(
 
 CONDITION_DESCRIPTION_CACHE: HassKey[dict[str, dict[str, Any] | None]] = HassKey(
     "condition_description_cache"
-)
-CONDITION_DISABLED_CONDITIONS: HassKey[set[str]] = HassKey(
-    "condition_disabled_conditions"
 )
 CONDITION_PLATFORM_SUBSCRIPTIONS: HassKey[
     list[Callable[[set[str]], Coroutine[Any, Any, None]]]
@@ -177,27 +195,10 @@ _CONDITIONS_DESCRIPTION_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant) -> None:
     """Set up the condition helper."""
-    from homeassistant.components import automation, labs  # noqa: PLC0415
-
     hass.data[CONDITION_DESCRIPTION_CACHE] = {}
-    hass.data[CONDITION_DISABLED_CONDITIONS] = set()
     hass.data[CONDITION_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[CONDITIONS] = {}
-
-    async def new_triggers_conditions_listener(
-        _event_data: labs.EventLabsUpdatedData,
-    ) -> None:
-        """Handle new_triggers_conditions flag change."""
-        # Invalidate the cache
-        hass.data[CONDITION_DESCRIPTION_CACHE] = {}
-        hass.data[CONDITION_DISABLED_CONDITIONS] = set()
-
-    labs.async_subscribe_preview_feature(
-        hass,
-        automation.DOMAIN,
-        automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-        new_triggers_conditions_listener,
-    )
+    hass.data[_DATA_HISTORY_PRIMING_MANAGER] = _HistoryPrimingManager(hass)
 
     await async_process_integration_platforms(
         hass, "condition", _register_condition_platform, wait_for_platforms=True
@@ -224,11 +225,9 @@ async def _register_condition_platform(
 ) -> None:
     """Register a condition platform and notify listeners.
 
-    If the condition platform does not provide any conditions, or it is disabled,
+    If the condition platform does not provide any conditions,
     listeners will not be notified.
     """
-    from homeassistant.components import automation  # noqa: PLC0415
-
     new_conditions: set[str] = set()
     conditions = hass.data[CONDITIONS]
 
@@ -253,10 +252,6 @@ async def _register_condition_platform(
             "Integration %s does not provide condition support, skipping",
             integration_domain,
         )
-        return
-
-    if automation.is_disabled_experimental_condition(hass, integration_domain):
-        _LOGGER.debug("Conditions for integration %s are disabled", integration_domain)
         return
 
     # We don't use gather here because gather adds additional overhead
@@ -284,10 +279,121 @@ _CONDITION_SCHEMA = _CONDITION_BASE_SCHEMA.extend(
 )
 
 
-class Condition(abc.ABC):
-    """Condition class."""
+class ConditionChecker(abc.ABC):
+    """Base class for condition checkers."""
 
-    _hass: HomeAssistant
+    _set_up = False
+    _unloaded = False
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize condition checker."""
+        self._hass = hass
+
+    def __call__(
+        self, hass: HomeAssistant, variables: TemplateVarsType = None
+    ) -> bool | None:
+        """Check the condition.
+
+        `hass` parameter is for backwards compatibility only and is always ignored.
+        """
+        return self.async_check(variables=variables)
+
+    def __del__(self) -> None:
+        """Clean up when the checker is deleted."""
+        if self._unloaded:
+            return
+        try:
+            self.async_unload()
+        except Exception:
+            _LOGGER.exception("Error while unloading condition checker")
+
+    @final
+    async def async_setup(self) -> None:
+        """Set up the condition checker.
+
+        Users of conditions do not need to call this method directly. It is called
+        automatically by async_from_config and async_conditions_from_config.
+        """
+        await self._async_setup()
+        self._set_up = True
+
+    async def _async_setup(self) -> None:  # noqa: B027
+        """Set up the condition checker.
+
+        Intended to be overridden in derived classes that need to do setup.
+        """
+
+    @final
+    def async_unload(self) -> None:
+        """Clean up any resources held by the checker.
+
+        Users of conditions must call this method when they are done with the
+        checker to ensure resources are released.
+        """
+        self._async_unload()
+        self._unloaded = True
+
+    def _async_unload(self) -> None:  # noqa: B027
+        """Clean up any resources held by the checker.
+
+        Intended to be overridden in derived classes that need to do unloading.
+        """
+
+    @final
+    def async_check(
+        self, *, variables: TemplateVarsType = None, **kwargs: Never
+    ) -> bool | None:
+        """Check the condition."""
+        if not self._set_up:
+            raise HomeAssistantError("Condition checker is not set up")
+        with trace_condition(variables):
+            result = self._async_check(variables=variables)
+            condition_trace_update_result(result=result)
+            return result
+
+    @abc.abstractmethod
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool | None:
+        """Check the condition."""
+
+
+class LegacyConditionChecker(ConditionChecker):
+    """Condition checker wrapping a legacy condition factory function."""
+
+    def __init__(self, hass: HomeAssistant, checker: ConditionCheckerType) -> None:
+        """Initialize condition checker."""
+        super().__init__(hass)
+        self._checker = checker
+
+    @override
+    def _async_check(self, variables: TemplateVarsType = None, **kwargs: Any) -> bool:
+        return self._checker(self._hass, variables)
+
+
+class DisabledConditionChecker(ConditionChecker):
+    """Condition checker for disabled conditions."""
+
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> None:
+        return None
+
+
+class CompoundConditionChecker(ConditionChecker):
+    """Base class for compound condition checkers (and/or/not)."""
+
+    def __init__(self, hass: HomeAssistant, conditions: list[ConditionChecker]) -> None:
+        """Initialize condition checker."""
+        super().__init__(hass)
+        self._conditions = conditions
+
+    @override
+    def _async_unload(self) -> None:
+        """Clean up child conditions."""
+        for condition in self._conditions:
+            condition.async_unload()
+
+
+class Condition(ConditionChecker):
+    """Condition class."""
 
     @classmethod
     async def async_validate_complete_config(
@@ -323,11 +429,7 @@ class Condition(abc.ABC):
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize condition."""
-        self._hass = hass
-
-    @abc.abstractmethod
-    async def async_get_checker(self) -> ConditionChecker:
-        """Get the condition checker."""
+        super().__init__(hass)
 
 
 ATTR_BEHAVIOR: Final = "behavior"
@@ -337,30 +439,108 @@ BEHAVIOR_ALL: Final = "all"
 ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
     {
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
-        vol.Required(CONF_OPTIONS): {
+        vol.Required(CONF_OPTIONS, default={}): {
             vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                 [BEHAVIOR_ANY, BEHAVIOR_ALL]
             ),
+            vol.Optional(CONF_FOR): cv.positive_time_period,
         },
     }
 )
 
-ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL_FOR = (
-    ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
-        {
-            vol.Required(CONF_OPTIONS): {
-                vol.Optional(CONF_FOR): cv.positive_time_period_dict,
-            },
-        }
-    )
+
+_DATA_HISTORY_PRIMING_MANAGER: HassKey[_HistoryPrimingManager] = HassKey(
+    "condition_history_priming_manager"
 )
+
+
+class _HistoryPrimingManager:
+    """Serialize and coalesce the recorder reads that prime condition durations.
+
+    At startup many conditions may prime at once. Letting each hit the recorder
+    independently would force a separate commit per condition and run every read
+    on the shared DB executor in parallel — a flood. So the reads run one at a
+    time, and a single commit flush is shared by each "generation" of conditions
+    that arrive while the previous flush is running.
+
+    The flush a condition relies on must begin after that condition started
+    tracking its entities, or the read could miss a change still queued in the
+    recorder and compute too generous an anchor. A condition therefore never
+    relies on a flush that was already running when it arrived (the lobby); it
+    waits that one out and joins the next, re-attempting if the flush it waited
+    for was cancelled before completing. This mirrors `ReloadServiceHelper`
+    minus its target de-duplication, which does not apply because each condition
+    reads its own entities.
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the manager."""
+        self._hass = hass
+        self._flush_condition = asyncio.Condition()
+        self._flushing = False
+        self._flush_ok = False
+        self._query_lock = asyncio.Lock()
+
+    async def async_prime[_T](
+        self, job: Callable[[Recorder], Coroutine[Any, Any, _T]]
+    ) -> _T:
+        """Flush the recorder, then run `job`, coordinated with other primings."""
+        await self._async_flush()
+        async with self._query_lock:
+            return await job(get_instance(self._hass))
+
+    async def _async_flush(self) -> None:
+        """Return once a recorder flush that began no earlier than this call ends.
+
+        The first condition of a generation performs the flush; the rest rely on
+        it.
+        """
+        async with self._flush_condition:
+            # Lobby: a flush already running began before we arrived, so it may
+            # not capture our entity's queued changes. Wait it out, don't rely on
+            # it.
+            if self._flushing:
+                await self._flush_condition.wait()
+
+        while True:
+            async with self._flush_condition:
+                if not self._flushing:
+                    # First past the lobby this generation: we run the flush.
+                    self._flushing = True
+                    break
+                # A peer began a fresh flush after we cleared the lobby; wait for
+                # it.
+                await self._flush_condition.wait()
+                if self._flush_ok:
+                    return
+                # The flush we waited for was cancelled before completing (its owner
+                # timed out): loop and start or wait for a fresh one rather than read
+                # against a queue that was never flushed.
+
+        instance = get_instance(self._hass)
+        flushed = False
+        try:
+            if (commit_future := instance.async_get_commit_future()) is not None:
+                await commit_future
+            flushed = True
+        finally:
+            async with self._flush_condition:
+                self._flushing = False
+                self._flush_ok = flushed
+                self._flush_condition.notify_all()
 
 
 class EntityConditionBase(Condition):
     """Base class for entity conditions."""
 
     _domain_specs: Mapping[str, DomainSpec]
+    _excluded_states: Final[frozenset[str]] = frozenset(
+        {STATE_UNAVAILABLE, STATE_UNKNOWN}
+    )
     _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
+    # When True, indirect target expansion (via device/area/floor) skips
+    # entities with an entity_category.
+    _primary_entities_only: ClassVar[bool] = True
 
     @override
     @classmethod
@@ -376,13 +556,339 @@ class EntityConditionBase(Condition):
         if TYPE_CHECKING:
             assert config.target
             assert config.options
+        self._target = config.target
         self._target_selection = TargetSelection(config.target)
         self._behavior = config.options[ATTR_BEHAVIOR]
         self._duration: timedelta | None = config.options.get(CONF_FOR)
+        if self._behavior == BEHAVIOR_ANY:
+            self._matcher = self._check_any_match_state
+        elif self._behavior == BEHAVIOR_ALL:
+            self._matcher = self._check_all_match_state
+        self._on_unload: list[Callable[[], None]] = []
+        self._valid_since: dict[str, datetime] = {}
+        # Entities whose `for:` anchor is currently being resolved from recorder
+        # history. While an entity is here the live listener leaves its anchor to
+        # the priming, except that an invalidation removes it (the run broke, so
+        # the in-flight history is stale and live tracking takes over).
+        self._priming: set[str] = set()
 
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities matching any of the domain specs."""
         return filter_by_domain_specs(self._hass, self._domain_specs, entities)
+
+    @property
+    def _needs_duration_tracking(self) -> bool:
+        """Whether this condition needs active state change tracking for duration.
+
+        The base implementation intentionally defaults to always tracking
+        duration and should be overridden by subclasses that can safely use
+        state.last_changed directly. For example, conditions that are true
+        for a single main state value may not need active tracking, while
+        conditions that track attributes or match multiple states do because
+        last_changed does not capture those transitions.
+        """
+        return True
+
+    def _state_valid_since(self, _state: State) -> datetime:
+        """Return the datetime that anchors `for:` durations for `state`.
+
+        Override in subclasses whose `is_valid_state` reads
+        attributes directly without going through `value_source`.
+        """
+        if self._domain_specs[_state.domain].value_source is None:
+            return _state.last_changed
+        return _state.last_updated
+
+    def _update_valid_since(self, entity_id: str, _state: State | None) -> None:
+        """Update _valid_since tracking for an entity based on its current state.
+
+        If the entity is in a valid state and not already tracked, records
+        when the condition became true (via `_state_valid_since`). If the
+        entity is not in a valid state, removes it from tracking.
+        """
+        if (
+            _state is not None
+            and self._should_include(_state)
+            and self.is_valid_state(_state)
+        ):
+            # While an entity is being primed from history, leave its anchor to
+            # the priming: the entity stayed valid, so the run is unbroken and the
+            # history start (which can be earlier than this update) is accurate.
+            if entity_id in self._priming:
+                return
+            # Only record the time if not already tracked, to avoid
+            # resetting the duration on unrelated state/attribute updates.
+            if entity_id not in self._valid_since:
+                self._valid_since[entity_id] = self._state_valid_since(_state)
+        else:
+            # An invalidation breaks the run, so any history being loaded for the
+            # entity is now stale; stop priming it and let live tracking own it.
+            self._priming.discard(entity_id)
+            self._valid_since.pop(entity_id, None)
+
+    @override
+    async def _async_setup(self) -> None:
+        """Set up state tracking for duration-based conditions."""
+        if not self._duration or not self._needs_duration_tracking:
+            return
+
+        @callback
+        def _state_change_listener(
+            data: TargetStateChangedData,
+        ) -> None:
+            """Track when entities enter or leave a valid state."""
+            event = data.state_change_event
+            entity_id = event.data["entity_id"]
+            to_state = event.data["new_state"]
+
+            self._update_valid_since(entity_id, to_state)
+
+        unsub = await async_track_target_selector_state_change_event(
+            self._hass,
+            self._target,
+            _state_change_listener,
+            self.entity_filter,
+            self._async_on_entities_update,
+            primary_entities_only=self._primary_entities_only,
+        )
+        self._on_unload.append(unsub)
+
+    async def _async_on_entities_update(
+        self,
+        added: set[str],
+        removed: set[str],
+        _entity_states: Mapping[str, State | None],
+    ) -> None:
+        """Handle changes to the tracked entity set.
+
+        Removed entities stop being tracked immediately. Added entities are only
+        considered by the condition once their `for:` anchor has been resolved
+        (see `_async_prime_valid_since`); until then they are absent from
+        `_valid_since`. The target tracker awaits this for the initial entity set
+        at setup and runs it as a background task for later registry-driven
+        changes.
+        """
+        for entity_id in removed:
+            self._priming.discard(entity_id)
+            self._valid_since.pop(entity_id, None)
+        await self._async_prime_valid_since(added)
+
+    async def _async_prime_valid_since(self, entity_ids: set[str]) -> None:
+        """Resolve and store the `for:` anchor for newly tracked entities.
+
+        For each currently-valid entity the anchor is the start of its current
+        continuous run of validity, read from recorder history (bounded by
+        `MAX_HISTORY_PRIMING_LOOKBACK`). The earlier of that and the current
+        state's own anchor wins, so a run that began before the lookback window
+        is not cut short. When the recorder is unavailable or the read fails,
+        the current state's anchor is used alone. An entity is added to
+        `_valid_since` only once this resolves, so a newly tracked entity does
+        not participate in the condition until its anchor is known — rather than
+        briefly using a conservative anchor that then changes.
+
+        While loading, an entity is held in `_priming`. A live change that keeps
+        it valid is ignored (the run is unbroken, history is accurate), but an
+        invalidation removes it from `_priming` so that we do not apply now-stale
+        history over the live tracking that observed the break.
+        """
+        # Conservative anchor from the live state for each currently-valid entity.
+        anchors = {
+            entity_id: self._state_valid_since(_state)
+            for entity_id in entity_ids
+            if (_state := self._hass.states.get(entity_id)) is not None
+            and self._should_include(_state)
+            and self.is_valid_state(_state)
+        }
+        if not anchors:
+            return
+
+        self._priming.update(anchors)
+        try:
+            if "recorder" in self._hass.config.components:
+                await self._async_refine_anchors_from_history(anchors)
+            for entity_id, anchor in anchors.items():
+                # Skip entities a live change invalidated mid-load: they were
+                # removed from `_priming`, the run broke, and live tracking (which
+                # saw the break) owns them — applying this history would be stale.
+                if entity_id in self._priming:
+                    self._valid_since[entity_id] = anchor
+        finally:
+            self._priming.difference_update(anchors)
+
+    async def _async_refine_anchors_from_history(
+        self, anchors: dict[str, datetime]
+    ) -> None:
+        """Move each anchor in `anchors` back to the true start of its run.
+
+        For each entity the anchor becomes the earlier of the recorded run start
+        and the existing (live) anchor; entities with no usable history keep
+        their existing anchor. Mutates `anchors` in place.
+        """
+        from sqlalchemy.exc import SQLAlchemyError  # noqa: PLC0415
+
+        from homeassistant.components.recorder import history  # noqa: PLC0415
+
+        if TYPE_CHECKING:
+            assert self._duration is not None
+        lookback = min(self._duration, MAX_HISTORY_PRIMING_LOOKBACK)
+        start_time = dt_util.utcnow() - lookback
+
+        async def _read_history(
+            instance: Recorder,
+        ) -> dict[str, list[State | dict[str, Any]]]:
+            # The history query only sees committed rows; the priming manager
+            # flushes the recorder queue before running this.
+            return await instance.async_add_executor_job(
+                ft.partial(
+                    history.get_significant_states,
+                    self._hass,
+                    start_time,
+                    entity_ids=list(anchors),
+                    include_start_time_state=True,
+                    # Mandatory: the default (True) drops attribute-only changes
+                    # for entities outside SIGNIFICANT_DOMAINS, which are exactly
+                    # the transitions attribute-based conditions depend on.
+                    significant_changes_only=False,
+                    minimal_response=False,
+                )
+            )
+
+        manager = self._hass.data[_DATA_HISTORY_PRIMING_MANAGER]
+        try:
+            # The timeout also covers waiting for our turn, so under a flood of
+            # primings a condition falls back to its conservative anchor rather
+            # than blocking on the queue indefinitely.
+            async with asyncio.timeout(HISTORY_PRIMING_TIMEOUT):
+                historical_states = await manager.async_prime(_read_history)
+        except (SQLAlchemyError, TimeoutError) as err:
+            # Best effort: keep the conservative anchors rather than failing.
+            _LOGGER.debug("Error priming condition durations from history: %s", err)
+            return
+
+        for entity_id, rows in historical_states.items():
+            valid_since = self._valid_since_from_history(
+                entity_id, cast(list[State], rows)
+            )
+            if valid_since is not None:
+                anchors[entity_id] = min(valid_since, anchors[entity_id])
+
+    def _valid_since_from_history(
+        self, entity_id: str, rows: list[State]
+    ) -> datetime | None:
+        """Return when the current continuous run of valid states began.
+
+        Walks recorded states newest-first and stops at the first one that is
+        not valid; the anchor is the oldest state in the unbroken run leading up
+        to the latest recorded state. (We can't just take the first valid state
+        in the window: an intervening invalid period breaks the run, so the
+        anchor must come from after it.) Returns None when the latest recorded
+        state is not valid, e.g. the recorder lags behind the live state machine.
+        """
+        # Recorder rows are LazyState objects, which skip State.__init__ and so
+        # never populate the domain/object_id that the validity checks rely on.
+        domain, object_id = split_entity_id(entity_id)
+        valid_since: datetime | None = None
+        for _state in reversed(rows):
+            _state.domain = domain
+            _state.object_id = object_id
+            if not (self._should_include(_state) and self.is_valid_state(_state)):
+                break
+            valid_since = self._state_valid_since(_state)
+        return valid_since
+
+    @override
+    def _async_unload(self) -> None:
+        """Unsubscribe from listeners."""
+        for cb in self._on_unload:
+            cb()
+        self._on_unload.clear()
+
+    def _should_include(self, _state: State) -> bool:
+        """Check if an entity should participate in any/all checks.
+
+        The default implementation excludes only entities whose state.state
+        is in `_excluded_states` (unavailable / unknown). Subclasses can
+        override to also exclude entities that lack the optional capability
+        the condition relies on.
+        """
+        return _state.state not in self._excluded_states
+
+    @abc.abstractmethod
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state matches the expected state(s)."""
+
+    def _check_any_match_state(self, states: list[State]) -> bool:
+        """Test if any entity matches the state."""
+        if not self._duration:
+            # Skip duration check if duration is not specified or 0
+            return any(self.is_valid_state(state) for state in states)
+        cutoff = dt_util.utcnow() - self._duration
+        if not self._needs_duration_tracking:
+            return any(
+                self.is_valid_state(state) and state.last_changed <= cutoff
+                for state in states
+            )
+        return any(
+            self.is_valid_state(state)
+            and (valid_since := self._valid_since.get(state.entity_id)) is not None
+            and valid_since <= cutoff
+            for state in states
+        )
+
+    def _check_all_match_state(self, states: list[State]) -> bool:
+        """Test if all entities match the state."""
+        if not self._duration:
+            # Skip duration check if duration is not specified or 0
+            return all(self.is_valid_state(state) for state in states)
+        cutoff = dt_util.utcnow() - self._duration
+        if not self._needs_duration_tracking:
+            return all(
+                self.is_valid_state(state) and state.last_changed <= cutoff
+                for state in states
+            )
+        return all(
+            self.is_valid_state(state)
+            and (valid_since := self._valid_since.get(state.entity_id)) is not None
+            and valid_since <= cutoff
+            for state in states
+        )
+
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Test state condition."""
+        targeted_entities = async_extract_referenced_entity_ids(
+            self._hass,
+            self._target_selection,
+            expand_group=False,
+            primary_entities_only=self._primary_entities_only,
+        )
+        referenced_entity_ids = targeted_entities.referenced.union(
+            targeted_entities.indirectly_referenced
+        )
+        filtered_entity_ids = self.entity_filter(referenced_entity_ids)
+        entity_states = [
+            _state
+            for entity_id in filtered_entity_ids
+            if (_state := self._hass.states.get(entity_id))
+            and self._should_include(_state)
+        ]
+        return self._matcher(entity_states)
+
+
+class EntityStateConditionBase(EntityConditionBase):
+    """State condition."""
+
+    _states: set[str | bool]
+
+    @property
+    @override
+    def _needs_duration_tracking(self) -> bool:
+        """Single-state conditions with no attribute tracking can use last_changed."""
+        if len(self._states) != 1:
+            return True
+        return any(
+            spec.value_source is not None for spec in self._domain_specs.values()
+        )
 
     def _get_tracked_value(self, entity_state: State) -> Any:
         """Get the tracked value from a state based on the DomainSpec."""
@@ -391,67 +897,7 @@ class EntityConditionBase(Condition):
             return entity_state.state
         return entity_state.attributes.get(domain_spec.value_source)
 
-    @abc.abstractmethod
-    def is_valid_state(self, entity_state: State) -> bool:
-        """Check if the state matches the expected state(s)."""
-
     @override
-    async def async_get_checker(self) -> ConditionChecker:
-        """Get the condition checker."""
-
-        def check_any_match_state(states: list[State]) -> bool:
-            """Test if any entity matches the state."""
-            if not self._duration:
-                # Skip duration check if duration is not specified or 0
-                return any(self.is_valid_state(state) for state in states)
-            duration = dt_util.utcnow() - self._duration
-            return any(
-                self.is_valid_state(state) and duration > state.last_changed
-                for state in states
-            )
-
-        def check_all_match_state(states: list[State]) -> bool:
-            """Test if all entities match the state."""
-            if not self._duration:
-                # Skip duration check if duration is not specified or 0
-                return all(self.is_valid_state(state) for state in states)
-            duration = dt_util.utcnow() - self._duration
-            return all(
-                self.is_valid_state(state) and duration > state.last_changed
-                for state in states
-            )
-
-        matcher: Callable[[list[State]], bool]
-        if self._behavior == BEHAVIOR_ANY:
-            matcher = check_any_match_state
-        elif self._behavior == BEHAVIOR_ALL:
-            matcher = check_all_match_state
-
-        def test_state(**kwargs: Unpack[ConditionCheckParams]) -> bool:
-            """Test state condition."""
-            targeted_entities = async_extract_referenced_entity_ids(
-                self._hass, self._target_selection, expand_group=False
-            )
-            referenced_entity_ids = targeted_entities.referenced.union(
-                targeted_entities.indirectly_referenced
-            )
-            filtered_entity_ids = self.entity_filter(referenced_entity_ids)
-            entity_states = [
-                _state
-                for entity_id in filtered_entity_ids
-                if (_state := self._hass.states.get(entity_id))
-                and _state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
-            ]
-            return matcher(entity_states)
-
-        return test_state
-
-
-class EntityStateConditionBase(EntityConditionBase):
-    """State condition."""
-
-    _states: set[str | bool]
-
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected state(s)."""
         return self._get_tracked_value(entity_state) in self._states
@@ -470,7 +916,7 @@ def make_entity_state_condition(
     domain_specs: Mapping[str, DomainSpec] | str,
     states: str | bool | set[str | bool],
     *,
-    support_duration: bool = False,
+    primary_entities_only: bool = True,
 ) -> type[EntityStateConditionBase]:
     """Create a condition for entity state changes to specific state(s).
 
@@ -488,12 +934,8 @@ def make_entity_state_condition(
         """Condition for entity state."""
 
         _domain_specs = specs
-        _schema = (
-            ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL_FOR
-            if support_duration
-            else ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
-        )
         _states = states_set
+        _primary_entities_only = primary_entities_only
 
     return CustomCondition
 
@@ -558,7 +1000,10 @@ class EntityNumericalConditionBase(EntityConditionBase):
             return None
 
     def _get_tracked_value(self, entity_state: State) -> Any:
-        """Get the tracked value from a state, with unit validation for state-based values."""
+        """Get the tracked value from a state.
+
+        Includes unit validation for state-based values.
+        """
         domain_spec = self._domain_specs[entity_state.domain]
         if domain_spec.value_source is None:
             if not self._is_valid_unit(
@@ -568,6 +1013,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
             return entity_state.state
         return entity_state.attributes.get(domain_spec.value_source)
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state is within the specified range."""
         try:
@@ -592,7 +1038,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
         if lower_limit is None or upper_limit is None:
             # Entity not found or invalid number, don't trigger
             return False
-        between = lower_limit < value < upper_limit
+        between = lower_limit <= value <= upper_limit
         if self._threshold_type == NumericThresholdType.BETWEEN:
             return between
         return not between
@@ -601,6 +1047,8 @@ class EntityNumericalConditionBase(EntityConditionBase):
 def make_entity_numerical_condition(
     domain_specs: Mapping[str, DomainSpec] | str,
     valid_unit: str | None | UndefinedType = UNDEFINED,
+    *,
+    primary_entities_only: bool = True,
 ) -> type[EntityNumericalConditionBase]:
     """Create a condition for numerical state comparisons."""
     specs = _normalize_domain_specs(domain_specs)
@@ -610,6 +1058,7 @@ def make_entity_numerical_condition(
 
         _domain_specs = specs
         _valid_unit = valid_unit
+        _primary_entities_only = primary_entities_only
 
     return CustomCondition
 
@@ -638,6 +1087,7 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
     _base_unit: str | None  # Base unit for the tracked value
     _unit_converter: type[BaseUnitConverter]
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Create a schema."""
         super().__init_subclass__(**kwargs)
@@ -647,6 +1097,7 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
         """Get the unit of an entity from its state."""
         return entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
+    @override
     def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
         """Get threshold value from float or entity state."""
         if threshold is None:
@@ -677,6 +1128,7 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
             # Unit conversion failed (i.e. incompatible units), treat as invalid number
             return None
 
+    @override
     def _get_tracked_value(self, entity_state: State) -> Any:
         """Get the tracked numerical value from a state."""
         domain_spec = self._domain_specs[entity_state.domain]
@@ -737,13 +1189,6 @@ class ConditionCheckParams(TypedDict, total=False):
     """Condition check params."""
 
     variables: TemplateVarsType
-
-
-class ConditionChecker(Protocol):
-    """Protocol for condition checker callable with typed kwargs."""
-
-    def __call__(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
-        """Check the condition."""
 
 
 type ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
@@ -835,20 +1280,11 @@ def trace_condition_function(
 async def _async_get_condition_platform(
     hass: HomeAssistant, condition_key: str
 ) -> tuple[str, ConditionProtocol | None]:
-    from homeassistant.components import automation  # noqa: PLC0415
-
     platform_and_sub_type = condition_key.split(".")
     platform: str | None = platform_and_sub_type[0]
     platform = _PLATFORM_ALIASES.get(platform, platform)
     if platform is None:
         return "", None
-
-    if automation.is_disabled_experimental_condition(hass, platform):
-        raise vol.Invalid(
-            f"Condition '{condition_key}' requires the experimental 'New triggers and "
-            "conditions' feature to be enabled in Home Assistant Labs settings "
-            f"(feature flag: '{automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG}')"
-        )
 
     try:
         integration = await async_get_integration(hass, platform)
@@ -869,20 +1305,10 @@ async def _async_get_condition_platform(
     return platform, platform_module
 
 
-async def _async_get_checker(condition: Condition) -> ConditionCheckerType:
-    new_checker = await condition.async_get_checker()
-
-    @trace_condition_function
-    def checker(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
-        return new_checker(variables=variables)
-
-    return checker
-
-
 async def async_from_config(
     hass: HomeAssistant,
     config: ConfigType,
-) -> ConditionCheckerTypeOptional:
+) -> ConditionChecker:
     """Turn a condition configuration into a method.
 
     Should be run on the event loop.
@@ -898,15 +1324,9 @@ async def async_from_config(
                     f"Error rendering condition enabled template: {err}"
                 ) from err
         if not enabled:
-
-            @trace_condition_function
-            def disabled_condition(
-                hass: HomeAssistant, variables: TemplateVarsType = None
-            ) -> bool | None:
-                """Condition not enabled, will act as if it didn't exist."""
-                return None
-
-            return disabled_condition
+            disabled_checker = DisabledConditionChecker(hass)
+            await disabled_checker.async_setup()
+            return disabled_checker
 
     condition_key: str = config[CONF_CONDITION]
     factory: Any = None
@@ -925,7 +1345,8 @@ async def async_from_config(
                 target=config.get(CONF_TARGET),
             ),
         )
-        return await _async_get_checker(condition)
+        await condition.async_setup()
+        return condition
 
     for fmt in (ASYNC_FROM_CONFIG_FORMAT, FROM_CONFIG_FORMAT):
         factory = getattr(sys.modules[__name__], fmt.format(condition_key), None)
@@ -938,31 +1359,43 @@ async def async_from_config(
     while isinstance(check_factory, ft.partial):
         check_factory = check_factory.func
 
+    checker: ConditionChecker | ConditionCheckerType
     if inspect.iscoroutinefunction(check_factory):
-        return cast(ConditionCheckerType, await factory(hass, config))
-    return cast(ConditionCheckerType, factory(config))
+        checker = await factory(hass, config)
+    else:
+        checker = factory(config)
+    if not isinstance(checker, ConditionChecker):
+        checker = LegacyConditionChecker(hass, checker)
+    await checker.async_setup()
+    return checker
 
 
 async def async_and_from_config(
     hass: HomeAssistant, config: ConfigType
-) -> ConditionCheckerType:
+) -> ConditionChecker:
     """Create multi condition matcher using 'AND'."""
     checks = [await async_from_config(hass, entry) for entry in config["conditions"]]
+    return AndConditionChecker(hass, checks)
 
-    @trace_condition_function
-    def if_and_condition(
-        hass: HomeAssistant, variables: TemplateVarsType = None
-    ) -> bool:
+
+class AndConditionChecker(CompoundConditionChecker):
+    """Condition checker for 'and' compound conditions."""
+
+    @callback
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test and condition."""
         errors = []
-        for index, check in enumerate(checks):
+        for index, condition in enumerate(self._conditions):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(hass, variables) is False:
+                    if condition.async_check(**kwargs) is False:
                         return False
             except ConditionError as ex:
                 errors.append(
-                    ConditionErrorIndex("and", index=index, total=len(checks), error=ex)
+                    ConditionErrorIndex(
+                        "and", index=index, total=len(self._conditions), error=ex
+                    )
                 )
 
         # Raise the errors if no check was false
@@ -971,29 +1404,33 @@ async def async_and_from_config(
 
         return True
 
-    return if_and_condition
-
 
 async def async_or_from_config(
     hass: HomeAssistant, config: ConfigType
-) -> ConditionCheckerType:
+) -> ConditionChecker:
     """Create multi condition matcher using 'OR'."""
     checks = [await async_from_config(hass, entry) for entry in config["conditions"]]
+    return OrConditionChecker(hass, checks)
 
-    @trace_condition_function
-    def if_or_condition(
-        hass: HomeAssistant, variables: TemplateVarsType = None
-    ) -> bool:
+
+class OrConditionChecker(CompoundConditionChecker):
+    """Condition checker for 'or' compound conditions."""
+
+    @callback
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test or condition."""
         errors = []
-        for index, check in enumerate(checks):
+        for index, condition in enumerate(self._conditions):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(hass, variables) is True:
+                    if condition.async_check(**kwargs) is True:
                         return True
             except ConditionError as ex:
                 errors.append(
-                    ConditionErrorIndex("or", index=index, total=len(checks), error=ex)
+                    ConditionErrorIndex(
+                        "or", index=index, total=len(self._conditions), error=ex
+                    )
                 )
 
         # Raise the errors if no check was true
@@ -1002,29 +1439,33 @@ async def async_or_from_config(
 
         return False
 
-    return if_or_condition
-
 
 async def async_not_from_config(
     hass: HomeAssistant, config: ConfigType
-) -> ConditionCheckerType:
+) -> ConditionChecker:
     """Create multi condition matcher using 'NOT'."""
     checks = [await async_from_config(hass, entry) for entry in config["conditions"]]
+    return NotConditionChecker(hass, checks)
 
-    @trace_condition_function
-    def if_not_condition(
-        hass: HomeAssistant, variables: TemplateVarsType = None
-    ) -> bool:
+
+class NotConditionChecker(CompoundConditionChecker):
+    """Condition checker for 'not' compound conditions."""
+
+    @callback
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test not condition."""
         errors = []
-        for index, check in enumerate(checks):
+        for index, condition in enumerate(self._conditions):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(hass, variables):
+                    if condition.async_check(**kwargs):
                         return False
             except ConditionError as ex:
                 errors.append(
-                    ConditionErrorIndex("not", index=index, total=len(checks), error=ex)
+                    ConditionErrorIndex(
+                        "not", index=index, total=len(self._conditions), error=ex
+                    )
                 )
 
         # Raise the errors if no check was true
@@ -1032,8 +1473,6 @@ async def async_not_from_config(
             raise ConditionErrorContainer("not", errors=errors)
 
         return True
-
-    return if_not_condition
 
 
 def numeric_state(
@@ -1191,7 +1630,6 @@ def async_numeric_state_from_config(config: ConfigType) -> ConditionCheckerType:
     above = config.get(CONF_ABOVE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
 
-    @trace_condition_function
     def if_numeric_state(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
@@ -1310,7 +1748,6 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
     if not isinstance(req_states, list):
         req_states = [req_states]
 
-    @trace_condition_function
     def if_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
         errors = []
@@ -1372,7 +1809,6 @@ def async_template_from_config(config: ConfigType) -> ConditionCheckerType:
     """Wrap action method with state based condition."""
     value_template = cast(Template, config.get(CONF_VALUE_TEMPLATE))
 
-    @trace_condition_function
     def template_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Validate template based if-condition."""
         return async_template(hass, value_template, variables)
@@ -1416,7 +1852,7 @@ def time(
             after = datetime.strptime(after_entity.state, "%H:%M:%S").time()
         elif (
             after_entity.attributes.get(ATTR_DEVICE_CLASS)
-            == SensorDeviceClass.TIMESTAMP
+            in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME)
         ) and after_entity.state not in (
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
@@ -1446,7 +1882,7 @@ def time(
                 return False
         elif (
             before_entity.attributes.get(ATTR_DEVICE_CLASS)
-            == SensorDeviceClass.TIMESTAMP
+            in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME)
         ) and before_entity.state not in (
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
@@ -1485,7 +1921,6 @@ def time_from_config(config: ConfigType) -> ConditionCheckerType:
     after = config.get(CONF_AFTER)
     weekday = config.get(CONF_WEEKDAY)
 
-    @trace_condition_function
     def time_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Validate time based if-condition."""
         return time(hass, before, after, weekday)
@@ -1499,7 +1934,6 @@ async def async_trigger_from_config(
     """Test a trigger condition."""
     trigger_id = config[CONF_ID]
 
-    @trace_condition_function
     def trigger_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Validate trigger based if-condition."""
         return (
@@ -1536,9 +1970,14 @@ def state_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType
 
 
 async def async_validate_condition_config(
-    hass: HomeAssistant, config: ConfigType
+    hass: HomeAssistant, config: ConfigType | str
 ) -> ConfigType:
     """Validate config."""
+    if isinstance(config, str):
+        config = {
+            CONF_CONDITION: "template",
+            CONF_VALUE_TEMPLATE: cv.dynamic_template(config),
+        }
     condition_key: str = config[CONF_CONDITION]
 
     if condition_key in ("and", "not", "or"):
@@ -1588,39 +2027,80 @@ async def async_conditions_from_config(
     condition_configs: list[ConfigType],
     logger: logging.Logger,
     name: str,
-) -> Callable[[TemplateVarsType], bool]:
+) -> ConditionsChecker:
     """AND all conditions."""
     checks = [
         await async_from_config(hass, condition_config)
         for condition_config in condition_configs
     ]
+    return ConditionsChecker(checks, logger, name)
 
-    def check_conditions(variables: TemplateVarsType = None) -> bool:
+
+class ConditionsChecker:
+    """Condition checker that ANDs multiple conditions.
+
+    Used by automations and template entities. Unlike AndConditionChecker,
+    this logs warnings on errors instead of raising, and uses "condition"
+    as the trace path prefix.
+    """
+
+    def __init__(
+        self,
+        conditions: list[ConditionChecker],
+        logger: logging.Logger,
+        name: str,
+    ) -> None:
+        """Initialize condition checker."""
+        self._conditions = conditions
+        self._logger = logger
+        self._name = name
+        self._unloaded = False
+
+    def __call__(self, variables: TemplateVarsType = None) -> bool:
+        """Check all conditions."""
+        return self.async_check(variables=variables)
+
+    def __del__(self) -> None:
+        """Clean up when the checker is deleted."""
+        if self._unloaded:
+            return
+        try:
+            self.async_unload()
+        except Exception:
+            _LOGGER.exception("Error while unloading condition checker")
+
+    def async_unload(self) -> None:
+        """Clean up child conditions."""
+        self._unloaded = True
+        for condition in self._conditions:
+            condition.async_unload()
+
+    def async_check(
+        self, *, variables: TemplateVarsType = None, **kwargs: Never
+    ) -> bool:
         """AND all conditions."""
         errors: list[ConditionErrorIndex] = []
-        for index, check in enumerate(checks):
+        for index, condition in enumerate(self._conditions):
             try:
                 with trace_path(["condition", str(index)]):
-                    if check(hass, variables) is False:
+                    if condition.async_check(variables=variables, **kwargs) is False:
                         return False
             except ConditionError as ex:
                 errors.append(
                     ConditionErrorIndex(
-                        "condition", index=index, total=len(checks), error=ex
+                        "condition", index=index, total=len(self._conditions), error=ex
                     )
                 )
 
         if errors:
-            logger.warning(
+            self._logger.warning(
                 "Error evaluating condition in '%s':\n%s",
-                name,
+                self._name,
                 ConditionErrorContainer("condition", errors=errors),
             )
             return False
 
         return True
-
-    return check_conditions
 
 
 @callback
@@ -1764,8 +2244,6 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any] | None]:
     """Return descriptions (i.e. user documentation) for all conditions."""
-    from homeassistant.components import automation  # noqa: PLC0415
-
     descriptions_cache = hass.data[CONDITION_DESCRIPTION_CACHE]
 
     conditions = hass.data[CONDITIONS]
@@ -1774,12 +2252,7 @@ async def async_get_all_descriptions(
     all_conditions = set(conditions)
     previous_all_conditions = set(descriptions_cache)
     # If the conditions are the same, we can return the cache
-
-    # mypy complains: Invalid index type "HassKey[set[str]]" for "HassDict"
-    if (
-        previous_all_conditions | hass.data[CONDITION_DISABLED_CONDITIONS]  # type: ignore[index]
-        == all_conditions
-    ):
+    if previous_all_conditions == all_conditions:
         return descriptions_cache
 
     # Files we loaded for missing descriptions
@@ -1819,10 +2292,6 @@ async def async_get_all_descriptions(
     new_descriptions_cache = descriptions_cache.copy()
     for missing_condition in missing_conditions:
         domain = conditions[missing_condition]
-        if automation.is_disabled_experimental_condition(hass, domain):
-            hass.data[CONDITION_DISABLED_CONDITIONS].add(missing_condition)
-            continue
-
         if (
             yaml_description := new_conditions_descriptions.get(domain, {}).get(
                 missing_condition

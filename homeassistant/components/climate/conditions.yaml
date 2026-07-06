@@ -7,11 +7,13 @@
       required: true
       default: any
       selector:
-        select:
-          translation_key: condition_behavior
-          options:
-            - all
-            - any
+        automation_behavior:
+          mode: condition
+    for: &condition_for
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
 
 .humidity_threshold_entity: &humidity_threshold_entity
   - domain: input_number
@@ -39,16 +41,7 @@
   - domain: number
     device_class: temperature
 
-is_off:
-  target: *condition_climate_target
-  fields:
-    behavior: *condition_behavior
-    for:
-      required: true
-      default: 00:00:00
-      selector:
-        duration:
-
+is_off: *condition_common
 is_on: *condition_common
 is_cooling: *condition_common
 is_drying: *condition_common
@@ -58,6 +51,7 @@ is_hvac_mode:
   target: *condition_climate_target
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     hvac_mode:
       context:
         filter_target: target
@@ -69,10 +63,11 @@ is_hvac_mode:
             - unknown
           multiple: true
 
-target_humidity:
+is_target_humidity:
   target: *condition_climate_target
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:
@@ -81,10 +76,11 @@ target_humidity:
           mode: is
           number: *humidity_threshold_number
 
-target_temperature:
+is_target_temperature:
   target: *condition_climate_target
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:

@@ -5,8 +5,6 @@ we can cache the result of the decode of valid tokens
 to speed up the process.
 """
 
-from __future__ import annotations
-
 from collections.abc import Container, Iterable, Sequence
 from datetime import timedelta
 from functools import lru_cache
@@ -41,6 +39,7 @@ class _PyJWSWithLoadCache(PyJWS):
     # We only ever have a global instance of this class
     # so we do not have to worry about the LRU growing
     # each time we create a new instance.
+    @override
     def _load(self, jwt: str | bytes) -> tuple[bytes, bytes, dict, bytes]:
         """Load a JWS."""
         return super()._load(jwt)

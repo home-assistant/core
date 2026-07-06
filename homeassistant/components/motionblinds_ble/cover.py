@@ -1,10 +1,8 @@
 """Cover entities for the Motionblinds Bluetooth integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from motionblindsble.const import MotionBlindType, MotionRunningType
 
@@ -84,6 +82,7 @@ class MotionblindsBLECoverEntity(MotionblindsBLEEntity, CoverEntity):
     _attr_is_closed: bool | None = None
     _attr_name = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register device callbacks."""
         _LOGGER.debug(
@@ -95,6 +94,7 @@ class MotionblindsBLECoverEntity(MotionblindsBLEEntity, CoverEntity):
         self.device.register_running_callback(self.async_update_running)
         self.device.register_position_callback(self.async_update_position)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop moving the cover entity."""
         _LOGGER.debug("(%s) Stopping", self.entry.data[CONF_MAC_CODE])
@@ -146,16 +146,19 @@ class PositionCover(MotionblindsBLECoverEntity):
         | CoverEntityFeature.SET_POSITION
     )
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover entity."""
         _LOGGER.debug("(%s) Opening", self.entry.data[CONF_MAC_CODE])
         await self.device.open()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover entity."""
         _LOGGER.debug("(%s) Closing", self.entry.data[CONF_MAC_CODE])
         await self.device.close()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover entity to a specific position."""
         new_position: int = 100 - int(kwargs[ATTR_POSITION])
@@ -178,20 +181,24 @@ class TiltCover(MotionblindsBLECoverEntity):
         | CoverEntityFeature.SET_TILT_POSITION
     )
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover entity open."""
         _LOGGER.debug("(%s) Tilt opening", self.entry.data[CONF_MAC_CODE])
         await self.device.open_tilt()
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover entity closed."""
         _LOGGER.debug("(%s) Tilt closing", self.entry.data[CONF_MAC_CODE])
         await self.device.close_tilt()
 
+    @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop tilting the cover entity."""
         await self.async_stop_cover(**kwargs)
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Tilt the cover entity to a specific position."""
         new_tilt: int = 100 - int(kwargs[ATTR_TILT_POSITION])

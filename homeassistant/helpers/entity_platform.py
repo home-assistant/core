@@ -1,13 +1,11 @@
 """Class to manage the entities for a single platform."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
 from datetime import timedelta
 from logging import Logger, getLogger
-from typing import TYPE_CHECKING, Any, Protocol, overload
+from typing import TYPE_CHECKING, Any, Protocol, overload, override
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -34,6 +32,7 @@ from homeassistant.exceptions import (
     PlatformNotReady,
 )
 from homeassistant.generated import languages
+from homeassistant.loader import async_suggest_report_issue
 from homeassistant.setup import SetupPhases, async_start_setup
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.hass_dict import HassKey
@@ -55,6 +54,8 @@ SLOW_SETUP_MAX_WAIT = 60
 SLOW_ADD_ENTITY_MAX_WAIT = 15  # Per Entity
 SLOW_ADD_MIN_TIMEOUT = 500
 
+MAX_ENABLED_ENTITIES_PER_CONFIG_ENTRY = 10000
+
 PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM: HassKey[dict[str, list[EntityPlatform]]] = HassKey(
     "entity_platform"
@@ -66,6 +67,61 @@ DATA_DOMAIN_PLATFORM_ENTITIES: HassKey[dict[tuple[str, str], dict[str, Entity]]]
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
 _LOGGER = getLogger(__name__)
+
+
+@callback
+def async_create_platform_config_not_supported_issue(
+    hass: HomeAssistant,
+    integration_domain: str,
+    platform_domain: str,
+    *,
+    yaml_config_under_integration_supported: bool = False,
+    learn_more_url: str | None = None,
+    logger: Logger = _LOGGER,
+) -> None:
+    """Create a repair issue for an unsupported YAML platform configuration.
+
+    Raised when an integration is configured via the legacy
+    <platform_domain>: - platform: <integration_domain> schema.
+    Set yaml_config_under_integration_supported=False if the integration does
+    not support YAML configuration for this platform and the config should be
+    removed. Set it to True if the integration supports YAML configuration
+    under its own <integration_domain>: key and the config should be moved
+    there.
+    """
+    if yaml_config_under_integration_supported:
+        logger.error(
+            "Configuring the %s integration under the %s platform key is not"
+            " supported, it must be configured under its own %s key instead",
+            integration_domain,
+            platform_domain,
+            integration_domain,
+        )
+    else:
+        logger.error(
+            "The %s platform for the %s integration does not support platform"
+            " setup, please remove it from your config",
+            integration_domain,
+            platform_domain,
+        )
+    platform_key = f"platform: {integration_domain}"
+    yaml_example = f"```yaml\n{platform_domain}:\n  - {platform_key}\n```"
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"platform_integration_no_support_{platform_domain}_{integration_domain}",
+        is_fixable=False,
+        issue_domain=integration_domain,
+        learn_more_url=learn_more_url,
+        severity=IssueSeverity.ERROR,
+        translation_key=f"platform_{'config' if yaml_config_under_integration_supported else 'setup'}_not_supported",
+        translation_placeholders={
+            "platform_domain": platform_domain,
+            "integration_domain": integration_domain,
+            "platform_key": platform_key,
+            "yaml_example": yaml_example,
+        },
+    )
 
 
 class AddEntitiesCallback(Protocol):
@@ -223,6 +279,8 @@ class EntityPlatform:
         # Storage for entities for this specific platform only
         # which are indexed by entity_id
         self.entities: dict[str, Entity] = {}
+        # Whether we already warned about reaching the config entry entity limit
+        self._entity_limit_warned = False
         self._tasks: list[asyncio.Task[None]] = []
         # Stop tracking tasks after setup is completed
         self._setup_complete = False
@@ -260,6 +318,7 @@ class EntityPlatform:
             hass, domain=domain, platform_name=platform_name
         )
 
+    @override
     def __repr__(self) -> str:
         """Represent an EntityPlatform."""
         return (
@@ -317,20 +376,13 @@ class EntityPlatform:
         if not hasattr(platform, "async_setup_platform") and not hasattr(
             platform, "setup_platform"
         ):
-            self.logger.error(
-                (
-                    "The %s platform for the %s integration does not support platform"
-                    " setup. Please remove it from your config."
-                ),
-                self.platform_name,
-                self.domain,
-            )
             learn_more_url = None
             if self.platform:
                 if "custom_components" in self.platform.__file__:  # type: ignore[attr-defined]
                     self.logger.warning(
                         (
-                            "The %s platform module for the %s custom integration does not implement"
+                            "The %s platform module for the %s custom"
+                            " integration does not implement"
                             " async_setup_platform or setup_platform."
                         ),
                         self.platform_name,
@@ -338,25 +390,14 @@ class EntityPlatform:
                     )
                 else:
                     learn_more_url = f"https://www.home-assistant.io/integrations/{self.platform_name}/"
-            platform_key = f"platform: {self.platform_name}"
-            yaml_example = f"```yaml\n{self.domain}:\n  - {platform_key}\n```"
-            async_create_issue(
-                self.hass,
-                HOMEASSISTANT_DOMAIN,
-                f"platform_integration_no_support_{self.domain}_{self.platform_name}",
-                is_fixable=False,
-                issue_domain=self.platform_name,
-                learn_more_url=learn_more_url,
-                severity=IssueSeverity.ERROR,
-                translation_key="no_platform_setup",
-                translation_placeholders={
-                    "domain": self.domain,
-                    "platform": self.platform_name,
-                    "platform_key": platform_key,
-                    "yaml_example": yaml_example,
-                },
-            )
 
+            async_create_platform_config_not_supported_issue(
+                self.hass,
+                self.platform_name,
+                self.domain,
+                learn_more_url=learn_more_url,
+                logger=self.logger,
+            )
             return
 
         @callback
@@ -583,7 +624,8 @@ class EntityPlatform:
                 update_before_add=update_before_add,
                 config_subentry_id=config_subentry_id,
             ),
-            f"EntityPlatform async_add_entities_for_entry {self.domain}.{self.platform_name}",
+            "EntityPlatform async_add_entities_for_entry"
+            f" {self.domain}.{self.platform_name}",
             eager_start=True,
         )
 
@@ -714,8 +756,9 @@ class EntityPlatform:
             or config_subentry_id not in self.config_entry.subentries
         ):
             raise HomeAssistantError(
-                f"Can't add entities to unknown subentry {config_subentry_id} of config "
-                f"entry {self.config_entry.entry_id if self.config_entry else None}"
+                f"Can't add entities to unknown subentry"
+                f" {config_subentry_id} of config entry"
+                f" {self.config_entry.entry_id if self.config_entry else None}"
             )
 
         entities: list[Entity] = (
@@ -845,8 +888,9 @@ class EntityPlatform:
                     )
                     if domain != self.domain:
                         report_usage(
-                            f"sets an entity ID with wrong domain: '{entity.entity_id}'. "
-                            f"Expected domain is '{self.domain}'",
+                            "sets an entity ID with wrong domain:"
+                            f" '{entity.entity_id}'."
+                            f" Expected domain is '{self.domain}'",
                             integration_domain=self.platform_name,
                             breaks_in_ha_version="2027.5.0",
                         )
@@ -919,6 +963,32 @@ class EntityPlatform:
             hidden_by: RegistryEntryHider | None = None
             if not entity.entity_registry_visible_default:
                 hidden_by = RegistryEntryHider.INTEGRATION
+
+            if (
+                disabled_by is None
+                and not registered_entity_id
+                and self.config_entry is not None
+                and entity_registry.entities.get_enabled_count_for_config_entry_id(
+                    self.config_entry.entry_id
+                )
+                >= MAX_ENABLED_ENTITIES_PER_CONFIG_ENTRY
+            ):
+                if not self._entity_limit_warned:
+                    report_issue = async_suggest_report_issue(
+                        self.hass, integration_domain=self.platform_name
+                    )
+                    self.logger.warning(
+                        "Reached the maximum of %s enabled entities for config entry "
+                        "%s; not adding more entities for integration %s until "
+                        "existing entities are removed or disabled, please %s",
+                        MAX_ENABLED_ENTITIES_PER_CONFIG_ENTRY,
+                        self.config_entry.entry_id,
+                        self.platform_name,
+                        report_issue,
+                    )
+                    self._entity_limit_warned = True
+                entity.add_to_platform_abort()
+                return
 
             entry = entity_registry.async_get_or_create(
                 self.domain,
@@ -1015,6 +1085,7 @@ class EntityPlatform:
         This method must be run in the event loop.
         """
         self.async_cancel_retry_setup()
+        self._entity_limit_warned = False
 
         if not self.entities:
             return

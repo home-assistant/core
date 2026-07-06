@@ -1,11 +1,9 @@
 """Flo device object."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, override
 
 from aioflo.api import API
 from aioflo.errors import RequestError
@@ -59,6 +57,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=60),
         )
 
+    @override
     async def _async_update_data(self):
         """Update data via library."""
         try:

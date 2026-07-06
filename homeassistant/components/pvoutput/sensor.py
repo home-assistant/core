@@ -1,9 +1,8 @@
 """Support for getting collected information from PVOutput."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pvo import Status, System
 
@@ -145,6 +144,7 @@ class PVOutputSensorEntity(
         )
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the state of the device."""
         return self.entity_description.value_fn(self.coordinator.data)

@@ -1,10 +1,8 @@
 """Coordinator for the Advantage Air integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from advantage_air import ApiError, advantage_air
 
@@ -47,6 +45,7 @@ class AdvantageAirCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the API."""
         try:

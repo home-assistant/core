@@ -1,11 +1,10 @@
 """Support for Google Cloud Pub/Sub."""
 
-from __future__ import annotations
-
 import datetime
 import json
 import logging
 import os
+from typing import override
 
 from google.cloud.pubsub_v1 import PublisherClient
 import voluptuous as vol
@@ -85,6 +84,7 @@ class DateTimeJSONEncoder(json.JSONEncoder):
     Additionally add encoding for datetime objects as isoformat.
     """
 
+    @override
     def default(self, o):
         """Implement encoding logic."""
         if isinstance(o, datetime.datetime):

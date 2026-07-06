@@ -1,9 +1,7 @@
-"""Config flow to configure the HomematicIP Cloud component."""
-
-from __future__ import annotations
+"""Config flow to configure the HomematicIP Cloud integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -14,15 +12,16 @@ from .hap import HomematicipAuth
 
 
 class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Config flow for the HomematicIP Cloud component."""
+    """Config flow for the HomematicIP Cloud integration."""
 
-    VERSION = 1
+    VERSION = 2
 
     auth: HomematicipAuth
 
     def __init__(self) -> None:
         """Initialize HomematicIP Cloud config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

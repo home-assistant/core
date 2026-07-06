@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 from datetime import timedelta
 import logging
-from typing import TypeVar
+from typing import override
 
 from todoist_api_python.api_async import TodoistAPIAsync
 from todoist_api_python.models import Label, Project, Section, Task
@@ -17,10 +17,8 @@ from .const import MAX_PAGE_SIZE
 
 type TodoistConfigEntry = ConfigEntry[TodoistCoordinator]
 
-T = TypeVar("T")
 
-
-async def flatten_async_pages(
+async def flatten_async_pages[T](
     pages: AsyncGenerator[list[T]],
 ) -> list[T]:
     """Flatten paginated results from an async generator."""
@@ -55,6 +53,7 @@ class TodoistCoordinator(DataUpdateCoordinator[list[Task]]):
         self._labels: list[Label] | None = None
         self.token = token
 
+    @override
     async def _async_update_data(self) -> list[Task]:
         """Fetch tasks from the Todoist API."""
         try:

@@ -11,25 +11,29 @@ publish:
       example: "The temperature is {{ states('sensor.temperature') }}"
       selector:
         template:
-    evaluate_payload:
-      advanced: true
-      default: false
-      selector:
-        boolean:
-    qos:
-      advanced: true
-      default: 0
-      selector:
-        select:
-          options:
-            - "0"
-            - "1"
-            - "2"
-    retain:
-      default: false
-      selector:
-        boolean:
-
+    publish_options:
+      collapsed: true
+      fields:
+        evaluate_payload:
+          default: false
+          selector:
+            boolean:
+        qos:
+          default: "0"
+          selector:
+            select:
+              options:
+                - "0"
+                - "1"
+                - "2"
+        retain:
+          default: false
+          selector:
+            boolean:
+        message_expiry_interval:
+          selector:
+            duration:
+              enable_day: true
 dump:
   fields:
     topic:

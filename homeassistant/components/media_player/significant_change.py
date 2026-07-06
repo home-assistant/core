@@ -1,7 +1,5 @@
 """Helper to test significant Media Player state changes."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -15,7 +13,7 @@ from . import (
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_TO_PROPERTY,
+    PROP_TO_ATTR,
 )
 
 INSIGNIFICANT_ATTRIBUTES: set[str] = {
@@ -25,7 +23,7 @@ INSIGNIFICANT_ATTRIBUTES: set[str] = {
 
 SIGNIFICANT_ATTRIBUTES: set[str] = {
     ATTR_ENTITY_PICTURE_LOCAL,
-    *ATTR_TO_PROPERTY,
+    *PROP_TO_ATTR.values(),
 } - INSIGNIFICANT_ATTRIBUTES
 
 

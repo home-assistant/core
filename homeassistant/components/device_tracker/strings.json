@@ -40,8 +40,21 @@
             "gps": "GPS",
             "router": "Router"
           }
+        },
+        "tracking_type": {
+          "name": "Tracking type",
+          "state": {
+            "connection": "Connection",
+            "position": "Position"
+          }
         }
       }
+    }
+  },
+  "issues": {
+    "associated_zone_missing": {
+      "description": "The scanner entity `{entity_id}` is associated with the zone `{zone}`, but that zone has been removed.\n\nTo fix this, reconfigure the scanner to use a different zone or recreate the missing zone.",
+      "title": "Scanner is associated with a removed zone"
     }
   },
   "services": {

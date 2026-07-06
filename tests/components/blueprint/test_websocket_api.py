@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 import pytest
 import yaml
 
+from homeassistant.components.blueprint import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import UndefinedSubstitution, parse_yaml
@@ -35,7 +36,7 @@ async def setup_bp(
     script_config: dict[str, Any],
 ) -> None:
     """Fixture to set up the blueprint component."""
-    assert await async_setup_component(hass, "blueprint", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     # Trigger registration of automation and script blueprints
     await async_setup_component(hass, "automation", automation_config)

@@ -1,11 +1,9 @@
 """Home Assistant representation of an UPnP/IGD."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from functools import partial
 from ipaddress import ip_address
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
@@ -183,6 +181,7 @@ class Device:
         """Get the serial number."""
         return self._igd_device.device.serial_number
 
+    @override
     def __str__(self) -> str:
         """Get string representation."""
         return f"IGD Device: {self.name}/{self.udn}::{self.device_type}"

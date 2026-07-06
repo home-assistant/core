@@ -1,10 +1,8 @@
 """Support for Velbus devices."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from duotecno.unit import BaseUnit
 
@@ -33,6 +31,7 @@ class DuotecnoEntity(Entity):
         )
         self._attr_unique_id = f"{unit.get_node_address()}-{unit.get_number()}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When added to hass."""
         self._unit.on_status_update(self._on_update)
@@ -42,6 +41,7 @@ class DuotecnoEntity(Entity):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Available state for the unit."""
         return self._unit.is_available()

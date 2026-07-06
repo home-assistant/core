@@ -2,9 +2,10 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import growattServer
+from growattServer import GrowattV1ApiErrorCode
 import requests
 import voluptuous as vol
 
@@ -12,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResu
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_REGION,
     CONF_TOKEN,
     CONF_URL,
     CONF_USERNAME,
@@ -25,14 +27,12 @@ from .const import (
     AUTH_PASSWORD,
     CONF_AUTH_TYPE,
     CONF_PLANT_ID,
-    CONF_REGION,
     DEFAULT_URL,
     DOMAIN,
     ERROR_CANNOT_CONNECT,
     ERROR_INVALID_AUTH,
     LOGIN_INVALID_AUTH_CODE,
     SERVER_URLS_NAMES,
-    V1_API_ERROR_NO_PRIVILEGE,
 )
 
 _URL_TO_REGION = {v: k for k, v in SERVER_URLS_NAMES.items()}
@@ -55,6 +55,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         self.auth_type: str | None = None
         self.plants: list[dict[str, Any]] = []
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -148,11 +149,12 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     _LOGGER.debug("Network error during credential update: %s", ex)
                     errors["base"] = ERROR_CANNOT_CONNECT
                 except growattServer.GrowattV1ApiError as err:
-                    if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
+                    if err.error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE:
                         errors["base"] = ERROR_INVALID_AUTH
                     else:
                         _LOGGER.debug(
-                            "Growatt V1 API error during credential update: %s (Code: %s)",
+                            "Growatt V1 API error during credential"
+                            " update: %s (Code: %s)",
                             err.error_msg or str(err),
                             err.error_code,
                         )
@@ -300,7 +302,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 e.error_msg or str(e),
                 e.error_code,
             )
-            if e.error_code == V1_API_ERROR_NO_PRIVILEGE:
+            if e.error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE:
                 return self._async_show_token_form({"base": ERROR_INVALID_AUTH})
             return self._async_show_token_form({"base": ERROR_CANNOT_CONNECT})
         except (ValueError, KeyError, TypeError, AttributeError) as ex:

@@ -1,11 +1,9 @@
 """Tests for Victron GX MQTT device trackers."""
 
-from __future__ import annotations
-
 from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
-from homeassistant.components.device_tracker import SourceType
+from homeassistant.components.device_tracker import SourceType, TrackingType
 from homeassistant.components.victron_gx.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -58,9 +56,13 @@ async def test_victron_device_tracker(
         "source_type": SourceType.GPS,
         "latitude": 52.1,
         "longitude": 4.3,
+        "altitude": None,
+        "course": None,
+        "speed": None,
         "gps_accuracy": 0,
         "friendly_name": "GPS Location",
         "in_zones": [],
+        "tracking_type": TrackingType.POSITION,
     }
 
     device = device_registry.async_get_device(
@@ -100,9 +102,13 @@ async def test_victron_device_tracker(
         "source_type": SourceType.GPS,
         "latitude": 52.1,
         "longitude": 4.4,
+        "altitude": 11.0,
+        "course": 180.0,
+        "speed": 3.5,
         "gps_accuracy": 0,
         "friendly_name": "GPS Location",
         "in_zones": [],
+        "tracking_type": TrackingType.POSITION,
     }
 
     # Send GPS fix lost to exercise the non-GpsLocation reset branch.
@@ -118,6 +124,10 @@ async def test_victron_device_tracker(
     assert state is not None
     assert state.attributes == {
         "source_type": SourceType.GPS,
+        "altitude": None,
+        "course": None,
+        "speed": None,
         "friendly_name": "GPS Location",
         "in_zones": [],
+        "tracking_type": TrackingType.POSITION,
     }

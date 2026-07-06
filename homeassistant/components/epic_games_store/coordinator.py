@@ -1,10 +1,8 @@
 """The Epic Games Store integration data coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from epicstore_api import EpicGamesStoreAPI
 
@@ -44,6 +42,7 @@ class EGSCalendarUpdateCoordinator(
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, list[dict[str, Any]]]:
         """Update data via library."""
         raw_data = await self.hass.async_add_executor_job(self._api.get_free_games)

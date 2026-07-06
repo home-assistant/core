@@ -3,17 +3,29 @@
 from abc import abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
-from homeassistant.const import CONF_DEVICE_ID, CONF_OPTIMISTIC
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.const import (
+    ATTR_ENTITY_PICTURE,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
+    CONF_DEVICE_ID,
+    CONF_ICON,
+    CONF_NAME,
+    CONF_OPTIMISTIC,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.script import Script, _VarsType
 from homeassistant.helpers.template import Template, TemplateStateFromEntityId
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_DEFAULT_ENTITY_ID
+from .const import CONF_ATTRIBUTES, CONF_DEFAULT_ENTITY_ID, CONF_PICTURE
+
+_SENTINEL = object()
 
 
 @dataclass
@@ -34,6 +46,11 @@ class AbstractTemplateEntity(Entity):
     _optimistic_entity: bool = False
     _extra_optimistic_options: tuple[str, ...] | None = None
     _state_option: str | None = None
+    _restore_state_extra_data: Any | None = None
+
+    # Restore state properties. The state will be restored if set to None.
+    # If a tuple is supplied, all properties must be None for the state to restore.
+    _restore_state_properties: tuple[str, ...] | None = None
 
     def __init__(
         self,
@@ -46,6 +63,10 @@ class AbstractTemplateEntity(Entity):
         self._config = config
         self._templates: dict[str, EntityTemplate] = {}
         self._action_scripts: dict[str, Script] = {}
+        self._attr_extra_state_attributes = {}
+        self._attribute_templates: dict[str, Template] | None = config.get(
+            CONF_ATTRIBUTES
+        )
 
         if self._optimistic_entity:
             optimistic = config.get(CONF_OPTIMISTIC)
@@ -91,9 +112,11 @@ class AbstractTemplateEntity(Entity):
     ) -> None:
         """Set up a template that manages the main state of the entity.
 
-        Requires _state_option to be set on the inheriting class. _state_option represents
-        the configuration option that derives the state. E.g. Template weather entities main state option
-        is 'condition', where switch is 'state'.
+        Requires _state_option to be set on the inheriting
+        class. _state_option represents the configuration
+        option that derives the state. E.g. Template weather
+        entities main state option is 'condition', where
+        switch is 'state'.
         """
 
     @abstractmethod
@@ -168,6 +191,18 @@ class AbstractTemplateEntity(Entity):
             domain,
         )
 
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Clean up scripts when removing from Home Assistant."""
+        if not self.registry_entry or self.registry_entry.entity_id == self.entity_id:
+            # Entity ID not changed, unload scripts as they will not be reused.
+            for action_script in self._action_scripts.values():
+                await action_script.async_unload()
+        else:
+            # Entity ID changed, just stop scripts
+            for action_script in self._action_scripts.values():
+                await action_script.async_stop()
+
     async def async_run_script(
         self,
         script: Script,
@@ -186,3 +221,87 @@ class AbstractTemplateEntity(Entity):
             },
             context=context,
         )
+
+    async def _async_get_last_template_data(
+        self,
+    ) -> Any | None:
+        """Get the last template data."""
+        if self._restore_state_extra_data is None or not hasattr(
+            self, "async_get_last_extra_data"
+        ):
+            return _SENTINEL
+
+        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
+            return None
+
+        return self._restore_state_extra_data.from_dict(
+            restored_last_extra_data.as_dict()
+        )
+
+    def restore_extra_data(self, extra_data: Any) -> None:
+        """Restore extra data from the last state."""
+
+    async def async_restore_last_state(self) -> None:
+        """Restore the state from the last state."""
+        if not hasattr(self, "async_get_last_state"):
+            return
+
+        last_state: State | None = await self.async_get_last_state()
+        if last_state is None:
+            return
+
+        # Handle extra data.
+        extra_data = _SENTINEL
+        if self._restore_state_extra_data is not None:
+            extra_data = await self._async_get_last_template_data()
+
+        if (
+            extra_data is None
+            or last_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            or (
+                self._restore_state_properties is not None
+                and any(
+                    getattr(self, attr) is not None
+                    for attr in self._restore_state_properties
+                )
+            )
+        ):
+            return
+
+        if not self.restore_last_state_state(last_state):
+            return
+
+        self.restore_last_state_attributes(last_state)
+
+        # Extra data should be loaded last
+        if extra_data is not _SENTINEL:
+            self.restore_extra_data(extra_data)
+
+    def restore_last_state_state(self, last_state: State) -> bool:
+        """Restore the state from the last state."""
+        return True
+
+    @abstractmethod
+    def restore_attribute(self, conf_attr: str, attr: str, restored_value: Any) -> None:
+        """Restore an attribute from the last value."""
+
+    def restore_last_state_attributes(self, last_state: State) -> None:
+        """Restore attributes from the last state."""
+        # Restore built-in attributes from templates
+        for conf_key, attr, _attr in (
+            (CONF_ICON, ATTR_ICON, "_attr_icon"),
+            (CONF_NAME, ATTR_FRIENDLY_NAME, "_attr_name"),
+            (CONF_PICTURE, ATTR_ENTITY_PICTURE, "_attr_entity_picture"),
+        ):
+            if conf_key not in self._config or attr not in last_state.attributes:
+                continue
+            value = last_state.attributes[attr]
+            self.restore_attribute(conf_key, _attr, value)
+
+        self._attr_extra_state_attributes = {}
+        # Restore attributes from template attributes
+        if self._attribute_templates:
+            for attr in self._config[CONF_ATTRIBUTES]:
+                if attr not in last_state.attributes:
+                    continue
+                self._attr_extra_state_attributes[attr] = last_state.attributes[attr]

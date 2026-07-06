@@ -1,7 +1,5 @@
 """Helpers to help coordinate updates."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Generator
@@ -10,7 +8,7 @@ from functools import partial
 import logging
 from random import randint
 from time import monotonic
-from typing import Any, Generic, Protocol, TypeVar
+from typing import Any, Generic, Protocol, TypeVar, override
 import urllib.error
 
 import aiohttp
@@ -169,6 +167,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         )
 
     @callback
+    @override
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:
@@ -199,7 +198,14 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     def async_update_listeners(self) -> None:
         """Update all registered listeners."""
         for update_callback, _ in list(self._listeners.values()):
-            update_callback()
+            try:
+                update_callback()
+            except Exception:
+                self.logger.exception(
+                    "Unexpected error updating listener %s for %s",
+                    id(update_callback),
+                    self.name,
+                )
 
     async def async_shutdown(self) -> None:
         """Cancel any scheduled call, and ignore new runs."""
@@ -335,8 +341,11 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             is not config_entries.ConfigEntryState.SETUP_IN_PROGRESS
         ):
             raise ConfigEntryError(
-                f"`async_config_entry_first_refresh` called when config entry state is {self.config_entry.state}, "
-                f"but should only be called in state {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}"
+                "`async_config_entry_first_refresh` called when"
+                f" config entry state is"
+                f" {self.config_entry.state},"
+                " but should only be called in state"
+                f" {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}"
             )
         if await self.__wrap_async_setup():
             await self._async_refresh(
@@ -433,7 +442,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                     self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
 
-        except (OAuth2TokenRequestError,) as err:
+        except OAuth2TokenRequestError as err:
             self.last_exception = err
             if isinstance(err, OAuth2TokenRequestReauthError):
                 # Non-recoverable error
@@ -450,7 +459,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                     raise ConfigEntryAuthFailed from err
 
                 if self.config_entry:
-                    self.config_entry.async_start_reauth(self.hass)
+                    self.config_entry.async_start_reauth_if_available(self.hass)
                 return
 
             # Recoverable error
@@ -528,7 +537,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 raise
 
             if self.config_entry:
-                self.config_entry.async_start_reauth(self.hass)
+                self.config_entry.async_start_reauth_if_available(self.hass)
         except NotImplementedError as err:
             self.last_exception = err
             self.last_update_success = False
@@ -617,6 +626,7 @@ class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     last_update_success_time: datetime | None = None
 
     @callback
+    @override
     def _async_refresh_finished(self) -> None:
         """Handle when a refresh has finished."""
         if self.last_update_success:
@@ -636,10 +646,12 @@ class BaseCoordinatorEntity[
         self.coordinator_context = context
 
     @cached_property
+    @override
     def should_poll(self) -> bool:
         """No need to poll. Coordinator notifies entity of updates."""
         return False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -681,10 +693,12 @@ class CoordinatorEntity[
         super().__init__(coordinator, context)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.last_update_success
 
+    @override
     async def async_update(self) -> None:
         """Update the entity.
 
