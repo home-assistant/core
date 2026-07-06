@@ -19,6 +19,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.group import (
     expand_entity_ids as _expand_entity_ids,
@@ -157,13 +158,21 @@ async def async_clean_import(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     if TYPE_CHECKING:
         assert old_entity_entry.config_entry_id
-    await hass.config_entries.async_unload(old_entity_entry.config_entry_id)
-    entity_reg.async_update_entity_platform(
-        old_entity_entry.entity_id,
-        DOMAIN,
-        new_config_entry_id=entry.entry_id,
-        new_unique_id=entry.entry_id,
-    )
+    if not await hass.config_entries.async_unload(old_entity_entry.config_entry_id):
+        raise ConfigEntryError(
+            "Failed to unload Min/Max config entry during migration from Min/Max helper"
+        )
+    try:
+        entity_reg.async_update_entity_platform(
+            old_entity_entry.entity_id,
+            DOMAIN,
+            new_config_entry_id=entry.entry_id,
+            new_unique_id=entry.entry_id,
+        )
+    except ValueError as err:
+        raise ConfigEntryError(
+            "Failed to migrate Min/Max entity to group platform; entity is still loaded"
+        ) from err
     await hass.config_entries.async_remove(old_entity_entry.config_entry_id)
 
 
