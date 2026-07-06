@@ -30,6 +30,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.overkiz.const import CONF_GATEWAY_ID, DOMAIN
+from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -1379,6 +1380,8 @@ async def test_somfy_full_flow_single_site(
     assert result["data"]["site_oid"] == TEST_SITE_OID
     assert result["data"]["region"] == TEST_REGION
     assert result["data"]["gateway_id"] == TEST_GATEWAY_ID
+    # The email is stored to pre-fill reauth; the password is never persisted.
+    assert result["data"]["username"] == TEST_EMAIL
     assert "password" not in result["data"]
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1559,6 +1562,7 @@ async def test_somfy_reauth_success(
         data={
             "hub": "somfy",
             "api_type": "cloud",
+            "username": TEST_EMAIL,
             "refresh_token": "old-token",
             "site_oid": TEST_SITE_OID,
             "region": TEST_REGION,
@@ -1570,6 +1574,11 @@ async def test_somfy_reauth_success(
     result = await mock_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "somfy"
+    # The stored email pre-fills the username field on reauth.
+    username_key = next(
+        key for key in result["data_schema"].schema if key == CONF_USERNAME
+    )
+    assert username_key.default() == TEST_EMAIL
 
     credentials = SomfyTokenCredentials(
         refresh_token="new-token",
@@ -1602,6 +1611,7 @@ async def test_somfy_reauth_success(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_entry.data["refresh_token"] == "new-token"
+    assert mock_entry.data["username"] == TEST_EMAIL
 
 
 async def test_somfy_reauth_wrong_account(
@@ -1616,6 +1626,7 @@ async def test_somfy_reauth_wrong_account(
         data={
             "hub": "somfy",
             "api_type": "cloud",
+            "username": TEST_EMAIL,
             "refresh_token": "old-token",
             "site_oid": TEST_SITE_OID,
             "region": TEST_REGION,

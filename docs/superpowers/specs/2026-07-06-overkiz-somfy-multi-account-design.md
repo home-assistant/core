@@ -34,8 +34,11 @@ token instead of an OAuth2 token bundle.
 
 ## Credential storage decision
 
-**Token only.** The config entry stores the resumable token bundle; no password
-is written to disk.
+**Token only (plus email).** The config entry stores the resumable token bundle
+and the account email; **no password** is written to disk. The email is an
+identifier, not a secret — storing it lets reauth pre-fill the username field
+(useful when one person has several Somfy accounts), matching the standard HA
+cloud-flow pattern.
 
 - Fast setup/reload: the token path skips the password grant, token exchange,
   and site discovery entirely.
@@ -52,6 +55,7 @@ is written to disk.
 |---|---|
 | `CONF_HUB` | `Server.SOMFY` |
 | `CONF_API_TYPE` | `APIType.CLOUD` |
+| `CONF_USERNAME` | account email (pre-fills the reauth form; not a secret) |
 | `CONF_REFRESH_TOKEN` | site-scoped rotating refresh token |
 | `CONF_SITE_OID` | selected site OID |
 | `CONF_REGION` | resolved region (`EMEA`/`APAC`/`SNABA`) |

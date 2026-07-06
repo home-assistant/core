@@ -161,6 +161,7 @@ def mock_somfy_config_entry() -> MockConfigEntry:
         data={
             "hub": "somfy",
             "api_type": "cloud",
+            "username": TEST_EMAIL,
             "refresh_token": "somfy-refresh-token",
             "site_oid": "site-oid-1",
             "region": "EMEA",

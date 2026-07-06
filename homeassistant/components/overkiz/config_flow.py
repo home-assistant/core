@@ -527,6 +527,8 @@ class OverkizConfigFlow(
         data = {
             CONF_HUB: Server.SOMFY,
             CONF_API_TYPE: APIType.CLOUD,
+            # Stored to pre-fill the login form on reauth; the password is never persisted.
+            CONF_USERNAME: self._user,
             CONF_REFRESH_TOKEN: credentials.refresh_token,
             CONF_SITE_OID: credentials.site_oid,
             CONF_REGION: credentials.region,
@@ -602,8 +604,8 @@ class OverkizConfigFlow(
         if self._api_type == APIType.LOCAL:
             self._host = entry_data[CONF_HOST]
             self._verify_ssl = entry_data[CONF_VERIFY_SSL]
-        # Rexel and Somfy cloud reauth re-run their own login; no stored username.
-        elif self._server not in {Server.REXEL, Server.SOMFY}:
+        # Rexel cloud reauth re-runs the OAuth2 flow; there is no stored username.
+        elif self._server != Server.REXEL:
             self._user = entry_data[CONF_USERNAME]
 
         if self._server == Server.SOMFY:
