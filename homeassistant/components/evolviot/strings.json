@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect EvolvIOT",
+        "description": "Home Assistant could not start EvolvIOT pairing. Check the EvolvIOT backend connection and retry.",
+        "data": {
+          "retry": "Retry pairing"
+        }
+      },
+      "pair": {
+        "title": "Scan the code from EvolvIOT app",
+        "description": "| ![EvolvIOT pairing QR]({qr_image_url}) |\n|:--:|\n\nPairing code: `{user_code}`\n\nProfile > Third party services > Home Assistant > Scan QR to connect Home Assistant.\n\nAfter the app shows success, select Submit."
+      }
+    },
+    "progress": {
+      "pair": "Waiting for approval in the EvolvIOT app. Pairing code: {user_code}"
+    },
+    "error": {
+      "authorization_denied": "Pairing was denied in the EvolvIOT app.",
+      "authorization_expired": "The previous pairing session expired. A new QR code and pairing code have been generated.",
+      "authorization_pending": "Pairing is not approved yet. Scan the QR code or enter the pairing code in the EvolvIOT app, then submit again.",
+      "cannot_connect": "Failed to connect to EvolvIOT.",
+      "invalid_auth": "Invalid EvolvIOT credentials.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This EvolvIOT account is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "EvolvIOT options",
+        "data": {
+          "api_base_url": "API base URL",
+          "verify_ssl": "Verify SSL certificate"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "connection_mode": {
+        "name": "Connection Mode"
+      }
+    }
+  }
+}
