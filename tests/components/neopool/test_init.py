@@ -162,3 +162,34 @@ async def test_corrupt_gpio_logs_error_only_on_state_change(
         await hass.async_block_till_done()
         issue_registry = ir.async_get(hass)
         assert issue_registry.async_get_issue(DOMAIN, "corrupted_gpio") is None
+
+
+async def test_corrupt_gpio_updates_issue_on_value_change(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """The repair issue details refresh when a corrupted register value changes."""
+    first = dict(MOCK_POOL_DATA)
+    first["MBF_PAR_FILT_GPIO"] = MAX_RELAY_GPIO + 1
+    mock_neopool_client.async_read_all = AsyncMock(return_value=first)
+
+    await setup_integration(hass, mock_config_entry)
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, "corrupted_gpio")
+    assert issue is not None
+    assert issue.translation_placeholders is not None
+    assert str(MAX_RELAY_GPIO + 1) in issue.translation_placeholders["details"]
+
+    second = dict(MOCK_POOL_DATA)
+    second["MBF_PAR_FILT_GPIO"] = MAX_RELAY_GPIO + 2
+    mock_neopool_client.async_read_all = AsyncMock(return_value=second)
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "corrupted_gpio")
+    assert issue is not None
+    assert issue.translation_placeholders is not None
+    assert str(MAX_RELAY_GPIO + 2) in issue.translation_placeholders["details"]
