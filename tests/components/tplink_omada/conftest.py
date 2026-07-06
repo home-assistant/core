@@ -231,6 +231,18 @@ def mock_omada_clients_only_client(
         client = client_mock.return_value
 
         client.get_site_client.return_value = mock_omada_clients_only_site_client
+        client.get_controller_info = AsyncMock(
+            return_value=OmadaControllerInfo(
+                {
+                    "controllerVer": "6.2.10.17",
+                    "configured": True,
+                    "omadacId": "12345",
+                }
+            )
+        )
+        client.check_firmware_updates = AsyncMock(
+            return_value=OmadaControllerUpdateInfo({})
+        )
         yield client
 
 

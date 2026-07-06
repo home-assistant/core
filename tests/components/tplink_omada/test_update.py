@@ -6,16 +6,19 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tplink_omada_client import OmadaControllerUpdateInfo
 from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
 
 from homeassistant.components.tplink_omada.coordinator import POLL_DEVICES
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
+    ATTR_INSTALLED_VERSION,
+    ATTR_LATEST_VERSION,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -100,6 +103,81 @@ async def test_firmware_download_in_progress(
     entity = hass.states.get(entity_id)
     assert entity is not None
     assert entity.attributes.get(ATTR_IN_PROGRESS) is True
+
+
+@pytest.mark.parametrize(
+    (
+        "controller_update_info",
+        "expected_state",
+        "expected_installed_version",
+        "expected_latest_version",
+    ),
+    [
+        pytest.param(
+            OmadaControllerUpdateInfo(
+                {
+                    "software": {
+                        "upgrade": True,
+                        "currentVersion": "6.2.10.17",
+                        "latestVersion": "6.2.14.6 Build 20260617091728",
+                        "releaseLog": "Controller software update available.",
+                    }
+                }
+            ),
+            STATE_ON,
+            "6.2.10.17",
+            "6.2.14.6 Build 20260617091728",
+            id="software-update",
+        ),
+        pytest.param(
+            OmadaControllerUpdateInfo(
+                {
+                    "hardware": {
+                        "upgrade": True,
+                        "currentVersion": "2.0.1",
+                        "latestVersion": "2.1.0",
+                        "releaseLog": "Hardware controller update available.",
+                    }
+                }
+            ),
+            STATE_ON,
+            "2.0.1",
+            "2.1.0",
+            id="hardware-update",
+        ),
+        pytest.param(
+            OmadaControllerUpdateInfo({}),
+            STATE_OFF,
+            "6.2.10.17",
+            "6.2.10.17",
+            id="no-update",
+        ),
+    ],
+)
+async def test_controller_firmware_update_versions(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+    controller_update_info: OmadaControllerUpdateInfo,
+    expected_state: str,
+    expected_installed_version: str,
+    expected_latest_version: str,
+) -> None:
+    """Test controller update entity version details."""
+    mock_omada_client.check_firmware_updates = AsyncMock(
+        return_value=controller_update_info
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.tplink_omada.PLATFORMS", [Platform.UPDATE]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity = hass.states.get("update.omada_controller_firmware")
+    assert entity is not None
+    assert entity.state == expected_state
+    assert entity.attributes[ATTR_INSTALLED_VERSION] == expected_installed_version
+    assert entity.attributes[ATTR_LATEST_VERSION] == expected_latest_version
 
 
 async def test_install_firmware_success(
