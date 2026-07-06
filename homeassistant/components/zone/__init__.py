@@ -9,7 +9,7 @@ from typing import Any, Self, cast, override
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (  # noqa : F401
+from homeassistant.const import (  # noqa: F401
     ATTR_EDITABLE,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -44,7 +44,7 @@ from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.location import distance
 
-from .const import (  # noqa : F401
+from .const import (  # noqa: F401
     ATTR_PASSIVE,
     ATTR_RADIUS,
     CONF_PASSIVE,
