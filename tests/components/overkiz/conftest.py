@@ -153,6 +153,23 @@ def mock_rexel_local_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_somfy_config_entry() -> MockConfigEntry:
+    """Return a Somfy multi-account config entry backed by a token bundle."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={
+            "hub": "somfy",
+            "api_type": "cloud",
+            "refresh_token": "somfy-refresh-token",
+            "site_oid": "site-oid-1",
+            "region": "EMEA",
+            "gateway_id": TEST_GATEWAY_ID,
+        },
+    )
+
+
+@pytest.fixture
 def mock_client() -> MockOverkizClient:
     """Return a configurable mock Overkiz client."""
     return MockOverkizClient()

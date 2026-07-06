@@ -11,6 +11,7 @@ from pyoverkiz.exceptions import (
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.overkiz import create_somfy_client
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -204,3 +205,37 @@ async def test_setup_transient_error_retries(
 
     assert mock_rexel_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert not hass.config_entries.flow.async_progress()
+
+
+async def test_somfy_setup_persists_rotated_token(
+    hass: HomeAssistant,
+    mock_somfy_config_entry: MockConfigEntry,
+    mock_client: MockOverkizClient,
+) -> None:
+    """create_somfy_client wires on_token_refresh to persist the rotated token."""
+    mock_somfy_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.overkiz.create_somfy_client",
+        return_value=mock_client,
+    ) as create_client:
+        await hass.config_entries.async_setup(mock_somfy_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert create_client.call_count == 1
+    assert mock_somfy_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_somfy_on_token_refresh_updates_entry(
+    hass: HomeAssistant,
+    mock_somfy_config_entry: MockConfigEntry,
+) -> None:
+    """The on_token_refresh callback writes the new refresh token to the entry."""
+    mock_somfy_config_entry.add_to_hass(hass)
+
+    client = await create_somfy_client(hass, mock_somfy_config_entry)
+    callback = client._auth.credentials.on_token_refresh
+    await callback("rotated-token")
+
+    assert mock_somfy_config_entry.data["refresh_token"] == "rotated-token"
+    assert mock_somfy_config_entry.data["site_oid"] == "site-oid-1"
