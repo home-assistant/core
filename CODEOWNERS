@@ -1630,6 +1630,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/shodan/ @fabaff
 /homeassistant/components/sia/ @eavanvalkenburg
 /tests/components/sia/ @eavanvalkenburg
+/homeassistant/components/sifely/ @lifyfun-llc
 /homeassistant/components/sighthound/ @robmarkcole
 /tests/components/sighthound/ @robmarkcole
 /homeassistant/components/signal_messenger/ @bbernhard

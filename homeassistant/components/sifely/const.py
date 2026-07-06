@@ -14,9 +14,5 @@ DEFAULT_SCAN_INTERVAL = 300
 DEFAULT_CLIENT_ID = "home_assistant"
 
 # Config entry data keys
-CONF_EMAIL = "email"
-CONF_PASSWORD = "password"
-CONF_CLIENT_ID = "client_id"
 CONF_BASE_URL = "base_url"
-CONF_ACCESS_TOKEN = "access_token"
 CONF_REFRESH_TOKEN = "refresh_token"

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -47,7 +47,7 @@ class SifelyBatterySensor(
         """Initialize the battery sensor."""
         super().__init__(coordinator)
         self._lock_id = lock_id
-        self._attr_unique_id = f"sifely_lock_{lock_id}_battery"
+        self._attr_unique_id = f"{lock_id}_battery"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(lock_id))}
         )
@@ -58,11 +58,13 @@ class SifelyBatterySensor(
         return self.coordinator.data.get(self._lock_id, {})
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the lock is present in the latest update."""
         return super().available and self._lock_id in self.coordinator.data
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the battery level percentage."""
         detail = self._data.get("detail", {})

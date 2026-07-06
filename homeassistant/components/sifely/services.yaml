@@ -1,12 +1,6 @@
-# HA 开发者工具中展示的服务描述与参数选择器
-
 list_passcodes:
-  name: List Passcodes
-  description: 获取指定锁的密码列表
   fields:
     lock_id:
-      name: Lock ID
-      description: 锁的唯一标识 ID
       required: true
       selector:
         number:
@@ -14,105 +8,81 @@ list_passcodes:
           min: 1
 
 add_passcode:
-  name: Add Passcode
-  description: 为指定锁新增一个键盘密码
   fields:
     lock_id:
-      name: Lock ID
-      description: 锁的唯一标识 ID
       required: true
       selector:
         number:
           mode: box
           min: 1
     keyboard_pwd:
-      name: Passcode
-      description: 密码值（纯数字，如 "1234"）
       required: true
       selector:
         text:
     keyboard_pwd_name:
-      name: Passcode Name
-      description: 密码别名（方便识别用途）
       required: true
       selector:
         text:
     start_date:
-      name: Start Date
-      description: 有效开始时间（毫秒时间戳）
       required: true
       selector:
         number:
           mode: box
           min: 0
     end_date:
-      name: End Date
-      description: 有效结束时间（毫秒时间戳）
       required: true
       selector:
         number:
           mode: box
           min: 0
     keyboard_pwd_type:
-      name: Passcode Type
-      description: "密码类型：1=一次性, 2=永久, 3=限时"
       required: false
-      default: 3
+      default: "3"
       selector:
         select:
           options:
-            - label: "一次性密码"
+            - label: "One-time passcode"
               value: "1"
-            - label: "永久密码"
+            - label: "Permanent passcode"
               value: "2"
-            - label: "限时密码"
+            - label: "Timed passcode"
               value: "3"
     add_type:
-      name: Add Type
-      description: "添加方式：1=蓝牙, 2=网关/WiFi远程, 3=NB-IoT"
       required: false
-      default: 2
+      default: "2"
       selector:
         select:
           options:
-            - label: "网关/WiFi 远程添加"
+            - label: "Gateway/WiFi remote"
               value: "2"
-            - label: "APP 蓝牙添加"
+            - label: "App Bluetooth"
               value: "1"
             - label: "NB-IoT"
               value: "3"
 
 delete_passcode:
-  name: Delete Passcode
-  description: 删除指定锁的一个键盘密码
   fields:
     lock_id:
-      name: Lock ID
-      description: 锁的唯一标识 ID
       required: true
       selector:
         number:
           mode: box
           min: 1
     keyboard_pwd_id:
-      name: Passcode ID
-      description: 要删除的密码 ID（可从密码列表中获取）
       required: true
       selector:
         number:
           mode: box
           min: 1
     delete_type:
-      name: Delete Type
-      description: "删除方式：1=蓝牙, 2=网关/WiFi远程, 3=NB-IoT"
       required: false
-      default: 2
+      default: "2"
       selector:
         select:
           options:
-            - label: "网关/WiFi 远程删除"
+            - label: "Gateway/WiFi remote"
               value: "2"
-            - label: "APP 蓝牙删除"
+            - label: "App Bluetooth"
               value: "1"
             - label: "NB-IoT"
               value: "3"

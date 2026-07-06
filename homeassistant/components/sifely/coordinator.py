@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -41,6 +41,7 @@ class SifelyDataUpdateCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]
         self.client = client
         self.locks: list[dict[str, Any]] = []
 
+    @override
     async def _async_update_data(self) -> dict[int, dict[str, Any]]:
         """Fetch the lock list, then each lock's state and detail.
 

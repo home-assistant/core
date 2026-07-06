@@ -18,5 +18,69 @@
     "abort": {
       "already_configured": "This account is already configured"
     }
+  },
+  "services": {
+    "list_passcodes": {
+      "name": "List passcodes",
+      "description": "Retrieves the list of passcodes for a lock.",
+      "fields": {
+        "lock_id": {
+          "name": "Lock ID",
+          "description": "The unique identifier of the lock."
+        }
+      }
+    },
+    "add_passcode": {
+      "name": "Add passcode",
+      "description": "Adds a keyboard passcode to a lock.",
+      "fields": {
+        "lock_id": {
+          "name": "Lock ID",
+          "description": "The unique identifier of the lock."
+        },
+        "keyboard_pwd": {
+          "name": "Passcode",
+          "description": "The passcode value (digits only, for example \"1234\")."
+        },
+        "keyboard_pwd_name": {
+          "name": "Passcode name",
+          "description": "A friendly name for the passcode."
+        },
+        "start_date": {
+          "name": "Start date",
+          "description": "The passcode validity start time as a millisecond timestamp."
+        },
+        "end_date": {
+          "name": "End date",
+          "description": "The passcode validity end time as a millisecond timestamp."
+        },
+        "keyboard_pwd_type": {
+          "name": "Passcode type",
+          "description": "The passcode type: 1 = one-time, 2 = permanent, 3 = timed."
+        },
+        "add_type": {
+          "name": "Add type",
+          "description": "How the passcode is added: 1 = Bluetooth, 2 = gateway/Wi-Fi remote, 3 = NB-IoT."
+        }
+      }
+    },
+    "delete_passcode": {
+      "name": "Delete passcode",
+      "description": "Deletes a keyboard passcode from a lock.",
+      "fields": {
+        "lock_id": {
+          "name": "Lock ID",
+          "description": "The unique identifier of the lock."
+        },
+        "keyboard_pwd_id": {
+          "name": "Passcode ID",
+          "description": "The ID of the passcode to delete, obtained from the passcode list."
+        },
+        "delete_type": {
+          "name": "Delete type",
+          "description": "How the passcode is deleted: 1 = Bluetooth, 2 = gateway/Wi-Fi remote, 3 = NB-IoT."
+        }
+      }
+    }
   }
 }

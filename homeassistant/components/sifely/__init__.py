@@ -9,7 +9,11 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.const import Platform
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_CLIENT_ID,
+    Platform,
+)
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -19,12 +23,11 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from pysifely import DEFAULT_BASE_URL, PASSCODE_OP_REMOTE, SifelyApiClient, SifelyApiError
 from .const import (
-    CONF_ACCESS_TOKEN,
     CONF_BASE_URL,
-    CONF_CLIENT_ID,
     CONF_REFRESH_TOKEN,
     DOMAIN,
 )
@@ -142,6 +145,12 @@ def _register_services(hass: HomeAssistant) -> None:
     )
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Sifely integration."""
+    _register_services(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: SifelyConfigEntry) -> bool:
     """Set up Sifely from a config entry."""
     access_token = entry.data[CONF_ACCESS_TOKEN]
@@ -179,8 +188,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SifelyConfigEntry) -> bo
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    _register_services(hass)
 
     return True
 

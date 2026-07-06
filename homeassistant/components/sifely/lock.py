@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant
@@ -43,7 +43,7 @@ class SifelyLock(CoordinatorEntity[SifelyDataUpdateCoordinator], LockEntity):
         """Initialize the lock entity."""
         super().__init__(coordinator)
         self._lock_id = lock_id
-        self._attr_unique_id = f"sifely_lock_{lock_id}"
+        self._attr_unique_id = str(lock_id)
 
     @property
     def _data(self) -> dict[str, Any]:
@@ -61,11 +61,13 @@ class SifelyLock(CoordinatorEntity[SifelyDataUpdateCoordinator], LockEntity):
         return self._data.get("detail", {})
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the lock is present in the latest update."""
         return super().available and self._lock_id in self.coordinator.data
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device registry information."""
         info = self._info
@@ -82,6 +84,7 @@ class SifelyLock(CoordinatorEntity[SifelyDataUpdateCoordinator], LockEntity):
         )
 
     @property
+    @override
     def is_locked(self) -> bool | None:
         """Return whether the lock is locked."""
         state = self._data.get("state")
@@ -89,6 +92,7 @@ class SifelyLock(CoordinatorEntity[SifelyDataUpdateCoordinator], LockEntity):
             return None
         return state == LOCK_STATE_LOCKED
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         try:
@@ -97,6 +101,7 @@ class SifelyLock(CoordinatorEntity[SifelyDataUpdateCoordinator], LockEntity):
             raise HomeAssistantError(f"Failed to lock: {err}") from err
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         try:

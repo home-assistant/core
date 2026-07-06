@@ -4,20 +4,22 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_CLIENT_ID,
+    CONF_EMAIL,
+    CONF_PASSWORD,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from pysifely import DEFAULT_BASE_URL, SifelyApiClient, SifelyApiError, SifelyAuthError
 from .const import (
-    CONF_ACCESS_TOKEN,
     CONF_BASE_URL,
-    CONF_CLIENT_ID,
-    CONF_EMAIL,
-    CONF_PASSWORD,
     CONF_REFRESH_TOKEN,
     DEFAULT_CLIENT_ID,
     DOMAIN,
@@ -52,6 +54,7 @@ class SifelyConfigFlow(ConfigFlow, domain=DOMAIN):
             session=session,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
