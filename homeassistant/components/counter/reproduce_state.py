@@ -13,9 +13,9 @@ from . import DOMAIN, SERVICE_SET_VALUE, VALUE, CounterEntityStateAttribute
 _LOGGER = logging.getLogger(__name__)
 
 ATTRS = {
-    "step": CounterEntityStateAttribute.STEP,
-    "minimum": CounterEntityStateAttribute.MINIMUM,
-    "maximum": CounterEntityStateAttribute.MAXIMUM,
+    CounterEntityStateAttribute.STEP: "step",
+    CounterEntityStateAttribute.MINIMUM: "minimum",
+    CounterEntityStateAttribute.MAXIMUM: "maximum",
 }
 
 
@@ -39,14 +39,13 @@ async def _async_reproduce_state(
 
     # Return if we are already at the right state.
     if cur_state.state == state.state and all(
-        cur_state.attributes.get(attr) == state.attributes.get(attr)
-        for attr in ATTRS.values()
+        cur_state.attributes.get(attr) == state.attributes.get(attr) for attr in ATTRS
     ):
         return
 
     service_data = {ATTR_ENTITY_ID: state.entity_id, VALUE: state.state}
     service = SERVICE_SET_VALUE
-    for arg, attr in ATTRS.items():
+    for attr, arg in ATTRS.items():
         if attr in state.attributes:
             service_data[arg] = state.attributes[attr]
 
