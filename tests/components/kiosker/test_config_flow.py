@@ -14,8 +14,8 @@ from kiosker import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.kiosker.const import CONF_API_TOKEN, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.components.kiosker.const import DOMAIN
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -94,12 +94,9 @@ async def test_user_flow_creates_entry(
         (Exception(), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_errors_and_recovery(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_kiosker_api: MagicMock,
-    exception: Exception,
-    error: str,
+    hass: HomeAssistant, mock_kiosker_api: MagicMock, exception: Exception, error: str
 ) -> None:
     """Test user flow handles all validation errors and can recover."""
     result = await hass.config_entries.flow.async_init(
@@ -256,10 +253,9 @@ async def test_zeroconf_abort_if_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_no_device_id(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_kiosker_api: MagicMock,
+    hass: HomeAssistant, mock_kiosker_api: MagicMock
 ) -> None:
     """Test user flow shows cannot_connect error when device reports no device ID."""
     mock_kiosker_api.status.return_value.device_id = None

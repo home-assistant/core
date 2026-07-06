@@ -1,7 +1,5 @@
 """Test the Aquacell init module."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
@@ -73,7 +71,7 @@ async def test_coordinator_update_expired_refresh_token(
     """Test load and unload entry."""
     mock_aquacell_api.authenticate.return_value = "new-refresh-token"
 
-    now = datetime.now()
+    now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
     with patch(
         "homeassistant.components.aquacell.coordinator.datetime"
     ) as datetime_mock:

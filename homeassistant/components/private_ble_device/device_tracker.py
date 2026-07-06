@@ -1,15 +1,12 @@
 """Tracking for bluetooth low energy devices."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
+from typing import override
 
 from homeassistant.components import bluetooth
-from homeassistant.components.device_tracker import SourceType
-from homeassistant.components.device_tracker.config_entry import BaseTrackerEntity
+from homeassistant.components.device_tracker import BaseScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -27,15 +24,17 @@ async def async_setup_entry(
     async_add_entities([BasePrivateDeviceTracker(config_entry)])
 
 
-class BasePrivateDeviceTracker(BasePrivateDeviceEntity, BaseTrackerEntity):
+class BasePrivateDeviceTracker(BasePrivateDeviceEntity, BaseScannerEntity):
     """A trackable Private Bluetooth Device."""
 
     _attr_should_poll = False
     _attr_has_entity_name = True
+    _attr_source_type: SourceType = SourceType.BLUETOOTH_LE
     _attr_translation_key = "device_tracker"
     _attr_name = None
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, str]:
         """Return extra state attributes for this device."""
         if last_info := self._last_info:
@@ -46,6 +45,7 @@ class BasePrivateDeviceTracker(BasePrivateDeviceEntity, BaseTrackerEntity):
         return {}
 
     @callback
+    @override
     def _async_track_unavailable(
         self, service_info: bluetooth.BluetoothServiceInfoBleak
     ) -> None:
@@ -53,6 +53,7 @@ class BasePrivateDeviceTracker(BasePrivateDeviceEntity, BaseTrackerEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def _async_track_service_info(
         self,
         service_info: bluetooth.BluetoothServiceInfoBleak,
@@ -62,11 +63,7 @@ class BasePrivateDeviceTracker(BasePrivateDeviceEntity, BaseTrackerEntity):
         self.async_write_ha_state()
 
     @property
-    def state(self) -> str:
-        """Return the state of the device."""
-        return STATE_HOME if self._last_info else STATE_NOT_HOME
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type, eg gps or router, of the device."""
-        return SourceType.BLUETOOTH_LE
+    @override
+    def is_connected(self) -> bool:
+        """Return true if the device is connected."""
+        return bool(self._last_info)

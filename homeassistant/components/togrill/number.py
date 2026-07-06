@@ -1,10 +1,8 @@
 """Support for number entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from togrill_bluetooth.packets import (
     AlarmType,
@@ -233,10 +231,12 @@ class ToGrillNumber(ToGrillEntity, NumberEntity):
         self._attr_unique_id = f"{coordinator.address}_{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the value reported by the number."""
         return self.entity_description.get_value(self.coordinator)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set value on device."""
 

@@ -1,5 +1,7 @@
 """Support for MotionMount binary sensors."""
 
+from typing import override
+
 import motionmount
 
 from homeassistant.components.binary_sensor import (
@@ -43,6 +45,7 @@ class MotionMountMovingSensor(MotionMountEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self._base_unique_id}-moving"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Get on status."""
         return self.mm.is_moving or False

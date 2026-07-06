@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'closed',
         'created',
         'deleted',
@@ -47,8 +47,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'dest_file': 'hello2.txt',
-      'event_type': 'moved',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'moved',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'closed',
         'created',
         'deleted',

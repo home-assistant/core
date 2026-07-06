@@ -1,9 +1,7 @@
 """Config flow for the Zinvolt integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import jwt
 import voluptuous as vol
@@ -22,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 class ZinvoltConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Zinvolt."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

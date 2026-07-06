@@ -1,7 +1,5 @@
 """Common code for tests."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from enum import Enum
 from typing import NamedTuple

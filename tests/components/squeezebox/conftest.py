@@ -84,8 +84,16 @@ FAKE_QUERY_RESPONSE = {
     STATUS_SENSOR_INFO_TOTAL_SONGS: 42,
     STATUS_SENSOR_PLAYER_COUNT: 10,
     STATUS_SENSOR_OTHER_PLAYER_COUNT: 0,
-    STATUS_UPDATE_NEWVERSION: 'A new version of Logitech Media Server is available (8.5.2 - 0). <a href="updateinfo.html?installerFile=/var/lib/squeezeboxserver/cache/updates/logitechmediaserver_8.5.2_amd64.deb" target="update">Click here for further information</a>.',
-    STATUS_UPDATE_NEWPLUGINS: "Plugins have been updated - Restart Required (Big Sounds)",
+    STATUS_UPDATE_NEWVERSION: (
+        "A new version of Logitech Media Server is available"
+        ' (8.5.2 - 0). <a href="updateinfo.html?installerFile='
+        "/var/lib/squeezeboxserver/cache/updates/"
+        'logitechmediaserver_8.5.2_amd64.deb" target="update">'
+        "Click here for further information</a>."
+    ),
+    STATUS_UPDATE_NEWPLUGINS: (
+        "Plugins have been updated - Restart Required (Big Sounds)"
+    ),
     "_can": 1,
     "players_loop": [
         {
@@ -379,7 +387,7 @@ def mock_pysqueezebox_player(uuid: str) -> MagicMock:
 
 @pytest.fixture
 def lms_factory(player_factory: MagicMock) -> MagicMock:
-    """Return a factory for creating mock Lyrion Media Servers with arbitrary number of players."""
+    """Return a factory for creating mock Lyrion Media Servers."""
     return lambda player_count, uuid: mock_pysqueezebox_server(
         player_factory, player_count, uuid
     )
@@ -394,7 +402,7 @@ def lms(player_factory: MagicMock) -> MagicMock:
 def mock_pysqueezebox_server(
     player_factory: MagicMock, player_count: int, uuid: str
 ) -> MagicMock:
-    """Create a mock Lyrion Media Server with the given number of mock players attached."""
+    """Create a mock Lyrion Media Server with mock players."""
     with patch("homeassistant.components.squeezebox.Server", autospec=True) as mock_lms:
         players = [player_factory(TEST_MAC[index]) for index in range(player_count)]
         mock_lms.async_get_players = AsyncMock(return_value=players)
@@ -472,7 +480,7 @@ async def configured_players(
     config_entry: MockConfigEntry,
     lms_factory: MagicMock,
 ) -> list[MagicMock]:
-    """Fixture mocking calls to multiple pysqueezebox Players from a configured squeezebox."""
+    """Fixture mocking calls to multiple pysqueezebox Players."""
     lms = lms_factory(3, uuid=SERVER_UUIDS[0])
 
     with patch("homeassistant.components.squeezebox.Server", return_value=lms):

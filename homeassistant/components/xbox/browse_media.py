@@ -1,7 +1,5 @@
 """Support for media browsing."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, NamedTuple
 
 from pythonxbox.api.client import XboxLiveClient

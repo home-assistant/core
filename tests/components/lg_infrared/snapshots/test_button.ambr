@@ -39,7 +39,7 @@
 # name: test_entities[button.lg_tv_back-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Back',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Back',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_back',
@@ -89,7 +89,7 @@
 # name: test_entities[button.lg_tv_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Down',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Down',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_down',
@@ -139,7 +139,7 @@
 # name: test_entities[button.lg_tv_exit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Exit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Exit',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_exit',
@@ -189,7 +189,7 @@
 # name: test_entities[button.lg_tv_guide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Guide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Guide',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_guide',
@@ -239,7 +239,7 @@
 # name: test_entities[button.lg_tv_hdmi_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV HDMI 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV HDMI 1',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_hdmi_1',
@@ -289,7 +289,7 @@
 # name: test_entities[button.lg_tv_hdmi_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV HDMI 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV HDMI 2',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_hdmi_2',
@@ -339,7 +339,7 @@
 # name: test_entities[button.lg_tv_hdmi_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV HDMI 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV HDMI 3',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_hdmi_3',
@@ -389,7 +389,7 @@
 # name: test_entities[button.lg_tv_hdmi_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV HDMI 4',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV HDMI 4',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_hdmi_4',
@@ -439,7 +439,7 @@
 # name: test_entities[button.lg_tv_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Home',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Home',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_home',
@@ -489,7 +489,7 @@
 # name: test_entities[button.lg_tv_info-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Info',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Info',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_info',
@@ -539,7 +539,7 @@
 # name: test_entities[button.lg_tv_input-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Input',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Input',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_input',
@@ -589,7 +589,7 @@
 # name: test_entities[button.lg_tv_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Left',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Left',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_left',
@@ -639,7 +639,7 @@
 # name: test_entities[button.lg_tv_menu-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Menu',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Menu',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_menu',
@@ -689,7 +689,7 @@
 # name: test_entities[button.lg_tv_number_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Number 0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 0',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_number_0',
@@ -739,7 +739,7 @@
 # name: test_entities[button.lg_tv_number_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Number 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 1',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_number_1',
@@ -789,7 +789,7 @@
 # name: test_entities[button.lg_tv_number_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Number 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 2',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_number_2',
@@ -839,7 +839,7 @@
 # name: test_entities[button.lg_tv_number_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Number 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 3',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_number_3',
@@ -889,7 +889,7 @@
 # name: test_entities[button.lg_tv_number_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Number 4',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 4',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_number_4',
@@ -939,7 +939,7 @@
 # name: test_entities[button.lg_tv_number_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Number 5',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 5',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_number_5',
@@ -989,7 +989,7 @@
 # name: test_entities[button.lg_tv_number_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Number 6',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 6',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_number_6',
@@ -1039,7 +1039,7 @@
 # name: test_entities[button.lg_tv_number_7-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Number 7',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 7',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_number_7',
@@ -1089,7 +1089,7 @@
 # name: test_entities[button.lg_tv_number_8-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Number 8',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 8',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_number_8',
@@ -1139,7 +1139,7 @@
 # name: test_entities[button.lg_tv_number_9-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Number 9',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 9',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_number_9',
@@ -1189,10 +1189,60 @@
 # name: test_entities[button.lg_tv_ok-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV OK',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV OK',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_ok',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.lg_tv_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_tv_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': '01JTEST0000000000000000000_power',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.lg_tv_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_tv_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1239,7 +1289,7 @@
 # name: test_entities[button.lg_tv_power_off-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Power off',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Power off',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_power_off',
@@ -1289,7 +1339,7 @@
 # name: test_entities[button.lg_tv_power_on-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Power on',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Power on',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_power_on',
@@ -1339,7 +1389,7 @@
 # name: test_entities[button.lg_tv_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Right',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Right',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_right',
@@ -1389,7 +1439,7 @@
 # name: test_entities[button.lg_tv_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LG TV Up',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Up',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_tv_up',

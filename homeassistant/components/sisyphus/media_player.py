@@ -1,6 +1,6 @@
 """Support for track controls on the Sisyphus Kinetic Art Table."""
 
-from __future__ import annotations
+from typing import override
 
 import aiohttp
 from sisyphus_control import Track
@@ -61,6 +61,7 @@ class SisyphusPlayer(MediaPlayerEntity):
         self._host = host
         self._table = table
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add listeners after this object has been initialized."""
         self._table.add_listener(self.async_write_ha_state)
@@ -70,21 +71,25 @@ class SisyphusPlayer(MediaPlayerEntity):
         await self._table.refresh()
 
     @property
+    @override
     def unique_id(self):
         """Return the UUID of the table."""
         return self._table.id
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if the table is responding to heartbeats."""
         return self._table.is_connected
 
     @property
+    @override
     def name(self):
         """Return the name of the table."""
         return self._name
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """Return the current state of the table; sleeping maps to off."""
         if self._table.state in ["homing", "playing"]:
@@ -100,45 +105,54 @@ class SisyphusPlayer(MediaPlayerEntity):
         return None
 
     @property
+    @override
     def volume_level(self):
         """Return the current playback speed (0..1)."""
         return self._table.speed
 
     @property
+    @override
     def shuffle(self):
         """Return True if the current playlist is in shuffle mode."""
         return self._table.is_shuffle
 
+    @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Change the shuffle mode of the current playlist."""
         await self._table.set_shuffle(shuffle)
 
     @property
+    @override
     def media_playlist(self):
         """Return the name of the current playlist."""
         return self._table.active_playlist.name if self._table.active_playlist else None
 
     @property
+    @override
     def media_title(self):
         """Return the title of the current track."""
         return self._table.active_track.name if self._table.active_track else None
 
     @property
+    @override
     def media_content_type(self):
         """Return the content type currently playing; i.e. a Sisyphus track."""
         return MEDIA_TYPE_TRACK
 
     @property
+    @override
     def media_content_id(self):
         """Return the track ID of the current track."""
         return self._table.active_track.id if self._table.active_track else None
 
     @property
+    @override
     def media_duration(self):
         """Return the total time it will take to run this track at the current speed."""
         return self._table.active_track_total_time.total_seconds()
 
     @property
+    @override
     def media_position(self):
         """Return the current position within the track."""
         return (
@@ -147,11 +161,13 @@ class SisyphusPlayer(MediaPlayerEntity):
         ).total_seconds()
 
     @property
+    @override
     def media_position_updated_at(self):
         """Return the last time we got a position update."""
         return self._table.active_track_remaining_time_as_of
 
     @property
+    @override
     def media_image_url(self):
         """Return the URL for a thumbnail image of the current track."""
 
@@ -160,34 +176,42 @@ class SisyphusPlayer(MediaPlayerEntity):
 
         return super().media_image_url
 
+    @override
     async def async_turn_on(self) -> None:
         """Wake up a sleeping table."""
         await self._table.wakeup()
 
+    @override
     async def async_turn_off(self) -> None:
         """Put the table to sleep."""
         await self._table.sleep()
 
+    @override
     async def async_volume_down(self) -> None:
         """Slow down playback."""
         await self._table.set_speed(max(0, self._table.speed - 0.1))
 
+    @override
     async def async_volume_up(self) -> None:
         """Speed up playback."""
         await self._table.set_speed(min(1.0, self._table.speed + 0.1))
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set playback speed (0..1)."""
         await self._table.set_speed(volume)
 
+    @override
     async def async_media_play(self) -> None:
         """Start playing."""
         await self._table.play()
 
+    @override
     async def async_media_pause(self) -> None:
         """Pause."""
         await self._table.pause()
 
+    @override
     async def async_media_next_track(self) -> None:
         """Skip to next track."""
         cur_track_index = self._get_current_track_index()
@@ -196,6 +220,7 @@ class SisyphusPlayer(MediaPlayerEntity):
             self._table.active_playlist.tracks[cur_track_index + 1]
         )
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Skip to previous track."""
         cur_track_index = self._get_current_track_index()

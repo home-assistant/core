@@ -1,7 +1,5 @@
 """Utils for Magic Home."""
 
-from __future__ import annotations
-
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.const import COLOR_MODE_DIM as FLUX_COLOR_MODE_DIM, MultiColorEffects
 

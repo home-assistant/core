@@ -1,8 +1,6 @@
 """Support for Velux switches."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pyvlx import OnOffSwitch
 
@@ -22,7 +20,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch(es) for Velux platform."""
-    pyvlx = config_entry.runtime_data
+    pyvlx = config_entry.runtime_data.pyvlx
     async_add_entities(
         VeluxOnOffSwitch(node, config_entry.entry_id)
         for node in pyvlx.nodes
@@ -38,16 +36,19 @@ class VeluxOnOffSwitch(VeluxEntity, SwitchEntity):
     node: OnOffSwitch
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.node.is_on()
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.node.set_on()
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.node.set_off()

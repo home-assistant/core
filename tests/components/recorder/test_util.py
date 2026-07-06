@@ -171,7 +171,8 @@ async def test_last_run_was_recently_clean(
             last_run_was_recently_clean_mock.assert_called_once()
             assert return_values[-1] is True
 
-        # Restart HA with a long downtime, last_run_was_recently_clean should return False
+        # Restart HA with a long downtime,
+        # last_run_was_recently_clean should return False
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
         await hass.async_stop()
@@ -291,7 +292,7 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version: str) -> None:
 def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
     sqlite_version: str,
 ) -> None:
-    """Test setting up the connection for a sqlite dialect with a zero commit interval."""
+    """Test connection setup for sqlite with zero commit interval."""
     instance_mock = MagicMock(commit_interval=0)
     execute_args = []
     close_mock = MagicMock()
@@ -344,15 +345,18 @@ def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
     [
         (
             "10.2.0-MariaDB",
-            "Version 10.2.0 of MariaDB is not supported; minimum supported version is 10.3.0.",
+            "Version 10.2.0 of MariaDB is not supported;"
+            " minimum supported version is 10.3.0.",
         ),
         (
             "5.7.26-0ubuntu0.18.04.1",
-            "Version 5.7.26 of MySQL is not supported; minimum supported version is 8.0.0.",
+            "Version 5.7.26 of MySQL is not supported;"
+            " minimum supported version is 8.0.0.",
         ),
         (
             "some_random_response",
-            "Version some_random_response of MySQL is not supported; minimum supported version is 8.0.0.",
+            "Version some_random_response of MySQL is not supported;"
+            " minimum supported version is 8.0.0.",
         ),
     ],
 )
@@ -430,15 +434,18 @@ def test_supported_mysql(caplog: pytest.LogCaptureFixture, mysql_version) -> Non
     [
         (
             "11.12 (Debian 11.12-1.pgdg100+1)",
-            "Version 11.12 of PostgreSQL is not supported; minimum supported version is 12.0.",
+            "Version 11.12 of PostgreSQL is not supported;"
+            " minimum supported version is 12.0.",
         ),
         (
             "9.2.10",
-            "Version 9.2.10 of PostgreSQL is not supported; minimum supported version is 12.0.",
+            "Version 9.2.10 of PostgreSQL is not supported;"
+            " minimum supported version is 12.0.",
         ),
         (
             "unexpected",
-            "Version unexpected of PostgreSQL is not supported; minimum supported version is 12.0.",
+            "Version unexpected of PostgreSQL is not supported;"
+            " minimum supported version is 12.0.",
         ),
     ],
 )
@@ -513,11 +520,13 @@ def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> Non
     [
         (
             "3.30.0",
-            "Version 3.30.0 of SQLite is not supported; minimum supported version is 3.40.1.",
+            "Version 3.30.0 of SQLite is not supported;"
+            " minimum supported version is 3.40.1.",
         ),
         (
             "2.0.0",
-            "Version 2.0.0 of SQLite is not supported; minimum supported version is 3.40.1.",
+            "Version 2.0.0 of SQLite is not supported;"
+            " minimum supported version is 3.40.1.",
         ),
     ],
 )

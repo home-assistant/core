@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from hdfury import HDFuryAPI, HDFuryError
 
@@ -64,6 +65,7 @@ class HDFuryButton(HDFuryEntity, ButtonEntity):
 
     entity_description: HDFuryButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Handle Button Press."""
 

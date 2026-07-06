@@ -63,5 +63,5 @@ async def test_camera_no_stream_source(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.CAMERA}.{TEST_CAM_NAME}_snapshots_fluent_lens_0"
+    entity_id = f"{Platform.CAMERA}.{TEST_CAM_NAME}_lens_0_snapshots_fluent"
     assert hass.states.get(entity_id).state == CameraState.IDLE

@@ -9,9 +9,12 @@ from homewizard_energy.errors import DisabledError, UnauthorizedError
 import pytest
 
 from homeassistant.components.homewizard import get_main_device
-from homeassistant.components.homewizard.const import DOMAIN
+from homeassistant.components.homewizard.const import (
+    DOMAIN,
+    battery_mode_cloud_issue_id,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -156,7 +159,7 @@ async def test_load_creates_repair_issue_when_name_is_updated(
     mock_config_entry: MockConfigEntry,
     mock_homewizardenergy: MagicMock,
 ) -> None:
-    """Test setup creates repair issue for v2 API upgrade and updates title when device name changes."""
+    """Test repair issue for v2 API and title update on name change."""
     mock_config_entry.add_to_hass(hass)
     await hass.async_block_till_done()
 
@@ -254,3 +257,70 @@ async def test_disablederror_reloads_integration(
     flow = flows[0]
     assert flow.get("step_id") == "reauth_enable_api"
     assert flow.get("handler") == DOMAIN
+
+
+@pytest.mark.usefixtures("mock_homewizardenergy")
+async def test_battery_cloud_issue_updates_only_on_state_transition(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homewizardenergy: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test battery/cloud issue is only created/deleted when condition changes."""
+    combined_data = mock_homewizardenergy.combined.return_value
+    combined_data.system.cloud_enabled = False
+    combined_data.batteries.mode = "predictive"
+    issue_id = battery_mode_cloud_issue_id(mock_config_entry.entry_id)
+    issue_events: list[str] = []
+
+    @callback
+    def _capture_issue_event(event: Event[ir.EventIssueRegistryUpdatedData]) -> None:
+        if event.data["domain"] == DOMAIN and event.data["issue_id"] == issue_id:
+            issue_events.append(event.data["action"])
+
+    hass.bus.async_listen(ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED, _capture_issue_event)
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_events == ["create"]
+
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert issue_events == ["create"]
+
+    combined_data.system.cloud_enabled = True
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert issue_events == ["create", "remove"]
+
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert issue_events == ["create", "remove"]
+
+
+@pytest.mark.usefixtures("mock_homewizardenergy")
+async def test_battery_cloud_issue_stale_issue_cleared_on_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homewizardenergy: MagicMock,
+) -> None:
+    """Test stale battery/cloud issue is removed after reload when resolved."""
+    combined_data = mock_homewizardenergy.combined.return_value
+    combined_data.batteries.mode = "predictive"
+    combined_data.system.cloud_enabled = False
+    issue_id = battery_mode_cloud_issue_id(mock_config_entry.entry_id)
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is not None
+
+    combined_data.system.cloud_enabled = True
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None

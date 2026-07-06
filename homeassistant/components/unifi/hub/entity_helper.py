@@ -1,7 +1,5 @@
 """UniFi Network entity helper."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 
 import aiounifi

@@ -1,6 +1,6 @@
 """Support for sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from fjaraskupan import Device
 
@@ -56,6 +56,7 @@ class RssiSensor(CoordinatorEntity[FjaraskupanCoordinator], SensorEntity):
         self._attr_device_info = device_info
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         if data := self.coordinator.data:

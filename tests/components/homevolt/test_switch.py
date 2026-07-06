@@ -1,7 +1,5 @@
 """Tests for the Homevolt switch platform."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 from homevolt import HomevoltAuthenticationError, HomevoltConnectionError, HomevoltError
@@ -65,7 +63,7 @@ async def test_switch_turn_on_off(
     service: str,
     client_method_name: str,
 ) -> None:
-    """Test turning the switch on or off calls client, refreshes coordinator, and updates state."""
+    """Test switch on/off calls client and updates state."""
     client_method = getattr(mock_homevolt_client, client_method_name)
 
     async def update_local_mode(*args: object, **kwargs: object) -> None:

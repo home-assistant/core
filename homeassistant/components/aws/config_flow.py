@@ -1,4 +1,4 @@
-"""Config flow for AWS component."""
+"""Config flow for AWS integration."""
 
 from typing import Any
 

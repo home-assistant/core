@@ -1,10 +1,8 @@
 """Platform for Miele button integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
-from typing import Final
+from typing import Final, override
 
 from aiohttp import ClientResponseError
 
@@ -137,6 +135,7 @@ class MieleButton(MieleEntity, ButtonEntity):
     entity_description: MieleButtonDescription
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the entity."""
 
@@ -145,6 +144,7 @@ class MieleButton(MieleEntity, ButtonEntity):
             and self.entity_description.press_data in self.action.process_actions
         )
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         _LOGGER.debug("Press: %s", self.entity_description.key)

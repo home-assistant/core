@@ -1,9 +1,8 @@
 """Coordinator for Actron Air integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from actron_neo_api import (
     ActronAirAPI,
@@ -62,6 +61,7 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirStatus]):
         self.status = self.api.state_manager.get_status(self.serial_number)
         self.last_seen = dt_util.utcnow()
 
+    @override
     async def _async_update_data(self) -> ActronAirStatus:
         """Fetch updates and merge incremental changes into the full state."""
         try:

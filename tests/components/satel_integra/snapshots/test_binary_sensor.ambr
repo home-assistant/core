@@ -39,8 +39,8 @@
 # name: test_binary_sensors[binary_sensor.output-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'safety',
-      'friendly_name': 'Output',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Output',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.output',
@@ -90,8 +90,8 @@
 # name: test_binary_sensors[binary_sensor.zone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'Zone',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.zone',

@@ -1,9 +1,7 @@
 """Config flow for Meteo.lt integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from meteo_lt import MeteoLtAPI, Place
@@ -25,6 +23,7 @@ class MeteoLtConfigFlow(ConfigFlow, domain=DOMAIN):
         self._places: list[Place] = []
         self._selected_place: Place | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

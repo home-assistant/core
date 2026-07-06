@@ -60,7 +60,11 @@ async def set_time_zone(hass: HomeAssistant):
 
 def get_events_url(entity: str, start: str, end: str) -> str:
     """Create a url to get events during the specified time range."""
-    return f"/api/calendars/{entity}?start={urllib.parse.quote(start)}&end={urllib.parse.quote(end)}"
+    return (
+        f"/api/calendars/{entity}"
+        f"?start={urllib.parse.quote(start)}"
+        f"&end={urllib.parse.quote(end)}"
+    )
 
 
 def get_events_response(start: dict[str, str], end: dict[str, str]) -> dict[str, Any]:
@@ -138,7 +142,7 @@ async def test_update_entity_for_custom_project_no_due_date_on(
     hass: HomeAssistant,
     api: AsyncMock,
 ) -> None:
-    """Test that a task without an explicit due date is considered to be in an on state."""
+    """Test that a task without an explicit due date is in an on state."""
     await async_update_entity(hass, "calendar.name")
     state = hass.states.get("calendar.name")
     assert state.state == "on"
@@ -166,7 +170,7 @@ async def test_update_entity_for_calendar_with_due_date_in_the_future(
     api: AsyncMock,
     due: Due,
 ) -> None:
-    """Test that a task with a due date in the future has on state and correct end_time."""
+    """Test that a task with a future due date has on state and correct end_time."""
     await async_update_entity(hass, "calendar.name")
     state = hass.states.get("calendar.name")
     assert state.state == "on"

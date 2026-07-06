@@ -1,11 +1,9 @@
 """Template context management for Home Assistant."""
 
-from __future__ import annotations
-
 from contextlib import AbstractContextManager
 from contextvars import ContextVar
 from types import TracebackType
-from typing import Any
+from typing import Any, override
 
 import jinja2
 
@@ -19,9 +17,10 @@ class TemplateContextManager(AbstractContextManager):
     """Context manager to store template being parsed or rendered in a ContextVar."""
 
     def set_template(self, template_str: str, action: str) -> None:
-        """Store template being parsed or rendered in a Contextvar to aid error handling."""
+        """Store template being parsed/rendered to aid error handling."""
         template_cv.set((template_str, action))
 
+    @override
     def __exit__(
         self,
         exc_type: type[BaseException] | None,

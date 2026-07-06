@@ -1,0 +1,13 @@
+{
+  "domain": "llama_cpp",
+  "name": "llama.cpp",
+  "after_dependencies": ["assist_pipeline", "intent"],
+  "codeowners": ["@allenporter"],
+  "config_flow": true,
+  "dependencies": ["conversation"],
+  "documentation": "https://www.home-assistant.io/integrations/llama_cpp",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["openai==2.21.0"]
+}

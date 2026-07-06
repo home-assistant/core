@@ -8,6 +8,7 @@ import pytest
 from webrtc_models import RTCIceCandidate, RTCIceCandidateInit, RTCIceServer
 
 from homeassistant.components.camera import (
+    DOMAIN,
     Camera,
     CameraWebRTCProvider,
     StreamType,
@@ -105,7 +106,7 @@ async def test_ws_get_client_config(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test get WebRTC client config."""
-    await async_setup_component(hass, "camera", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -178,7 +179,7 @@ async def test_ws_get_client_config_custom_config(
         {"webrtc": {"ice_servers": [{"url": "stun:custom_stun_server:3478"}]}},
     )
 
-    await async_setup_component(hass, "camera", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -199,7 +200,7 @@ async def test_ws_get_client_config_no_rtc_camera(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test get WebRTC client config."""
-    await async_setup_component(hass, "camera", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -212,7 +213,10 @@ async def test_ws_get_client_config_no_rtc_camera(
     assert not msg["success"]
     assert msg["error"] == {
         "code": "webrtc_get_client_config_failed",
-        "message": "Camera does not support WebRTC, frontend_stream_types={<StreamType.HLS: 'hls'>}",
+        "message": (
+            "Camera does not support WebRTC,"
+            " frontend_stream_types={<StreamType.HLS: 'hls'>}"
+        ),
     }
 
 
@@ -276,7 +280,7 @@ async def test_websocket_webrtc_offer_webrtc_provider_deprecated(
     hass_ws_client: WebSocketGenerator,
     register_test_provider: SomeTestProvider,
 ) -> None:
-    """Test initiating a WebRTC stream with a webrtc provider with the deprecated class."""
+    """Test initiating a WebRTC stream with a deprecated provider."""
     await _test_websocket_webrtc_offer_webrtc_provider(
         hass,
         hass_ws_client,
@@ -386,7 +390,7 @@ async def test_websocket_webrtc_offer_invalid_entity(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test WebRTC with a camera entity that does not exist."""
-    await async_setup_component(hass, "camera", {})
+    await async_setup_component(hass, DOMAIN, {})
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
         {
@@ -443,7 +447,10 @@ async def test_websocket_webrtc_offer_invalid_stream_type(
     assert not response["success"]
     assert response["error"] == {
         "code": "webrtc_offer_failed",
-        "message": "Camera does not support WebRTC, frontend_stream_types={<StreamType.HLS: 'hls'>}",
+        "message": (
+            "Camera does not support WebRTC,"
+            " frontend_stream_types={<StreamType.HLS: 'hls'>}"
+        ),
     }
 
 
@@ -508,15 +515,19 @@ async def test_ws_webrtc_candidate(
         (
             {"sdpMLineIndex": 0},
             (
-                'Field "candidate" of type str is missing in RTCIceCandidateInit instance'
-                " for dictionary value @ data['candidate']. Got {'sdpMLineIndex': 0}"
+                'Field "candidate" of type str is missing in'
+                " RTCIceCandidateInit instance for dictionary"
+                " value @ data['candidate']."
+                " Got {'sdpMLineIndex': 0}"
             ),
         ),
         (
             {"candidate": "candidate", "sdpMLineIndex": -1},
             (
-                "sdpMLineIndex must be greater than or equal to 0 for dictionary value @ "
-                "data['candidate']. Got {'candidate': 'candidate', 'sdpMLineIndex': -1}"
+                "sdpMLineIndex must be greater than or equal"
+                " to 0 for dictionary value @"
+                " data['candidate']. Got {'candidate':"
+                " 'candidate', 'sdpMLineIndex': -1}"
             ),
         ),
     ],
@@ -609,7 +620,7 @@ async def test_ws_webrtc_candidate_invalid_entity(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test ws WebRTC candidate command with a camera entity that does not exist."""
-    await async_setup_component(hass, "camera", {})
+    await async_setup_component(hass, DOMAIN, {})
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
         {
@@ -669,7 +680,10 @@ async def test_ws_webrtc_candidate_invalid_stream_type(
     assert not response["success"]
     assert response["error"] == {
         "code": "webrtc_candidate_failed",
-        "message": "Camera does not support WebRTC, frontend_stream_types={<StreamType.HLS: 'hls'>}",
+        "message": (
+            "Camera does not support WebRTC,"
+            " frontend_stream_types={<StreamType.HLS: 'hls'>}"
+        ),
     }
 
 

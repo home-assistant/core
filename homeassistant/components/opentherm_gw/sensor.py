@@ -1,6 +1,7 @@
 """Support for OpenTherm Gateway sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 import pyotgw.vars as gw_vars
 
@@ -896,6 +897,7 @@ class OpenThermSensor(OpenThermStatusEntity, SensorEntity):
     entity_description: OpenThermSensorEntityDescription
 
     @callback
+    @override
     def receive_report(self, status: dict[OpenThermDataSource, dict]) -> None:
         """Handle status updates from the component."""
         self._attr_native_value = status[

@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for pegel_online."""
 
 import logging
+from typing import override
 
 from aiopegelonline import CONNECT_ERRORS, PegelOnline, Station, StationMeasurements
 
@@ -38,6 +39,7 @@ class PegelOnlineDataUpdateCoordinator(DataUpdateCoordinator[StationMeasurements
             update_interval=MIN_TIME_BETWEEN_UPDATES,
         )
 
+    @override
     async def _async_update_data(self) -> StationMeasurements:
         """Fetch data from API endpoint."""
         try:

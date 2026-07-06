@@ -14,11 +14,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_full_flow(
-    hass: HomeAssistant,
-    mock_nyt_games_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_nyt_games_client: AsyncMock) -> None:
     """Test full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -37,10 +34,9 @@ async def test_full_flow(
     assert result["result"].unique_id == "218886794"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_stripping_token(
-    hass: HomeAssistant,
-    mock_nyt_games_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_nyt_games_client: AsyncMock
 ) -> None:
     """Test stripping token."""
     result = await hass.config_entries.flow.async_init(
@@ -66,10 +62,10 @@ async def test_stripping_token(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_errors(
     hass: HomeAssistant,
     mock_nyt_games_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -100,10 +96,10 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate(
     hass: HomeAssistant,
     mock_nyt_games_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate flow."""

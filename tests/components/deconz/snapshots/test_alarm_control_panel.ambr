@@ -39,11 +39,11 @@
 # name: test_alarm_control_panel[sensor_payload0-alarm_system_payload0][alarm_control_panel.keypad-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'changed_by': None,
-      'code_arm_required': True,
-      'code_format': <CodeFormat.NUMBER: 'number'>,
-      'friendly_name': 'Keypad',
-      'supported_features': <AlarmControlPanelEntityFeature: 7>,
+      <AlarmControlPanelEntityStateAttribute.CHANGED_BY: 'changed_by'>: None,
+      <AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: 'code_arm_required'>: True,
+      <AlarmControlPanelEntityStateAttribute.CODE_FORMAT: 'code_format'>: <CodeFormat.NUMBER: 'number'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Keypad',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <AlarmControlPanelEntityFeature: 7>,
     }),
     'context': <ANY>,
     'entity_id': 'alarm_control_panel.keypad',

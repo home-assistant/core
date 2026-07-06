@@ -77,12 +77,13 @@ async def test_schedule_update_webhook_event(
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    climate_entity_livingroom = "climate.livingroom"
+    climate_entity_livingroom = "climate.livingroom_livingroom"
 
     # Save initial state
     initial_state = hass.states.get(climate_entity_livingroom)
 
-    # Create a schedule update event without a schedule_id (the event is sent when temperature sets of a schedule are changed)
+    # Create a schedule update event without a schedule_id (the
+    # event is sent when temperature sets of a schedule are changed)
     response = {
         "home_id": "91763b24c43d3e344f424e8b",
         "event_type": "schedule",
@@ -104,7 +105,7 @@ async def test_webhook_event_handling_thermostats(
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    climate_entity_livingroom = "climate.livingroom"
+    climate_entity_livingroom = "climate.livingroom_livingroom"
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
     assert (
@@ -278,7 +279,7 @@ async def test_service_preset_mode_frost_guard_thermostat(
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    climate_entity_livingroom = "climate.livingroom"
+    climate_entity_livingroom = "climate.livingroom_livingroom"
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
     assert (
@@ -351,7 +352,7 @@ async def test_service_preset_modes_thermostat(
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    climate_entity_livingroom = "climate.livingroom"
+    climate_entity_livingroom = "climate.livingroom_livingroom"
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
     assert (
@@ -431,7 +432,7 @@ async def test_service_set_temperature_with_end_datetime(
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    climate_entity_livingroom = "climate.livingroom"
+    climate_entity_livingroom = "climate.livingroom_livingroom"
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
 
@@ -489,7 +490,7 @@ async def test_service_set_temperature_with_time_period(
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    climate_entity_livingroom = "climate.livingroom"
+    climate_entity_livingroom = "climate.livingroom_livingroom"
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
 
@@ -547,7 +548,7 @@ async def test_service_clear_temperature_setting(
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    climate_entity_livingroom = "climate.livingroom"
+    climate_entity_livingroom = "climate.livingroom_livingroom"
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
 
@@ -679,7 +680,7 @@ async def test_service_schedule_thermostats(
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    climate_entity_livingroom = "climate.livingroom"
+    climate_entity_livingroom = "climate.livingroom_livingroom"
 
     assert (
         hass.states.get(climate_entity_livingroom).attributes.get(
@@ -745,9 +746,10 @@ async def test_service_preset_mode_with_end_time_thermostats(
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    climate_entity_livingroom = "climate.livingroom"
+    climate_entity_livingroom = "climate.livingroom_livingroom"
 
-    # Test setting a valid preset mode (that allow an end datetime in Netatmo == THERM_MODES) and a valid end datetime
+    # Test setting a valid preset mode (that allow an end datetime
+    # in Netatmo == THERM_MODES) and a valid end datetime
     await hass.services.async_call(
         "netatmo",
         SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
@@ -792,7 +794,8 @@ async def test_service_preset_mode_with_end_time_thermostats(
             blocking=True,
         )
 
-    # Test setting a valid preset mode (that allow an end datetime in Netatmo == THERM_MODES) without an end datetime
+    # Test setting a valid preset mode (that allow an end datetime
+    # in Netatmo == THERM_MODES) without an end datetime
     with pytest.raises(MultipleInvalid):
         await hass.services.async_call(
             "netatmo",
@@ -815,7 +818,7 @@ async def test_service_preset_mode_already_boost_valves(
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    climate_entity_entrada = "climate.entrada"
+    climate_entity_entrada = "climate.entrada_entrada"
 
     assert hass.states.get(climate_entity_entrada).state == "auto"
     assert (
@@ -895,7 +898,7 @@ async def test_service_preset_mode_boost_valves(
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    climate_entity_entrada = "climate.entrada"
+    climate_entity_entrada = "climate.entrada_entrada"
 
     # Test service setting the preset mode to "boost"
     assert hass.states.get(climate_entity_entrada).state == "auto"
@@ -950,7 +953,7 @@ async def test_service_preset_mode_invalid(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: "climate.cocina", ATTR_PRESET_MODE: "invalid"},
+            {ATTR_ENTITY_ID: "climate.cocina_cocina", ATTR_PRESET_MODE: "invalid"},
             blocking=True,
         )
 
@@ -965,7 +968,7 @@ async def test_valves_service_turn_off(
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    climate_entity_entrada = "climate.entrada"
+    climate_entity_entrada = "climate.entrada_entrada"
 
     assert hass.states.get(climate_entity_entrada).attributes["hvac_modes"] == [
         "auto",
@@ -1017,7 +1020,7 @@ async def test_valves_service_turn_on(
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    climate_entity_entrada = "climate.entrada"
+    climate_entity_entrada = "climate.entrada_entrada"
 
     # Test turning valve on
     await hass.services.async_call(
@@ -1064,7 +1067,7 @@ async def test_webhook_home_id_mismatch(
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    climate_entity_entrada = "climate.entrada"
+    climate_entity_entrada = "climate.entrada_entrada"
 
     assert hass.states.get(climate_entity_entrada).state == "auto"
 
@@ -1104,7 +1107,7 @@ async def test_webhook_set_point(
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    climate_entity_entrada = "climate.entrada"
+    climate_entity_entrada = "climate.entrada_entrada"
 
     # Fake backend response for valve being turned on
     response = {

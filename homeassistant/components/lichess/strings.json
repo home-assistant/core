@@ -21,6 +21,20 @@
   },
   "entity": {
     "sensor": {
+      "antichess_games": {
+        "name": "Antichess games",
+        "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
+      },
+      "antichess_rating": {
+        "name": "Antichess rating"
+      },
+      "atomic_games": {
+        "name": "Atomic games",
+        "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
+      },
+      "atomic_rating": {
+        "name": "Atomic rating"
+      },
       "blitz_games": {
         "name": "Blitz games",
         "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
@@ -35,6 +49,13 @@
       "bullet_rating": {
         "name": "Bullet rating"
       },
+      "chess960_games": {
+        "name": "Chess960 games",
+        "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
+      },
+      "chess960_rating": {
+        "name": "Chess960 rating"
+      },
       "classical_games": {
         "name": "Classical games",
         "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
@@ -42,12 +63,68 @@
       "classical_rating": {
         "name": "Classical rating"
       },
+      "correspondence_games": {
+        "name": "Correspondence games",
+        "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
+      },
+      "correspondence_rating": {
+        "name": "Correspondence rating"
+      },
+      "crazyhouse_games": {
+        "name": "Crazyhouse games",
+        "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
+      },
+      "crazyhouse_rating": {
+        "name": "Crazyhouse rating"
+      },
+      "horde_games": {
+        "name": "Horde games",
+        "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
+      },
+      "horde_rating": {
+        "name": "Horde rating"
+      },
+      "king_of_the_hill_games": {
+        "name": "King of the Hill games",
+        "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
+      },
+      "king_of_the_hill_rating": {
+        "name": "King of the Hill rating"
+      },
+      "puzzle_games": {
+        "name": "Puzzle games",
+        "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
+      },
+      "puzzle_rating": {
+        "name": "Puzzle rating"
+      },
+      "racing_kings_games": {
+        "name": "Racing Kings games",
+        "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
+      },
+      "racing_kings_rating": {
+        "name": "Racing Kings rating"
+      },
       "rapid_games": {
         "name": "Rapid games",
         "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
       },
       "rapid_rating": {
         "name": "Rapid rating"
+      },
+      "three_check_games": {
+        "name": "Three-check games",
+        "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
+      },
+      "three_check_rating": {
+        "name": "Three-check rating"
+      },
+      "ultra_bullet_games": {
+        "name": "UltraBullet games",
+        "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
+      },
+      "ultra_bullet_rating": {
+        "name": "UltraBullet rating"
       }
     }
   }

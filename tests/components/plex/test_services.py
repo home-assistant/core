@@ -123,8 +123,8 @@ async def test_lookup_media_for_other_integrations(
     CONTENT_ID_PLAYQUEUE = PLEX_URI_SCHEME + '{"playqueue_id": 1234}'
     CONTENT_ID_BAD_PLAYQUEUE = PLEX_URI_SCHEME + '{"playqueue_id": 1235}'
     CONTENT_ID_SERVER = (
-        PLEX_URI_SCHEME
-        + '{"plex_server": "Plex Server 1", "library_name": "Music", "artist_name": "Artist"}'
+        PLEX_URI_SCHEME + '{"plex_server": "Plex Server 1",'
+        ' "library_name": "Music", "artist_name": "Artist"}'
     )
     CONTENT_ID_SHUFFLE = (
         PLEX_URI_SCHEME

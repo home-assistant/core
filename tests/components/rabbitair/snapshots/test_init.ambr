@@ -1,0 +1,36 @@
+# serializer version: 1
+# name: test_device_registry
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '01:23:45:67:89:ab',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '1.0.0.4',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'rabbitair',
+        '01:23:45:67:89:AB',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Rabbit Air',
+    'model': 'A3',
+    'model_id': None,
+    'name': 'Rabbit Air',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '2.3.17',
+    'via_device_id': None,
+  })
+# ---

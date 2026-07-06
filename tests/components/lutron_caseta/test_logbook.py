@@ -81,7 +81,7 @@ async def test_humanify_lutron_caseta_button_event(hass: HomeAssistant) -> None:
 async def test_humanify_lutron_caseta_button_event_integration_not_loaded(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Test humanifying lutron_caseta_button_events when the integration fails to load."""
+    """Test humanifying button events when integration fails to load."""
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
     config_entry = MockConfigEntry(

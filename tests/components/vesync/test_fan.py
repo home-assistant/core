@@ -158,7 +158,7 @@ async def test_set_preset_mode(
     preset_mode: str,
     patch_target: str,
 ) -> None:
-    """Test handling of value in set_preset_mode method. Does this via turn on as it increases test coverage."""
+    """Test set_preset_mode method via turn on for test coverage."""
 
     # If VeSyncTowerFan.mode fails (returns False), then HomeAssistantError is raised
     with (

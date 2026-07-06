@@ -15,7 +15,7 @@ test_service_1:
             - "off"
             - "auto"
             - "cool"
-    advanced_fields:
+    additional_fields:
       collapsed: true
       fields:
         field_3:
@@ -30,3 +30,44 @@ test_service_1:
               options:
                 - "forward"
                 - "reverse"
+set_tracker_location:
+  target:
+    entity:
+      integration: kitchen_sink
+      domain: device_tracker
+  fields:
+    latitude:
+      required: true
+      example: 52.379189
+      selector:
+        number:
+          min: -90
+          max: 90
+          step: any
+    longitude:
+      required: true
+      example: 4.899431
+      selector:
+        number:
+          min: -180
+          max: 180
+          step: any
+    accuracy:
+      required: true
+      example: 10
+      selector:
+        number:
+          min: 0
+          max: 10000
+          unit_of_measurement: m
+set_scanner_connected:
+  target:
+    entity:
+      integration: kitchen_sink
+      domain: device_tracker
+  fields:
+    connected:
+      required: true
+      example: true
+      selector:
+        boolean:

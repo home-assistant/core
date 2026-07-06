@@ -1,0 +1,37 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "device_not_found": "Device not found.",
+      "device_offline": "Device is offline.",
+      "email_empty": "Email cannot be empty.",
+      "email_invalid": "Invalid email format.",
+      "email_not_found": "Email does not exist.",
+      "password_empty": "Password cannot be empty.",
+      "password_wrong": "Incorrect password.",
+      "token_expired": "Token expired, please log in again.",
+      "token_invalid": "Invalid token, please log in again.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "user_disabled": "This account has been disabled.",
+      "user_not_activated": "This account has not been activated.",
+      "user_not_logged_in": "Session expired, please log in again."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email address used to register your Xthings Cloud account.",
+          "password": "Your Xthings Cloud account password."
+        },
+        "description": "Please enter your Xthings Cloud account credentials.",
+        "title": "Xthings Cloud Login"
+      }
+    }
+  }
+}

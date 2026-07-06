@@ -1,10 +1,9 @@
 """Support for Tailscale sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from tailscale import Device as TailscaleDevice
 
@@ -77,6 +76,7 @@ class TailscaleSensorEntity(TailscaleEntity, SensorEntity):
     entity_description: TailscaleSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> datetime | str | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data[self.device_id])

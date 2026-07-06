@@ -1,11 +1,9 @@
 """Component providing HA sensor support for Ring Door Bell/Chimes."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Generic
+from typing import Any, Generic, override
 
 from ring_doorbell import RingCapability, RingEvent
 from ring_doorbell.const import KIND_DING, KIND_MOTION
@@ -36,7 +34,9 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True, kw_only=True)
 class RingBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RingEntityDescription, Generic[RingDeviceT]
+    BinarySensorEntityDescription,
+    RingEntityDescription,
+    Generic[RingDeviceT],  # noqa: UP046
 ):
     """Describes Ring binary sensor entity."""
 
@@ -137,20 +137,24 @@ class RingBinarySensor(
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         if alert := self._get_coordinator_alert():
             self._async_handle_event(alert)
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.event_listener.started
 
+    @override
     async def async_update(self) -> None:
         """All updates are passive."""
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         attrs = super().extra_state_attributes

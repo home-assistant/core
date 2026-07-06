@@ -1,10 +1,8 @@
 """The Minecraft Server sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import CONF_TYPE, EntityCategory, UnitOfTime
@@ -201,6 +199,7 @@ class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
         self._update_properties()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_properties()

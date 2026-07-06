@@ -1,7 +1,5 @@
 """Helpers for Home Assistant dispatcher & internal component/platform."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Callable, Coroutine
 from functools import partial

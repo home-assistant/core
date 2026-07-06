@@ -1,8 +1,6 @@
 """Support for Lutron scenes."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pylutron import Button, Keypad, Lutron
 
@@ -48,6 +46,7 @@ class LutronScene(LutronKeypad, Scene):
         super().__init__(area_name, lutron_device, controller, keypad)
         self._attr_name = lutron_device.name
 
+    @override
     def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         self._lutron_device.tap()

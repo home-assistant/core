@@ -695,6 +695,8 @@ async def test_if_position(
     assert service_calls[6].data["some"] == "is_pos_not_gt_45 - event - test_event1"
 
     for record in caplog.records:
+        if record.name == "asyncio" and record.getMessage().startswith("Executing "):
+            continue
         assert record.levelname in ("DEBUG", "INFO")
 
 
@@ -857,4 +859,6 @@ async def test_if_tilt_position(
     assert service_calls[6].data["some"] == "is_pos_not_gt_45 - event - test_event1"
 
     for record in caplog.records:
+        if record.name == "asyncio" and record.getMessage().startswith("Executing "):
+            continue
         assert record.levelname in ("DEBUG", "INFO")

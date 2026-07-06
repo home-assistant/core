@@ -1,7 +1,5 @@
 """Handle MySensors messages."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 
 from mysensors import Message

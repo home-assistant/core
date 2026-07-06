@@ -31,7 +31,8 @@ async def cleanup_device_tracker(
         entry_host = entry_name.partition(" ")[0] if entry_name else None
         entry_mac = entry.unique_id.partition("_")[0]
 
-        # Some devices, mainly routers, allow to change the hostname of the connected devices.
+        # Some devices, mainly routers, allow to change the
+        # hostname of the connected devices.
         # This can lead to entities no longer aligned to the device UI
         if (
             entry_host

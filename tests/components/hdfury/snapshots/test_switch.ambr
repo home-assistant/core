@@ -39,7 +39,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_auto_switch_inputs-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Auto switch inputs',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 Auto switch inputs',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_auto_switch_inputs',
@@ -89,7 +89,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_cec-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 CEC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 CEC',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_cec',
@@ -139,7 +139,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_cec_rx0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 CEC RX0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 CEC RX0',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_cec_rx0',
@@ -189,7 +189,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_cec_rx1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 CEC RX1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 CEC RX1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_cec_rx1',
@@ -239,7 +239,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_cec_rx2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 CEC RX2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 CEC RX2',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_cec_rx2',
@@ -289,7 +289,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_cec_rx3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 CEC RX3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 CEC RX3',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_cec_rx3',
@@ -339,7 +339,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_htpc_mode_rx0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 HTPC mode RX0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 HTPC mode RX0',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_htpc_mode_rx0',
@@ -389,7 +389,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_htpc_mode_rx1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 HTPC mode RX1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 HTPC mode RX1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_htpc_mode_rx1',
@@ -439,7 +439,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_htpc_mode_rx2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 HTPC mode RX2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 HTPC mode RX2',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_htpc_mode_rx2',
@@ -489,7 +489,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_htpc_mode_rx3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 HTPC mode RX3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 HTPC mode RX3',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_htpc_mode_rx3',
@@ -539,7 +539,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_infrared-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Infrared',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 Infrared',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_infrared',
@@ -589,7 +589,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_mute_audio_tx0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Mute audio TX0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 Mute audio TX0',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_mute_audio_tx0',
@@ -639,7 +639,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_mute_audio_tx1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Mute audio TX1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 Mute audio TX1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_mute_audio_tx1',
@@ -689,7 +689,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_oled_display-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 OLED display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 OLED display',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_oled_display',
@@ -739,7 +739,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Relay',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 Relay',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_relay',
@@ -789,7 +789,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_tx0_force_5v-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 TX0 force +5V',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 TX0 force +5V',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_tx0_force_5v',
@@ -839,7 +839,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_tx1_force_5v-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 TX1 force +5V',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 TX1 force +5V',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_tx1_force_5v',

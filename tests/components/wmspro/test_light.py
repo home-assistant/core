@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
@@ -23,42 +24,52 @@ from . import setup_config_entry
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.parametrize(
+    ("mock_hub_configuration", "mock_hub_status"),
+    [("config_prod_awning_dimmer.json", "status_prod_dimmer.json")],
+    indirect=True,
+)
 async def test_light_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod_awning_dimmer: AsyncMock,
-    mock_hub_status_prod_dimmer: AsyncMock,
+    mock_hub_configuration: AsyncMock,
+    mock_hub_status: AsyncMock,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a light device is created correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
-    assert len(mock_hub_status_prod_dimmer.mock_calls) == 2
+    assert len(mock_hub_configuration.mock_calls) == 1
+    assert len(mock_hub_status.mock_calls) == 2
 
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "97358")})
     assert device_entry is not None
     assert device_entry == snapshot
 
 
+@pytest.mark.parametrize(
+    ("mock_hub_configuration", "mock_hub_status"),
+    [("config_prod_awning_dimmer.json", "status_prod_dimmer.json")],
+    indirect=True,
+)
 async def test_light_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod_awning_dimmer: AsyncMock,
-    mock_hub_status_prod_dimmer: AsyncMock,
+    mock_hub_configuration: AsyncMock,
+    mock_hub_status: AsyncMock,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a light entity is created and updated correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
-    assert len(mock_hub_status_prod_dimmer.mock_calls) == 2
+    assert len(mock_hub_configuration.mock_calls) == 1
+    assert len(mock_hub_status.mock_calls) == 2
 
-    entity = hass.states.get("light.licht")
+    entity = hass.states.get("light.terrasse_licht")
     assert entity is not None
     assert entity == snapshot
 
@@ -67,24 +78,29 @@ async def test_light_update(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert len(mock_hub_status_prod_dimmer.mock_calls) >= 3
+    assert len(mock_hub_status.mock_calls) >= 3
 
 
+@pytest.mark.parametrize(
+    ("mock_hub_configuration", "mock_hub_status"),
+    [("config_prod_awning_dimmer.json", "status_prod_dimmer.json")],
+    indirect=True,
+)
 async def test_light_turn_on_and_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod_awning_dimmer: AsyncMock,
-    mock_hub_status_prod_dimmer: AsyncMock,
+    mock_hub_configuration: AsyncMock,
+    mock_hub_status: AsyncMock,
     mock_action_call: AsyncMock,
 ) -> None:
     """Test that a light entity is turned on and off correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
-    assert len(mock_hub_status_prod_dimmer.mock_calls) >= 1
+    assert len(mock_hub_configuration.mock_calls) == 1
+    assert len(mock_hub_status.mock_calls) >= 1
 
-    entity = hass.states.get("light.licht")
+    entity = hass.states.get("light.terrasse_licht")
     assert entity is not None
     assert entity.state == STATE_OFF
     assert entity.attributes[ATTR_BRIGHTNESS] is None
@@ -93,7 +109,7 @@ async def test_light_turn_on_and_off(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status_prod_dimmer.mock_calls)
+        before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -102,17 +118,17 @@ async def test_light_turn_on_and_off(
             blocking=True,
         )
 
-        entity = hass.states.get("light.licht")
+        entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_ON
         assert entity.attributes[ATTR_BRIGHTNESS] >= 1
-        assert len(mock_hub_status_prod_dimmer.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before
 
     with patch(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status_prod_dimmer.mock_calls)
+        before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -121,28 +137,33 @@ async def test_light_turn_on_and_off(
             blocking=True,
         )
 
-        entity = hass.states.get("light.licht")
+        entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_OFF
         assert entity.attributes[ATTR_BRIGHTNESS] is None
-        assert len(mock_hub_status_prod_dimmer.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before
 
 
+@pytest.mark.parametrize(
+    ("mock_hub_configuration", "mock_hub_status"),
+    [("config_prod_awning_dimmer.json", "status_prod_dimmer.json")],
+    indirect=True,
+)
 async def test_light_dimm_on_and_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod_awning_dimmer: AsyncMock,
-    mock_hub_status_prod_dimmer: AsyncMock,
+    mock_hub_configuration: AsyncMock,
+    mock_hub_status: AsyncMock,
     mock_action_call: AsyncMock,
 ) -> None:
     """Test that a light entity is dimmed on and off correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
-    assert len(mock_hub_status_prod_dimmer.mock_calls) >= 1
+    assert len(mock_hub_configuration.mock_calls) == 1
+    assert len(mock_hub_status.mock_calls) >= 1
 
-    entity = hass.states.get("light.licht")
+    entity = hass.states.get("light.terrasse_licht")
     assert entity is not None
     assert entity.state == STATE_OFF
     assert entity.attributes[ATTR_BRIGHTNESS] is None
@@ -151,7 +172,7 @@ async def test_light_dimm_on_and_off(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status_prod_dimmer.mock_calls)
+        before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -160,17 +181,17 @@ async def test_light_dimm_on_and_off(
             blocking=True,
         )
 
-        entity = hass.states.get("light.licht")
+        entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_ON
         assert entity.attributes[ATTR_BRIGHTNESS] >= 1
-        assert len(mock_hub_status_prod_dimmer.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before
 
     with patch(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status_prod_dimmer.mock_calls)
+        before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -179,17 +200,17 @@ async def test_light_dimm_on_and_off(
             blocking=True,
         )
 
-        entity = hass.states.get("light.licht")
+        entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_ON
         assert entity.attributes[ATTR_BRIGHTNESS] == 128
-        assert len(mock_hub_status_prod_dimmer.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before
 
     with patch(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status_prod_dimmer.mock_calls)
+        before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -198,8 +219,8 @@ async def test_light_dimm_on_and_off(
             blocking=True,
         )
 
-        entity = hass.states.get("light.licht")
+        entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_OFF
         assert entity.attributes[ATTR_BRIGHTNESS] is None
-        assert len(mock_hub_status_prod_dimmer.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before

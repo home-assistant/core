@@ -1,7 +1,5 @@
 """Tests for the Google Generative AI Conversation helpers."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.components.google_generative_ai_conversation.helpers import (

@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_button_event_creation_a5
   list([
-    'binary_sensor.beosound_a5_44444444_charging',
+    'binary_sensor.lounge_room_a5_charging',
     'event.beoremote_one_55555555_44444444_control_blue',
     'event.beoremote_one_55555555_44444444_control_digit_0',
     'event.beoremote_one_55555555_44444444_control_digit_1',
@@ -92,18 +92,18 @@
     'event.beoremote_one_55555555_44444444_light_up',
     'event.beoremote_one_55555555_44444444_light_wind',
     'event.beoremote_one_55555555_44444444_light_yellow',
-    'event.beosound_a5_44444444_bluetooth',
-    'event.beosound_a5_44444444_favorite_1',
-    'event.beosound_a5_44444444_favorite_2',
-    'event.beosound_a5_44444444_favorite_3',
-    'event.beosound_a5_44444444_favorite_4',
-    'event.beosound_a5_44444444_next',
-    'event.beosound_a5_44444444_play_pause',
-    'event.beosound_a5_44444444_previous',
-    'event.beosound_a5_44444444_volume',
-    'media_player.beosound_a5_44444444',
+    'event.lounge_room_a5_bluetooth',
+    'event.lounge_room_a5_favorite_1',
+    'event.lounge_room_a5_favorite_2',
+    'event.lounge_room_a5_favorite_3',
+    'event.lounge_room_a5_favorite_4',
+    'event.lounge_room_a5_next',
+    'event.lounge_room_a5_play_pause',
+    'event.lounge_room_a5_previous',
+    'event.lounge_room_a5_volume',
+    'media_player.lounge_room_a5',
     'sensor.beoremote_one_55555555_44444444_battery',
-    'sensor.beosound_a5_44444444_battery',
+    'sensor.lounge_room_a5_battery',
   ])
 # ---
 # name: test_button_event_creation_balance
@@ -198,22 +198,30 @@
     'event.beoremote_one_55555555_11111111_light_up',
     'event.beoremote_one_55555555_11111111_light_wind',
     'event.beoremote_one_55555555_11111111_light_yellow',
-    'event.beosound_balance_11111111_bluetooth',
-    'event.beosound_balance_11111111_favorite_1',
-    'event.beosound_balance_11111111_favorite_2',
-    'event.beosound_balance_11111111_favorite_3',
-    'event.beosound_balance_11111111_favorite_4',
-    'event.beosound_balance_11111111_microphone',
-    'event.beosound_balance_11111111_next',
-    'event.beosound_balance_11111111_play_pause',
-    'event.beosound_balance_11111111_previous',
-    'event.beosound_balance_11111111_volume',
-    'media_player.beosound_balance_11111111',
+    'event.living_room_balance_bluetooth',
+    'event.living_room_balance_favorite_1',
+    'event.living_room_balance_favorite_2',
+    'event.living_room_balance_favorite_3',
+    'event.living_room_balance_favorite_4',
+    'event.living_room_balance_microphone',
+    'event.living_room_balance_next',
+    'event.living_room_balance_play_pause',
+    'event.living_room_balance_previous',
+    'event.living_room_balance_volume',
+    'media_player.living_room_balance',
     'sensor.beoremote_one_55555555_11111111_battery',
   ])
 # ---
 # name: test_button_event_creation_premiere
   list([
+    'event.bedroom_premiere_favorite_1',
+    'event.bedroom_premiere_favorite_2',
+    'event.bedroom_premiere_favorite_3',
+    'event.bedroom_premiere_favorite_4',
+    'event.bedroom_premiere_next',
+    'event.bedroom_premiere_play_pause',
+    'event.bedroom_premiere_previous',
+    'event.bedroom_premiere_volume',
     'event.beoremote_one_55555555_33333333_control_blue',
     'event.beoremote_one_55555555_33333333_control_digit_0',
     'event.beoremote_one_55555555_33333333_control_digit_1',
@@ -304,20 +312,12 @@
     'event.beoremote_one_55555555_33333333_light_up',
     'event.beoremote_one_55555555_33333333_light_wind',
     'event.beoremote_one_55555555_33333333_light_yellow',
-    'event.beosound_premiere_33333333_favorite_1',
-    'event.beosound_premiere_33333333_favorite_2',
-    'event.beosound_premiere_33333333_favorite_3',
-    'event.beosound_premiere_33333333_favorite_4',
-    'event.beosound_premiere_33333333_next',
-    'event.beosound_premiere_33333333_play_pause',
-    'event.beosound_premiere_33333333_previous',
-    'event.beosound_premiere_33333333_volume',
-    'media_player.beosound_premiere_33333333',
+    'media_player.bedroom_premiere',
     'sensor.beoremote_one_55555555_33333333_battery',
   ])
 # ---
 # name: test_no_button_and_remote_key_event_creation_core
   list([
-    'media_player.beoconnect_core_22222222',
+    'media_player.laundry_room_core',
   ])
 # ---

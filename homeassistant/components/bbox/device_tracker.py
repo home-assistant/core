@@ -1,10 +1,9 @@
 """Support for French FAI Bouygues Bbox routers."""
 
-from __future__ import annotations
-
 from collections import namedtuple
 from datetime import timedelta
 import logging
+from typing import override
 
 import pybbox
 import voluptuous as vol
@@ -54,12 +53,14 @@ class BboxDeviceScanner(DeviceScanner):
 
         self.success_init = self._update_info()
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
         return [device.mac for device in self.last_results]
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         filter_named = [

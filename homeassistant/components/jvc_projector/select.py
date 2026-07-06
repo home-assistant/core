@@ -1,9 +1,7 @@
 """Select platform for the jvc_projector integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from jvcprojector import Command, command as cmd
 
@@ -102,17 +100,20 @@ class JvcProjectorSelectEntity(JvcProjectorEntity, SelectEntity):
         )
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return a list of selectable options."""
         return list(self._options_map.values())
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         if value := self.coordinator.data.get(self.command.name):
             return self._options_map.get(value)
         return None
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         value = next((k for k, v in self._options_map.items() if v == option), None)

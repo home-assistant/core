@@ -1,7 +1,5 @@
 """Helpers for AVM FRITZ!Box."""
 
-from __future__ import annotations
-
 from collections.abc import ValuesView
 import logging
 

@@ -1,7 +1,5 @@
 """Diagnostics support for august."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from yalexs.const import DEFAULT_BRAND

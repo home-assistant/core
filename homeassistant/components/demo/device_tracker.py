@@ -1,7 +1,5 @@
 """Demo platform for the Device tracker component."""
 
-from __future__ import annotations
-
 import random
 
 from homeassistant.components.device_tracker import SeeCallback

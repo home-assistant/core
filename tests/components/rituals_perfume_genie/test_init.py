@@ -41,7 +41,7 @@ async def test_config_entry_not_ready(
     mock_rituals_account: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the Rituals configuration entry setup if connection to Rituals is missing."""
+    """Test entry setup when connection to Rituals is missing."""
     mock_config_entry.add_to_hass(hass)
     mock_rituals_account.get_devices.side_effect = aiohttp.ClientError
 

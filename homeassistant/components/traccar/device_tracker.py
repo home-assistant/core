@@ -1,9 +1,9 @@
 """Support for Traccar device tracking."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
@@ -132,10 +132,12 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         )
 
     @property
+    @override
     def battery_level(self) -> int | None:
         """Return battery value of the device."""
         return self._battery
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         await super().async_added_to_hass()
@@ -170,6 +172,7 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         }
         self._battery = attr.get(ATTR_BATTERY)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up after entity before removal."""
         await super().async_will_remove_from_hass()

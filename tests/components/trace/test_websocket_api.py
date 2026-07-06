@@ -1,7 +1,7 @@
 """Test Trace websocket API."""
 
 import asyncio
-from collections import defaultdict
+from collections import defaultdict, deque
 import json
 from typing import Any
 from unittest.mock import patch
@@ -9,9 +9,12 @@ from unittest.mock import patch
 import pytest
 from pytest_unordered import unordered
 
-from homeassistant.components.trace.const import DEFAULT_STORED_TRACES
+from homeassistant.components.trace import ActionTrace
+from homeassistant.components.trace.const import DATA_TRACE, DEFAULT_STORED_TRACES
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context, CoreState, HomeAssistant, callback
+from homeassistant.helpers.json import ExtendedJSONEncoder
+from homeassistant.helpers.trace import TraceElement
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 from homeassistant.util.uuid import random_uuid_hex
@@ -1660,3 +1663,83 @@ async def test_trace_blueprint_automation(
     assert trace["script_execution"] == "error"
     assert trace["item_id"] == "sun"
     assert trace.get("trigger", UNDEFINED) == "event 'blueprint_event'"
+
+
+class _DiagnosticActionTrace(ActionTrace):
+    """Automation-domain trace used to exercise not-triggered serialization."""
+
+    _domain = "automation"
+
+
+def _serialize_trace(not_triggered: bool, reason: str) -> dict[str, Any]:
+    """Build a trace serialized the way the trace Store persists it to disk."""
+    trace = _DiagnosticActionTrace("diag", {"id": "diag"}, None, Context())
+    trace.not_triggered = not_triggered
+    element = TraceElement({"trigger": {"idx": "0"}}, "trigger/0")
+    element.set_result(reason=reason)
+    trace.set_trace({"trigger/0": deque([element])})
+    trace.finished()
+    return json.loads(json.dumps(trace.as_dict(), cls=ExtendedJSONEncoder))
+
+
+async def test_not_triggered_trace_serialization(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Not-triggered traces serialize with their flag and restore to their bucket."""
+    run = _serialize_trace(False, "ran")
+    not_triggered = _serialize_trace(True, "mock_reason")
+
+    # Serialization: only the not-triggered trace carries the flag, and its
+    # diagnostics survive in the extended dict.
+    assert "not_triggered" not in run["short_dict"]
+    assert not_triggered["short_dict"]["not_triggered"] is True
+    assert not_triggered["extended_dict"]["trace"]["trigger/0"][0]["result"] == {
+        "reason": "mock_reason"
+    }
+
+    hass_storage["trace.saved_traces"] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": "trace.saved_traces",
+        "data": {"automation.diag": [run, not_triggered]},
+    }
+    assert await async_setup_component(hass, "trace", {})
+    client = await hass_ws_client()
+
+    # Restore (lazily, on the first query) and confirm the flag round-trips.
+    await client.send_json(
+        {"id": 1, "type": "trace/list", "domain": "automation", "item_id": "diag"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert {
+        trace["run_id"]: trace.get("not_triggered", False)
+        for trace in response["result"]
+    } == {
+        run["short_dict"]["run_id"]: False,
+        not_triggered["short_dict"]["run_id"]: True,
+    }
+
+    # Restored traces are routed back into their separate buckets.
+    trace_bucket = hass.data[DATA_TRACE]["automation.diag"]
+    assert list(trace_bucket.runs) == [run["short_dict"]["run_id"]]
+    assert list(trace_bucket.not_triggered) == [not_triggered["short_dict"]["run_id"]]
+
+    # The restored not-triggered trace keeps its diagnostics.
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "trace/get",
+            "domain": "automation",
+            "item_id": "diag",
+            "run_id": not_triggered["short_dict"]["run_id"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["not_triggered"] is True
+    assert response["result"]["trace"]["trigger/0"][0]["result"] == {
+        "reason": "mock_reason"
+    }

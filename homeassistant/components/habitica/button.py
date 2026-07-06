@@ -1,11 +1,9 @@
 """Habitica button platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, override
 
 from habiticalib import Habitica, HabiticaClass, Skill, TaskType
 
@@ -313,6 +311,7 @@ class HabiticaButton(HabiticaBase, ButtonEntity):
 
     entity_description: HabiticaButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
 
@@ -320,6 +319,7 @@ class HabiticaButton(HabiticaBase, ButtonEntity):
         await self.coordinator.async_request_refresh()
 
     @property
+    @override
     def available(self) -> bool:
         """Is entity available."""
 
@@ -328,6 +328,7 @@ class HabiticaButton(HabiticaBase, ButtonEntity):
         )
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
         if entity_picture := self.entity_description.entity_picture:

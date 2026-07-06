@@ -1090,6 +1090,37 @@ async def test_v1_sensors(
                 },
             ],
         ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x64\x42",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_light_level",
+                    "friendly_name": "Test Device 18B2 Light level",
+                    "state_class": "measurement",
+                    "expected_state": "66",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x65\x07",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_settings_revision",
+                    "friendly_name": "Test Device 18B2 Settings revision",
+                    "expected_state": "7",
+                },
+            ],
+        ),
     ],
 )
 async def test_v2_sensors(
@@ -1241,7 +1272,7 @@ async def test_sleepy_device(hass: HomeAssistant) -> None:
 
 
 async def test_sleepy_device_restore_state(hass: HomeAssistant) -> None:
-    """Test sleepy device does not go to unavailable after 60 minutes and restores state."""
+    """Test sleepy device does not go unavailable after 60 min and restores state."""
     start_monotonic = time.monotonic()
 
     entry = MockConfigEntry(

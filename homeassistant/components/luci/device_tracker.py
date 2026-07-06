@@ -1,8 +1,7 @@
 """Support for OpenWRT (luci) routers."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from openwrt_luci_rpc import OpenWrtRpc
 import voluptuous as vol
@@ -63,12 +62,14 @@ class LuciDeviceScanner(DeviceScanner):
         self.last_results = {}
         self.success_init = self.router.is_logged_in()
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
         return [device.mac for device in self.last_results]
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         return next(
@@ -76,6 +77,7 @@ class LuciDeviceScanner(DeviceScanner):
             None,
         )
 
+    @override
     def get_extra_attributes(self, device):
         """Get extra attributes of a device.
 

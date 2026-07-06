@@ -1,8 +1,6 @@
 """Music Assistant Number platform."""
 
-from __future__ import annotations
-
-from typing import Final
+from typing import Final, override
 
 from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.player import PlayerOption, PlayerOptionType
@@ -79,7 +77,7 @@ async def async_setup_entry(
 
 
 class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberEntity):
-    """Representation of a Number entity to control player provider dependent settings."""
+    """Representation of a Number entity to control player settings."""
 
     def __init__(
         self,
@@ -94,6 +92,7 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
         self.entity_description = entity_description
 
     @catch_musicassistant_error
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
         _value = round(value) if self.mass_type == PlayerOptionType.INTEGER else value
@@ -103,6 +102,7 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
             _value,
         )
 
+    @override
     def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Update on player option update."""
         if player_option.min_value is not None:

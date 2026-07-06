@@ -1,11 +1,9 @@
 """Config flow for Bond integration."""
 
-from __future__ import annotations
-
 import contextlib
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from bond_async import Bond, RequestorUUID
@@ -107,6 +105,7 @@ class BondConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         self._discovered[CONF_NAME] = hub_name
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -116,6 +115,7 @@ class BondConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(bond_id)
         return await self.async_step_any_discovery(bond_id, host)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -204,6 +204,7 @@ class BondConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=self._discovered,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

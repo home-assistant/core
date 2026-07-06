@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.enums import APIType
-from pyoverkiz.models import Event, OverkizServer, Setup
+from pyoverkiz.models import Event, ServerConfig, Setup
 import pytest
 
 from homeassistant.components.overkiz.const import DOMAIN
@@ -35,27 +35,30 @@ class MockOverkizClient(OverkizClient):
 
     setup: Setup = field(default_factory=load_setup_fixture)
     event_batches: list[list[Event]] = field(default_factory=list)
-    server: OverkizServer = field(
-        default_factory=lambda: OverkizServer(
+    server_config: ServerConfig = field(
+        default_factory=lambda: ServerConfig(
             name="Somfy",
             endpoint="https://example.test/enduser-mobile-web/enduserAPI",
             manufacturer="Somfy",
             configuration_url=None,
+            server=None,
+            api_type=APIType.CLOUD,
         )
     )
 
     def __post_init__(self) -> None:
         """Initialize async client methods."""
         self._execution_id = 0
-        self.api_type = APIType.CLOUD
         self.login = AsyncMock(return_value=True)
         self.get_setup = AsyncMock(side_effect=self._async_get_setup)
         self.get_devices = AsyncMock(side_effect=self._async_get_devices)
-        self.get_scenarios = AsyncMock(return_value=[])
+        self.get_action_groups = AsyncMock(return_value=[])
         self.fetch_events = AsyncMock(side_effect=self._async_fetch_events)
         self.get_current_executions = AsyncMock(return_value=[])
-        self.cancel_command = AsyncMock(return_value=None)
-        self.execute_command = AsyncMock(side_effect=self._async_execute_command)
+        self.cancel_execution = AsyncMock(return_value=None)
+        self.execute_action_group = AsyncMock(
+            side_effect=self._async_execute_action_group
+        )
 
     def set_setup_fixture(self, fixture: str) -> None:
         """Load a setup fixture for the next integration setup."""
@@ -72,11 +75,11 @@ class MockOverkizClient(OverkizClient):
         self.login.reset_mock()
         self.get_setup.reset_mock()
         self.get_devices.reset_mock()
-        self.get_scenarios.reset_mock()
+        self.get_action_groups.reset_mock()
         self.fetch_events.reset_mock()
         self.get_current_executions.reset_mock()
-        self.cancel_command.reset_mock()
-        self.execute_command.reset_mock()
+        self.cancel_execution.reset_mock()
+        self.execute_action_group.reset_mock()
 
     async def _async_get_setup(self) -> Setup:
         """Return the configured setup."""
@@ -92,8 +95,8 @@ class MockOverkizClient(OverkizClient):
             return self.event_batches.pop(0)
         return []
 
-    async def _async_execute_command(self, *args, **kwargs) -> str:
-        """Return a unique execution id for each command."""
+    async def _async_execute_action_group(self, *args, **kwargs) -> str:
+        """Return a unique execution id for each action group."""
         self._execution_id += 1
         return f"exec-{self._execution_id}"
 
@@ -116,6 +119,37 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.overkiz.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_rexel_config_entry() -> MockConfigEntry:
+    """Return a Rexel config entry backed by an OAuth2 token bundle."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {"access_token": "mock-access-token"},
+            "hub": "rexel",
+            "gateway_id": TEST_GATEWAY_ID,
+        },
+    )
+
+
+@pytest.fixture
+def mock_rexel_local_config_entry() -> MockConfigEntry:
+    """Return a Rexel config entry set up via the Local API."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={
+            "host": "gateway-1234-5678-9123.local:8443",
+            "token": "1234123412341234",
+            "verify_ssl": True,
+            "hub": "rexel",
+            "api_type": "local",
+        },
+    )
 
 
 @pytest.fixture

@@ -1,10 +1,9 @@
 """Define an object to manage fetching Mealie data."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from aiomealie import (
     MealieAuthenticationError,
@@ -63,6 +62,7 @@ class MealieDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> _DataT:
         """Fetch data from Mealie."""
         try:
@@ -91,6 +91,7 @@ class MealieMealplanCoordinator(
     _name = "mealplan"
     _update_interval = timedelta(hours=1)
 
+    @override
     async def _async_update_internal(self) -> dict[MealplanEntryType, list[Mealplan]]:
         next_week = dt_util.now() + WEEK
         current_date = dt_util.now().date()
@@ -120,6 +121,7 @@ class MealieShoppingListCoordinator(
     _name = "shopping_list"
     _update_interval = timedelta(minutes=5)
 
+    @override
     async def _async_update_internal(
         self,
     ) -> dict[str, ShoppingListData]:
@@ -144,6 +146,7 @@ class MealieStatisticsCoordinator(MealieDataUpdateCoordinator[Statistics]):
     _name = "statistics"
     _update_interval = timedelta(minutes=15)
 
+    @override
     async def _async_update_internal(
         self,
     ) -> Statistics:

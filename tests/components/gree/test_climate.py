@@ -502,7 +502,7 @@ async def test_send_target_temperature_with_hvac_mode(
 async def test_send_target_temperature_device_timeout(
     hass: HomeAssistant, discovery, device, units: UnitSystem, temperature
 ) -> None:
-    """Test for sending target temperature command to the device with a device timeout."""
+    """Test sending target temperature command with device timeout."""
     hass.config.units = units
     if units.temperature_unit == UnitOfTemperature.FAHRENHEIT:
         device().temperature_units = 1

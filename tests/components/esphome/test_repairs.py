@@ -1,7 +1,5 @@
 """Test ESPHome repairs."""
 
-from __future__ import annotations
-
 import asyncio
 from unittest.mock import AsyncMock
 
@@ -24,7 +22,6 @@ from .conftest import MockESPHomeDeviceType
 
 from tests.common import MockConfigEntry
 from tests.components.repairs import (
-    async_process_repairs_platforms,
     get_repairs,
     process_repair_fix_flow,
     start_repair_fix_flow,
@@ -75,7 +72,6 @@ async def test_device_conflict_manual(
     assert issues
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
-    await async_process_repairs_platforms(hass)
     client = await hass_client()
     data = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
@@ -179,7 +175,6 @@ async def test_device_conflict_migration(
     assert issues
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
-    await async_process_repairs_platforms(hass)
     client = await hass_client()
     data = await start_repair_fix_flow(client, DOMAIN, issue_id)
 

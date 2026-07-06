@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
+
 from homeassistant.components.arve.config_flow import ArveConnectionError
 from homeassistant.components.arve.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -37,9 +39,8 @@ async def test_correct_flow(
     assert result2["result"].unique_id == "12345"
 
 
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_arve: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_cannot_connect(hass: HomeAssistant, mock_arve: AsyncMock) -> None:
     """Test we handle cannot connect error."""
     mock_arve.get_customer_id.side_effect = ArveConnectionError
     result = await hass.config_entries.flow.async_init(

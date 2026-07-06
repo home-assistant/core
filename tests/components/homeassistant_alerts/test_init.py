@@ -1,7 +1,5 @@
 """Test creating repairs from alerts."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import json
 from unittest.mock import ANY, patch

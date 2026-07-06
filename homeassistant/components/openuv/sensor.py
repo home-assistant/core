@@ -1,10 +1,8 @@
 """Support for OpenUV sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -185,6 +183,7 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
     entity_description: OpenUvSensorEntityDescription
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return entity specific state attributes."""
         attrs = {}
@@ -194,6 +193,7 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
         return attrs
 
     @property
+    @override
     def native_value(self) -> int | str:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data)

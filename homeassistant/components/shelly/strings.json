@@ -211,8 +211,14 @@
       "restart_required": {
         "name": "Restart required"
       },
+      "rotation": {
+        "name": "Rotation"
+      },
       "smoke_with_channel_name": {
         "name": "{channel_name} smoke"
+      },
+      "tilt": {
+        "name": "Tilt"
       }
     },
     "button": {
@@ -417,9 +423,6 @@
       },
       "lamp_life": {
         "name": "Lamp life"
-      },
-      "last_restart": {
-        "name": "Last restart"
       },
       "left_slot_level": {
         "name": "Left slot level"
@@ -651,6 +654,15 @@
     "rpc_call_error": {
       "message": "RPC call error occurred for {device}"
     },
+    "unsupported_media_content_type": {
+      "message": "Unsupported media content type for Shelly device: {media_content_type}"
+    },
+    "unsupported_media_id": {
+      "message": "Unsupported media ID for Shelly device: {media_id}"
+    },
+    "unsupported_media_type": {
+      "message": "Unsupported media type for Shelly device: {media_type}"
+    },
     "update_error": {
       "message": "An error occurred while retrieving data from {device}"
     },
@@ -661,7 +673,7 @@
       "message": "An error occurred while reconnecting to {device}"
     },
     "update_error_sleeping_device": {
-      "message": "Sleeping device did not update within {period} seconds interval"
+      "message": "Sleeping device {device} did not update within {period} seconds interval"
     }
   },
   "issues": {
@@ -673,7 +685,7 @@
         },
         "step": {
           "confirm": {
-            "description": "Your Shelly device {device_name} with IP address {ip_address} is running firmware {firmware} and acts as BLE scanner with active mode. This firmware version is not supported for BLE scanner active mode.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version.",
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is running firmware {firmware} and acts as a BLE scanner in Active or Auto mode. This firmware version is not supported for these BLE scanner modes.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version.",
             "title": "[%key:component::shelly::issues::ble_scanner_firmware_unsupported::title%]"
           }
         }
@@ -775,16 +787,17 @@
         "data_description": {
           "ble_scanner_mode": "The scanner mode to use for Bluetooth scanning."
         },
-        "description": "Bluetooth scanning can be active or passive. With active, the Shelly requests data from nearby devices; with passive, the Shelly receives unsolicited data from nearby devices."
+        "description": "Auto is recommended for most setups; the Shelly listens passively and only briefly switches to active when needed, saving battery on your Bluetooth devices."
       }
     }
   },
   "selector": {
     "ble_scanner_mode": {
       "options": {
-        "active": "[%key:common::state::active%]",
+        "active": "Active (uses more device battery, fastest updates)",
+        "auto": "Auto (recommended, saves device battery)",
         "disabled": "[%key:common::state::disabled%]",
-        "passive": "Passive"
+        "passive": "Passive (lowest device battery use, some details may be missing)"
       }
     },
     "device": {

@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from mypermobil import MyPermobil, MyPermobilAPIException
 
@@ -43,6 +44,7 @@ class MyPermobilCoordinator(DataUpdateCoordinator[MyPermobilData]):
         )
         self.p_api = p_api
 
+    @override
     async def _async_update_data(self) -> MyPermobilData:
         """Fetch data from the 3 API endpoints."""
         try:

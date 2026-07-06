@@ -1,7 +1,5 @@
 """Test the Time & Date config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -9,7 +7,8 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.time_date.const import CONF_DISPLAY_OPTIONS, DOMAIN
+from homeassistant.components.time_date.const import DOMAIN
+from homeassistant.const import CONF_DISPLAY_OPTIONS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -37,9 +36,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_does_not_allow_beat(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+async def test_user_flow_does_not_allow_beat(hass: HomeAssistant) -> None:
     """Test we get the forms."""
 
     result = await hass.config_entries.flow.async_init(

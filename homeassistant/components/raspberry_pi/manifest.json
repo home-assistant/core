@@ -4,7 +4,7 @@
   "after_dependencies": ["hassio"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": false,
-  "dependencies": ["hardware"],
+  "dependencies": ["hardware", "homeassistant_hardware"],
   "documentation": "https://www.home-assistant.io/integrations/raspberry_pi",
   "integration_type": "hardware",
   "quality_scale": "legacy"

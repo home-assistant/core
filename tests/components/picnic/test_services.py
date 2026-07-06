@@ -9,6 +9,7 @@ from homeassistant.components.picnic.const import SERVICE_ADD_PRODUCT_TO_CART
 from homeassistant.components.picnic.services import PicnicServiceException
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from tests.common import MockConfigEntry
 
@@ -134,7 +135,8 @@ async def test_add_product_using_name_no_results(
 ) -> None:
     """Test adding a product by name that can't be found."""
 
-    # Set the search return value and check that the right exception is raised during the service call
+    # Set the search return value and check that the right exception
+    # is raised during the service call
     picnic_api_client.search.return_value = []
     with pytest.raises(PicnicServiceException):
         await hass.services.async_call(
@@ -155,7 +157,8 @@ async def test_add_product_using_name_no_named_results(
 ) -> None:
     """Test adding a product by name for which no named results are returned."""
 
-    # Set the search return value and check that the right exception is raised during the service call
+    # Set the search return value and check that the right exception
+    # is raised during the service call
     picnic_api_client.search.return_value = [{"items": [{"attr": "test"}]}]
     with pytest.raises(PicnicServiceException):
         await hass.services.async_call(
@@ -174,7 +177,7 @@ async def test_add_product_multiple_config_entries(
     picnic_api_client: MagicMock,
     picnic_config_entry: MockConfigEntry,
 ) -> None:
-    """Test adding a product for a specific Picnic service while multiple are configured."""
+    """Test adding a product while multiple services are configured."""
     with patch(
         "homeassistant.components.picnic.create_picnic_client"
     ) as create_picnic_client_mock:
@@ -200,7 +203,7 @@ async def test_add_product_device_doesnt_exist(
     picnic_config_entry: MockConfigEntry,
 ) -> None:
     """Test adding a product for a specific Picnic service, which doesn't exist."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ADD_PRODUCT_TO_CART,

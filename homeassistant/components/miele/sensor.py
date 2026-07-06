@@ -1,12 +1,10 @@
 """Sensor platform for Miele integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Final, cast
+from typing import Any, Final, cast, override
 
 from pymiele import MieleDevice, MieleFillingLevel, MieleTemperature
 
@@ -849,8 +847,9 @@ async def async_setup_entry(
             and definition.description.value_fn(device) is None
             and definition.description.zone != 1
         ):
-            # Optional temperature datapoints (extra fridge zones, oven food probe): only
-            # create the entity after the API first reports a valid reading, then keep it
+            # Optional temperature datapoints (extra fridge
+            # zones, oven food probe): only create the entity
+            # after the API first reports a valid reading, keep it
             # so state can return to unknown when the datapoint is inactive.
             return _is_entity_registered(unique_id)
         if (
@@ -971,11 +970,13 @@ class MieleSensor(MieleEntity, SensorEntity):
             self._attr_unique_id = description.unique_id_fn(device_id, description)
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.device)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return extra_state_attributes."""
         if self.entity_description.extra_attributes is None:
@@ -991,6 +992,7 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
 
     _attr_native_value: StateType | datetime
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -1001,6 +1003,7 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
             self._attr_native_value = last_data.native_value  # type: ignore[assignment]
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor.
 
@@ -1015,6 +1018,7 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
         self._attr_native_value = self.entity_description.value_fn(self.device)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_native_value()
@@ -1038,6 +1042,7 @@ class MieleAuxSensor(MieleAuxEntity, SensorEntity):
             self._attr_unique_id = description.unique_id_fn(device_id, description)
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the level sensor."""
         return (
@@ -1053,6 +1058,7 @@ class MielePlateSensor(MieleSensor):
     entity_description: MieleSensorDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the plate sensor."""
         # state_plate_step is [] if all zones are off
@@ -1089,11 +1095,17 @@ class MieleStatusSensor(MieleSensor):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return StateStatus(self.device.state_status).name
+        return (
+            StateStatus(self.device.state_status).name
+            if self._device_id in self.coordinator.data.devices
+            else None
+        )
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the entity."""
         # This sensor should always be available
@@ -1113,6 +1125,7 @@ class MielePhaseSensor(MieleSensor):
     """Representation of the program phase sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the phase sensor."""
         program_phase = PROGRAM_PHASE[self.device.device_type](
@@ -1126,6 +1139,7 @@ class MielePhaseSensor(MieleSensor):
         )
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return the options list for the actual device type."""
         phases = PROGRAM_PHASE[self.device.device_type].keys()
@@ -1138,6 +1152,7 @@ class MieleProgramIdSensor(MieleSensor):
     _unrecorded_attributes = frozenset({ATTRIBUTE_PROFILE})
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return (
@@ -1147,6 +1162,7 @@ class MieleProgramIdSensor(MieleSensor):
         )
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return the options list for the actual device type."""
         return sorted(PROGRAM_IDS.get(self.device.device_type, {}).keys())
@@ -1155,13 +1171,15 @@ class MieleProgramIdSensor(MieleSensor):
 class MieleTimeSensor(MieleRestorableSensor):
     """Representation of time sensors keeping state from cache."""
 
+    @override
     def _update_native_value(self) -> None:
         """Update the last value of the sensor."""
 
         current_value = self.entity_description.value_fn(self.device)
         current_status = StateStatus(self.device.state_status).name
 
-        # report end-specific value when program ends (some devices are immediately reporting 0...)
+        # report end-specific value when program ends
+        # (some devices are immediately reporting 0...)
         if (
             current_status == StateStatus.program_ended.name
             and self.entity_description.end_value_fn is not None
@@ -1174,7 +1192,8 @@ class MieleTimeSensor(MieleRestorableSensor):
         elif current_status == StateStatus.program_ended.name:
             pass
 
-        # force unknown when appliance is not working (some devices are keeping last value until a new cycle starts)
+        # force unknown when appliance is not working (some
+        # devices keep last value until a new cycle starts)
         elif current_status in (
             StateStatus.off.name,
             StateStatus.on.name,
@@ -1192,6 +1211,7 @@ class MieleAbsoluteTimeSensor(MieleRestorableSensor):
 
     _previous_value: StateType | datetime = None
 
+    @override
     def _update_native_value(self) -> None:
         """Update the last value of the sensor."""
         current_value = self.entity_description.value_fn(self.device)
@@ -1211,7 +1231,8 @@ class MieleAbsoluteTimeSensor(MieleRestorableSensor):
         ) or current_status == StateStatus.program_ended.name:
             return
 
-        # force unknown when appliance is not working (some devices are keeping last value until a new cycle starts)
+        # force unknown when appliance is not working (some
+        # devices keep last value until a new cycle starts)
         if current_status in (
             StateStatus.off.name,
             StateStatus.on.name,
@@ -1230,6 +1251,7 @@ class MieleConsumptionSensor(MieleRestorableSensor):
 
     _is_reporting: bool = False
 
+    @override
     def _update_native_value(self) -> None:
         """Update the last value of the sensor."""
         current_value = self.entity_description.value_fn(self.device)
@@ -1258,9 +1280,11 @@ class MieleConsumptionSensor(MieleRestorableSensor):
             self._is_reporting = False
             self._attr_native_value = None
 
-        # appliance might report the last value for consumption of previous cycle and it will report 0
-        # only after a while, so it is necessary to force 0 until we see the 0 value coming from API, unless
-        # we already saw a valid value in this cycle from cache
+        # appliance might report the last value for consumption
+        # of previous cycle and it will report 0 only after a
+        # while, so it is necessary to force 0 until we see
+        # the 0 value coming from API, unless we already saw
+        # a valid value in this cycle from cache
         elif (
             current_status in (StateStatus.in_use.name, StateStatus.pause.name)
             and not self._is_reporting

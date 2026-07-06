@@ -1,10 +1,13 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_discover": "Could not detect a Nobø Ecohub at the discovered IP address."
     },
     "error": {
       "cannot_connect": "Failed to connect - check serial number",
+      "cannot_connect_ip": "Failed to connect - check IP address",
       "invalid_ip": "Invalid IP address",
       "invalid_serial": "Invalid serial number",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -58,14 +61,23 @@
     }
   },
   "exceptions": {
-    "cannot_connect_manual": {
-      "message": "Unable to connect to Nobø Ecohub with serial {serial} at {ip}. If the hub has moved to a new IP address, remove and re-add the integration."
+    "cannot_connect": {
+      "message": "Unable to connect to Nobø Ecohub with serial {serial} at {ip}; will retry. If the hub is on a different network from Home Assistant and has changed IP address, remove and re-add the integration."
     },
-    "cannot_connect_rediscovered": {
-      "message": "Unable to connect to Nobø Ecohub at rediscovered IP {ip}; will retry."
+    "set_global_override_failed": {
+      "message": "Failed to set global override."
     },
-    "hub_not_found": {
-      "message": "Nobø Ecohub with serial {serial} not found on the network. The hub may be offline or on a different subnet; will retry."
+    "set_hvac_mode_failed": {
+      "message": "Failed to set HVAC mode."
+    },
+    "set_preset_mode_failed": {
+      "message": "Failed to set preset mode."
+    },
+    "set_temperature_failed": {
+      "message": "Failed to set target temperature."
+    },
+    "set_week_profile_failed": {
+      "message": "Failed to set week profile."
     }
   },
   "options": {

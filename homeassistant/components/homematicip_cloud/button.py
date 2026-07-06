@@ -1,6 +1,6 @@
 """Support for HomematicIP Cloud button devices."""
 
-from __future__ import annotations
+from typing import override
 
 from homematicip.device import WallMountedGarageDoorController
 
@@ -45,9 +45,10 @@ class HomematicipGarageDoorControllerButton(HomematicipGenericEntity, ButtonEnti
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize a wall mounted garage door controller."""
-        super().__init__(hap, device)
+        super().__init__(hap, device, feature_id="garage_button")
         self._attr_icon = "mdi:arrow-up-down"
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         await self._device.send_start_impulse_async()
@@ -58,9 +59,12 @@ class HomematicipFullFlushLockControllerButton(HomematicipGenericEntity, ButtonE
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the full flush lock controller opener button."""
-        super().__init__(hap, device, post="Door opener")
+        super().__init__(
+            hap, device, post="Door opener", feature_id="lock_opener_button"
+        )
         self._attr_icon = "mdi:door-open"
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         await self._device.send_start_impulse_async()

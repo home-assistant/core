@@ -1,9 +1,7 @@
 """Config flow for mopeka integration."""
 
-from __future__ import annotations
-
 from enum import Enum
-from typing import Any
+from typing import Any, override
 
 from mopeka_iot_ble import MopekaIOTBluetoothDeviceData as DeviceData
 import voluptuous as vol
@@ -54,12 +52,14 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     @staticmethod
+    @override
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
     ) -> MopekaOptionsFlow:
         """Return the options flow for this handler."""
         return MopekaOptionsFlow()
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -98,6 +98,7 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=async_generate_schema(),
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

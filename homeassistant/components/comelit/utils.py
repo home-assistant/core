@@ -5,7 +5,12 @@ from functools import wraps
 from typing import TYPE_CHECKING, Any, Concatenate, Literal
 
 from aiocomelit.api import ComelitSerialBridgeObject
-from aiocomelit.exceptions import CannotAuthenticate, CannotConnect, CannotRetrieveData
+from aiocomelit.exceptions import (
+    CannotAuthenticate,
+    CannotConnect,
+    CannotRetrieveData,
+    DeviceStorageFailureError,
+)
 from aiohttp import ClientSession, CookieJar
 
 from homeassistant.config_entries import ConfigEntry
@@ -109,6 +114,12 @@ def bridge_api_call[_T: ComelitBridgeBaseEntity, **_P](
                 translation_domain=DOMAIN,
                 translation_key="cannot_retrieve_data",
                 translation_placeholders={"error": repr(err)},
+            ) from err
+        except DeviceStorageFailureError as err:
+            self.coordinator.last_update_success = False
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_storage_failure",
             ) from err
         except CannotAuthenticate:
             self.coordinator.last_update_success = False

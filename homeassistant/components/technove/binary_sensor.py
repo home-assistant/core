@@ -1,9 +1,8 @@
 """Support for TechnoVE binary sensor."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from technove import Station as TechnoVEStation
 
@@ -89,6 +88,7 @@ class TechnoVEBinarySensorEntity(TechnoVEEntity, BinarySensorEntity):
         super().__init__(coordinator, description.key)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the sensor."""
 

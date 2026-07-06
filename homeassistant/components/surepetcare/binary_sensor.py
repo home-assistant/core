@@ -1,8 +1,6 @@
 """Support for Sure PetCare Flaps/Pets binary sensors."""
 
-from __future__ import annotations
-
-from typing import cast
+from typing import cast, override
 
 from surepy.entities import SurepyEntity
 from surepy.entities.pet import Pet as SurepyPet
@@ -70,11 +68,13 @@ class Hub(SurePetcareBinarySensor):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and bool(self._attr_is_on)
 
     @callback
+    @override
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         """Get the latest data and update the state."""
         state = surepy_entity.raw_data()["status"]
@@ -96,6 +96,7 @@ class Pet(SurePetcareBinarySensor):
     _attr_device_class = BinarySensorDeviceClass.PRESENCE
 
     @callback
+    @override
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         """Get the latest data and update the state."""
         surepy_entity = cast(SurepyPet, surepy_entity)
@@ -130,6 +131,7 @@ class DeviceConnectivity(SurePetcareBinarySensor):
         self._attr_unique_id = f"{self._device_id}-connectivity"
 
     @callback
+    @override
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         state = surepy_entity.raw_data().get("status", {})
         online = bool(state.get("online", False))

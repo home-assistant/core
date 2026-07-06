@@ -1,5 +1,6 @@
 {
   "data": {
+    "id": "sub_uuid",
     "username": "username_1234",
     "description": null,
     "picture": null

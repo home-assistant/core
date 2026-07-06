@@ -1,20 +1,24 @@
 """unifiprotect.repairs."""
 
-from __future__ import annotations
-
+import logging
 from typing import cast
 
 from uiprotect import ProtectApiClient
-from uiprotect.data import Bootstrap, Camera
+from uiprotect.exceptions import ClientError
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
+from homeassistant.components.repairs import (
+    ConfirmRepairFlow,
+    RepairsFlow,
+    RepairsFlowResult,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
 from .data import UFPConfigEntry, async_get_data_for_entry_id
 from .utils import async_create_api_client
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ProtectRepair(RepairsFlow):
@@ -47,14 +51,14 @@ class CloudAccountRepair(ProtectRepair):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
 
         return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
 
         if user_input is None:
@@ -70,86 +74,68 @@ class CloudAccountRepair(ProtectRepair):
 
 
 class RTSPRepair(ProtectRepair):
-    """Handler for an issue fixing flow."""
+    """Fix flow for a camera without an active RTSPS stream.
+
+    Verifies and creates the stream through the public API, so it also works in
+    a public-only setup. The camera name is carried by the issue placeholders.
+    """
 
     _camera_id: str
-    _camera: Camera | None
-    _bootstrap: Bootstrap | None
 
     def __init__(
-        self,
-        *,
-        api: ProtectApiClient,
-        entry: UFPConfigEntry,
-        camera_id: str,
+        self, *, api: ProtectApiClient, entry: UFPConfigEntry, camera_id: str
     ) -> None:
         """Create flow."""
 
         super().__init__(api=api, entry=entry)
         self._camera_id = camera_id
-        self._bootstrap = None
-        self._camera = None
 
-    @callback
-    def _async_get_placeholders(self) -> dict[str, str]:
-        description_placeholders = super()._async_get_placeholders()
-        if self._camera is not None:
-            description_placeholders["camera"] = self._camera.display_name
-
-        return description_placeholders
-
-    async def _get_boostrap(self) -> Bootstrap:
-        if self._bootstrap is None:
-            self._bootstrap = await self._api.get_bootstrap()
-
-        return self._bootstrap
-
-    async def _get_camera(self) -> Camera:
-        if self._camera is None:
-            bootstrap = await self._get_boostrap()
-            self._camera = bootstrap.cameras.get(self._camera_id)
-            assert self._camera is not None
-        return self._camera
-
-    async def _enable_rtsp(self) -> None:
-        camera = await self._get_camera()
-        await camera.create_rtsps_streams(qualities="high")
+    async def _async_has_active_stream(self) -> bool:
+        streams = await self._api.get_camera_rtsps_streams(self._camera_id)
+        return bool(streams and streams.get_active_stream_qualities())
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
 
         return await self.async_step_start()
 
     async def async_step_start(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
 
         if user_input is None:
-            # make sure camera object is loaded for placeholders
-            await self._get_camera()
-            placeholders = self._async_get_placeholders()
             return self.async_show_form(
                 step_id="start",
                 data_schema=vol.Schema({}),
-                description_placeholders=placeholders,
+                description_placeholders=self._async_get_placeholders(),
             )
 
-        updated_camera = await self._api.get_camera(self._camera_id)
-        if not any(c.is_rtsp_enabled for c in updated_camera.channels):
-            await self._enable_rtsp()
+        # Creating a stream needs write permission; a NotAuthorized/ClientError
+        # routes to the confirm step (which explains the manual fallback)
+        # instead of raising out of the fix flow.
+        try:
+            active = await self._async_has_active_stream()
+            if not active:
+                await self._api.create_camera_rtsps_streams(self._camera_id, "high")
+                active = await self._async_has_active_stream()
+        except ClientError:
+            _LOGGER.debug(
+                "Auto-creating RTSPS stream failed; routing to manual fallback",
+                exc_info=True,
+            )
+            active = False
 
-        updated_camera = await self._api.get_camera(self._camera_id)
-        if any(c.is_rtsp_enabled for c in updated_camera.channels):
+        if active:
             await self.hass.config_entries.async_reload(self._entry.entry_id)
             return self.async_create_entry(data={})
         return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
             return self.async_create_entry(data={})

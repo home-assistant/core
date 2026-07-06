@@ -1,7 +1,5 @@
 """Type casting functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 import math
 from typing import TYPE_CHECKING, Any
 

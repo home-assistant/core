@@ -146,7 +146,9 @@ async def test_if_fires_on_event(
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "{{trigger.event.data.type}} - {{trigger.platform}} - {{trigger.event.data.device_id}}"
+                                "{{trigger.event.data.type}} - "
+                                "{{trigger.platform}} - "
+                                "{{trigger.event.data.device_id}}"
                             )
                         },
                     },
@@ -229,7 +231,9 @@ async def test_if_fires_on_event_legacy(
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "{{trigger.event.data.type}} - {{trigger.platform}} - {{trigger.event.data.device_id}}"
+                                "{{trigger.event.data.type}} - "
+                                "{{trigger.platform}} - "
+                                "{{trigger.event.data.device_id}}"
                             )
                         },
                     },
@@ -310,8 +314,10 @@ async def test_if_fires_on_event_with_subtype(
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "{{trigger.event.data.type}} - {{trigger.event.data.data.mode}} - "
-                                "{{trigger.platform}} - {{trigger.event.data.device_id}}"
+                                "{{trigger.event.data.type}} - "
+                                "{{trigger.event.data.data.mode}}"
+                                " - {{trigger.platform}} - "
+                                "{{trigger.event.data.device_id}}"
                             )
                         },
                     },
@@ -387,7 +393,9 @@ async def test_if_invalid_device(
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "{{trigger.event.data.type}} - {{trigger.platform}} - {{trigger.event.data.device_id}}"
+                                "{{trigger.event.data.type}} - "
+                                "{{trigger.platform}} - "
+                                "{{trigger.event.data.device_id}}"
                             )
                         },
                     },

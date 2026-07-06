@@ -18,7 +18,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_form_multiple_meters_first_connected(hass: HomeAssistant) -> None:
-    """Test proper flow with an EAGLE-200 with a list of meters, one of which is connected (should auto-select it)."""
+    """Test EAGLE-200 flow with multiple meters, one connected."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -72,7 +72,7 @@ async def test_form_multiple_meters_first_connected(hass: HomeAssistant) -> None
 
 
 async def test_form_eagle_200_meters_none_connected(hass: HomeAssistant) -> None:
-    """Test proper flow with an EAGLE-200 with a list of meters, but all are disconnected (Error should be shown)."""
+    """Test EAGLE-200 flow with all meters disconnected."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -111,7 +111,7 @@ async def test_form_eagle_200_meters_none_connected(hass: HomeAssistant) -> None
 
 
 async def test_form_eagle_200_no_meters(hass: HomeAssistant) -> None:
-    """Test proper flow with an EAGLE-200 with an empty list of meters (Error should be shown)."""
+    """Test EAGLE-200 flow with an empty list of meters."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -142,7 +142,7 @@ async def test_form_eagle_200_no_meters(hass: HomeAssistant) -> None:
 
 
 async def test_form_eagle_100(hass: HomeAssistant) -> None:
-    """Test proper flow for EAGLE-100 (KeyError from get_device_list, then legacy response)."""
+    """Test EAGLE-100 flow with legacy response."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -150,7 +150,9 @@ async def test_form_eagle_100(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    # Patch get_device_list to raise KeyError (expected from EAGLE-100), and async_add_executor_job to return proper EAGLE-100 response
+    # Patch get_device_list to raise KeyError (expected from
+    # EAGLE-100), and async_add_executor_job to return proper
+    # EAGLE-100 response
     eagle_100_response = {"NetworkInfo": {"ModelId": "Z109-EAGLE"}}
 
     with (
@@ -194,7 +196,7 @@ async def test_form_eagle_100(hass: HomeAssistant) -> None:
 
 
 async def test_form_unknown_device_type(hass: HomeAssistant) -> None:
-    """Test flow when device type cannot be determined (get_device_list raises an error but other responses aren't the expected values)."""
+    """Test flow when device type cannot be determined."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -202,7 +204,9 @@ async def test_form_unknown_device_type(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    # Patch get_device_list to raise KeyError (expected from EAGLE-100), and async_add_executor_job to return an unknown device response
+    # Patch get_device_list to raise KeyError (expected from
+    # EAGLE-100), and async_add_executor_job to return an unknown
+    # device response
     unknown_device_response = {"NetworkInfo": {"ModelId": "UNKNOWN-DEVICE"}}
 
     with (
@@ -233,7 +237,7 @@ async def test_form_unknown_device_type(hass: HomeAssistant) -> None:
 
 
 async def test_form_unsupported_device_type(hass: HomeAssistant) -> None:
-    """Test flow when device type is unsupported (async_get_type returns an unexpected device type)."""
+    """Test flow when device type is unsupported."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

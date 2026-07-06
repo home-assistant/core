@@ -1,7 +1,5 @@
 """Base entity for Qube Heat Pump."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from homeassistant.helpers.device_registry import DeviceInfo

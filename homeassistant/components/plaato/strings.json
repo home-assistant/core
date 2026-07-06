@@ -41,7 +41,7 @@
     "step": {
       "user": {
         "data": {
-          "update_interval": "Update interval (minutes)"
+          "scan_interval": "Update interval (minutes)"
         },
         "description": "Set the update interval (minutes)",
         "title": "Options for Plaato"

@@ -674,7 +674,7 @@ async def test_discovered_by_dhcp_or_homekit(hass: HomeAssistant, source, data) 
 async def test_discovered_by_dhcp_or_homekit_failed_to_get_id(
     hass: HomeAssistant, source, data
 ) -> None:
-    """Test we abort if we cannot get the unique id when discovered from dhcp or homekit."""
+    """Test abort when unique id cannot be obtained from discovery."""
 
     mocked_bulb = _mocked_bulb()
     with (

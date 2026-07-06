@@ -1,5 +1,7 @@
 """Support for SleepIQ sensors."""
 
+from typing import override
+
 from asyncsleepiq import SleepIQBed, SleepIQSleeper
 
 from homeassistant.components.binary_sensor import (
@@ -45,6 +47,7 @@ class IsInBedBinarySensor(
         super().__init__(coordinator, bed, sleeper, IS_IN_BED)
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update sensor attributes."""
         self._attr_is_on = self.sleeper.in_bed

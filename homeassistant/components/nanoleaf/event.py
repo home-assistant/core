@@ -1,5 +1,7 @@
 """Support for Nanoleaf event entity."""
 
+from typing import override
+
 from homeassistant.components.event import EventEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -37,6 +39,7 @@ class NanoleafGestureEvent(NanoleafEntity, EventEntity):
         super().__init__(coordinator)
         self._attr_unique_id = f"{self._nanoleaf.serial_no}_gesture"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to Nanoleaf events."""
         await super().async_added_to_hass()

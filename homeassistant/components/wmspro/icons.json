@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "button": {
+      "rotation-reset": {
+        "default": "mdi:numeric-0-box-multiple-outline"
+      }
+    },
+    "number": {
+      "rotation": {
+        "default": "mdi:rotate-360"
+      },
+      "rotation-max": {
+        "default": "mdi:rotate-right"
+      },
+      "rotation-min": {
+        "default": "mdi:rotate-left"
+      }
+    }
+  }
+}

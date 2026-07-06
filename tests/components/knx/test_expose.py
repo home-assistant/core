@@ -378,8 +378,8 @@ async def test_expose_conversion_exception(
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
     assert (
-        f'Could not expose fake.entity fake_attribute value "{invalid_attribute}" to KNX:'
-        in caplog.text
+        "Could not expose fake.entity fake_attribute"
+        f' value "{invalid_attribute}" to KNX:' in caplog.text
     )
 
 
@@ -401,7 +401,16 @@ async def test_ui_expose_create_and_update(
         {
             "type": "knx/update_expose",
             "entity_id": ENTITY_ID,
-            "options": [{"ga": {"write": GROUP_ADDRESS_1, "dpt": "1.001"}}],
+            "data": {
+                "options": [
+                    {
+                        "ga": {
+                            "write": GROUP_ADDRESS_1,
+                            "dpt": "1.001",
+                        }
+                    }
+                ],
+            },
         }
     )
     res = await ws_client.receive_json()
@@ -418,13 +427,16 @@ async def test_ui_expose_create_and_update(
         {
             "type": "knx/update_expose",
             "entity_id": ENTITY_ID,
-            "options": [
-                {"ga": {"write": GROUP_ADDRESS_1, "dpt": "1.001"}},
-                {
-                    "ga": {"write": GROUP_ADDRESS_2, "dpt": "5.001"},
-                    "attribute": "brightness",
-                },
-            ],
+            "data": {
+                "options": [
+                    {"ga": {"write": GROUP_ADDRESS_1, "dpt": "1.001"}},
+                    {
+                        "ga": {"write": GROUP_ADDRESS_2, "dpt": "5.001"},
+                        "attribute": "brightness",
+                    },
+                ],
+                "notes": "This is a note",
+            },
         }
     )
     res = await ws_client.receive_json()
@@ -455,17 +467,19 @@ async def test_ui_expose_with_options(
         {
             "type": "knx/update_expose",
             "entity_id": ENTITY_ID,
-            "options": [
-                {
-                    "ga": {"write": GROUP_ADDRESS_1, "dpt": "5.010"},
-                    "attribute": "brightness",
-                    "cooldown": 2.5,
-                    "default": 0,
-                    "periodic_send": 60.0,
-                    "respond_to_read": False,
-                    "value_template": "{{ 50 if value >= 50 else 1 }}",
-                }
-            ],
+            "data": {
+                "options": [
+                    {
+                        "ga": {"write": GROUP_ADDRESS_1, "dpt": "5.010"},
+                        "attribute": "brightness",
+                        "cooldown": 2.5,
+                        "default": 0,
+                        "periodic_send": 60.0,
+                        "respond_to_read": False,
+                        "value_template": "{{ 50 if value >= 50 else 1 }}",
+                    }
+                ],
+            },
         }
     )
     res = await ws_client.receive_json()

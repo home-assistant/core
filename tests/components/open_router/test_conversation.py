@@ -69,7 +69,7 @@ async def test_default_prompt(
         agent_id="conversation.gpt_3_5_turbo",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert mock_chat_log.content[1:] == snapshot
     call = mock_openai_client.chat.completions.create.call_args_list[0][1]
     assert call["model"] == "openai/gpt-3.5-turbo"
@@ -136,7 +136,7 @@ async def test_empty_api_response(
         agent_id="conversation.gpt_3_5_turbo",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
 
 
 @pytest.mark.parametrize("enable_assist", [True])
@@ -258,7 +258,7 @@ async def test_function_call(
         agent_id="conversation.gpt_3_5_turbo",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     # Don't test the prompt, as it's not deterministic
     assert mock_chat_log.content[1:] == snapshot
     assert mock_openai_client.chat.completions.create.call_count == 2

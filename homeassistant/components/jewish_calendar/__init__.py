@@ -1,7 +1,5 @@
 """The jewish_calendar component."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 
@@ -34,7 +32,7 @@ from .entity import JewishCalendarConfigEntry
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SENSOR]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
@@ -132,10 +130,6 @@ async def async_migrate_entry(
             new_unique_id = f"{config_entry.entry_id}-{key_translations[old_key]}"
             return {"new_unique_id": new_unique_id}
         return None
-
-    if config_entry.version > 2:
-        # This means the user has downgraded from a future version
-        return False
 
     if config_entry.version == 1:
         await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)

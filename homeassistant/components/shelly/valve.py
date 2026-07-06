@@ -1,9 +1,7 @@
 """Valve for Shelly."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aioshelly.block_device import Block
 from aioshelly.const import MODEL_GAS, RPC_GENERATIONS
@@ -87,10 +85,12 @@ class RpcShellyWaterValve(RpcShellyBaseWaterValve):
     _attr_reports_position = True
 
     @property
+    @override
     def current_valve_position(self) -> int:
         """Return current position of valve."""
         return cast(int, self.attribute_value)
 
+    @override
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
         await self.coordinator.device.number_set(self._id, position)
@@ -103,14 +103,17 @@ class RpcShellySimpleWaterValve(RpcShellyBaseWaterValve):
     _attr_reports_position = False
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the valve is closed or not."""
         return not self.attribute_value
 
+    @override
     async def async_open_valve(self, **kwargs: Any) -> None:
         """Open valve."""
         await self.coordinator.device.boolean_set(self._id, True)
 
+    @override
     async def async_close_valve(self, **kwargs: Any) -> None:
         """Close valve."""
         await self.coordinator.device.boolean_set(self._id, False)
@@ -242,6 +245,7 @@ class BlockShellyValve(ShellyBlockAttributeEntity, ValveEntity):
         self._attr_is_closed = bool(self.attribute_value == "closed")
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the valve is closing."""
         if self.control_result:
@@ -250,6 +254,7 @@ class BlockShellyValve(ShellyBlockAttributeEntity, ValveEntity):
         return self.attribute_value == "closing"
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the valve is opening."""
         if self.control_result:
@@ -257,17 +262,20 @@ class BlockShellyValve(ShellyBlockAttributeEntity, ValveEntity):
 
         return self.attribute_value == "opening"
 
+    @override
     async def async_open_valve(self, **kwargs: Any) -> None:
         """Open valve."""
         self.control_result = await self.set_state(go="open")
         self.async_write_ha_state()
 
+    @override
     async def async_close_valve(self, **kwargs: Any) -> None:
         """Close valve."""
         self.control_result = await self.set_state(go="close")
         self.async_write_ha_state()
 
     @callback
+    @override
     def _update_callback(self) -> None:
         """When device updates, clear control result that overrides state."""
         self.control_result = None

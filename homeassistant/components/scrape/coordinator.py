@@ -1,10 +1,8 @@
 """Coordinator for the scrape component."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from bs4 import BeautifulSoup
 
@@ -46,6 +44,7 @@ class ScrapeCoordinator(DataUpdateCoordinator[BeautifulSoup]):
         self._rest = rest
         self._rest_config = rest_config
 
+    @override
     async def _async_update_data(self) -> BeautifulSoup:
         """Fetch data from Rest."""
         if CONF_RESOURCE_TEMPLATE in self._rest_config:
@@ -61,7 +60,8 @@ class ScrapeCoordinator(DataUpdateCoordinator[BeautifulSoup]):
             raise UpdateFailed("REST data is not available")
 
         # Detect if content is XML and use appropriate parser
-        # Check Content-Type header first (most reliable), then fall back to content detection
+        # Check Content-Type header first (most reliable),
+        # then fall back to content detection
         parser = "lxml"
         headers = self._rest.headers
         content_type = headers.get("Content-Type", "") if headers else ""
@@ -78,7 +78,8 @@ class ScrapeCoordinator(DataUpdateCoordinator[BeautifulSoup]):
                     after_xml_lower = after_xml.lower()
                     is_html = after_xml_lower.startswith(("<!doctype html", "<html"))
                     if is_html:
-                        # Strip XML declaration from HTML to avoid XMLParsedAsHTMLWarning
+                        # Strip XML declaration from HTML
+                        # to avoid XMLParsedAsHTMLWarning
                         data = after_xml
                     else:
                         parser = "lxml-xml"

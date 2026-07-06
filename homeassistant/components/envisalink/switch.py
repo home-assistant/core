@@ -1,9 +1,7 @@
 """Support for Envisalink zone bypass switches."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyenvisalink import EnvisalinkAlarmPanel
 
@@ -68,6 +66,7 @@ class EnvisalinkSwitch(EnvisalinkEntity, SwitchEntity):
 
         super().__init__(zone_name, info, controller)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
@@ -77,14 +76,17 @@ class EnvisalinkSwitch(EnvisalinkEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the boolean response if the zone is bypassed."""
         return self._info["bypassed"]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send the bypass keypress sequence to toggle the zone bypass."""
         self._controller.toggle_zone_bypass(self._zone_number)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the bypass keypress sequence to toggle the zone bypass."""
         self._controller.toggle_zone_bypass(self._zone_number)

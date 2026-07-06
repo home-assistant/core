@@ -1,8 +1,6 @@
 """Support for WiLight switches."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pywilight.const import ITEM_SWITCH, SWITCH_PAUSE_VALVE, SWITCH_VALVE
 from pywilight.wilight_device import PyWiLightDevice
@@ -149,6 +147,7 @@ class WiLightValveSwitch(WiLightDevice, SwitchEntity):
     _attr_translation_key = "watering"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._status.get("on", False)
@@ -202,6 +201,7 @@ class WiLightValveSwitch(WiLightDevice, SwitchEntity):
         return wilight_to_hass_trigger(self._status.get("trigger_4"))
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attr: dict[str, Any] = {}
@@ -235,10 +235,12 @@ class WiLightValveSwitch(WiLightDevice, SwitchEntity):
 
         return attr
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._client.turn_on(self._index)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._client.turn_off(self._index)
@@ -265,6 +267,7 @@ class WiLightValvePauseSwitch(WiLightDevice, SwitchEntity):
     _attr_translation_key = "pause"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._status.get("on", False)
@@ -281,6 +284,7 @@ class WiLightValvePauseSwitch(WiLightDevice, SwitchEntity):
         return pause_time
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attr: dict[str, Any] = {}
@@ -290,10 +294,12 @@ class WiLightValvePauseSwitch(WiLightDevice, SwitchEntity):
 
         return attr
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._client.turn_on(self._index)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._client.turn_off(self._index)

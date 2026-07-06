@@ -5,6 +5,8 @@ from typing import Any
 from unittest.mock import patch
 
 from aioesphomeapi import APIClient, UpdateCommand, UpdateInfo, UpdateState
+from awesomeversion import AwesomeVersion
+from awesomeversion.exceptions import AwesomeVersionCompareException
 import pytest
 
 from homeassistant.components.esphome.dashboard import async_get_dashboard
@@ -311,7 +313,7 @@ async def test_update_entity_dashboard_discovered_after_startup_but_update_faile
     mock_esphome_device: MockESPHomeDeviceType,
     mock_dashboard: dict[str, Any],
 ) -> None:
-    """Test ESPHome update entity when dashboard is discovered after startup and the first update fails."""
+    """Test update entity when dashboard discovered after startup fails."""
     with patch(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
         side_effect=TimeoutError,
@@ -369,7 +371,7 @@ async def test_update_becomes_available_at_runtime(
     mock_esphome_device: MockESPHomeDeviceType,
     mock_dashboard: dict[str, Any],
 ) -> None:
-    """Test ESPHome update entity when the dashboard has no device at startup but gets them later."""
+    """Test update entity when dashboard has no device at startup."""
     await mock_esphome_device(
         mock_client=mock_client,
     )
@@ -402,7 +404,7 @@ async def test_update_entity_not_present_with_dashboard_but_unknown_device(
     mock_esphome_device: MockESPHomeDeviceType,
     mock_dashboard: dict[str, Any],
 ) -> None:
-    """Test ESPHome update entity does not get created if the device is unknown to the dashboard."""
+    """Test update entity not created if device is unknown to dashboard."""
     await mock_esphome_device(
         mock_client=mock_client,
     )
@@ -545,6 +547,128 @@ async def test_generic_device_update_entity_has_update(
     mock_client.update_command.assert_called_with(
         key=1, command=UpdateCommand.CHECK, device_id=0
     )
+
+
+@pytest.mark.parametrize(
+    ("current_version", "latest_version"),
+    [
+        ("2025.11.5_c51f7548", "2025.11.6_aabbccdd"),
+        ("2025.11.5_c51f7548", "2025.11.5_aabbccdd"),
+        ("2025.11.6_aabbccdd", "2025.11.5_c51f7548"),
+    ],
+    ids=["newer_base", "same_base_new_build", "older_base"],
+)
+def test_awesomeversion_cannot_compare_project_versions(
+    current_version: str, latest_version: str
+) -> None:
+    """Prove AwesomeVersion raises on ESPHome project versions.
+
+    ESPHome project versions carry a build suffix (e.g. 2025.11.5_c51f7548).
+    AwesomeVersion cannot parse these, so the base UpdateEntity comparison would
+    raise and force the entity on, which is why ESPHomeUpdateEntity mirrors the
+    device by comparing with a plain string inequality instead.
+    """
+    with pytest.raises(AwesomeVersionCompareException):
+        assert AwesomeVersion(latest_version) > current_version
+
+
+@pytest.mark.parametrize(
+    ("current_version", "latest_version", "expected_state"),
+    [
+        ("2025.11.5_c51f7548", "2025.11.6_aabbccdd", STATE_ON),
+        ("2025.11.5_c51f7548", "2025.11.5_aabbccdd", STATE_OFF),
+        ("2025.11.6_aabbccdd", "2025.11.5_c51f7548", STATE_OFF),
+        ("2025.11.5_c51f7548", "2025.11.5_c51f7548", STATE_OFF),
+    ],
+    ids=["newer_base", "same_base_new_build", "older_base", "identical"],
+)
+async def test_generic_device_update_entity_project_version(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+    current_version: str,
+    latest_version: str,
+    expected_state: str,
+) -> None:
+    """Test version comparison for ESPHome project versions.
+
+    AwesomeVersion cannot parse the build suffix, so the entity strips it and
+    compares the real versions: only a genuinely newer base version is offered;
+    a different build of the same version or an older version is not.
+    """
+    entity_info = [
+        UpdateInfo(
+            object_id="myupdate",
+            key=1,
+            name="my update",
+        )
+    ]
+    states = [
+        UpdateState(
+            key=1,
+            current_version=current_version,
+            latest_version=latest_version,
+            title="ESPHome Project",
+            release_summary=RELEASE_SUMMARY,
+            release_url=RELEASE_URL,
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == expected_state
+
+
+async def test_generic_device_update_entity_clears_after_ota(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a project version update clears once the device runs the new build."""
+    entity_info = [
+        UpdateInfo(
+            object_id="myupdate",
+            key=1,
+            name="my update",
+        )
+    ]
+    states = [
+        UpdateState(
+            key=1,
+            current_version="2025.11.5_c51f7548",
+            latest_version="2025.11.6_aabbccdd",
+            title="ESPHome Project",
+            release_summary=RELEASE_SUMMARY,
+            release_url=RELEASE_URL,
+        )
+    ]
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    mock_device.set_state(
+        UpdateState(
+            key=1,
+            current_version="2025.11.6_aabbccdd",
+            latest_version="2025.11.6_aabbccdd",
+            title="ESPHome Project",
+            release_summary=RELEASE_SUMMARY,
+            release_url=RELEASE_URL,
+        )
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
 
 
 async def test_update_entity_release_notes(

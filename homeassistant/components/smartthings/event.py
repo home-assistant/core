@@ -1,8 +1,6 @@
 """Support for events through the SmartThings cloud API."""
 
-from __future__ import annotations
-
-from typing import cast
+from typing import cast, override
 
 from pysmartthings import Attribute, Capability, Component, DeviceEvent, SmartThings
 
@@ -51,12 +49,14 @@ class SmartThingsButtonEvent(SmartThingsEntity, EventEntity):
         )
 
     @property
+    @override
     def event_types(self) -> list[str]:
         """Return the event types."""
         return self.get_attribute_value(
             Capability.BUTTON, Attribute.SUPPORTED_BUTTON_VALUES
         )
 
+    @override
     def _update_handler(self, event: DeviceEvent) -> None:
         if event.attribute is Attribute.BUTTON:
             self._trigger_event(cast(str, event.value))

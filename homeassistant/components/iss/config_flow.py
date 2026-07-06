@@ -1,6 +1,6 @@
 """Config flow to configure iss component."""
 
-from __future__ import annotations
+from typing import override
 
 import voluptuous as vol
 
@@ -19,12 +19,14 @@ class ISSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: IssConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
+    @override
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if user_input is not None:

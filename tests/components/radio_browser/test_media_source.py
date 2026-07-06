@@ -98,7 +98,7 @@ async def test_browsing_exceptions(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert mock_config_entry.state == ConfigEntryState.LOADED
+        assert mock_config_entry.state is ConfigEntryState.LOADED
 
         mock_browser.return_value.stations.side_effect = exception
         with pytest.raises(BrowseError) as exc_info:
@@ -124,7 +124,7 @@ async def test_browsing_not_ready(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
         with pytest.raises(BrowseError) as exc_info:
             await media_source.async_browse_media(
@@ -153,7 +153,7 @@ async def test_resolve_media_exceptions(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert mock_config_entry.state == ConfigEntryState.LOADED
+        assert mock_config_entry.state is ConfigEntryState.LOADED
 
         mock_browser.return_value.station.side_effect = exception
         with pytest.raises(media_source.Unresolvable) as exc_info:
@@ -179,7 +179,7 @@ async def test_resolve_media_not_ready(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
         with pytest.raises(media_source.Unresolvable) as exc_info:
             await media_source.async_resolve_media(

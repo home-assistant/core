@@ -4,8 +4,6 @@ Provides DoorLock cluster endpoint resolution, feature detection, and
 business logic for lock user/credential management.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from chip.clusters import Objects as clusters

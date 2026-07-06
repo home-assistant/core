@@ -1,7 +1,5 @@
 """Validate integration JSON files."""
 
-from __future__ import annotations
-
 import json
 
 from .model import Config, Integration

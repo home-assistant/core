@@ -1,8 +1,6 @@
 """Support for Slide switch."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from goslideapi.goslideapi import (
     AuthenticationFailed,
@@ -49,10 +47,12 @@ class SlideSwitch(SlideEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.data['mac']}-touchgo"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if switch is on."""
         return self.coordinator.data["touch_go"]
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off touchgo."""
         try:
@@ -72,6 +72,7 @@ class SlideSwitch(SlideEntity, SwitchEntity):
             ) from ex
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on touchgo."""
         try:

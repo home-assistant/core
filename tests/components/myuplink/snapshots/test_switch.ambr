@@ -39,7 +39,7 @@
 # name: test_switch_states[platforms0][switch.gotham_city_increased_ventilation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gotham City In\xadcreased venti\xadlation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City In\xadcreased venti\xadlation',
     }),
     'context': <ANY>,
     'entity_id': 'switch.gotham_city_increased_ventilation',
@@ -89,7 +89,7 @@
 # name: test_switch_states[platforms0][switch.gotham_city_increased_ventilation_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gotham City In\xadcreased venti\xadlation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City In\xadcreased venti\xadlation',
     }),
     'context': <ANY>,
     'entity_id': 'switch.gotham_city_increased_ventilation_2',
@@ -139,7 +139,7 @@
 # name: test_switch_states[platforms0][switch.gotham_city_temporary_lux-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gotham City Tempo\xadrary lux',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City Tempo\xadrary lux',
     }),
     'context': <ANY>,
     'entity_id': 'switch.gotham_city_temporary_lux',
@@ -189,7 +189,7 @@
 # name: test_switch_states[platforms0][switch.gotham_city_temporary_lux_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gotham City Tempo\xadrary lux',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City Tempo\xadrary lux',
     }),
     'context': <ANY>,
     'entity_id': 'switch.gotham_city_temporary_lux_2',

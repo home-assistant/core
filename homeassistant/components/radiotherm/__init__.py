@@ -1,7 +1,5 @@
 """The Radio Thermostat integration."""
 
-from __future__ import annotations
-
 from collections.abc import Coroutine
 from typing import Any
 from urllib.error import URLError

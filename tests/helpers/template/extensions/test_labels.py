@@ -1,7 +1,5 @@
 """Test label template functions."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,

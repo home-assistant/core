@@ -1,7 +1,5 @@
 """Constants for TCP platform."""
 
-from __future__ import annotations
-
 from typing import Final
 
 CONF_BUFFER_SIZE: Final = "buffer_size"

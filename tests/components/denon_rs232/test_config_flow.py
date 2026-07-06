@@ -1,4 +1,4 @@
-"""Tests for the Denon RS232 config flow."""
+"""Tests for the Denon RS-232 config flow."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch

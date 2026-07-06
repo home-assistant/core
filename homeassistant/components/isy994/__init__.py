@@ -1,7 +1,5 @@
 """Support the Universal Devices ISY/IoX controllers."""
 
-from __future__ import annotations
-
 import asyncio
 from urllib.parse import urlparse
 
@@ -15,6 +13,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     CONF_VARIABLES,
+    CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -33,9 +32,9 @@ from .const import (
     CONF_IGNORE_STRING,
     CONF_NETWORK,
     CONF_SENSOR_STRING,
-    CONF_TLS_VER,
     DEFAULT_IGNORE_STRING,
     DEFAULT_SENSOR_STRING,
+    DEFAULT_VERIFY_SSL,
     DOMAIN,
     ISY_CONF_FIRMWARE,
     ISY_CONF_MODEL,
@@ -64,6 +63,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
+    """Migrate old config entries."""
+    if entry.version == 1 and entry.minor_version == 1:
+        new_data = {key: value for key, value in entry.data.items() if key != "tls"}
+        new_data.setdefault(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+        hass.config_entries.async_update_entry(entry, data=new_data, minor_version=2)
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
     """Set up the ISY 994 integration."""
     isy_config = entry.data
@@ -73,9 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
     user = isy_config[CONF_USERNAME]
     password = isy_config[CONF_PASSWORD]
     host = urlparse(isy_config[CONF_HOST])
-
-    # Optional
-    tls_version = isy_config.get(CONF_TLS_VER)
+    verify_ssl = isy_config[CONF_VERIFY_SSL]
     ignore_identifier = isy_options.get(CONF_IGNORE_STRING, DEFAULT_IGNORE_STRING)
     sensor_identifier = isy_options.get(CONF_SENSOR_STRING, DEFAULT_SENSOR_STRING)
 
@@ -88,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
     elif host.scheme == SCHEME_HTTPS:
         https = True
         port = host.port or 443
-        session = aiohttp_client.async_get_clientsession(hass)
+        session = aiohttp_client.async_get_clientsession(hass, verify_ssl=verify_ssl)
     else:
         _LOGGER.error("The ISY/IoX host value in configuration is invalid")
         return False
@@ -100,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
         username=user,
         password=password,
         use_https=https,
-        tls_ver=tls_version,
+        verify_ssl=verify_ssl,
         webroot=host.path,
         websession=session,
         use_websocket=True,

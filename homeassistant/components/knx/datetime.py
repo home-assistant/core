@@ -1,9 +1,7 @@
 """Support for KNX datetime entities."""
 
-from __future__ import annotations
-
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from xknx.devices import DateTimeDevice as XknxDateTimeDevice
 from xknx.dpt.dpt_19 import KNXDateTime as XKNXDateTime
@@ -77,6 +75,7 @@ class _KNXDateTime(DateTimeEntity, RestoreEntity):
 
     _device: XknxDateTimeDevice
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
@@ -92,12 +91,14 @@ class _KNXDateTime(DateTimeEntity, RestoreEntity):
             )
 
     @property
+    @override
     def native_value(self) -> datetime | None:
         """Return the latest value."""
         if (naive_dt := self._device.value) is None:
             return None
         return naive_dt.replace(tzinfo=dt_util.get_default_time_zone())
 
+    @override
     async def async_set_value(self, value: datetime) -> None:
         """Change the value."""
         await self._device.set(value.astimezone(dt_util.get_default_time_zone()))

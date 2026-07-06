@@ -1,6 +1,6 @@
 """The Nibe Heat Pump binary sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from nibe.coil import Coil, CoilData
 
@@ -39,5 +39,6 @@ class BinarySensor(CoilEntity, BinarySensorEntity):
         super().__init__(coordinator, coil, ENTITY_ID_FORMAT)
         self._on_value = coil.get_mapping_for(1)
 
+    @override
     def _async_read_coil(self, data: CoilData) -> None:
         self._attr_is_on = data.value == self._on_value

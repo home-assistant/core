@@ -1,10 +1,9 @@
 """Coordinator for the Airobot integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 from pyairobotrest import AirobotClient
 from pyairobotrest.exceptions import AirobotAuthError, AirobotConnectionError
@@ -50,6 +49,7 @@ class AirobotDataUpdateCoordinator(DataUpdateCoordinator[AirobotData]):
             session=session,
         )
 
+    @override
     async def _async_update_data(self) -> AirobotData:
         """Fetch data from API endpoint."""
         try:

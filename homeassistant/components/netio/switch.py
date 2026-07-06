@@ -1,11 +1,9 @@
 """The Netio switch component."""
 
-from __future__ import annotations
-
 from collections import namedtuple
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pynetio import Netio
 import voluptuous as vol
@@ -148,19 +146,23 @@ class NetioSwitch(SwitchEntity):
         self.netio = netio
 
     @property
+    @override
     def name(self):
         """Return the device's name."""
         return self._name
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if entity is available."""
         return not hasattr(self, "telnet")
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         self._set(True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         self._set(False)
@@ -174,6 +176,7 @@ class NetioSwitch(SwitchEntity):
         self.schedule_update_ha_state()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the switch's status."""
         return self.netio.states[int(self.outlet) - 1]

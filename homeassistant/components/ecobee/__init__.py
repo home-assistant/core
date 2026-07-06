@@ -8,15 +8,23 @@ from pyecobee import (
     ECOBEE_REFRESH_TOKEN,
     ECOBEE_USERNAME,
     Ecobee,
+    EcobeeAuthFailedError,
+    EcobeeAuthMfaRequiredError,
+    EcobeeAuthUnknownError,
     ExpiredTokenError,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.util import Throttle
 
-from .const import _LOGGER, CONF_REFRESH_TOKEN, PLATFORMS
+from .const import _LOGGER, CONF_REFRESH_TOKEN, DOMAIN, PLATFORMS
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
@@ -40,7 +48,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcobeeConfigEntry) -> bo
     )
 
     if not await runtime_data.refresh():
-        return False
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="failed_to_refresh_tokens",
+        )
 
     await runtime_data.update()
 
@@ -102,7 +113,30 @@ class EcobeeData:
     async def refresh(self) -> bool:
         """Refresh ecobee tokens and update config entry."""
         _LOGGER.debug("Refreshing ecobee tokens and updating config entry")
-        if await self._hass.async_add_executor_job(self.ecobee.refresh_tokens):
+        try:
+            success = await self._hass.async_add_executor_job(
+                self.ecobee.refresh_tokens
+            )
+        except EcobeeAuthMfaRequiredError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="mfa_reauthentication_needed",
+            ) from err
+        except EcobeeAuthFailedError as err:
+            if self.ecobee.config.get(ECOBEE_USERNAME):
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="credentials_rejected",
+                ) from err
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="credentials_rejected",
+            ) from err
+        except EcobeeAuthUnknownError:
+            _LOGGER.exception("Unexpected error refreshing ecobee tokens")
+            return False
+
+        if success:
             data = {}
             if self.ecobee.config.get(ECOBEE_API_KEY):
                 data = {

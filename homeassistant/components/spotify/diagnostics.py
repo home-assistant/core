@@ -1,7 +1,5 @@
 """Diagnostics support for Spotify."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from typing import Any
 

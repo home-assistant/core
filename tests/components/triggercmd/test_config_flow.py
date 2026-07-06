@@ -5,16 +5,27 @@ from unittest.mock import patch
 import pytest
 from triggercmd import TRIGGERcmdConnectionError
 
-from homeassistant.components.triggercmd.const import CONF_TOKEN, DOMAIN
+from homeassistant.components.triggercmd.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-invalid_token_with_length_100_or_more = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEyMzQ1Njc4OTBxd2VydHl1aW9wYXNkZiIsImlhdCI6MTcxOTg4MTU4M30.E4T2S4RQfuI2ww74sUkkT-wyTGrV5_VDkgUdae5yo4E"
+invalid_token_with_length_100_or_more = (
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+    ".eyJpZCI6IjEyMzQ1Njc4OTBxd2VydHl1aW9wYXNkZiIs"
+    "ImlhdCI6MTcxOTg4MTU4M30"
+    ".E4T2S4RQfuI2ww74sUkkT-wyTGrV5_VDkgUdae5yo4E"
+)
 invalid_token_id = "1234567890qwertyuiopasdf"
-invalid_token_with_length_100_or_more_and_no_id = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub2lkIjoiMTIzNDU2Nzg5MHF3ZXJ0eXVpb3Bhc2RmIiwiaWF0IjoxNzE5ODgxNTgzfQ.MaJLNWPGCE51Zibhbq-Yz7h3GkUxLurR2eoM2frnO6Y"
+invalid_token_with_length_100_or_more_and_no_id = (
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+    ".eyJub2lkIjoiMTIzNDU2Nzg5MHF3ZXJ0eXVpb3Bhc2Rm"
+    "IiwiaWF0IjoxNzE5ODgxNTgzfQ"
+    ".MaJLNWPGCE51Zibhbq-Yz7h3GkUxLurR2eoM2frnO6Y"
+)
 
 
 async def test_full_flow(

@@ -1,7 +1,5 @@
 """Agent foundation for conversation integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import dataclasses
 import logging

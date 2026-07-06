@@ -1,6 +1,6 @@
 """Config flow for syncthing integration."""
 
-from typing import Any
+from typing import Any, override
 
 import aiosyncthing
 import voluptuous as vol
@@ -44,6 +44,7 @@ class SyncThingConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

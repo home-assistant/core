@@ -4,9 +4,10 @@ import pytest
 from roborock.exceptions import RoborockTimeout
 
 from homeassistant.components.number import ATTR_VALUE, SERVICE_SET_VALUE
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_component import async_update_entity
 
 from .conftest import FakeDevice
 
@@ -47,6 +48,22 @@ async def test_update_sound_volume(
     state = hass.states.get("number.roborock_s7_maxv_volume")
     assert state is not None
     assert state.state == "3.0"
+
+
+async def test_volume_unknown_value(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test the entity reports unknown when the trait value is None."""
+    assert fake_vacuum.v1_properties is not None
+    fake_vacuum.v1_properties.sound_volume.volume = None
+
+    await async_update_entity(hass, "number.roborock_s7_maxv_volume")
+
+    state = hass.states.get("number.roborock_s7_maxv_volume")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_volume_update_failed(

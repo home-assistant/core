@@ -1,15 +1,19 @@
 """Minio component."""
 
-from __future__ import annotations
-
 import logging
 import os
 from queue import Queue
 import threading
+from typing import override
 
 import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -19,8 +23,6 @@ from .minio_helper import MinioEventThread, create_minio_client
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "minio"
-CONF_HOST = "host"
-CONF_PORT = "port"
 CONF_ACCESS_KEY = "access_key"
 CONF_SECRET_KEY = "secret_key"
 CONF_SECURE = "secure"
@@ -175,6 +177,7 @@ class QueueListener(threading.Thread):
         self._hass = hass
         self._queue = Queue()
 
+    @override
     def run(self):
         """Listen to queue events, and forward them to Home Assistant event bus."""
         _LOGGER.debug("Running QueueListener")

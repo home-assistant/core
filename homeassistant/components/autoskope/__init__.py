@@ -1,7 +1,5 @@
 """The Autoskope integration."""
 
-from __future__ import annotations
-
 import aiohttp
 from autoskope_client.api import AutoskopeApi
 from autoskope_client.models import CannotConnect, InvalidAuth

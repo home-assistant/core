@@ -7,7 +7,21 @@ import json
 from env_canada.ec_weather import MetaData
 import pytest
 
-from tests.common import load_fixture
+from homeassistant.components.environment_canada.const import DOMAIN
+
+from . import FIXTURE_USER_INPUT
+
+from tests.common import MockConfigEntry, load_fixture
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return the default mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data=FIXTURE_USER_INPUT,
+        title="Home",
+    )
 
 
 @pytest.fixture

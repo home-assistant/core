@@ -6,12 +6,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': None,
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: None,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -46,17 +46,17 @@
 # name: test_all_entities[aux_ac][climate.aux_a_c_on_off-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 20.0,
-      'fan_mode': 'auto',
-      'fan_modes': None,
-      'friendly_name': 'AUX A/C on-off',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.0,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AUX A/C on-off',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'supported_features': <ClimateEntityFeature: 393>,
-      'temperature': 20.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 393>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 20.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.aux_a_c_on_off',
@@ -73,12 +73,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -113,18 +113,18 @@
 # name: test_all_entities[bosch_radiator_thermostat_ii][climate.radiator_thermostat_ii_m_wohnzimmer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 23.9,
-      'friendly_name': 'Radiator Thermostat II [+M] Wohnzimmer',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23.9,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Radiator Thermostat II [+M] Wohnzimmer',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'supported_features': <ClimateEntityFeature: 387>,
-      'target_temp_high': None,
-      'target_temp_low': None,
-      'temperature': 22.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 387>,
+      <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.radiator_thermostat_ii_m_wohnzimmer',
@@ -141,13 +141,13 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'auto',
         'low',
         'medium',
         'high',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
@@ -155,9 +155,9 @@
         <HVACMode.FAN_ONLY: 'fan_only'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'wind_free',
         'long_wind',
@@ -165,7 +165,7 @@
         'quiet',
         'sleep',
       ]),
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'vertical',
         'off',
         'horizontal',
@@ -205,20 +205,20 @@
 # name: test_all_entities[da_ac_cac_01001][climate.ar_varanda-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 28,
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 28,
       'drlc_status_duration': 0,
       'drlc_status_level': 0,
       'drlc_status_override': False,
       'drlc_status_start': '1970-01-01T00:00:00Z',
-      'fan_mode': 'high',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'high',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'auto',
         'low',
         'medium',
         'high',
       ]),
-      'friendly_name': 'Ar Varanda',
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ar Varanda',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
@@ -226,10 +226,10 @@
         <HVACMode.FAN_ONLY: 'fan_only'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'preset_mode': 'none',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'wind_free',
         'long_wind',
@@ -237,15 +237,15 @@
         'quiet',
         'sleep',
       ]),
-      'supported_features': <ClimateEntityFeature: 441>,
-      'swing_mode': 'off',
-      'swing_modes': list([
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 441>,
+      <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'off',
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'vertical',
         'off',
         'horizontal',
         'both',
       ]),
-      'temperature': 20,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 20,
     }),
     'context': <ANY>,
     'entity_id': 'climate.ar_varanda',
@@ -262,14 +262,14 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.AUTO: 'auto'>,
       ]),
-      'max_temp': 65,
-      'min_temp': 26,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 65,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 26,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -304,18 +304,18 @@
 # name: test_all_entities[da_ac_ehs_01001][climate.heat_pump_indoor1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 18.5,
-      'friendly_name': 'Heat pump INDOOR1',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 18.5,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat pump INDOOR1',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.AUTO: 'auto'>,
       ]),
-      'max_temp': 65,
-      'min_temp': 26,
-      'supported_features': <ClimateEntityFeature: 385>,
-      'temperature': 35,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 65,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 26,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 35,
     }),
     'context': <ANY>,
     'entity_id': 'climate.heat_pump_indoor1',
@@ -325,21 +325,21 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ac_rac_000001][climate.ac_office_granit-entry]
+# name: test_all_entities[da_ac_rac_000001][climate.theater_ac_office_granit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'auto',
         'low',
         'medium',
         'high',
         'turbo',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.DRY: 'dry'>,
@@ -347,13 +347,13 @@
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'wind_free',
       ]),
-      'swing_modes': None,
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -362,7 +362,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.ac_office_granit',
+    'entity_id': 'climate.theater_ac_office_granit',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -385,24 +385,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_rac_000001][climate.ac_office_granit-state]
+# name: test_all_entities[da_ac_rac_000001][climate.theater_ac_office_granit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 25,
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 25,
       'drlc_status_duration': 0,
       'drlc_status_level': -1,
       'drlc_status_override': False,
       'drlc_status_start': '1970-01-01T00:00:00Z',
-      'fan_mode': 'low',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'low',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'auto',
         'low',
         'medium',
         'high',
         'turbo',
       ]),
-      'friendly_name': 'AC Office Granit',
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AC Office Granit',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.DRY: 'dry'>,
@@ -410,20 +410,20 @@
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'preset_mode': 'wind_free',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'wind_free',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'wind_free',
       ]),
-      'supported_features': <ClimateEntityFeature: 441>,
-      'swing_mode': 'off',
-      'swing_modes': None,
-      'temperature': 25,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 441>,
+      <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'off',
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: None,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 25,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.ac_office_granit',
+    'entity_id': 'climate.theater_ac_office_granit',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -437,14 +437,14 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'auto',
         'low',
         'medium',
         'high',
         'turbo',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.DRY: 'dry'>,
@@ -452,9 +452,9 @@
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'sleep',
         'quiet',
@@ -465,7 +465,7 @@
         'wind_free',
         'wind_free_sleep',
       ]),
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'off',
         'both',
         'vertical',
@@ -505,21 +505,21 @@
 # name: test_all_entities[da_ac_rac_000003][climate.clim_salon-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 20,
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20,
       'drlc_status_duration': 0,
       'drlc_status_level': -1,
       'drlc_status_override': False,
       'drlc_status_start': '1970-01-01T00:00:00Z',
-      'fan_mode': 'auto',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'auto',
         'low',
         'medium',
         'high',
         'turbo',
       ]),
-      'friendly_name': 'Clim Salon',
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Clim Salon',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.DRY: 'dry'>,
@@ -527,10 +527,10 @@
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'preset_mode': 'none',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'sleep',
         'quiet',
@@ -541,15 +541,15 @@
         'wind_free',
         'wind_free_sleep',
       ]),
-      'supported_features': <ClimateEntityFeature: 441>,
-      'swing_mode': 'off',
-      'swing_modes': list([
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 441>,
+      <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'off',
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'off',
         'both',
         'vertical',
         'horizontal',
       ]),
-      'temperature': 19,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 19,
     }),
     'context': <ANY>,
     'entity_id': 'climate.clim_salon',
@@ -559,21 +559,21 @@
     'state': 'heat',
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][climate.aire_dormitorio_principal-entry]
+# name: test_all_entities[da_ac_rac_01001][climate.theater_aire_dormitorio_principal-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'auto',
         'low',
         'medium',
         'high',
         'turbo',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
@@ -581,9 +581,9 @@
         <HVACMode.FAN_ONLY: 'fan_only'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'sleep',
         'quiet',
@@ -592,7 +592,7 @@
         'wind_free',
         'wind_free_sleep',
       ]),
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'off',
         'vertical',
         'horizontal',
@@ -606,7 +606,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.aire_dormitorio_principal',
+    'entity_id': 'climate.theater_aire_dormitorio_principal',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -629,24 +629,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][climate.aire_dormitorio_principal-state]
+# name: test_all_entities[da_ac_rac_01001][climate.theater_aire_dormitorio_principal-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 27,
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 27,
       'drlc_status_duration': 0,
       'drlc_status_level': 0,
       'drlc_status_override': False,
       'drlc_status_start': '1970-01-01T00:00:00Z',
-      'fan_mode': 'high',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'high',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'auto',
         'low',
         'medium',
         'high',
         'turbo',
       ]),
-      'friendly_name': 'Aire Dormitorio Principal',
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aire Dormitorio Principal',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
@@ -654,10 +654,10 @@
         <HVACMode.FAN_ONLY: 'fan_only'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'preset_mode': 'none',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'sleep',
         'quiet',
@@ -666,47 +666,47 @@
         'wind_free',
         'wind_free_sleep',
       ]),
-      'supported_features': <ClimateEntityFeature: 441>,
-      'swing_mode': 'off',
-      'swing_modes': list([
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 441>,
+      <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'off',
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'off',
         'vertical',
         'horizontal',
         'both',
       ]),
-      'temperature': 23,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 23,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.aire_dormitorio_principal',
+    'entity_id': 'climate.theater_aire_dormitorio_principal',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ac_rac_100001][climate.corridor_a_c-entry]
+# name: test_all_entities[da_ac_rac_100001][climate.theater_corridor_a_c-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'auto',
         'low',
         'medium',
         'high',
         'turbo',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.DRY: 'dry'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,
         <HVACMode.AUTO: 'auto'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -715,7 +715,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.corridor_a_c',
+    'entity_id': 'climate.theater_corridor_a_c',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -738,33 +738,33 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_rac_100001][climate.corridor_a_c-state]
+# name: test_all_entities[da_ac_rac_100001][climate.theater_corridor_a_c-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 27,
-      'fan_mode': 'auto',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 27,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'auto',
         'low',
         'medium',
         'high',
         'turbo',
       ]),
-      'friendly_name': 'Corridor A/C',
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Corridor A/C',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.DRY: 'dry'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,
         <HVACMode.AUTO: 'auto'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'supported_features': <ClimateEntityFeature: 393>,
-      'temperature': 18,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 393>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 18,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.corridor_a_c',
+    'entity_id': 'climate.theater_corridor_a_c',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -778,14 +778,14 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 65,
-      'min_temp': 25,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 65,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 25,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -820,18 +820,18 @@
 # name: test_all_entities[da_sac_ehs_000001_sub][climate.eco_heating_system_indoor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 23.1,
-      'friendly_name': 'Eco Heating System INDOOR',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23.1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eco Heating System INDOOR',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 65,
-      'min_temp': 25,
-      'supported_features': <ClimateEntityFeature: 385>,
-      'temperature': 25,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 65,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 25,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 25,
     }),
     'context': <ANY>,
     'entity_id': 'climate.eco_heating_system_indoor',
@@ -848,14 +848,14 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 65,
-      'min_temp': 25,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 65,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 25,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -890,18 +890,18 @@
 # name: test_all_entities[da_sac_ehs_000001_sub_1][climate.heat_pump_main_indoor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 31,
-      'friendly_name': 'Heat Pump Main INDOOR',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 31,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat Pump Main INDOOR',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 65,
-      'min_temp': 25,
-      'supported_features': <ClimateEntityFeature: 385>,
-      'temperature': 30,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 65,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 25,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 30,
     }),
     'context': <ANY>,
     'entity_id': 'climate.heat_pump_main_indoor',
@@ -918,14 +918,14 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -960,17 +960,17 @@
 # name: test_all_entities[da_sac_ehs_000002_sub][climate.warmepumpe_indoor1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 31.2,
-      'friendly_name': 'Wärmepumpe INDOOR1',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 31.2,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wärmepumpe INDOOR1',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'supported_features': <ClimateEntityFeature: 384>,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 384>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.warmepumpe_indoor1',
@@ -987,14 +987,14 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1029,17 +1029,17 @@
 # name: test_all_entities[da_sac_ehs_000002_sub][climate.warmepumpe_indoor2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 29.1,
-      'friendly_name': 'Wärmepumpe INDOOR2',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 29.1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wärmepumpe INDOOR2',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'supported_features': <ClimateEntityFeature: 384>,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 384>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.warmepumpe_indoor2',
@@ -1056,17 +1056,17 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'on',
         'auto',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 35.0,
-      'min_temp': 7.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1101,26 +1101,26 @@
 # name: test_all_entities[ecobee_thermostat][climate.main_floor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_humidity': 32,
-      'current_temperature': 21.7,
-      'fan_mode': 'auto',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 32,
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.7,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'on',
         'auto',
       ]),
-      'friendly_name': 'Main Floor',
-      'hvac_action': <HVACAction.HEATING: 'heating'>,
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main Floor',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 35.0,
-      'min_temp': 7.0,
-      'supported_features': <ClimateEntityFeature: 395>,
-      'target_temp_high': None,
-      'target_temp_low': None,
-      'temperature': 21.7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 395>,
+      <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.7,
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_floor',
@@ -1137,11 +1137,11 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': None,
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: None,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1176,18 +1176,18 @@
 # name: test_all_entities[ecobee_thermostat_offline][climate.downstairs-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': None,
-      'fan_mode': None,
-      'fan_modes': None,
-      'friendly_name': 'Downstairs',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: None,
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Downstairs',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'supported_features': <ClimateEntityFeature: 395>,
-      'target_temp_high': None,
-      'target_temp_low': None,
-      'temperature': None,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 395>,
+      <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.downstairs',
@@ -1204,10 +1204,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1242,16 +1242,16 @@
 # name: test_all_entities[generic_ef00_v1][climate.thermostat_kuche-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 21.0,
-      'friendly_name': 'Thermostat Küche',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat Küche',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'supported_features': <ClimateEntityFeature: 387>,
-      'target_temp_high': None,
-      'target_temp_low': None,
-      'temperature': 23.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 387>,
+      <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 23.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat_kuche',
@@ -1268,12 +1268,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1308,19 +1308,19 @@
 # name: test_all_entities[heatit_ztrm3_thermostat][climate.hall_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 19.0,
-      'friendly_name': 'Hall thermostat',
-      'hvac_action': <HVACAction.HEATING: 'heating'>,
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hall thermostat',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'supported_features': <ClimateEntityFeature: 387>,
-      'target_temp_high': None,
-      'target_temp_low': None,
-      'temperature': 19.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 387>,
+      <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 19.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.hall_thermostat',
@@ -1337,20 +1337,20 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'auto',
         'on',
         'circulate',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 35.0,
-      'min_temp': 7.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1385,29 +1385,29 @@
 # name: test_all_entities[sensi_thermostat][climate.thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_humidity': 49,
-      'current_temperature': 23.6,
-      'fan_mode': 'auto',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 49,
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23.6,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'auto',
         'on',
         'circulate',
       ]),
-      'friendly_name': 'Thermostat',
-      'hvac_action': <HVACAction.IDLE: 'idle'>,
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 35.0,
-      'min_temp': 7.0,
-      'supported_features': <ClimateEntityFeature: 395>,
-      'target_temp_high': 23.9,
-      'target_temp_low': 21.7,
-      'temperature': None,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 395>,
+      <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 23.9,
+      <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 21.7,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat',
@@ -1417,21 +1417,21 @@
     'state': 'heat_cool',
   })
 # ---
-# name: test_all_entities[virtual_thermostat][climate.virtual_thermostat-entry]
+# name: test_all_entities[virtual_thermostat][climate.theater_virtual_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'on',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
       ]),
-      'max_temp': 35.0,
-      'min_temp': 7.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1440,7 +1440,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.virtual_thermostat',
+    'entity_id': 'climate.theater_virtual_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1463,28 +1463,28 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[virtual_thermostat][climate.virtual_thermostat-state]
+# name: test_all_entities[virtual_thermostat][climate.theater_virtual_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 4734.6,
-      'fan_mode': 'followschedule',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 4734.6,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'followschedule',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'on',
       ]),
-      'friendly_name': 'virtual thermostat',
-      'hvac_action': <HVACAction.COOLING: 'cooling'>,
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'virtual thermostat',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.COOLING: 'cooling'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
       ]),
-      'max_temp': 35.0,
-      'min_temp': 7.0,
-      'supported_features': <ClimateEntityFeature: 395>,
-      'target_temp_high': None,
-      'target_temp_low': None,
-      'temperature': None,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 395>,
+      <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.virtual_thermostat',
+    'entity_id': 'climate.theater_virtual_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

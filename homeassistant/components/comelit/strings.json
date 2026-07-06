@@ -121,6 +121,9 @@
     "cannot_retrieve_data": {
       "message": "Error retrieving data: {error}"
     },
+    "device_storage_failure": {
+      "message": "Device SD card read failure. The card may be corrupted or failing; replacement is recommended."
+    },
     "humidity_while_off": {
       "message": "Cannot change humidity while off"
     },

@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from weheat.abstractions.discovery import HeatPumpDiscovery
 from weheat.abstractions.heat_pump import HeatPump
@@ -42,13 +43,16 @@ class HeatPumpInfo(HeatPumpDiscovery.HeatPumpInfo):
         """Initialize the HeatPump object with the provided pump information.
 
         Args:
-            pump_info (HeatPumpDiscovery.HeatPumpInfo): An object containing the heat pump's discovery information, including:
+            pump_info (HeatPumpDiscovery.HeatPumpInfo):
+                An object containing the heat pump's discovery
+                information, including:
                 - uuid (str): Unique identifier for the heat pump.
                 - uuid (str): Unique identifier for the heat pump.
                 - device_name (str): Name of the heat pump device.
                 - model (str): Model of the heat pump.
                 - sn (str): Serial number of the heat pump.
-                - has_dhw (bool): Indicates if the heat pump has domestic hot water functionality.
+                - has_dhw (bool): Indicates if the heat pump
+                  has domestic hot water functionality.
 
         """
         super().__init__(
@@ -97,6 +101,7 @@ class WeheatDataUpdateCoordinator(DataUpdateCoordinator[HeatPump]):
 
         self.session = session
 
+    @override
     async def _async_update_data(self) -> HeatPump:
         """Fetch data from the API."""
         await self.session.async_ensure_token_valid()
@@ -139,6 +144,7 @@ class WeheatEnergyUpdateCoordinator(DataUpdateCoordinator[HeatPump]):
 
         self.session = session
 
+    @override
     async def _async_update_data(self) -> HeatPump:
         """Fetch data from the API."""
         await self.session.async_ensure_token_valid()

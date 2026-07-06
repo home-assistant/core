@@ -1,0 +1,11 @@
+{
+  "id": "dev_plug_002",
+  "name": "Smart Plug 100",
+  "type": "plug",
+  "model": "XT-PL100",
+  "version": "1.0.0",
+  "online": true,
+  "status": {
+    "on": false
+  }
+}

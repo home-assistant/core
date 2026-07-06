@@ -39,7 +39,7 @@
 # name: test_all_button_entities[button.ct_backup_create_snapshot-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ct-backup Create snapshot',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ct-backup Create snapshot',
     }),
     'context': <ANY>,
     'entity_id': 'button.ct_backup_create_snapshot',
@@ -89,8 +89,8 @@
 # name: test_all_button_entities[button.ct_backup_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'ct-backup Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ct-backup Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.ct_backup_restart',
@@ -140,7 +140,7 @@
 # name: test_all_button_entities[button.ct_backup_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ct-backup Start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ct-backup Start',
     }),
     'context': <ANY>,
     'entity_id': 'button.ct_backup_start',
@@ -190,7 +190,7 @@
 # name: test_all_button_entities[button.ct_backup_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ct-backup Stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ct-backup Stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.ct_backup_stop',
@@ -240,7 +240,7 @@
 # name: test_all_button_entities[button.ct_nginx_create_snapshot-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ct-nginx Create snapshot',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ct-nginx Create snapshot',
     }),
     'context': <ANY>,
     'entity_id': 'button.ct_nginx_create_snapshot',
@@ -290,8 +290,8 @@
 # name: test_all_button_entities[button.ct_nginx_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'ct-nginx Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ct-nginx Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.ct_nginx_restart',
@@ -341,7 +341,7 @@
 # name: test_all_button_entities[button.ct_nginx_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ct-nginx Start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ct-nginx Start',
     }),
     'context': <ANY>,
     'entity_id': 'button.ct_nginx_start',
@@ -391,7 +391,7 @@
 # name: test_all_button_entities[button.ct_nginx_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ct-nginx Stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ct-nginx Stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.ct_nginx_stop',
@@ -441,8 +441,8 @@
 # name: test_all_button_entities[button.pve1_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'pve1 Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pve1 Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.pve1_restart',
@@ -492,7 +492,7 @@
 # name: test_all_button_entities[button.pve1_shut_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pve1 Shut down',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pve1 Shut down',
     }),
     'context': <ANY>,
     'entity_id': 'button.pve1_shut_down',
@@ -542,7 +542,7 @@
 # name: test_all_button_entities[button.pve1_start_all-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pve1 Start all',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pve1 Start all',
     }),
     'context': <ANY>,
     'entity_id': 'button.pve1_start_all',
@@ -592,7 +592,7 @@
 # name: test_all_button_entities[button.pve1_stop_all-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pve1 Stop all',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pve1 Stop all',
     }),
     'context': <ANY>,
     'entity_id': 'button.pve1_stop_all',
@@ -642,7 +642,7 @@
 # name: test_all_button_entities[button.pve1_suspend_all-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pve1 Suspend all',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pve1 Suspend all',
     }),
     'context': <ANY>,
     'entity_id': 'button.pve1_suspend_all',
@@ -692,7 +692,7 @@
 # name: test_all_button_entities[button.vm_db-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-db',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-db',
     }),
     'context': <ANY>,
     'entity_id': 'button.vm_db',
@@ -742,7 +742,7 @@
 # name: test_all_button_entities[button.vm_db_create_snapshot-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-db Create snapshot',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-db Create snapshot',
     }),
     'context': <ANY>,
     'entity_id': 'button.vm_db_create_snapshot',
@@ -792,7 +792,7 @@
 # name: test_all_button_entities[button.vm_db_hibernate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-db Hibernate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-db Hibernate',
     }),
     'context': <ANY>,
     'entity_id': 'button.vm_db_hibernate',
@@ -842,7 +842,7 @@
 # name: test_all_button_entities[button.vm_db_reset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-db Reset',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-db Reset',
     }),
     'context': <ANY>,
     'entity_id': 'button.vm_db_reset',
@@ -892,8 +892,8 @@
 # name: test_all_button_entities[button.vm_db_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'vm-db Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-db Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.vm_db_restart',
@@ -943,7 +943,7 @@
 # name: test_all_button_entities[button.vm_db_shut_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-db Shut down',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-db Shut down',
     }),
     'context': <ANY>,
     'entity_id': 'button.vm_db_shut_down',
@@ -993,7 +993,7 @@
 # name: test_all_button_entities[button.vm_db_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-db Start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-db Start',
     }),
     'context': <ANY>,
     'entity_id': 'button.vm_db_start',
@@ -1043,7 +1043,7 @@
 # name: test_all_button_entities[button.vm_db_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-db Stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-db Stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.vm_db_stop',
@@ -1093,7 +1093,7 @@
 # name: test_all_button_entities[button.vm_web-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-web',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-web',
     }),
     'context': <ANY>,
     'entity_id': 'button.vm_web',
@@ -1143,7 +1143,7 @@
 # name: test_all_button_entities[button.vm_web_create_snapshot-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-web Create snapshot',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-web Create snapshot',
     }),
     'context': <ANY>,
     'entity_id': 'button.vm_web_create_snapshot',
@@ -1193,7 +1193,7 @@
 # name: test_all_button_entities[button.vm_web_hibernate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-web Hibernate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-web Hibernate',
     }),
     'context': <ANY>,
     'entity_id': 'button.vm_web_hibernate',
@@ -1243,7 +1243,7 @@
 # name: test_all_button_entities[button.vm_web_reset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-web Reset',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-web Reset',
     }),
     'context': <ANY>,
     'entity_id': 'button.vm_web_reset',
@@ -1293,8 +1293,8 @@
 # name: test_all_button_entities[button.vm_web_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'vm-web Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-web Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.vm_web_restart',
@@ -1344,7 +1344,7 @@
 # name: test_all_button_entities[button.vm_web_shut_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-web Shut down',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-web Shut down',
     }),
     'context': <ANY>,
     'entity_id': 'button.vm_web_shut_down',
@@ -1394,7 +1394,7 @@
 # name: test_all_button_entities[button.vm_web_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-web Start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-web Start',
     }),
     'context': <ANY>,
     'entity_id': 'button.vm_web_start',
@@ -1444,7 +1444,7 @@
 # name: test_all_button_entities[button.vm_web_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-web Stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-web Stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.vm_web_stop',

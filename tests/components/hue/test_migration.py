@@ -83,7 +83,8 @@ async def test_light_entity_migration(
     ):
         await hue.migration.handle_v2_migration(hass, config_entry)
 
-    # migrated device should now have the new identifier (guid) instead of old style (mac)
+    # migrated device should now have the new identifier (guid) instead of old style
+    # (mac)
     migrated_device = device_registry.async_get(device.id)
     assert migrated_device is not None
     assert migrated_device.identifiers == {
@@ -142,7 +143,8 @@ async def test_sensor_entity_migration(
     ):
         await hue.migration.handle_v2_migration(hass, config_entry)
 
-    # migrated device should now have the new identifier (guid) instead of old style (mac)
+    # migrated device should now have the new identifier (guid) instead of old style
+    # (mac)
     migrated_device = device_registry.async_get(device.id)
     assert migrated_device is not None
     assert migrated_device.identifiers == {

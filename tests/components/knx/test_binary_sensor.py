@@ -181,7 +181,8 @@ async def test_binary_sensor_ignore_internal_state(
     await knx.receive_write("2/2/2", False)
     assert len(events) == 5
 
-    # receive second OFF telegram - ignore_internal_state shall force state_changed event
+    # receive second OFF telegram - ignore_internal_state shall
+    # force state_changed event
     await knx.receive_write("1/1/1", False)
     await knx.receive_write("2/2/2", False)
     assert len(events) == 6
@@ -211,7 +212,8 @@ async def test_binary_sensor_counter(
 
     # receive initial ON telegram
     await knx.receive_write("2/2/2", True)
-    # no change yet - still in 1 sec context (additional async_block_till_done needed for time change)
+    # no change yet - still in 1 sec context
+    # (additional async_block_till_done needed for time change)
     assert len(events) == 0
     state = hass.states.get("binary_sensor.test")
     assert state.state is STATE_OFF
@@ -219,7 +221,8 @@ async def test_binary_sensor_counter(
     freezer.tick(timedelta(seconds=context_timeout))
     async_fire_time_changed(hass)
     await knx.xknx.task_registry.block_till_done()
-    # state changed twice after context timeout - once to ON with counter 1 and once to counter 0
+    # state changed twice after context timeout - once to ON with
+    # counter 1 and once to counter 0
     state = hass.states.get("binary_sensor.test")
     assert state.state is STATE_ON
     assert state.attributes.get("counter") == 0

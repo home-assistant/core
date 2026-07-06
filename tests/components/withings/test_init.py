@@ -185,7 +185,9 @@ async def test_triggering_reauth(
                 "token": {"userid": 123},
                 "profile": "henk",
                 "use_webhook": False,
-                "webhook_id": "3290798afaebd28519c4883d3d411c7197572e0cc9b8d507471f59a700a61a55",
+                "webhook_id": (
+                    "3290798afaebd28519c4883d3d411c7197572e0cc9b8d507471f59a700a61a55"
+                ),
             },
         ),
         MockConfigEntry(

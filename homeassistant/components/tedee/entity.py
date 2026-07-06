@@ -1,5 +1,7 @@
 """Bases for Tedee entities."""
 
+from typing import override
+
 from aiotedee.models import TedeeLock
 
 from homeassistant.core import callback
@@ -36,7 +38,14 @@ class TedeeEntity(CoordinatorEntity[TedeeApiCoordinator]):
             via_device=(DOMAIN, coordinator.bridge.serial),
         )
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._lock.is_connected
+
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._lock = self.coordinator.data.get(self._lock.id, self._lock)

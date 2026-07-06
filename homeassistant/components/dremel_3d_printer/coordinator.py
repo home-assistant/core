@@ -1,6 +1,7 @@
 """Data update coordinator for the Dremel 3D Printer integration."""
 
 from datetime import timedelta
+from typing import override
 
 from dremel3dpy import Dremel3DPrinter
 
@@ -31,6 +32,7 @@ class Dremel3DPrinterDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> None:
         """Update data via APIs."""
         try:

@@ -1,7 +1,7 @@
 """Config flow for FAA Delays integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientConnectionError
 import faadelays
@@ -23,6 +23,7 @@ class FAADelaysConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,11 +1,9 @@
 """Data coordinator for receiving LD2410B updates."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from ld2410_ble import LD2410BLE, LD2410BLEState
 
@@ -80,6 +78,7 @@ class LD2410BLECoordinator(DataUpdateCoordinator[None]):
         self.connected = False
         self.async_update_listeners()
 
+    @override
     async def async_shutdown(self) -> None:
         """Shutdown the coordinator."""
         if self._debounce_cancel is not None:

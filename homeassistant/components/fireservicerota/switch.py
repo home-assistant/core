@@ -1,7 +1,7 @@
 """Switch platform for FireServiceRota integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -55,6 +55,7 @@ class ResponseSwitch(SwitchEntity):
         self._state_icon = None
 
     @property
+    @override
     def icon(self) -> str:
         """Return the icon to use in the frontend."""
         if self._state_icon == "acknowledged":
@@ -65,16 +66,19 @@ class ResponseSwitch(SwitchEntity):
         return "mdi:forum"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Get the assumed state of the switch."""
         return self._state
 
     @property
+    @override
     def available(self) -> bool:
         """Return if switch is available."""
         return self._client.on_duty
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return available attributes for switch."""
         attr: dict[str, Any] = {}
@@ -98,10 +102,12 @@ class ResponseSwitch(SwitchEntity):
             if key in data
         }
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send Acknowledge response status."""
         await self.async_set_response(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send Reject response status."""
         await self.async_set_response(False)
@@ -117,6 +123,7 @@ class ResponseSwitch(SwitchEntity):
         await self._client.async_set_response(value)
         self.client_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
         self.async_on_remove(

@@ -27,7 +27,7 @@ async def update_only() -> AsyncGenerator[None]:
         yield
 
 
-@pytest.mark.usefixtures("mock_pynecil", "ble_device", "mock_ironosupdate")
+@pytest.mark.usefixtures("mock_pynecil", "ble_device")
 async def test_update(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

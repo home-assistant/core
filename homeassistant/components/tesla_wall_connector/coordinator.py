@@ -1,10 +1,9 @@
 """DataUpdateCoordinator for the Tesla Wall Connector integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from tesla_wall_connector import WallConnector
 from tesla_wall_connector.exceptions import (
@@ -71,6 +70,7 @@ class WallConnectorCoordinator(DataUpdateCoordinator[dict]):
         self._hostname = hostname
         self._wall_connector = wall_connector
 
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch new data from the Wall Connector."""
         try:

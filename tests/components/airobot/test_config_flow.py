@@ -93,9 +93,9 @@ async def test_form_exceptions(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate_entry(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_airobot_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -116,10 +116,9 @@ async def test_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_airobot_client: AsyncMock,
+    hass: HomeAssistant, mock_airobot_client: AsyncMock
 ) -> None:
     """Test DHCP discovery flow."""
     result = await hass.config_entries.flow.async_init(
@@ -204,9 +203,9 @@ async def test_dhcp_discovery_errors(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_duplicate(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_airobot_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -225,7 +224,8 @@ async def test_dhcp_discovery_duplicate(
     )
     await hass.async_block_till_done()
 
-    # Should abort immediately since device_id extracted from hostname matches existing entry
+    # Should abort immediately since device_id extracted from
+    # hostname matches existing entry
     # and update the IP address
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -234,9 +234,9 @@ async def test_dhcp_discovery_duplicate(
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.101"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_airobot_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -270,9 +270,9 @@ async def test_reauth_flow(
         (Exception("Unknown error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_airobot_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
@@ -309,9 +309,9 @@ async def test_reauth_flow_errors(
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_airobot_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -341,9 +341,9 @@ async def test_reconfigure_flow(
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_wrong_device(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_airobot_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -378,9 +378,9 @@ async def test_reconfigure_flow_wrong_device(
         (Exception("Unknown error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_airobot_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,

@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'default',
         'fast_solar',
         'pure_solar',
@@ -47,8 +47,8 @@
 # name: test_entities[select][select.peblar_ev_charger_smart_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Peblar EV Charger Smart charging',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Peblar EV Charger Smart charging',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'default',
         'fast_solar',
         'pure_solar',

@@ -181,35 +181,55 @@ def login_requests_mock(requests_mock: requests_mock.Mocker) -> requests_mock.Mo
     [
         (
             {
-                "text": f"<error><code>{LoginErrorEnum.USERNAME_WRONG}</code><message/></error>",
+                "text": (
+                    "<error><code>"
+                    f"{LoginErrorEnum.USERNAME_WRONG}"
+                    "</code><message/></error>"
+                ),
             },
             {},
             {CONF_USERNAME: "incorrect_username"},
         ),
         (
             {
-                "text": f"<error><code>{LoginErrorEnum.PASSWORD_WRONG}</code><message/></error>",
+                "text": (
+                    "<error><code>"
+                    f"{LoginErrorEnum.PASSWORD_WRONG}"
+                    "</code><message/></error>"
+                ),
             },
             {},
             {CONF_PASSWORD: "incorrect_password"},
         ),
         (
             {
-                "text": f"<error><code>{LoginErrorEnum.USERNAME_PWD_WRONG}</code><message/></error>",
+                "text": (
+                    "<error><code>"
+                    f"{LoginErrorEnum.USERNAME_PWD_WRONG}"
+                    "</code><message/></error>"
+                ),
             },
             {},
             {CONF_USERNAME: "invalid_auth"},
         ),
         (
             {
-                "text": f"<error><code>{LoginErrorEnum.USERNAME_PWD_OVERRUN}</code><message/></error>",
+                "text": (
+                    "<error><code>"
+                    f"{LoginErrorEnum.USERNAME_PWD_OVERRUN}"
+                    "</code><message/></error>"
+                ),
             },
             {},
             {"base": "login_attempts_exceeded"},
         ),
         (
             {
-                "text": f"<error><code>{ResponseCodeEnum.ERROR_SYSTEM_UNKNOWN}</code><message/></error>",
+                "text": (
+                    "<error><code>"
+                    f"{ResponseCodeEnum.ERROR_SYSTEM_UNKNOWN}"
+                    "</code><message/></error>"
+                ),
             },
             {},
             {"base": "response_error"},
@@ -343,7 +363,9 @@ async def test_ssdp(
         ssdp_st="upnp:rootdevice",
         ssdp_location=f"{url}:60957/rootDesc.xml",
         upnp={
-            ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            ATTR_UPNP_DEVICE_TYPE: (
+                "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
+            ),
             ATTR_UPNP_MANUFACTURER: "Huawei",
             ATTR_UPNP_MANUFACTURER_URL: "http://www.huawei.com/",
             ATTR_UPNP_MODEL_NAME: "Huawei router",
@@ -361,6 +383,7 @@ async def test_ssdp(
 
     for k, v in expected_result.items():
         assert result[k] == v  # type: ignore[literal-required] # expected is a subset
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if result.get("data_schema"):
         assert result["data_schema"] is not None
         assert result["data_schema"]({})[CONF_URL] == url + "/"

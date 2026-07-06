@@ -55,8 +55,9 @@ async def test_user_flow(
     mock_client.close.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_with_infer_arming_state(
-    hass: HomeAssistant, mock_client: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_client: AsyncMock
 ) -> None:
     """Test user flow with infer_arming_state enabled."""
     result = await hass.config_entries.flow.async_init(
@@ -107,10 +108,10 @@ async def test_user_flow_already_configured(
         (RuntimeError("Unexpected"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_connection_error_recovery(
     hass: HomeAssistant,
     mock_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     side_effect: Exception,
     expected_error: str,
 ) -> None:
@@ -202,10 +203,10 @@ async def test_import_yaml_config(
         (RuntimeError("Unexpected"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_yaml_config_errors(
     hass: HomeAssistant,
     mock_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     side_effect: Exception,
     expected_reason: str,
 ) -> None:

@@ -28,13 +28,16 @@ from tests.common import MockConfigEntry, async_fire_time_changed
         # We should create devices for the entities and prefix their IDs with "MyUPS".
         MOCK_STATUS,
         # Contains "SERIALNO" but no "UPSNAME" field.
-        # We should create devices for the entities and prefix their IDs with default "APC UPS".
+        # We should create devices for the entities and prefix
+        # their IDs with default "APC UPS".
         MOCK_MINIMAL_STATUS | {"SERIALNO": "XXXX"},
         # Does not contain either "SERIALNO" field or "UPSNAME" field.
-        # Our integration should work fine without it by falling back to config entry ID as unique
-        # ID and "APC UPS" as the default name.
+        # Our integration should work fine without it by falling
+        # back to config entry ID as unique ID and "APC UPS" as the
+        # default name.
         MOCK_MINIMAL_STATUS,
-        # Some models report "Blank" as SERIALNO, but we should treat it as not reported.
+        # Some models report "Blank" as SERIALNO, but we should
+        # treat it as not reported.
         MOCK_MINIMAL_STATUS | {"SERIALNO": "Blank"},
     ],
     indirect=True,
@@ -102,7 +105,7 @@ async def test_availability(
     mock_request_status: AsyncMock,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Ensure that we mark the entity's availability properly when network is down / back up."""
+    """Ensure we mark entity availability properly when network is down."""
     device_slug = slugify(mock_request_status.return_value["UPSNAME"])
     state = hass.states.get(f"sensor.{device_slug}_load")
     assert state

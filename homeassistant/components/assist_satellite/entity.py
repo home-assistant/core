@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
 import time
-from typing import Any, Literal, final
+from typing import Any, Literal, final, override
 
 from hassil import Intents, recognize
 from hassil.expression import Expression, Group, ListReference
@@ -146,6 +146,7 @@ class AssistSatelliteEntity(entity.Entity):
 
     @final
     @property
+    @override
     def state(self) -> str | None:
         """Return state of the entity."""
         return self.__assist_satellite_state
@@ -291,7 +292,8 @@ class AssistSatelliteEntity(entity.Entity):
         self._is_announcing = True
         self._set_state(AssistSatelliteState.RESPONDING)
 
-        # Provide our start info to the LLM so it understands context of incoming message
+        # Provide our start info to the LLM so it understands
+        # context of incoming message
         if extra_system_prompt is not None:
             self._extra_system_prompt = extra_system_prompt
         else:
@@ -501,7 +503,8 @@ class AssistSatelliteEntity(entity.Entity):
         with chat_session.async_get_chat_session(
             self.hass, self._conversation_id
         ) as session:
-            # Store the conversation ID. If it is no longer valid, get_chat_session will reset it
+            # Store the conversation ID. If it is no longer valid,
+            # get_chat_session will reset it
             self._conversation_id = session.conversation_id
             self._pipeline_task = (
                 self.platform.config_entry.async_create_background_task(

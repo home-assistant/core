@@ -1,10 +1,8 @@
 """Motor speed support for Xiaomi Mi Air Humidifier."""
 
-from __future__ import annotations
-
 import dataclasses
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from miio import Device as MiioDevice
 
@@ -375,6 +373,7 @@ class XiaomiNumberEntity(
         self.entity_description = description
 
     @property
+    @override
     def available(self) -> bool:
         """Return the number controller availability."""
         if (
@@ -385,6 +384,7 @@ class XiaomiNumberEntity(
             return False
         return super().available
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set an option of the miio device."""
         method = getattr(self, self.entity_description.method)
@@ -393,6 +393,7 @@ class XiaomiNumberEntity(
             self.async_write_ha_state()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Fetch state from the device."""
         # On state change the device doesn't provide the new state immediately.

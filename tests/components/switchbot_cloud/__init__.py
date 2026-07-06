@@ -113,3 +113,19 @@ HUMIDIFIER2_INFO = Device(
     deviceType="Humidifier2",
     hubDeviceId="test-hub-id",
 )
+
+LOCK_ULTRA_INFO = Device(
+    version="V1.0",
+    deviceId="lock-id-1",
+    deviceName="Lock Ultra",
+    deviceType="Smart Lock Ultra",
+    hubDeviceId="test-hub-id",
+)
+
+AI_ART_FRAME_DEVICE = Device(
+    version="V1.0",
+    deviceId="AABBCCDDEEFF",
+    deviceName="test-art-frame",
+    deviceType="AI Art Frame",
+    hubDeviceId="test-hub-id",
+)

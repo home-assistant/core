@@ -39,9 +39,9 @@
 # name: test_sensor_state[sensor.comet_blue_aa_bb_cc_dd_ee_ff_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Comet Blue aa:bb:cc:dd:ee:ff Battery',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Comet Blue aa:bb:cc:dd:ee:ff Battery',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.comet_blue_aa_bb_cc_dd_ee_ff_battery',

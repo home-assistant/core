@@ -1,5 +1,7 @@
 """Sensor checking adc and status values from your ROMY."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -104,6 +106,7 @@ class RomySensor(RomyEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the value of the sensor."""
         value: int = self.romy.sensors[self.entity_description.key]

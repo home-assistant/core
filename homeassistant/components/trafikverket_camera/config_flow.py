@@ -1,9 +1,7 @@
 """Adds config flow for Trafikverket Camera integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from pytrafikverket import (
     CameraInfoModel,
@@ -137,6 +135,7 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -203,7 +202,11 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
         camera_choices = [
             SelectOptionDict(
                 value=f"{camera_info.camera_id}",
-                label=f"{camera_info.camera_id} - {camera_info.camera_name} - {camera_info.location}",
+                label=(
+                    f"{camera_info.camera_id}"
+                    f" - {camera_info.camera_name}"
+                    f" - {camera_info.location}"
+                ),
             )
             for camera_info in self.cameras
         ]

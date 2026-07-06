@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.nzbget.const import DOMAIN
+from homeassistant.components.nzbget.const import CONF_MORE_OPTIONS, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -36,6 +36,7 @@ USER_INPUT = {
     CONF_PORT: 6789,
     CONF_SSL: False,
     CONF_USERNAME: "",
+    CONF_MORE_OPTIONS: {},
 }
 
 MOCK_VERSION = "21.0"

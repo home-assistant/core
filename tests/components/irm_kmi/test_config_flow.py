@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
@@ -16,10 +18,9 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_user_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
-    mock_get_forecast_in_benelux: MagicMock,
+    hass: HomeAssistant, mock_get_forecast_in_benelux: MagicMock
 ) -> None:
     """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
@@ -41,10 +42,9 @@ async def test_full_user_flow(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_home(
-    hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
-    mock_get_forecast_in_benelux: MagicMock,
+    hass: HomeAssistant, mock_get_forecast_in_benelux: MagicMock
 ) -> None:
     """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
@@ -59,10 +59,9 @@ async def test_user_flow_home(
     assert result.get("title") == "Brussels"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_flow_location_out_benelux(
-    hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
-    mock_get_forecast_out_benelux_then_in_belgium: MagicMock,
+    hass: HomeAssistant, mock_get_forecast_out_benelux_then_in_belgium: MagicMock
 ) -> None:
     """Test configuration flow with a zone outside of Benelux."""
     result = await hass.config_entries.flow.async_init(
@@ -85,10 +84,9 @@ async def test_config_flow_location_out_benelux(
     assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_flow_with_api_error(
-    hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
-    mock_get_forecast_api_error: MagicMock,
+    hass: HomeAssistant, mock_get_forecast_api_error: MagicMock
 ) -> None:
     """Test when API returns an error during the configuration flow."""
     result = await hass.config_entries.flow.async_init(
@@ -103,10 +101,9 @@ async def test_config_flow_with_api_error(
     assert result.get("type") is FlowResultType.ABORT
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_setup_twice_same_location(
-    hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
-    mock_get_forecast_in_benelux: MagicMock,
+    hass: HomeAssistant, mock_get_forecast_in_benelux: MagicMock
 ) -> None:
     """Test when the user tries to set up the weather twice for the same location."""
     result = await hass.config_entries.flow.async_init(

@@ -1,7 +1,5 @@
 """Test the DLNA config flow."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 import dataclasses
 import logging
@@ -44,7 +42,7 @@ from .conftest import (
 
 from tests.common import MockConfigEntry
 
-# Auto-use the domain_data_mock and dmr_device_mock fixtures for every test in this module
+# Auto-use the domain_data_mock and dmr_device_mock fixtures for every test
 pytestmark = [
     pytest.mark.usefixtures("domain_data_mock"),
     pytest.mark.usefixtures("dmr_device_mock"),
@@ -406,7 +404,7 @@ async def test_ssdp_flow_duplicate_location(
 async def test_ssdp_duplicate_mac_ignored_entry(
     hass: HomeAssistant, config_entry_mock: MockConfigEntry
 ) -> None:
-    """Test SSDP with different UDN but matching MAC for ignored config entry is ignored."""
+    """Test SSDP with different UDN but matching MAC for ignored entry is ignored."""
     # Add an ignored entry
     config_entry_mock.source = config_entries.SOURCE_IGNORE
     config_entry_mock.add_to_hass(hass)

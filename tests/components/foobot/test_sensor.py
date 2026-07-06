@@ -8,13 +8,7 @@ import pytest
 
 from homeassistant.components import sensor
 from homeassistant.components.foobot import sensor as foobot
-from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
-    UnitOfTemperature,
-)
+from homeassistant.const import UnitOfDensity, UnitOfRatio, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import async_setup_component
@@ -45,12 +39,12 @@ async def test_default_setup(
     await hass.async_block_till_done()
 
     metrics = {
-        "co2": ["1232.0", CONCENTRATION_PARTS_PER_MILLION],
+        "co2": ["1232.0", UnitOfRatio.PARTS_PER_MILLION],
         "temperature": ["21.1", UnitOfTemperature.CELSIUS],
-        "humidity": ["49.5", PERCENTAGE],
-        "pm2_5": ["144.8", CONCENTRATION_MICROGRAMS_PER_CUBIC_METER],
-        "voc": ["340.7", CONCENTRATION_PARTS_PER_BILLION],
-        "index": ["138.9", PERCENTAGE],
+        "humidity": ["49.5", UnitOfRatio.PERCENTAGE],
+        "pm2_5": ["144.8", UnitOfDensity.MICROGRAMS_PER_CUBIC_METER],
+        "voc": ["340.7", UnitOfRatio.PARTS_PER_BILLION],
+        "index": ["138.9", UnitOfRatio.PERCENTAGE],
     }
 
     for name, value in metrics.items():

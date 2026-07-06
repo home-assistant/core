@@ -1,0 +1,115 @@
+# serializer version: 1
+# name: test_switches
+  dict({
+    'switch.aqualogic_aux_1': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AquaLogic Aux 1',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.aqualogic_aux_1',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    'switch.aqualogic_aux_2': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AquaLogic Aux 2',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.aqualogic_aux_2',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    'switch.aqualogic_aux_3': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AquaLogic Aux 3',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.aqualogic_aux_3',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    'switch.aqualogic_aux_4': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AquaLogic Aux 4',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.aqualogic_aux_4',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    'switch.aqualogic_aux_5': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AquaLogic Aux 5',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.aqualogic_aux_5',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    'switch.aqualogic_aux_6': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AquaLogic Aux 6',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.aqualogic_aux_6',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    'switch.aqualogic_aux_7': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AquaLogic Aux 7',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.aqualogic_aux_7',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    'switch.aqualogic_filter': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AquaLogic Filter',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.aqualogic_filter',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    'switch.aqualogic_filter_low_speed': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AquaLogic Filter Low Speed',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.aqualogic_filter_low_speed',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    'switch.aqualogic_lights': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AquaLogic Lights',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.aqualogic_lights',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+  })
+# ---

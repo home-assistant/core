@@ -2,11 +2,12 @@
 
 from typing import Any
 
+from aiohttp import CookieJar
 from cookidoo_api import Cookidoo, CookidooConfig, get_localization_options
 
 from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_LANGUAGE, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .coordinator import CookidooConfigEntry
 
@@ -21,7 +22,7 @@ async def cookidoo_from_config_data(
     )
 
     return Cookidoo(
-        async_get_clientsession(hass),
+        async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True)),
         CookidooConfig(
             email=data[CONF_EMAIL],
             password=data[CONF_PASSWORD],

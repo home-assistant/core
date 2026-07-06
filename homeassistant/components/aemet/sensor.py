@@ -1,11 +1,9 @@
 """Support for the AEMET OpenData service."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Final
+from typing import Final, override
 
 from aemet_opendata.const import (
     AOD_CONDITION,
@@ -401,6 +399,7 @@ class AemetSensor(AemetEntity, SensorEntity):
         self._attr_unique_id = f"{unique_id}-{description.key}"
 
     @property
+    @override
     def native_value(self):
         """Return the state of the device."""
         value = self.get_aemet_value(self.entity_description.keys)

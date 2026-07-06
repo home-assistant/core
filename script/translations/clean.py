@@ -100,7 +100,9 @@ def run():
         key_data = lokalise.keys_list({"filter_keys": ",".join(chunk), "limit": 1000})
         if len(key_data) != len(chunk):
             print(
-                f"Looking up key in Lokalise returns {len(key_data)} results, expected {len(chunk)}"
+                f"Looking up key in Lokalise returns"
+                f" {len(key_data)} results,"
+                f" expected {len(chunk)}"
             )
 
         if not key_data:

@@ -52,8 +52,20 @@ async def test_availability_poll_state_once(
     await hass.async_block_till_done()
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call(poll_topic_relay, poll_payload_relay, 0, False),
-            call(poll_topic_switch, poll_payload_switch, 0, False),
+            call(
+                poll_topic_relay,
+                poll_payload_relay,
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
+            call(
+                poll_topic_switch,
+                poll_payload_switch,
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )

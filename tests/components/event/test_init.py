@@ -353,7 +353,7 @@ async def test_doorbell_missing_ring_event_type(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test warning when a doorbell entity does not include the standard ring event type."""
+    """Test warning when doorbell entity lacks the ring event type."""
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry

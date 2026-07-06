@@ -1,9 +1,7 @@
 """Nice G.O. switch platform."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.const import Platform
@@ -55,6 +53,7 @@ class NiceGOSwitchEntity(NiceGOEntity, SwitchEntity):
     _attr_translation_key = "vacation_mode"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if switch is on."""
         if TYPE_CHECKING:
@@ -62,12 +61,14 @@ class NiceGOSwitchEntity(NiceGOEntity, SwitchEntity):
         return self.data.vacation_mode
 
     @retry("switch_on_error")
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
 
         await self.coordinator.api.vacation_mode_on(self.data.id)
 
     @retry("switch_off_error")
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
 

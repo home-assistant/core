@@ -1,8 +1,6 @@
 """Vizio SmartCast Device support."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pyvizio.api.apps import AppConfig, find_app_name
 from pyvizio.const import APP_HOME, INPUT_APPS, NO_APP_RUNNING, UNKNOWN_APP
@@ -159,6 +157,7 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         return apps
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         data = self.coordinator.data
@@ -242,6 +241,7 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
             log_api_exception=False,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
         await super().async_added_to_hass()
@@ -267,6 +267,7 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         self.async_on_remove(apps_coordinator.async_add_listener(apps_list_update))
 
     @property
+    @override
     def source(self) -> str | None:
         """Return current input of the device."""
         if self._attr_app_name is not None and self._current_input in INPUT_APPS:
@@ -275,6 +276,7 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         return self._current_input
 
     @property
+    @override
     def source_list(self) -> list[str]:
         """Return list of available inputs of the device."""
         # If Smartcast app is in input list, and the app list has been retrieved,
@@ -297,6 +299,7 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         return self._available_inputs
 
     @property
+    @override
     def app_id(self):
         """Return the ID of the current app if it is unknown by pyvizio."""
         if self._current_app_config and self.source == UNKNOWN_APP:
@@ -308,6 +311,7 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
 
         return None
 
+    @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         if sound_mode in (self._attr_sound_mode_list or ()):
@@ -318,14 +322,17 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
                 log_api_exception=False,
             )
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the device on."""
         await self._device.pow_on(log_api_exception=False)
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the device off."""
         await self._device.pow_off(log_api_exception=False)
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         if mute:
@@ -335,14 +342,17 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
             await self._device.mute_off(log_api_exception=False)
             self._attr_is_volume_muted = False
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous channel command."""
         await self._device.ch_down(log_api_exception=False)
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send next channel command."""
         await self._device.ch_up(log_api_exception=False)
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if source in self._available_inputs:
@@ -361,6 +371,7 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
                 source, self._all_apps, log_api_exception=False
             )
 
+    @override
     async def async_volume_up(self) -> None:
         """Increase volume of the device."""
         await self._device.vol_up(num=self._volume_step, log_api_exception=False)
@@ -370,6 +381,7 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
                 1.0, self._attr_volume_level + self._volume_step / self._max_volume
             )
 
+    @override
     async def async_volume_down(self) -> None:
         """Decrease volume of the device."""
         await self._device.vol_down(num=self._volume_step, log_api_exception=False)
@@ -379,6 +391,7 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
                 0.0, self._attr_volume_level - self._volume_step / self._max_volume
             )
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
         if self._attr_volume_level is not None:
@@ -392,10 +405,12 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
                 await self._device.vol_down(num=num, log_api_exception=False)
                 self._attr_volume_level = volume
 
+    @override
     async def async_media_play(self) -> None:
         """Play whatever media is currently active."""
         await self._device.play(log_api_exception=False)
 
+    @override
     async def async_media_pause(self) -> None:
         """Pause whatever media is currently active."""
         await self._device.pause(log_api_exception=False)

@@ -1,7 +1,5 @@
 """The test for the Trafikverket binary sensor platform."""
 
-from __future__ import annotations
-
 import pytest
 from pytrafikverket import CameraInfoModel
 

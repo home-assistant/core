@@ -1,7 +1,5 @@
 """Tests for the conversation component."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass, field
 from typing import Literal

@@ -1,7 +1,5 @@
 """Utils for trafikverket_ferry."""
 
-from __future__ import annotations
-
 from datetime import time
 
 
@@ -10,6 +8,7 @@ def create_unique_id(
 ) -> str:
     """Create unique id."""
     return (
-        f"{ferry_from.casefold().replace(' ', '')}-{ferry_to.casefold().replace(' ', '')}"
+        f"{ferry_from.casefold().replace(' ', '')}"
+        f"-{ferry_to.casefold().replace(' ', '')}"
         f"-{ferry_time!s}-{weekdays!s}"
     )

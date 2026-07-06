@@ -1,10 +1,8 @@
 """Support for MelCloud device sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import dataclasses
-from typing import Any
+from typing import Any, override
 
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW
 from pymelcloud.atw_device import Zone
@@ -329,6 +327,7 @@ class MelDeviceSensor(MelCloudEntity, SensorEntity):
         self._attr_device_info = coordinator.device_info
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator)
@@ -355,6 +354,7 @@ class AtwZoneSensor(MelDeviceSensor):
         self._zone = zone
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return zone based state."""
         return self.entity_description.value_fn(self._zone)

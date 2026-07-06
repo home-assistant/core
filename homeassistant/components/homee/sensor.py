@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyHomee.const import AttributeType, NodeState
 from pyHomee.model import HomeeAttribute, HomeeNode
@@ -341,11 +342,13 @@ class HomeeSensor(HomeeEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | str | None:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self._attribute)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the native unit of the sensor."""
         return self.entity_description.native_unit_of_measurement_fn(
@@ -371,6 +374,7 @@ class HomeeNodeSensor(HomeeNodeEntity, SensorEntity):
         self._attr_unique_id = f"{self._attr_unique_id}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the sensors value."""
         return self.entity_description.value_fn(self._node)

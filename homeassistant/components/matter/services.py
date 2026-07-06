@@ -1,7 +1,5 @@
 """Services for Matter devices."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN

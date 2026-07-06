@@ -1,5 +1,7 @@
 """The Homee binary sensor platform."""
 
+from typing import override
+
 from pyHomee.const import AttributeType
 from pyHomee.model import HomeeAttribute, HomeeNode
 
@@ -197,6 +199,7 @@ class HomeeBinarySensor(HomeeEntity, BinarySensorEntity):
         self._attr_translation_key = description.key
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return bool(self._attribute.current_value)

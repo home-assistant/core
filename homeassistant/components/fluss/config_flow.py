@@ -1,8 +1,7 @@
 """Config flow for Fluss+ integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from collections.abc import Mapping
+from typing import Any, override
 
 from fluss_api import (
     FlussApiClient,
@@ -24,6 +23,22 @@ STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): cv.string})
 class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fluss+."""
 
+    async def _validate_api_key(self, api_key: str) -> dict[str, str]:
+        """Validate the API key and return any errors."""
+        errors: dict[str, str] = {}
+        client = FlussApiClient(api_key, session=async_get_clientsession(self.hass))
+        try:
+            await client.async_get_devices()
+        except FlussApiClientCommunicationError:
+            errors["base"] = "cannot_connect"
+        except FlussApiClientAuthenticationError:
+            errors["base"] = "invalid_auth"
+        except Exception:  # noqa: BLE001
+            LOGGER.exception("Unexpected exception occurred")
+            errors["base"] = "unknown"
+        return errors
+
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -33,18 +48,7 @@ class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             api_key = user_input[CONF_API_KEY]
             self._async_abort_entries_match({CONF_API_KEY: api_key})
-            client = FlussApiClient(
-                user_input[CONF_API_KEY], session=async_get_clientsession(self.hass)
-            )
-            try:
-                await client.async_get_devices()
-            except FlussApiClientCommunicationError:
-                errors["base"] = "cannot_connect"
-            except FlussApiClientAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except Exception:  # noqa: BLE001
-                LOGGER.exception("Unexpected exception occurred")
-                errors["base"] = "unknown"
+            errors = await self._validate_api_key(api_key)
             if not errors:
                 return self.async_create_entry(
                     title="My Fluss+ Devices", data=user_input
@@ -52,4 +56,31 @@ class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication when the API key is no longer valid."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm re-authentication with a new API key."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            api_key = user_input[CONF_API_KEY]
+            self._async_abort_entries_match({CONF_API_KEY: api_key})
+            errors = await self._validate_api_key(api_key)
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_API_KEY: api_key},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
         )

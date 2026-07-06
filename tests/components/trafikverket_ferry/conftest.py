@@ -1,7 +1,5 @@
 """Fixtures for Trafikverket Ferry integration tests."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from unittest.mock import patch
 

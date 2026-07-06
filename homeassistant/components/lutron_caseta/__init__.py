@@ -1,7 +1,5 @@
 """Component for interacting with a Lutron Caseta system."""
 
-from __future__ import annotations
-
 import asyncio
 from itertools import chain
 import logging
@@ -25,6 +23,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ACTION_LONG_PRESS,
     ACTION_MULTITAP,
     ACTION_PRESS,
     ACTION_RELEASE,
@@ -37,6 +36,7 @@ from .const import (
     ATTR_SERIAL,
     ATTR_TYPE,
     BRIDGE_DEVICE_ID,
+    BUTTON_STATUS_LONG_HOLD,
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
@@ -291,7 +291,8 @@ def _async_setup_keypads(
         button_name = _get_button_name(keypad, bridge_button)
         keypad_lutron_device_id = keypad[LUTRON_KEYPAD_LUTRON_DEVICE_ID]
 
-        # Add button to parent keypad, and build keypad_buttons and keypad_button_names_to_leap
+        # Add button to parent keypad, and build
+        # keypad_buttons and keypad_button_names_to_leap
         keypad_buttons[button_lutron_device_id] = LutronButton(
             lutron_device_id=button_lutron_device_id,
             leap_button_number=leap_button_number,
@@ -451,6 +452,8 @@ def _async_subscribe_keypad_events(
             action = ACTION_PRESS
         elif event_type == BUTTON_STATUS_MULTITAP:
             action = ACTION_MULTITAP
+        elif event_type == BUTTON_STATUS_LONG_HOLD:
+            action = ACTION_LONG_PRESS
         else:
             action = ACTION_RELEASE
 

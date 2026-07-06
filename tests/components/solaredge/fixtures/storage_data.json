@@ -1,0 +1,25 @@
+{
+  "storageData": {
+    "batteries": [
+      {
+        "serialNumber": "BAT001",
+        "telemetries": [
+          {
+            "timeStamp": "2025-01-01 00:00:00",
+            "lifeTimeEnergyCharged": 1000.0,
+            "lifeTimeEnergyDischarged": 500.0,
+            "batteryPercentageState": 50.0,
+            "power": 100.0
+          },
+          {
+            "timeStamp": "2025-01-01 12:00:00",
+            "lifeTimeEnergyCharged": 1500.0,
+            "lifeTimeEnergyDischarged": 800.0,
+            "batteryPercentageState": 75.0,
+            "power": 200.0
+          }
+        ]
+      }
+    ]
+  }
+}

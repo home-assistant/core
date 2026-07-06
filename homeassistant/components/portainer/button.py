@@ -1,12 +1,10 @@
 """Support for Portainer buttons."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from pyportainer import Portainer
 from pyportainer.exceptions import (
@@ -183,7 +181,10 @@ async def async_setup_entry(
 
 
 class PortainerBaseButton(ButtonEntity):
-    """Common base for Portainer buttons. Basically to ensure the async_press logic isn't duplicated."""
+    """Common base for Portainer buttons.
+
+    Ensures the async_press logic isn't duplicated.
+    """
 
     entity_description: PortainerButtonDescription
     coordinator: PortainerCoordinator
@@ -192,6 +193,7 @@ class PortainerBaseButton(ButtonEntity):
     async def _async_press_call(self) -> None:
         """Abstract method used per Portainer button class."""
 
+    @override
     async def async_press(self) -> None:
         """Trigger the Portainer button press service."""
         try:
@@ -220,6 +222,7 @@ class PortainerEndpointButton(PortainerEndpointEntity, PortainerBaseButton):
 
     entity_description: PortainerButtonDescription
 
+    @override
     async def _async_press_call(self) -> None:
         """Call the endpoint button press action."""
         await self.entity_description.press_action(
@@ -232,6 +235,7 @@ class PortainerContainerButton(PortainerContainerEntity, PortainerBaseButton):
 
     entity_description: PortainerButtonDescription
 
+    @override
     async def _async_press_call(self) -> None:
         """Call the container button press action."""
         await self.entity_description.press_action(

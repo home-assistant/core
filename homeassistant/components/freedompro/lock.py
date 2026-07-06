@@ -1,7 +1,7 @@
 """Support for Freedompro lock."""
 
 import json
-from typing import Any
+from typing import Any, override
 
 from pyfreedompro import put_state
 
@@ -63,6 +63,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], LockEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         device = next(
@@ -82,11 +83,13 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], LockEntity):
                     self._attr_is_locked = False
         super()._handle_coordinator_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Async function to lock the lock."""
         payload = {"lock": 1}
@@ -98,6 +101,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], LockEntity):
         )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Async function to unlock the lock."""
         payload = {"lock": 0}

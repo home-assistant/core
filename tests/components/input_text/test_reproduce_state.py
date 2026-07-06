@@ -2,6 +2,7 @@
 
 import pytest
 
+from homeassistant.components.input_text import DOMAIN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 from homeassistant.setup import async_setup_component
@@ -20,7 +21,7 @@ async def test_reproducing_states(
     # Setup entity for testing
     assert await async_setup_component(
         hass,
-        "input_text",
+        DOMAIN,
         {
             "input_text": {
                 "test_text": {"min": "6", "max": "10", "initial": VALID_TEXT1}

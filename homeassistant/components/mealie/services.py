@@ -1,7 +1,6 @@
 """Define services for the Mealie integration."""
 
 from dataclasses import asdict
-from datetime import date
 
 from aiomealie import (
     MealieConnectionError,
@@ -23,6 +22,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_END_DATE,
@@ -137,8 +137,8 @@ async def _async_get_mealplan(call: ServiceCall) -> ServiceResponse:
     entry: MealieConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
-    start_date = call.data.get(ATTR_START_DATE, date.today())
-    end_date = call.data.get(ATTR_END_DATE, date.today())
+    start_date = call.data.get(ATTR_START_DATE, dt_util.now().date())
+    end_date = call.data.get(ATTR_END_DATE, dt_util.now().date())
     if end_date < start_date:
         raise ServiceValidationError(
             translation_domain=DOMAIN,

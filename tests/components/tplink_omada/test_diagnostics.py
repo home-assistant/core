@@ -1,7 +1,5 @@
 """Tests for TP-Link Omada diagnostics."""
 
-from __future__ import annotations
-
 import json
 
 from syrupy.assertion import SnapshotAssertion

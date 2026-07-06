@@ -1,8 +1,7 @@
 """Support for bthome event entities."""
 
-from __future__ import annotations
-
 from dataclasses import replace
+from typing import override
 
 from homeassistant.components.event import (
     EventDeviceClass,
@@ -18,6 +17,7 @@ from . import format_discovered_event_class, format_event_dispatcher_name
 from .const import (
     DOMAIN,
     EVENT_CLASS_BUTTON,
+    EVENT_CLASS_COMMAND,
     EVENT_CLASS_DIMMER,
     EVENT_PROPERTIES,
     EVENT_TYPE,
@@ -44,6 +44,11 @@ DESCRIPTIONS_BY_EVENT_CLASS = {
         key=EVENT_CLASS_DIMMER,
         translation_key="dimmer",
         event_types=["rotate_left", "rotate_right"],
+    ),
+    EVENT_CLASS_COMMAND: EventEntityDescription(
+        key=EVENT_CLASS_COMMAND,
+        translation_key="command",
+        event_types=["off", "on", "toggle", "step_up", "step_down"],
     ),
 }
 
@@ -84,6 +89,7 @@ class BTHomeEventEntity(EventEntity):
         if event:
             self._trigger_event(event[EVENT_TYPE], event[EVENT_PROPERTIES])
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
         await super().async_added_to_hass()

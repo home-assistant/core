@@ -997,7 +997,7 @@
       "firmwareVersion": "1.10",
       "zwavePlusVersion": 2,
       "name": "2nd Floor Sensor",
-      "location": "**REDACTED**",
+      "location": "",
       "deviceConfig": {
         "filename": "/usr/src/app/store/.config-db/devices/0x027a/zse44.json",
         "isEmbedded": true,

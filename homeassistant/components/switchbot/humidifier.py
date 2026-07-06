@@ -1,9 +1,7 @@
 """Support for Switchbot humidifier."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import switchbot
 from switchbot import HumidifierAction as SwitchbotHumidifierAction, HumidifierMode
@@ -56,27 +54,32 @@ class SwitchBotHumidifier(SwitchbotSwitchedEntity, HumidifierEntity):
     _attr_name = None
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._device.is_on()
 
     @property
+    @override
     def mode(self) -> str:
         """Return the humidity we try to reach."""
         return MODE_AUTO if self._device.is_auto() else MODE_NORMAL
 
     @property
+    @override
     def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
         return self._device.get_target_humidity()
 
     @exception_handler
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         self._last_run_success = bool(await self._device.set_level(humidity))
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_set_mode(self, mode: str) -> None:
         """Set new target humidity."""
         if mode == MODE_AUTO:
@@ -99,26 +102,31 @@ class SwitchBotEvaporativeHumidifier(SwitchbotSwitchedEntity, HumidifierEntity):
     _attr_name = None
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._device.is_on()
 
     @property
+    @override
     def mode(self) -> str:
         """Return the evaporative humidifier current mode."""
         return self._device.get_mode().name.lower()
 
     @property
+    @override
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self._device.get_humidity()
 
     @property
+    @override
     def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
         return self._device.get_target_humidity()
 
     @property
+    @override
     def action(self) -> HumidifierAction | None:
         """Return the current action."""
         return EVAPORATIVE_HUMIDIFIER_ACTION_MAP.get(
@@ -126,6 +134,7 @@ class SwitchBotEvaporativeHumidifier(SwitchbotSwitchedEntity, HumidifierEntity):
         )
 
     @exception_handler
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         _LOGGER.debug("Setting target humidity to: %s %s", humidity, self._address)
@@ -133,6 +142,7 @@ class SwitchBotEvaporativeHumidifier(SwitchbotSwitchedEntity, HumidifierEntity):
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_set_mode(self, mode: str) -> None:
         """Set new evaporative humidifier mode."""
         _LOGGER.debug("Setting mode to: %s %s", mode, self._address)
@@ -140,6 +150,7 @@ class SwitchBotEvaporativeHumidifier(SwitchbotSwitchedEntity, HumidifierEntity):
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the humidifier."""
         _LOGGER.debug("Turning on the humidifier %s", self._address)
@@ -147,6 +158,7 @@ class SwitchBotEvaporativeHumidifier(SwitchbotSwitchedEntity, HumidifierEntity):
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the humidifier."""
         _LOGGER.debug("Turning off the humidifier %s", self._address)

@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Default',
         'Winter',
       ]),
@@ -44,9 +44,9 @@
 # name: test_entity[select.myhome-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'MYHOME',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MYHOME',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Default',
         'Winter',
       ]),

@@ -1,7 +1,5 @@
 """Support for Qwikswitch devices."""
 
-from __future__ import annotations
-
 import logging
 
 from pyqwikswitch.async_ import QSUsb

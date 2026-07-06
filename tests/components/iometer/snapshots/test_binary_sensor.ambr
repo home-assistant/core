@@ -39,8 +39,8 @@
 # name: test_binary_sensors[binary_sensor.iometer_1isk0000000000_core_attachment_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'IOmeter-1ISK0000000000 Core attachment status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IOmeter-1ISK0000000000 Core attachment status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.iometer_1isk0000000000_core_attachment_status',
@@ -90,8 +90,8 @@
 # name: test_binary_sensors[binary_sensor.iometer_1isk0000000000_core_bridge_connection_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'IOmeter-1ISK0000000000 Core/Bridge connection status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IOmeter-1ISK0000000000 Core/Bridge connection status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.iometer_1isk0000000000_core_bridge_connection_status',

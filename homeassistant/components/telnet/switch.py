@@ -1,10 +1,8 @@
 """Support for switch controlled using a telnet connection."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import telnetlib  # pylint: disable=deprecated-module
 import voluptuous as vol
@@ -142,6 +140,7 @@ class TelnetSwitch(SwitchEntity):
             return
         self._attr_is_on = rendered == "True"
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._telnet_command(self._command_on)
@@ -149,6 +148,7 @@ class TelnetSwitch(SwitchEntity):
             self._attr_is_on = True
             self.schedule_update_ha_state()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._telnet_command(self._command_off)

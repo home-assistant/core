@@ -9,17 +9,14 @@ import pytest
 from homeassistant.components.sftp_storage import SFTPConfigEntryData
 from homeassistant.components.sftp_storage.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util.ulid import ulid
 
 from .asyncssh_mock import SSHClientConnectionMock
 from .conftest import (
     CONF_BACKUP_LOCATION,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
     CONF_PRIVATE_KEY_FILE,
-    CONF_USERNAME,
     USER_INPUT,
     ComponentSetup,
     create_private_key_file,
@@ -54,7 +51,8 @@ async def test_setup_and_unload(
 
     assert entries[0].state is ConfigEntryState.NOT_LOADED
     assert (
-        f"Unloading {DOMAIN} integration for host {entries[0].data[CONF_USERNAME]}@{entries[0].data[CONF_HOST]}"
+        f"Unloading {DOMAIN} integration for host"
+        f" {entries[0].data[CONF_USERNAME]}@{entries[0].data[CONF_HOST]}"
         in caplog.messages
     )
 
@@ -91,8 +89,9 @@ async def test_setup_unexpected_error(
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.SETUP_ERROR
     assert (
-        "Failure while attempting to establish SSH connection. Please check SSH credentials and if changed, re-install the integration"
-        in caplog.text
+        "Failure while attempting to establish SSH connection."
+        " Please check SSH credentials and if changed,"
+        " re-install the integration" in caplog.text
     )
 
 
@@ -135,15 +134,16 @@ async def test_async_remove_entry(
     assert private_key.exists()
     assert new_private_key.exists()
 
-    # Remove first config entry - the private key from second will still be in filesystem
-    # as well as integration storage directory
+    # Remove first config entry - the private key from second will
+    # still be in filesystem as well as integration storage directory
     assert await hass.config_entries.async_remove(config_entry.entry_id)
     assert not private_key.exists()
     assert new_private_key.exists()
     assert new_private_key.parent.exists()
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    # Remove the second config entry, ensuring all files and integration storage directory removed.
+    # Remove the second config entry, ensuring all files and
+    # integration storage directory removed.
     assert await hass.config_entries.async_remove(new_config_entry.entry_id)
     assert not new_private_key.exists()
     assert not new_private_key.parent.exists()

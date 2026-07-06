@@ -1,9 +1,6 @@
 """Helpers for template integration."""
 
 from collections.abc import Callable
-from enum import StrEnum
-import hashlib
-import itertools
 import logging
 from typing import Any
 
@@ -13,13 +10,7 @@ from voluptuous.humanize import humanize_error
 from homeassistant.components import blueprint
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_ENTITY_PICTURE_TEMPLATE,
-    CONF_FRIENDLY_NAME,
-    CONF_ICON,
-    CONF_ICON_TEMPLATE,
     CONF_NAME,
-    CONF_PLATFORM,
     CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -27,48 +18,25 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.helpers import issue_registry as ir, template
+from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
+    async_create_platform_config_not_supported_issue,
     async_get_platforms,
 )
-from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.script import async_validate_actions_config
-from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import yaml as yaml_util
-from homeassistant.util.hass_dict import HassKey
+from homeassistant.util import slugify
 
-from .const import (
-    CONF_ADVANCED_OPTIONS,
-    CONF_ATTRIBUTE_TEMPLATES,
-    CONF_ATTRIBUTES,
-    CONF_AVAILABILITY,
-    CONF_AVAILABILITY_TEMPLATE,
-    CONF_DEFAULT_ENTITY_ID,
-    CONF_PICTURE,
-    DOMAIN,
-    PLATFORMS,
-)
+from .const import CONF_ADVANCED_OPTIONS, CONF_DEFAULT_ENTITY_ID, DOMAIN
 from .entity import AbstractTemplateEntity
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
-LEGACY_TEMPLATE_DEPRECATION_KEY = "deprecate_legacy_templates"
-
 DATA_BLUEPRINTS = "template_blueprints"
-DATA_DEPRECATION: HassKey[list[str]] = HassKey(LEGACY_TEMPLATE_DEPRECATION_KEY)
-
-LEGACY_FIELDS = {
-    CONF_ICON_TEMPLATE: CONF_ICON,
-    CONF_ENTITY_PICTURE_TEMPLATE: CONF_PICTURE,
-    CONF_AVAILABILITY_TEMPLATE: CONF_AVAILABILITY,
-    CONF_ATTRIBUTE_TEMPLATES: CONF_ATTRIBUTES,
-    CONF_FRIENDLY_NAME: CONF_NAME,
-}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,57 +96,6 @@ def async_get_blueprints(hass: HomeAssistant) -> blueprint.DomainBlueprints:
     )
 
 
-def rewrite_legacy_to_modern_config(
-    hass: HomeAssistant,
-    entity_cfg: dict[str, Any],
-    extra_legacy_fields: dict[str, str],
-) -> dict[str, Any]:
-    """Rewrite legacy config."""
-    entity_cfg = {**entity_cfg}
-
-    # Remove deprecated entity_id field from legacy syntax
-    entity_cfg.pop(ATTR_ENTITY_ID, None)
-
-    for from_key, to_key in itertools.chain(
-        LEGACY_FIELDS.items(), extra_legacy_fields.items()
-    ):
-        if from_key not in entity_cfg or to_key in entity_cfg:
-            continue
-
-        val = entity_cfg.pop(from_key)
-        if isinstance(val, str):
-            val = template.Template(val, hass)
-        entity_cfg[to_key] = val
-
-    if CONF_NAME in entity_cfg and isinstance(entity_cfg[CONF_NAME], str):
-        entity_cfg[CONF_NAME] = template.Template(entity_cfg[CONF_NAME], hass)
-
-    return entity_cfg
-
-
-def rewrite_legacy_to_modern_configs(
-    hass: HomeAssistant,
-    domain: str,
-    entity_cfg: dict[str, dict],
-    extra_legacy_fields: dict[str, str],
-) -> list[dict]:
-    """Rewrite legacy configuration definitions to modern ones."""
-    entities = []
-    for object_id, entity_conf in entity_cfg.items():
-        entity_conf = {**entity_conf, CONF_DEFAULT_ENTITY_ID: f"{domain}.{object_id}"}
-
-        entity_conf = rewrite_legacy_to_modern_config(
-            hass, entity_conf, extra_legacy_fields
-        )
-
-        if CONF_NAME not in entity_conf:
-            entity_conf[CONF_NAME] = template.Template(object_id, hass)
-
-        entities.append(entity_conf)
-
-    return entities
-
-
 @callback
 def async_create_template_tracking_entities(
     entity_cls: type[Entity],
@@ -197,19 +114,6 @@ def async_create_template_tracking_entities(
     async_add_entities(entities)
 
 
-def _format_template(value: Any, field: str | None = None) -> Any:
-    if isinstance(value, template.Template):
-        return value.template
-
-    if isinstance(value, StrEnum):
-        return value.value
-
-    if isinstance(value, (int, float, str, bool)):
-        return value
-
-    return str(value)
-
-
 def _get_config_breadcrumbs(config: ConfigType) -> str:
     """Try to coerce entity information from the config."""
     breadcrumb = "Template Entity"
@@ -223,85 +127,6 @@ def _get_config_breadcrumbs(config: ConfigType) -> str:
     elif (name := config.get(CONF_NAME)) and isinstance(name, template.Template):
         breadcrumb = name.template
     return breadcrumb
-
-
-def format_migration_config(
-    config: ConfigType | list[ConfigType], depth: int = 0
-) -> ConfigType | list[ConfigType]:
-    """Recursive method to format templates as strings from ConfigType."""
-    if depth > 9:
-        raise RecursionError
-
-    if isinstance(config, list):
-        items = []
-        for item in config:
-            if isinstance(item, (dict, list)):
-                if len(item) > 0:
-                    items.append(format_migration_config(item, depth + 1))
-            else:
-                items.append(_format_template(item))
-        return items  # type: ignore[return-value]
-
-    formatted_config = {}
-    for field, value in config.items():
-        if isinstance(value, dict):
-            if len(value) > 0:
-                formatted_config[field] = format_migration_config(value, depth + 1)
-        elif isinstance(value, list):
-            if len(value) > 0:
-                formatted_config[field] = format_migration_config(value, depth + 1)
-            else:
-                formatted_config[field] = []
-        elif isinstance(value, ScriptVariables):
-            formatted_config[field] = format_migration_config(
-                value.as_dict(), depth + 1
-            )
-        else:
-            formatted_config[field] = _format_template(value)
-
-    return formatted_config
-
-
-def create_legacy_template_issue(
-    hass: HomeAssistant, config: ConfigType, domain: str
-) -> None:
-    """Create a repair for legacy template entities."""
-    if domain not in PLATFORMS:
-        return
-
-    breadcrumb = _get_config_breadcrumbs(config)
-
-    issue_id = f"{LEGACY_TEMPLATE_DEPRECATION_KEY}_{domain}_{breadcrumb}_{hashlib.md5(','.join(config.keys()).encode()).hexdigest()}"
-
-    if (deprecation_list := hass.data.get(DATA_DEPRECATION)) is None:
-        hass.data[DATA_DEPRECATION] = deprecation_list = []
-
-    deprecation_list.append(issue_id)
-
-    try:
-        config.pop(CONF_PLATFORM, None)
-        modified_yaml = format_migration_config(config)
-        yaml_config = (
-            f"```\n{yaml_util.dump({DOMAIN: [{domain: [modified_yaml]}]})}\n```"
-        )
-    except RecursionError:
-        yaml_config = f"{DOMAIN}:\n  - {domain}:      - ..."
-
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        issue_id,
-        breaks_in_ha_version="2026.6",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_legacy_templates",
-        translation_placeholders={
-            "domain": domain,
-            "breadcrumb": breadcrumb,
-            "config": yaml_config,
-            "filename": "<filename>",
-        },
-    )
 
 
 async def validate_template_scripts(
@@ -337,6 +162,24 @@ async def validate_template_scripts(
                 )
 
 
+def async_create_platform_template_not_supported_issue(
+    hass: HomeAssistant, domain: str
+):
+    """Create a platform: template not supported issue."""
+    learn_more_url = (
+        "https://www.home-assistant.io/integrations/template/"
+        f"#{slugify(domain, separator='-')}"
+    )
+    async_create_platform_config_not_supported_issue(
+        hass,
+        DOMAIN,
+        domain,
+        yaml_config_under_integration_supported=True,
+        learn_more_url=learn_more_url,
+        logger=_LOGGER,
+    )
+
+
 async def async_setup_template_platform(
     hass: HomeAssistant,
     domain: str,
@@ -345,35 +188,12 @@ async def async_setup_template_platform(
     trigger_entity_cls: type[TriggerEntity] | None,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None,
-    legacy_fields: dict[str, str] | None = None,
-    legacy_key: str | None = None,
     script_options: tuple[str, ...] | None = None,
 ) -> None:
     """Set up the Template platform."""
     if discovery_info is None:
         # Legacy Configuration
-        if legacy_fields is not None:
-            if legacy_key:
-                configs = rewrite_legacy_to_modern_configs(
-                    hass, domain, config[legacy_key], legacy_fields
-                )
-            else:
-                configs = [rewrite_legacy_to_modern_config(hass, config, legacy_fields)]
-
-            for definition in configs:
-                create_legacy_template_issue(hass, definition, domain)
-
-            async_create_template_tracking_entities(
-                state_entity_cls,
-                async_add_entities,
-                hass,
-                configs,
-                None,
-            )
-        else:
-            _LOGGER.warning(
-                "Template %s entities can only be configured under template:", domain
-            )
+        async_create_platform_template_not_supported_issue(hass, domain)
         return
 
     # Trigger Configuration

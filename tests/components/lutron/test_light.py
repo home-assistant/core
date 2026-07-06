@@ -65,7 +65,7 @@ async def test_light_turn_on_off(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "light.test_light"
+    entity_id = "light.test_area_test_light"
 
     # Turn on
     await hass.services.async_call(
@@ -99,7 +99,7 @@ async def test_light_update(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "light.test_light"
+    entity_id = "light.test_area_test_light"
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # Simulate update from library
@@ -126,7 +126,7 @@ async def test_light_transition(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "light.test_light"
+    entity_id = "light.test_area_test_light"
 
     # Turn on with transition
     await hass.services.async_call(
@@ -161,7 +161,7 @@ async def test_light_flash(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "light.test_light"
+    entity_id = "light.test_area_test_light"
 
     # Short flash
     await hass.services.async_call(
@@ -195,7 +195,7 @@ async def test_light_brightness_restore(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "light.test_light"
+    entity_id = "light.test_area_test_light"
 
     # Turn on first time - uses default (50%)
     await hass.services.async_call(

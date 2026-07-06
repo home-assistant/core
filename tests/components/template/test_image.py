@@ -151,7 +151,7 @@ async def test_missing_optional_config(
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
             hass,
-            "template",
+            DOMAIN,
             {
                 "template": {
                     "image": {
@@ -193,7 +193,7 @@ async def test_multiple_configs(
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
             hass,
-            "template",
+            DOMAIN,
             {
                 "template": {
                     "image": [
@@ -229,7 +229,7 @@ async def test_missing_required_keys(hass: HomeAssistant) -> None:
     with assert_setup_component(0, "template"):
         assert await setup.async_setup_component(
             hass,
-            "template",
+            DOMAIN,
             {
                 "template": {
                     "image": {
@@ -253,7 +253,7 @@ async def test_unique_id(
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
             hass,
-            "template",
+            DOMAIN,
             {
                 "template": {
                     "unique_id": "b",
@@ -287,7 +287,7 @@ async def test_custom_entity_picture(
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
             hass,
-            "template",
+            DOMAIN,
             {
                 "template": {
                     "image": {
@@ -322,7 +322,7 @@ async def test_template_error(
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
             hass,
-            "template",
+            DOMAIN,
             {
                 "template": {
                     "image": {
@@ -379,7 +379,7 @@ async def test_templates_with_entities(
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
             hass,
-            "template",
+            DOMAIN,
             {
                 "template": {
                     "image": {
@@ -435,7 +435,7 @@ async def test_trigger_image(
 
     assert await setup.async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": [
                 {
@@ -497,7 +497,7 @@ async def test_trigger_image_custom_entity_picture(
 
     assert await setup.async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": [
                 {

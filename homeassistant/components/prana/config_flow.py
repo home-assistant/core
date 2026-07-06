@@ -1,7 +1,7 @@
 """Configuration flow for Prana integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from prana_local_api_client.exceptions import PranaApiCommunicationError
 from prana_local_api_client.models.prana_device_info import PranaDeviceInfo
@@ -29,6 +29,7 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
     _host: str
     _device_info: PranaDeviceInfo
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -64,6 +65,7 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,

@@ -1,7 +1,5 @@
 """Services for Agent DVR."""
 
-from __future__ import annotations
-
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import service

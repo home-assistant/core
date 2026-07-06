@@ -1,7 +1,5 @@
 """Test datetime template functions."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from types import MappingProxyType
 from typing import Any

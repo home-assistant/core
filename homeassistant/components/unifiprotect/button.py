@@ -1,12 +1,10 @@
 """Support for Ubiquiti's UniFi Protect NVR."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from uiprotect.data import ModelType, ProtectAdoptableDeviceModel
 
@@ -161,6 +159,7 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
     entity_description: ProtectButtonEntityDescription
 
     @async_ufp_instance_command
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         if self.entity_description.ufp_press is not None:
@@ -171,6 +170,7 @@ class ProtectAdoptButton(ProtectButton):
     """A Ubiquiti UniFi Protect Adopt button."""
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         if TYPE_CHECKING:

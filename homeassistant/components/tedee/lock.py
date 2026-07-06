@@ -1,6 +1,6 @@
 """Tedee lock entities."""
 
-from typing import Any
+from typing import Any, override
 
 from aiotedee import TedeeClientException, TedeeLock, TedeeLockState
 
@@ -52,6 +52,7 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
         super().__init__(lock, coordinator, "lock")
 
     @property
+    @override
     def is_locked(self) -> bool | None:
         """Return true if lock is locked."""
         if self._lock.state in (
@@ -62,39 +63,42 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
         return self._lock.state == TedeeLockState.LOCKED
 
     @property
+    @override
     def is_unlocking(self) -> bool:
         """Return true if lock is unlocking."""
         return self._lock.state == TedeeLockState.UNLOCKING
 
     @property
+    @override
     def is_open(self) -> bool:
         """Return true if lock is open."""
         return self._lock.state == TedeeLockState.PULLED
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return true if lock is opening."""
         return self._lock.state == TedeeLockState.PULLING
 
     @property
+    @override
     def is_locking(self) -> bool:
         """Return true if lock is locking."""
         return self._lock.state == TedeeLockState.LOCKING
 
     @property
+    @override
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
         return self._lock.is_jammed
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return (
-            super().available
-            and self._lock.is_connected
-            and self._lock.state != TedeeLockState.UNCALIBRATED
-        )
+        return super().available and self._lock.state != TedeeLockState.UNCALIBRATED
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the door."""
         try:
@@ -110,6 +114,7 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
                 translation_placeholders={"lock_id": str(self._lock.id)},
             ) from ex
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the door."""
         try:
@@ -130,10 +135,12 @@ class TedeeLockWithLatchEntity(TedeeLockEntity):
     """A tedee lock but has pullspring enabled, so it additional features."""
 
     @property
+    @override
     def supported_features(self) -> LockEntityFeature:
         """Flag supported features."""
         return LockEntityFeature.OPEN
 
+    @override
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door with pullspring."""
         try:

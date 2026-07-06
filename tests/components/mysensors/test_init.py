@@ -1,7 +1,5 @@
 """Test function in __init__.py."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from unittest.mock import MagicMock
 

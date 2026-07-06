@@ -32,8 +32,9 @@ from tests.common import MockConfigEntry
 
 async def test_setup(
     hass: HomeAssistant,
-    mock_lunatone_devices: AsyncMock,
     mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -52,8 +53,9 @@ async def test_setup(
 
 async def test_turn_on_off(
     hass: HomeAssistant,
-    mock_lunatone_devices: AsyncMock,
     mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the light can be turned on and off."""
@@ -93,8 +95,9 @@ async def test_turn_on_off(
 
 async def test_turn_on_off_with_brightness(
     hass: HomeAssistant,
-    mock_lunatone_devices: AsyncMock,
     mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the light can be turned on with brightness."""
@@ -154,6 +157,7 @@ async def test_turn_on_off_broadcast(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
     mock_lunatone_dali_broadcast: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -197,6 +201,7 @@ async def test_line_broadcast_available_status(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
     mock_lunatone_dali_broadcast: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -228,6 +233,7 @@ async def test_line_broadcast_line_present(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
     mock_lunatone_dali_broadcast: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -247,6 +253,7 @@ async def test_turn_on_with_color_temperature(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
     mock_config_entry: MockConfigEntry,
     color_temp_kelvin: int,
 ) -> None:
@@ -286,6 +293,7 @@ async def test_turn_on_with_rgb_color(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
     mock_config_entry: MockConfigEntry,
     rgb_color: tuple[int, int, int],
 ) -> None:
@@ -327,6 +335,7 @@ async def test_turn_on_with_rgbw_color(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
     mock_config_entry: MockConfigEntry,
     rgbw_color: tuple[int, int, int, int],
 ) -> None:

@@ -2,11 +2,10 @@
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from xiaomi_gateway import XiaomiGateway
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, CONF_MAC
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -15,6 +14,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
+from . import XiaomiAqaraConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ class XiaomiDevice(Entity):
         device: dict[str, Any],
         device_type: str,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the Xiaomi device."""
         self._is_available = True
@@ -67,17 +67,20 @@ class XiaomiDevice(Entity):
             self._is_gateway = False
             self._device_id = self._sid
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Start unavailability tracking."""
         self._xiaomi_hub.callbacks[self._sid].append(self.push_data)
         self._async_track_unavailable()
 
     @property
+    @override
     def name(self):
         """Return the name of the device."""
         return self._name
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self._unique_id
@@ -88,6 +91,7 @@ class XiaomiDevice(Entity):
         return self._device_id
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info of the Xiaomi Aqara device."""
         if self._is_gateway:
@@ -112,6 +116,7 @@ class XiaomiDevice(Entity):
         return device_info
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._is_available

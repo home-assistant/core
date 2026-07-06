@@ -1,9 +1,7 @@
 """Support for image which integrates with other components."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -99,8 +97,11 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attr_image_url: str | None = None
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
         ImageEntity.__init__(self, hass, config[CONF_VERIFY_SSL])
@@ -134,6 +135,7 @@ class StateImageEntity(TemplateEntity, AbstractTemplateImage):
         AbstractTemplateImage.__init__(self, hass, config)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return entity picture."""
         if self._has_picture_template:
@@ -158,6 +160,7 @@ class TriggerImageEntity(TriggerEntity, AbstractTemplateImage):
         AbstractTemplateImage.__init__(self, hass, config)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return entity picture."""
         if self._has_picture_template:

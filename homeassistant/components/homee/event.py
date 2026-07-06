@@ -1,5 +1,7 @@
 """The homee event platform."""
 
+from typing import override
+
 from pyHomee.const import AttributeType, NodeProfile
 from pyHomee.model import HomeeAttribute, HomeeNode
 
@@ -94,6 +96,7 @@ class HomeeEvent(HomeeEntity, EventEntity):
             self._attr_translation_key = f"{self._attr_translation_key}_instance"
             self._attr_translation_placeholders = {"instance": str(attribute.instance)}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add the homee event entity to home assistant."""
         await super().async_added_to_hass()

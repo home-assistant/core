@@ -1,9 +1,7 @@
 """Camera for the Trafikverket Camera integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.camera import Camera
 from homeassistant.const import ATTR_LOCATION
@@ -56,6 +54,7 @@ class TVCamera(TrafikverketCameraEntity, Camera):
         Camera.__init__(self)
         self._attr_unique_id = entry_id
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -63,11 +62,13 @@ class TVCamera(TrafikverketCameraEntity, Camera):
         return self.coordinator.data.image
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return camera on."""
         return self.coordinator.data.data.active is True
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional attributes."""
         return {

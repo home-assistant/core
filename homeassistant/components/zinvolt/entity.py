@@ -1,6 +1,8 @@
 """Base entity for Zinvolt integration."""
 
-from zinvolt.models import Unit
+from typing import override
+
+from zinvolt.models import OnlineStatus, Unit
 
 from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -23,6 +25,16 @@ class ZinvoltEntity(CoordinatorEntity[ZinvoltDeviceCoordinator]):
             manufacturer="Zinvolt",
             name=coordinator.battery.name,
             serial_number=coordinator.data.battery.serial_number,
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the entity is available."""
+        return (
+            super().available
+            and self.coordinator.data.battery.current_power.online_status
+            is OnlineStatus.ONLINE
         )
 
 
@@ -69,6 +81,7 @@ class ZinvoltUnitEntity(ZinvoltEntity):
         return self.coordinator.battery_units[self.unit_serial_number]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return (

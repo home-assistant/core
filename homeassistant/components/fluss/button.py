@@ -1,5 +1,7 @@
 """Support for Fluss Devices."""
 
+from typing import override
+
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -7,6 +9,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import FlussApiClientError, FlussConfigEntry
 from .entity import FlussEntity
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -29,6 +33,13 @@ class FlussButton(FlussEntity, ButtonEntity):
 
     _attr_name = None
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True only when the device is online."""
+        return super().available and self.device["internetConnected"]
+
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         try:

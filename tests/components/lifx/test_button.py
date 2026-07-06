@@ -53,7 +53,7 @@ async def test_button_restart(
         await hass.async_block_till_done()
 
     unique_id = f"{SERIAL}_restart"
-    entity_id = "button.my_bulb_restart"
+    entity_id = "button.my_group_my_bulb_restart"
 
     entity = entity_registry.async_get(entity_id)
     assert entity
@@ -88,7 +88,7 @@ async def test_button_identify(
         await hass.async_block_till_done()
 
     unique_id = f"{SERIAL}_identify"
-    entity_id = "button.my_bulb_identify"
+    entity_id = "button.my_group_my_bulb_identify"
 
     entity = entity_registry.async_get(entity_id)
     assert entity

@@ -7,6 +7,7 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    DOMAIN,
     CoverEntityFeature,
     CoverState,
 )
@@ -252,13 +253,13 @@ async def test_reproducing_states(
             ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_TILT_POSITION,
         },
     )
-    close_calls = async_mock_service(hass, "cover", SERVICE_CLOSE_COVER)
-    open_calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
-    close_tilt_calls = async_mock_service(hass, "cover", SERVICE_CLOSE_COVER_TILT)
-    open_tilt_calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER_TILT)
-    position_calls = async_mock_service(hass, "cover", SERVICE_SET_COVER_POSITION)
+    close_calls = async_mock_service(hass, DOMAIN, SERVICE_CLOSE_COVER)
+    open_calls = async_mock_service(hass, DOMAIN, SERVICE_OPEN_COVER)
+    close_tilt_calls = async_mock_service(hass, DOMAIN, SERVICE_CLOSE_COVER_TILT)
+    open_tilt_calls = async_mock_service(hass, DOMAIN, SERVICE_OPEN_COVER_TILT)
+    position_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_COVER_POSITION)
     position_tilt_calls = async_mock_service(
-        hass, "cover", SERVICE_SET_COVER_TILT_POSITION
+        hass, DOMAIN, SERVICE_SET_COVER_TILT_POSITION
     )
 
     # These calls should do nothing as entities already in desired state

@@ -1,9 +1,8 @@
 """Support for Twente Milieu sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import date
+from typing import override
 
 from twentemilieu import WasteType
 
@@ -87,6 +86,7 @@ class TwenteMilieuSensor(TwenteMilieuEntity, SensorEntity):
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> date | None:
         """Return the state of the sensor."""
         if not (dates := self.coordinator.data[self.entity_description.waste_type]):

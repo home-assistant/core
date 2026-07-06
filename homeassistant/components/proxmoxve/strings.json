@@ -6,10 +6,12 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
+      "api_error_no_details": "An error occurred while communicating with the Proxmox VE instance.",
       "cannot_connect": "Cannot connect to Proxmox VE server",
       "connect_timeout": "[%key:common::config_flow::error::timeout_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "no_nodes_found": "No active nodes found",
+      "no_nodes_found": "No active nodes were found on the Proxmox VE server.",
+      "no_vmlxc_found": "No LXC or VM were found on the Proxmox VE server.",
       "ssl_error": "SSL check failed. Check the SSL settings"
     },
     "step": {
@@ -324,6 +326,9 @@
     "no_permission_vm_lxc_power": {
       "message": "The configured Proxmox VE user does not have permission to manage the power state of VMs and containers. Please grant the user the 'VM.PowerMgmt' permission and try again."
     },
+    "no_vmlxc_found": {
+      "message": "No LXC or VM were found on the Proxmox VE server."
+    },
     "permissions_error": {
       "message": "Failed to retrieve Proxmox VE permissions. Please check your credentials and try again."
     },
@@ -335,28 +340,6 @@
     },
     "timeout_connect_no_details": {
       "message": "A timeout occurred while trying to connect to the Proxmox VE instance."
-    }
-  },
-  "issues": {
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, a connection error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
-      "title": "[%key:component::proxmoxve::issues::deprecated_yaml_import_issue_connect_timeout::title%]"
-    },
-    "deprecated_yaml_import_issue_connect_timeout": {
-      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, a connection timeout occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
-      "title": "The {integration_title} YAML configuration is being removed"
-    },
-    "deprecated_yaml_import_issue_invalid_auth": {
-      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, invalid authentication details were found. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
-      "title": "[%key:component::proxmoxve::issues::deprecated_yaml_import_issue_connect_timeout::title%]"
-    },
-    "deprecated_yaml_import_issue_no_nodes_found": {
-      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, no active nodes were found on the Proxmox VE server. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
-      "title": "[%key:component::proxmoxve::issues::deprecated_yaml_import_issue_connect_timeout::title%]"
-    },
-    "deprecated_yaml_import_issue_ssl_error": {
-      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an SSL error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
-      "title": "[%key:component::proxmoxve::issues::deprecated_yaml_import_issue_connect_timeout::title%]"
     }
   },
   "selector": {

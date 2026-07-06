@@ -45,3 +45,50 @@ async def test_litterhopper_binary_sensors(
     assert (
         state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.CONNECTIVITY
     )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_litter_robot_5_binary_sensors(
+    hass: HomeAssistant,
+    mock_account_with_litterrobot_5: MagicMock,
+) -> None:
+    """Tests Litter-Robot 5 binary sensors."""
+    await setup_integration(hass, mock_account_with_litterrobot_5, BINARY_SENSOR_DOMAIN)
+
+    state = hass.states.get("binary_sensor.test_drawer_removed")
+    assert state
+    assert state.state == "off"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.PROBLEM
+
+    state = hass.states.get("binary_sensor.test_bonnet_removed")
+    assert state
+    assert state.state == "off"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.PROBLEM
+
+    state = hass.states.get("binary_sensor.test_laser_dirty")
+    assert state
+    assert state.state == "off"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.PROBLEM
+
+    state = hass.states.get("binary_sensor.test_hopper_connected")
+    assert state
+    assert state.state == "on"
+    assert (
+        state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.CONNECTIVITY
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_litter_robot_5_online_sensor(
+    hass: HomeAssistant,
+    mock_account_with_litterrobot_5: MagicMock,
+) -> None:
+    """Tests Litter-Robot 5 online binary sensor (diagnostic, disabled by default)."""
+    await setup_integration(hass, mock_account_with_litterrobot_5, BINARY_SENSOR_DOMAIN)
+
+    state = hass.states.get("binary_sensor.test_online")
+    assert state
+    assert state.state == "on"
+    assert (
+        state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.CONNECTIVITY
+    )

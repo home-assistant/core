@@ -1,7 +1,5 @@
 """Test the Home Assistant analytics init module."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from homeassistant.components.analytics_insights import CONF_TRACKED_APPS

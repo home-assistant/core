@@ -1,7 +1,5 @@
 """Test for the Schedule integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from typing import Any
 from unittest.mock import patch

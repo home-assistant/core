@@ -17,6 +17,7 @@ from . import (
     MOCK_PARTITION_SUBENTRY,
     MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
     MOCK_ZONE_SUBENTRY,
+    MOCK_ZONE_TEMPERATURE_SUBENTRY,
     get_monitor_callbacks,
 )
 
@@ -63,6 +64,8 @@ def mock_satel() -> Generator[AsyncMock]:
         client.violated_zones = []
 
         client.connect = AsyncMock(return_value=True)
+        client.read_temperature = AsyncMock(return_value=21.5)
+        client.read_temperatures = AsyncMock(return_value={1: 21.5})
         client.set_output = AsyncMock()
 
         client.register_callbacks = MagicMock()
@@ -99,13 +102,28 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_config_entry_with_subentries(
     mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
-    """Mock satel configuration entry."""
+    """Mock satel configuration entry with the default subentries."""
     mock_config_entry.subentries = deepcopy(
         {
             MOCK_PARTITION_SUBENTRY.subentry_id: MOCK_PARTITION_SUBENTRY,
             MOCK_ZONE_SUBENTRY.subentry_id: MOCK_ZONE_SUBENTRY,
             MOCK_OUTPUT_SUBENTRY.subentry_id: MOCK_OUTPUT_SUBENTRY,
-            MOCK_SWITCHABLE_OUTPUT_SUBENTRY.subentry_id: MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
+            MOCK_SWITCHABLE_OUTPUT_SUBENTRY.subentry_id: (
+                MOCK_SWITCHABLE_OUTPUT_SUBENTRY
+            ),
+        }
+    )
+    return mock_config_entry
+
+
+@pytest.fixture
+def mock_config_entry_with_temperature_zone(
+    mock_config_entry: MockConfigEntry,
+) -> MockConfigEntry:
+    """Mock satel configuration entry with only a temperature-enabled zone."""
+    mock_config_entry.subentries = deepcopy(
+        {
+            MOCK_ZONE_TEMPERATURE_SUBENTRY.subentry_id: MOCK_ZONE_TEMPERATURE_SUBENTRY,
         }
     )
     return mock_config_entry

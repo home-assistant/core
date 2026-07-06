@@ -1,7 +1,5 @@
 """Tests for the Bluetooth base scanner models."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import time
 from typing import Any
@@ -260,7 +258,7 @@ async def test_remote_scanner_expires_non_connectable(hass: HomeAssistant) -> No
 
 @pytest.mark.usefixtures("enable_bluetooth")
 async def test_base_scanner_connecting_behavior(hass: HomeAssistant) -> None:
-    """Test that the default behavior is to mark the scanner as not scanning when connecting."""
+    """Test scanner is marked as not scanning when connecting."""
     manager = _get_manager()
 
     switchbot_device = generate_ble_device(
@@ -483,7 +481,8 @@ async def test_scanner_stops_responding(hass: HomeAssistant) -> None:
         + SCANNER_WATCHDOG_TIMEOUT
         + SCANNER_WATCHDOG_INTERVAL.total_seconds()
     )
-    # We hit the timer with no detections, so we reset the adapter and restart the scanner
+    # We hit the timer with no detections, so we reset the
+    # adapter and restart the scanner
     with patch_bluetooth_time(failure_reached_time):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
         await hass.async_block_till_done()

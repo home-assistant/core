@@ -1,13 +1,17 @@
 """DataUpdateCoordinator for the Verisure integration."""
 
-from __future__ import annotations
-
-from datetime import timedelta
+from datetime import datetime, timedelta
 from time import sleep
+from typing import override
 
 from verisure import (
+    AuthenticationError as VerisureAuthenticationError,
+    CookieReadError as VerisureCookieReadError,
     Error as VerisureError,
     LoginError as VerisureLoginError,
+    RateLimitError as VerisureRateLimitError,
+    RequestError as VerisureRequestError,
+    ResponseError as VerisureResponseError,
     Session as Verisure,
 )
 
@@ -17,11 +21,27 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, dt as dt_util
 
-from .const import CONF_GIID, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
+from .const import (
+    CONF_GIID,
+    COOKIE_REFRESH_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    LOGGER,
+    RATE_LIMIT_BACKOFF,
+)
 
 type VerisureConfigEntry = ConfigEntry[VerisureDataUpdateCoordinator]
+
+_MFA_REQUIRED_MESSAGE = (
+    "Multifactor authentication enabled, disable or create MFA cookie"
+)
+
+
+def _requires_mfa_reauth(exc: VerisureLoginError) -> bool:
+    """Return True when password login cannot proceed without MFA."""
+    return _MFA_REQUIRED_MESSAGE in str(exc)
 
 
 class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
@@ -33,6 +53,8 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize the Verisure hub."""
         self.imageseries: list[dict[str, str]] = []
         self._overview: list[dict] = []
+        self._rate_limit_backoff_level = 0
+        self._last_successful_cookie_refresh: datetime | None = None
 
         self.verisure = Verisure(
             username=entry.data[CONF_EMAIL],
@@ -50,15 +72,138 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
+    async def _async_password_login_after_cookie_read(self) -> None:
+        """Re-authenticate with password when the cookie file cannot be used."""
+        try:
+            await self.hass.async_add_executor_job(self.verisure.login)
+        except VerisureAuthenticationError as login_ex:
+            raise ConfigEntryAuthFailed(
+                "Verisure re-authentication failed after cookie could not be read"
+            ) from login_ex
+        except VerisureRateLimitError as login_ex:
+            self._raise_rate_limited(login_ex, "password login")
+        except (VerisureRequestError, VerisureResponseError) as login_ex:
+            raise UpdateFailed(
+                "Could not refresh Verisure session (transient)"
+            ) from login_ex
+        except VerisureLoginError as login_ex:
+            if _requires_mfa_reauth(login_ex):
+                raise ConfigEntryAuthFailed(
+                    "Verisure multifactor authentication required"
+                ) from login_ex
+            raise ConfigEntryAuthFailed(
+                "Verisure re-authentication failed after cookie could not be read"
+            ) from login_ex
+        except VerisureError as login_ex:
+            raise ConfigEntryAuthFailed(
+                "Verisure re-authentication failed after cookie could not be read"
+            ) from login_ex
+
+    async def _async_refresh_session_after_auth_failure(self) -> None:
+        """Recover session when cookie refresh indicates expired authentication."""
+        try:
+            await self.hass.async_add_executor_job(self.verisure.login_cookie)
+        except VerisureAuthenticationError as ex:
+            raise ConfigEntryAuthFailed(
+                "Verisure authentication rejected (invalid or expired session)"
+            ) from ex
+        except VerisureCookieReadError:
+            await self._async_password_login_after_cookie_read()
+        except VerisureLoginError as ex:
+            raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
+        except VerisureRateLimitError as ex:
+            self._raise_rate_limited(ex, "session refresh")
+        except (VerisureRequestError, VerisureResponseError) as ex:
+            raise UpdateFailed("Could not refresh Verisure session (transient)") from ex
+        except VerisureError as ex:
+            raise UpdateFailed("Could not log in to Verisure") from ex
+
+    def _rate_limit_retry_seconds(self) -> float:
+        """Return the next retry delay and advance the backoff level."""
+        level = min(self._rate_limit_backoff_level, len(RATE_LIMIT_BACKOFF) - 1)
+        retry_after = RATE_LIMIT_BACKOFF[level].total_seconds()
+        if self._rate_limit_backoff_level < len(RATE_LIMIT_BACKOFF) - 1:
+            self._rate_limit_backoff_level += 1
+        return retry_after
+
+    def _raise_rate_limited(self, exc: VerisureRateLimitError, context: str) -> None:
+        """Log rate limiting and defer the next poll."""
+        retry_after = self._rate_limit_retry_seconds()
+        LOGGER.warning(
+            "Verisure rate limited during %s, %s; backing off %s seconds",
+            context,
+            exc,
+            int(retry_after),
+        )
+        raise UpdateFailed(
+            f"Verisure rate limited during {context}",
+            retry_after=retry_after,
+        ) from exc
+
+    async def _async_refresh_cookie_if_needed(self) -> None:
+        """Refresh the session cookie when it is close to expiring."""
+        if (
+            self._last_successful_cookie_refresh is not None
+            and dt_util.utcnow() - self._last_successful_cookie_refresh
+            < COOKIE_REFRESH_INTERVAL
+        ):
+            return
+
+        try:
+            await self.hass.async_add_executor_job(self.verisure.update_cookie)
+        except VerisureAuthenticationError:
+            LOGGER.debug("Cookie expired, acquiring new cookies")
+            await self._async_refresh_session_after_auth_failure()
+        except VerisureCookieReadError:
+            LOGGER.debug("Cookie unreadable, re-authenticating with password")
+            await self._async_password_login_after_cookie_read()
+        except VerisureLoginError:
+            LOGGER.debug("Login token expired, refreshing session")
+            await self._async_refresh_session_after_auth_failure()
+        except VerisureRateLimitError as ex:
+            self._raise_rate_limited(ex, "cookie refresh")
+        except (VerisureRequestError, VerisureResponseError) as ex:
+            LOGGER.warning(
+                "Verisure unreachable or server error during cookie refresh, %s", ex
+            )
+            raise UpdateFailed("Unable to update cookie - Verisure unreachable") from ex
+        except VerisureError as ex:
+            raise UpdateFailed("Unable to update cookie") from ex
+
+        self._last_successful_cookie_refresh = dt_util.utcnow()
+
     async def async_login(self) -> bool:
         """Login to Verisure."""
         try:
             await self.hass.async_add_executor_job(self.verisure.login_cookie)
+        except VerisureAuthenticationError as ex:
+            raise ConfigEntryAuthFailed(
+                "Verisure authentication rejected (invalid or expired session)"
+            ) from ex
+        except VerisureCookieReadError:
+            try:
+                await self._async_password_login_after_cookie_read()
+            except UpdateFailed as ex:
+                LOGGER.warning(
+                    "Verisure login unavailable (likely transient), %s",
+                    ex,
+                )
+                return False
         except VerisureLoginError as ex:
             LOGGER.error("Credentials expired for Verisure, %s", ex)
             raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
+        except (
+            VerisureRequestError,
+            VerisureResponseError,
+            VerisureRateLimitError,
+        ) as ex:
+            LOGGER.warning(
+                "Verisure login unavailable (likely transient), %s",
+                ex,
+            )
+            return False
         except VerisureError as ex:
-            LOGGER.error("Could not log in to verisure, %s", ex)
+            LOGGER.error("Could not log in to Verisure, %s", ex)
             return False
 
         await self.hass.async_add_executor_job(
@@ -67,22 +212,10 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
 
         return True
 
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch data from Verisure."""
-        try:
-            await self.hass.async_add_executor_job(self.verisure.update_cookie)
-        except VerisureLoginError:
-            LOGGER.debug("Cookie expired, acquiring new cookies")
-            try:
-                await self.hass.async_add_executor_job(self.verisure.login_cookie)
-            except VerisureLoginError as ex:
-                LOGGER.error("Credentials expired for Verisure, %s", ex)
-                raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
-            except VerisureError as ex:
-                LOGGER.error("Could not log in to verisure, %s", ex)
-                raise ConfigEntryAuthFailed("Could not log in to verisure") from ex
-        except VerisureError as ex:
-            raise UpdateFailed("Unable to update cookie") from ex
+        await self._async_refresh_cookie_if_needed()
         try:
             overview = await self.hass.async_add_executor_job(
                 self.verisure.request,
@@ -111,6 +244,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
 
         # Store data in a way Home Assistant can easily consume it
         self._overview = overview
+        self._rate_limit_backoff_level = 0
         return {
             "alarm": unpack(overview, "armState"),
             "broadband": unpack(overview, "broadband"),

@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -224,6 +225,7 @@ class WallConnectorSensorEntity(WallConnectorEntity, SensorEntity):
         super().__init__(wall_connector_data)
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
 

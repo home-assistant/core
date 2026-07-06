@@ -31,8 +31,9 @@
       'members': dict({
         'comped': 50,
         'free': 850,
+        'gift': 25,
         'paid': 100,
-        'total': 1000,
+        'total': 1025,
       }),
       'mrr': dict({
         'usd': 5000,

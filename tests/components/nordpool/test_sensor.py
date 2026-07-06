@@ -1,7 +1,5 @@
 """The test for the Nord Pool sensor platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
@@ -12,7 +10,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -22,6 +20,10 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 @pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.SENSOR]],
+)
 async def test_sensor(
     hass: HomeAssistant,
     load_int: ConfigEntry,

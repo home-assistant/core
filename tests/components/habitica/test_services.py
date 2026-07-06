@@ -260,7 +260,8 @@ async def test_cast_skill(
             },
             ERROR_NOT_FOUND,
             ServiceValidationError,
-            "Unable to cast skill, your character does not have the skill or spell smash",
+            "Unable to cast skill, your character does not have"
+            " the skill or spell smash",
         ),
         (
             {
@@ -269,7 +270,8 @@ async def test_cast_skill(
             },
             ERROR_NOT_AUTHORIZED,
             ServiceValidationError,
-            "Unable to cast skill, not enough mana. Your character has 50 MP, but the skill costs 10 MP",
+            "Unable to cast skill, not enough mana. Your character"
+            " has 50 MP, but the skill costs 10 MP",
         ),
         (
             {
@@ -403,7 +405,8 @@ async def test_handle_quests(
         (
             ERROR_NOT_AUTHORIZED,
             ServiceValidationError,
-            "Action not allowed, only quest leader or group leader can perform this action",
+            "Action not allowed, only quest leader or group leader"
+            " can perform this action",
         ),
         (
             ERROR_BAD_REQUEST,
@@ -591,7 +594,8 @@ async def test_score_task(
             },
             ERROR_NOT_AUTHORIZED,
             HomeAssistantError,
-            "Unable to buy reward, not enough gold. Your character has 137.63 GP, but the reward costs 10.00 GP",
+            "Unable to buy reward, not enough gold. Your character"
+            " has 137.63 GP, but the reward costs 10.00 GP",
         ),
     ],
 )
@@ -776,7 +780,8 @@ async def test_transformation(
             ERROR_NOT_FOUND,
             None,
             ServiceValidationError,
-            "Unable to find target, you are currently not in a party. You can only target yourself",
+            "Unable to find target, you are currently not in a"
+            " party. You can only target yourself",
         ),
         (
             {
@@ -1053,7 +1058,10 @@ async def test_task_not_found(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Unable to complete action, could not find the task '7f902bbc-eb3d-4a8f-82cf-4e2025d69af1'",
+        match=(
+            "Unable to complete action, could not find the task"
+            " '7f902bbc-eb3d-4a8f-82cf-4e2025d69af1'"
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -1765,6 +1773,12 @@ async def test_create_todo(
                 ATTR_INTERVAL: 5,
             },
             Task(everyX=5),
+        ),
+        (
+            {
+                ATTR_INTERVAL: 0,
+            },
+            Task(everyX=0),
         ),
         (
             {

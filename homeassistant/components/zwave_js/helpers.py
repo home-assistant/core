@@ -1,7 +1,5 @@
 """Helper functions for Z-Wave JS integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import astuple, dataclass
@@ -307,7 +305,7 @@ def async_get_node_from_device_id(
         raise ValueError(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
-    if entry.state != ConfigEntryState.LOADED:
+    if entry.state is not ConfigEntryState.LOADED:
         raise ValueError(f"Device {device_id} config entry is not loaded")
 
     client = entry.runtime_data.client
@@ -355,7 +353,7 @@ async def async_get_provisioning_entry_from_device_id(
         raise ValueError(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
-    if entry.state != ConfigEntryState.LOADED:
+    if entry.state is not ConfigEntryState.LOADED:
         raise ValueError(f"Device {device_id} config entry is not loaded")
 
     client = entry.runtime_data.client

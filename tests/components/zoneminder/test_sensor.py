@@ -1,7 +1,5 @@
 """Tests for ZoneMinder sensor entities."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import MagicMock, PropertyMock
 

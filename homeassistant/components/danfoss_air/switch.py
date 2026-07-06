@@ -1,9 +1,7 @@
 """Support for the for Danfoss Air HRV sswitches."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pydanfossair.commands import ReadCommand, UpdateCommand
 
@@ -64,11 +62,13 @@ class DanfossAir(SwitchEntity):
         self._on_command = on_command
         self._off_command = off_command
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         _LOGGER.debug("Turning on switch with command %s", self._on_command)
         self._data.update_state(self._on_command, self._state_command)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         _LOGGER.debug("Turning off switch with command %s", self._off_command)

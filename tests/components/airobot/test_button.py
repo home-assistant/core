@@ -112,12 +112,21 @@ async def test_recalibrate_co2_button(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.parametrize(
+    "exception",
+    [
+        AirobotError("Test error"),
+        AirobotConnectionError("Connection lost"),
+        AirobotTimeoutError("Timeout"),
+    ],
+)
 async def test_recalibrate_co2_button_error(
     hass: HomeAssistant,
     mock_airobot_client: AsyncMock,
+    exception: Exception,
 ) -> None:
     """Test recalibrate CO2 sensor button error handling."""
-    mock_airobot_client.recalibrate_co2_sensor.side_effect = AirobotError("Test error")
+    mock_airobot_client.recalibrate_co2_sensor.side_effect = exception
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(

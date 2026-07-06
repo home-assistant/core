@@ -10,6 +10,9 @@
     },
     "step": {
       "confirm": {
+        "data": {
+          "blind_type": "Blind type"
+        },
         "description": "What kind of blind is {display_name}?"
       },
       "user": {

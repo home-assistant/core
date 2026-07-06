@@ -236,12 +236,39 @@ async def test_generic_numeric_sensor_device_class_timestamp(
     assert state.state == "2023-06-22T18:43:52+00:00"
 
 
+async def test_generic_numeric_sensor_device_class_uptime(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test a sensor entity that uses uptime (epoch)."""
+    entity_info = [
+        SensorInfo(
+            object_id="mysensor",
+            key=1,
+            name="my sensor",
+            device_class="uptime",
+        )
+    ]
+    states = [SensorState(key=1, state=1687459432.466624)]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("sensor.test_my_sensor")
+    assert state is not None
+    assert state.state == "2023-06-22T18:43:52+00:00"
+
+
 async def test_generic_numeric_sensor_legacy_last_reset_convert(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
-    """Test a state class of measurement with last reset type of auto is converted to total increasing."""
+    """Test measurement with last_reset auto converts to total_increasing."""
     entity_info = [
         SensorInfo(
             object_id="mysensor",

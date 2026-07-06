@@ -23,6 +23,9 @@ rules:
     comment: >
       Almost all devices are multi-functional, which means that all functions
       are equally important -> keep the descriptive name (not setting _attr_name to None).
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: done
     comment: |
@@ -33,6 +36,9 @@ rules:
     comment: |
       No custom actions are defined.
   common-modules: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions:
     status: done

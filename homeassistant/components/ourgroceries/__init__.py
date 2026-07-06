@@ -1,7 +1,5 @@
 """The OurGroceries integration."""
 
-from __future__ import annotations
-
 from aiohttp import ClientError
 from ourgroceries import OurGroceries
 from ourgroceries.exceptions import InvalidLoginException

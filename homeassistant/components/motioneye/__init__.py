@@ -1,7 +1,5 @@
 """The motionEye integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
 from http import HTTPStatus
@@ -439,7 +437,7 @@ def _get_media_event_data(
     if (
         not config_entry_id
         or not (entry := hass.config_entries.async_get_entry(config_entry_id))
-        or entry.state != ConfigEntryState.LOADED
+        or entry.state is not ConfigEntryState.LOADED
     ):
         return {}
 

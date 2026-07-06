@@ -93,7 +93,7 @@ async def test_home_assistant_stop(
 @pytest.mark.usefixtures("client", "connect_timeout")
 async def test_initialized_timeout(hass: HomeAssistant) -> None:
     """Test we handle a timeout during client initialization."""
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -106,7 +106,7 @@ async def test_initialized_timeout(hass: HomeAssistant) -> None:
 async def test_enabled_statistics(hass: HomeAssistant) -> None:
     """Test that we enabled statistics if the entry is opted in."""
     entry = MockConfigEntry(
-        domain="zwave_js",
+        domain=DOMAIN,
         data={"url": "ws://test.org", "data_collection_opted_in": True},
     )
     entry.add_to_hass(hass)
@@ -123,7 +123,7 @@ async def test_enabled_statistics(hass: HomeAssistant) -> None:
 async def test_disabled_statistics(hass: HomeAssistant) -> None:
     """Test that we disabled statistics if the entry is opted out."""
     entry = MockConfigEntry(
-        domain="zwave_js",
+        domain=DOMAIN,
         data={"url": "ws://test.org", "data_collection_opted_in": False},
     )
     entry.add_to_hass(hass)
@@ -139,7 +139,7 @@ async def test_disabled_statistics(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("client")
 async def test_noop_statistics(hass: HomeAssistant) -> None:
     """Test that we don't make statistics calls if user hasn't set preference."""
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
 
     with (
@@ -170,7 +170,7 @@ async def test_driver_ready_timeout_during_setup(
     client.listen.side_effect = listen
 
     entry = MockConfigEntry(
-        domain="zwave_js",
+        domain=DOMAIN,
         data={"url": "ws://test.org", "data_collection_opted_in": True},
     )
     entry.add_to_hass(hass)
@@ -220,7 +220,7 @@ async def test_listen_done_during_setup_before_forward_entry(
     listen_block.set()
     getattr(listen_result, listen_future_result_method)(listen_future_result)
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     assert client.disconnect.call_count == 0
 
@@ -257,7 +257,7 @@ async def test_not_connected_during_setup_after_forward_entry(
     client.listen.side_effect = listen
 
     entry = MockConfigEntry(
-        domain="zwave_js",
+        domain=DOMAIN,
         data={"url": "ws://test.org", "data_collection_opted_in": True},
     )
     entry.add_to_hass(hass)
@@ -312,7 +312,7 @@ async def test_listen_done_during_setup_after_forward_entry(
     hass.set_state(core_state)
 
     entry = MockConfigEntry(
-        domain="zwave_js",
+        domain=DOMAIN,
         data={"url": "ws://test.org", "data_collection_opted_in": True},
     )
     entry.add_to_hass(hass)
@@ -366,7 +366,7 @@ async def test_listen_done_after_setup(
     client.listen.side_effect = listen
 
     config_entry = MockConfigEntry(
-        domain="zwave_js",
+        domain=DOMAIN,
         data={"url": "ws://test.org", "data_collection_opted_in": True},
     )
     config_entry.add_to_hass(hass)
@@ -1295,7 +1295,7 @@ async def test_stop_addon(
     )
     await hass.async_block_till_done()
 
-    assert entry.state == entry_state
+    assert entry.state is entry_state
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call("core_zwave_js")
 
@@ -1452,7 +1452,7 @@ async def test_suggested_area(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that suggested area works."""
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -1969,7 +1969,7 @@ async def test_remove_entity_on_value_removed(
     client: MagicMock,
     integration: MockConfigEntry,
 ) -> None:
-    """Test that when entity primary values are removed the entity becomes unavailable."""
+    """Test entity becomes unavailable when primary values removed."""
     idle_cover_status_button_entity = (
         "button.4_in_1_sensor_idle_home_security_cover_status"
     )
@@ -2301,7 +2301,7 @@ async def test_server_logging(
     # Set server logging to disabled
     client.server_logging_enabled = False
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -2359,8 +2359,8 @@ async def test_server_logging(
 
         _reset_mocks()
 
-        # Validate that the server logging doesn't get enabled because HA thinks it already
-        # is enabled
+        # Validate that the server logging doesn't get enabled
+        # because HA thinks it already is enabled
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert len(client.async_send_command.call_args_list) == 2
@@ -2376,8 +2376,8 @@ async def test_server_logging(
         client.server_logging_enabled = False
         await hass.config_entries.async_unload(entry.entry_id)
 
-        # Validate that the server logging was not disabled because HA thinks it is already
-        # is disabled
+        # Validate that the server logging was not disabled
+        # because HA thinks it is already disabled
         assert len(client.async_send_command.call_args_list) == 0
         assert not client.enable_server_logging.called
         assert not client.disable_server_logging.called

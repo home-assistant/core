@@ -667,7 +667,7 @@
         "widgetName": "Pod"
       },
       "controllableName": "internal:PodV3Component",
-      "label": "**",
+      "label": "TaHoma",
       "enabled": true,
       "type": 1,
       "subsystemId": 0,
@@ -677,7 +677,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "**"
+          "value": "TaHoma"
         },
         {
           "type": 3,
@@ -864,7 +864,7 @@
         ]
       },
       "controllableName": "zigbee:OnOffComponent",
-      "label": "**",
+      "label": "Zigbee Plug",
       "enabled": true,
       "type": 1,
       "subsystemId": 0,
@@ -1005,7 +1005,7 @@
         ]
       },
       "controllableName": "zigbee:StackV3Component",
-      "label": "** *(**/**)*",
+      "label": "Zigbee Plug",
       "enabled": true,
       "type": 5,
       "subsystemId": 0,
@@ -1025,7 +1025,7 @@
         "states": []
       },
       "controllableName": "zigbee:TransceiverV3_0Component",
-      "label": "** *(**)*",
+      "label": "TaHoma (Zigbee)",
       "enabled": true,
       "type": 5,
       "subsystemId": 0,
@@ -1070,7 +1070,7 @@
         "widgetName": "Wifi"
       },
       "controllableName": "internal:WifiComponent",
-      "label": "** *(**/**)*",
+      "label": "TaHoma (WiFi/Ethernet)",
       "enabled": true,
       "type": 1,
       "subsystemId": 0,
@@ -1154,7 +1154,7 @@
         ]
       },
       "controllableName": "zigbee:ZigbeeNetworkNode",
-      "label": "**",
+      "label": "Zigbee Node",
       "enabled": true,
       "type": 6,
       "subsystemId": 0,
@@ -1259,7 +1259,7 @@
         ]
       },
       "controllableName": "zigbee:StackV3Component",
-      "label": "** *(**/**)*",
+      "label": "Zigbee Node",
       "enabled": true,
       "type": 5,
       "subsystemId": 0,
@@ -1322,7 +1322,7 @@
         ]
       },
       "controllableName": "zigbee:ZigbeeNetworkNode",
-      "label": "** *(**/**)*",
+      "label": "TaHoma (Zigbee/ZDO)",
       "enabled": true,
       "type": 6,
       "subsystemId": 0,
@@ -1715,7 +1715,7 @@
         "widgetName": "IOStack"
       },
       "controllableName": "io:StackComponent",
-      "label": "** *(**)*",
+      "label": "TaHoma (IO)",
       "enabled": true,
       "type": 5,
       "subsystemId": 0,

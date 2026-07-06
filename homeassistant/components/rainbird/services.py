@@ -1,7 +1,5 @@
 """Rain Bird Irrigation system services."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN

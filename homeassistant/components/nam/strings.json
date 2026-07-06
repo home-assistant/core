@@ -93,9 +93,6 @@
       "heca_temperature": {
         "name": "HECA temperature"
       },
-      "last_restart": {
-        "name": "Last restart"
-      },
       "mhz14a_carbon_dioxide": {
         "name": "MH-Z14A carbon dioxide"
       },

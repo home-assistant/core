@@ -1,9 +1,8 @@
 """Support for Stookwijzer Sensor."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from stookwijzer import Stookwijzer
 
@@ -91,6 +90,7 @@ class StookwijzerSensor(CoordinatorEntity[StookwijzerCoordinator], SensorEntity)
         )
 
     @property
+    @override
     def native_value(self) -> int | float | str | None:
         """Return the state of the device."""
         return self.entity_description.value_fn(self.coordinator.client)

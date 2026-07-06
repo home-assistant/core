@@ -1,7 +1,5 @@
 """A class to hold entity values."""
 
-from __future__ import annotations
-
 import fnmatch
 from functools import lru_cache
 import re

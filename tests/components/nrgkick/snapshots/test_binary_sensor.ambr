@@ -39,7 +39,7 @@
 # name: test_binary_sensor_entities[binary_sensor.nrgkick_test_charge_permitted-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NRGkick Test Charge permitted',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NRGkick Test Charge permitted',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nrgkick_test_charge_permitted',

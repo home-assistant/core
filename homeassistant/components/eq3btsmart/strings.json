@@ -61,5 +61,10 @@
         "name": "Lock"
       }
     }
+  },
+  "exceptions": {
+    "device_not_found": {
+      "message": "[{mac_address}] Device could not be found: {reason}"
+    }
   }
 }

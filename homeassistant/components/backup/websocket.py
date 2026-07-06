@@ -58,11 +58,19 @@ async def handle_info(
                 agent_id: str(err) for agent_id, err in agent_errors.items()
             },
             "backups": list(backups.values()),
-            "last_attempted_automatic_backup": manager.config.data.last_attempted_automatic_backup,
-            "last_completed_automatic_backup": manager.config.data.last_completed_automatic_backup,
+            "last_attempted_automatic_backup": (
+                manager.config.data.last_attempted_automatic_backup
+            ),
+            "last_completed_automatic_backup": (
+                manager.config.data.last_completed_automatic_backup
+            ),
             "last_action_event": manager.last_action_event,
-            "next_automatic_backup": manager.config.data.schedule.next_automatic_backup,
-            "next_automatic_backup_additional": manager.config.data.schedule.next_automatic_backup_additional,
+            "next_automatic_backup": (
+                manager.config.data.schedule.next_automatic_backup
+            ),
+            "next_automatic_backup_additional": (
+                manager.config.data.schedule.next_automatic_backup_additional
+            ),
             "state": manager.state,
         },
     )
@@ -336,8 +344,12 @@ async def handle_config_info(
         {
             "config": config
             | {
-                "next_automatic_backup": manager.config.data.schedule.next_automatic_backup,
-                "next_automatic_backup_additional": manager.config.data.schedule.next_automatic_backup_additional,
+                "next_automatic_backup": (
+                    manager.config.data.schedule.next_automatic_backup
+                ),
+                "next_automatic_backup_additional": (
+                    manager.config.data.schedule.next_automatic_backup_additional
+                ),
             }
         },
     )
@@ -355,7 +367,8 @@ async def handle_config_info(
                     vol.Optional("retention"): vol.Any(
                         vol.Schema(
                             {
-                                # Note: We can't use cv.positive_int because it allows 0 even
+                                # Note: We can't use cv.positive_int
+                                # because it allows 0 even
                                 # though 0 is not positive.
                                 vol.Optional("copies"): vol.Any(
                                     vol.All(int, vol.Range(min=1)), None

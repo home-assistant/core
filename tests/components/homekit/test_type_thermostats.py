@@ -548,8 +548,8 @@ async def test_thermostat_auto(
     assert acc.char_cooling_thresh_temp.value == 25.0
     assert len(events) == 1
     assert (
-        events[-1].data[ATTR_VALUE]
-        == "CoolingThresholdTemperature to 25.0°C, HeatingThresholdTemperature to 20.0°C"
+        events[-1].data[ATTR_VALUE] == "CoolingThresholdTemperature to 25.0\u00b0C,"
+        " HeatingThresholdTemperature to 20.0\u00b0C"
     )
 
 
@@ -656,8 +656,9 @@ async def test_thermostat_mode_and_temp_change(
     assert len(events) == 2
     assert events[-2].data[ATTR_VALUE] == "TargetHeatingCoolingState to 3"
     assert (
-        events[-1].data[ATTR_VALUE]
-        == "TargetHeatingCoolingState to 3, CoolingThresholdTemperature to 25.0°C, HeatingThresholdTemperature to 20.0°C"
+        events[-1].data[ATTR_VALUE] == "TargetHeatingCoolingState to 3,"
+        " CoolingThresholdTemperature to 25.0\u00b0C,"
+        " HeatingThresholdTemperature to 20.0\u00b0C"
     )
 
 
@@ -729,7 +730,7 @@ async def test_thermostat_humidity(
 async def test_thermostat_humidity_with_target_humidity(
     hass: HomeAssistant, hk_driver
 ) -> None:
-    """Test if accessory and HA are updated accordingly with humidity without target hudmidity.
+    """Test accessory and HA updates with humidity without target.
 
     This test is for thermostats that do not support target humidity but
     have a current humidity sensor.
@@ -1287,7 +1288,7 @@ async def test_thermostat_hvac_modes_with_auto_only(
 async def test_thermostat_hvac_modes_with_heat_only(
     hass: HomeAssistant, hk_driver
 ) -> None:
-    """Test if unsupported HVAC modes are deactivated in HomeKit and siri calls get converted to heat."""
+    """Test unsupported HVAC modes deactivated, siri calls convert to heat."""
     entity_id = "climate.test"
 
     hass.states.async_set(
@@ -1367,7 +1368,7 @@ async def test_thermostat_hvac_modes_with_heat_only(
 async def test_thermostat_hvac_modes_with_cool_only(
     hass: HomeAssistant, hk_driver
 ) -> None:
-    """Test if unsupported HVAC modes are deactivated in HomeKit and siri calls get converted to cool."""
+    """Test unsupported HVAC modes deactivated, siri calls convert to cool."""
     entity_id = "climate.test"
 
     hass.states.async_set(
@@ -1422,7 +1423,7 @@ async def test_thermostat_hvac_modes_with_cool_only(
 async def test_thermostat_hvac_modes_with_heat_cool_only(
     hass: HomeAssistant, hk_driver
 ) -> None:
-    """Test if unsupported HVAC modes are deactivated in HomeKit and siri calls get converted to heat or cool."""
+    """Test unsupported HVAC modes deactivated, siri converts to heat/cool."""
     entity_id = "climate.test"
 
     hass.states.async_set(
@@ -2080,7 +2081,7 @@ async def test_thermostat_with_no_modes_when_we_first_see(
 async def test_thermostat_with_no_off_after_recheck(
     hass: HomeAssistant, hk_driver
 ) -> None:
-    """Test if a thermostat that is not ready when we first see it that actually does not have off."""
+    """Test thermostat without off mode discovered after recheck."""
     entity_id = "climate.test"
 
     base_attrs = {
@@ -2895,3 +2896,75 @@ async def test_thermostat_reversed_min_max(hass: HomeAssistant, hk_driver) -> No
     assert acc.char_heating_thresh_temp.properties[PROP_MAX_VALUE] == DEFAULT_MAX_TEMP
     assert acc.char_heating_thresh_temp.properties[PROP_MIN_VALUE] == 7.0
     assert acc.char_heating_thresh_temp.properties[PROP_MIN_STEP] == 0.1
+
+
+async def test_thermostat_with_capitalized_fan_modes(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test fan modes are sent back with their original casing."""
+    entity_id = "climate.test"
+    hass.states.async_set(
+        entity_id,
+        HVACMode.OFF,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: ["Auto", "Low", "Medium", "High"],
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
+            ATTR_FAN_MODE: "Auto",
+            ATTR_HVAC_MODES: [
+                HVACMode.HEAT,
+                HVACMode.COOL,
+                HVACMode.OFF,
+                HVACMode.AUTO,
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    acc.run()
+    await hass.async_block_till_done()
+
+    # ordered_fan_speeds tracks the lowercased keys, but the value sent back to
+    # the climate entity must use the entity's original casing.
+    assert acc.ordered_fan_speeds == [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+
+    call_set_fan_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE)
+    char_rotation_speed_iid = acc.char_speed.to_HAP()[HAP_REPR_IID]
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_rotation_speed_iid,
+                    HAP_REPR_VALUE: 100,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+    await hass.async_block_till_done()
+    assert len(call_set_fan_mode) == 1
+    assert call_set_fan_mode[-1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == "High"
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_rotation_speed_iid,
+                    HAP_REPR_VALUE: 100 / 3,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+    await hass.async_block_till_done()
+    assert len(call_set_fan_mode) == 2
+    assert call_set_fan_mode[-1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == "Low"

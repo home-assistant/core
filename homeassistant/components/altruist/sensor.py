@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,12 +12,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfDensity,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfSoundPressure,
     UnitOfTemperature,
 )
@@ -44,7 +44,7 @@ SENSOR_DESCRIPTIONS = [
         device_class=SensorDeviceClass.HUMIDITY,
         key="BME280_humidity",
         translation_key="humidity",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=2,
         translation_placeholders={"sensor_name": "BME280"},
     ),
@@ -69,7 +69,7 @@ SENSOR_DESCRIPTIONS = [
         device_class=SensorDeviceClass.HUMIDITY,
         key="BME680_humidity",
         translation_key="humidity",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=2,
         translation_placeholders={"sensor_name": "BME680"},
     ),
@@ -128,7 +128,7 @@ SENSOR_DESCRIPTIONS = [
         device_class=SensorDeviceClass.HUMIDITY,
         key="HTU21D_humidity",
         translation_key="humidity",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=2,
         translation_placeholders={"sensor_name": "HTU21D"},
     ),
@@ -144,21 +144,21 @@ SENSOR_DESCRIPTIONS = [
         device_class=SensorDeviceClass.PM10,
         translation_key="pm_10",
         key="SDS_P1",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         suggested_display_precision=2,
     ),
     AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.PM25,
         translation_key="pm_25",
         key="SDS_P2",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         suggested_display_precision=2,
     ),
     AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.HUMIDITY,
         key="SHT3X_humidity",
         translation_key="humidity",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=2,
         translation_placeholders={"sensor_name": "SHT3X"},
     ),
@@ -193,7 +193,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         translation_key="co2",
         key="CCS_CO2",
         suggested_display_precision=2,
@@ -202,7 +202,7 @@ SENSOR_DESCRIPTIONS = [
     AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         key="CCS_TVOC",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         suggested_display_precision=2,
     ),
     AltruistSensorEntityDescription(
@@ -214,7 +214,7 @@ SENSOR_DESCRIPTIONS = [
     AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.CO2,
         translation_key="co2",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         key="SCD4x_co2",
         suggested_display_precision=2,
         translation_placeholders={"sensor_name": "SCD4x"},
@@ -261,6 +261,7 @@ class AltruistSensor(CoordinatorEntity[AltruistDataUpdateCoordinator], SensorEnt
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -268,6 +269,7 @@ class AltruistSensor(CoordinatorEntity[AltruistDataUpdateCoordinator], SensorEnt
         )
 
     @property
+    @override
     def native_value(self) -> float | int:
         """Return the native value of the sensor."""
         string_value = self.coordinator.data[self.entity_description.key]

@@ -1,11 +1,9 @@
 """Config flow for OpenAI Conversation integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 import openai
 import voluptuous as vol
@@ -27,6 +25,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_LLM_HASS_API,
     CONF_NAME,
+    CONF_PROMPT,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
@@ -50,7 +49,6 @@ from .const import (
     CONF_CODE_INTERPRETER,
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
     CONF_RECOMMENDED,
@@ -127,8 +125,9 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenAI Conversation."""
 
     VERSION = 2
-    MINOR_VERSION = 6
+    MINOR_VERSION = 7
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -213,6 +212,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -257,7 +257,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Manage initial options."""
         # abort if entry is not loaded
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         options = self.options
@@ -326,7 +326,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             options.update(user_input)
             if CONF_LLM_HASS_API in options and CONF_LLM_HASS_API not in user_input:
                 options.pop(CONF_LLM_HASS_API)
-            return await self.async_step_advanced()
+            return await self.async_step_additional()
 
         return self.async_show_form(
             step_id="init",
@@ -335,10 +335,10 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             ),
         )
 
-    async def async_step_advanced(
+    async def async_step_additional(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Manage advanced options."""
+        """Manage additional options."""
         options = self.options
         errors: dict[str, str] = {}
 
@@ -374,7 +374,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 return await self.async_step_model()
 
         return self.async_show_form(
-            step_id="advanced",
+            step_id="additional",
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(step_schema), options
             ),
@@ -435,23 +435,37 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
+                }
+            )
+        elif CONF_VERBOSITY in options:
+            options.pop(CONF_VERBOSITY)
+
+        if model.startswith(("o", "gpt-5")):
+            reasoning_summary_options = ["off", "auto", "concise", "detailed"]
+            if model.startswith("o"):
+                reasoning_summary_options.remove("concise")
+            stored_summary = options.get(
+                CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
+            )
+            if stored_summary not in reasoning_summary_options:
+                stored_summary = RECOMMENDED_REASONING_SUMMARY
+                options[CONF_REASONING_SUMMARY] = stored_summary
+            step_schema.update(
+                {
                     vol.Optional(
                         CONF_REASONING_SUMMARY,
-                        default=RECOMMENDED_REASONING_SUMMARY,
+                        default=stored_summary,
                     ): SelectSelector(
                         SelectSelectorConfig(
-                            options=["off", "auto", "short", "detailed"],
+                            options=reasoning_summary_options,
                             translation_key=CONF_REASONING_SUMMARY,
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
                 }
             )
-        elif CONF_VERBOSITY in options:
-            options.pop(CONF_VERBOSITY)
-        if CONF_REASONING_SUMMARY in options:
-            if not model.startswith("gpt-5"):
-                options.pop(CONF_REASONING_SUMMARY)
+        elif CONF_REASONING_SUMMARY in options:
+            options.pop(CONF_REASONING_SUMMARY)
 
         service_tiers = self._get_service_tiers(model)
         if "flex" in service_tiers or "priority" in service_tiers:
@@ -525,7 +539,12 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 vol.Optional(CONF_IMAGE_MODEL, default=RECOMMENDED_IMAGE_MODEL)
             ] = SelectSelector(
                 SelectSelectorConfig(
-                    options=["gpt-image-1.5", "gpt-image-1", "gpt-image-1-mini"],
+                    options=[
+                        "gpt-image-2",
+                        "gpt-image-1.5",
+                        "gpt-image-1",
+                        "gpt-image-1-mini",
+                    ],
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             )
@@ -574,8 +593,8 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             return []
 
         models_reasoning_map: dict[str | tuple[str, ...], list[str]] = {
-            ("gpt-5.2-pro", "gpt-5.4-pro"): ["medium", "high", "xhigh"],
-            ("gpt-5.2", "gpt-5.3", "gpt-5.4"): [
+            ("gpt-5.2-pro", "gpt-5.4-pro", "gpt-5.5-pro"): ["medium", "high", "xhigh"],
+            ("gpt-5.2", "gpt-5.3", "gpt-5.4", "gpt-5.5"): [
                 "none",
                 "low",
                 "medium",
@@ -619,7 +638,9 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 {
                     vol.Optional(
                         CONF_WEB_SEARCH_CITY,
-                        description="Free text input for the city, e.g. `San Francisco`",
+                        description=(
+                            "Free text input for the city, e.g. `San Francisco`"
+                        ),
                     ): str,
                     vol.Optional(
                         CONF_WEB_SEARCH_REGION,
@@ -691,7 +712,7 @@ class OpenAISubentrySTTFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Manage initial options."""
         # abort if entry is not loaded
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         options = self.options
@@ -780,7 +801,7 @@ class OpenAISubentryTTSFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Manage initial options."""
         # abort if entry is not loaded
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         options = self.options

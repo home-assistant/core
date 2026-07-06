@@ -38,6 +38,9 @@
     "number": {
       "room_correction_intensity": {
         "name": "Room correction intensity"
+      },
+      "volume_limit": {
+        "name": "Volume limit"
       }
     },
     "select": {

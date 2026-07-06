@@ -1,7 +1,5 @@
 """Test Tuya diagnostics platform."""
 
-from __future__ import annotations
-
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props

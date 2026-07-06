@@ -16,7 +16,6 @@ import pytest
 from homeassistant.components.profiler import (
     _LRU_CACHE_WRAPPER_OBJECT,
     _SQLALCHEMY_LRU_OBJECT,
-    CONF_ENABLED,
     CONF_SECONDS,
     SERVICE_DUMP_LOG_OBJECTS,
     SERVICE_DUMP_SOCKETS,
@@ -33,7 +32,7 @@ from homeassistant.components.profiler import (
     SERVICE_STOP_LOG_OBJECTS,
 )
 from homeassistant.components.profiler.const import DOMAIN
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE
+from homeassistant.const import CONF_ENABLED, CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util

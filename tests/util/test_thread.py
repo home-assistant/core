@@ -37,20 +37,20 @@ async def test_thread_not_started(hass: HomeAssistant) -> None:
         test_thread.raise_exc(TimeoutError)
 
 
-async def test_thread_fails_raise(hass: HomeAssistant) -> None:
+async def test_thread_fails_raise() -> None:
     """Test throwing after already ended."""
 
-    finish_event = asyncio.Event()
-
-    def _do_nothing(*_):
-        run_callback_threadsafe(hass.loop, finish_event.set)
-
-    test_thread = ThreadWithException(target=_do_nothing)
+    test_thread = ThreadWithException(target=lambda *_: None)
     test_thread.start()
-    await asyncio.wait_for(finish_event.wait(), timeout=0.1)
     test_thread.join()
 
-    with pytest.raises(SystemError):
+    # After the thread has ended, its id may still briefly resolve to a live
+    # thread state, so patch it to an id guaranteed not to exist to
+    # deterministically exercise the "Thread not found" path.
+    with (
+        patch.object(test_thread, "_ident", -1),
+        pytest.raises(ValueError, match="Thread not found"),
+    ):
         test_thread.raise_exc(ValueError)
 
 

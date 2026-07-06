@@ -1,7 +1,5 @@
 """Support for RFXtrx devices."""
 
-from __future__ import annotations
-
 import binascii
 from collections.abc import Callable, Mapping
 import copy
@@ -9,7 +7,6 @@ import logging
 from typing import Any, NamedTuple, cast
 
 import RFXtrx as rfxtrxmod
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -22,7 +19,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import EventDeviceRegistryUpdatedData
@@ -32,9 +29,9 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ATTR_EVENT,
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_PROTOCOLS,
@@ -42,9 +39,9 @@ from .const import (
     DEVICE_PACKET_TYPE_LIGHTING4,
     DOMAIN,
     EVENT_RFXTRX_EVENT,
-    SERVICE_SEND,
     SIGNAL_EVENT,
 )
+from .services import async_setup_services
 
 DEFAULT_OFF_DELAY = 2.0
 
@@ -61,18 +58,6 @@ class DeviceTuple(NamedTuple):
     id_string: str
 
 
-def _bytearray_string(data: Any) -> bytearray:
-    val = cv.string(data)
-    try:
-        return bytearray.fromhex(val)
-    except ValueError as err:
-        raise vol.Invalid(
-            "Data must be a hex string with multiple of two characters"
-        ) from err
-
-
-SERVICE_SEND_SCHEMA = vol.Schema({ATTR_EVENT: _bytearray_string})
-
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.COVER,
@@ -82,6 +67,15 @@ PLATFORMS = [
     Platform.SIREN,
     Platform.SWITCH,
 ]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up RFXtrx services."""
+    hass.data.setdefault(DOMAIN, {})
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -99,12 +93,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
 
-    hass.services.async_remove(DOMAIN, SERVICE_SEND)
-
     rfx_object = hass.data[DOMAIN][DATA_RFXOBJECT]
     await hass.async_add_executor_job(rfx_object.close_connection)
 
-    hass.data.pop(DOMAIN)
+    hass.data[DOMAIN].pop(DATA_RFXOBJECT)
 
     return True
 
@@ -270,6 +262,8 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
         _create_rfx, config, lambda event: hass.add_job(async_handle_receive, event)
     )
 
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     hass.data[DOMAIN][DATA_RFXOBJECT] = rfx_object
 
     entry.async_on_unload(
@@ -283,12 +277,6 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_rfxtrx)
     )
-
-    def send(call: ServiceCall) -> None:
-        event = call.data[ATTR_EVENT]
-        rfx_object.transport.send(event)
-
-    hass.services.async_register(DOMAIN, SERVICE_SEND, send, schema=SERVICE_SEND_SCHEMA)
 
 
 async def async_setup_platform_entry(

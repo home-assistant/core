@@ -1,7 +1,5 @@
 """SFR Box."""
 
-from __future__ import annotations
-
 import asyncio
 
 from sfrbox_api.bridge import SFRBox

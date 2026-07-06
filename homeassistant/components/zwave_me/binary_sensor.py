@@ -1,6 +1,6 @@
 """Representation of a sensorBinary."""
 
-from __future__ import annotations
+from typing import override
 
 from zwave_me_ws import ZWaveMeData
 
@@ -71,6 +71,7 @@ class ZWaveMeBinarySensor(ZWaveMeEntity, BinarySensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return self.device.level == "on"

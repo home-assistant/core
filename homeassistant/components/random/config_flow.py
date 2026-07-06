@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine, Mapping
 from enum import StrEnum
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -187,6 +187,7 @@ class RandomConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow_reloads = True
 
     @callback
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options["name"])

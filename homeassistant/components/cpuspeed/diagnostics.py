@@ -1,7 +1,5 @@
 """Diagnostics support for CPU Speed."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from cpuinfo import cpuinfo

@@ -32,7 +32,9 @@ async def test_button_calibrate(
         BUTTON_DOMAIN,
         "press",
         {
-            ATTR_ENTITY_ID: f"button.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_calibrate"
+            ATTR_ENTITY_ID: (
+                f"button.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_calibrate"
+            )
         },
         blocking=True,
     )
@@ -65,7 +67,9 @@ async def test_button_stop_pump(
         BUTTON_DOMAIN,
         "press",
         {
-            ATTR_ENTITY_ID: f"button.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_stop_pump"
+            ATTR_ENTITY_ID: (
+                f"button.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_stop_pump"
+            )
         },
         blocking=True,
     )

@@ -1,10 +1,8 @@
 """The data update coordinator for OctoPrint."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import cast
+from typing import cast, override
 
 from pyoctoprintapi import ApiError, OctoprintClient, PrinterOffline
 from pyoctoprintapi.exceptions import UnauthorizedException
@@ -49,6 +47,7 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
         self._printer_offline = False
         self.data = {"printer": None, "job": None, "last_read_time": None}
 
+    @override
     async def _async_update_data(self):
         """Update data via API."""
         printer = None

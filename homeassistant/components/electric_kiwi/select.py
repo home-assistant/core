@@ -1,8 +1,7 @@
 """Support for Electric Kiwi hour of free power."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -63,6 +62,7 @@ class ElectricKiwiSelectHOPEntity(
         self._attr_options = list(self.values_dict)
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the currently selected option."""
         return (
@@ -70,6 +70,7 @@ class ElectricKiwiSelectHOPEntity(
             f" - {self.coordinator.data.end.end_time}"
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         value = self.values_dict[option]

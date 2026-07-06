@@ -1,8 +1,6 @@
 """Support for Keba notifications."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
 from homeassistant.core import HomeAssistant
@@ -29,6 +27,7 @@ class KebaNotificationService(BaseNotificationService):
         """Initialize the service."""
         self._client = client
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send the message."""
         text = message.replace(" ", "$")  # Will be translated back by the display

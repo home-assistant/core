@@ -1,11 +1,9 @@
 """Lights on Zigbee Home Automation networks."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import functools
 import logging
-from typing import Any
+from typing import Any, override
 
 from zha.application.platforms.light.const import (
     ColorMode as ZhaColorMode,
@@ -110,6 +108,7 @@ class Light(LightEntity, ZHAEntity):
         self._attr_supported_features = features
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
         state = self.entity_data.entity.state
@@ -119,16 +118,19 @@ class Light(LightEntity, ZHAEntity):
         }
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if entity is on."""
         return self.entity_data.entity.is_on
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light."""
         return self.entity_data.entity.brightness
 
     @property
+    @override
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
         return color_util.color_temperature_mired_to_kelvin(
@@ -136,6 +138,7 @@ class Light(LightEntity, ZHAEntity):
         )
 
     @property
+    @override
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
         return color_util.color_temperature_mired_to_kelvin(
@@ -143,11 +146,13 @@ class Light(LightEntity, ZHAEntity):
         )
 
     @property
+    @override
     def xy_color(self) -> tuple[float, float] | None:
         """Return the xy color value [float, float]."""
         return self.entity_data.entity.xy_color
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
         return (
@@ -157,6 +162,7 @@ class Light(LightEntity, ZHAEntity):
         )
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode."""
         if self.entity_data.entity.color_mode is None:
@@ -164,16 +170,19 @@ class Light(LightEntity, ZHAEntity):
         return ZHA_TO_HA_COLOR_MODE[self.entity_data.entity.color_mode]
 
     @property
+    @override
     def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         return self.entity_data.entity.effect_list
 
     @property
+    @override
     def effect(self) -> str | None:
         """Return the current effect."""
         return self.entity_data.entity.effect
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         color_temp = (
@@ -191,7 +200,8 @@ class Light(LightEntity, ZHAEntity):
         )
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_data.entity.async_turn_off(
@@ -200,6 +210,7 @@ class Light(LightEntity, ZHAEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def restore_external_state_attributes(self, state: State) -> None:
         """Restore entity state."""
         color_temp = (

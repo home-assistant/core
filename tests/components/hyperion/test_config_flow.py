@@ -1,7 +1,5 @@
 """Tests for the Hyperion config flow."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable
 import dataclasses
@@ -575,7 +573,7 @@ async def test_auth_create_token_success(hass: HomeAssistant) -> None:
 async def test_auth_create_token_success_but_login_fail(
     hass: HomeAssistant,
 ) -> None:
-    """Verify correct behaviour when a token is successfully created but the login fails."""
+    """Verify behaviour when token is created but login fails."""
     result = await _init_flow(hass)
 
     client = create_mock_client()

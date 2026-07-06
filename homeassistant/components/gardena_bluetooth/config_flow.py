@@ -1,27 +1,21 @@
 """Config flow for Gardena Bluetooth integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from gardena_bluetooth.client import Client
-from gardena_bluetooth.const import PRODUCT_NAMES, DeviceInformation, ScanService
+from gardena_bluetooth.const import PRODUCT_NAMES, DeviceInformation
 from gardena_bluetooth.exceptions import CharacteristicNotFound, CommunicationFailure
 from gardena_bluetooth.parse import ManufacturerData, ProductType
-from gardena_bluetooth.scan import async_get_manufacturer_data
 import voluptuous as vol
 
-from homeassistant.components.bluetooth import (
-    BluetoothServiceInfo,
-    async_discovered_service_info,
-)
+from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import AbortFlow
 
-from . import get_connection
-from .const import DOMAIN
+from . import async_get_product, async_get_products, get_connection
+from .const import CONF_PRODUCT_TYPE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,26 +29,16 @@ _SUPPORTED_PRODUCT_TYPES = {
 }
 
 
-def _is_supported(discovery_info: BluetoothServiceInfo):
-    """Check if device is supported."""
-    if ScanService not in discovery_info.service_uuids:
-        return False
-
-    if discovery_info.manufacturer_data.get(ManufacturerData.company) is None:
-        _LOGGER.debug("Missing manufacturer data: %s", discovery_info)
-        return False
-    return True
-
-
 class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Gardena Bluetooth."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.devices: dict[str, str] = {}
         self.address: str | None
+        self.devices: dict[str, ManufacturerData] = {}
 
     async def async_read_data(self):
         """Try to connect to device and extract information."""
@@ -70,22 +54,28 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         finally:
             await client.disconnect()
 
-        return {CONF_ADDRESS: self.address}
+        assert self.address in self.devices
+        return {
+            CONF_ADDRESS: self.address,
+            CONF_PRODUCT_TYPE: self.devices[self.address].product_type.name,
+        }
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
     ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         _LOGGER.debug("Discovered device: %s", discovery_info)
-        data = await async_get_manufacturer_data({discovery_info.address})
-        product_type = data[discovery_info.address].product_type
-        if product_type not in _SUPPORTED_PRODUCT_TYPES:
+
+        await self.async_set_unique_id(discovery_info.address)
+        self._abort_if_unique_id_configured()
+
+        mfg = await async_get_product(self.hass, discovery_info.address)
+        self.devices[discovery_info.address] = mfg
+        if mfg.product_type not in _SUPPORTED_PRODUCT_TYPES:
             return self.async_abort(reason="no_devices_found")
 
         self.address = discovery_info.address
-        self.devices = {discovery_info.address: PRODUCT_NAMES[product_type]}
-        await self.async_set_unique_id(self.address)
-        self._abort_if_unique_id_configured()
         return await self.async_step_confirm()
 
     async def async_step_confirm(
@@ -93,7 +83,7 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm discovery."""
         assert self.address
-        title = self.devices[self.address]
+        title = PRODUCT_NAMES[self.devices[self.address].product_type]
 
         if user_input is not None:
             data = await self.async_read_data()
@@ -109,6 +99,7 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=self.context["title_placeholders"],
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -119,31 +110,25 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return await self.async_step_confirm()
 
-        current_addresses = self._async_current_ids(include_ignore=False)
-        candidates = set()
-        for discovery_info in async_discovered_service_info(self.hass):
-            address = discovery_info.address
-            if address in current_addresses or not _is_supported(discovery_info):
-                continue
-            candidates.add(address)
-
-        data = await async_get_manufacturer_data(candidates)
-        for address, mfg_data in data.items():
-            if mfg_data.product_type not in _SUPPORTED_PRODUCT_TYPES:
-                continue
-            self.devices[address] = PRODUCT_NAMES[mfg_data.product_type]
+        current = self._async_current_ids(include_ignore=False)
+        self.devices = await async_get_products(self.hass)
 
         # Keep selection sorted by address to ensure stable tests
-        self.devices = dict(sorted(self.devices.items(), key=lambda x: x[0]))
+        devices = {
+            address: PRODUCT_NAMES[data.product_type]
+            for address in sorted(self.devices)
+            if address not in current
+            and (data := self.devices[address]).product_type in _SUPPORTED_PRODUCT_TYPES
+        }
 
-        if not self.devices:
+        if not devices:
             return self.async_abort(reason="no_devices_found")
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(self.devices),
+                    vol.Required(CONF_ADDRESS): vol.In(devices),
                 },
             ),
         )

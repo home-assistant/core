@@ -109,7 +109,8 @@ def async_remove_stale_devices_links_keep_current_device(
             continue
         ent_reg.async_update_entity(entity.entity_id, device_id=current_device_id)
 
-    # Removes all devices from the config entry that are not the same as the current device
+    # Removes all devices from the config entry that are not the same
+    # as the current device
     for device in dev_reg.devices.get_devices_for_config_entry_id(entry_id):
         if device.id == current_device_id:
             continue

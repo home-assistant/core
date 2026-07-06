@@ -1,5 +1,6 @@
 ignore: |
   tests/fixtures/core/config/yaml_errors/
+  .github/workflows/*.lock.yml
 rules:
   braces:
     level: error

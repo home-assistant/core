@@ -1,10 +1,9 @@
 """GoodWe PV inverter numeric settings entities."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from goodwe import Inverter, InverterError
 
@@ -126,7 +125,7 @@ class InverterNumberEntity(NumberEntity):
     ) -> None:
         """Initialize the number inverter setting entity."""
         self.entity_description = description
-        self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"
+        self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = device_info
         self._attr_native_value = float(current_value)
         self._inverter: Inverter = inverter
@@ -136,6 +135,7 @@ class InverterNumberEntity(NumberEntity):
         value = await self.entity_description.getter(self._inverter)
         self._attr_native_value = float(value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.entity_description.setter(self._inverter, int(value))

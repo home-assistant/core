@@ -1,7 +1,5 @@
 """Component to integrate the Home Assistant cloud."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
@@ -255,7 +253,10 @@ def async_listen_cloudhook_change(
     webhook_id: str,
     on_change: Callable[[dict[str, Any] | None], None],
 ) -> Callable[[], None]:
-    """Listen for cloudhook changes for the given webhook and notify when modified or deleted."""
+    """Listen for cloudhook changes for the given webhook.
+
+    Notify when modified or deleted.
+    """
 
     @callback
     def _handle_cloudhooks_updated(cloudhooks: dict[str, Any]) -> None:

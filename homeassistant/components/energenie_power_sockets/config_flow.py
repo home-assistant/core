@@ -1,6 +1,6 @@
 """ConfigFlow for Energenie-Power-Sockets devices."""
 
-from typing import Any
+from typing import Any, override
 
 from pyegps import get_device, search_for_devices
 from pyegps.exceptions import MissingLibrary, UsbError
@@ -14,6 +14,7 @@ from .const import CONF_DEVICE_API_ID, DOMAIN, LOGGER
 class EGPSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for EGPS devices."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

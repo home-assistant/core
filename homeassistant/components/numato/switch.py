@@ -1,9 +1,7 @@
 """Switch platform integration for Numato USB GPIO expanders."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from numato_gpio import NumatoGpioError
 
@@ -80,6 +78,7 @@ class NumatoGpioSwitch(SwitchEntity):
         self._attr_is_on = False
         self._api = api
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the port on."""
         try:
@@ -88,6 +87,7 @@ class NumatoGpioSwitch(SwitchEntity):
             )
             self._attr_is_on = True
             self.schedule_update_ha_state()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NumatoGpioError as err:
             _LOGGER.error(
                 "Failed to turn on Numato device %s port %s: %s",
@@ -96,6 +96,7 @@ class NumatoGpioSwitch(SwitchEntity):
                 err,
             )
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the port off."""
         try:
@@ -104,6 +105,7 @@ class NumatoGpioSwitch(SwitchEntity):
             )
             self._attr_is_on = False
             self.schedule_update_ha_state()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NumatoGpioError as err:
             _LOGGER.error(
                 "Failed to turn off Numato device %s port %s: %s",

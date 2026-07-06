@@ -1,8 +1,6 @@
 """BSBLAN platform to control a compatible Water Heater Device."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from bsblan import BSBLANError, HotWaterState, SetHotWaterParam
 
@@ -21,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BSBLanConfigEntry, BSBLanData
 from .const import DOMAIN
-from .entity import BSBLanDualCoordinatorEntity
+from .entity import BSBLanWaterHeaterDeviceEntity
 
 PARALLEL_UPDATES = 1
 
@@ -61,7 +59,7 @@ async def async_setup_entry(
     async_add_entities([BSBLANWaterHeater(data)])
 
 
-class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
+class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
     """Defines a BSBLAN water heater entity."""
 
     _attr_name = None
@@ -120,6 +118,7 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
         return dhw
 
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return current operation."""
         if (
@@ -129,6 +128,7 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
         return BSBLAN_TO_HA_OPERATION_MODE.get(operating_mode.value)
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if (current_temp := self._dhw.dhw_actual_value_top_temperature) is None:
@@ -136,12 +136,14 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
         return current_temp.value
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if (target_temp := self._dhw.nominal_setpoint) is None:
             return None
         return target_temp.value
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -157,6 +159,7 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
 
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         # Base class validates operation_mode is in operation_list before calling
@@ -174,10 +177,12 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
 
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the water heater on."""
         await self.async_set_operation_mode(STATE_PERFORMANCE)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the water heater off."""
         await self.async_set_operation_mode(STATE_OFF)

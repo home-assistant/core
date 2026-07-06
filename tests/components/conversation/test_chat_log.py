@@ -320,7 +320,11 @@ async def test_extra_systen_prompt(
     hass: HomeAssistant, mock_conversation_input: ConversationInput
 ) -> None:
     """Test that extra system prompt works."""
-    extra_system_prompt = "Garage door cover.garage_door has been left open for 30 minutes. We asked the user if they want to close it."
+    extra_system_prompt = (
+        "Garage door cover.garage_door has been left open"
+        " for 30 minutes. We asked the user if they want"
+        " to close it."
+    )
     extra_system_prompt2 = (
         "User person.paulus came home. Asked him what he wants to do."
     )

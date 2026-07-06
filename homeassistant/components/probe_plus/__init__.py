@@ -1,7 +1,5 @@
 """The Probe Plus integration."""
 
-from __future__ import annotations
-
 from homeassistant.const import CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 

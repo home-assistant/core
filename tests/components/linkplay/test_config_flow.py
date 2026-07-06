@@ -81,7 +81,7 @@ async def test_user_flow(
 async def test_user_flow_re_entry(
     hass: HomeAssistant,
 ) -> None:
-    """Test user setup config flow when an entry with the same unique id already exists."""
+    """Test user setup flow when entry with same unique id exists."""
 
     # Create mock entry which already has the same UUID
     entry = MockConfigEntry(

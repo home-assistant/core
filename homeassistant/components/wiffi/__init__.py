@@ -25,7 +25,7 @@ type WiffiConfigEntry = ConfigEntry[WiffiIntegrationApi]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WiffiConfigEntry) -> bool:
-    """Set up wiffi from a config entry, config_entry contains data from config entry database."""
+    """Set up wiffi from a config entry."""
 
     # create api object
     api = WiffiIntegrationApi(hass)

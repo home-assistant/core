@@ -191,7 +191,8 @@ async def setup_integration(
     mock_calendar(aioclient_mock, url)
 
     if not skip_entry_setup:
-        # async_setup_entry will automatically trigger async_setup which registers services
+        # async_setup_entry will automatically trigger async_setup
+        # which registers services
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

@@ -1,7 +1,5 @@
 """The OpenGarage integration."""
 
-from __future__ import annotations
-
 import opengarage
 
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL, Platform

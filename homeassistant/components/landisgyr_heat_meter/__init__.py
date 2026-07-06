@@ -1,7 +1,5 @@
 """The Landis+Gyr Heat Meter integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -47,7 +45,8 @@ async def async_migrate_entry(
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    # Removing domain name and config entry id from entity unique id's, replacing it with device number
+    # Removing domain name and config entry id from entity
+    # unique id's, replacing it with device number
     if config_entry.version == 1:
         hass.config_entries.async_update_entry(config_entry, version=2)
 

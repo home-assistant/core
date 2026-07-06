@@ -1,7 +1,5 @@
 """Support for Elgato services."""
 
-from __future__ import annotations
-
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import service

@@ -1,7 +1,5 @@
 """The Electra Air Conditioner integration."""
 
-from __future__ import annotations
-
 from electrasmart.api import ElectraAPI, ElectraApiError
 
 from homeassistant.config_entries import ConfigEntry

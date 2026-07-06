@@ -1,10 +1,8 @@
 """AirOS Binary Sensor component for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import override
 
 from airos.data import AirOSDataBaseClass
 
@@ -22,13 +20,10 @@ from .entity import AirOSEntity
 
 PARALLEL_UPDATES = 0
 
-AirOSDataModel = TypeVar("AirOSDataModel", bound=AirOSDataBaseClass)
-
 
 @dataclass(frozen=True, kw_only=True)
-class AirOSBinarySensorEntityDescription(
+class AirOSBinarySensorEntityDescription[AirOSDataModel: AirOSDataBaseClass](
     BinarySensorEntityDescription,
-    Generic[AirOSDataModel],
 ):
     """Describe an AirOS binary sensor."""
 
@@ -120,6 +115,7 @@ class AirOSBinarySensor(AirOSEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.data.derived.mac}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

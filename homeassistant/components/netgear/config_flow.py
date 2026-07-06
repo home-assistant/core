@@ -1,9 +1,7 @@
 """Config flow to configure the Netgear integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 from urllib.parse import urlparse
 
 from pynetgear import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER
@@ -106,6 +104,7 @@ class NetgearFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
@@ -133,6 +132,7 @@ class NetgearFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders=self.placeholders,
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -178,6 +178,7 @@ class NetgearFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

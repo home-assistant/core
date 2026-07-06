@@ -216,34 +216,15 @@ async def test_single_site(hass: HomeAssistant, single_site_api: Mock) -> None:
 async def test_single_closed_site_no_closed_date(
     hass: HomeAssistant, single_site_closed_no_close_date_api: Mock
 ) -> None:
-    """Test single closed site with no closed date."""
-    initial_result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert initial_result.get("type") is FlowResultType.FORM
-    assert initial_result.get("step_id") == "user"
-
-    # Test filling in API key
+    """Test single closed site with no closed date is filtered out."""
     enter_api_key_result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_API_TOKEN: API_KEY},
     )
     assert enter_api_key_result.get("type") is FlowResultType.FORM
-    assert enter_api_key_result.get("step_id") == "site"
-
-    select_site_result = await hass.config_entries.flow.async_configure(
-        enter_api_key_result["flow_id"],
-        {CONF_SITE_ID: "01FG0AGP818PXK0DWHXJRRT2DH", CONF_SITE_NAME: "Home"},
-    )
-
-    # Show available sites
-    assert select_site_result.get("type") is FlowResultType.CREATE_ENTRY
-    assert select_site_result.get("title") == "Home"
-    data = select_site_result.get("data")
-    assert data
-    assert data[CONF_API_TOKEN] == API_KEY
-    assert data[CONF_SITE_ID] == "01FG0AGP818PXK0DWHXJRRT2DH"
+    assert enter_api_key_result.get("step_id") == "user"
+    assert enter_api_key_result.get("errors") == {"api_token": "no_site"}
 
 
 async def test_single_site_rejoin(
@@ -333,13 +314,9 @@ async def test_unknown_error(hass: HomeAssistant, api_error: Mock) -> None:
     assert result.get("errors") == {"api_token": "unknown_error"}
 
 
-async def test_site_deduplication(single_site_rejoin_api: Mock) -> None:
-    """Test site deduplication."""
+async def test_site_filtering(single_site_rejoin_api: Mock) -> None:
+    """Test that closed sites are filtered out and remaining sites are deduplicated."""
     filtered = filter_sites(single_site_rejoin_api.get_sites())
-    assert len(filtered) == 2
-    assert (
-        next(s for s in filtered if s.nmi == "11111111111").status == SiteStatus.ACTIVE
-    )
-    assert (
-        next(s for s in filtered if s.nmi == "11111111112").status == SiteStatus.CLOSED
-    )
+    assert len(filtered) == 1
+    assert filtered[0].nmi == "11111111111"
+    assert filtered[0].status == SiteStatus.ACTIVE

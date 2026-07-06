@@ -1,8 +1,8 @@
-"""Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier with humidifier entity."""
+"""Support for Xiaomi Mi Air Purifier and Humidifier."""
 
 import logging
 import math
-from typing import Any
+from typing import Any, override
 
 from miio import Device as MiioDevice
 from miio.integrations.humidifier.deerma.airhumidifier_mjjsq import (
@@ -134,6 +134,7 @@ class XiaomiGenericHumidifier(
         self._humidity_steps = 100
         self._target_humidity: float | None = None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         result = await self._try_command(
@@ -144,6 +145,7 @@ class XiaomiGenericHumidifier(
             self._attr_is_on = True
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         result = await self._try_command(
@@ -208,6 +210,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
         self._mode = self._attributes[ATTR_MODE]
 
     @callback
+    @override
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         self._attr_is_on = self.coordinator.data.is_on
@@ -223,11 +226,13 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def mode(self) -> str:
         """Return the current mode."""
         return AirhumidifierOperationMode(self._mode).name
 
     @property
+    @override
     def target_humidity(self) -> float | None:
         """Return the target humidity."""
         return (
@@ -237,6 +242,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
             else None
         )
 
+    @override
     async def async_set_humidity(self, humidity: float) -> None:
         """Set the target humidity of the humidifier and set the mode to auto."""
         target_humidity = self.translate_humidity(humidity)
@@ -253,7 +259,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
         if (
             self.supported_features & HumidifierEntityFeature.MODES == 0
             or AirhumidifierOperationMode(self._attributes[ATTR_MODE])
-            == AirhumidifierOperationMode.Auto
+            is AirhumidifierOperationMode.Auto
             or AirhumidifierOperationMode.Auto.name not in self.available_modes
         ):
             self.async_write_ha_state()
@@ -267,6 +273,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
             self._mode = AirhumidifierOperationMode.Auto.value
             self.async_write_ha_state()
 
+    @override
     async def async_set_mode(self, mode: str) -> None:
         """Set the mode of the humidifier."""
         if self.supported_features & HumidifierEntityFeature.MODES == 0 or not mode:
@@ -299,22 +306,25 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
     REVERSE_MODE_MAPPING = {v: k for k, v in MODE_MAPPING.items()}
 
     @property
+    @override
     def mode(self) -> str:
         """Return the current mode."""
         return AirhumidifierMiotOperationMode(self._mode).name
 
     @property
+    @override
     def target_humidity(self) -> float | None:
         """Return the target humidity."""
         if self.is_on:
             return (
                 self._target_humidity
                 if AirhumidifierMiotOperationMode(self._mode)
-                == AirhumidifierMiotOperationMode.Auto
+                is AirhumidifierMiotOperationMode.Auto
                 else None
             )
         return None
 
+    @override
     async def async_set_humidity(self, humidity: float) -> None:
         """Set the target humidity of the humidifier and set the mode to auto."""
         target_humidity = self.translate_humidity(humidity)
@@ -331,7 +341,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
         if (
             self.supported_features & HumidifierEntityFeature.MODES == 0
             or AirhumidifierMiotOperationMode(self._attributes[ATTR_MODE])
-            == AirhumidifierMiotOperationMode.Auto
+            is AirhumidifierMiotOperationMode.Auto
         ):
             self.async_write_ha_state()
             return
@@ -344,6 +354,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
             self._mode = 0
             self.async_write_ha_state()
 
+    @override
     async def async_set_mode(self, mode: str) -> None:
         """Set the mode of the fan."""
         if self.supported_features & HumidifierEntityFeature.MODES == 0 or not mode:
@@ -375,21 +386,24 @@ class XiaomiAirHumidifierMjjsq(XiaomiAirHumidifier):
     }
 
     @property
+    @override
     def mode(self) -> str:
         """Return the current mode."""
         return AirhumidifierMjjsqOperationMode(self._mode).name
 
     @property
+    @override
     def target_humidity(self) -> float | None:
         """Return the target humidity."""
         if self.is_on:
             if (
                 AirhumidifierMjjsqOperationMode(self._mode)
-                == AirhumidifierMjjsqOperationMode.Humidity
+                is AirhumidifierMjjsqOperationMode.Humidity
             ):
                 return self._target_humidity
         return None
 
+    @override
     async def async_set_humidity(self, humidity: float) -> None:
         """Set the target humidity of the humidifier and set the mode to Humidity."""
         target_humidity = self.translate_humidity(humidity)
@@ -406,7 +420,7 @@ class XiaomiAirHumidifierMjjsq(XiaomiAirHumidifier):
         if (
             self.supported_features & HumidifierEntityFeature.MODES == 0
             or AirhumidifierMjjsqOperationMode(self._attributes[ATTR_MODE])
-            == AirhumidifierMjjsqOperationMode.Humidity
+            is AirhumidifierMjjsqOperationMode.Humidity
         ):
             self.async_write_ha_state()
             return
@@ -419,6 +433,7 @@ class XiaomiAirHumidifierMjjsq(XiaomiAirHumidifier):
             self._mode = 3
             self.async_write_ha_state()
 
+    @override
     async def async_set_mode(self, mode: str) -> None:
         """Set the mode of the fan."""
         if mode not in self.MODE_MAPPING:

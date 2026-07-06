@@ -1,7 +1,5 @@
 """Queries for logbook."""
 
-from __future__ import annotations
-
 from collections.abc import Collection
 from datetime import datetime as dt
 
@@ -47,7 +45,8 @@ def statement_for_request(
     # object from the non-json ones to prevent
     # sqlalchemy from quoting them incorrectly
 
-    # entities and devices: logbook sends everything for the timeframe for the entities and devices
+    # entities and devices: logbook sends everything for
+    # the timeframe for the entities and devices
     if entity_ids and device_ids:
         return entities_devices_stmt(
             start_day,

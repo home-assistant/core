@@ -75,7 +75,7 @@ async def test_weather_higher_temp_at_night(
     mock_irm_kmi_api_high_low_temp: AsyncMock,
     forecast_type: str,
 ) -> None:
-    """Test that the templow is always lower than temperature, even when API returns the opposite."""
+    """Test templow is always lower than temperature."""
     # Test case for https://github.com/jdejaegh/irm-kmi-ha/issues/8
     mock_config_entry.add_to_hass(hass)
 

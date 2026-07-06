@@ -1,8 +1,6 @@
 """Support for Balboa switches."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pybalboa import SpaClient
 
@@ -35,14 +33,17 @@ class BalboaSwitchEntity(BalboaEntity, SwitchEntity):
         self._attr_translation_key = "filter_cycle_2_enabled"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._client.filter_cycle_2_enabled
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._client.configure_filter_cycle(2, enabled=True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._client.configure_filter_cycle(2, enabled=False)

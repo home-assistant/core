@@ -1,10 +1,9 @@
 """Support for Peblar sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from peblar import PeblarUserConfiguration
 
@@ -251,6 +250,7 @@ class PeblarSensorEntity(PeblarEntity[PeblarDataUpdateCoordinator], SensorEntity
     entity_description: PeblarSensorDescription
 
     @property
+    @override
     def native_value(self) -> datetime | int | str | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

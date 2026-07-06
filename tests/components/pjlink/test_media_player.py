@@ -274,9 +274,7 @@ async def test_yaml_import(
     mocked_projector: MagicMock,
 ) -> None:
     """Test a YAML media player is imported and becomes an operational config entry."""
-    assert await async_setup_component(
-        hass, Platform.MEDIA_PLAYER, _EXAMPLE_YAML_CONFIG
-    )
+    assert await async_setup_component(hass, media_player.DOMAIN, _EXAMPLE_YAML_CONFIG)
     await hass.async_block_till_done()
 
     # Verify the config entry was created
@@ -308,7 +306,7 @@ async def test_failed_yaml_import(
 
     with patch("pypjlink.Projector.from_address", side_effect=side_effect):
         assert await async_setup_component(
-            hass, Platform.MEDIA_PLAYER, _EXAMPLE_YAML_CONFIG
+            hass, media_player.DOMAIN, _EXAMPLE_YAML_CONFIG
         )
         await hass.async_block_till_done()
 

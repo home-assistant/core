@@ -9,6 +9,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import file_upload
+from homeassistant.components.file_upload import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -21,7 +22,7 @@ async def uploaded_file_dir(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> Path:
     """Test uploading and using a file."""
-    assert await async_setup_component(hass, "file_upload", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_client()
 
     with (
@@ -83,7 +84,7 @@ async def test_upload_large_file(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, large_file_io
 ) -> None:
     """Test uploading large file."""
-    assert await async_setup_component(hass, "file_upload", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_client()
 
     with (
@@ -117,7 +118,7 @@ async def test_upload_with_wrong_key_fails(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, large_file_io
 ) -> None:
     """Test uploading fails."""
-    assert await async_setup_component(hass, "file_upload", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_client()
 
     with patch(
@@ -134,7 +135,7 @@ async def test_upload_large_file_fails(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, large_file_io
 ) -> None:
     """Test uploading large file."""
-    assert await async_setup_component(hass, "file_upload", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_client()
 
     @contextmanager

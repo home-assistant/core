@@ -1,7 +1,5 @@
 """Base entity for Tami4Edge."""
 
-from __future__ import annotations
-
 from Tami4EdgeAPI import Tami4EdgeAPI
 
 from homeassistant.helpers.device_registry import DeviceInfo

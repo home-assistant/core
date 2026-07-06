@@ -1,6 +1,6 @@
 """Support for the demo image processing."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.image_processing import (
     FaceInformation,
@@ -36,15 +36,18 @@ class DemoImageProcessingFace(ImageProcessingFaceEntity):
         self._camera = camera_entity
 
     @property
+    @override
     def camera_entity(self) -> str:
         """Return camera entity id from process pictures."""
         return self._camera
 
     @property
+    @override
     def confidence(self) -> int:
         """Return minimum confidence for send events."""
         return 80
 
+    @override
     async def async_process_image(self, image: bytes) -> None:
         """Process image."""
         demo_data = [

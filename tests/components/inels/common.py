@@ -25,7 +25,10 @@ DISCONNECTED_INELS_VALUE = b"off\n"
 def get_entity_id(entity_config: dict, index: int) -> str:
     """Construct the entity_id based on the entity_config."""
     unique_id = entity_config["unique_id"].lower()
-    base_id = f"{entity_config['entity_type']}.{MAC_ADDRESS}_{unique_id}_{entity_config['device_type']}"
+    base_id = (
+        f"{entity_config['entity_type']}.{MAC_ADDRESS}"
+        f"_{unique_id}_{entity_config['device_type']}"
+    )
     return f"{base_id}{f'_{index:03}'}" if index is not None else base_id
 
 
@@ -67,7 +70,7 @@ def set_mock_mqtt(
 async def old_entity_and_device_removal(
     hass: HomeAssistant, mock_mqtt, platform, entity_config, value_key, index
 ):
-    """Test that old entities are correctly identified and removed across different platforms."""
+    """Test old entities are identified and removed across platforms."""
 
     set_mock_mqtt(
         mock_mqtt,
@@ -114,7 +117,8 @@ async def old_entity_and_device_removal(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # The device was discovered, and at this point, the async_remove_old_entities function was called
+    # The device was discovered, and at this point,
+    # the async_remove_old_entities function was called
     assert config_entry.runtime_data.devices
     assert old_entity.entity_id not in config_entry.runtime_data.old_entities[platform]
 

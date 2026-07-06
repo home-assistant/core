@@ -1,10 +1,8 @@
 """Define a Ridwell coordinator."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
-from typing import cast
+from typing import cast, override
 
 from aioridwell.client import async_get_client
 from aioridwell.errors import InvalidCredentialsError, RidwellError
@@ -47,6 +45,7 @@ class RidwellDataUpdateCoordinator(
             update_interval=UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, list[RidwellPickupEvent]]:
         """Fetch the latest data from the source."""
         data = {}

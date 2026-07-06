@@ -1,7 +1,5 @@
 """Services for the Jellyfin integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol
@@ -27,7 +25,9 @@ def _promote_media_fields(data: dict[str, Any]) -> dict[str, Any]:
     if ATTR_MEDIA in data and isinstance(data[ATTR_MEDIA], dict):
         if ATTR_MEDIA_CONTENT_ID in data:
             raise vol.Invalid(
-                f"Play media cannot contain both '{ATTR_MEDIA}' and '{ATTR_MEDIA_CONTENT_ID}'"
+                "Play media cannot contain both"
+                f" '{ATTR_MEDIA}' and"
+                f" '{ATTR_MEDIA_CONTENT_ID}'"
             )
         media_data = data[ATTR_MEDIA]
 

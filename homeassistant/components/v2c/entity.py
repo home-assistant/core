@@ -1,7 +1,5 @@
 """Support for V2C EVSE."""
 
-from __future__ import annotations
-
 from pytrydan import TrydanData
 
 from homeassistant.helpers.device_registry import DeviceInfo

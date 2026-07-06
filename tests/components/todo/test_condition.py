@@ -10,7 +10,7 @@ from tests.components.common import (
     ConditionStateDescription,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
+    assert_condition_options_supported,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_target_entities,
@@ -24,21 +24,33 @@ async def target_todos(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "todo", domain_excluded="sensor")
 
 
+_TODO_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 5}}}
+
+
 @pytest.mark.parametrize(
-    "condition",
+    ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        "todo.all_completed",
-        "todo.incomplete",
+        ("todo.all_completed", {}, True, True),
+        ("todo.incomplete", _TODO_THRESHOLD, True, True),
     ],
 )
-async def test_todo_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
+async def test_todo_condition_options_validation(
+    hass: HomeAssistant,
+    condition_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test the to-do list conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
+    """Test that todo conditions support the expected options."""
+    await assert_condition_options_supported(
+        hass,
+        condition_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("todo"),
@@ -77,7 +89,6 @@ async def test_todo_state_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("todo"),
@@ -142,8 +153,8 @@ def parametrize_incomplete_condition_states_any(
                     "value_max": {"number": 8},
                 }
             },
-            target_states=["3", "5"],
-            other_states=["0", "1", "2", "8", "10"],
+            target_states=["2", "3", "5", "8"],
+            other_states=["0", "1", "9", "10"],
         ),
     ]
 
@@ -151,7 +162,7 @@ def parametrize_incomplete_condition_states_any(
 def parametrize_incomplete_condition_states_all(
     condition: str,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
-    """Parametrize above/below threshold test cases for incomplete conditions with 'all' behavior."""
+    """Parametrize above/below threshold cases for incomplete 'all' conditions."""
     return [
         *parametrize_condition_states_all(
             condition=condition,
@@ -174,13 +185,12 @@ def parametrize_incomplete_condition_states_all(
                     "value_max": {"number": 8},
                 }
             },
-            target_states=["3", "5"],
-            other_states=["0", "1", "2", "8", "10"],
+            target_states=["2", "3", "5", "8"],
+            other_states=["0", "1", "9", "10"],
         ),
     ]
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("todo"),
@@ -214,7 +224,6 @@ async def test_todo_incomplete_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("todo"),

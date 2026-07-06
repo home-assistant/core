@@ -1,7 +1,5 @@
 """The PEGELONLINE component."""
 
-from __future__ import annotations
-
 import logging
 
 from aiopegelonline import PegelOnline

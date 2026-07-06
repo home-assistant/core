@@ -1,7 +1,5 @@
 """The NRGkick integration."""
 
-from __future__ import annotations
-
 from nrgkick_api import NRGkickAPI
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform

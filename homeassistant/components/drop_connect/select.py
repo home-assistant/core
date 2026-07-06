@@ -1,11 +1,9 @@
 """Support for DROP selects."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
@@ -83,11 +81,13 @@ class DROPSelect(DROPEntity, SelectEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current selected option."""
         val = self.entity_description.value_fn(self.coordinator)
         return str(val) if val else None
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
         await self.entity_description.set_fn(self.coordinator, option)

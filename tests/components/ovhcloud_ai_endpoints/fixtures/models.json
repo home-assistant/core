@@ -1,0 +1,16 @@
+{
+  "data": [
+    {
+      "id": "Meta-Llama-3_3-70B-Instruct",
+      "object": "model",
+      "created": 1700000000,
+      "owned_by": "ovhcloud"
+    },
+    {
+      "id": "Mistral-Nemo-Instruct-2407",
+      "object": "model",
+      "created": 1700000000,
+      "owned_by": "ovhcloud"
+    }
+  ]
+}

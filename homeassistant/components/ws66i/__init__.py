@@ -1,7 +1,5 @@
 """The Soundavo WS66i 6-Zone Amplifier integration."""
 
-from __future__ import annotations
-
 import logging
 
 from pyws66i import WS66i, get_ws66i

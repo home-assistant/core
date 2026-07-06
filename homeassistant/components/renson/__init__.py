@@ -1,7 +1,5 @@
 """The Renson integration."""
 
-from __future__ import annotations
-
 from renson_endura_delta.renson import RensonVentilation
 
 from homeassistant.const import CONF_HOST, Platform

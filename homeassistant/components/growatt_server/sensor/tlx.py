@@ -3,8 +3,6 @@
 TLX Type is also shown on the UI as: "MIN/MIC/MOD/NEO"
 """
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     PERCENTAGE,

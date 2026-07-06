@@ -1,10 +1,8 @@
 """Config flow for Logitech Harmony Hub integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from aioharmony.hubconnector_websocket import HubConnector
@@ -40,7 +38,10 @@ from .util import (
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str}, extra=vol.ALLOW_EXTRA
+    # Name field is no longer allowed in config flow schemas
+    # pylint: disable-next=home-assistant-config-flow-name-field
+    {vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str},
+    extra=vol.ALLOW_EXTRA,
 )
 
 
@@ -69,6 +70,7 @@ class HarmonyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the Harmony config flow."""
         self.harmony_config: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -95,6 +97,7 @@ class HarmonyConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -154,6 +157,7 @@ class HarmonyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:

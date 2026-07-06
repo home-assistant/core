@@ -29,6 +29,7 @@ from homeassistant.components.wled.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_GROUP_ENTITIES,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -388,3 +389,52 @@ async def test_cct_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
         on=True,
         segment_id=0,
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
+async def test_main_light_group_updates_when_segments_change(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_wled: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test that the main light group field updates when segments are dynamically added or removed."""
+    single_segment_data = mock_wled.update.return_value
+    two_segment_data = WLEDDevice.from_dict(
+        await async_load_json_object_fixture(hass, "rgb.json", DOMAIN)
+    )
+
+    # Enable keep_main_light so the main light persists even with a single segment
+    hass.config_entries.async_update_entry(
+        init_integration, options={CONF_KEEP_MAIN_LIGHT: True}
+    )
+    await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    # 1 segment: group should contain only segment 0
+    assert (state := hass.states.get("light.wled_rgb_light_main"))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_GROUP_ENTITIES] == ["light.wled_rgb_light"]
+
+    # Add a second segment
+    mock_wled.update.return_value = two_segment_data
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # 2 segments: group should contain both
+    assert (state := hass.states.get("light.wled_rgb_light_main"))
+    assert state.attributes[ATTR_GROUP_ENTITIES] == [
+        "light.wled_rgb_light",
+        "light.wled_rgb_light_segment_1",
+    ]
+
+    # Remove the second segment
+    mock_wled.update.return_value = single_segment_data
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Back to 1 segment: group should contain only segment 0 again
+    assert (state := hass.states.get("light.wled_rgb_light_main"))
+    assert state.attributes[ATTR_GROUP_ENTITIES] == ["light.wled_rgb_light"]

@@ -1,7 +1,5 @@
 """The jvc_projector integration."""
 
-from __future__ import annotations
-
 from jvcprojector import JvcProjector, JvcProjectorAuthError, JvcProjectorTimeoutError
 
 from homeassistant.const import (

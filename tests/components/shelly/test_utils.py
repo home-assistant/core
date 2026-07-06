@@ -22,7 +22,6 @@ from homeassistant.components.shelly.const import (
     GEN1_RELEASE_URL,
     GEN2_BETA_RELEASE_URL,
     GEN2_RELEASE_URL,
-    UPTIME_DEVIATION,
     WALL_DISPLAY_RELEASE_URL,
 )
 from homeassistant.components.shelly.utils import (
@@ -30,7 +29,6 @@ from homeassistant.components.shelly.utils import (
     get_block_device_sleep_period,
     get_block_input_triggers,
     get_block_number_of_channels,
-    get_device_uptime,
     get_host,
     get_release_url,
     get_rpc_channel_name,
@@ -39,7 +37,6 @@ from homeassistant.components.shelly.utils import (
     is_block_momentary_input,
     mac_address_from_name,
 )
-from homeassistant.util import dt as dt_util
 
 DEVICE_BLOCK_ID = 4
 
@@ -147,19 +144,6 @@ async def test_get_block_device_sleep_period(
 ) -> None:
     """Test get block device sleep period."""
     assert get_block_device_sleep_period(settings) == sleep_period
-
-
-@pytest.mark.freeze_time("2019-01-10 18:43:00+00:00")
-async def test_get_device_uptime() -> None:
-    """Test block test get device uptime."""
-    assert get_device_uptime(
-        55, dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:00+00:00"))
-    ) == dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:00+00:00"))
-
-    assert get_device_uptime(
-        55 - UPTIME_DEVIATION,
-        dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:00+00:00")),
-    ) == dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:43:05+00:00"))
 
 
 async def test_get_block_input_triggers(

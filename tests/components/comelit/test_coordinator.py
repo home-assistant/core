@@ -20,7 +20,12 @@ from aiocomelit.const import (
     AlarmAreaState,
     AlarmZoneState,
 )
-from aiocomelit.exceptions import CannotAuthenticate, CannotConnect, CannotRetrieveData
+from aiocomelit.exceptions import (
+    CannotAuthenticate,
+    CannotConnect,
+    CannotRetrieveData,
+    DeviceStorageFailureError,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -40,6 +45,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
         CannotConnect,
         CannotRetrieveData,
         CannotAuthenticate,
+        DeviceStorageFailureError,
     ],
 )
 async def test_coordinator_data_update_fails(

@@ -1,9 +1,7 @@
 """Provide pre-made queries on top of the recorder component."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Collection, Iterable
-from typing import Any
+from typing import Any, override
 
 from sqlalchemy import Column, Text, cast, not_, or_
 from sqlalchemy.sql.elements import ColumnElement
@@ -101,6 +99,7 @@ class Filters:
         self._included_domains = included_domains or []
         self._included_entity_globs = included_entity_globs or []
 
+    @override
     def __repr__(self) -> str:
         """Return human readable excludes/includes."""
         return (
@@ -159,7 +158,8 @@ class Filters:
         # - All entities included
         if not have_include and not have_exclude:
             raise RuntimeError(
-                "No filter configuration provided, check has_config before calling this method."
+                "No filter configuration provided, check"
+                " has_config before calling this method."
             )
 
         # Case 2 - Only includes

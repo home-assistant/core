@@ -64,6 +64,7 @@ async def test_form(
     ("side_effect", "expected_error"),
     [
         (Exception(), "unknown"),
+        (requests.Timeout(), "cannot_connect"),
         (requests.ConnectionError(), "cannot_connect"),
         (DAVError(), "cannot_connect"),
         (AuthorizationError(reason="Unauthorized"), "invalid_auth"),
@@ -246,11 +247,9 @@ async def test_multiple_config_entries(
         },
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate_config_entries(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    config_entry: MockConfigEntry,
-    user_input: dict[str, str],
+    hass: HomeAssistant, config_entry: MockConfigEntry, user_input: dict[str, str]
 ) -> None:
     """Test multiple configuration entries with the same settings."""
 

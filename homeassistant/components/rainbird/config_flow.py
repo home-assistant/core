@@ -1,11 +1,9 @@
 """Config flow for Rain Bird."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyrainbird.async_client import create_controller
 from pyrainbird.data import WifiParams
@@ -64,6 +62,7 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: RainbirdConfigEntry,
     ) -> RainBirdOptionsFlowHandler:
@@ -99,6 +98,7 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

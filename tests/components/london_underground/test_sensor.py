@@ -80,8 +80,8 @@ async def test_yaml_import(
     state = hass.states.get("sensor.london_underground_london_overground")
     assert not state
     assert any(
-        "London Overground was removed from the configuration as the line has been divided and renamed"
-        in record.message
+        "London Overground was removed from the configuration"
+        " as the line has been divided and renamed" in record.message
         for record in caplog.records
     )
 

@@ -70,5 +70,6 @@ async def test_adaptive_update_interval(
             freezer.tick(FroniusInverterUpdateCoordinator.default_interval)
             async_fire_time_changed(hass)
             await hass.async_block_till_done()
-        # BadStatusError does 3 silent retries for inverter endpoint * 3 request intervals = 9
+        # BadStatusError does 3 silent retries for inverter
+        # endpoint * 3 request intervals = 9
         assert mock_inverter_data.call_count == 9

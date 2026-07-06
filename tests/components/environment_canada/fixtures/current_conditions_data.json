@@ -1,29 +1,49 @@
 {
   "alerts": {
     "warnings": {
-      "value": [],
-      "label": "Warnings"
-    },
-    "watches": {
-      "value": [],
-      "label": "Watches"
-    },
-    "advisories": {
+      "label": "Warnings",
       "value": [
         {
-          "title": "Frost Advisory",
-          "date": "Monday October 03, 2022 at 15:05 EDT"
+          "title": "Air Quality Warning",
+          "date": "2026-06-04T10:35:16.386Z",
+          "alertColourLevel": "yellow",
+          "expiryTime": "2026-06-04T19:00:16.386Z",
+          "text": "Wildfire smoke is causing poor air quality. Conditions are expected to improve later this morning. Air quality and visibility due to wildfire smoke can fluctuate over short distances and can vary considerably from hour to hour. As smoke levels increase, health risks increase. Limit time outdoors. Consider reducing or rescheduling outdoor sports, activities and events.",
+          "area": "Yellowknife Region",
+          "status": "continued",
+          "confidence": "High",
+          "impact": "Moderate",
+          "alert_code": "AQW"
+        },
+        {
+          "title": "Wow, it is hot out there!",
+          "date": "2026-06-04T10:35:16.386Z",
+          "alertColourLevel": "red",
+          "expiryTime": "2026-06-04T19:00:16.386Z",
+          "text": "It is so hot you can fry an egg on the pavement!",
+          "area": "Yellowknife Region",
+          "status": "continued",
+          "confidence": "High",
+          "impact": "Moderate",
+          "alert_code": "HOT"
         }
-      ],
-      "label": "Advisories"
+      ]
+    },
+    "watches": {
+      "label": "Watches",
+      "value": []
+    },
+    "advisories": {
+      "label": "Advisories",
+      "value": []
     },
     "statements": {
-      "value": [],
-      "label": "Statements"
+      "label": "Statements",
+      "value": []
     },
     "endings": {
-      "value": [],
-      "label": "Endings"
+      "label": "Endings",
+      "value": []
     }
   },
   "conditions": {

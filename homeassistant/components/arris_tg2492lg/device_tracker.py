@@ -1,6 +1,6 @@
 """Support for Arris TG2492LG router."""
 
-from __future__ import annotations
+from typing import override
 
 from aiohttp.client_exceptions import ClientResponseError
 from arris_tg2492lg import ConnectBox, Device
@@ -52,12 +52,14 @@ class ArrisDeviceScanner(DeviceScanner):
         self.connect_box = connect_box
         self.last_results: list[Device] = []
 
+    @override
     async def async_scan_devices(self) -> list[str]:
         """Scan for new devices and return a list with found device IDs."""
         await self._async_update_info()
 
         return [device.mac for device in self.last_results if device.mac]
 
+    @override
     async def async_get_device_name(self, device: str) -> str | None:
         """Return the name of the given device or None if we don't know."""
         return next(

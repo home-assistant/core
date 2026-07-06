@@ -89,7 +89,11 @@ def openwebif_device_mock() -> Generator[AsyncMock]:
         device.get_all_bouquets.return_value = {
             "bouquets": [
                 [
-                    '1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "userbouquet.favourites.tv" ORDER BY bouquet',
+                    (
+                        "1:7:1:0:0:0:0:0:0:0:FROM BOUQUET"
+                        ' "userbouquet.favourites.tv"'
+                        " ORDER BY bouquet"
+                    ),
                     "Favourites (TV)",
                 ]
             ]

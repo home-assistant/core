@@ -1,4 +1,4 @@
-"""Constants for the Plex component."""
+"""Constants for the Plex integration."""
 
 from datetime import timedelta
 from typing import Final
@@ -51,9 +51,6 @@ X_PLEX_DEVICE_NAME = "Home Assistant"
 X_PLEX_PLATFORM = "Home Assistant"
 X_PLEX_PRODUCT = "Home Assistant"
 X_PLEX_VERSION = __version__
-
-AUTOMATIC_SETUP_STRING = "Obtain a new token from plex.tv"
-MANUAL_SETUP_STRING = "Configure Plex server manually"
 
 SERVICE_REFRESH_LIBRARY = "refresh_library"
 

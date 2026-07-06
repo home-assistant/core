@@ -251,7 +251,7 @@ async def test_fetch_image_unauthenticated(
     assert body == b"Test"
 
     resp = await client.get("/api/image_proxy/image.unknown")
-    assert resp.status == HTTPStatus.NOT_FOUND
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 @respx.mock
@@ -427,7 +427,7 @@ async def test_image_stream(
             assert not resp.closed
             assert resp.status == HTTPStatus.OK
 
-            mock_image.image_last_updated = datetime.now()
+            mock_image.image_last_updated = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
             mock_image.async_write_ha_state()
             # Two blocks to ensure the frame is written
             await hass.async_block_till_done()

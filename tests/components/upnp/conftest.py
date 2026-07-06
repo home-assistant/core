@@ -1,7 +1,5 @@
 """Configuration for SSDP tests."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Generator
 import copy
 from datetime import datetime
@@ -95,7 +93,7 @@ def mock_igd_device(mock_async_create_device) -> IgdDevice:
     mock_igd_device.device = mock_upnp_device
 
     mock_igd_device.async_get_traffic_and_status_data.return_value = IgdState(
-        timestamp=datetime.now(),
+        timestamp=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
         bytes_received=0,
         bytes_sent=0,
         packets_received=0,

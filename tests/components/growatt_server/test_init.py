@@ -5,11 +5,11 @@ import json
 
 from freezegun.api import FrozenDateTimeFactory
 import growattServer
+from growattServer import GrowattV1ApiErrorCode
 import pytest
 import requests
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.growatt_server import async_migrate_entry
 from homeassistant.components.growatt_server.const import (
     AUTH_API_TOKEN,
     AUTH_PASSWORD,
@@ -17,10 +17,9 @@ from homeassistant.components.growatt_server.const import (
     CONF_AUTH_TYPE,
     CONF_PLANT_ID,
     DEFAULT_PLANT_ID,
+    DEVICE_SCAN_INTERVAL,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
-    V1_API_ERROR_NO_PRIVILEGE,
-    V1_API_ERROR_RATE_LIMITED,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -32,7 +31,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
@@ -67,10 +66,25 @@ async def test_device_info(
 @pytest.mark.parametrize(
     ("exception", "expected_state"),
     [
-        (growattServer.GrowattV1ApiError("API Error"), ConfigEntryState.SETUP_ERROR),
+        (
+            growattServer.GrowattV1ApiError(
+                message="API Error",
+                error_code=GrowattV1ApiErrorCode.WRONG_DOMAIN,
+                error_msg="Invalid JSON",
+            ),
+            ConfigEntryState.SETUP_ERROR,
+        ),
         (
             json.decoder.JSONDecodeError("Invalid JSON", "", 0),
             ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            growattServer.GrowattV1ApiError(
+                message="Rate limited",
+                error_code=GrowattV1ApiErrorCode.RATE_LIMITED,
+                error_msg="Access frequency limit",
+            ),
+            ConfigEntryState.SETUP_RETRY,
         ),
     ],
 )
@@ -102,7 +116,9 @@ async def test_coordinator_update_failed(
 
     # Cause coordinator update to fail
     mock_growatt_v1_api.min_detail.side_effect = growattServer.GrowattV1ApiError(
-        "Connection timeout"
+        message="Rate limited",
+        error_code=growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
+        error_msg="Too many requests",
     )
 
     # Trigger coordinator refresh
@@ -148,8 +164,11 @@ async def test_coordinator_total_non_auth_api_error(
     """Test total coordinator handles non-auth V1 API errors as UpdateFailed."""
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    error = growattServer.GrowattV1ApiError("Rate limited")
-    error.error_code = V1_API_ERROR_RATE_LIMITED
+    error = growattServer.GrowattV1ApiError(
+        message="Rate limited",
+        error_code=growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
+        error_msg="Too many requests",
+    )
     mock_growatt_v1_api.plant_energy_overview.side_effect = error
 
     freezer.tick(timedelta(minutes=5))
@@ -167,9 +186,12 @@ async def test_setup_auth_failed_on_permission_denied(
     mock_growatt_v1_api,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that error 10011 (no privilege) from device_list triggers reauth during setup."""
-    error = growattServer.GrowattV1ApiError("Permission denied")
-    error.error_code = V1_API_ERROR_NO_PRIVILEGE
+    """Test error 10011 from device_list triggers reauth during setup."""
+    error = growattServer.GrowattV1ApiError(
+        message="Permission denied",
+        error_code=growattServer.GrowattV1ApiErrorCode.NO_PRIVILEGE,
+        error_msg="dummy error",
+    )
     mock_growatt_v1_api.device_list.side_effect = error
 
     await setup_integration(hass, mock_config_entry)
@@ -194,8 +216,11 @@ async def test_coordinator_auth_failed_triggers_reauth(
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    error = growattServer.GrowattV1ApiError("Permission denied")
-    error.error_code = V1_API_ERROR_NO_PRIVILEGE
+    error = growattServer.GrowattV1ApiError(
+        message="Permission denied",
+        error_code=growattServer.GrowattV1ApiErrorCode.NO_PRIVILEGE,
+        error_msg="dummy error",
+    )
     mock_growatt_v1_api.min_detail.side_effect = error
 
     freezer.tick(timedelta(minutes=5))
@@ -220,7 +245,7 @@ async def test_classic_api_coordinator_auth_failed_triggers_reauth(
     mock_config_entry_classic: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that invalid classic API credentials during coordinator update trigger reauth."""
+    """Test invalid classic API credentials trigger reauth on update."""
     mock_growatt_classic_api.device_list.return_value = [
         {"deviceSn": "TLX123456", "deviceType": "tlx"}
     ]
@@ -305,6 +330,7 @@ async def test_classic_api_setup(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_growatt_v1_api", "mock_growatt_classic_api")
 async def test_migrate_config_without_auth_type(
     hass: HomeAssistant,
     config_data: dict[str, str],
@@ -326,10 +352,8 @@ async def test_migrate_config_without_auth_type(
     )
 
     mock_config_entry.add_to_hass(hass)
-
-    # Execute migration
-    migration_result = await async_migrate_entry(hass, mock_config_entry)
-    assert migration_result is True
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Verify version was updated to 1.1
     assert mock_config_entry.version == 1
@@ -337,6 +361,9 @@ async def test_migrate_config_without_auth_type(
 
     # Verify auth_type field was added during migration
     assert mock_config_entry.data[CONF_AUTH_TYPE] == expected_auth_type
+
+    # Verify setup completed successfully after migration
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_migrate_legacy_config_no_auth_fields(
@@ -357,16 +384,13 @@ async def test_migrate_legacy_config_no_auth_fields(
     )
 
     mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    # Migration should succeed (only updates version)
-    migration_result = await async_migrate_entry(hass, mock_config_entry)
-    assert migration_result is True
-
-    # Verify version was updated
+    # Migration succeeds (version bumped) but setup fails due to missing auth fields
     assert mock_config_entry.version == 1
     assert mock_config_entry.minor_version == 1
-
-    # Note: Setup will fail later due to missing auth fields in async_setup_entry
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize(
@@ -584,7 +608,6 @@ async def test_migrate_version_bump(
     This test verifies that:
     - Migration successfully resolves DEFAULT_PLANT_ID ("0") to actual plant_id
     - Config entry version is bumped from 1.0 to 1.1
-    - API instance is cached for setup to reuse (rate limit optimization)
     """
     # Create a version 1.0 config entry with DEFAULT_PLANT_ID
     mock_config_entry = MockConfigEntry(
@@ -602,7 +625,7 @@ async def test_migrate_version_bump(
         minor_version=0,
     )
 
-    # Mock successful API responses for migration
+    # Mock successful API responses for migration and setup
     mock_growatt_classic_api.login.return_value = {
         "success": True,
         "user": {"id": 123456},
@@ -610,12 +633,13 @@ async def test_migrate_version_bump(
     mock_growatt_classic_api.plant_list.return_value = {
         "data": [{"plantId": "RESOLVED_PLANT_789", "plantName": "My Plant"}]
     }
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
 
     mock_config_entry.add_to_hass(hass)
-
-    # Execute migration
-    migration_result = await async_migrate_entry(hass, mock_config_entry)
-    assert migration_result is True
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Verify version was updated to 1.1
     assert mock_config_entry.version == 1
@@ -624,8 +648,8 @@ async def test_migrate_version_bump(
     # Verify plant_id was resolved to actual plant_id (not DEFAULT_PLANT_ID)
     assert mock_config_entry.data[CONF_PLANT_ID] == "RESOLVED_PLANT_789"
 
-    # Verify API instance was cached for setup to reuse
-    assert f"{CACHED_API_KEY}{mock_config_entry.entry_id}" in hass.data[DOMAIN]
+    # Verify setup completed successfully after migration
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_reuses_cached_api_from_migration(
@@ -688,15 +712,11 @@ async def test_setup_reuses_cached_api_from_migration(
     }
 
     mock_config_entry.add_to_hass(hass)
-
-    # Run migration first (resolves plant_id and caches authenticated API)
-    await async_migrate_entry(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Verify migration successfully resolved plant_id
     assert mock_config_entry.data[CONF_PLANT_ID] == "RESOLVED_PLANT_789"
-
-    # Now setup the integration (should reuse cached API from migration)
-    await setup_integration(hass, mock_config_entry)
 
     # Verify integration loaded successfully
     assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -752,12 +772,11 @@ async def test_migrate_failure_returns_false(
     )
 
     mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    # Execute migration (should fail gracefully)
-    migration_result = await async_migrate_entry(hass, mock_config_entry)
-
-    # Verify migration returned False (will retry on next restart)
-    assert migration_result is False
+    # Verify migration failed (entry is in migration error state)
+    assert mock_config_entry.state is ConfigEntryState.MIGRATION_ERROR
 
     # Verify version was NOT bumped (remains 1.0)
     assert mock_config_entry.version == 1
@@ -771,6 +790,7 @@ async def test_migrate_failure_returns_false(
     assert "Migration will retry on next restart" in caplog.text
 
 
+@pytest.mark.usefixtures("mock_growatt_classic_api")
 async def test_migrate_already_migrated(
     hass: HomeAssistant,
 ) -> None:
@@ -791,10 +811,8 @@ async def test_migrate_already_migrated(
     )
 
     mock_config_entry.add_to_hass(hass)
-
-    # Call migration function
-    migration_result = await async_migrate_entry(hass, mock_config_entry)
-    assert migration_result is True
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Verify version remains 1.1 (no change)
     assert mock_config_entry.version == 1
@@ -802,3 +820,247 @@ async def test_migrate_already_migrated(
 
     # Plant ID should remain unchanged
     assert mock_config_entry.data[CONF_PLANT_ID] == "specific_plant_123"
+
+    # Verify setup completed successfully
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_dynamic_device_added(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that new devices are dynamically added when discovered during a scan."""
+    # Initially only MIN123456 device exists
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+        is not None
+    )
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "NEW456789")}) is None
+
+    # Mock a new device appearing in the device list
+    mock_growatt_v1_api.device_list.return_value = {
+        "devices": [
+            {"device_sn": "MIN123456", "type": 7},
+            {"device_sn": "NEW456789", "type": 7},
+        ]
+    }
+    mock_growatt_v1_api.min_detail.return_value = {
+        "deviceSn": "NEW456789",
+        "acChargeEnable": 0,
+    }
+
+    # Trigger the periodic device scan
+    freezer.tick(DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # New device should now be in the device registry
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "NEW456789")})
+        is not None
+    )
+    # New device should be in runtime_data
+    assert "NEW456789" in mock_config_entry.runtime_data.devices
+    # Entities for the new device should have been created via the dispatcher.
+    # Verify multiple entity types to confirm end-to-end dynamic device support
+    assert hass.states.get("switch.new456789_charge_from_grid") is not None
+    # Additional check: verify entities exist in the entity registry
+    entity_registry = er.async_get(hass)
+    new_device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "NEW456789")}
+    )
+    new_device_entities = er.async_entries_for_device(
+        entity_registry, new_device_entry.id, include_disabled_entities=True
+    )
+    assert len(new_device_entities) > 0, "No entities created for new device"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_stale_device_removed(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that stale devices are removed from the device registry during a scan."""
+    # Initially MIN123456 device exists with entities in the state machine
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+        is not None
+    )
+    assert hass.states.get("switch.min123456_charge_from_grid") is not None
+
+    # Mock the device disappearing from the API
+    mock_growatt_v1_api.device_list.return_value = {"devices": []}
+
+    # Trigger the periodic device scan
+    freezer.tick(DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The device should be removed from HA
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")}) is None
+    # The coordinator should be removed from runtime_data
+    assert "MIN123456" not in mock_config_entry.runtime_data.devices
+    # Orphaned entities must also be gone from the entity registry and state machine
+    assert entity_registry.async_get("switch.min123456_charge_from_grid") is None
+    assert hass.states.get("switch.min123456_charge_from_grid") is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_device_scan_error_is_silent(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that errors during device scan are handled gracefully without crashing."""
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Simulate a scan failure
+    mock_growatt_v1_api.device_list.side_effect = growattServer.GrowattV1ApiError(
+        message="Temporary error",
+        error_code=growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
+        error_msg="Temporary error",
+    )
+
+    freezer.tick(DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Integration should remain loaded - scan errors are non-fatal
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    # Existing device should still be present
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+        is not None
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_dynamic_device_refresh_fails_is_skipped(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a new device whose first coordinator refresh fails is not added."""
+    # Mock a new device appearing but its data endpoint failing
+    mock_growatt_v1_api.device_list.return_value = {
+        "devices": [
+            {"device_sn": "MIN123456", "type": 7},
+            {"device_sn": "NEW456789", "type": 7},
+        ]
+    }
+
+    def min_detail_side_effect(device_sn: str) -> dict:
+        if device_sn == "NEW456789":
+            raise growattServer.GrowattV1ApiError(
+                message="Device not reachable",
+                error_code=growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
+                error_msg="Device not reachable",
+            )
+        return mock_growatt_v1_api.min_detail.return_value
+
+    mock_growatt_v1_api.min_detail.side_effect = min_detail_side_effect
+
+    freezer.tick(DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # New device should NOT be added — its refresh failed
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "NEW456789")}) is None
+    assert "NEW456789" not in mock_config_entry.runtime_data.devices
+    # Existing device must be unaffected
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+        is not None
+    )
+
+
+async def test_classic_api_device_scan(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    mock_config_entry_classic: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that the periodic device scan works correctly for Classic API (password auth).
+
+    The scan must reuse the total coordinator's authenticated session (no extra login).
+    """
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
+    await setup_integration(hass, mock_config_entry_classic)
+    assert mock_config_entry_classic.state is ConfigEntryState.LOADED
+
+    # Mock a new device appearing; reset device_list call count after setup
+    # so we can assert the scan calls it exactly once.
+    mock_growatt_classic_api.device_list.reset_mock()
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"},
+        {"deviceSn": "TLX999999", "deviceType": "tlx"},
+    ]
+    mock_growatt_classic_api.tlx_detail.return_value = {
+        "data": {"deviceSn": "TLX999999"}
+    }
+
+    freezer.tick(DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # New device should be added via the classic scan path
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "TLX999999")})
+        is not None
+    )
+    assert "TLX999999" in mock_config_entry_classic.runtime_data.devices
+
+    # The scan reuses the coordinator's API session — device_list must have been
+    # called exactly once (by the scan itself, not a fresh login+list cycle).
+    mock_growatt_classic_api.device_list.assert_called_once()
+
+
+async def test_classic_api_stale_device_removed(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    mock_config_entry_classic: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that stale devices are removed during a Classic API device scan."""
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
+    await setup_integration(hass, mock_config_entry_classic)
+    assert mock_config_entry_classic.state is ConfigEntryState.LOADED
+
+    # Verify device exists after setup
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "TLX123456")})
+        is not None
+    )
+    assert "TLX123456" in mock_config_entry_classic.runtime_data.devices
+
+    # Mock the device disappearing from the API
+    mock_growatt_classic_api.device_list.return_value = []
+
+    # Trigger the periodic device scan
+    freezer.tick(DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The device should be removed from HA
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "TLX123456")}) is None
+    # The coordinator should be removed from runtime_data
+    assert "TLX123456" not in mock_config_entry_classic.runtime_data.devices

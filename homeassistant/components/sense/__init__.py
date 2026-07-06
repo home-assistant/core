@@ -6,6 +6,7 @@ import logging
 
 from sense_energy import (
     ASyncSenseable,
+    SenseAPIException,
     SenseAuthenticationException,
     SenseMFARequiredException,
 )
@@ -88,6 +89,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
         ) from err
     except SENSE_WEBSOCKET_EXCEPTIONS as err:
         raise ConfigEntryNotReady(str(err) or "Error during realtime update") from err
+    except SenseAPIException as err:
+        raise ConfigEntryNotReady(
+            str(err) or "API error retrieving realtime data"
+        ) from err
 
     trends_coordinator = SenseTrendCoordinator(hass, entry, gateway)
     realtime_coordinator = SenseRealtimeCoordinator(hass, entry, gateway)

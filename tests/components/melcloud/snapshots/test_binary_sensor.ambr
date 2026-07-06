@@ -39,7 +39,7 @@
 # name: test_all_entities[binary_sensor.ecodan_3_way_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ecodan 3-way valve',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ecodan 3-way valve',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ecodan_3_way_valve',
@@ -89,8 +89,8 @@
 # name: test_all_entities[binary_sensor.ecodan_boiler-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Ecodan Boiler',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ecodan Boiler',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ecodan_boiler',
@@ -140,8 +140,8 @@
 # name: test_all_entities[binary_sensor.ecodan_booster_heater_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Ecodan Booster heater 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ecodan Booster heater 1',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ecodan_booster_heater_1',
@@ -191,8 +191,8 @@
 # name: test_all_entities[binary_sensor.ecodan_immersion_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Ecodan Immersion heater',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ecodan Immersion heater',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ecodan_immersion_heater',
@@ -242,8 +242,8 @@
 # name: test_all_entities[binary_sensor.ecodan_water_pump_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Ecodan Water pump 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ecodan Water pump 1',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ecodan_water_pump_1',
@@ -293,8 +293,8 @@
 # name: test_all_entities[binary_sensor.ecodan_water_pump_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Ecodan Water pump 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ecodan Water pump 2',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ecodan_water_pump_2',

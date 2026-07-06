@@ -12,7 +12,6 @@ DOMAIN = "google_travel_time"
 ATTRIBUTION = "Powered by Google"
 
 CONF_DESTINATION = "destination"
-CONF_OPTIONS = "options"
 CONF_ORIGIN = "origin"
 CONF_AVOID = "avoid"
 CONF_UNITS = "units"

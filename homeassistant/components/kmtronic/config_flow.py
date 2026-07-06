@@ -1,9 +1,7 @@
 """Config flow for kmtronic integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from pykmtronic.auth import Auth
@@ -62,12 +60,14 @@ class KmtronicConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> KMTronicOptionsFlow:
         """Get the options flow for this handler."""
         return KMTronicOptionsFlow()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

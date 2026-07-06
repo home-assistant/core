@@ -1,9 +1,8 @@
 """Renson ventilation unit buttons."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from renson_endura_delta.renson import RensonVentilation
 
@@ -83,6 +82,7 @@ class RensonButton(RensonEntity, ButtonEntity):
 
         self.entity_description = description
 
+    @override
     def press(self) -> None:
         """Triggers the action."""
         self.entity_description.action_fn(self.api)

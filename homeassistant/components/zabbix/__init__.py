@@ -8,6 +8,7 @@ import math
 import queue
 import threading
 import time
+from typing import override
 from urllib.error import HTTPError
 from urllib.parse import urljoin
 
@@ -285,6 +286,7 @@ class ZabbixThread(threading.Thread):
             except ProcessingError as prerr:
                 _LOGGER.error("Error writing to Zabbix: %s", prerr)
 
+    @override
     def run(self) -> None:
         """Process incoming events."""
         while not self.shutdown:

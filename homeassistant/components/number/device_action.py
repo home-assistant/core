@@ -1,7 +1,5 @@
 """Provides device actions for Number."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.device_automation import async_validate_entity_schema

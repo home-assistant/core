@@ -1,7 +1,5 @@
 """The Anthropic integration."""
 
-from __future__ import annotations
-
 from anthropic.resources.messages.messages import DEPRECATED_MODELS
 
 from homeassistant.config_entries import ConfigSubentry
@@ -180,10 +178,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) 
     """Migrate entry."""
     LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
 
-    if entry.version > 2:
-        # This means the user has downgraded from a future version
-        return False
-
     if entry.version == 2 and entry.minor_version == 1:
         # Correct broken device migration in Home Assistant Core 2025.7.0b0-2025.7.0b1
         device_registry = dr.async_get(hass)
@@ -232,13 +226,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) 
 
     if entry.version == 2 and entry.minor_version == 3:
         # Remove Temperature parameter
-        CONF_TEMPERATURE = "temperature"
+        temperature_key = "temperature"
 
         for subentry in entry.subentries.values():
             data = subentry.data.copy()
-            if CONF_TEMPERATURE not in data:
+            if temperature_key not in data:
                 continue
-            data.pop(CONF_TEMPERATURE, None)
+            data.pop(temperature_key, None)
             hass.config_entries.async_update_subentry(entry, subentry, data=data)
 
         hass.config_entries.async_update_entry(entry, minor_version=4)

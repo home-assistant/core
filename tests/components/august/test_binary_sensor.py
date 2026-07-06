@@ -40,17 +40,32 @@ async def test_doorsense(hass: HomeAssistant) -> None:
     await _create_august_with_devices(hass, [lock_one])
     states = hass.states
 
-    assert states.get("binary_sensor.online_with_doorsense_name_door").state == STATE_ON
+    assert (
+        states.get(
+            "binary_sensor.online_with_doorsense_name_online_with_doorsense_name_door"
+        ).state
+        == STATE_ON
+    )
 
-    data = {ATTR_ENTITY_ID: "lock.online_with_doorsense_name"}
+    data = {
+        ATTR_ENTITY_ID: "lock.online_with_doorsense_name_online_with_doorsense_name"
+    }
     await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
 
-    assert states.get("binary_sensor.online_with_doorsense_name_door").state == STATE_ON
+    assert (
+        states.get(
+            "binary_sensor.online_with_doorsense_name_online_with_doorsense_name_door"
+        ).state
+        == STATE_ON
+    )
 
     await hass.services.async_call(LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True)
 
     assert (
-        states.get("binary_sensor.online_with_doorsense_name_door").state == STATE_OFF
+        states.get(
+            "binary_sensor.online_with_doorsense_name_online_with_doorsense_name_door"
+        ).state
+        == STATE_OFF
     )
 
 
@@ -65,7 +80,9 @@ async def test_lock_bridge_offline(hass: HomeAssistant) -> None:
     await _create_august_with_devices(hass, [lock_one], activities=activities)
     states = hass.states
     assert (
-        states.get("binary_sensor.online_with_doorsense_name_door").state
+        states.get(
+            "binary_sensor.online_with_doorsense_name_online_with_doorsense_name_door"
+        ).state
         == STATE_UNAVAILABLE
     )
 
@@ -76,17 +93,37 @@ async def test_create_doorbell(hass: HomeAssistant) -> None:
     await _create_august_with_devices(hass, [doorbell_one])
     states = hass.states
 
-    assert states.get("binary_sensor.k98gidt45gul_name_motion").state == STATE_OFF
     assert (
-        states.get("binary_sensor.k98gidt45gul_name_image_capture").state == STATE_OFF
+        states.get("binary_sensor.k98gidt45gul_name_k98gidt45gul_name_motion").state
+        == STATE_OFF
     )
-    assert states.get("binary_sensor.k98gidt45gul_name_connectivity").state == STATE_ON
     assert (
-        states.get("binary_sensor.k98gidt45gul_name_doorbell_ding").state == STATE_OFF
+        states.get(
+            "binary_sensor.k98gidt45gul_name_k98gidt45gul_name_image_capture"
+        ).state
+        == STATE_OFF
     )
-    assert states.get("binary_sensor.k98gidt45gul_name_motion").state == STATE_OFF
     assert (
-        states.get("binary_sensor.k98gidt45gul_name_image_capture").state == STATE_OFF
+        states.get(
+            "binary_sensor.k98gidt45gul_name_k98gidt45gul_name_connectivity"
+        ).state
+        == STATE_ON
+    )
+    assert (
+        states.get(
+            "binary_sensor.k98gidt45gul_name_k98gidt45gul_name_doorbell_ding"
+        ).state
+        == STATE_OFF
+    )
+    assert (
+        states.get("binary_sensor.k98gidt45gul_name_k98gidt45gul_name_motion").state
+        == STATE_OFF
+    )
+    assert (
+        states.get(
+            "binary_sensor.k98gidt45gul_name_k98gidt45gul_name_image_capture"
+        ).state
+        == STATE_OFF
     )
 
 
@@ -96,10 +133,17 @@ async def test_create_doorbell_offline(hass: HomeAssistant) -> None:
     await _create_august_with_devices(hass, [doorbell_one])
     states = hass.states
 
-    assert states.get("binary_sensor.tmt100_name_motion").state == STATE_UNAVAILABLE
-    assert states.get("binary_sensor.tmt100_name_connectivity").state == STATE_OFF
     assert (
-        states.get("binary_sensor.tmt100_name_doorbell_ding").state == STATE_UNAVAILABLE
+        states.get("binary_sensor.tmt100_name_tmt100_name_motion").state
+        == STATE_UNAVAILABLE
+    )
+    assert (
+        states.get("binary_sensor.tmt100_name_tmt100_name_connectivity").state
+        == STATE_OFF
+    )
+    assert (
+        states.get("binary_sensor.tmt100_name_tmt100_name_doorbell_ding").state
+        == STATE_UNAVAILABLE
     )
 
 
@@ -114,15 +158,29 @@ async def test_create_doorbell_with_motion(
     await _create_august_with_devices(hass, [doorbell_one], activities=activities)
     states = hass.states
 
-    assert states.get("binary_sensor.k98gidt45gul_name_motion").state == STATE_ON
-    assert states.get("binary_sensor.k98gidt45gul_name_connectivity").state == STATE_ON
     assert (
-        states.get("binary_sensor.k98gidt45gul_name_doorbell_ding").state == STATE_OFF
+        states.get("binary_sensor.k98gidt45gul_name_k98gidt45gul_name_motion").state
+        == STATE_ON
+    )
+    assert (
+        states.get(
+            "binary_sensor.k98gidt45gul_name_k98gidt45gul_name_connectivity"
+        ).state
+        == STATE_ON
+    )
+    assert (
+        states.get(
+            "binary_sensor.k98gidt45gul_name_k98gidt45gul_name_doorbell_ding"
+        ).state
+        == STATE_OFF
     )
     freezer.tick(40)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert states.get("binary_sensor.k98gidt45gul_name_motion").state == STATE_OFF
+    assert (
+        states.get("binary_sensor.k98gidt45gul_name_k98gidt45gul_name_motion").state
+        == STATE_OFF
+    )
 
 
 async def test_doorbell_update_via_pubnub(
@@ -135,9 +193,15 @@ async def test_doorbell_update_via_pubnub(
     await _create_august_with_devices(hass, [doorbell_one], pubnub=pubnub)
     assert doorbell_one.pubsub_channel == "7c7a6672-59c8-3333-ffff-dcd98705cccc"
     states = hass.states
-    assert states.get("binary_sensor.k98gidt45gul_name_motion").state == STATE_OFF
     assert (
-        states.get("binary_sensor.k98gidt45gul_name_doorbell_ding").state == STATE_OFF
+        states.get("binary_sensor.k98gidt45gul_name_k98gidt45gul_name_motion").state
+        == STATE_OFF
+    )
+    assert (
+        states.get(
+            "binary_sensor.k98gidt45gul_name_k98gidt45gul_name_doorbell_ding"
+        ).state
+        == STATE_OFF
     )
 
     pubnub.message(
@@ -161,7 +225,12 @@ async def test_doorbell_update_via_pubnub(
 
     await hass.async_block_till_done()
 
-    assert states.get("binary_sensor.k98gidt45gul_name_image_capture").state == STATE_ON
+    assert (
+        states.get(
+            "binary_sensor.k98gidt45gul_name_k98gidt45gul_name_image_capture"
+        ).state
+        == STATE_ON
+    )
 
     pubnub.message(
         pubnub,
@@ -195,10 +264,16 @@ async def test_doorbell_update_via_pubnub(
 
     await hass.async_block_till_done()
 
-    assert states.get("binary_sensor.k98gidt45gul_name_motion").state == STATE_ON
+    assert (
+        states.get("binary_sensor.k98gidt45gul_name_k98gidt45gul_name_motion").state
+        == STATE_ON
+    )
 
     assert (
-        states.get("binary_sensor.k98gidt45gul_name_doorbell_ding").state == STATE_OFF
+        states.get(
+            "binary_sensor.k98gidt45gul_name_k98gidt45gul_name_doorbell_ding"
+        ).state
+        == STATE_OFF
     )
 
     freezer.tick(40)
@@ -206,7 +281,10 @@ async def test_doorbell_update_via_pubnub(
     await hass.async_block_till_done()
 
     assert (
-        states.get("binary_sensor.k98gidt45gul_name_image_capture").state == STATE_OFF
+        states.get(
+            "binary_sensor.k98gidt45gul_name_k98gidt45gul_name_image_capture"
+        ).state
+        == STATE_OFF
     )
 
     pubnub.message(
@@ -221,13 +299,21 @@ async def test_doorbell_update_via_pubnub(
     )
     await hass.async_block_till_done()
 
-    assert states.get("binary_sensor.k98gidt45gul_name_doorbell_ding").state == STATE_ON
+    assert (
+        states.get(
+            "binary_sensor.k98gidt45gul_name_k98gidt45gul_name_doorbell_ding"
+        ).state
+        == STATE_ON
+    )
     freezer.tick(40)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (
-        states.get("binary_sensor.k98gidt45gul_name_doorbell_ding").state == STATE_OFF
+        states.get(
+            "binary_sensor.k98gidt45gul_name_k98gidt45gul_name_doorbell_ding"
+        ).state
+        == STATE_OFF
     )
 
 
@@ -254,7 +340,12 @@ async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
     )
     states = hass.states
 
-    assert states.get("binary_sensor.online_with_doorsense_name_door").state == STATE_ON
+    assert (
+        states.get(
+            "binary_sensor.online_with_doorsense_name_online_with_doorsense_name_door"
+        ).state
+        == STATE_ON
+    )
 
     pubnub.message(
         pubnub,
@@ -267,7 +358,10 @@ async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
     assert (
-        states.get("binary_sensor.online_with_doorsense_name_door").state == STATE_OFF
+        states.get(
+            "binary_sensor.online_with_doorsense_name_online_with_doorsense_name_door"
+        ).state
+        == STATE_OFF
     )
 
     pubnub.message(
@@ -279,22 +373,42 @@ async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
         ),
     )
     await hass.async_block_till_done()
-    assert states.get("binary_sensor.online_with_doorsense_name_door").state == STATE_ON
+    assert (
+        states.get(
+            "binary_sensor.online_with_doorsense_name_online_with_doorsense_name_door"
+        ).state
+        == STATE_ON
+    )
 
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
     await hass.async_block_till_done()
-    assert states.get("binary_sensor.online_with_doorsense_name_door").state == STATE_ON
+    assert (
+        states.get(
+            "binary_sensor.online_with_doorsense_name_online_with_doorsense_name_door"
+        ).state
+        == STATE_ON
+    )
 
     pubnub.connected = True
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
     await hass.async_block_till_done()
-    assert states.get("binary_sensor.online_with_doorsense_name_door").state == STATE_ON
+    assert (
+        states.get(
+            "binary_sensor.online_with_doorsense_name_online_with_doorsense_name_door"
+        ).state
+        == STATE_ON
+    )
 
     # Ensure pubnub status is always preserved
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=2))
     await hass.async_block_till_done()
 
-    assert states.get("binary_sensor.online_with_doorsense_name_door").state == STATE_ON
+    assert (
+        states.get(
+            "binary_sensor.online_with_doorsense_name_online_with_doorsense_name_door"
+        ).state
+        == STATE_ON
+    )
 
     pubnub.message(
         pubnub,
@@ -305,11 +419,21 @@ async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
         ),
     )
     await hass.async_block_till_done()
-    assert states.get("binary_sensor.online_with_doorsense_name_door").state == STATE_ON
+    assert (
+        states.get(
+            "binary_sensor.online_with_doorsense_name_online_with_doorsense_name_door"
+        ).state
+        == STATE_ON
+    )
 
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=4))
     await hass.async_block_till_done()
-    assert states.get("binary_sensor.online_with_doorsense_name_door").state == STATE_ON
+    assert (
+        states.get(
+            "binary_sensor.online_with_doorsense_name_online_with_doorsense_name_door"
+        ).state
+        == STATE_ON
+    )
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -323,7 +447,7 @@ async def test_create_lock_with_doorbell(hass: HomeAssistant) -> None:
     states = hass.states
     assert (
         states.get(
-            "binary_sensor.a6697750d607098bae8d6baa11ef8063_name_doorbell_ding"
+            "binary_sensor.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name_doorbell_ding"
         ).state
         == STATE_OFF
     )

@@ -1,7 +1,5 @@
 """Support for AVM FRITZ!SmartHome devices."""
 
-from __future__ import annotations
-
 from requests.exceptions import ConnectionError as RequestConnectionError, HTTPError
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN

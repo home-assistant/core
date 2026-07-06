@@ -1,9 +1,7 @@
 """Config flow for Control4 integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp.client_exceptions import ClientError
 from pyControl4.account import C4Account
@@ -118,6 +116,7 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return errors, data, description_placeholders
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -150,6 +149,7 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: Control4ConfigEntry,
     ) -> OptionsFlowHandler:
@@ -169,6 +169,8 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
         data_schema = vol.Schema(
             {
+                # Polling interval is user-configurable, which is no longer allowed
+                # pylint: disable-next=home-assistant-config-flow-polling-field
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(

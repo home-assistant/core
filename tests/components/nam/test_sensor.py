@@ -106,7 +106,7 @@ async def test_incompleta_data_after_device_restart(hass: HomeAssistant) -> None
 async def test_availability(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, exc: Exception
 ) -> None:
-    """Ensure that we mark the entities unavailable correctly when device causes an error."""
+    """Ensure we mark entities unavailable when device causes an error."""
     nam_data = await async_load_json_object_fixture(hass, "nam_data.json", DOMAIN)
 
     await init_integration(hass)

@@ -19,6 +19,7 @@ def test_lazy_event_partial_state_context() -> None:
             state="state",
             entity_id="entity_id",
             icon="icon",
+            attributes=None,
             context_only=False,
             data={},
             context=Mock(),

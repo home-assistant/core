@@ -1,7 +1,7 @@
 """Config flow for Samsung SyncThru."""
 
 import re
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlparse
 
 from pysyncthru import ConnectionMode, SyncThru, SyncThruAPINotSupported
@@ -29,6 +29,7 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
     url: str
     name: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -37,6 +38,7 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self._async_show_form(step_id="user")
         return await self._async_check_and_create("user", user_input)
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -92,6 +94,8 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str,
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=home-assistant-config-flow-name-field
                     vol.Optional(CONF_NAME, default=user_input.get(CONF_NAME, "")): str,
                 }
             ),

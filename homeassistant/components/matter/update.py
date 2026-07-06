@@ -1,10 +1,8 @@
 """Matter update."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, override
 
 from chip.clusters import Objects as clusters
 from matter_server.common.errors import UpdateCheckError, UpdateError
@@ -17,7 +15,6 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -26,7 +23,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import ExtraStoredData
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 SCAN_INTERVAL = timedelta(hours=12)
@@ -41,6 +38,7 @@ class MatterUpdateExtraStoredData(ExtraStoredData):
 
     software_update: MatterSoftwareVersion | None = None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the extra data."""
         return {
@@ -59,11 +57,11 @@ class MatterUpdateExtraStoredData(ExtraStoredData):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter lock from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.UPDATE, async_add_entities)
 
 
@@ -90,6 +88,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
     )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
 
@@ -162,6 +161,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         except UpdateCheckError as err:
             raise HomeAssistantError(f"Error finding applicable update: {err}") from err
 
+    @override
     async def async_release_notes(self) -> str | None:
         """Return full release notes.
 
@@ -176,21 +176,29 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         release_notes = ""
 
         # insert extra heavy warning case the update is not from the main net
-        if self._software_update.update_source != UpdateSource.MAIN_NET_DCL:
+        if self._software_update.update_source is not UpdateSource.MAIN_NET_DCL:
             release_notes += (
                 "\n\n<ha-alert alert-type='warning'>"
-                f"Update provided by {self._software_update.update_source.value}. "
-                "Installing this update is at your own risk and you may run into unexpected "
-                "problems such as the need to re-add and factory reset your device.</ha-alert>\n\n"
+                "Update provided by "
+                f"{self._software_update.update_source.value}. "
+                "Installing this update is at your own risk "
+                "and you may run into unexpected "
+                "problems such as the need to re-add and "
+                "factory reset your device.</ha-alert>\n\n"
             )
         return release_notes + (
-            "\n\n<ha-alert alert-type='info'>The update process can take a while, "
-            "especially for battery powered devices. Please be patient and wait until the update "
-            "process is fully completed. Do not remove power from the device while it's updating. "
-            "The device may restart during the update process and be unavailable for several minutes."
+            "\n\n<ha-alert alert-type='info'>"
+            "The update process can take a while, "
+            "especially for battery powered devices. "
+            "Please be patient and wait until the update "
+            "process is fully completed. Do not remove power "
+            "from the device while it's updating. "
+            "The device may restart during the update process "
+            "and be unavailable for several minutes."
             "</ha-alert>\n\n"
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         await super().async_added_to_hass()
@@ -209,11 +217,13 @@ class MatterUpdate(MatterEntity, UpdateEntity):
             await self.async_update()
 
     @property
+    @override
     def extra_restore_state_data(self) -> MatterUpdateExtraStoredData:
         """Return Matter specific state data to be restored."""
         return MatterUpdateExtraStoredData(self._software_update)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend.
 
@@ -222,6 +232,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         """
         return None
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -272,6 +283,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         """Request update."""
         await self.async_update()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
         await super().async_will_remove_from_hass()

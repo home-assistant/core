@@ -81,6 +81,12 @@
     },
     "not_connected": {
       "message": "Apple TV is not connected"
+    },
+    "stream_failed": {
+      "message": "Failed to stream media to the Apple TV"
+    },
+    "streaming_not_supported": {
+      "message": "Streaming the requested media is not supported"
     }
   },
   "options": {

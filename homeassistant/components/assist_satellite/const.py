@@ -1,7 +1,5 @@
 """Constants for assist satellite."""
 
-from __future__ import annotations
-
 import asyncio
 from enum import IntFlag
 from typing import TYPE_CHECKING

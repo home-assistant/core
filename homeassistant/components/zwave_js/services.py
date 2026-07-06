@@ -1,7 +1,5 @@
 """Methods and classes related to executing Z-Wave commands."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Collection, Generator, Sequence
 import logging
@@ -53,6 +51,7 @@ from .helpers import (
     async_get_nodes_from_targets,
     get_value_id_from_unique_id,
 )
+from .lock_helpers import CREDENTIAL_RULE_REVERSE_MAP, USER_TYPE_REVERSE_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,8 +69,112 @@ TARGET_VALIDATORS = {
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register integration services."""
+    _async_register_credential_services(hass)
     services = ZWaveServices(hass, er.async_get(hass), dr.async_get(hass))
     services.async_register()
+
+
+@callback
+def _async_register_credential_services(hass: HomeAssistant) -> None:
+    """Register lock-entity credential platform services."""
+    uint16_id = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        "set_user",
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Optional(const.ATTR_USER_ID): uint16_id,
+            vol.Optional(const.ATTR_USER_NAME): cv.string,
+            vol.Optional(const.ATTR_USER_TYPE): vol.In(USER_TYPE_REVERSE_MAP.keys()),
+            vol.Optional(const.ATTR_CREDENTIAL_RULE): vol.In(
+                CREDENTIAL_RULE_REVERSE_MAP.keys()
+            ),
+            vol.Optional(const.ATTR_USER_ACTIVE): cv.boolean,
+        },
+        func="async_set_user",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        "delete_user",
+        entity_domain=LOCK_DOMAIN,
+        schema={vol.Required(const.ATTR_USER_ID): uint16_id},
+        func="async_delete_user",
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        "delete_all_users",
+        entity_domain=LOCK_DOMAIN,
+        schema={},
+        func="async_delete_all_users",
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        "get_credential_capabilities",
+        entity_domain=LOCK_DOMAIN,
+        schema={},
+        func="async_get_credential_capabilities",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        "get_users",
+        entity_domain=LOCK_DOMAIN,
+        schema={},
+        func="async_get_users",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        "set_credential",
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Required(const.ATTR_USER_ID): uint16_id,
+            vol.Required(const.ATTR_CREDENTIAL_TYPE): vol.In(
+                const.WRITABLE_CREDENTIAL_TYPES
+            ),
+            vol.Required(const.ATTR_CREDENTIAL_DATA): cv.string,
+            vol.Optional(const.ATTR_CREDENTIAL_SLOT): uint16_id,
+        },
+        func="async_set_credential",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        "delete_credential",
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Required(const.ATTR_USER_ID): uint16_id,
+            vol.Required(const.ATTR_CREDENTIAL_TYPE): vol.In(
+                const.WRITABLE_CREDENTIAL_TYPES
+            ),
+            vol.Required(const.ATTR_CREDENTIAL_SLOT): uint16_id,
+        },
+        func="async_delete_credential",
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        "delete_all_credentials",
+        entity_domain=LOCK_DOMAIN,
+        schema={vol.Required(const.ATTR_USER_ID): uint16_id},
+        func="async_delete_all_credentials",
+    )
 
 
 def parameter_name_does_not_need_bitmask(
@@ -605,11 +708,13 @@ class ZWaveServices:
                 nodes_or_endpoints_list, _results
             ):
                 if value_size is None:
-                    # async_set_config_parameter still returns (Value, SetConfigParameterResult)
+                    # async_set_config_parameter still returns
+                    # (Value, SetConfigParameterResult)
                     zwave_value = result[0]
                     cmd_status = result[1]
                 else:
-                    # async_set_raw_config_parameter_value now returns just SetConfigParameterResult
+                    # async_set_raw_config_parameter_value now
+                    # returns just SetConfigParameterResult
                     cmd_status = result
                     zwave_value = f"parameter {property_or_property_name}"
 
@@ -617,7 +722,8 @@ class ZWaveServices:
                     msg = "Set configuration parameter %s on Node %s with value %s"
                 else:
                     msg = (
-                        "Added command to queue to set configuration parameter %s on %s "
+                        "Added command to queue to set"
+                        " configuration parameter %s on %s "
                         "with value %s. Parameter will be set when the device wakes up"
                     )
                 _LOGGER.info(msg, zwave_value, node_or_endpoint, new_value)

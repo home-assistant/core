@@ -1,9 +1,7 @@
 """Config flow to configure the IPP integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyipp import (
     IPP,
@@ -63,6 +61,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
         """Set up the instance."""
         self.discovery_info: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -102,6 +101,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

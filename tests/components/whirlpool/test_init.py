@@ -36,7 +36,8 @@ async def test_setup_region_fallback(
 ) -> None:
     """Test setup when no region is available on the ConfigEntry.
 
-    This can happen after a version update, since there was no region in the first versions.
+    This can happen after a version update, since there was no region
+    in the first versions.
     """
 
     entry = MockConfigEntry(
@@ -59,7 +60,8 @@ async def test_setup_brand_fallback(
 ) -> None:
     """Test setup when no brand is available on the ConfigEntry.
 
-    This can happen after a version update, since the brand was not selected or stored in the earlier versions.
+    This can happen after a version update, since the brand was not
+    selected or stored in the earlier versions.
     """
 
     entry = MockConfigEntry(

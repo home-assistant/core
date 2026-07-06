@@ -1,9 +1,7 @@
 """Config flow for air-Q integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioairq import AirQ, InvalidAuth
 from aiohttp.client_exceptions import ClientConnectionError
@@ -53,6 +51,7 @@ class AirQConfigFlow(ConfigFlow, domain=DOMAIN):
     _discovered_host: str
     _discovered_name: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -97,6 +96,7 @@ class AirQConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -151,6 +151,7 @@ class AirQConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> SchemaOptionsFlowHandler:

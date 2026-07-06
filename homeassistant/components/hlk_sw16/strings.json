@@ -12,8 +12,7 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
+          "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
           "host": "The hostname or IP address of your Hi-Link HLK-SW-16 device."

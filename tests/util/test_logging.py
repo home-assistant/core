@@ -208,7 +208,8 @@ async def test_noisy_loggers(
     )
     assert (
         caplog.text.count(
-            "Module noisy2.module is logging too frequently. 5 messages since last count"
+            "Module noisy2.module is logging too frequently."
+            " 5 messages since last count"
         )
         == logger2_expected_notices
     )
@@ -226,7 +227,7 @@ async def test_noisy_loggers(
 async def test_noisy_loggers_ignores_self(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test that the noisy loggers warning does not trigger a warning for its own module."""
+    """Test noisy loggers warning doesn't trigger for its own module."""
 
     logging_util.async_activate_log_queue_handler(hass)
     logger1 = logging.getLogger("noisy_module1")
@@ -248,7 +249,7 @@ async def test_noisy_loggers_ignores_self(
 async def test_noisy_loggers_ignores_lower_than_info(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test that noisy loggers all logged as warnings, except for levels lower than INFO."""
+    """Test noisy loggers logged as warnings, except levels below INFO."""
 
     logging_util.async_activate_log_queue_handler(hass)
     logger = logging.getLogger("noisy_module")

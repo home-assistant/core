@@ -1,7 +1,5 @@
 """Various utilities for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from mozart_api.models import PairedRemote

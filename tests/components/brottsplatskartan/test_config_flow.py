@@ -1,7 +1,5 @@
 """Test the Brottsplatskartan config flow."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant import config_entries

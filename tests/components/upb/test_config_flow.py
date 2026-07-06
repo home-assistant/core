@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-def mocked_upb(sync_complete=True, config_ok=True):
+def mocked_upb(sync_complete: bool = True, config_ok: bool = True):
     """Mock UPB lib."""
 
     def _add_handler(_, callback):
@@ -32,8 +32,11 @@ def mocked_upb(sync_complete=True, config_ok=True):
     )
 
 
-async def valid_tcp_flow(
-    hass: HomeAssistant, sync_complete: bool = True, config_ok: bool = True
+async def valid_flow(
+    hass: HomeAssistant,
+    device: str = "socket://1.2.3.4:2101",
+    sync_complete: bool = True,
+    config_ok: bool = True,
 ) -> ConfigFlowResult:
     """Get result dict that are standard for most tests."""
 
@@ -46,7 +49,7 @@ async def valid_tcp_flow(
         )
         return await hass.config_entries.flow.async_configure(
             flow["flow_id"],
-            {"protocol": "TCP", "address": "1.2.3.4", "file_path": "upb.upe"},
+            {"device": device, "file_path": "upb.upe"},
         )
 
 
@@ -66,8 +69,7 @@ async def test_full_upb_flow_with_serial_port(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             flow["flow_id"],
             {
-                "protocol": "Serial port",
-                "address": "/dev/ttyS0:115200",
+                "device": "/dev/ttyS0",
                 "file_path": "upb.upe",
             },
         )
@@ -78,17 +80,20 @@ async def test_full_upb_flow_with_serial_port(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "UPB"
     assert result["data"] == {
-        "host": "serial:///dev/ttyS0:115200",
+        "device": "/dev/ttyS0",
         "file_path": "upb.upe",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_user_with_tcp_upb(hass: HomeAssistant) -> None:
-    """Test we can setup a serial upb."""
-    result = await valid_tcp_flow(hass)
+    """Test we can setup a TCP upb."""
+    result = await valid_flow(hass, device="socket://1.2.3.4:2101")
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {"host": "tcp://1.2.3.4", "file_path": "upb.upe"}
+    assert result["data"] == {
+        "device": "socket://1.2.3.4:2101",
+        "file_path": "upb.upe",
+    }
     await hass.async_block_till_done()
 
 
@@ -99,7 +104,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         "homeassistant.components.upb.config_flow.asyncio.timeout",
         side_effect=TimeoutError,
     ):
-        result = await valid_tcp_flow(hass, sync_complete=False)
+        result = await valid_flow(hass, sync_complete=False)
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
@@ -107,15 +112,15 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
 async def test_form_missing_upb_file(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
-    result = await valid_tcp_flow(hass, config_ok=False)
+    result = await valid_flow(hass, config_ok=False)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_upb_file"}
 
 
 async def test_form_user_with_already_configured(hass: HomeAssistant) -> None:
     """Test we can setup a TCP upb."""
-    _ = await valid_tcp_flow(hass)
-    result2 = await valid_tcp_flow(hass)
+    _ = await valid_flow(hass)
+    result2 = await valid_flow(hass)
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
     await hass.async_block_till_done()

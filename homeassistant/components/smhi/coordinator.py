@@ -1,9 +1,8 @@
 """DataUpdateCoordinator for the SMHI integration."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
+from typing import override
 
 from pysmhi import (
     SMHIFireForecast,
@@ -64,6 +63,7 @@ class SMHIDataUpdateCoordinator(DataUpdateCoordinator[SMHIForecastData]):
             session=aiohttp_client.async_get_clientsession(hass),
         )
 
+    @override
     async def _async_update_data(self) -> SMHIForecastData:
         """Fetch data from SMHI."""
         try:
@@ -110,6 +110,7 @@ class SMHIFireDataUpdateCoordinator(DataUpdateCoordinator[SMHIFireForecastData])
             session=aiohttp_client.async_get_clientsession(hass),
         )
 
+    @override
     async def _async_update_data(self) -> SMHIFireForecastData:
         """Fetch data from SMHI."""
         try:

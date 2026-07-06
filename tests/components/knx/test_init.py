@@ -38,10 +38,14 @@ from homeassistant.components.knx.const import (
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
+    CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
+    CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
     DOMAIN,
+    KNX_TELEGRAM_DB_RETENTION_DEFAULT,
+    KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
     KNXConfigEntryData,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -355,8 +359,81 @@ async def test_async_remove_entry(
         patch("pathlib.Path.rmdir") as rmdir_mock,
     ):
         assert await hass.config_entries.async_remove(config_entry.entry_id)
-        assert unlink_mock.call_count == 4
+        assert unlink_mock.call_count == 6
         rmdir_mock.assert_called_once()
 
     assert hass.config_entries.async_entries() == []
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_async_migrate_entry_v1_to_v2(hass: HomeAssistant) -> None:
+    """Test KNX config entry migration from v1 to v2."""
+    config_entry = MockConfigEntry(
+        title="KNX",
+        domain=DOMAIN,
+        version=1,
+        data={
+            "telegram_log_size": 1000,
+            "other_setting": "some_value",
+            CONF_KNX_STATE_UPDATER: True,
+            CONF_KNX_RATE_LIMIT: 30,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    assert config_entry.version == 1
+
+    with patch("homeassistant.components.knx.async_setup_entry", return_value=True):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.version == 2
+    assert "telegram_log_size" not in config_entry.data
+    assert CONF_KNX_STATE_UPDATER not in config_entry.data
+    assert CONF_KNX_RATE_LIMIT not in config_entry.data
+    assert CONF_KNX_TELEGRAM_DB_RETENTION_DAYS not in config_entry.data
+    assert CONF_KNX_TELEGRAM_DB_LOAD_HOURS not in config_entry.data
+
+    assert config_entry.options[CONF_KNX_STATE_UPDATER] is True
+    assert config_entry.options[CONF_KNX_RATE_LIMIT] == 30
+    assert (
+        config_entry.options[CONF_KNX_TELEGRAM_DB_RETENTION_DAYS]
+        == KNX_TELEGRAM_DB_RETENTION_DEFAULT
+    )
+    assert (
+        config_entry.options[CONF_KNX_TELEGRAM_DB_LOAD_HOURS]
+        == KNX_TELEGRAM_LOAD_HOURS_DEFAULT
+    )
+    assert config_entry.data["other_setting"] == "some_value"
+
+
+async def test_async_migrate_entry_already_v2(hass: HomeAssistant) -> None:
+    """Test that migration does not run if already version 2."""
+    config_entry = MockConfigEntry(
+        title="KNX",
+        domain=DOMAIN,
+        version=2,
+        data={
+            "other_setting": "some_value",
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.knx.async_setup_entry", return_value=True):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.version == 2
+    assert config_entry.data == {"other_setting": "some_value"}
+
+
+async def test_async_migrate_entry_future_version(hass: HomeAssistant) -> None:
+    """Test that migration returns False for future versions."""
+    config_entry = MockConfigEntry(
+        title="KNX",
+        domain=DOMAIN,
+        version=3,
+        data={},
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.knx.async_setup_entry", return_value=True):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)

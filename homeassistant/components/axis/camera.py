@@ -1,5 +1,6 @@
 """Support for Axis camera streaming."""
 
+from typing import override
 from urllib.parse import urlencode
 
 from homeassistant.components.camera import CameraEntityFeature
@@ -60,6 +61,7 @@ class AxisCamera(AxisEntity, MjpegCamera):
             unique_id=f"{hub.unique_id}-camera",
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe camera events."""
         self.async_on_remove(
@@ -111,6 +113,7 @@ class AxisCamera(AxisEntity, MjpegCamera):
         """Return mjpeg URL for device."""
         return self._mjpeg_url
 
+    @override
     async def stream_source(self) -> str:
         """Return the stream source."""
         return self._stream_source

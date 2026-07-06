@@ -1,10 +1,8 @@
 """Config flow for fritzbox_callmonitor."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import Any, cast
+from typing import Any, cast, override
 
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
@@ -130,12 +128,14 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> FritzBoxCallMonitorOptionsFlowHandler:
         """Get the options flow for this handler."""
         return FritzBoxCallMonitorOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

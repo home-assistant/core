@@ -1,8 +1,6 @@
 """Constants for calendar components."""
 
-from __future__ import annotations
-
-from enum import IntFlag
+from enum import IntFlag, StrEnum
 from typing import TYPE_CHECKING
 
 from homeassistant.util.hass_dict import HassKey
@@ -15,7 +13,16 @@ if TYPE_CHECKING:
 DOMAIN = "calendar"
 DATA_COMPONENT: HassKey[EntityComponent[CalendarEntity]] = HassKey(DOMAIN)
 
-CONF_EVENT = "event"
+
+class CalendarEntityStateAttribute(StrEnum):
+    """State attributes for calendar entities."""
+
+    MESSAGE = "message"
+    ALL_DAY = "all_day"
+    START_TIME = "start_time"
+    END_TIME = "end_time"
+    LOCATION = "location"
+    DESCRIPTION = "description"
 
 
 class CalendarEntityFeature(IntFlag):

@@ -1,8 +1,6 @@
 """Representation of a deCONZ remote or keypad."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pydeconz.models.event import EventType
 from pydeconz.models.sensor.ancillary_control import (
@@ -168,6 +166,7 @@ class DeconzEvent(DeconzEventBase):
     _device: Switch
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Fire the event if reason is that state is updated."""
         if self.hub.ignore_state_updates or "state" not in self._device.changed_keys:
@@ -200,6 +199,7 @@ class DeconzAlarmEvent(DeconzEventBase):
     _device: AncillaryControl
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Fire the event if reason is new action is updated."""
         if (
@@ -225,6 +225,7 @@ class DeconzPresenceEvent(DeconzEventBase):
     _device: Presence
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Fire the event if reason is new action is updated."""
         if (
@@ -250,6 +251,7 @@ class DeconzRelativeRotaryEvent(DeconzEventBase):
     _device: RelativeRotary
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Fire the event if reason is new action is updated."""
         if (

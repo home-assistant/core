@@ -1,5 +1,7 @@
 """Tests for Cert Expiry setup."""
 
+from datetime import timedelta
+import socket
 from unittest.mock import patch
 
 import pytest
@@ -14,11 +16,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from .const import HOST, PORT
 from .helpers import future_timestamp, static_datetime
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_update_unique_id(hass: HomeAssistant) -> None:
@@ -72,7 +75,7 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.LOADED
     state = hass.states.get("sensor.example_com_cert_expiry")
     assert state.state == timestamp.isoformat()
-    assert state.attributes.get("error") == "None"
+    assert state.attributes.get("error") is None
     assert state.attributes.get("is_valid")
 
     await hass.config_entries.async_unload(entry.entry_id)
@@ -115,5 +118,80 @@ async def test_delay_load_during_startup(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.example_com_cert_expiry")
     assert state.state == timestamp.isoformat()
-    assert state.attributes.get("error") == "None"
+    assert state.attributes.get("error") is None
     assert state.attributes.get("is_valid")
+
+
+async def test_coordinator_refresh_fails_during_startup(
+    hass: HomeAssistant,
+) -> None:
+    """Test coordinator refresh failure during the async_at_started callback."""
+    hass.set_state(CoreState.not_running)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_PORT: PORT},
+        unique_id=f"{HOST}:{PORT}",
+    )
+    entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {}) is True
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.example_com_cert_expiry") is None
+
+    with patch(
+        "homeassistant.components.cert_expiry.helper.async_get_cert",
+        side_effect=socket.gaierror,
+    ):
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert hass.state is CoreState.running
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("sensor.example_com_cert_expiry")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_coordinator_refresh_fails_then_recovers_after_startup(
+    hass: HomeAssistant,
+) -> None:
+    """Test coordinator recovers after failing on the initial startup refresh."""
+
+    hass.set_state(CoreState.not_running)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_PORT: PORT},
+        unique_id=f"{HOST}:{PORT}",
+    )
+    entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {}) is True
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.cert_expiry.helper.async_get_cert",
+        side_effect=socket.gaierror,
+    ):
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.example_com_cert_expiry")
+    assert state.state == STATE_UNAVAILABLE
+
+    timestamp = future_timestamp(100)
+    with patch(
+        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
+        return_value=timestamp,
+    ):
+        async_fire_time_changed(hass, utcnow() + timedelta(hours=13))
+
+    state = hass.states.get("sensor.example_com_cert_expiry")
+    assert state.state == timestamp.isoformat()
+    assert state.attributes.get("is_valid")
+    assert state.attributes.get("error") is None

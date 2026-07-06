@@ -5,8 +5,6 @@ Integrations can register lab preview features in their manifest.json which will
 in the Home Assistant Labs UI for users to enable or disable.
 """
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import EVENT_LABS_UPDATED

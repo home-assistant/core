@@ -1,6 +1,6 @@
 """Support for interface with an Harman/Kardon or JBL AVR."""
 
-from __future__ import annotations
+from typing import override
 
 import hkavr
 import voluptuous as vol
@@ -83,33 +83,40 @@ class HkAvrDevice(MediaPlayerEntity):
         self._current_source = self._avr.current_source
 
     @property
+    @override
     def name(self):
         """Return the name of the device."""
         return self._name
 
     @property
+    @override
     def is_volume_muted(self):
         """Muted status not available."""
         return self._muted
 
     @property
+    @override
     def source(self):
         """Return the current input source."""
         return self._current_source
 
     @property
+    @override
     def source_list(self):
         """Available sources."""
         return self._source_list
 
+    @override
     def turn_on(self) -> None:
         """Turn the AVR on."""
         self._avr.power_on()
 
+    @override
     def turn_off(self) -> None:
         """Turn off the AVR."""
         self._avr.power_off()
 
+    @override
     def select_source(self, source: str) -> None:
         """Select input source."""
         return self._avr.select_source(source)
@@ -122,6 +129,7 @@ class HkAvrDevice(MediaPlayerEntity):
         """Volume down AVR."""
         return self._avr.volume_down()
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         return self._avr.mute(mute)

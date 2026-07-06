@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "chlorine": {
+        "default": "mdi:gauge"
+      },
+      "conductivity": {
+        "default": "mdi:gauge"
+      },
+      "electrolysis": {
+        "default": "mdi:flash"
+      },
+      "filtration_intel_time": {
+        "default": "mdi:timer-outline"
+      },
+      "hydrolysis": {
+        "default": "mdi:flash"
+      },
+      "redox_potential": {
+        "default": "mdi:gauge"
+      },
+      "uv": {
+        "default": "mdi:weather-sunny-alert"
+      }
+    }
+  }
+}

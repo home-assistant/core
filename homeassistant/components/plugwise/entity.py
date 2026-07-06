@@ -1,6 +1,6 @@
 """Generic Plugwise Entity Class."""
 
-from __future__ import annotations
+from typing import override
 
 from plugwise import GwEntityData
 
@@ -71,6 +71,7 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
             )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (

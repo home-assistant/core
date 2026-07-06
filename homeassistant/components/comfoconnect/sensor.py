@@ -1,9 +1,8 @@
 """Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pycomfoconnect import (
     SENSOR_BYPASS_STATE,
@@ -307,6 +306,7 @@ class ComfoConnectSensor(SensorEntity):
         self._attr_name = f"{ccb.name} {description.name}"
         self._attr_unique_id = f"{ccb.unique_id}-{description.key}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
         _LOGGER.debug(

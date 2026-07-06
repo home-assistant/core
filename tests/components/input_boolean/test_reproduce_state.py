@@ -1,5 +1,6 @@
 """Test reproduce state for input boolean."""
 
+from homeassistant.components.input_boolean import DOMAIN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 from homeassistant.setup import async_setup_component
@@ -9,7 +10,7 @@ async def test_reproducing_states(hass: HomeAssistant) -> None:
     """Test reproducing input_boolean states."""
     assert await async_setup_component(
         hass,
-        "input_boolean",
+        DOMAIN,
         {
             "input_boolean": {
                 "initial_on": {"initial": True},

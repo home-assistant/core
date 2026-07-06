@@ -1,10 +1,8 @@
 """Config flow for the Abode Security System component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from http import HTTPStatus
-from typing import Any, cast
+from typing import Any, cast, override
 
 from jaraco.abode.client import Client as Abode
 from jaraco.abode.exceptions import (
@@ -108,6 +106,7 @@ class AbodeFlowHandler(ConfigFlow, domain=DOMAIN):
             title=cast(str, self._username), data=config_data
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

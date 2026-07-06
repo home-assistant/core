@@ -1,6 +1,6 @@
 """Fan platform for Compit integration."""
 
-from typing import Any
+from typing import Any, override
 
 from compit_inext_api import PARAM_VALUES
 from compit_inext_api.consts import CompitParameter
@@ -90,6 +90,7 @@ class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -98,6 +99,7 @@ class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the fan is on."""
         value = self.coordinator.connector.get_current_option(
@@ -106,6 +108,7 @@ class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
 
         return True if value == STATE_ON else False if value == STATE_OFF else None
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -123,6 +126,7 @@ class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
 
         await self.async_set_percentage(percentage)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self.coordinator.connector.select_device_option(
@@ -131,6 +135,7 @@ class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current fan speed as a percentage."""
         if self.is_on is False:
@@ -150,6 +155,7 @@ class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
             )
         )
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the fan speed."""
         if percentage == 0:

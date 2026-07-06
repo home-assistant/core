@@ -1,7 +1,5 @@
 """The Mopeka integration."""
 
-from __future__ import annotations
-
 import logging
 
 from mopeka_iot_ble import MediumType, MopekaIOTBluetoothDeviceData

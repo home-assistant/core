@@ -1,7 +1,7 @@
 """Class to hold all air purifier accessories."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_AIR_PURIFIER
@@ -88,6 +88,7 @@ class AirPurifier(Fan):
                     self.auto_preset = preset
                     break
 
+    @override
     def create_services(self) -> Service:
         """Create and configure the primary service for this accessory."""
         self.chars.append(CHAR_ACTIVE)
@@ -214,12 +215,14 @@ class AirPurifier(Fan):
 
         return serv_air_purifier
 
+    @override
     def should_add_preset_mode_switch(self, preset_mode: str) -> bool:
         """Check if a preset mode switch should be added."""
         return preset_mode.lower() != "auto"
 
     @callback
     @pyhap_callback  # type: ignore[untyped-decorator]
+    @override
     def run(self) -> None:
         """Handle accessory driver started event.
 
@@ -378,7 +381,7 @@ class AirPurifier(Fan):
 
     @callback
     def _async_update_filter_change_indicator(self, new_state: State | None) -> None:
-        """Handle linked filter change indicator binary sensor state change to update HomeKit value."""
+        """Handle filter change indicator state change."""
         if new_state is None or new_state.state in IGNORED_STATES:
             return
 
@@ -408,7 +411,7 @@ class AirPurifier(Fan):
 
     @callback
     def _async_update_filter_life_level(self, new_state: State | None) -> None:
-        """Handle linked filter life level sensor state change to update HomeKit value."""
+        """Handle filter life level sensor state change."""
         if new_state is None or new_state.state in IGNORED_STATES:
             return
 
@@ -449,6 +452,7 @@ class AirPurifier(Fan):
         self.char_filter_change_indication.set_value(current_change_indicator)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update fan after state change."""
         super().async_update_state(new_state)
@@ -472,6 +476,7 @@ class AirPurifier(Fan):
                 else TARGET_STATE_MANUAL
             )
 
+    @override
     def set_chars(self, char_values: dict[str, Any]) -> None:
         """Handle automatic mode after state change."""
         super().set_chars(char_values)

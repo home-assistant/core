@@ -31,7 +31,7 @@
   "title": "Event",
   "triggers": {
     "received": {
-      "description": "Triggers after one or more event entities receive a matching event.",
+      "description": "Triggers when one or more event entities receive a matching event.",
       "fields": {
         "event_type": {
           "description": "The event types to trigger on.",

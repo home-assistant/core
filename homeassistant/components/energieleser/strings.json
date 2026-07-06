@@ -1,0 +1,84 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unknown_device_type": "This isn't a supported energieleser product. Please check that the device is a stromleser, gasleser, wasserleser, or wärmeleser."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unknown_device_type": "This isn't a supported energieleser product. Please check that the device is a stromleser, gasleser, wasserleser, or wärmeleser."
+    },
+    "flow_title": "{device_type} · {host}",
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Local IP address or hostname of the device (e.g. 192.168.1.42)."
+        },
+        "description": "Connect to a local energieleser device (stromleser.one, gasleser, wasserleser, or wärmeleser).",
+        "title": "Add an energieleser device"
+      },
+      "zeroconf_confirm": {
+        "description": "Found a {device_type} ({device_id}) at {host}. Add it to Home Assistant?",
+        "title": "Add discovered device"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy_export": {
+        "name": "Exported energy"
+      },
+      "energy_import": {
+        "name": "Imported energy"
+      },
+      "flow_rate": {
+        "name": "Gas flow rate"
+      },
+      "gas_consumption": {
+        "name": "Total gas"
+      },
+      "heat_energy_tariff": {
+        "name": "Energy tariff {tariff}"
+      },
+      "heat_flow_temperature": {
+        "name": "Flow temperature"
+      },
+      "heat_return_temperature": {
+        "name": "Return temperature"
+      },
+      "heat_total_volume": {
+        "name": "Total volume"
+      },
+      "heat_volume_flow": {
+        "name": "Volume flow"
+      },
+      "power_phase": {
+        "name": "Phase {phase} power"
+      },
+      "power_total": {
+        "name": "Active power"
+      },
+      "pulse_count": {
+        "name": "Pulse count"
+      },
+      "water_consumption": {
+        "name": "Total water"
+      },
+      "water_flow_rate": {
+        "name": "Water flow rate"
+      },
+      "water_flow_rate_m3": {
+        "name": "Volume flow rate"
+      },
+      "water_today_consumption": {
+        "name": "Water today"
+      }
+    }
+  }
+}

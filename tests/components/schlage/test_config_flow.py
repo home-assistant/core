@@ -152,7 +152,6 @@ async def test_reauth(
 async def test_reauth_invalid_auth(
     hass: HomeAssistant,
     mock_added_config_entry: MockSchlageConfigEntry,
-    mock_setup_entry: AsyncMock,
     mock_pyschlage_auth: Mock,
 ) -> None:
     """Test reauth flow."""

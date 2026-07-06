@@ -1,7 +1,5 @@
 """Component for the Slide local API."""
 
-from __future__ import annotations
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 

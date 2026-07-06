@@ -1,11 +1,9 @@
 """Config flow for TP-Link Omada integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 import re
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, override
 from urllib.parse import urlsplit
 
 from aiohttp import CookieJar
@@ -59,7 +57,8 @@ async def create_omada_client(
         and re.fullmatch(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", host_parts.hostname)
         is not None
     ):
-        # TP-Link API uses cookies for login session, so an unsafe cookie jar is required for IP addresses
+        # TP-Link API uses cookies for login session,
+        # so an unsafe cookie jar is required for IPs
         websession = async_create_clientsession(
             hass, cookie_jar=CookieJar(unsafe=True), verify_ssl=verify_ssl
         )
@@ -94,14 +93,16 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> HubInfo:
 class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for TP-Link Omada."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Create the config flow for a new integration."""
         self._omada_opts: dict[str, Any] = {}
         self._sites: list[OmadaSite] = []
         self._controller_name = ""
+        self._controller_id = ""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -117,12 +118,10 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
             )
 
-        await self.async_set_unique_id(info.controller_id)
-        self._abort_if_unique_id_configured()
-
         self._omada_opts.update(user_input)
         self._sites = info.sites
         self._controller_name = info.name
+        self._controller_id = info.controller_id
         if len(self._sites) > 1:
             return await self.async_step_site()
         return await self.async_step_site({CONF_SITE: self._sites[0].id})
@@ -149,6 +148,9 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             return self.async_show_form(step_id="site", data_schema=schema)
+
+        await self.async_set_unique_id(f"{self._controller_id}_{user_input[CONF_SITE]}")
+        self._abort_if_unique_id_configured()
 
         self._omada_opts.update(user_input)
         site_name = next(
@@ -178,7 +180,10 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if info is not None:
                 # Check the controller ID is the same as before
-                await self.async_set_unique_id(info.controller_id)
+                reauth_entry = self._get_reauth_entry()
+                await self.async_set_unique_id(
+                    f"{info.controller_id}_{reauth_entry.data[CONF_SITE]}"
+                )
                 self._abort_if_unique_id_mismatch(reason="device_mismatch")
 
                 # Auth successful - update the config entry with the new credentials

@@ -1,6 +1,6 @@
 """The venstar component."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -26,11 +26,13 @@ class VenstarEntity(CoordinatorEntity[VenstarDataUpdateCoordinator]):
         self._client = venstar_data_coordinator.client
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.async_write_ha_state()
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device information for this entity."""
         firmware_version = self._client.get_firmware_ver()

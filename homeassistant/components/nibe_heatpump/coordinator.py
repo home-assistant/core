@@ -1,12 +1,10 @@
 """The Nibe Heat Pump coordinator."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 from datetime import date, timedelta
-from typing import Any
+from typing import Any, override
 
 from nibe.coil import Coil, CoilData
 from nibe.connection import Connection
@@ -55,6 +53,7 @@ class ContextCoordinator[_DataTypeT, _ContextTypeT](DataUpdateCoordinator[_DataT
             update_callback()
 
     @callback
+    @override
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:
@@ -147,7 +146,9 @@ class CoilCoordinator(ContextCoordinator[dict[int, CoilData], int]):
             await self.connection.write_coil(data)
         except WriteDeniedException:
             LOGGER.debug(
-                "Denied write on address %d with value %s. This is likely already the value the pump has internally",
+                "Denied write on address %d with value %s."
+                " This is likely already the value"
+                " the pump has internally",
                 coil.address,
                 value,
             )
@@ -179,6 +180,7 @@ class CoilCoordinator(ContextCoordinator[dict[int, CoilData], int]):
         """Read coil and update state using callbacks."""
         return await self.connection.read_coil(coil)
 
+    @override
     async def _async_update_data(self) -> dict[int, CoilData]:
         self.task = asyncio.current_task()
         try:
@@ -216,6 +218,7 @@ class CoilCoordinator(ContextCoordinator[dict[int, CoilData], int]):
 
         return result
 
+    @override
     async def async_shutdown(self):
         """Make sure a coordinator is shut down as well as it's connection."""
         await super().async_shutdown()

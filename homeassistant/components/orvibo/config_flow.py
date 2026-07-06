@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 from orvibo.s20 import S20, S20Exception, discover
 import voluptuous as vol
@@ -65,6 +65,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._discovered_switches = _filter_discovered_switches(_unfiltered_switches)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -90,7 +91,9 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             if not user_input.get(CONF_MAC):
-                # Using private attribute access here since S20 class doesn't have a public method to get the MAC without repeating discovery
+                # Using private attribute access here since S20
+                # class doesn't have a public method to get
+                # the MAC without repeating discovery
                 if not device._mac:  # noqa: SLF001
                     return "cannot_discover"
                 user_input[CONF_MAC] = format_mac(device._mac.hex()).lower()  # noqa: SLF001

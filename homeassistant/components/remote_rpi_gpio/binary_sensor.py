@@ -1,6 +1,6 @@
 """Support for binary sensor using RPi GPIO."""
 
-from __future__ import annotations
+from typing import override
 
 from gpiozero import DigitalInputDevice
 import requests
@@ -81,6 +81,7 @@ class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
         self._state = False
         self._sensor = sensor
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 
@@ -93,6 +94,7 @@ class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
         self._sensor.when_activated = read_gpio
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the entity."""
         return self._state != self._invert_logic

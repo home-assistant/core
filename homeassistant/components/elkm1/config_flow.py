@@ -1,9 +1,7 @@
 """Config flow for Elk-M1 Control integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 from elkm1_lib.discovery import ElkSystem
 from elkm1_lib.elk import Elk
@@ -12,6 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_DEVICE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PREFIX,
@@ -33,8 +32,6 @@ from .discovery import (
     async_discover_devices,
     async_update_entry_from_discovery,
 )
-
-CONF_DEVICE = "device"
 
 NON_SECURE_PORT = 2101
 SECURE_PORT = 2601
@@ -122,7 +119,11 @@ def _make_url_from_data(data: dict[str, str]) -> str:
 
 
 def _get_protocol_from_url(url: str) -> str:
-    """Get protocol from URL. Returns the configured protocol from URL or the default secure protocol."""
+    """Get protocol from URL.
+
+    Returns the configured protocol from URL or the
+    default secure protocol.
+    """
     return next(
         (k for k, v in PROTOCOL_MAP.items() if url.startswith(v)),
         DEFAULT_SECURE_PROTOCOL,
@@ -148,6 +149,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_device: ElkSystem | None = None
         self._discovered_devices: dict[str, ElkSystem] = {}
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -158,6 +160,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Elk discovered from dhcp: %s", self._discovered_device)
         return await self._async_handle_discovery()
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
@@ -200,6 +203,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
         return await self.async_step_discovery_confirm()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return other_flow.host == self.host
@@ -238,19 +242,23 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception during reconfiguration")
                 errors["base"] = "unknown"
             else:
-                # Discover the device at the provided address to obtain its MAC (unique_id)
+                # Discover the device at the provided address
+                # to obtain its MAC (unique_id)
                 device = await async_discover_device(
                     self.hass, validate_input_data[CONF_ADDRESS]
                 )
                 if device is not None and device.mac_address:
                     await self.async_set_unique_id(dr.format_mac(device.mac_address))
-                    self._abort_if_unique_id_mismatch()  # aborts if user tried to switch devices
+                    if reconfigure_entry.unique_id is not None:
+                        self._abort_if_unique_id_mismatch()
                 else:
-                    # If we cannot confirm identity, keep existing behavior (don't block reconfigure)
+                    # If we cannot confirm identity, keep existing
+                    # behavior (don't block reconfigure)
                     await self.async_set_unique_id(reconfigure_entry.unique_id)
 
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
+                    unique_id=self.unique_id,
                     data_updates={
                         **reconfigure_entry.data,
                         CONF_HOST: info[CONF_HOST],
@@ -286,6 +294,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,0 +1,64 @@
+.type: &twilight_type
+  required: true
+  default: civil
+  selector:
+    select:
+      translation_key: twilight_type
+      options:
+        - civil
+        - nautical
+        - astronomical
+
+.for: &trigger_for
+  required: true
+  default: "00:00:00"
+  selector:
+    duration:
+
+.elevation_threshold_entity: &trigger_elevation_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "°"
+  - domain: number
+    unit_of_measurement: "°"
+  - domain: sensor
+    unit_of_measurement: "°"
+
+.elevation_threshold_number: &trigger_elevation_threshold_number
+  min: -90
+  max: 90
+  mode: box
+  unit_of_measurement: "°"
+
+sunrise: {}
+sunset: {}
+solar_noon: {}
+solar_midnight: {}
+
+dawn:
+  fields:
+    type: *twilight_type
+
+dusk:
+  fields:
+    type: *twilight_type
+
+elevation_changed:
+  fields:
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *trigger_elevation_threshold_entity
+          mode: changed
+          number: *trigger_elevation_threshold_number
+
+elevation_crossed_threshold:
+  fields:
+    for: *trigger_for
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *trigger_elevation_threshold_entity
+          mode: crossed
+          number: *trigger_elevation_threshold_number

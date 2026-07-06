@@ -1,9 +1,7 @@
 """Define events for the Transmission integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.const import ATTR_ID, ATTR_NAME
@@ -49,6 +47,7 @@ async def async_setup_entry(
 class TransmissionEvent(TransmissionEntity, EventEntity):
     """Representation of a Transmission event entity."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()

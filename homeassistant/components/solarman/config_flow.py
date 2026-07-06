@@ -1,7 +1,7 @@
 """Config flow for solarman integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from solarman_opendata.solarman import Solarman
 import voluptuous as vol
@@ -35,6 +35,7 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
     mac: str | None = None
     client: Solarman | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -87,6 +88,7 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

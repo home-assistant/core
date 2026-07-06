@@ -1,7 +1,5 @@
 """The bluetooth integration matchers."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from dataclasses import dataclass
 from fnmatch import translate

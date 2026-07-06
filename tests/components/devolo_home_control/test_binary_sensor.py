@@ -36,27 +36,31 @@ async def test_binary_sensor(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_door")
-    assert state == snapshot
-    assert entity_registry.async_get(f"{BINARY_SENSOR_DOMAIN}.test_door") == snapshot
-
-    state = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_overload")
+    state = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_test_door")
     assert state == snapshot
     assert (
-        entity_registry.async_get(f"{BINARY_SENSOR_DOMAIN}.test_overload") == snapshot
+        entity_registry.async_get(f"{BINARY_SENSOR_DOMAIN}.test_test_door") == snapshot
+    )
+
+    state = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_test_overload")
+    assert state == snapshot
+    assert (
+        entity_registry.async_get(f"{BINARY_SENSOR_DOMAIN}.test_test_overload")
+        == snapshot
     )
 
     # Emulate websocket message: sensor turned on
     test_gateway.publisher.dispatch("Test", ("Test", True))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_door").state == STATE_ON
+    assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_test_door").state == STATE_ON
 
     # Emulate websocket message: device went offline
     test_gateway.devices["Test"].status = 1
     test_gateway.publisher.dispatch("Test", ("Status", False, "status"))
     await hass.async_block_till_done()
     assert (
-        hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_door").state == STATE_UNAVAILABLE
+        hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_test_door").state
+        == STATE_UNAVAILABLE
     )
 
     # Emulate websocket message: device was deleted
@@ -80,28 +84,33 @@ async def test_remote_control(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_button_1")
+    state = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_test_button_1")
     assert state == snapshot
     assert (
-        entity_registry.async_get(f"{BINARY_SENSOR_DOMAIN}.test_button_1") == snapshot
+        entity_registry.async_get(f"{BINARY_SENSOR_DOMAIN}.test_test_button_1")
+        == snapshot
     )
 
     # Emulate websocket message: button pressed
     test_gateway.publisher.dispatch("Test", ("Test", 1))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_button_1").state == STATE_ON
+    assert (
+        hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_test_button_1").state == STATE_ON
+    )
 
     # Emulate websocket message: button released
     test_gateway.publisher.dispatch("Test", ("Test", 0))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_button_1").state == STATE_OFF
+    assert (
+        hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_test_button_1").state == STATE_OFF
+    )
 
     # Emulate websocket message: device went offline
     test_gateway.devices["Test"].status = 1
     test_gateway.publisher.dispatch("Test", ("Status", False, "status"))
     await hass.async_block_till_done()
     assert (
-        hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_button_1").state
+        hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_test_button_1").state
         == STATE_UNAVAILABLE
     )
 
@@ -116,7 +125,7 @@ async def test_disabled(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_door") is None
+    assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_test_door") is None
 
 
 async def test_remove_from_hass(hass: HomeAssistant) -> None:
@@ -130,7 +139,7 @@ async def test_remove_from_hass(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_door")
+    state = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_test_door")
     assert state is not None
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()

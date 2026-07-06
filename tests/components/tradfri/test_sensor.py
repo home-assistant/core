@@ -1,7 +1,5 @@
 """Tradfri sensor platform tests."""
 
-from __future__ import annotations
-
 import pytest
 from pytradfri.const import (
     ATTR_AIR_PURIFIER_AIR_QUALITY,
@@ -22,10 +20,10 @@ from homeassistant.components.tradfri.const import DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfDensity,
+    UnitOfRatio,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -56,7 +54,7 @@ async def test_battery_sensor(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "87"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfRatio.PERCENTAGE
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.BATTERY
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
@@ -67,7 +65,7 @@ async def test_battery_sensor(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "60"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfRatio.PERCENTAGE
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.BATTERY
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
@@ -84,7 +82,7 @@ async def test_cover_battery_sensor(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "77"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfRatio.PERCENTAGE
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.BATTERY
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
@@ -104,7 +102,7 @@ async def test_air_quality_sensor(
     assert state.state == "5"
     assert (
         state.attributes[ATTR_UNIT_OF_MEASUREMENT]
-        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
     )
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
     assert ATTR_DEVICE_CLASS not in state.attributes

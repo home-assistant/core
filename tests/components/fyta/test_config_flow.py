@@ -145,12 +145,12 @@ async def test_duplicate_entry(
         (Exception, {"base": "unknown"}),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth(
     hass: HomeAssistant,
     exception: Exception,
     error: dict[str, str],
     mock_fyta_connector: AsyncMock,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth-flow works."""
 

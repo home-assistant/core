@@ -1,8 +1,7 @@
 """Coordinator for Vallox ventilation units."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from vallox_websocket_api import MetricData, Vallox, ValloxApiException
 
@@ -39,6 +38,7 @@ class ValloxDataUpdateCoordinator(DataUpdateCoordinator[MetricData]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> MetricData:
         """Fetch state update."""
         _LOGGER.debug("Updating Vallox state cache")

@@ -1,11 +1,9 @@
 """Sensor platform for NRGkick."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, cast
+from typing import Any, cast, override
 
 from nrgkick_api import ChargingStatus
 
@@ -792,6 +790,7 @@ class NRGkickSensor(NRGkickEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

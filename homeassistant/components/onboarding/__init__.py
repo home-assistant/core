@@ -1,10 +1,8 @@
 """Support to help onboard new users."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, TypedDict, override
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -46,6 +44,7 @@ class OnboardingStoreData(TypedDict):
 class OnboardingStorage(Store[OnboardingStoreData]):
     """Store onboarding data."""
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,

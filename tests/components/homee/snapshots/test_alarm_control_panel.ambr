@@ -39,11 +39,11 @@
 # name: test_alarm_control_panel_snapshot[alarm_control_panel.testhomee_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'changed_by': 'user - 4',
-      'code_arm_required': False,
-      'code_format': None,
-      'friendly_name': 'TestHomee Status',
-      'supported_features': <AlarmControlPanelEntityFeature: 39>,
+      <AlarmControlPanelEntityStateAttribute.CHANGED_BY: 'changed_by'>: 'user - 4',
+      <AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: 'code_arm_required'>: False,
+      <AlarmControlPanelEntityStateAttribute.CODE_FORMAT: 'code_format'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestHomee Status',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <AlarmControlPanelEntityFeature: 39>,
     }),
     'context': <ANY>,
     'entity_id': 'alarm_control_panel.testhomee_status',

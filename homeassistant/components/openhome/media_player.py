@@ -1,11 +1,9 @@
 """Support for Openhome Devices."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 import aiohttp
 from async_upnp_client.client import UpnpError
@@ -172,17 +170,23 @@ class OpenhomeDevice(MediaPlayerEntity):
         except TimeoutError, aiohttp.ClientError, UpnpError:
             self._attr_available = False
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
+    @override
     async def async_turn_on(self) -> None:
         """Bring device out of standby."""
         await self._device.set_standby(False)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
+    @override
     async def async_turn_off(self) -> None:
         """Put device in standby."""
         await self._device.set_standby(True)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -207,32 +211,44 @@ class OpenhomeDevice(MediaPlayerEntity):
         track_details = {"title": "Home Assistant", "uri": media_id}
         await self._device.play_media(track_details)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._device.pause()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._device.stop()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._device.play()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._device.skip(1)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._device.skip(-1)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self._device.set_source(self._source_index[source])
@@ -248,26 +264,35 @@ class OpenhomeDevice(MediaPlayerEntity):
         except UpnpError:
             _LOGGER.error("Error invoking pin %s", pin)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
+    @override
     async def async_volume_up(self) -> None:
         """Volume up media player."""
         await self._device.increase_volume()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
+    @override
     async def async_volume_down(self) -> None:
         """Volume down media player."""
         await self._device.decrease_volume()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._device.set_volume(int(volume * 100))
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         await self._device.set_mute(mute)
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,

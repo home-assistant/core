@@ -1,10 +1,9 @@
 """Support for DD-WRT routers."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
 import re
+from typing import override
 
 import requests
 import voluptuous as vol
@@ -75,12 +74,14 @@ class DdWrtDeviceScanner(DeviceScanner):
         if not self.get_ddwrt_data(url):
             raise ConnectionError("Cannot connect to DD-Wrt router")
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
         return self.last_results
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         # If not initialised and not already scanned and not found.

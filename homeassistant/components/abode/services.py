@@ -1,7 +1,5 @@
 """Support for the Abode Security System."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from jaraco.abode.exceptions import Exception as AbodeException
@@ -9,8 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import DOMAIN, LOGGER
@@ -33,10 +30,8 @@ AUTOMATION_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
 def _get_abode_system(hass: HomeAssistant) -> AbodeSystem:
     """Return the Abode system for the loaded config entry."""
-    entries: list[AbodeConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
-    if not entries:
-        raise ServiceValidationError("Abode integration is not loaded")
-    return entries[0].runtime_data
+    entry: AbodeConfigEntry = service.async_get_config_entry(hass, DOMAIN, None)
+    return entry.runtime_data
 
 
 def _change_setting(call: ServiceCall) -> None:
@@ -46,6 +41,7 @@ def _change_setting(call: ServiceCall) -> None:
 
     try:
         _get_abode_system(call.hass).abode.set_setting(setting, value)
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     except AbodeException as ex:
         LOGGER.warning(ex)
 

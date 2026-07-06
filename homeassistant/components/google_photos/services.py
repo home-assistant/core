@@ -1,7 +1,5 @@
 """Google Photos services."""
 
-from __future__ import annotations
-
 import asyncio
 import mimetypes
 from pathlib import Path
@@ -89,7 +87,6 @@ async def _async_handle_upload(call: ServiceCall) -> ServiceResponse:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="missing_upload_permission",
-            translation_placeholders={"target": DOMAIN},
         )
     coordinator = config_entry.runtime_data
     client_api = coordinator.client

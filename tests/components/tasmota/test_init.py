@@ -58,8 +58,20 @@ async def test_device_remove(
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call(f"tasmota/discovery/{mac}/config", "", 0, True),
-            call(f"tasmota/discovery/{mac}/sensors", "", 0, True),
+            call(
+                f"tasmota/discovery/{mac}/config",
+                "",
+                0,
+                True,
+                message_expiry_interval=None,
+            ),
+            call(
+                f"tasmota/discovery/{mac}/sensors",
+                "",
+                0,
+                True,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )

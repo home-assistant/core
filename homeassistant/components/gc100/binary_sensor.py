@@ -1,6 +1,6 @@
 """Support for binary sensor using GC100."""
 
-from __future__ import annotations
+from typing import override
 
 import voluptuous as vol
 
@@ -54,11 +54,13 @@ class GC100BinarySensor(BinarySensorEntity):
         self._gc100.subscribe(self._port_addr, self.set_state)
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the entity."""
         return self._state

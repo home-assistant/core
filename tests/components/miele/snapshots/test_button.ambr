@@ -39,7 +39,7 @@
 # name: test_button_states[platforms0][button.hood_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hood Stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.hood_stop',
@@ -89,7 +89,7 @@
 # name: test_button_states[platforms0][button.oven_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Oven Start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Start',
     }),
     'context': <ANY>,
     'entity_id': 'button.oven_start',
@@ -139,7 +139,7 @@
 # name: test_button_states[platforms0][button.oven_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Oven Stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.oven_stop',
@@ -189,7 +189,7 @@
 # name: test_button_states[platforms0][button.washing_machine_pause-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing machine Pause',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Pause',
     }),
     'context': <ANY>,
     'entity_id': 'button.washing_machine_pause',
@@ -239,7 +239,7 @@
 # name: test_button_states[platforms0][button.washing_machine_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing machine Start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Start',
     }),
     'context': <ANY>,
     'entity_id': 'button.washing_machine_start',
@@ -289,7 +289,7 @@
 # name: test_button_states[platforms0][button.washing_machine_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing machine Stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.washing_machine_stop',
@@ -339,7 +339,7 @@
 # name: test_button_states_api_push[platforms0][button.hood_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hood Stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.hood_stop',
@@ -389,7 +389,7 @@
 # name: test_button_states_api_push[platforms0][button.oven_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Oven Start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Start',
     }),
     'context': <ANY>,
     'entity_id': 'button.oven_start',
@@ -439,7 +439,7 @@
 # name: test_button_states_api_push[platforms0][button.oven_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Oven Stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.oven_stop',
@@ -489,7 +489,7 @@
 # name: test_button_states_api_push[platforms0][button.washing_machine_pause-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing machine Pause',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Pause',
     }),
     'context': <ANY>,
     'entity_id': 'button.washing_machine_pause',
@@ -539,7 +539,7 @@
 # name: test_button_states_api_push[platforms0][button.washing_machine_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing machine Start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Start',
     }),
     'context': <ANY>,
     'entity_id': 'button.washing_machine_start',
@@ -589,7 +589,7 @@
 # name: test_button_states_api_push[platforms0][button.washing_machine_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing machine Stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.washing_machine_stop',

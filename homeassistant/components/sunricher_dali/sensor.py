@@ -1,8 +1,7 @@
 """Platform for Sunricher DALI sensor entities."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from PySrDaliGateway import CallbackEventType, Device
 from PySrDaliGateway.helper import is_illuminance_sensor, is_light_device
@@ -69,12 +68,14 @@ class SunricherDaliIlluminanceSensor(DaliDeviceEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the native value, or None if sensor is disabled."""
         if not self._sensor_enabled:
             return None
         return self._illuminance_value
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to Home Assistant."""
         await super().async_added_to_hass()
@@ -144,6 +145,7 @@ class SunricherDaliEnergySensor(DaliDeviceEntity, SensorEntity):
             via_device=(DOMAIN, device.gw_sn),
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register energy report listener."""
         await super().async_added_to_hass()

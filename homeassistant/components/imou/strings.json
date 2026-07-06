@@ -1,0 +1,90 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_url": "Server region",
+          "app_id": "App ID",
+          "app_secret": "App secret"
+        },
+        "data_description": {
+          "api_url": "Select the server region closest to your location",
+          "app_id": "The app ID obtained from the Imou cloud platform",
+          "app_secret": "The app secret obtained from the Imou cloud platform"
+        },
+        "title": "Log in to Imou cloud"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "mute": {
+        "name": "Mute"
+      },
+      "ptz_down": {
+        "name": "PTZ down"
+      },
+      "ptz_left": {
+        "name": "PTZ left"
+      },
+      "ptz_right": {
+        "name": "PTZ right"
+      },
+      "ptz_up": {
+        "name": "PTZ up"
+      }
+    },
+    "camera": {
+      "camera_hd": {
+        "name": "Live view HD"
+      },
+      "camera_sd": {
+        "name": "Live view SD"
+      }
+    },
+    "switch": {
+      "ab_alarm_sound": {
+        "name": "Abnormal sound alarm"
+      },
+      "audio_encode_control": {
+        "name": "Audio recording"
+      },
+      "close_camera": {
+        "name": "Privacy mode"
+      },
+      "header_detect": {
+        "name": "Human detection"
+      },
+      "light": {
+        "name": "Indicator light"
+      },
+      "motion_detect": {
+        "name": "Motion detection"
+      },
+      "switch": {
+        "name": "Plug switch"
+      },
+      "white_light": {
+        "name": "White light"
+      }
+    }
+  },
+  "selector": {
+    "api_url": {
+      "options": {
+        "cn": "China",
+        "eu": "Europe",
+        "na": "North America",
+        "sg": "Singapore (Asia-Pacific)"
+      }
+    }
+  }
+}

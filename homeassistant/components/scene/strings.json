@@ -62,7 +62,7 @@
   "title": "Scene",
   "triggers": {
     "activated": {
-      "description": "Triggers when a scene was activated",
+      "description": "Triggers when one or more scenes are activated.",
       "name": "Scene activated"
     }
   }

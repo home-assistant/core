@@ -1,7 +1,5 @@
 """The Google Weather integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from google_weather_api import GoogleWeatherApi

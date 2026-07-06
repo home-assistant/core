@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -65,11 +65,13 @@ class NetgearRouterButtonEntity(NetgearRouterCoordinatorEntity, ButtonEntity):
             f"{coordinator.router.serial_number}-{entity_description.key}"
         )
 
+    @override
     async def async_press(self) -> None:
         """Triggers the button press service."""
         async_action = self.entity_description.action(self._router)
         await async_action()
 
     @callback
+    @override
     def async_update_device(self) -> None:
         """Update the Netgear device."""

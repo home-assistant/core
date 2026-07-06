@@ -1,6 +1,8 @@
 """The bluetooth integration utilities."""
 
-from __future__ import annotations
+from collections.abc import Mapping
+import logging
+from typing import Any
 
 from bluetooth_adapters import (
     ADAPTER_ADDRESS,
@@ -11,13 +13,31 @@ from bluetooth_adapters import (
     adapter_unique_name,
 )
 from bluetooth_data_tools import monotonic_time_coarse
-from habluetooth import get_manager
+from habluetooth import BluetoothScanningMode, get_manager
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
+from .const import CONF_MODE, CONF_PASSIVE, DEFAULT_MODE
 from .models import BluetoothServiceInfoBleak
 from .storage import BluetoothStorage
+
+_LOGGER = logging.getLogger(__name__)
+
+
+def resolve_scanning_mode(options: Mapping[str, Any]) -> BluetoothScanningMode:
+    """Resolve CONF_MODE, falling back to legacy CONF_PASSIVE or DEFAULT_MODE."""
+    if (mode_value := options.get(CONF_MODE)) is not None:
+        try:
+            return BluetoothScanningMode(mode_value)
+        except TypeError, ValueError:
+            _LOGGER.warning("Unknown bluetooth scanning mode %r", mode_value)
+            return BluetoothScanningMode(DEFAULT_MODE)
+    if (legacy_passive := options.get(CONF_PASSIVE)) is True:
+        return BluetoothScanningMode.PASSIVE
+    if legacy_passive is False:
+        return BluetoothScanningMode.ACTIVE
+    return BluetoothScanningMode(DEFAULT_MODE)
 
 
 class InvalidConfigEntryID(HomeAssistantError):

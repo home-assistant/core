@@ -1,9 +1,7 @@
 """Support to enter a value into a text box."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 import voluptuous as vol
 
@@ -169,15 +167,18 @@ class InputTextStorageCollection(collection.DictStorageCollection):
 
     CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_text))
 
+    @override
     async def _process_create_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Validate the config is valid."""
         return self.CREATE_UPDATE_SCHEMA(data)  # type: ignore[no-any-return]
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict[str, Any]) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]  # type: ignore[no-any-return]
 
+    @override
     async def _update_data(
         self, item: dict[str, Any], update_data: dict[str, Any]
     ) -> dict[str, Any]:
@@ -203,6 +204,7 @@ class InputText(collection.CollectionEntity, RestoreEntity):
         self._current_value = config.get(CONF_INITIAL)
 
     @classmethod
+    @override
     def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         input_text: Self = cls(config)
@@ -210,6 +212,7 @@ class InputText(collection.CollectionEntity, RestoreEntity):
         return input_text
 
     @classmethod
+    @override
     def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         input_text: Self = cls(config)
@@ -218,11 +221,13 @@ class InputText(collection.CollectionEntity, RestoreEntity):
         return input_text
 
     @property
+    @override
     def name(self) -> str | None:
         """Return the name of the text input entity."""
         return self._config.get(CONF_NAME)
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         return self._config.get(CONF_ICON)
@@ -238,21 +243,25 @@ class InputText(collection.CollectionEntity, RestoreEntity):
         return self._config[CONF_MIN]  # type: ignore[no-any-return]
 
     @property
+    @override
     def state(self) -> str | None:
         """Return the state of the component."""
         return self._current_value
 
     @property
+    @override
     def unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return unique id for the entity."""
         return self._config[CONF_ID]  # type: ignore[no-any-return]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
@@ -263,6 +272,7 @@ class InputText(collection.CollectionEntity, RestoreEntity):
             ATTR_MODE: self._config[CONF_MODE],
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -289,6 +299,7 @@ class InputText(collection.CollectionEntity, RestoreEntity):
         self._current_value = value
         self.async_write_ha_state()
 
+    @override
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config

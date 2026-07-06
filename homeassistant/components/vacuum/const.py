@@ -1,7 +1,5 @@
 """Support for vacuum cleaner robots (botvacs)."""
 
-from __future__ import annotations
-
 from enum import IntFlag, StrEnum
 from typing import TYPE_CHECKING
 
@@ -25,6 +23,18 @@ class VacuumActivity(StrEnum):
     PAUSED = "paused"
     RETURNING = "returning"
     ERROR = "error"
+
+
+class VacuumEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for vacuum devices."""
+
+    FAN_SPEED_LIST = "fan_speed_list"
+
+
+class VacuumEntityStateAttribute(StrEnum):
+    """State attributes for vacuum entities."""
+
+    FAN_SPEED = "fan_speed"
 
 
 class VacuumEntityFeature(IntFlag):

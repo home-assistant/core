@@ -1,9 +1,7 @@
 """Config flow for Flipr integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from flipr_api import FliprAPIRestClient
 from requests.exceptions import HTTPError, Timeout
@@ -29,6 +27,7 @@ class FliprConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

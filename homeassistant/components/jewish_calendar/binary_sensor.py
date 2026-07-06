@@ -1,10 +1,9 @@
 """Support for Jewish Calendar binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import datetime as dt
+from typing import override
 
 from hdate.zmanim import Zmanim
 
@@ -70,10 +69,12 @@ class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
     entity_description: JewishCalendarBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if sensor is on."""
         return self.entity_description.is_on(self.coordinator.zmanim)(dt_util.now())
 
+    @override
     def _update_times(self, zmanim: Zmanim) -> list[dt.datetime | None]:
         """Return a list of times to update the sensor."""
         return [

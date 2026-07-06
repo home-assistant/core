@@ -1,8 +1,6 @@
 """Config flow to configure the RDW integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from vehicle import RDW, RDWError, RDWUnknownLicensePlateError
 import voluptuous as vol
@@ -18,6 +16,7 @@ class RDWFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

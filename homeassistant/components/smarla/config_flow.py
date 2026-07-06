@@ -1,9 +1,7 @@
 """Config flow for Swing2Sleep Smarla integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from pysmarlaapi import Connection
 from pysmarlaapi.connection.exceptions import (
@@ -68,6 +66,7 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

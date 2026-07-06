@@ -32,6 +32,22 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "high_flow": {
+        "name": "High flow alert",
+        "state": {
+          "off": "None",
+          "on": "Live alert!"
+        }
+      },
+      "unusual_flow": {
+        "name": "Unusual flow alert",
+        "state": {
+          "off": "None",
+          "on": "Live alert!"
+        }
+      }
+    },
     "sensor": {
       "current_flow_rate": { "name": "Flow rate" },
       "server_connectivity": { "name": "Server status" },

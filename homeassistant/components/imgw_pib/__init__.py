@@ -1,7 +1,5 @@
 """The IMGW-PIB integration."""
 
-from __future__ import annotations
-
 import logging
 
 from aiohttp import ClientError
@@ -50,7 +48,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImgwPibConfigEntry) -> b
     coordinator = ImgwPibDataUpdateCoordinator(hass, entry, imgwpib, station_id)
     await coordinator.async_config_entry_first_refresh()
 
-    # Remove binary_sensor entities for which the endpoint has been blocked by IMGW-PIB API
+    # Remove binary_sensor entities for which the endpoint
+    # has been blocked by IMGW-PIB API
     entity_reg = er.async_get(hass)
     for key in ("flood_warning", "flood_alarm"):
         if entity_id := entity_reg.async_get_entity_id(

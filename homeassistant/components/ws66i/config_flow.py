@@ -1,9 +1,7 @@
 """Config flow for WS66i 6-Zone Amplifier integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyws66i import WS66i, get_ws66i
 import voluptuous as vol
@@ -99,6 +97,7 @@ class WS66iConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -126,6 +125,7 @@ class WS66iConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> Ws66iOptionsFlowHandler:

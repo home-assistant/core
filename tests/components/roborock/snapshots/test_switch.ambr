@@ -1,4 +1,205 @@
 # serializer version: 1
+# name: test_switches[switch.roborock_q10_s5_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.roborock_q10_s5_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Child lock',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': 'child_lock_q10_duid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.roborock_q10_s5_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock Q10 S5+ Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.roborock_q10_s5_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches[switch.roborock_q10_s5_do_not_disturb-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.roborock_q10_s5_do_not_disturb',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Do not disturb',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Do not disturb',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dnd_switch',
+    'unique_id': 'do_not_disturb_q10_duid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.roborock_q10_s5_do_not_disturb-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock Q10 S5+ Do not disturb',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.roborock_q10_s5_do_not_disturb',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches[switch.roborock_q10_s5_dust_collection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.roborock_q10_s5_dust_collection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dust collection',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dust collection',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dust_collection',
+    'unique_id': 'dust_collection_q10_duid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.roborock_q10_s5_dust_collection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock Q10 S5+ Dust collection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.roborock_q10_s5_dust_collection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches[switch.roborock_q10_s5_indicator_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.roborock_q10_s5_indicator_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Indicator light',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Indicator light',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button_light',
+    'unique_id': 'button_light_q10_duid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.roborock_q10_s5_indicator_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock Q10 S5+ Indicator light',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.roborock_q10_s5_indicator_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_switches[switch.roborock_s7_2_do_not_disturb-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -39,7 +240,7 @@
 # name: test_switches[switch.roborock_s7_2_do_not_disturb-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 2 Do not disturb',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Do not disturb',
     }),
     'context': <ANY>,
     'entity_id': 'switch.roborock_s7_2_do_not_disturb',
@@ -89,7 +290,7 @@
 # name: test_switches[switch.roborock_s7_2_dock_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 2 Dock Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.roborock_s7_2_dock_child_lock',
@@ -139,7 +340,7 @@
 # name: test_switches[switch.roborock_s7_2_dock_status_indicator_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 2 Dock Status indicator light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Status indicator light',
     }),
     'context': <ANY>,
     'entity_id': 'switch.roborock_s7_2_dock_status_indicator_light',
@@ -189,7 +390,7 @@
 # name: test_switches[switch.roborock_s7_2_off_peak_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 2 Off-peak charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Off-peak charging',
     }),
     'context': <ANY>,
     'entity_id': 'switch.roborock_s7_2_off_peak_charging',
@@ -239,7 +440,7 @@
 # name: test_switches[switch.roborock_s7_maxv_do_not_disturb-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 MaxV Do not disturb',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Do not disturb',
     }),
     'context': <ANY>,
     'entity_id': 'switch.roborock_s7_maxv_do_not_disturb',
@@ -289,7 +490,7 @@
 # name: test_switches[switch.roborock_s7_maxv_dock_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 MaxV Dock Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.roborock_s7_maxv_dock_child_lock',
@@ -339,7 +540,7 @@
 # name: test_switches[switch.roborock_s7_maxv_dock_status_indicator_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 MaxV Dock Status indicator light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Status indicator light',
     }),
     'context': <ANY>,
     'entity_id': 'switch.roborock_s7_maxv_dock_status_indicator_light',
@@ -389,7 +590,7 @@
 # name: test_switches[switch.roborock_s7_maxv_off_peak_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 MaxV Off-peak charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Off-peak charging',
     }),
     'context': <ANY>,
     'entity_id': 'switch.roborock_s7_maxv_off_peak_charging',
@@ -439,7 +640,7 @@
 # name: test_switches[switch.zeo_one_sound_setting-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Zeo One Sound setting',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zeo One Sound setting',
     }),
     'context': <ANY>,
     'entity_id': 'switch.zeo_one_sound_setting',

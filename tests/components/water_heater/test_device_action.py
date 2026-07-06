@@ -147,8 +147,8 @@ async def test_action(
         },
     )
 
-    turn_off_calls = async_mock_service(hass, "water_heater", "turn_off")
-    turn_on_calls = async_mock_service(hass, "water_heater", "turn_on")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
 
     hass.bus.async_fire("test_event_turn_off")
     await hass.async_block_till_done()
@@ -201,7 +201,7 @@ async def test_action_legacy(
         },
     )
 
-    turn_off_calls = async_mock_service(hass, "water_heater", "turn_off")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
 
     hass.bus.async_fire("test_event_turn_off")
     await hass.async_block_till_done()

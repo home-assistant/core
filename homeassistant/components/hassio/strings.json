@@ -52,6 +52,12 @@
     },
     "mount_reload_unknown_device_id": {
       "message": "Device ID not found"
+    },
+    "supervisor_not_connected": {
+      "message": "Not connected with the supervisor / system too busy"
+    },
+    "supervisor_update_pending": {
+      "message": "Supervisor was out-of-date during onboarding. Update triggered, will retry when complete"
     }
   },
   "issues": {
@@ -202,6 +208,17 @@
         }
       },
       "title": "Reboot required"
+    },
+    "legacy_homeassistant_folder": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "An automation or script called the `hassio.backup_partial` or `hassio.restore_partial` action with `\"homeassistant\"` listed in `folders`. This is a legacy alias for the `homeassistant: true` option and will stop being accepted in a future release.\n\nUpdate the affected automations and scripts to set `homeassistant: true` and remove `\"homeassistant\"` from the `folders` list. When this is done, select **Submit** to mark this issue as resolved.",
+            "title": "Legacy \"homeassistant\" folder used in partial backup/restore"
+          }
+        }
+      },
+      "title": "Legacy \"homeassistant\" folder used in partial backup/restore"
     },
     "unhealthy": {
       "description": "System is currently unhealthy due to {reason}. For troubleshooting information, select Learn more.",
@@ -548,6 +565,7 @@
     "info": {
       "agent_version": "Agent version",
       "board": "Board",
+      "disk_life_time": "Disk lifetime",
       "disk_total": "Disk total",
       "disk_used": "Disk used",
       "docker_version": "Docker version",

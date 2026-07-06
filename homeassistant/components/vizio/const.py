@@ -56,7 +56,8 @@ VIZIO_VOLUME = "volume"
 VIZIO_MUTE = "mute"
 
 # Since Vizio component relies on device class, this dict will ensure that changes to
-# the values of DEVICE_CLASS_SPEAKER or DEVICE_CLASS_TV don't require changes to pyvizio.
+# the values of DEVICE_CLASS_SPEAKER or DEVICE_CLASS_TV
+# don't require changes to pyvizio.
 VIZIO_DEVICE_CLASSES = {
     MediaPlayerDeviceClass.SPEAKER: VIZIO_DEVICE_CLASS_SPEAKER,
     MediaPlayerDeviceClass.TV: VIZIO_DEVICE_CLASS_TV,

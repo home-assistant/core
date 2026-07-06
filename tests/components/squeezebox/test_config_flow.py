@@ -193,11 +193,9 @@ async def test_manual_setup_recovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate_setup(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_server: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_server: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test abort if setting up an already configured server."""
     mock_config_entry.add_to_hass(hass)
@@ -305,9 +303,9 @@ async def test_discovery_flow_edit_discovered_success(
         (Exception("Test error"), None, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_discovery_flow_edit_discovered_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_server: AsyncMock,
     mock_discover: MagicMock,
     side_effect: Any,
@@ -341,8 +339,9 @@ async def test_discovery_flow_edit_discovered_errors(
     assert result["errors"]["base"] == expected_error
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_discovery_flow_failed(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_discover: MagicMock
+    hass: HomeAssistant, mock_discover: MagicMock
 ) -> None:
     """Test discovery flow when no servers are found."""
 
@@ -370,11 +369,9 @@ async def test_discovery_flow_failed(
     assert result["step_id"] == "edit"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_discovery_ignores_existing(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    mock_discover: MagicMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_discover: MagicMock
 ) -> None:
     """Test discovery properly ignores a server that's already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -416,8 +413,9 @@ async def test_integration_discovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_integration_discovery_no_uuid(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_server: AsyncMock
+    hass: HomeAssistant, mock_server: AsyncMock
 ) -> None:
     """Test integration discovery flow without a UUID."""
     mock_server.async_query.return_value = {"uuid": TEST_UUID}
@@ -432,8 +430,9 @@ async def test_integration_discovery_no_uuid(
     assert result["step_id"] == "edit_integration_discovered"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_integration_discovery_no_uuid_fails(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_server: AsyncMock
+    hass: HomeAssistant, mock_server: AsyncMock
 ) -> None:
     """Test integration discovery flow routes to form when connection fails."""
     mock_server.async_query.return_value = False

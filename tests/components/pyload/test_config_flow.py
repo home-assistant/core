@@ -15,17 +15,22 @@ from .conftest import (
     ADDON_DISCOVERY_INFO,
     ADDON_SERVICE_INFO,
     NEW_INPUT,
+    NEW_INPUT_API_KEY,
     REAUTH_INPUT,
+    REAUTH_INPUT_API_KEY,
     USER_INPUT,
+    USER_INPUT_API_KEY,
 )
 
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.parametrize("user_input", [USER_INPUT, USER_INPUT_API_KEY])
 async def test_form(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_pyloadapi: AsyncMock,
+    user_input: dict[str, str],
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -36,22 +41,24 @@ async def test_form(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        USER_INPUT,
+        user_input,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
-    assert result["data"] == USER_INPUT
+    assert result["data"] == user_input
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize("user_input", [USER_INPUT, USER_INPUT_API_KEY])
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
     [
         (InvalidAuth, "invalid_auth"),
         (CannotConnect, "cannot_connect"),
         (ParserError, "cannot_connect"),
-        (ValueError, "unknown"),
+        (ValueError, "invalid_auth"),
+        (TypeError, "unknown"),
     ],
 )
 async def test_form_errors(
@@ -60,6 +67,7 @@ async def test_form_errors(
     mock_pyloadapi: AsyncMock,
     exception: Exception,
     expected_error: str,
+    user_input: dict[str, str],
 ) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
@@ -69,7 +77,7 @@ async def test_form_errors(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        USER_INPUT,
+        user_input,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -78,12 +86,12 @@ async def test_form_errors(
     mock_pyloadapi.get_status.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        USER_INPUT,
+        user_input,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
-    assert result["data"] == USER_INPUT
+    assert result["data"] == user_input
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -110,10 +118,19 @@ async def test_flow_user_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    ("reauth_input", "new_input"),
+    [
+        (REAUTH_INPUT, NEW_INPUT),
+        (REAUTH_INPUT_API_KEY, NEW_INPUT_API_KEY),
+    ],
+)
+@pytest.mark.usefixtures("mock_pyloadapi")
 async def test_reauth(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_pyloadapi: AsyncMock,
+    reauth_input: dict[str, str],
+    new_input: dict[str, str],
 ) -> None:
     """Test reauth flow."""
 
@@ -126,12 +143,12 @@ async def test_reauth(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        REAUTH_INPUT,
+        reauth_input,
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert config_entry.data == NEW_INPUT
+    assert config_entry.data == new_input
     assert len(hass.config_entries.async_entries()) == 1
 
 
@@ -139,8 +156,16 @@ async def test_reauth(
     ("side_effect", "error_text"),
     [
         (InvalidAuth, "invalid_auth"),
+        (ValueError, "invalid_auth"),
         (CannotConnect, "cannot_connect"),
         (IndexError, "unknown"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("reauth_input", "new_input"),
+    [
+        (REAUTH_INPUT, NEW_INPUT),
+        (REAUTH_INPUT_API_KEY, NEW_INPUT_API_KEY),
     ],
 )
 async def test_reauth_errors(
@@ -149,6 +174,8 @@ async def test_reauth_errors(
     mock_pyloadapi: AsyncMock,
     side_effect: Exception,
     error_text: str,
+    reauth_input: dict[str, str],
+    new_input: dict[str, str],
 ) -> None:
     """Test reauth flow."""
 
@@ -162,7 +189,7 @@ async def test_reauth_errors(
     mock_pyloadapi.get_status.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        REAUTH_INPUT,
+        reauth_input,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -171,21 +198,26 @@ async def test_reauth_errors(
     mock_pyloadapi.get_status.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        REAUTH_INPUT,
+        reauth_input,
     )
 
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert config_entry.data == NEW_INPUT
+    assert config_entry.data == new_input
     assert len(hass.config_entries.async_entries()) == 1
 
 
+@pytest.mark.parametrize(
+    "user_input",
+    [USER_INPUT, USER_INPUT_API_KEY],
+)
+@pytest.mark.usefixtures("mock_pyloadapi")
 async def test_reconfiguration(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_pyloadapi: AsyncMock,
+    user_input: dict[str, str],
 ) -> None:
     """Test reconfiguration flow."""
 
@@ -198,12 +230,12 @@ async def test_reconfiguration(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        USER_INPUT,
+        user_input,
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert config_entry.data == USER_INPUT
+    assert config_entry.data == user_input
     assert len(hass.config_entries.async_entries()) == 1
 
 
@@ -211,9 +243,14 @@ async def test_reconfiguration(
     ("side_effect", "error_text"),
     [
         (InvalidAuth, "invalid_auth"),
+        (ValueError, "invalid_auth"),
         (CannotConnect, "cannot_connect"),
         (IndexError, "unknown"),
     ],
+)
+@pytest.mark.parametrize(
+    "user_input",
+    [USER_INPUT, USER_INPUT_API_KEY],
 )
 async def test_reconfigure_errors(
     hass: HomeAssistant,
@@ -221,6 +258,7 @@ async def test_reconfigure_errors(
     mock_pyloadapi: AsyncMock,
     side_effect: Exception,
     error_text: str,
+    user_input: dict[str, str],
 ) -> None:
     """Test reconfiguration flow."""
 
@@ -234,7 +272,7 @@ async def test_reconfigure_errors(
     mock_pyloadapi.get_status.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        USER_INPUT,
+        user_input,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -243,14 +281,14 @@ async def test_reconfigure_errors(
     mock_pyloadapi.get_status.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        USER_INPUT,
+        user_input,
     )
 
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert config_entry.data == USER_INPUT
+    assert config_entry.data == user_input
     assert len(hass.config_entries.async_entries()) == 1
 
 
@@ -385,7 +423,7 @@ async def test_hassio_discovery_already_configured(
 async def test_hassio_discovery_data_update(
     hass: HomeAssistant,
 ) -> None:
-    """Test we abort discovery flow if already configured and we update entry from discovery data."""
+    """Test we abort discovery if configured and update entry."""
 
     entry = MockConfigEntry(
         domain=DOMAIN,

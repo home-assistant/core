@@ -213,10 +213,9 @@ async def test_zeroconf_flow_stretch(
     assert len(mock_smile_config_flow.connect.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zercoconf_discovery_update_configuration(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_smile_config_flow: MagicMock,
+    hass: HomeAssistant, mock_smile_config_flow: MagicMock
 ) -> None:
     """Test if a discovered device is configured and updated with new host."""
     entry = MockConfigEntry(
@@ -317,10 +316,9 @@ async def test_flow_errors(
     assert len(mock_smile_config_flow.connect.mock_calls) == 2
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_abort_existing_anna(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_smile_config_flow: MagicMock,
+    hass: HomeAssistant, mock_smile_config_flow: MagicMock
 ) -> None:
     """Test the full user configuration flow."""
     entry = MockConfigEntry(
@@ -352,10 +350,9 @@ async def test_user_abort_existing_anna(
     assert result2.get("reason") == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_abort_existing_anna(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_smile_config_flow: MagicMock,
+    hass: HomeAssistant, mock_smile_config_flow: MagicMock
 ) -> None:
     """Test the full user configuration flow."""
     entry = MockConfigEntry(
@@ -456,11 +453,9 @@ async def _start_reconfigure_flow(
     )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow(
-    hass: HomeAssistant,
-    mock_smile_adam: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_smile_adam: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reconfigure flow."""
     result = await _start_reconfigure_flow(hass, mock_config_entry, TEST_HOST)
@@ -471,11 +466,9 @@ async def test_reconfigure_flow(
     assert mock_config_entry.data.get(CONF_HOST) == TEST_HOST
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_smile_mismatch(
-    hass: HomeAssistant,
-    mock_smile_adam: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_smile_adam: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reconfigure flow aborts on other Smile ID."""
     mock_smile_adam.smile.hostname = TEST_SMILE_HOST

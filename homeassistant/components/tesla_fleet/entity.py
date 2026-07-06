@@ -1,7 +1,7 @@
 """Tesla Fleet parent entity class."""
 
 from abc import abstractmethod
-from typing import Any, Generic, TypeVar
+from typing import Any, override
 
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.tesla.energysite import EnergySite
@@ -21,17 +21,14 @@ from .coordinator import (
 from .helpers import wake_up_vehicle
 from .models import TeslaFleetEnergyData, TeslaFleetVehicleData
 
-_ApiT = TypeVar("_ApiT", bound=VehicleFleet | EnergySite)
 
-
-class TeslaFleetEntity(
+class TeslaFleetEntity[_ApiT: VehicleFleet | EnergySite](
     CoordinatorEntity[
         TeslaFleetVehicleDataCoordinator
         | TeslaFleetEnergySiteLiveCoordinator
         | TeslaFleetEnergySiteHistoryCoordinator
         | TeslaFleetEnergySiteInfoCoordinator
-    ],
-    Generic[_ApiT],
+    ]
 ):
     """Parent class for all TeslaFleet entities."""
 
@@ -57,6 +54,7 @@ class TeslaFleetEntity(
         self._async_update_attrs()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if sensor is available."""
         return self.coordinator.last_update_success and self._attr_available
@@ -86,6 +84,7 @@ class TeslaFleetEntity(
         """Return True if a specific value is in coordinator data."""
         return self.key in self.coordinator.data
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
@@ -123,6 +122,7 @@ class TeslaFleetVehicleEntity(TeslaFleetEntity[VehicleFleet]):
         super().__init__(data.coordinator, data.api, key)
 
     @property
+    @override
     def _value(self) -> Any | None:
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(self.key)
@@ -213,6 +213,7 @@ class TeslaFleetWallConnectorEntity(
         super().__init__(data.live_coordinator, data.api, key)
 
     @property
+    @override
     def _value(self) -> int:
         """Return a specific wall connector value from coordinator data."""
         return (

@@ -1,11 +1,10 @@
 """HomeAssistant specific aiohttp Site."""
 
-from __future__ import annotations
-
 import asyncio
 from pathlib import Path
 import socket
 from ssl import SSLContext
+from typing import override
 
 from aiohttp import web
 from yarl import URL
@@ -49,12 +48,14 @@ class HomeAssistantTCPSite(web.BaseSite):
         self._reuse_port = reuse_port
 
     @property
+    @override
     def name(self) -> str:
         """Return server URL."""
         scheme = "https" if self._ssl_context else "http"
         host = self._host[0] if isinstance(self._host, list) else "0.0.0.0"
         return str(URL.build(scheme=scheme, host=host, port=self._port))
 
+    @override
     async def start(self) -> None:
         """Start server."""
         await super().start()
@@ -96,6 +97,7 @@ class HomeAssistantUnixSite(web.BaseSite):
         self._path = path
 
     @property
+    @override
     def name(self) -> str:
         """Return server URL."""
         return f"http://unix:{self._path}:"
@@ -119,6 +121,7 @@ class HomeAssistantUnixSite(web.BaseSite):
             raise
         return sock
 
+    @override
     async def start(self) -> None:
         """Start server."""
         await super().start()

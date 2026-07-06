@@ -1,7 +1,5 @@
 """The ThermoPro Bluetooth integration."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 
@@ -35,7 +33,7 @@ def process_service_info(
     data: ThermoProBluetoothDeviceData,
     service_info: BluetoothServiceInfoBleak,
 ) -> SensorUpdate:
-    """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
+    """Process a BluetoothServiceInfoBleak and return sensor data."""
     update = data.update(service_info)
     async_dispatcher_send(
         hass, f"{SIGNAL_DATA_UPDATED}_{entry.entry_id}", data, service_info, update

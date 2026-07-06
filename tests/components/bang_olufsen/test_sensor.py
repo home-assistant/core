@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
-from mozart_api.models import PairedRemote, PairedRemoteResponse
+from mozart_api.models import BeolinkSelf, PairedRemote, PairedRemoteResponse
 
 from homeassistant.components.bang_olufsen.sensor import SCAN_INTERVAL
 from homeassistant.const import STATE_UNKNOWN
@@ -13,6 +13,8 @@ from .conftest import mock_websocket_connection
 from .const import (
     TEST_BATTERY,
     TEST_BATTERY_SENSOR_ENTITY_ID,
+    TEST_FRIENDLY_NAME_4,
+    TEST_JID_4,
     TEST_REMOTE_BATTERY_LEVEL_SENSOR_ENTITY_ID,
     TEST_REMOTE_SERIAL,
 )
@@ -28,6 +30,9 @@ async def test_battery_level(
     """Test the battery level entity."""
     # Ensure battery entities are created
     mock_mozart_client.get_battery_state.return_value = TEST_BATTERY
+    mock_mozart_client.get_beolink_self.return_value = BeolinkSelf(
+        friendly_name=TEST_FRIENDLY_NAME_4, jid=TEST_JID_4
+    )
 
     # Load entry
     mock_config_entry_a5.add_to_hass(hass)

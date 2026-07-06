@@ -14,7 +14,7 @@
   "firmwareVersion": "5.51",
   "zwavePlusVersion": 1,
   "name": "zwa4002_fan",
-  "location": "**REDACTED**",
+  "location": "",
   "deviceConfig": {
     "filename": "/usr/src/app/store/.config-db/devices/0x0063/55258_zw4002.json",
     "isEmbedded": true,

@@ -123,8 +123,6 @@ that link accounts with other cloud providers using LocalOAuth2Implementation
 as part of a config flow.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta

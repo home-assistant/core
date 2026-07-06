@@ -11,6 +11,9 @@ rules:
   appropriate-polling: done
   entity-unique-id: done
   has-entity-name: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: entities do not subscribe to events
@@ -21,6 +24,9 @@ rules:
   common-modules:
     status: done
     comment: base entity available, but no coordinator
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done

@@ -1,7 +1,5 @@
 """The pushover component."""
 
-from __future__ import annotations
-
 from pushover_complete import BadAPIRequestError, PushoverAPI
 from requests.exceptions import RequestException
 from urllib3.exceptions import HTTPError

@@ -6,17 +6,17 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         '1',
         '2',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
       ]),
-      'max_temp': 86.0,
-      'min_temp': 16.0,
-      'target_temp_step': 1.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 86.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -51,22 +51,22 @@
 # name: test_platform_setup_and_discovery[climate.air_conditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 22.0,
-      'fan_mode': None,
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 22.0,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: None,
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         '1',
         '2',
       ]),
-      'friendly_name': 'Air Conditioner',
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioner',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
       ]),
-      'max_temp': 86.0,
-      'min_temp': 16.0,
-      'supported_features': <ClimateEntityFeature: 393>,
-      'target_temp_step': 1.0,
-      'temperature': 23.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 86.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 393>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 23.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.air_conditioner',
@@ -83,17 +83,17 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35.0,
-      'min_temp': 5.0,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'manual',
       ]),
-      'target_temp_step': 1.0,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -128,19 +128,19 @@
 # name: test_platform_setup_and_discovery[climate.anbau-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Anbau',
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Anbau',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35.0,
-      'min_temp': 5.0,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'manual',
       ]),
-      'supported_features': <ClimateEntityFeature: 17>,
-      'target_temp_step': 1.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 17>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.anbau',
@@ -157,19 +157,19 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 70.0,
-      'min_temp': 1.0,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 70.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 1.0,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'holiday',
         'auto',
         'manual',
         'eco',
       ]),
-      'target_temp_step': 0.5,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -204,24 +204,24 @@
 # name: test_platform_setup_and_discovery[climate.bathroom_radiator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 19.5,
-      'friendly_name': 'Bathroom radiator',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.5,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bathroom radiator',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 70.0,
-      'min_temp': 1.0,
-      'preset_mode': 'manual',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 70.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 1.0,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'manual',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'holiday',
         'auto',
         'manual',
         'eco',
       ]),
-      'supported_features': <ClimateEntityFeature: 17>,
-      'target_temp_step': 0.5,
-      'temperature': 12.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 17>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 12.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.bathroom_radiator',
@@ -238,13 +238,13 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'target_temp_step': 1.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -279,16 +279,16 @@
 # name: test_platform_setup_and_discovery[climate.boiler_temperature_controller-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 57.5,
-      'friendly_name': 'Boiler Temperature Controller',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 57.5,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Temperature Controller',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'supported_features': <ClimateEntityFeature: 384>,
-      'target_temp_step': 1.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 384>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.boiler_temperature_controller',
@@ -305,20 +305,20 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'low',
         'middle',
         'high',
         'auto',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35.0,
-      'min_temp': 5.0,
-      'target_temp_step': 1.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -353,25 +353,25 @@
 # name: test_platform_setup_and_discovery[climate.clima_cucina-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 27.0,
-      'fan_mode': 'auto',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 27.0,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'low',
         'middle',
         'high',
         'auto',
       ]),
-      'friendly_name': 'Clima cucina',
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Clima cucina',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35.0,
-      'min_temp': 5.0,
-      'supported_features': <ClimateEntityFeature: 393>,
-      'target_temp_step': 1.0,
-      'temperature': 25.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 393>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 25.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.clima_cucina',
@@ -388,13 +388,13 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 7.0,
-      'min_temp': 1.0,
-      'target_temp_step': 0.5,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 7.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 1.0,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -429,17 +429,17 @@
 # name: test_platform_setup_and_discovery[climate.el_termostato_de_la_cocina-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 45.0,
-      'friendly_name': 'El termostato de la cocina',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 45.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'El termostato de la cocina',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 7.0,
-      'min_temp': 1.0,
-      'supported_features': <ClimateEntityFeature: 385>,
-      'target_temp_step': 0.5,
-      'temperature': 4.6,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 7.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 1.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 4.6,
     }),
     'context': <ANY>,
     'entity_id': 'climate.el_termostato_de_la_cocina',
@@ -456,17 +456,17 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35.0,
-      'min_temp': 5.0,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'manual',
       ]),
-      'target_temp_step': 1.0,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -501,22 +501,22 @@
 # name: test_platform_setup_and_discovery[climate.empore-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 19.0,
-      'friendly_name': 'Empore',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Empore',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 35.0,
-      'min_temp': 5.0,
-      'preset_mode': 'manual',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'manual',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'manual',
       ]),
-      'supported_features': <ClimateEntityFeature: 17>,
-      'target_temp_step': 1.0,
-      'temperature': 35.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 17>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 35.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.empore',
@@ -533,17 +533,17 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 35.0,
-      'min_temp': 5.0,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'manual',
       ]),
-      'target_temp_step': 1.0,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -578,22 +578,22 @@
 # name: test_platform_setup_and_discovery[climate.floor_thermostat_kitchen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 20.0,
-      'friendly_name': 'Floor Thermostat Kitchen',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Thermostat Kitchen',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 35.0,
-      'min_temp': 5.0,
-      'preset_mode': 'manual',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'manual',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'manual',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
-      'target_temp_step': 1.0,
-      'temperature': None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.floor_thermostat_kitchen',
@@ -610,11 +610,11 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'target_temp_step': 1.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -649,14 +649,14 @@
 # name: test_platform_setup_and_discovery[climate.geti_solar_pv_water_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 60.0,
-      'friendly_name': 'Geti Solar PV Water Heater',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 60.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Geti Solar PV Water Heater',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'supported_features': <ClimateEntityFeature: 0>,
-      'target_temp_step': 1.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 0>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.geti_solar_pv_water_heater',
@@ -673,11 +673,11 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
       ]),
-      'max_temp': 212.0,
-      'min_temp': -40.0,
-      'target_temp_step': 0.5,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 212.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -40.0,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -712,15 +712,15 @@
 # name: test_platform_setup_and_discovery[climate.itc_308_wifi_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 34.0,
-      'friendly_name': 'ITC-308-WIFI Thermostat',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 34.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ITC-308-WIFI Thermostat',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
       ]),
-      'max_temp': 212.0,
-      'min_temp': -40.0,
-      'supported_features': <ClimateEntityFeature: 1>,
-      'target_temp_step': 0.5,
-      'temperature': 35.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 212.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -40.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 35.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.itc_308_wifi_thermostat',
@@ -737,17 +737,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 95.0,
-      'min_temp': 5.0,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'program',
       ]),
-      'target_temp_step': 0.5,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -782,22 +781,21 @@
 # name: test_platform_setup_and_discovery[climate.kabinet-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 19.5,
-      'friendly_name': 'Кабінет',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.5,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Кабінет',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 95.0,
-      'min_temp': 5.0,
-      'preset_mode': None,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'program',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
-      'target_temp_step': 0.5,
-      'temperature': 21.5,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.5,
     }),
     'context': <ANY>,
     'entity_id': 'climate.kabinet',
@@ -814,7 +812,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
@@ -822,9 +820,9 @@
         <HVACMode.FAN_ONLY: 'fan_only'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 88.0,
-      'min_temp': 16.0,
-      'target_temp_step': 0.5,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 88.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -859,10 +857,10 @@
 # name: test_platform_setup_and_discovery[climate.master_bedroom_ac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_humidity': 0,
-      'current_temperature': 26.0,
-      'friendly_name': 'Master Bedroom AC',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 0,
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 26.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master Bedroom AC',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
@@ -870,11 +868,11 @@
         <HVACMode.FAN_ONLY: 'fan_only'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 88.0,
-      'min_temp': 16.0,
-      'supported_features': <ClimateEntityFeature: 385>,
-      'target_temp_step': 0.5,
-      'temperature': 75.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 88.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 75.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.master_bedroom_ac',
@@ -891,7 +889,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
@@ -899,13 +897,13 @@
         <HVACMode.FAN_ONLY: 'fan_only'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 90.0,
-      'min_temp': 16.0,
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 90.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'off',
         'horizontal',
       ]),
-      'target_temp_step': 1.0,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -940,9 +938,9 @@
 # name: test_platform_setup_and_discovery[climate.mini_split-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 69.0,
-      'friendly_name': 'Mini-Split',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 69.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mini-Split',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
@@ -950,16 +948,16 @@
         <HVACMode.FAN_ONLY: 'fan_only'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 90.0,
-      'min_temp': 16.0,
-      'supported_features': <ClimateEntityFeature: 417>,
-      'swing_mode': 'off',
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 90.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 417>,
+      <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'off',
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'off',
         'horizontal',
       ]),
-      'target_temp_step': 1.0,
-      'temperature': 66.0,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 66.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.mini_split',
@@ -976,11 +974,11 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'target_temp_step': 1.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1015,14 +1013,14 @@
 # name: test_platform_setup_and_discovery[climate.mr_pure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': None,
-      'friendly_name': 'Mr. Pure',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mr. Pure',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'supported_features': <ClimateEntityFeature: 0>,
-      'target_temp_step': 1.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 0>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.mr_pure',
@@ -1039,16 +1037,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 40.0,
-      'min_temp': 5.0,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 40.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'holiday',
       ]),
-      'target_temp_step': 0.5,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1083,21 +1081,21 @@
 # name: test_platform_setup_and_discovery[climate.polotentsosushitel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 25.3,
-      'friendly_name': 'Полотенцосушитель',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 25.3,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Полотенцосушитель',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 40.0,
-      'min_temp': 5.0,
-      'preset_mode': None,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 40.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'holiday',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
-      'target_temp_step': 0.5,
-      'temperature': 5.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 5.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.polotentsosushitel',
@@ -1114,18 +1112,18 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 5.9,
-      'min_temp': 0.1,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 5.9,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 0.1,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'manual',
         'holiday',
       ]),
-      'target_temp_step': 0.5,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1160,23 +1158,23 @@
 # name: test_platform_setup_and_discovery[climate.salon-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 20.3,
-      'friendly_name': 'Salon',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.3,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Salon',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 5.9,
-      'min_temp': 0.1,
-      'preset_mode': 'manual',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 5.9,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 0.1,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'manual',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'manual',
         'holiday',
       ]),
-      'supported_features': <ClimateEntityFeature: 17>,
-      'target_temp_step': 0.5,
-      'temperature': 5.9,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 17>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 5.9,
     }),
     'context': <ANY>,
     'entity_id': 'climate.salon',
@@ -1193,17 +1191,17 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 90.0,
-      'min_temp': 5.0,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 90.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'manual',
       ]),
-      'target_temp_step': 1.0,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1238,22 +1236,22 @@
 # name: test_platform_setup_and_discovery[climate.smart_thermostats-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 21.5,
-      'friendly_name': 'smart thermostats',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.5,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'smart thermostats',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 90.0,
-      'min_temp': 5.0,
-      'preset_mode': 'manual',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 90.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'manual',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'manual',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
-      'target_temp_step': 1.0,
-      'temperature': 12.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 12.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.smart_thermostats',
@@ -1270,17 +1268,17 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         '1',
         '2',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
       ]),
-      'max_temp': 86.0,
-      'min_temp': 16.0,
-      'target_temp_step': 1.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 86.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1315,22 +1313,22 @@
 # name: test_platform_setup_and_discovery[climate.sove-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 24.0,
-      'fan_mode': None,
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 24.0,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: None,
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         '1',
         '2',
       ]),
-      'friendly_name': 'Sove',
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sove',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
       ]),
-      'max_temp': 86.0,
-      'min_temp': 16.0,
-      'supported_features': <ClimateEntityFeature: 393>,
-      'target_temp_step': 1.0,
-      'temperature': 16.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 86.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 393>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 16.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.sove',
@@ -1347,13 +1345,13 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 70.0,
-      'min_temp': 0.5,
-      'target_temp_step': 0.1,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 70.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 0.5,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1388,17 +1386,17 @@
 # name: test_platform_setup_and_discovery[climate.term_prizemi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 23.0,
-      'friendly_name': 'Term - Prizemi',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Term - Prizemi',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 70.0,
-      'min_temp': 0.5,
-      'supported_features': <ClimateEntityFeature: 385>,
-      'target_temp_step': 0.1,
-      'temperature': 23.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 70.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 0.5,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 23.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.term_prizemi',
@@ -1415,13 +1413,13 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 35.0,
-      'min_temp': 5.0,
-      'target_temp_step': 0.5,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1456,17 +1454,17 @@
 # name: test_platform_setup_and_discovery[climate.wifi_smart_gas_boiler_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 24.9,
-      'friendly_name': 'WiFi Smart Gas Boiler Thermostat ',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 24.9,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WiFi Smart Gas Boiler Thermostat ',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 35.0,
-      'min_temp': 5.0,
-      'supported_features': <ClimateEntityFeature: 385>,
-      'target_temp_step': 0.5,
-      'temperature': 22.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.wifi_smart_gas_boiler_thermostat',
@@ -1478,176 +1476,176 @@
 # ---
 # name: test_us_customary_system[climate.air_conditioner]
   ReadOnlyDict({
-    'current_temperature': 22,
-    'max_temp': 86,
-    'min_temp': 16,
-    'target_temp_step': 1.0,
-    'temperature': 23,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 22,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 86,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 23,
   })
 # ---
 # name: test_us_customary_system[climate.anbau]
   ReadOnlyDict({
-    'max_temp': 95,
-    'min_temp': 41,
-    'target_temp_step': 1.0,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 41,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
   })
 # ---
 # name: test_us_customary_system[climate.bathroom_radiator]
   ReadOnlyDict({
-    'current_temperature': 67,
-    'max_temp': 158,
-    'min_temp': 34,
-    'target_temp_step': 0.5,
-    'temperature': 54,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 67,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 158,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 34,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 54,
   })
 # ---
 # name: test_us_customary_system[climate.boiler_temperature_controller]
   ReadOnlyDict({
-    'current_temperature': 136,
-    'max_temp': 95,
-    'min_temp': 45,
-    'target_temp_step': 1.0,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 136,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 45,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
   })
 # ---
 # name: test_us_customary_system[climate.clima_cucina]
   ReadOnlyDict({
-    'current_temperature': 81,
-    'max_temp': 95,
-    'min_temp': 41,
-    'target_temp_step': 1.0,
-    'temperature': 77,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 81,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 41,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 77,
   })
 # ---
 # name: test_us_customary_system[climate.el_termostato_de_la_cocina]
   ReadOnlyDict({
-    'current_temperature': 113,
-    'max_temp': 45,
-    'min_temp': 34,
-    'target_temp_step': 0.5,
-    'temperature': 40,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 113,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 45,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 34,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 40,
   })
 # ---
 # name: test_us_customary_system[climate.empore]
   ReadOnlyDict({
-    'current_temperature': 66,
-    'max_temp': 95,
-    'min_temp': 41,
-    'target_temp_step': 1.0,
-    'temperature': 95,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 66,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 41,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 95,
   })
 # ---
 # name: test_us_customary_system[climate.floor_thermostat_kitchen]
   ReadOnlyDict({
-    'current_temperature': -4,
-    'max_temp': 66,
-    'min_temp': 12,
-    'target_temp_step': 1.0,
-    'temperature': None,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: -4,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 66,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 12,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
   })
 # ---
 # name: test_us_customary_system[climate.geti_solar_pv_water_heater]
   ReadOnlyDict({
-    'current_temperature': 140,
-    'max_temp': 95,
-    'min_temp': 45,
-    'target_temp_step': 1.0,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 140,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 45,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
   })
 # ---
 # name: test_us_customary_system[climate.itc_308_wifi_thermostat]
   ReadOnlyDict({
-    'current_temperature': 93,
-    'max_temp': 414,
-    'min_temp': -40,
-    'target_temp_step': 0.5,
-    'temperature': 95,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 93,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 414,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -40,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 95,
   })
 # ---
 # name: test_us_customary_system[climate.kabinet]
   ReadOnlyDict({
-    'current_temperature': 67,
-    'max_temp': 203,
-    'min_temp': 41,
-    'target_temp_step': 0.5,
-    'temperature': 71,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 67,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 203,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 41,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 71,
   })
 # ---
 # name: test_us_customary_system[climate.master_bedroom_ac]
   ReadOnlyDict({
-    'current_temperature': 79,
-    'max_temp': 190,
-    'min_temp': 61,
-    'target_temp_step': 0.5,
-    'temperature': 167,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 79,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 190,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 61,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 167,
   })
 # ---
 # name: test_us_customary_system[climate.mini_split]
   ReadOnlyDict({
-    'current_temperature': 69,
-    'max_temp': 90,
-    'min_temp': 16,
-    'target_temp_step': 1.0,
-    'temperature': 66,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 69,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 90,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 66,
   })
 # ---
 # name: test_us_customary_system[climate.mr_pure]
   ReadOnlyDict({
-    'current_temperature': None,
-    'max_temp': 95,
-    'min_temp': 45,
-    'target_temp_step': 1.0,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 45,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
   })
 # ---
 # name: test_us_customary_system[climate.polotentsosushitel]
   ReadOnlyDict({
-    'current_temperature': 32,
-    'max_temp': 104,
-    'min_temp': 41,
-    'target_temp_step': 1.0,
-    'temperature': 41,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 32,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 104,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 41,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 41,
   })
 # ---
 # name: test_us_customary_system[climate.salon]
   ReadOnlyDict({
-    'current_temperature': 69,
-    'max_temp': 43,
-    'min_temp': 32,
-    'target_temp_step': 0.5,
-    'temperature': 43,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 69,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 43,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 32,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 43,
   })
 # ---
 # name: test_us_customary_system[climate.smart_thermostats]
   ReadOnlyDict({
-    'current_temperature': 71,
-    'max_temp': 194,
-    'min_temp': 41,
-    'target_temp_step': 1.0,
-    'temperature': 54,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 71,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 194,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 41,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 54,
   })
 # ---
 # name: test_us_customary_system[climate.sove]
   ReadOnlyDict({
-    'current_temperature': 75,
-    'max_temp': 187,
-    'min_temp': 61,
-    'target_temp_step': 1.0,
-    'temperature': 61,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 75,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 187,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 61,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 61,
   })
 # ---
 # name: test_us_customary_system[climate.term_prizemi]
   ReadOnlyDict({
-    'current_temperature': 73,
-    'max_temp': 158,
-    'min_temp': 33,
-    'target_temp_step': 0.1,
-    'temperature': 73,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 73,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 158,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 33,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
+    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 73,
   })
 # ---
 # name: test_us_customary_system[climate.wifi_smart_gas_boiler_thermostat]
   ReadOnlyDict({
-    'current_temperature': 77,
-    'max_temp': 95,
-    'min_temp': 41,
-    'target_temp_step': 0.5,
-    'temperature': 72,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 77,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 41,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 72,
   })
 # ---

@@ -1,7 +1,5 @@
 """The Flux LED/MagicLight integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any, Final, cast
@@ -87,8 +85,7 @@ def async_wifi_bulb_for_host(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the flux_led component."""
-    domain_data = hass.data.setdefault(DOMAIN, {})
-    domain_data[FLUX_LED_DISCOVERY] = []
+    hass.data[FLUX_LED_DISCOVERY] = []
 
     @callback
     def _async_start_background_discovery(*_: Any) -> None:
@@ -193,7 +190,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FluxLedConfigEntry) -> b
     if entry.unique_id and discovery.get(ATTR_ID):
         mac = dr.format_mac(cast(str, discovery[ATTR_ID]))
         if not mac_matches_by_one(mac, entry.unique_id):
-            # The device is offline and another flux_led device is now using the ip address
+            # The device is offline and another flux_led device
+            # is now using the ip address
             raise ConfigEntryNotReady(
                 f"Unexpected device found at {host}; Expected {entry.unique_id}, found"
                 f" {mac}"

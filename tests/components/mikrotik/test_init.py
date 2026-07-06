@@ -1,9 +1,8 @@
 """Test Mikrotik setup process."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from librouteros.exceptions import ConnectionClosed, LibRouterosError
-import pytest
 
 from homeassistant.components import mikrotik
 from homeassistant.config_entries import ConfigEntryState
@@ -12,16 +11,6 @@ from homeassistant.core import HomeAssistant
 from . import MOCK_DATA
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture(autouse=True)
-def mock_api():
-    """Mock api."""
-    with (
-        patch("librouteros.create_transport"),
-        patch("librouteros.Api.readResponse") as mock_api,
-    ):
-        yield mock_api
 
 
 async def test_successful_config_entry(hass: HomeAssistant) -> None:

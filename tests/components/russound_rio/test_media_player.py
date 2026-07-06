@@ -210,7 +210,7 @@ async def test_invalid_source_service(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Error executing async_select_source on entity media_player.backyard",
+        match="Error executing async_select_source on entity media_player.backyard_backyard",
     ):
         await hass.services.async_call(
             MP_DOMAIN,

@@ -182,7 +182,8 @@ async def test_climate_hvac_mode(
     await knx.assert_read("1/2/7")
     await knx.receive_response("1/2/7", (0x01,))
 
-    # turn hvac mode to off - set_hvac_mode() doesn't send to on_off if dedicated hvac mode is available
+    # turn hvac mode to off - set_hvac_mode() doesn't send to
+    # on_off if dedicated hvac mode is available
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",

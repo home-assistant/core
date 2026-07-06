@@ -1,6 +1,6 @@
 """Config flow to configure StarLine component."""
 
-from __future__ import annotations
+from typing import override
 
 from starline import StarlineAuth
 import voluptuous as vol
@@ -53,6 +53,7 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._auth = StarlineAuth()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -194,6 +195,7 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
             self._app_code = await self.hass.async_add_executor_job(
                 self._auth.get_app_code, self._app_id, self._app_secret
             )
+            # pylint: disable-next=home-assistant-sequential-executor-jobs
             self._app_token = await self.hass.async_add_executor_job(
                 self._auth.get_app_token, self._app_id, self._app_secret, self._app_code
             )

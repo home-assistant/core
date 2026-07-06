@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'auto',
         'on',
@@ -45,8 +45,8 @@
 # name: test_select_entities_snapshot[select.nano_color_2_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nano Color 2 Bypass',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nano Color 2 Bypass',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'auto',
         'on',
@@ -67,7 +67,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'polish',
         'english',
       ]),
@@ -105,8 +105,8 @@
 # name: test_select_entities_snapshot[select.nano_color_2_language-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nano Color 2 Language',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nano Color 2 Language',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'polish',
         'english',
       ]),
@@ -126,7 +126,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'eco',
         'hybrid',
@@ -165,8 +165,8 @@
 # name: test_select_entities_snapshot[select.r_900_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'R 900 Operating mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'R 900 Operating mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'eco',
         'hybrid',

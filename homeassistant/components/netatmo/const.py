@@ -33,20 +33,22 @@ HOME_DATA = "netatmo_home_data"
 SIGNAL_NAME = "signal_name"
 
 API_SCOPES_EXCLUDED_FROM_CLOUD = [
+    "access_camerapro",
     "access_doorbell",
     "read_doorbell",
     "read_mhs1",
     "write_mhs1",
 ]
 
-NETATMO_CREATE_BATTERY = "netatmo_create_battery"
 NETATMO_CREATE_CAMERA = "netatmo_create_camera"
 NETATMO_CREATE_CAMERA_LIGHT = "netatmo_create_camera_light"
 NETATMO_CREATE_CLIMATE = "netatmo_create_climate"
+NETATMO_CREATE_CLIMATE_BATTERY_SENSOR = "netatmo_create_climate_battery_sensor"
 NETATMO_CREATE_COVER = "netatmo_create_cover"
 NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR = "netatmo_create_connectivity_binary_sensor"
 NETATMO_CREATE_BUTTON = "netatmo_create_button"
 NETATMO_CREATE_FAN = "netatmo_create_fan"
+NETATMO_CREATE_LEGACY_SENSOR = "netatmo_create_legacy_sensor"
 NETATMO_CREATE_LIGHT = "netatmo_create_light"
 NETATMO_CREATE_OPENING_BINARY_SENSOR = "netatmo_create_opening_binary_sensor"
 NETATMO_CREATE_ROOM_SENSOR = "netatmo_create_room_sensor"
@@ -91,7 +93,6 @@ ATTR_HOME_ID = "home_id"
 ATTR_HOME_NAME = "home_name"
 ATTR_IS_KNOWN = "is_known"
 ATTR_PERSON = "person"
-ATTR_PERSONS = "persons"
 ATTR_PSEUDO = "pseudo"
 ATTR_SCHEDULE_ID = "schedule_id"
 ATTR_SCHEDULE_NAME = "schedule_name"

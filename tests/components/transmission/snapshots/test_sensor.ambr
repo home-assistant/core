@@ -39,10 +39,10 @@
 # name: test_sensors[sensor.transmission_active_torrents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Transmission Active torrents',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Transmission Active torrents',
       'torrent_info': dict({
       }),
-      'unit_of_measurement': 'torrents',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'torrents',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.transmission_active_torrents',
@@ -92,10 +92,10 @@
 # name: test_sensors[sensor.transmission_completed_torrents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Transmission Completed torrents',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Transmission Completed torrents',
       'torrent_info': dict({
       }),
-      'unit_of_measurement': 'torrents',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'torrents',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.transmission_completed_torrents',
@@ -151,9 +151,9 @@
 # name: test_sensors[sensor.transmission_download_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'Transmission Download speed',
-      'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Transmission Download speed',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.transmission_download_speed',
@@ -203,10 +203,10 @@
 # name: test_sensors[sensor.transmission_paused_torrents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Transmission Paused torrents',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Transmission Paused torrents',
       'torrent_info': dict({
       }),
-      'unit_of_measurement': 'torrents',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'torrents',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.transmission_paused_torrents',
@@ -223,7 +223,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -264,10 +264,10 @@
 # name: test_sensors[sensor.transmission_session_download-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Transmission Session download',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Transmission Session download',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.transmission_session_download',
@@ -284,7 +284,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -322,8 +322,8 @@
 # name: test_sensors[sensor.transmission_session_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Transmission Session ratio',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Transmission Session ratio',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.transmission_session_ratio',
@@ -340,7 +340,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -381,10 +381,10 @@
 # name: test_sensors[sensor.transmission_session_upload-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Transmission Session upload',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Transmission Session upload',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.transmission_session_upload',
@@ -434,10 +434,10 @@
 # name: test_sensors[sensor.transmission_started_torrents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Transmission Started torrents',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Transmission Started torrents',
       'torrent_info': dict({
       }),
-      'unit_of_measurement': 'torrents',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'torrents',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.transmission_started_torrents',
@@ -454,7 +454,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'idle',
         'up_down',
         'seeding',
@@ -494,9 +494,9 @@
 # name: test_sensors[sensor.transmission_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Transmission Status',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Transmission Status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'idle',
         'up_down',
         'seeding',
@@ -518,7 +518,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -559,10 +559,10 @@
 # name: test_sensors[sensor.transmission_total_download-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Transmission Total download',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Transmission Total download',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.transmission_total_download',
@@ -579,7 +579,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -617,8 +617,8 @@
 # name: test_sensors[sensor.transmission_total_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Transmission Total ratio',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Transmission Total ratio',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.transmission_total_ratio',
@@ -668,10 +668,10 @@
 # name: test_sensors[sensor.transmission_total_torrents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Transmission Total torrents',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Transmission Total torrents',
       'torrent_info': dict({
       }),
-      'unit_of_measurement': 'torrents',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'torrents',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.transmission_total_torrents',
@@ -688,7 +688,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -729,10 +729,10 @@
 # name: test_sensors[sensor.transmission_total_upload-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Transmission Total upload',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Transmission Total upload',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.transmission_total_upload',
@@ -788,9 +788,9 @@
 # name: test_sensors[sensor.transmission_upload_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'Transmission Upload speed',
-      'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Transmission Upload speed',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.transmission_upload_speed',

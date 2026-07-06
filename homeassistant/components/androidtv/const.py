@@ -3,6 +3,7 @@
 DOMAIN = "androidtv"
 
 CONF_ADB_SERVER_IP = "adb_server_ip"
+CONF_MORE_OPTIONS = "more_options"
 CONF_ADB_SERVER_PORT = "adb_server_port"
 CONF_ADBKEY = "adbkey"
 CONF_APPS = "apps"

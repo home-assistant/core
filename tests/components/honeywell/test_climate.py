@@ -58,7 +58,7 @@ FAN_ACTION = "fan_action"
 async def test_no_thermostat_options(
     hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
 ) -> None:
-    """Test the setup of the climate entities when there are no additional options available."""
+    """Test climate entity setup without additional options."""
     device._data = {}
     await init_integration(hass, config_entry)
     assert hass.states.get("climate.device1")
@@ -1105,7 +1105,8 @@ async def test_async_update_errors(
     state = hass.states.get(entity_id)
     assert state.state == "off"
 
-    # Due to server instability, only mark entity unavailable after RETRY update attempts
+    # Due to server instability, only mark entity unavailable after RETRY update
+    # attempts
     for _ in range(RETRY):
         async_fire_time_changed(
             hass,
@@ -1172,7 +1173,8 @@ async def test_async_update_errors(
 
     device.refresh.side_effect = ClientConnectionError
 
-    # Due to server instability, only mark entity unavailable after RETRY update attempts
+    # Due to server instability, only mark entity unavailable after RETRY update
+    # attempts
     for _ in range(RETRY):
         async_fire_time_changed(
             hass,

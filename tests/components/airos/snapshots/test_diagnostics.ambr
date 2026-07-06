@@ -639,7 +639,7 @@
       }),
     }),
     'entry_data': dict({
-      'advanced_settings': dict({
+      'additional_settings': dict({
         'ssl': True,
         'verify_ssl': False,
       }),

@@ -230,7 +230,10 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                     },
                 ]
             },
-            f"{TEST_ENTITY_NAME}: Size of structure is 16 bytes but `{CONF_COUNT}: 2` is 4 bytes",
+            (
+                f"{TEST_ENTITY_NAME}: Size of structure is 16 bytes"
+                f" but `{CONF_COUNT}: 2` is 4 bytes"
+            ),
         ),
         (
             {
@@ -258,7 +261,10 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                     },
                 ]
             },
-            f"{TEST_ENTITY_NAME}: Size of structure is 0 bytes but `{CONF_COUNT}: 4` is 8 bytes",
+            (
+                f"{TEST_ENTITY_NAME}: Size of structure is 0 bytes"
+                f" but `{CONF_COUNT}: 4` is 8 bytes"
+            ),
         ),
         (
             {
@@ -272,7 +278,10 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                     },
                 ]
             },
-            f"{TEST_ENTITY_NAME}: Size of structure is 1 bytes but `{CONF_COUNT}: 4` is 8 bytes",
+            (
+                f"{TEST_ENTITY_NAME}: Size of structure is 1 bytes"
+                f" but `{CONF_COUNT}: 4` is 8 bytes"
+            ),
         ),
         (
             {
@@ -287,7 +296,11 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                     },
                 ]
             },
-            f"{TEST_ENTITY_NAME}: `{CONF_SWAP}:{CONF_SWAP_WORD}` illegal with `{CONF_DATA_TYPE}: {DataType.CUSTOM}`",
+            (
+                f"{TEST_ENTITY_NAME}:"
+                f" `{CONF_SWAP}:{CONF_SWAP_WORD}` illegal with"
+                f" `{CONF_DATA_TYPE}: {DataType.CUSTOM}`"
+            ),
         ),
     ],
 )

@@ -113,7 +113,7 @@
             "partition_number": "Partition number"
           },
           "data_description": {
-            "arm_home_mode": "The mode in which the partition is armed when 'arm home' is used. For more information on what the differences are between them, please refer to Satel Integra manual.",
+            "arm_home_mode": "The arming mode to use for 'arm home':\nMode 1 fully arms and bypasses zones that have the 'Bypassed if no exit' option enabled.\nMode 2 disarms interior zones; exterior zones trigger silent alarms and other alarm zones trigger loud alarms.\nMode 3 is like mode 2, but delayed zones are instant.",
             "name": "The name to give to the alarm panel",
             "partition_number": "Enter partition number to configure"
           },
@@ -153,9 +153,13 @@
       }
     },
     "zone": {
+      "abort": {
+        "entry_not_loaded": "Cannot validate zone temperature support while the integration is disabled."
+      },
       "entry_type": "Zone",
       "error": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+        "zone_does_not_report_temperature": "This zone does not report temperature data."
       },
       "initiate_flow": {
         "user": "Add zone"
@@ -163,10 +167,12 @@
       "step": {
         "reconfigure": {
           "data": {
+            "enable_temperature_sensor": "[%key:component::satel_integra::config_subentries::zone::step::user::data::enable_temperature_sensor%]",
             "name": "[%key:common::config_flow::data::name%]",
             "type": "[%key:component::satel_integra::config_subentries::zone::step::user::data::type%]"
           },
           "data_description": {
+            "enable_temperature_sensor": "[%key:component::satel_integra::config_subentries::zone::step::user::data_description::enable_temperature_sensor%]",
             "name": "[%key:component::satel_integra::config_subentries::zone::step::user::data_description::name%]",
             "type": "[%key:component::satel_integra::config_subentries::zone::step::user::data_description::type%]"
           },
@@ -174,11 +180,13 @@
         },
         "user": {
           "data": {
+            "enable_temperature_sensor": "Enable temperature sensor",
             "name": "[%key:common::config_flow::data::name%]",
             "type": "Zone type",
             "zone_number": "Zone number"
           },
           "data_description": {
+            "enable_temperature_sensor": "Enable this if the zone also reports a temperature reading",
             "name": "The name to give to the sensor",
             "type": "Choose the device class you would like the sensor to show as",
             "zone_number": "Enter zone number to configure"
@@ -215,6 +223,13 @@
     }
   },
   "selector": {
+    "arm_home_mode": {
+      "options": {
+        "1": "1 - Full arming + bypasses",
+        "2": "2 - No interior zones",
+        "3": "3 - No interior zones or entry delay"
+      }
+    },
     "binary_sensor_device_class": {
       "options": {
         "battery": "[%key:component::binary_sensor::entity_component::battery::name%]",

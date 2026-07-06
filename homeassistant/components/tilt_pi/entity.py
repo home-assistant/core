@@ -1,5 +1,7 @@
 """Base entity for Tilt Pi integration."""
 
+from typing import override
+
 from tiltpi import TiltHydrometerData
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -34,6 +36,7 @@ class TiltEntity(CoordinatorEntity[TiltPiDataUpdateCoordinator]):
         return self.coordinator.data[self._mac_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the hydrometer is available (present in coordinator data)."""
         return super().available and self._mac_id in self.coordinator.data

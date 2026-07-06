@@ -1,7 +1,5 @@
 """Utility functions for Bring."""
 
-from __future__ import annotations
-
 from bring_api import BringUserSettingsResponse
 
 from .coordinator import BringData

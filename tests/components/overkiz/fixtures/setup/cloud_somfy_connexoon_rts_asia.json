@@ -46,7 +46,7 @@
     {
       "creationTime": 1613675393000,
       "lastUpdateTime": 1613675393000,
-      "label": "*",
+      "label": "Connexoon",
       "deviceURL": "internal://1234-1234-6362/pod/0",
       "shortcut": false,
       "controllableName": "internal:PodMiniComponent",
@@ -142,7 +142,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "*"
+          "value": "Connexoon"
         },
         {
           "name": "internal:LightingLedPodModeState",
@@ -323,6 +323,227 @@
       "type": 1,
       "oid": "ef870fe7-daf3-4f33-b91e-62b2a809ef4e",
       "uiClass": "RollerShutter"
+    },
+    {
+      "creationTime": 1613676700000,
+      "lastUpdateTime": 1613676700000,
+      "label": "Jaloezie",
+      "deviceURL": "rts://1234-1234-6362/16730044",
+      "shortcut": false,
+      "controllableName": "rts:TiltOnlyVenetianBlindRTSComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "commandName": "tiltPositive",
+            "nparams": 2
+          },
+          {
+            "commandName": "tiltNegative",
+            "nparams": 2
+          },
+          {
+            "commandName": "my",
+            "nparams": 1
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          }
+        ],
+        "states": [],
+        "attributes": [],
+        "dataProperties": [],
+        "widgetName": "TiltOnlyVenetianBlind",
+        "uiProfiles": ["OpenClose"],
+        "uiClass": "VenetianBlind",
+        "qualifiedName": "rts:TiltOnlyVenetianBlindRTSComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [],
+      "attributes": [],
+      "available": true,
+      "enabled": true,
+      "placeOID": "6133b4a0-f514-4553-b635-d1b7beb7e7b2",
+      "widget": "TiltOnlyVenetianBlind",
+      "type": 1,
+      "oid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "uiClass": "VenetianBlind"
+    },
+    {
+      "creationTime": 1613676700000,
+      "lastUpdateTime": 1613676700000,
+      "label": "Office Venetian Blind",
+      "deviceURL": "rts://1234-1234-6362/16747291",
+      "shortcut": false,
+      "controllableName": "rts:VenetianBlindRTSComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 1
+          },
+          {
+            "commandName": "down",
+            "nparams": 1
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 1
+          },
+          {
+            "commandName": "open",
+            "nparams": 1
+          },
+          {
+            "commandName": "rest",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 1
+          },
+          {
+            "commandName": "test",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 1
+          },
+          {
+            "commandName": "moveOf",
+            "nparams": 2
+          },
+          {
+            "commandName": "openConfiguration",
+            "nparams": 1
+          },
+          {
+            "commandName": "tiltNegative",
+            "nparams": 2
+          },
+          {
+            "commandName": "tiltPositive",
+            "nparams": 2
+          }
+        ],
+        "states": [],
+        "dataProperties": [
+          {
+            "value": "0",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "UpDownVenetianBlind",
+        "uiProfiles": ["OpenCloseBlind", "OpenClose"],
+        "uiClass": "VenetianBlind",
+        "qualifiedName": "rts:VenetianBlindRTSComponent",
+        "type": "ACTUATOR"
+      },
+      "attributes": [],
+      "available": true,
+      "enabled": true,
+      "placeOID": "6133b4a0-f514-4553-b635-d1b7beb7e7b2",
+      "widget": "UpDownVenetianBlind",
+      "type": 1,
+      "oid": "3496a041-cafc-4d5d-ab3b-7947985812dc",
+      "uiClass": "VenetianBlind"
+    },
+    {
+      "creationTime": 1613676710000,
+      "lastUpdateTime": 1613676710000,
+      "label": "Kitchen Sheer Screen",
+      "deviceURL": "rts://1234-1234-6362/16753206",
+      "shortcut": false,
+      "controllableName": "rts:SheerBlindRTSComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 0
+          },
+          {
+            "commandName": "tiltPositive",
+            "nparams": 2
+          },
+          {
+            "commandName": "tiltNegative",
+            "nparams": 2
+          },
+          {
+            "commandName": "down",
+            "nparams": 0
+          },
+          {
+            "commandName": "rest",
+            "nparams": 0
+          },
+          {
+            "commandName": "openConfiguration",
+            "nparams": 0
+          },
+          {
+            "commandName": "test",
+            "nparams": 0
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "moveOf",
+            "nparams": 1
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [],
+        "dataProperties": [],
+        "widgetName": "UpDownSheerScreen",
+        "uiProfiles": ["OpenCloseBlind", "OpenClose"],
+        "uiClass": "VenetianBlind",
+        "qualifiedName": "rts:SheerBlindRTSComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [],
+      "attributes": [],
+      "available": true,
+      "enabled": true,
+      "placeOID": "6133b4a0-f514-4553-b635-d1b7beb7e7b2",
+      "widget": "UpDownSheerScreen",
+      "type": 1,
+      "oid": "c198bcdd-8b8b-4dc6-a2b0-f86f7dc7c001",
+      "uiClass": "VenetianBlind"
     }
   ],
   "zones": [],

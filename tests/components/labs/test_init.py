@@ -1,7 +1,5 @@
 """Tests for the Home Assistant Labs integration setup."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import Mock, patch
 

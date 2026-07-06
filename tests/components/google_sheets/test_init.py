@@ -235,7 +235,7 @@ async def test_setup_oauth_reauth_error(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
-    mock_async_start_reauth.assert_called_once_with(hass)
+    mock_async_start_reauth.assert_called_once_with(hass, None, None)
 
 
 async def test_setup_oauth_transient_error(
@@ -326,7 +326,8 @@ async def test_get_sheet(
     assert entries[0].state is ConfigEntryState.LOADED
 
     with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
-        mock_client.return_value.open_by_key.return_value.worksheet.return_value.get_values.return_value = [
+        worksheet = mock_client.return_value.open_by_key.return_value.worksheet
+        worksheet.return_value.get_values.return_value = [
             ["col1", "col2"],
             ["a", "b"],
             ["c", "d"],

@@ -1,7 +1,5 @@
 """Define services for the Apple TV integration."""
 
-from __future__ import annotations
-
 from pyatv.const import KeyboardFocusState
 from pyatv.exceptions import NotSupportedError, ProtocolError
 from pyatv.interface import AppleTV as AppleTVInterface
@@ -61,7 +59,7 @@ def _check_keyboard_focus(atv: AppleTVInterface) -> None:
             translation_domain=DOMAIN,
             translation_key="keyboard_not_available",
         ) from err
-    if focus_state != KeyboardFocusState.Focused:
+    if focus_state is not KeyboardFocusState.Focused:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="keyboard_not_focused",

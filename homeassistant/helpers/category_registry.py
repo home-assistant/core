@@ -1,12 +1,10 @@
 """Provide a way to categorize things within a defined scope."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, TypedDict, override
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util.dt import utc_from_timestamp, utcnow
@@ -69,6 +67,7 @@ class CategoryEntry:
 class CategoryRegistryStore(Store[CategoryRegistryStoreData]):
     """Store category registry data."""
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,
@@ -204,6 +203,7 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
 
         return new
 
+    @override
     async def _async_load(self) -> None:
         """Load the category registry."""
         data = await self._store.async_load()
@@ -225,6 +225,7 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
         self.categories = category_entries
 
     @callback
+    @override
     def _data_to_save(self) -> CategoryRegistryStoreData:
         """Return data of category registry to store in a file."""
         return {

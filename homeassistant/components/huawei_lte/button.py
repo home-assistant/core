@@ -1,8 +1,7 @@
 """Huawei LTE buttons."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from huawei_lte_api.enums.device import ControlModeEnum
 
@@ -11,12 +10,11 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 
-from .const import DOMAIN
+from . import HuaweiLteConfigEntry
 from .entity import HuaweiLteBaseEntityWithDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,11 +22,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HuaweiLteConfigEntry,
     async_add_entities: entity_platform.AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Huawei LTE buttons."""
-    router = hass.data[DOMAIN].routers[config_entry.entry_id]
+    router = config_entry.runtime_data
     buttons = [
         ClearTrafficStatisticsButton(router),
         RestartButton(router),
@@ -40,13 +38,16 @@ class BaseButton(HuaweiLteBaseEntityWithDevice, ButtonEntity):
     """Huawei LTE button base class."""
 
     @property
+    @override
     def _device_unique_id(self) -> str:
         """Return unique ID for entity within a router."""
         return f"button-{self.entity_description.key}"
 
+    @override
     async def async_update(self) -> None:
         """Update is not necessary for button entities."""
 
+    @override
     def press(self) -> None:
         """Press button."""
         if self.router.suspended:
@@ -74,6 +75,7 @@ class ClearTrafficStatisticsButton(BaseButton):
         entity_category=EntityCategory.CONFIG,
     )
 
+    @override
     def _press(self) -> str:
         """Call clear traffic statistics endpoint."""
         return self.router.client.monitoring.set_clear_traffic()
@@ -91,6 +93,7 @@ class RestartButton(BaseButton):
         entity_category=EntityCategory.CONFIG,
     )
 
+    @override
     def _press(self) -> str:
         """Call restart endpoint."""
         return self.router.client.device.set_control(ControlModeEnum.REBOOT)

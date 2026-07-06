@@ -1,7 +1,5 @@
 """Event parser and human readable log generator."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, NamedTuple, cast, final
@@ -108,10 +106,11 @@ CONTEXT_PARENT_ID_BIN_POS: Final = 6
 STATE_POS: Final = 7
 ENTITY_ID_POS: Final = 8
 ICON_POS: Final = 9
-CONTEXT_ONLY_POS: Final = 10
+ATTRIBUTES_POS: Final = 10
+CONTEXT_ONLY_POS: Final = 11
 # - For EventAsRow, additional fields are:
-DATA_POS: Final = 11
-CONTEXT_POS: Final = 12
+DATA_POS: Final = 12
+CONTEXT_POS: Final = 13
 
 
 @final  # Final to allow direct checking of the type instead of using isinstance
@@ -131,6 +130,7 @@ class EventAsRow(NamedTuple):
     state: str | None
     entity_id: str | None
     icon: str | None
+    attributes: Mapping[str, Any] | None
     context_only: bool | None
 
     # Additional fields for EventAsRow
@@ -154,6 +154,7 @@ def async_event_to_row(event: Event) -> EventAsRow:
             state=None,
             entity_id=None,
             icon=None,
+            attributes=None,
             context_only=None,
             data=event.data,
             context=context,
@@ -177,6 +178,7 @@ def async_event_to_row(event: Event) -> EventAsRow:
         state=new_state.state,
         entity_id=new_state.entity_id,
         icon=new_state.attributes.get(ATTR_ICON),
+        attributes=new_state.attributes,
         context_only=None,
         data=event.data,
         context=context,

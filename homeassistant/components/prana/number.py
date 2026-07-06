@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -70,10 +70,12 @@ class PranaNumber(PranaBaseEntity, NumberEntity):
     entity_description: PranaNumberEntityDescription
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the entity value."""
         return self.entity_description.value_fn(self.coordinator)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.entity_description.set_value_fn(self.coordinator.api_client, value)

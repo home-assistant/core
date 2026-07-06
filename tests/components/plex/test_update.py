@@ -48,16 +48,16 @@ async def test_plex_update(
     # Failed updates
     requests_mock.get("/updater/status", status_code=500)
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATER_SCAN_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     requests_mock.get("/updater/status", text=empty_payload)
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATER_SCAN_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # New release (not updatable)
     requests_mock.get("/updater/status", text=update_check_new_not_updatable)
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATER_SCAN_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(UPDATE_ENTITY).state == STATE_ON
 
     with pytest.raises(HomeAssistantError):

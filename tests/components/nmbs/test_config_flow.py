@@ -3,6 +3,8 @@
 from typing import Any
 from unittest.mock import AsyncMock
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.nmbs.config_flow import CONF_EXCLUDE_VIAS
 from homeassistant.components.nmbs.const import (
@@ -35,9 +37,8 @@ DUMMY_DATA: dict[str, Any] = {
 }
 
 
-async def test_full_flow(
-    hass: HomeAssistant, mock_nmbs_client: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_nmbs_client: AsyncMock) -> None:
     """Test the full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -68,9 +69,8 @@ async def test_full_flow(
     )
 
 
-async def test_same_station(
-    hass: HomeAssistant, mock_nmbs_client: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_same_station(hass: HomeAssistant, mock_nmbs_client: AsyncMock) -> None:
     """Test selecting the same station."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

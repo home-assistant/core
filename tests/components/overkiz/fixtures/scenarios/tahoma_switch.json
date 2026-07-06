@@ -1,0 +1,26 @@
+[
+  {
+    "creationTime": 1766929020000,
+    "lastUpdateTime": 1766929020000,
+    "label": "I'm arriving",
+    "metadata": "{\"tahoma\":{\"version\":1,\"icon\":\"at_home\",\"template\":\"arriving\"}}",
+    "shortcut": false,
+    "notificationTypeMask": 16,
+    "notificationCondition": "ON_ERROR",
+    "notificationText": "Your scene I'm arriving could not be played correctly due to an error in one of your products.",
+    "notificationTitle": "[$[setupLabel]] : Impossible to play the scene I'm arriving",
+    "actions": [
+      {
+        "deviceURL": "rts://1234-5678-1234/16756006",
+        "commands": [
+          {
+            "type": 1,
+            "name": "open",
+            "parameters": [1]
+          }
+        ]
+      }
+    ],
+    "oid": "d1b689e1-4087-473d-b726-d3b24770856f"
+  }
+]

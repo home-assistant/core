@@ -39,8 +39,8 @@
 # name: test_entities[binary_sensor.jar_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'Jar Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jar Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.jar_charging',
@@ -90,7 +90,7 @@
 # name: test_entities[binary_sensor.jar_dimming_paused-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Jar Dimming paused',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jar Dimming paused',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.jar_dimming_paused',

@@ -66,6 +66,12 @@ async def test_auto_add_devices(
     # 1 controller + 2 zones
     assert len(all_devices) == 3
 
+    # Sensors that use the water-use coordinator should exist for the initial zones.
+    assert hass.states.get("sensor.zone_one_daily_active_water_use") is not None
+    assert hass.states.get("sensor.zone_one_daily_active_watering_time") is not None
+    assert hass.states.get("sensor.zone_two_daily_active_water_use") is not None
+    assert hass.states.get("sensor.zone_two_daily_active_watering_time") is not None
+
     controller2 = deepcopy(controller)
     controller2.id += 10
     controller2.name += " 2"
@@ -99,6 +105,11 @@ async def test_auto_add_devices(
     )
     # 2 controllers + 4 zones
     assert len(all_devices) == 6
+
+    # Sensors that use the water-use coordinator must also be created for the
+    # newly added zones, even though the water-use coordinator hasn't refreshed.
+    assert hass.states.get("sensor.zone_one_2_daily_active_watering_time") is not None
+    assert hass.states.get("sensor.zone_two_2_daily_active_watering_time") is not None
 
 
 async def test_auto_remove_devices(

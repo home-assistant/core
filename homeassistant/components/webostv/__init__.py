@@ -1,7 +1,5 @@
 """The LG webOS TV integration."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 
 from aiowebostv import WebOsClient, WebOsTvPairError
@@ -48,7 +46,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
         try:
             await client.connect()
         except WebOsTvPairError as err:
-            raise ConfigEntryAuthFailed(err) from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from err
 
     # If pairing request accepted there will be no error
     # Update the stored key without triggering reauth

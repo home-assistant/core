@@ -14,7 +14,7 @@
   "firmwareVersion": "7.0",
   "zwavePlusVersion": 2,
   "name": "Portail",
-  "location": "**REDACTED**",
+  "location": "",
   "deviceConfig": {
     "filename": "/data/db/devices/0x0441/ibt4zwave.json",
     "isEmbedded": true,

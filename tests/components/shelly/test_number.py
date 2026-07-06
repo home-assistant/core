@@ -217,7 +217,8 @@ async def test_block_set_value_connection_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Device communication error occurred while calling action for number.test_name_valve_position of Test name",
+        match="Device communication error occurred while calling"
+        " action for number.test_name_valve_position of Test name",
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -358,7 +359,7 @@ async def test_rpc_remove_virtual_number_when_mode_label(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test if the virtual number will be removed if the mode has been changed to a label."""
+    """Test virtual number removal when mode changes to label."""
     config = deepcopy(mock_rpc_device.config)
     config["number:200"] = {
         "name": None,
@@ -395,7 +396,7 @@ async def test_rpc_remove_virtual_number_when_orphaned(
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
-    """Check whether the virtual number will be removed if it has been removed from the device configuration."""
+    """Test virtual number removal from device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
@@ -503,11 +504,13 @@ async def test_blu_trv_valve_pos_set_value(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling action for number.trv_name_external_temperature of Test name",
+            "Device communication error occurred while calling action"
+            " for number.trv_name_external_temperature of Test name",
         ),
         (
             RpcCallError(999),
-            "RPC call error occurred while calling action for number.trv_name_external_temperature of Test name",
+            "RPC call error occurred while calling action"
+            " for number.trv_name_external_temperature of Test name",
         ),
     ],
 )

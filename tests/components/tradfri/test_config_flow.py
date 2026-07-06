@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.tradfri import config_flow
+from homeassistant.components.tradfri import DOMAIN, config_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import (
@@ -36,7 +36,7 @@ async def test_already_paired(hass: HomeAssistant, mock_entry_setup) -> None:
         mock_it.generate_psk.return_value = None
         mock_lib.init.return_value = mock_it
         result = await hass.config_entries.flow.async_init(
-            "tradfri", context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "123.123.123.123", "security_code": "abcd"}
@@ -53,7 +53,7 @@ async def test_user_connection_successful(
     mock_auth.side_effect = lambda hass, host, code: {"host": host, "gateway_id": "bla"}
 
     flow = await hass.config_entries.flow.async_init(
-        "tradfri", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -76,7 +76,7 @@ async def test_user_connection_timeout(
     mock_auth.side_effect = config_flow.AuthError("timeout")
 
     flow = await hass.config_entries.flow.async_init(
-        "tradfri", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -96,7 +96,7 @@ async def test_user_connection_bad_key(
     mock_auth.side_effect = config_flow.AuthError("invalid_security_code")
 
     flow = await hass.config_entries.flow.async_init(
-        "tradfri", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -116,7 +116,7 @@ async def test_discovery_connection(
     mock_auth.side_effect = lambda hass, host, code: {"host": host, "gateway_id": "bla"}
 
     flow = await hass.config_entries.flow.async_init(
-        "tradfri",
+        DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.123"),
@@ -151,7 +151,7 @@ async def test_discovery_duplicate_aborted(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     flow = await hass.config_entries.flow.async_init(
-        "tradfri",
+        DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.124"),
@@ -175,7 +175,7 @@ async def test_duplicate_discovery(
 ) -> None:
     """Test a duplicate discovery in progress is ignored."""
     result = await hass.config_entries.flow.async_init(
-        "tradfri",
+        DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.123"),
@@ -191,7 +191,7 @@ async def test_duplicate_discovery(
     assert result["type"] is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_init(
-        "tradfri",
+        DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.123"),
@@ -216,7 +216,7 @@ async def test_discovery_updates_unique_id(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     flow = await hass.config_entries.flow.async_init(
-        "tradfri",
+        DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.123"),

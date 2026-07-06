@@ -1,7 +1,5 @@
 """The Mastodon integration."""
 
-from __future__ import annotations
-
 from mastodon.Mastodon import (
     Account,
     Instance,
@@ -55,7 +53,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> 
             translation_key="auth_failed",
         ) from error
     except MastodonError as ex:
-        raise ConfigEntryNotReady("Failed to connect") from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="failed_to_connect",
+        ) from ex
 
     assert entry.unique_id
 

@@ -1,7 +1,5 @@
 """Schemas used by insteon component."""
 
-from __future__ import annotations
-
 from pyinsteon.constants import HC_LOOKUP
 import voluptuous as vol
 

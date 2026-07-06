@@ -1,11 +1,10 @@
 """Coordinator for Arcam FMJ integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from arcam.fmj import ConnectionFailed
 from arcam.fmj.client import AmxDuetResponse, Client, ResponsePacket
@@ -55,24 +54,26 @@ class ArcamFmjCoordinator(DataUpdateCoordinator[None]):
         self.state = State(client, zone)
         self.update_in_progress = False
 
-        name = config_entry.title
+        device_name = config_entry.title
         unique_id = config_entry.unique_id or config_entry.entry_id
         unique_id_device = unique_id
         if zone != 1:
             unique_id_device += f"-{zone}"
-            name += f" Zone {zone}"
+            device_name += f" Zone {zone}"
 
+        self.device_name = device_name
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id_device)},
             manufacturer="Arcam",
             model="Arcam FMJ AVR",
-            name=name,
+            name=device_name,
         )
         self.zone_unique_id = f"{unique_id}-{zone}"
 
         if zone != 1:
             self.device_info["via_device"] = (DOMAIN, unique_id)
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data for manual refresh."""
         try:

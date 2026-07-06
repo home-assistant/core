@@ -1,9 +1,7 @@
 """Provide functionality to interact with vlc devices on the network."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import vlc
 import voluptuous as vol
@@ -88,36 +86,43 @@ class VlcDevice(MediaPlayerEntity):
         self._attr_volume_level = self._vlc.audio_get_volume() / 100
         self._attr_is_volume_muted = self._vlc.audio_get_mute() == 1
 
+    @override
     def media_seek(self, position: float) -> None:
         """Seek the media to a specific location."""
         track_length = self._vlc.get_length() / 1000
         self._vlc.set_position(position / track_length)
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         self._vlc.audio_set_mute(mute)
         self._attr_is_volume_muted = mute
 
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._vlc.audio_set_volume(int(volume * 100))
         self._attr_volume_level = volume
 
+    @override
     def media_play(self) -> None:
         """Send play command."""
         self._vlc.play()
         self._attr_state = MediaPlayerState.PLAYING
 
+    @override
     def media_pause(self) -> None:
         """Send pause command."""
         self._vlc.pause()
         self._attr_state = MediaPlayerState.PAUSED
 
+    @override
     def media_stop(self) -> None:
         """Send stop command."""
         self._vlc.stop()
         self._attr_state = MediaPlayerState.IDLE
 
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -146,6 +151,7 @@ class VlcDevice(MediaPlayerEntity):
         await self.hass.async_add_executor_job(play)
         self._attr_state = MediaPlayerState.PLAYING
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,

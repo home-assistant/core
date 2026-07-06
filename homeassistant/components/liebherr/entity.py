@@ -1,7 +1,5 @@
 """Base entity for Liebherr integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Coroutine
 from typing import Any

@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -65,6 +65,7 @@ class IdasenDeskButton(IdasenDeskEntity, ButtonEntity):
         super().__init__(f"{description.key}-{coordinator.address}", coordinator)
         self.entity_description = description
 
+    @override
     async def async_press(self) -> None:
         """Triggers the IdasenDesk button press service."""
         _LOGGER.debug(
@@ -75,6 +76,7 @@ class IdasenDeskButton(IdasenDeskEntity, ButtonEntity):
         await self.entity_description.press_action(self.coordinator)()
 
     @property
+    @override
     def available(self) -> bool:
         """Connect/disconnect buttons should always be available."""
         return True

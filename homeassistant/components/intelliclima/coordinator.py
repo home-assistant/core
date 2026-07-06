@@ -1,5 +1,7 @@
 """DataUpdateCoordinator for IntelliClima."""
 
+from typing import override
+
 from pyintelliclima import IntelliClimaAPI, IntelliClimaAPIError, IntelliClimaDevices
 
 from homeassistant.config_entries import ConfigEntry
@@ -27,6 +29,7 @@ class IntelliClimaCoordinator(DataUpdateCoordinator[IntelliClimaDevices]):
         )
         self.api = api
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator - called once during first refresh."""
         # Authenticate and get initial device list
@@ -35,6 +38,7 @@ class IntelliClimaCoordinator(DataUpdateCoordinator[IntelliClimaDevices]):
         except IntelliClimaAPIError as err:
             raise UpdateFailed(f"Failed to set up IntelliClima: {err}") from err
 
+    @override
     async def _async_update_data(self) -> IntelliClimaDevices:
         """Fetch data from API."""
         try:

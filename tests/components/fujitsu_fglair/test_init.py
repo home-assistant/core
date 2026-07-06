@@ -12,13 +12,17 @@ from homeassistant.components.fujitsu_fglair.const import (
     API_REFRESH,
     API_TIMEOUT,
     CONF_EUROPE,
-    CONF_REGION,
     DOMAIN,
     REGION_DEFAULT,
     REGION_EU,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_REGION,
+    CONF_USERNAME,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
@@ -177,7 +181,7 @@ async def test_startup_exception(
     mock_config_entry: MockConfigEntry,
     exception: Exception,
 ) -> None:
-    """Make sure that no devices are added if there was an exception while logging in."""
+    """Make sure no devices are added if login raises an exception."""
     mock_ayla_api.async_sign_in.side_effect = exception
     await setup_integration(hass, mock_config_entry)
 

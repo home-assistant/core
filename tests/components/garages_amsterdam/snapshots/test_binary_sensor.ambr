@@ -39,9 +39,9 @@
 # name: test_all_binary_sensors[binary_sensor.ijdok_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by municipality of Amsterdam',
-      'device_class': 'problem',
-      'friendly_name': 'IJDok State',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by municipality of Amsterdam',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IJDok State',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ijdok_state',

@@ -1,8 +1,6 @@
 """Support for Broadlink selects."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -31,6 +29,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Broadlink select."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
     async_add_entities([BroadlinkDayOfWeek(device)])
 
@@ -49,6 +49,7 @@ class BroadlinkDayOfWeek(BroadlinkEntity, SelectEntity):
 
         self._attr_unique_id = f"{device.unique_id}-dayofweek"
 
+    @override
     def _update_state(self, data: dict[str, Any]) -> None:
         """Update the state of the entity."""
         if data is None or "dayofweek" not in data:
@@ -56,6 +57,7 @@ class BroadlinkDayOfWeek(BroadlinkEntity, SelectEntity):
         else:
             self._attr_current_option = DAY_ID_TO_NAME[data["dayofweek"]]
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self._device.async_request(

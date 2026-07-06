@@ -39,7 +39,7 @@
 # name: test_binary_sensor[binary_sensor.myups_online_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'MyUPS Online status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MyUPS Online status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.myups_online_status',

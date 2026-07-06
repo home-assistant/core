@@ -1,5 +1,7 @@
 """Tests the Indevolt config flow."""
 
+from dataclasses import replace
+from ipaddress import IPv4Address
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
@@ -10,22 +12,42 @@ from homeassistant.components.indevolt.const import (
     CONF_SERIAL_NUMBER,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_DHCP,
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+)
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .conftest import TEST_DEVICE_SN_GEN2, TEST_HOST
+from .conftest import TEST_DEVICE_SN_GEN2, TEST_HOST, TEST_HOST_ALT, TEST_MODEL_GEN2
 
 from tests.common import MockConfigEntry
 
-# Used to mock host change
-TEST_HOST_NEW = "192.168.1.200"
+
+def _make_zeroconf_discovery(ip: str) -> ZeroconfServiceInfo:
+    """Create a ZeroconfServiceInfo for an Indevolt device at the given IP."""
+    return ZeroconfServiceInfo(
+        ip_address=IPv4Address(ip),
+        ip_addresses=[IPv4Address(ip)],
+        port=80,
+        hostname=f"{TEST_DEVICE_SN_GEN2}.local.",
+        type="_http._tcp.local.",
+        name="IGEN_FW._http._tcp.local.",
+        properties={},
+    )
 
 
-async def test_user_flow_success(
-    hass: HomeAssistant, mock_indevolt: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+ZEROCONF_DISCOVERY = _make_zeroconf_discovery(TEST_HOST)
+ZEROCONF_DISCOVERY_ALT_IP = _make_zeroconf_discovery(TEST_HOST_ALT)
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_success(hass: HomeAssistant, mock_indevolt: AsyncMock) -> None:
     """Test successful user-initiated config flow."""
 
     # Initiate user flow
@@ -44,11 +66,11 @@ async def test_user_flow_success(
 
     # Verify entry is created with correct data
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "INDEVOLT CMS-SF2000"
+    assert result["title"] == f"INDEVOLT {TEST_MODEL_GEN2}"
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_SERIAL_NUMBER: TEST_DEVICE_SN_GEN2,
-        CONF_MODEL: "CMS-SF2000",
+        CONF_MODEL: TEST_MODEL_GEN2,
         CONF_GENERATION: 2,
     }
     assert result["result"].unique_id == TEST_DEVICE_SN_GEN2
@@ -63,10 +85,10 @@ async def test_user_flow_success(
         (Exception("Some unknown error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_error(
     hass: HomeAssistant,
     mock_indevolt: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     expected_error: str,
 ) -> None:
@@ -95,7 +117,7 @@ async def test_user_flow_error(
 
     # Verify entry is created with correct data
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "INDEVOLT CMS-SF2000"
+    assert result["title"] == f"INDEVOLT {TEST_MODEL_GEN2}"
 
 
 async def test_user_flow_duplicate_entry(
@@ -119,11 +141,9 @@ async def test_user_flow_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_success(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_indevolt: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_indevolt: AsyncMock
 ) -> None:
     """Test successful reconfiguration flow."""
     mock_config_entry.add_to_hass(hass)
@@ -138,10 +158,8 @@ async def test_reconfigure_flow_success(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    # Mock new host input
-    new_host = TEST_HOST_NEW
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: new_host}
+        result["flow_id"], {CONF_HOST: TEST_HOST_ALT}
     )
 
     # Verify flow is aborted
@@ -152,7 +170,7 @@ async def test_reconfigure_flow_success(
     await hass.async_block_till_done()
 
     # Verify entry is updated
-    assert mock_config_entry.data[CONF_HOST] == new_host
+    assert mock_config_entry.data[CONF_HOST] == TEST_HOST_ALT
     assert mock_config_entry.data[CONF_SERIAL_NUMBER] == TEST_DEVICE_SN_GEN2
 
 
@@ -165,11 +183,11 @@ async def test_reconfigure_flow_success(
         (Exception("Some unknown error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_indevolt: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     expected_error: str,
 ) -> None:
@@ -206,11 +224,9 @@ async def test_reconfigure_flow_error(
     await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_different_device(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_indevolt: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_indevolt: AsyncMock
 ) -> None:
     """Test reconfigure aborts when connecting to a different device."""
     mock_config_entry.add_to_hass(hass)
@@ -233,7 +249,7 @@ async def test_reconfigure_flow_different_device(
 
     # Configure mock to cause host collision with different device
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: TEST_HOST_NEW}
+        result["flow_id"], {CONF_HOST: TEST_HOST_ALT}
     )
 
     # Verify flow is aborted with correct reason
@@ -242,3 +258,151 @@ async def test_reconfigure_flow_different_device(
 
     # Flush pending tasks
     await hass.async_block_till_done()
+
+
+async def test_zeroconf_flow_success(
+    hass: HomeAssistant, mock_indevolt: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test successful zeroconf discovery flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+    assert result["description_placeholders"][CONF_HOST] == TEST_HOST
+    assert result["description_placeholders"][CONF_MODEL] == TEST_MODEL_GEN2
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"INDEVOLT {TEST_MODEL_GEN2}"
+    assert result["data"] == {
+        CONF_HOST: TEST_HOST,
+        CONF_SERIAL_NUMBER: TEST_DEVICE_SN_GEN2,
+        CONF_MODEL: TEST_MODEL_GEN2,
+        CONF_GENERATION: 2,
+    }
+    assert result["result"].unique_id == TEST_DEVICE_SN_GEN2
+
+
+async def test_zeroconf_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_indevolt: AsyncMock
+) -> None:
+    """Test zeroconf discovery aborts if already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_ip_change(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_indevolt: AsyncMock
+) -> None:
+    """Test zeroconf discovery updates config entry host if the device moved to a new IP."""
+    mock_config_entry.add_to_hass(hass)
+    assert mock_config_entry.data[CONF_HOST] == TEST_HOST
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY_ALT_IP,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == TEST_HOST_ALT
+
+
+async def test_zeroconf_ip_reuse_by_different_device(
+    hass: HomeAssistant,
+    alt_mock_config_entry: MockConfigEntry,
+    mock_indevolt: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test zeroconf discovery proceeds when the discovered IP is used by a different device."""
+    alt_mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY_ALT_IP,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        (TimeoutError, "cannot_connect"),
+        (ConnectionError, "cannot_connect"),
+        (ClientError, "cannot_connect"),
+    ],
+)
+async def test_zeroconf_cannot_connect(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    exception: type[Exception],
+    reason: str,
+) -> None:
+    """Test zeroconf discovery aborts on connection errors."""
+    mock_indevolt.get_config.side_effect = exception
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
+async def test_zeroconf_unexpected_hostname(
+    hass: HomeAssistant, mock_indevolt: AsyncMock
+) -> None:
+    """Test zeroconf discovery aborts without probing when hostname is not in {sn}.local. form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=replace(ZEROCONF_DISCOVERY, hostname="unexpected-hostname"),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    mock_indevolt.get_config.assert_not_called()
+
+
+async def test_dhcp_registered_device_ip_change(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_indevolt: AsyncMock
+) -> None:
+    """Test DHCP discovery updates config entry host for a registered device at a new IP."""
+    mock_config_entry.add_to_hass(hass)
+    assert mock_config_entry.data[CONF_HOST] == TEST_HOST
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip=TEST_HOST_ALT,
+            hostname="3300003082",
+            macaddress="1c784b8d47bb",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == TEST_HOST_ALT

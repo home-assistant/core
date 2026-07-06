@@ -27,9 +27,6 @@ COUNTRY_DOMAINS = {
     "za": "co.za",
 }
 
-CATEGORY_SENSORS = "sensors"
-CATEGORY_NOTIFICATIONS = "notifications"
-
 # Map service translation keys to Alexa API
 INFO_SKILLS_MAPPING = {
     "calendar_today": "Alexa.Calendar.PlayToday",

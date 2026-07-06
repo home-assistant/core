@@ -1,10 +1,9 @@
 """Binary sensor platform for the Mastodon integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import override
 
 from mastodon.Mastodon import Account
 
@@ -123,6 +122,7 @@ class MastodonBinarySensorEntity(MastodonEntity, BinarySensorEntity):
     entity_description: MastodonBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.is_on_fn(self.coordinator.data)

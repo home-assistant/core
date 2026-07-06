@@ -1,6 +1,6 @@
 """Adds config flow for Mill integration."""
 
-from typing import Any
+from typing import Any, override
 
 from mill import Mill
 from mill_local import Mill as MillLocal
@@ -18,6 +18,7 @@ class MillConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

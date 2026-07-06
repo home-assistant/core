@@ -978,12 +978,34 @@ def test_choose_selector_serialize(snapshot: SnapshotAssertion) -> None:
     assert choose_selector.serialize() == snapshot
 
     # Test with Selector object instances
-    choose_selector_objects = selector.ChooseSelector(
+    nested_choose = selector.ChooseSelector(
         {
             "choices": {
                 "text_choice": {"selector": selector.TextSelector({"multiline": True})},
                 "number_choice": {
                     "selector": selector.NumberSelector({"min": 0, "max": 100})
+                },
+            }
+        }
+    )
+    nested_obj = selector.ObjectSelector(
+        {
+            "fields": {
+                "choose": {
+                    "required": True,
+                    "selector": nested_choose,
+                },
+            }
+        }
+    )
+    choose_selector_objects = selector.ChooseSelector(
+        {
+            "choices": {
+                "text_choice": {
+                    "selector": selector.TextSelector({"multiline": True}),
+                },
+                "number_choice": {
+                    "selector": selector.NumberSelector({"min": 0, "max": 100}),
                 },
                 "object_choice": {
                     "selector": selector.ObjectSelector(
@@ -997,36 +1019,7 @@ def test_choose_selector_serialize(snapshot: SnapshotAssertion) -> None:
                                     "selector": selector.NumberSelector({}),
                                 },
                                 "object": {
-                                    "selector": selector.ObjectSelector(
-                                        {
-                                            "fields": {
-                                                "choose": {
-                                                    "required": True,
-                                                    "selector": selector.ChooseSelector(
-                                                        {
-                                                            "choices": {
-                                                                "text_choice": {
-                                                                    "selector": selector.TextSelector(
-                                                                        {
-                                                                            "multiline": True
-                                                                        }
-                                                                    )
-                                                                },
-                                                                "number_choice": {
-                                                                    "selector": selector.NumberSelector(
-                                                                        {
-                                                                            "min": 0,
-                                                                            "max": 100,
-                                                                        }
-                                                                    )
-                                                                },
-                                                            }
-                                                        }
-                                                    ),
-                                                },
-                                            }
-                                        }
-                                    ),
+                                    "selector": nested_obj,
                                 },
                             },
                             "multiple": False,
@@ -1127,6 +1120,17 @@ def test_state_selector_schema(schema, valid_selections, invalid_selections) -> 
     [
         (None, ("/dev/ttyUSB0", "/dev/ttyACM1", "COM3"), (None, 1, True)),
         ({}, ("/dev/ttyUSB0",), (None,)),
+        (
+            {
+                "extra_recommended_domains": [
+                    "homeassistant_yellow",
+                    "homeassistant_sky_connect",
+                ]
+            },
+            ("/dev/ttyUSB0",),
+            (None,),
+        ),
+        ({"extra_recommended_domains": []}, ("/dev/ttyUSB0",), (None,)),
     ],
 )
 def test_serial_port_selector_schema(
@@ -1185,6 +1189,24 @@ def test_serial_port_selector_schema(
             (),
             (),
         ),
+        (
+            {"primary_entities_only": True},
+            (),
+            (),
+        ),
+        (
+            {"primary_entities_only": False},
+            (),
+            (),
+        ),
+        (
+            {
+                "entity": {"domain": "light"},
+                "primary_entities_only": True,
+            },
+            (),
+            (),
+        ),
     ],
 )
 def test_target_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -1199,6 +1221,46 @@ def test_target_selector_schema(schema, valid_selections, invalid_selections) ->
 def test_action_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test action sequence selector."""
     _test_selector("action", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            {"mode": "trigger"},
+            ("first", "all", "each"),
+            ("last", "any", "invalid", None),
+        ),
+        (
+            {"mode": "condition"},
+            ("all", "any"),
+            ("first", "each", "last", "invalid", None),
+        ),
+        (
+            {"mode": "trigger", "translation_key": "trigger_behavior"},
+            ("first", "all", "each"),
+            ("last", "any", "invalid", None),
+        ),
+    ],
+)
+def test_automation_behavior_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test automation behavior selector."""
+    _test_selector("automation_behavior", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        {},
+        {"mode": "invalid_mode"},
+    ],
+)
+def test_automation_behavior_selector_schema_error(schema) -> None:
+    """Test automation behavior selector config schema errors."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"automation_behavior": schema})
 
 
 @pytest.mark.parametrize(
@@ -1273,7 +1335,7 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections) ->
 
 
 def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
-    """Test ObjectSelector custom serializer for using Selector in ObjectSelectorField."""
+    """Test ObjectSelector serializer with Selector in ObjectSelectorField."""
 
     selector_type = "object"
     schema = {
@@ -1297,6 +1359,12 @@ def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
     config = {selector_type: schema}
     selector.validate_selector(config)
     selector_instance = selector.selector(config)
+    selector_instance(
+        [
+            {"name": "Test 1", "percentage": 50},
+            {"name": "Test 2", "percentage": 70},
+        ]
+    )
 
     # Serialize selector
     selector_instance = selector.selector({selector_type: schema})

@@ -1,8 +1,6 @@
 """Config flow for Lektrico Charging Station."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from lektricowifi import Device, DeviceConnectionError
 import voluptuous as vol
@@ -38,6 +36,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
     _board_revision: str
     _device_type: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -86,6 +85,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

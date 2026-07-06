@@ -1,7 +1,5 @@
 """The tests for the Recorder component."""
 
-from __future__ import annotations
-
 import logging
 import threading
 
@@ -50,7 +48,7 @@ async def test_passing_mutually_exclusive_options_to_get_many(
 async def test_unsafe_calls_to_statistics_meta_manager(
     async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:
-    """Test we raise when trying to call non-threadsafe functions on statistics_meta_manager."""
+    """Test we raise for non-threadsafe statistics_meta_manager calls."""
     instance = await async_setup_recorder_instance(
         hass, {recorder.CONF_COMMIT_INTERVAL: 0}
     )
@@ -140,5 +138,6 @@ async def test_invalid_mean_types(
         assert (
             "homeassistant.components.recorder.table_managers.statistics_meta",
             logging.WARNING,
-            "Invalid mean type found for statistic_id: sensor.invalid, mean_type: 12345. Skipping",
+            "Invalid mean type found for statistic_id:"
+            " sensor.invalid, mean_type: 12345. Skipping",
         ) in caplog.record_tuples

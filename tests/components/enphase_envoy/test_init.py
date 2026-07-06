@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from jwt import encode
@@ -13,8 +13,10 @@ import respx
 
 from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.components.enphase_envoy.const import (
+    OPERATIONAL_RETRY_TIMEOUT,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
     OPTION_DISABLE_KEEP_ALIVE,
+    SETUP_RETRY_TIMEOUT,
     Platform,
 )
 from homeassistant.components.enphase_envoy.coordinator import (
@@ -454,8 +456,8 @@ async def test_coordinator_firmware_refresh(
         await hass.async_block_till_done(wait_background_tasks=True)
 
         assert (
-            "Envoy firmware changed from: 7.6.175 to: 9.9.9999, reloading config entry Envoy 1234"
-            in caplog.text
+            "Envoy firmware changed from: 7.6.175 to: 9.9.9999,"
+            " reloading config entry Envoy 1234" in caplog.text
         )
         envoy = config_entry.runtime_data.envoy
         assert envoy.firmware == "9.9.9999"
@@ -581,7 +583,7 @@ async def test_coordinator_interface_information_mac_also_in_other_device(
     caplog: pytest.LogCaptureFixture,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test coordinator interface mac verification with MAC also in other existing device."""
+    """Test coordinator interface mac verification with other device."""
     await setup_integration(hass, config_entry)
 
     caplog.set_level(logging.DEBUG)
@@ -627,3 +629,42 @@ async def test_coordinator_interface_information_mac_also_in_other_device(
             "00:11:22:33:44:55",
         )
     }
+
+
+@pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
+async def test_retry_timeout_settings(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test coordinator with token provided from config."""
+    token = encode(
+        payload={"name": "envoy", "exp": 1907837780},
+        key="secret",
+        algorithm="HS256",
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="45a36e55aaddb2007c5f6602e0c38e72",
+        title="Envoy 1234",
+        unique_id="1234",
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Envoy 1234",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_TOKEN: token,
+        },
+    )
+    mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
+    await setup_integration(hass, entry)
+
+    assert (entity_state := hass.states.get("sensor.inverter_1"))
+    assert entity_state.state == "116"
+
+    assert mock_envoy.mock_calls[0] == call.set_retry_policy(
+        max_delay=SETUP_RETRY_TIMEOUT
+    )
+    assert mock_envoy.mock_calls[-1] == call.set_retry_policy(
+        max_delay=OPERATIONAL_RETRY_TIMEOUT
+    )

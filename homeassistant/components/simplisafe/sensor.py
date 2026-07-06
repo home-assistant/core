@@ -1,8 +1,6 @@
 """Support for SimpliSafe freeze sensor."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from simplipy.device import DeviceTypes
 from simplipy.device.sensor.v3 import SensorV3
@@ -41,7 +39,7 @@ async def async_setup_entry(
         sensors.extend(
             SimplisafeFreezeSensor(simplisafe, system, cast(SensorV3, sensor))
             for sensor in system.sensors.values()
-            if sensor.type == DeviceTypes.TEMPERATURE
+            if sensor.type is DeviceTypes.TEMPERATURE
         )
 
     async_add_entities(sensors)
@@ -63,6 +61,7 @@ class SimplisafeFreezeSensor(SimpliSafeEntity, SensorEntity):
         self._device: SensorV3
 
     @callback
+    @override
     def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
         self._attr_native_value = self._device.temperature

@@ -1,6 +1,6 @@
 """Tests for the Open-Meteo config flow."""
 
-from unittest.mock import MagicMock
+import pytest
 
 from homeassistant.components.open_meteo.const import DOMAIN
 from homeassistant.components.zone import ENTITY_ID_HOME
@@ -10,10 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_full_user_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_user_flow(hass: HomeAssistant) -> None:
     """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

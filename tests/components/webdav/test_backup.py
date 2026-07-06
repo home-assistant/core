@@ -1,7 +1,5 @@
 """Test the backups for WebDAV."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, AsyncIterator
 from copy import deepcopy
 from io import StringIO

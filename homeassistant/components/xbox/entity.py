@@ -1,18 +1,14 @@
 """Base Sensor for the Xbox Integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pythonxbox.api.provider.people.models import Person
 from pythonxbox.api.provider.smartglass.models import ConsoleType, SmartglassConsole
 from pythonxbox.api.provider.titlehub.models import Title
 from yarl import URL
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -42,7 +38,6 @@ class XboxBaseEntityDescription(EntityDescription):
     attributes_fn: Callable[[Person, Title | None], Mapping[str, Any] | None] | None = (
         None
     )
-    deprecated: bool | None = None
 
 
 class XboxBaseEntity(CoordinatorEntity[XboxPresenceCoordinator]):
@@ -83,6 +78,7 @@ class XboxBaseEntity(CoordinatorEntity[XboxPresenceCoordinator]):
         return self.coordinator.data.title_info.get(self.xuid)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture."""
 
@@ -95,6 +91,7 @@ class XboxBaseEntity(CoordinatorEntity[XboxPresenceCoordinator]):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, float | None] | None:
         """Return entity specific state attributes."""
         return (
@@ -104,6 +101,7 @@ class XboxBaseEntity(CoordinatorEntity[XboxPresenceCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
 
@@ -142,29 +140,10 @@ class XboxConsoleBaseEntity(CoordinatorEntity[XboxConsoleStatusCoordinator]):
         return self.coordinator.data[self._console.id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.data.get(self._console.id) is not None
-
-
-def check_deprecated_entity(
-    hass: HomeAssistant,
-    xuid: str,
-    entity_description: XboxBaseEntityDescription,
-    entity_domain: str,
-) -> bool:
-    """Check for deprecated entity and remove it."""
-    if not entity_description.deprecated:
-        return True
-    ent_reg = er.async_get(hass)
-    if entity_id := ent_reg.async_get_entity_id(
-        entity_domain,
-        DOMAIN,
-        f"{xuid}_{entity_description.key}",
-    ):
-        ent_reg.async_remove(entity_id)
-
-    return False
 
 
 def to_https(image_url: str) -> str:

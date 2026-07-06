@@ -1,7 +1,5 @@
 """Support to interact with a Music Player Daemon."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import asynccontextmanager, suppress
 from datetime import timedelta
@@ -9,7 +7,7 @@ import hashlib
 import logging
 import os
 from socket import gaierror
-from typing import Any
+from typing import Any, override
 
 import mpd
 from mpd.asyncio import MPDClient
@@ -192,6 +190,7 @@ class MpdDevice(MediaPlayerEntity):
                 LOGGER.debug("Error updating status: %s", error)
 
     @property
+    @override
     def state(self) -> MediaPlayerState:
         """Return the media state."""
         if not self._status:
@@ -206,11 +205,13 @@ class MpdDevice(MediaPlayerEntity):
         return MediaPlayerState.OFF
 
     @property
+    @override
     def media_content_id(self):
         """Return the content ID of current playing media."""
         return self._currentsong.get("file")
 
     @property
+    @override
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
         if currentsong_time := self._currentsong.get("time"):
@@ -223,6 +224,7 @@ class MpdDevice(MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_title(self):
         """Return the title of current playing media."""
         name = self._currentsong.get("name", None)
@@ -241,6 +243,7 @@ class MpdDevice(MediaPlayerEntity):
         return f"{name}: {title}"
 
     @property
+    @override
     def media_artist(self):
         """Return the artist of current playing media (Music track only)."""
         artists = self._currentsong.get("artist")
@@ -249,15 +252,18 @@ class MpdDevice(MediaPlayerEntity):
         return artists
 
     @property
+    @override
     def media_album_name(self):
         """Return the album of current playing media (Music track only)."""
         return self._currentsong.get("album")
 
     @property
+    @override
     def media_image_hash(self):
         """Hash value for media image."""
         return self._media_image_hash
 
+    @override
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch media image of current playing track."""
         async with self.connection():
@@ -294,8 +300,9 @@ class MpdDevice(MediaPlayerEntity):
                 bytes(response["binary"])
             ).hexdigest()[:16]
         else:
-            # If there is no image, this hash has to be None, else the media player component
-            # assumes there is an image and returns an error trying to load it and the
+            # If there is no image, this hash has to be None,
+            # else the media player component assumes there is an
+            # image and returns an error trying to load it and the
             # frontend media control card breaks.
             self._media_image_hash = None
 
@@ -324,7 +331,8 @@ class MpdDevice(MediaPlayerEntity):
                         error,
                     )
 
-        # read artwork contained in the media directory (cover.{jpg,png,tiff,bmp}) if none is embedded
+        # read artwork contained in the media directory
+        # (cover.{jpg,png,tiff,bmp}) if none is embedded
         if can_albumart and not response:
             try:
                 with suppress(mpd.ConnectionError):
@@ -343,6 +351,7 @@ class MpdDevice(MediaPlayerEntity):
         return response
 
     @property
+    @override
     def volume_level(self):
         """Return the volume level."""
         if "volume" in self._status:
@@ -350,6 +359,7 @@ class MpdDevice(MediaPlayerEntity):
         return None
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if not self._status:
@@ -368,10 +378,12 @@ class MpdDevice(MediaPlayerEntity):
         return supported
 
     @property
+    @override
     def source(self):
         """Name of the current input source."""
         return self._current_playlist
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Choose a different available playlist and play it."""
         await self.async_play_media(MediaType.PLAYLIST, source)
@@ -388,12 +400,14 @@ class MpdDevice(MediaPlayerEntity):
             self._attr_source_list = None
             LOGGER.warning("Playlists could not be updated: %s:", error)
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume of media player."""
         async with self.connection():
             if "volume" in self._status:
                 await self._client.setvol(int(volume * 100))
 
+    @override
     async def async_media_play(self) -> None:
         """Service to send the MPD the command for play/pause."""
         async with self.connection():
@@ -402,26 +416,31 @@ class MpdDevice(MediaPlayerEntity):
             else:
                 await self._client.play()
 
+    @override
     async def async_media_pause(self) -> None:
         """Service to send the MPD the command for play/pause."""
         async with self.connection():
             await self._client.pause(1)
 
+    @override
     async def async_media_stop(self) -> None:
         """Service to send the MPD the command for stop."""
         async with self.connection():
             await self._client.stop()
 
+    @override
     async def async_media_next_track(self) -> None:
         """Service to send the MPD the command for next track."""
         async with self.connection():
             await self._client.next()
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Service to send the MPD the command for previous track."""
         async with self.connection():
             await self._client.previous()
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute. Emulated with set_volume_level."""
         if "volume" in self._status:
@@ -432,6 +451,7 @@ class MpdDevice(MediaPlayerEntity):
                 await self.async_set_volume_level(self._muted_volume)
             self._attr_is_volume_muted = mute
 
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -461,6 +481,7 @@ class MpdDevice(MediaPlayerEntity):
                 await self._client.play()
 
     @property
+    @override
     def repeat(self) -> RepeatMode:
         """Return current repeat mode."""
         if self._status.get("repeat") == "1":
@@ -469,6 +490,7 @@ class MpdDevice(MediaPlayerEntity):
             return RepeatMode.ALL
         return RepeatMode.OFF
 
+    @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         async with self.connection():
@@ -483,36 +505,43 @@ class MpdDevice(MediaPlayerEntity):
                     await self._client.single(0)
 
     @property
+    @override
     def shuffle(self):
         """Boolean if shuffle is enabled."""
         return bool(int(self._status.get("random")))
 
+    @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         async with self.connection():
             await self._client.random(int(shuffle))
 
+    @override
     async def async_turn_off(self) -> None:
         """Service to send the MPD the command to stop playing."""
         async with self.connection():
             await self._client.stop()
 
+    @override
     async def async_turn_on(self) -> None:
         """Service to send the MPD the command to start playing."""
         async with self.connection():
             await self._client.play()
             await self._update_playlists(no_throttle=True)
 
+    @override
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         async with self.connection():
             await self._client.clear()
 
+    @override
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         async with self.connection():
             await self._client.seekcur(position)
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,

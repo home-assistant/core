@@ -1,0 +1,68 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The entered API key corresponds to a different account."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::aqvify::config::step::user::data_description::api_key%]"
+        },
+        "description": "Reauthentication required. Please enter your updated API key."
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your Aqvify API key"
+        },
+        "description": "Navigate to your [Aqvify account]({aqvify_url}), copy your API key, and paste it below."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "available_volume": {
+        "name": "Available volume"
+      },
+      "ground_water_level": {
+        "name": "Ground water level"
+      },
+      "in_flow": {
+        "name": "Inflow"
+      },
+      "level_from_sensor": {
+        "name": "Level from sensor"
+      },
+      "level_from_top": {
+        "name": "Level from top"
+      },
+      "out_volume": {
+        "name": "Outflow"
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "An error occurred while communicating with the Aqvify API for {entry}"
+    },
+    "api_timeout": {
+      "message": "Timeout occurred while communicating with the Aqvify API for {entry}"
+    },
+    "invalid_api_key": {
+      "message": "Invalid API key. Please verify your API key and try to reauthenticate."
+    }
+  }
+}

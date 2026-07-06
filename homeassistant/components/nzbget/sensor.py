@@ -1,9 +1,8 @@
 """Monitor the NZBGet API."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -124,6 +123,7 @@ class NZBGetSensor(NZBGetEntity, SensorEntity):
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         sensor_type = self.entity_description.key

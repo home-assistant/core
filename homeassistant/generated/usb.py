@@ -59,16 +59,6 @@ USB = [
         "vid": "04B4",
     },
     {
-        "domain": "teleinfo",
-        "pid": "6015",
-        "vid": "0403",
-    },
-    {
-        "domain": "teleinfo",
-        "pid": "EA60",
-        "vid": "10C4",
-    },
-    {
         "domain": "velbus",
         "pid": "0B1B",
         "vid": "10CF",

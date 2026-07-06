@@ -1,7 +1,5 @@
 """Diagnostics support for Miele."""
 
-from __future__ import annotations
-
 import hashlib
 from typing import Any, cast
 
@@ -38,19 +36,25 @@ async def async_get_config_entry_diagnostics(
         "devices": redact_identifiers(
             {
                 device_id: device_data.raw
-                for device_id, device_data in config_entry.runtime_data.coordinator.data.devices.items()
+                for device_id, device_data in (
+                    config_entry.runtime_data.coordinator.data.devices.items()
+                )
             }
         ),
         "filling_levels": redact_identifiers(
             {
                 device_id: filling_level_data.raw
-                for device_id, filling_level_data in config_entry.runtime_data.aux_coordinator.data.filling_levels.items()
+                for device_id, filling_level_data in (
+                    config_entry.runtime_data.aux_coordinator.data.filling_levels.items()
+                )
             }
         ),
         "actions": redact_identifiers(
             {
                 device_id: action_data.raw
-                for device_id, action_data in config_entry.runtime_data.coordinator.data.actions.items()
+                for device_id, action_data in (
+                    config_entry.runtime_data.coordinator.data.actions.items()
+                )
             }
         ),
     }

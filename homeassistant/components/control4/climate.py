@@ -1,10 +1,8 @@
 """Platform for Control4 Climate/Thermostat."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyControl4.climate import C4Climate
 from pyControl4.error_handling import C4Exception
@@ -197,6 +195,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._thermostat_data is not None
@@ -204,7 +203,8 @@ class Control4Climate(Control4Entity, ClimateEntity):
     def _create_api_object(self) -> C4Climate:
         """Create a pyControl4 device object.
 
-        This exists so the director token used is always the latest one, without needing to re-init the entire entity.
+        This exists so the director token used is always the
+        latest one, without needing to re-init the entire entity.
         """
         return C4Climate(self.runtime_data.director, self._idx)
 
@@ -214,6 +214,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         return self.coordinator.data.get(self._idx)
 
     @property
+    @override
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = (
@@ -227,6 +228,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         return features
 
     @property
+    @override
     def temperature_unit(self) -> str:
         """Return the temperature unit based on the thermostat's SCALE setting."""
         data = self._thermostat_data
@@ -257,6 +259,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         return data.get(CONTROL4_HEAT_SETPOINT_F)
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         data = self._thermostat_data
@@ -267,15 +270,20 @@ class Control4Climate(Control4Entity, ClimateEntity):
         return data.get(CONTROL4_CURRENT_TEMPERATURE_F)
 
     @property
+    @override
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         data = self._thermostat_data
         if data is None:
             return None
         humidity = data.get(CONTROL4_HUMIDITY)
-        return int(humidity) if humidity is not None else None
+        try:
+            return int(humidity) if humidity is not None else None
+        except ValueError, TypeError:
+            return None
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return current HVAC mode."""
         data = self._thermostat_data
@@ -285,6 +293,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         return C4_TO_HA_HVAC_MODE.get(c4_mode, HVACMode.OFF)
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return current HVAC action."""
         data = self._thermostat_data
@@ -306,6 +315,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         return action
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
         hvac_mode = self.hvac_mode
@@ -316,6 +326,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature_high(self) -> float | None:
         """Return the high target temperature for auto mode."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
@@ -323,6 +334,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature_low(self) -> float | None:
         """Return the low target temperature for auto mode."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
@@ -330,6 +342,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         return None
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
         data = self._thermostat_data
@@ -341,6 +354,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         return c4_fan_mode.lower()
 
     @property
+    @override
     def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes."""
         data = self._thermostat_data
@@ -351,6 +365,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
             return None
         return [m.strip().lower() for m in modes.split(",") if m.strip()]
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode."""
         c4_hvac_mode = HA_TO_C4_HVAC_MODE[hvac_mode]
@@ -358,6 +373,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         await c4_climate.setHvacMode(c4_hvac_mode)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         c4_climate = self._create_api_object()
@@ -392,6 +408,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
 
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         c4_climate = self._create_api_object()

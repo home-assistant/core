@@ -1,7 +1,5 @@
 """Support for Amcrest IP cameras."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager, suppress
@@ -9,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import threading
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from amcrest import AmcrestError, ApiWrapper, LoginError
@@ -39,7 +37,6 @@ from homeassistant.helpers.typing import ConfigType
 from .binary_sensor import BINARY_SENSOR_KEYS, BINARY_SENSORS, check_binary_sensors
 from .camera import STREAM_SOURCE_LIST
 from .const import (
-    CAMERAS,
     COMM_RETRIES,
     COMM_TIMEOUT,
     DATA_AMCREST,
@@ -181,6 +178,7 @@ class AmcrestChecker(ApiWrapper):
             self._hass, self._wrap_test_online, RECHECK_INTERVAL
         )
 
+    @override
     def command(self, *args: Any, **kwargs: Any) -> Any:
         """amcrest.ApiWrapper.command wrapper to catch errors."""
         try:
@@ -194,12 +192,14 @@ class AmcrestChecker(ApiWrapper):
         self._set_online()
         return ret
 
+    @override
     async def async_command(self, *args: Any, **kwargs: Any) -> httpx.Response:
         """amcrest.ApiWrapper.command wrapper to catch errors."""
         async with self._async_command_wrapper():
             return await super().async_command(*args, **kwargs)
 
     @asynccontextmanager
+    @override
     async def async_stream_command(
         self, *args: Any, **kwargs: Any
     ) -> AsyncGenerator[httpx.Response]:
@@ -359,7 +359,7 @@ def _start_event_monitor(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Amcrest IP Camera component."""
-    hass.data.setdefault(DATA_AMCREST, {DEVICES: {}, CAMERAS: []})
+    hass.data.setdefault(DATA_AMCREST, {DEVICES: {}})
 
     for device in config[DOMAIN]:
         name: str = device[CONF_NAME]

@@ -1,7 +1,5 @@
 """Support for ThermoBeacon devices."""
 
-from __future__ import annotations
-
 from thermobeacon_ble import DeviceKey
 
 from homeassistant.components.bluetooth.passive_update_processor import (

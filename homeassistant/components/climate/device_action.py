@@ -1,7 +1,5 @@
 """Provides device automations for Climate."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.device_automation import (
@@ -112,7 +110,12 @@ async def async_get_action_capabilities(
         try:
             entry = async_get_entity_registry_entry_or_raise(hass, entity_id_or_uuid)
             hvac_modes = (
-                get_capability(hass, entry.entity_id, const.ATTR_HVAC_MODES) or []
+                get_capability(
+                    hass,
+                    entry.entity_id,
+                    const.ClimateEntityCapabilityAttribute.HVAC_MODES,
+                )
+                or []
             )
         except HomeAssistantError:
             hvac_modes = []
@@ -121,7 +124,12 @@ async def async_get_action_capabilities(
         try:
             entry = async_get_entity_registry_entry_or_raise(hass, entity_id_or_uuid)
             preset_modes = (
-                get_capability(hass, entry.entity_id, const.ATTR_PRESET_MODES) or []
+                get_capability(
+                    hass,
+                    entry.entity_id,
+                    const.ClimateEntityCapabilityAttribute.PRESET_MODES,
+                )
+                or []
             )
         except HomeAssistantError:
             preset_modes = []

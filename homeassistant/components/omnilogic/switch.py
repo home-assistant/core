@@ -1,7 +1,7 @@
 """Platform for Omnilogic switch integration."""
 
 import time
-from typing import Any
+from typing import Any, override
 
 from omnilogic import OmniLogicException
 import voluptuous as vol
@@ -94,6 +94,7 @@ class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
         self._state_delay = 30
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the on/off state of the switch."""
         state_int = 0
@@ -116,6 +117,7 @@ class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
 class OmniLogicRelayControl(OmniLogicSwitch):
     """Define the OmniLogic Relay entity."""
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the relay."""
         self._state = True
@@ -129,6 +131,7 @@ class OmniLogicRelayControl(OmniLogicSwitch):
             1,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the relay."""
         self._state = False
@@ -175,6 +178,7 @@ class OmniLogicPumpControl(OmniLogicSwitch):
 
         self._last_speed = None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the pump."""
         self._state = True
@@ -193,6 +197,7 @@ class OmniLogicPumpControl(OmniLogicSwitch):
             on_value,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the pump."""
         self._state = False

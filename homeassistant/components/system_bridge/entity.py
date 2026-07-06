@@ -1,5 +1,7 @@
 """Base entity for the system bridge integration."""
 
+from typing import override
+
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -17,13 +19,13 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         self,
         coordinator: SystemBridgeDataUpdateCoordinator,
         api_port: int,
-        key: str,
+        key: str | None = None,
     ) -> None:
         """Initialize the System Bridge entity."""
         super().__init__(coordinator)
 
         self._hostname = coordinator.data.system.hostname
-        self._key = f"{self._hostname}_{key}"
+        self._key = f"{self._hostname}_{key}" if key is not None else self._hostname
         self._configuration_url = (
             f"http://{self._hostname}:{api_port}/app/settings.html"
         )
@@ -32,11 +34,13 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         self._version = coordinator.data.system.version
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
         return self._key
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this System Bridge instance."""
         return DeviceInfo(

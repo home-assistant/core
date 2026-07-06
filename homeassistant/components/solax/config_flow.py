@@ -1,9 +1,7 @@
 """Config flow for solax integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from solax import real_time_api
 from solax.discovery import DiscoveryError
@@ -42,6 +40,7 @@ async def validate_api(data) -> str:
 class SolaxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Solax."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,9 +1,7 @@
 """Support for ISY binary sensors."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, override
 
 from pyisy.constants import (
     CMD_OFF,
@@ -254,6 +252,7 @@ class ISYBinarySensorEntity(ISYNodeEntity, BinarySensorEntity):
         self._attr_device_class = force_device_class
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Get whether the ISY binary sensor device is on."""
         if self._node.status == ISY_VALUE_UNKNOWN:
@@ -288,6 +287,7 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
             self._computed_state = bool(self._node.status)
             self._status_was_unknown = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node and subnode event emitters."""
         await super().async_added_to_hass()
@@ -371,6 +371,7 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
             self._async_heartbeat()
 
     @callback
+    @override
     def async_on_update(self, event: NodeProperty) -> None:
         """Primary node status updates.
 
@@ -388,6 +389,7 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
             self._async_heartbeat()
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Get whether the ISY binary sensor device is on.
 
@@ -441,6 +443,7 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
         if self.state is None:
             self._computed_state = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node and subnode event emitters."""
         await super().async_added_to_hass()
@@ -494,6 +497,7 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
         )
 
     @callback
+    @override
     def async_on_update(self, event: object) -> None:
         """Ignore node status updates.
 
@@ -501,6 +505,7 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
         """
 
     @property
+    @override
     def is_on(self) -> bool:
         """Get whether the ISY binary sensor device is on.
 
@@ -511,6 +516,7 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
         return bool(self._computed_state)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Get the state attributes for the device."""
         attr = super().extra_state_attributes
@@ -526,6 +532,7 @@ class ISYBinarySensorProgramEntity(ISYProgramEntity, BinarySensorEntity):
     """
 
     @property
+    @override
     def is_on(self) -> bool:
         """Get whether the ISY binary sensor device is on."""
         return bool(self._node.status)

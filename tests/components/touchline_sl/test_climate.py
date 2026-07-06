@@ -14,7 +14,7 @@ from .conftest import make_mock_module, make_mock_zone
 
 from tests.common import MockConfigEntry
 
-ENTITY_ID = "climate.zone_1"
+ENTITY_ID = "climate.zone_1_zone_1"
 
 
 async def test_climate_zone_available(

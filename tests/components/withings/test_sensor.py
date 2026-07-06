@@ -26,7 +26,7 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-@pytest.mark.freeze_time("2023-10-21")
+@pytest.mark.freeze_time("2023-10-21 12:00:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
@@ -160,7 +160,7 @@ async def test_activity_sensors_unknown_next_day(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test activity sensors will return unknown the next day."""
-    freezer.move_to("2023-10-21")
+    freezer.move_to("2023-10-21 12:00:00")
     await setup_integration(hass, polling_config_entry, False)
 
     assert hass.states.get("sensor.henk_steps_today")
@@ -181,7 +181,7 @@ async def test_activity_sensors_same_result_same_day(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test activity sensors will return the same result if old data is updated."""
-    freezer.move_to("2023-10-21")
+    freezer.move_to("2023-10-21 12:00:00")
     await setup_integration(hass, polling_config_entry, False)
 
     assert hass.states.get("sensor.henk_steps_today").state == "1155"
@@ -202,7 +202,7 @@ async def test_activity_sensors_created_when_existed(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test activity sensors will be added if they existed before."""
-    freezer.move_to("2023-10-21")
+    freezer.move_to("2023-10-21 12:00:00")
     await setup_integration(hass, polling_config_entry, False)
 
     assert hass.states.get("sensor.henk_steps_today")
@@ -223,7 +223,7 @@ async def test_activity_sensors_created_when_receive_activity_data(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test activity sensors will be added if we receive activity data."""
-    freezer.move_to("2023-10-21")
+    freezer.move_to("2023-10-21 12:00:00")
     withings.get_activities_in_period.return_value = []
     await setup_integration(hass, polling_config_entry, False)
 
@@ -242,6 +242,22 @@ async def test_activity_sensors_created_when_receive_activity_data(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.henk_steps_today")
+
+
+async def test_activity_sensors_respect_timezone(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test activity sensors use HA timezone instead of system timezone."""
+    await hass.config.async_set_time_zone("Asia/Tokyo")
+    freezer.move_to("2023-10-20T20:00:00+00:00")
+    await setup_integration(hass, polling_config_entry, False)
+
+    state = hass.states.get("sensor.henk_steps_today")
+    assert state is not None
+    assert state.state == "1155"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

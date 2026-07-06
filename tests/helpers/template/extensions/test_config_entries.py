@@ -1,7 +1,5 @@
 """Test config entry functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import json
 import logging
@@ -112,24 +110,37 @@ async def test_config_entry_id(
 
 async def test_config_entry_attr(hass: HomeAssistant) -> None:
     """Test config entry attr."""
-    info = {
+    config_entry = MockConfigEntry(
+        domain="mock_light",
+        title="mock title",
+        source=config_entries.SOURCE_BLUETOOTH,
+        disabled_by=config_entries.ConfigEntryDisabler.USER,
+        pref_disable_polling=True,
+    )
+    config_entry.add_to_hass(hass)
+
+    expected = {
         "domain": "mock_light",
         "title": "mock title",
         "source": config_entries.SOURCE_BLUETOOTH,
-        "disabled_by": config_entries.ConfigEntryDisabler.USER,
-        "pref_disable_polling": True,
+        "disabled_by": "user",
+        "pref_disable_polling": "True",
+        "state": "not_loaded",
     }
-    config_entry = MockConfigEntry(**info)
-    config_entry.add_to_hass(hass)
 
-    info["state"] = config_entries.ConfigEntryState.NOT_LOADED
-
-    for key, value in info.items():
-        assert render(
-            hass,
-            "{{ config_entry_attr('" + config_entry.entry_id + "', '" + key + "') }}",
-            parse_result=False,
-        ) == str(value)
+    for key, value in expected.items():
+        assert (
+            render(
+                hass,
+                "{{ config_entry_attr('"
+                + config_entry.entry_id
+                + "', '"
+                + key
+                + "') }}",
+                parse_result=False,
+            )
+            == value
+        )
 
     for config_entry_id, key in (
         (config_entry.entry_id, "invalid_key"),

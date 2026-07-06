@@ -12,6 +12,7 @@ get_prices_for_date:
     areas:
       selector:
         select:
+          multiple: true
           options:
             - "EE"
             - "LT"
@@ -34,6 +35,8 @@ get_prices_for_date:
             - "SE2"
             - "SE3"
             - "SE4"
+            - "BG"
+            - "TEL"
             - "SYS"
           mode: dropdown
     currency:
@@ -60,6 +63,7 @@ get_price_indices_for_date:
     areas:
       selector:
         select:
+          multiple: true
           options:
             - "EE"
             - "LT"
@@ -82,6 +86,8 @@ get_price_indices_for_date:
             - "SE2"
             - "SE3"
             - "SE4"
+            - "BG"
+            - "TEL"
             - "SYS"
           mode: dropdown
     currency:

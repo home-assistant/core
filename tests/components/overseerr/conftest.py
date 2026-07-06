@@ -84,7 +84,8 @@ def mock_overseerr_client_cloudhook(
     mock_overseerr_client: AsyncMock,
 ) -> Generator[AsyncMock]:
     """Mock an Overseerr client."""
-    mock_overseerr_client.get_webhook_notification_config.return_value.options.webhook_url = "https://hooks.nabu.casa/ABCD"
+    webhook_config = mock_overseerr_client.get_webhook_notification_config
+    webhook_config.return_value.options.webhook_url = "https://hooks.nabu.casa/ABCD"
     return mock_overseerr_client
 
 

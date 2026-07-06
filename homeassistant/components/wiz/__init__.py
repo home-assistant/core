@@ -1,12 +1,9 @@
 """WiZ Platform integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
 from pywizlight import PilotParser, wizlight
-from pywizlight.bulb import PIR_SOURCE
 
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
@@ -20,6 +17,7 @@ from .const import (
     DISCOVER_SCAN_TIMEOUT,
     DISCOVERY_INTERVAL,
     DOMAIN,
+    OCCUPANCY_SOURCES,
     SIGNAL_WIZ_PIR,
     WIZ_CONNECT_EXCEPTIONS,
 )
@@ -101,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WizConfigEntry) -> bool:
         """Receive a push update."""
         _LOGGER.debug("%s: Got push update: %s", bulb.mac, state.pilotResult)
         coordinator.async_set_updated_data(coordinator.data)
-        if state.get_source() == PIR_SOURCE:
+        if state.get_source() in OCCUPANCY_SOURCES:
             async_dispatcher_send(hass, SIGNAL_WIZ_PIR.format(bulb.mac))
 
     await bulb.start_push(_async_push_update)

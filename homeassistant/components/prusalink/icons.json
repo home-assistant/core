@@ -1,8 +1,22 @@
 {
   "entity": {
+    "binary_sensor": {
+      "farm_mode": {
+        "default": "mdi:server-network"
+      },
+      "mmu": {
+        "default": "mdi:printer-3d-nozzle-alert"
+      },
+      "sd_ready": {
+        "default": "mdi:micro-sd"
+      }
+    },
     "button": {
       "cancel_job": {
         "default": "mdi:cancel"
+      },
+      "continue_job": {
+        "default": "mdi:play-circle"
       },
       "pause_job": {
         "default": "mdi:pause"

@@ -1,8 +1,7 @@
 """Number platform for Plugwise integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -105,11 +104,13 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
         self._attr_native_step = native_step
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the present setpoint value."""
         return self.device[self.entity_description.key]["setpoint"]
 
     @plugwise_command
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change to the new setpoint value."""
         await self.coordinator.api.set_number(

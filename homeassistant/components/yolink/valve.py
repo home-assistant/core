@@ -1,10 +1,8 @@
 """YoLink Valve."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from yolink.client_request import ClientRequest
 from yolink.const import (
@@ -148,6 +146,7 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
         )
 
     @callback
+    @override
     def update_entity_state(self, state: dict[str, str | list[str]]) -> None:
         """Update HA Entity State."""
         if (
@@ -196,15 +195,18 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
         self._attr_is_closed = state == "close"
         self.async_write_ha_state()
 
+    @override
     async def async_open_valve(self) -> None:
         """Open the valve."""
         await self._async_invoke_device("open")
 
+    @override
     async def async_close_valve(self) -> None:
         """Close valve."""
         await self._async_invoke_device("close")
 
     @property
+    @override
     def available(self) -> bool:
         """Return true is device is available."""
         return self._attr_available and super().available

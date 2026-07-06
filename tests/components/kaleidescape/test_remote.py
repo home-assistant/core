@@ -15,7 +15,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import MOCK_SERIAL
 
-ENTITY_ID = f"remote.kaleidescape_device_{MOCK_SERIAL}"
+ENTITY_ID = f"remote.theater_kaleidescape_device_{MOCK_SERIAL}"
 
 
 @pytest.mark.usefixtures("mock_device", "mock_integration")

@@ -110,7 +110,7 @@ async def test_step_user_form_invalid_key(
 
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
         assert mock_setup_entry.call_count == 0
 
         result = await hass.config_entries.flow.async_configure(

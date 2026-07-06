@@ -1,7 +1,7 @@
 """Config flow for Kostal Plenticore Solar Inverter integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp.client_exceptions import ClientError
 from pykoplenti import ApiClient, AuthenticationException
@@ -48,6 +48,7 @@ class KostalPlenticoreConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

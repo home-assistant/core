@@ -1,0 +1,90 @@
+# serializer version: 1
+# name: test_get_forecast_service
+  dict({
+    'forecast_time': datetime.datetime(2026, 5, 18, 19, 0, tzinfo=datetime.timezone.utc),
+    'indexes': IndexList([
+      dict({
+        'aqi': 72,
+        'aqi_display': '72',
+        'category': 'good_air_quality',
+        'code': 'uaqi',
+        'color': dict({
+          'blue': 0.2,
+          'green': 0.79607844,
+          'red': 0.48235294,
+        }),
+        'display_name': 'Universal AQI',
+        'dominant_pollutant': 'o3',
+      }),
+      dict({
+        'aqi': None,
+        'aqi_display': None,
+        'category': 'good_air_quality',
+        'code': 'deu_uba',
+        'color': dict({
+          'blue': 0.6666667,
+          'green': 0.8039216,
+          'red': 0.3137255,
+        }),
+        'display_name': 'LQI (DE)',
+        'dominant_pollutant': 'o3',
+      }),
+    ]),
+    'pollutants': PollutantList([
+      dict({
+        'code': 'co',
+        'concentration': dict({
+          'units': 'ppb',
+          'value': 162.82,
+        }),
+        'display_name': 'CO',
+        'full_name': 'Carbon monoxide',
+      }),
+      dict({
+        'code': 'no2',
+        'concentration': dict({
+          'units': 'ppb',
+          'value': 6.42,
+        }),
+        'display_name': 'NO2',
+        'full_name': 'Nitrogen dioxide',
+      }),
+      dict({
+        'code': 'o3',
+        'concentration': dict({
+          'units': 'ppb',
+          'value': 33.82,
+        }),
+        'display_name': 'O3',
+        'full_name': 'Ozone',
+      }),
+      dict({
+        'code': 'pm10',
+        'concentration': dict({
+          'units': 'µg/m³',
+          'value': 8.6,
+        }),
+        'display_name': 'PM10',
+        'full_name': 'Inhalable particulate matter (<10µm)',
+      }),
+      dict({
+        'code': 'pm25',
+        'concentration': dict({
+          'units': 'µg/m³',
+          'value': 5.17,
+        }),
+        'display_name': 'PM2.5',
+        'full_name': 'Fine particulate matter (<2.5µm)',
+      }),
+      dict({
+        'code': 'so2',
+        'concentration': dict({
+          'units': 'ppb',
+          'value': 0.36,
+        }),
+        'display_name': 'SO2',
+        'full_name': 'Sulfur dioxide',
+      }),
+    ]),
+  })
+# ---

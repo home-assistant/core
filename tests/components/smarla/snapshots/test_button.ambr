@@ -39,7 +39,7 @@
 # name: test_entities[button.smarla_send_diagnostics-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Smarla Send diagnostics',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smarla Send diagnostics',
     }),
     'context': <ANY>,
     'entity_id': 'button.smarla_send_diagnostics',

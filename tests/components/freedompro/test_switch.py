@@ -14,7 +14,10 @@ from .conftest import get_states_response_for_uid
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-uid = "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*1JKU1MVWHQL-Z9SCUS85VFXMRGNDCDNDDUVVDKBU31W"
+uid = (
+    "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU"
+    "-LQ*1JKU1MVWHQL-Z9SCUS85VFXMRGNDCDNDDUVVDKBU31W"
+)
 
 
 async def test_switch_get_state(

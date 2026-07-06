@@ -1,11 +1,9 @@
 """Support for monitoring the qBittorrent API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -271,6 +269,7 @@ class QBittorrentSensor(CoordinatorEntity[QBittorrentDataCoordinator], SensorEnt
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value of the sensor."""
         return self.entity_description.value_fn(self.coordinator)

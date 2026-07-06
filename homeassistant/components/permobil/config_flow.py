@@ -1,10 +1,8 @@
 """Config flow for MyPermobil integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from mypermobil import (
     MyPermobil,
@@ -53,6 +51,7 @@ class PermobilConfigFlow(ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(hass)
         self.p_api = MyPermobil(APPLICATION, session=session)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

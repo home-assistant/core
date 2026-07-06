@@ -1,8 +1,6 @@
 """Config flow to configure the WLED integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from wled import WLED, Device, WLEDConnectionError, WLEDUnsupportedVersionError
@@ -44,12 +42,14 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: WLEDConfigEntry,
     ) -> WLEDOptionsFlowHandler:
         """Get the options flow for this handler."""
         return WLEDOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -105,6 +105,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle reconfigure flow for WLED entry."""
         return await self.async_step_user(user_input)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

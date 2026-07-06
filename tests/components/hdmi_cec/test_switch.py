@@ -1,6 +1,13 @@
 """Tests for the HDMI-CEC switch platform."""
 
-from pycec.const import POWER_OFF, POWER_ON, STATUS_PLAY, STATUS_STILL, STATUS_STOP
+from pycec.const import (
+    CMD_STANDBY,
+    POWER_OFF,
+    POWER_ON,
+    STATUS_PLAY,
+    STATUS_STILL,
+    STATUS_STOP,
+)
 from pycec.network import PhysicalAddress
 import pytest
 
@@ -16,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import MockHDMIDevice
+from . import MockHDMIDevice, assert_cec_command
 from .conftest import CecEntityCreator, HDMINetworkCreator
 
 
@@ -107,7 +114,12 @@ async def test_service_off(
         blocking=True,
     )
 
-    mock_hdmi_device.turn_off.assert_called_once_with()
+    mock_hdmi_device.turn_off.assert_not_called()
+    assert_cec_command(
+        mock_hdmi_device.send_command,
+        cmd=CMD_STANDBY,
+        dst=mock_hdmi_device.logical_address,
+    )
 
     state = hass.states.get("switch.hdmi_3")
     assert state.state == STATE_OFF
@@ -145,7 +157,10 @@ async def test_device_status_change(
     state = hass.states.get("switch.hdmi_3")
     if power_status in (POWER_ON, 4) and status is not None:
         pytest.xfail(
-            reason="`CecSwitchEntity.is_on` returns `False` here instead of `true` as expected."
+            reason=(
+                "`CecSwitchEntity.is_on` returns `False` here"
+                " instead of `true` as expected."
+            )
         )
     assert state.state == expected_state
 
@@ -190,7 +205,10 @@ async def test_friendly_name(
             {},
             {},
             marks=pytest.mark.xfail(
-                reason="physical address logic returns a string 'None' instead of not being set."
+                reason=(
+                    "physical address logic returns a string"
+                    " 'None' instead of not being set."
+                )
             ),
         ),
         (

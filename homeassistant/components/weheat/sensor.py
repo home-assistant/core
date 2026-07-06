@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from weheat.abstractions.heat_pump import HeatPump
 
@@ -372,6 +373,7 @@ class WeheatHeatPumpSensor(WeheatEntity, SensorEntity):
         self._attr_unique_id = f"{heat_pump_info.heatpump_id}_{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

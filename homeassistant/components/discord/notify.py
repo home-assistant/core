@@ -1,11 +1,9 @@
 """Discord platform for notify component."""
 
-from __future__ import annotations
-
 from io import BytesIO
 import logging
 import os.path
-from typing import Any, cast
+from typing import Any, cast, override
 
 import aiohttp
 import nextcord
@@ -115,6 +113,7 @@ class DiscordNotificationService(BaseNotificationService):
 
             return byte_chunks
 
+    @override
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Login to Discord, send message to channel(s) and log out."""
         nextcord.VoiceClient.warn_nacl = False
@@ -195,6 +194,7 @@ class DiscordNotificationService(BaseNotificationService):
                         _LOGGER.warning("Channel not found for ID: %s", channelid)
                         continue
                 await channel.send(message, files=files, embeds=embeds)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except (nextcord.HTTPException, nextcord.NotFound) as error:
             _LOGGER.warning("Communication error: %s", error)
         await discord_bot.close()

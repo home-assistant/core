@@ -1,8 +1,7 @@
 """Support for Balboa events."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
+from typing import override
 
 from pybalboa import EVENT_UPDATE, SpaClient
 
@@ -74,6 +73,7 @@ class BalboaEventEntity(BalboaEntity, EventEntity):
             )
             self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()

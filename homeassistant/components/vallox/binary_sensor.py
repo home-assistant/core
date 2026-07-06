@@ -1,8 +1,7 @@
 """Support for Vallox ventilation unit binary sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -36,6 +35,7 @@ class ValloxBinarySensorEntity(ValloxEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self._device_uuid}-{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.coordinator.data.get(self.entity_description.metric_key) == 1

@@ -1,7 +1,7 @@
 """Cover Platform for the Somfy MyLink component."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.cover import CoverDeviceClass, CoverEntity, CoverState
 from homeassistant.core import HomeAssistant
@@ -82,6 +82,7 @@ class SomfyShade(RestoreEntity, CoverEntity):
             name=name,
         )
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         self._attr_is_closing = True
@@ -97,6 +98,7 @@ class SomfyShade(RestoreEntity, CoverEntity):
             self._attr_is_closing = None
             self.async_write_ha_state()
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self._attr_is_opening = True
@@ -112,10 +114,12 @@ class SomfyShade(RestoreEntity, CoverEntity):
             self._attr_is_opening = None
             self.async_write_ha_state()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.somfy_mylink.move_stop(self._target_id)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Complete the initialization."""
         await super().async_added_to_hass()

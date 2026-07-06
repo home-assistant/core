@@ -41,7 +41,7 @@
     'attributes': ReadOnlyDict({
       'end_time': datetime.datetime(2018, 7, 30, 16, 47, 49, 750000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
       'end_uv': 3.6483,
-      'friendly_name': 'OpenUV Protection window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenUV Protection window',
       'start_time': datetime.datetime(2018, 7, 30, 9, 17, 49, 750000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
       'start_uv': 3.2509,
     }),
@@ -58,7 +58,7 @@
     'attributes': ReadOnlyDict({
       'end_time': datetime.datetime(2018, 7, 30, 16, 47, 49, 750000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
       'end_uv': 3.6483,
-      'friendly_name': 'OpenUV Protection window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenUV Protection window',
       'start_time': datetime.datetime(2018, 7, 30, 9, 17, 49, 750000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
       'start_uv': 3.2509,
     }),
@@ -75,7 +75,7 @@
     'attributes': ReadOnlyDict({
       'end_time': datetime.datetime(2018, 7, 30, 16, 47, 49, 750000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
       'end_uv': 3.6483,
-      'friendly_name': 'OpenUV Protection window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenUV Protection window',
       'start_time': datetime.datetime(2018, 7, 30, 9, 17, 49, 750000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
       'start_uv': 3.2509,
     }),
@@ -92,7 +92,7 @@
     'attributes': ReadOnlyDict({
       'end_time': datetime.datetime(2018, 7, 30, 16, 47, 49, 750000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
       'end_uv': 3.6483,
-      'friendly_name': 'OpenUV Protection window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenUV Protection window',
       'start_time': datetime.datetime(2018, 7, 30, 9, 17, 49, 750000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
       'start_uv': 3.2509,
     }),

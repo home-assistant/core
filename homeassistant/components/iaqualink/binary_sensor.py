@@ -1,6 +1,6 @@
 """Support for Aqualink temperature sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from iaqualink.device import AqualinkBinarySensor
 
@@ -46,6 +46,7 @@ class HassAqualinkBinarySensor(
             self._attr_device_class = BinarySensorDeviceClass.COLD
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the binary sensor is on or not."""
         return self.dev.is_on

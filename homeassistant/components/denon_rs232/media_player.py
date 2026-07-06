@@ -1,8 +1,6 @@
-"""Media player platform for the Denon RS232 integration."""
+"""Media player platform for the Denon RS-232 integration."""
 
-from __future__ import annotations
-
-from typing import Literal, cast
+from typing import Literal, cast, override
 
 from denon_rs232 import (
     MIN_VOLUME_DB,
@@ -79,7 +77,7 @@ async def async_setup_entry(
     config_entry: DenonRS232ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Denon RS232 media player."""
+    """Set up the Denon RS-232 media player."""
     receiver = config_entry.runtime_data
     entities = [DenonRS232MediaPlayer(receiver, receiver.main, config_entry, "main")]
 
@@ -96,7 +94,7 @@ async def async_setup_entry(
 
 
 class DenonRS232MediaPlayer(MediaPlayerEntity):
-    """Representation of a Denon receiver controlled over RS232."""
+    """Representation of a Denon receiver controlled over RS-232."""
 
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_has_entity_name = True
@@ -146,6 +144,7 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
 
         self._async_update_from_player()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to receiver state updates."""
         self.async_on_remove(self._receiver.subscribe(self._async_on_state_update))
@@ -190,27 +189,33 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
         if self._is_main:
             self._attr_is_volume_muted = cast(MainPlayer, self._player).mute
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the receiver on."""
         await self._player.power_on()
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the receiver off."""
         await self._player.power_standby()
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         db = volume * self._volume_range + self._volume_min
         await self._player.set_volume(db)
 
+    @override
     async def async_volume_up(self) -> None:
         """Volume up."""
         await self._player.volume_up()
 
+    @override
     async def async_volume_down(self) -> None:
         """Volume down."""
         await self._player.volume_down()
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute."""
         player = cast(MainPlayer, self._player)
@@ -219,6 +224,7 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
         else:
             await player.mute_off()
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         input_source = next(

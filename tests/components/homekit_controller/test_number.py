@@ -62,7 +62,8 @@ async def test_read_number(
         hass, get_next_aid(), create_switch_with_spray_level
     )
 
-    # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
+    # Helper will be for the primary entity, which is the outlet. Make a helper for the
+    # sensor.
     spray_level = Helper(
         hass,
         "number.testdevice_spray_quantity",
@@ -92,7 +93,8 @@ async def test_write_number(
         hass, get_next_aid(), create_switch_with_spray_level
     )
 
-    # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
+    # Helper will be for the primary entity, which is the outlet. Make a helper for the
+    # sensor.
     spray_level = Helper(
         hass,
         "number.testdevice_spray_quantity",

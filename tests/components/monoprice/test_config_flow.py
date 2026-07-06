@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from serial import SerialException
+from serialx import SerialException
 
 from homeassistant import config_entries
 from homeassistant.components.monoprice.const import (

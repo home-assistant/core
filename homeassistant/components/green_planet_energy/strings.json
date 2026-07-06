@@ -43,8 +43,33 @@
     "api_error": {
       "message": "API error: {error}"
     },
+    "config_entry_not_loaded": {
+      "message": "This integration instance is not currently loaded"
+    },
     "connection_error": {
       "message": "Connection error: {error}"
+    },
+    "no_config_entry": {
+      "message": "No matching integration instance was found"
+    },
+    "no_data_available": {
+      "message": "No price data available for the requested duration and time range"
+    }
+  },
+  "services": {
+    "get_cheapest_duration": {
+      "description": "Retrieves electricity price data and finds the cheapest consecutive time window for a given duration.",
+      "fields": {
+        "duration": {
+          "description": "Duration in hours for which to find the cheapest time window.",
+          "name": "Duration"
+        },
+        "time_range": {
+          "description": "Time range to search within.",
+          "name": "Time range"
+        }
+      },
+      "name": "Get cheapest time window"
     }
   }
 }

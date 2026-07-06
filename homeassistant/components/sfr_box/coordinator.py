@@ -1,12 +1,10 @@
 """SFR Box coordinator."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from sfrbox_api.bridge import SFRBox
 from sfrbox_api.exceptions import SFRBoxError
@@ -61,6 +59,7 @@ class SFRDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             update_interval=_SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> _DataT:
         """Update data."""
         try:

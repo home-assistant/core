@@ -1,8 +1,7 @@
 """Config flow for Anova."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from anova_wifi import AnovaApi, InvalidLogin
 import voluptuous as vol
@@ -22,6 +21,7 @@ class AnovaConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
