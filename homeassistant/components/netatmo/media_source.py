@@ -14,10 +14,11 @@ from homeassistant.components.media_source import (
     PlayMedia,
     Unresolvable,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN, MANUFACTURER
-from .data_handler import NetatmoDataHandler, async_get_loaded_entry
+from .data_handler import NetatmoConfigEntry, NetatmoDataHandler, async_get_loaded_entry
 
 _LOGGER = logging.getLogger(__name__)
 MIME_TYPE = "application/x-mpegURL"
@@ -29,7 +30,7 @@ class IncompatibleMediaSource(MediaSourceError):
 
 async def async_get_media_source(hass: HomeAssistant) -> NetatmoSource:
     """Set up Netatmo media source."""
-    return NetatmoSource(hass)
+    return NetatmoSource(hass, async_get_loaded_entry(hass))
 
 
 class NetatmoSource(MediaSource):
@@ -37,16 +38,18 @@ class NetatmoSource(MediaSource):
 
     name: str = MANUFACTURER
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, entry: NetatmoConfigEntry | None) -> None:
         """Initialize Netatmo source."""
         super().__init__(DOMAIN)
         self.hass = hass
+        self.entry = entry
 
     @property
     def _data_handler(self) -> NetatmoDataHandler | None:
-        """Return the data handler of the loaded config entry."""
-        entry = async_get_loaded_entry(self.hass)
-        return entry.runtime_data if entry else None
+        """Return the data handler of the config entry, if it is loaded."""
+        if self.entry is None or self.entry.state is not ConfigEntryState.LOADED:
+            return None
+        return self.entry.runtime_data
 
     @property
     def events(self) -> dict[str, dict]:
