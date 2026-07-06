@@ -13,7 +13,6 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -33,16 +32,10 @@ async def async_get_service(
 ) -> FreeSMSNotificationService | None:
     """Get the Free Mobile SMS notification service."""
     if config:
-        result = await hass.config_entries.flow.async_init(
+        await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
         )
-        if result.get("type") is FlowResultType.CREATE_ENTRY or (
-            result.get("type") is FlowResultType.ABORT
-            and result.get("reason") == "already_configured"
-        ):
-            async_deprecate_yaml_issue(hass, config)
-        else:
-            async_deprecate_yaml_issue(hass, config, import_success=False)
+        async_deprecate_yaml_issue(hass)
         return None
 
     if discovery_info is None:

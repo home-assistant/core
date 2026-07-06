@@ -49,11 +49,5 @@
     "server_error": {
       "message": "Free Mobile server error, try again later."
     }
-  },
-  "issues": {
-    "deprecated_yaml_import_issue_error": {
-      "description": "YAML configuration for Free Mobile is being deprecated, but an error occurred while importing your existing configuration.\n\nVerify that the YAML configuration is valid, then restart Home Assistant to try again. Alternatively remove the Free Mobile YAML configuration from your `configuration.yaml` file and continue to [set up the integration]({url}) manually.\n\n**Configuration that could not be imported:**\n\n```{config}```",
-      "title": "Failed to import Free Mobile YAML configuration"
-    }
   }
 }
