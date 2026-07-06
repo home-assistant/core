@@ -17,6 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import FreeMobileConfigEntry
 from .const import DOMAIN
 from .issue import async_deprecate_yaml_issue
 
@@ -41,18 +42,21 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
-    return FreeSMSNotificationService(
-        discovery_info[CONF_USERNAME],
-        discovery_info[CONF_ACCESS_TOKEN],
+    entry: FreeMobileConfigEntry | None = hass.config_entries.async_get_entry(
+        discovery_info["entry_id"]
     )
+    if entry is None:
+        return None
+
+    return FreeSMSNotificationService(entry.runtime_data)
 
 
 class FreeSMSNotificationService(BaseNotificationService):
     """Implement a notification service for the Free Mobile SMS service."""
 
-    def __init__(self, username: str, access_token: str) -> None:
+    def __init__(self, client: FreeClient) -> None:
         """Initialize the service."""
-        self.free_client = FreeClient(username, access_token)
+        self.free_client = client
 
     @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
