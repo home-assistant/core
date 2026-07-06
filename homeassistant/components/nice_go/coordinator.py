@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from nice_go import (
     BARRIER_STATUS,
@@ -139,9 +139,11 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
             vacation_mode=vacation_mode,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, NiceGODevice]:
         return self.data
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         async with asyncio.timeout(10):
@@ -150,7 +152,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
                 + REFRESH_TOKEN_EXPIRY_TIME.total_seconds()
             )
             try:
-                if datetime.now().timestamp() >= expiry_time:
+                if datetime.now().timestamp() >= expiry_time:  # pylint: disable=home-assistant-enforce-naive-now
                     await self.update_refresh_token()
                 else:
                     await self.api.authenticate_refresh(
@@ -194,7 +196,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         data = {
             **self.config_entry.data,
             CONF_REFRESH_TOKEN: refresh_token,
-            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),  # pylint: disable=home-assistant-enforce-naive-now
         }
         self.hass.config_entries.async_update_entry(self.config_entry, data=data)
 

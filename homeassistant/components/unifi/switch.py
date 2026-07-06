@@ -10,7 +10,7 @@ Support for controlling zone based traffic rules.
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
@@ -400,10 +400,12 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
     entity_description: UnifiSwitchEntityDescription[HandlerT, ApiItemT]
 
     @callback
+    @override
     def async_initiate_state(self) -> None:
         """Initiate entity state."""
         self.async_update_state(ItemEvent.ADDED, self._obj_id, first_update=True)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         try:
@@ -418,6 +420,7 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         ):
             await coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         try:
@@ -433,6 +436,7 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             await coordinator.async_request_refresh()
 
     @callback
+    @override
     def async_update_state(
         self, event: ItemEvent, obj_id: str, first_update: bool = False
     ) -> None:
@@ -449,6 +453,7 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             self._attr_is_on = is_on
 
     @callback
+    @override
     def async_event_callback(self, event: Event) -> None:
         """Event subscription callback."""
         if event.mac != self._obj_id:
@@ -464,6 +469,7 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         self._attr_available = description.available_fn(self.hub, self._obj_id)
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()

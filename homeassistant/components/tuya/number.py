@@ -1,5 +1,7 @@
 """Support for Tuya number."""
 
+from typing import override
+
 from tuya_device_handlers.definition.number import (
     NumberDefinition,
     get_default_definition,
@@ -12,7 +14,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
+from homeassistant.const import EntityCategory, UnitOfRatio, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -26,6 +28,7 @@ from .const import (
 )
 from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
+from .util import get_device_temp_unit_convert
 
 NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
     DeviceCategory.BH: (
@@ -325,13 +328,13 @@ NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.ARM_DOWN_PERCENT,
             translation_key="move_down",
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.ARM_UP_PERCENT,
             translation_key="move_up",
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
@@ -401,6 +404,28 @@ NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.BRIGHTNESS_MAX_2,
             translation_key="indexed_maximum_brightness",
             translation_placeholders={"index": "2"},
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.WG2: (
+        NumberEntityDescription(
+            key=DPCode.DELAY_SET,
+            # This setting is called "Arm Delay" in the official Tuya app
+            translation_key="arm_delay",
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.ALARM_DELAY_TIME,
+            translation_key="alarm_delay",
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.ALARM_TIME,
+            # This setting is called "Siren Duration" in the official Tuya app
+            translation_key="siren_duration",
+            device_class=NumberDeviceClass.DURATION,
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -531,6 +556,15 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             self._attr_native_unit_of_measurement = tuya_uom
             return
 
+        # If the device provides TEMP_UNIT_CONVERT and no unit is set, use it.
+        if (
+            device_class is NumberDeviceClass.TEMPERATURE
+            and not tuya_uom
+            and (temp_unit := get_device_temp_unit_convert(self.device)) is not None
+        ):
+            self._attr_native_unit_of_measurement = temp_unit
+            return
+
         # Check mappings for compatible units of measurement for the device class
         if (
             tuya_uom is not None
@@ -564,10 +598,12 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         return self._read_wrapper(self._dpcode_wrapper)
 
+    @override
     async def _process_device_update(
         self,
         updated_status_properties: list[str],
@@ -582,6 +618,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             self.device, updated_status_properties, dp_timestamps
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, value)

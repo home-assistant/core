@@ -1,18 +1,30 @@
 """Config flow for the STIEBEL ELTRON integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
-from pymodbus.client import ModbusTcpClient
-from pystiebeleltron.pystiebeleltron import StiebelEltronAPI
+from pystiebeleltron import StiebelEltronModbusError, get_controller_model
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .const import DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def check_controller_model(host: str, port: int) -> str | None:
+    """Check if the controller model is valid."""
+    try:
+        await get_controller_model(host, port)
+    except StiebelEltronModbusError:
+        _LOGGER.debug("Cannot connect to Stiebel Eltron device", exc_info=True)
+        return "cannot_connect"
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
+        return "unknown"
+    return None
 
 
 class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -20,6 +32,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -29,18 +42,12 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(
                 {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
             )
-            client = StiebelEltronAPI(
-                ModbusTcpClient(user_input[CONF_HOST], port=user_input[CONF_PORT]), 1
+            error = await check_controller_model(
+                user_input[CONF_HOST], user_input[CONF_PORT]
             )
-            try:
-                success = await self.hass.async_add_executor_job(client.update)
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            if error is not None:
+                errors["base"] = error
             else:
-                if not success:
-                    errors["base"] = "cannot_connect"
-            if not errors:
                 return self.async_create_entry(title="Stiebel Eltron", data=user_input)
 
         return self.async_show_form(
@@ -52,29 +59,4 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-        )
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import."""
-        self._async_abort_entries_match(
-            {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
-        )
-        client = StiebelEltronAPI(
-            ModbusTcpClient(user_input[CONF_HOST], port=user_input[CONF_PORT]), 1
-        )
-        try:
-            success = await self.hass.async_add_executor_job(client.update)
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
-
-        if not success:
-            return self.async_abort(reason="cannot_connect")
-
-        return self.async_create_entry(
-            title=user_input[CONF_NAME],
-            data={
-                CONF_HOST: user_input[CONF_HOST],
-                CONF_PORT: user_input[CONF_PORT],
-            },
         )

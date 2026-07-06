@@ -838,7 +838,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     entry = MockConfigEntry(
-        domain="shelly", unique_id="test-mac", data={CONF_HOST: "0.0.0.0"}
+        domain=DOMAIN, unique_id="test-mac", data={CONF_HOST: "0.0.0.0"}
     )
     entry.add_to_hass(hass)
 
@@ -871,7 +871,7 @@ async def test_user_setup_ignored_device(
     """Test user can successfully setup an ignored device."""
 
     entry = MockConfigEntry(
-        domain="shelly",
+        domain=DOMAIN,
         unique_id="test-mac",
         data={CONF_HOST: "0.0.0.0"},
         source=config_entries.SOURCE_IGNORE,
@@ -2297,7 +2297,7 @@ async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     entry = MockConfigEntry(
-        domain="shelly", unique_id="test-mac", data={CONF_HOST: "0.0.0.0"}
+        domain=DOMAIN, unique_id="test-mac", data={CONF_HOST: "0.0.0.0"}
     )
     entry.add_to_hass(hass)
 
@@ -2322,7 +2322,7 @@ async def test_zeroconf_ignored(hass: HomeAssistant) -> None:
     """Test zeroconf when the device was previously ignored."""
 
     entry = MockConfigEntry(
-        domain="shelly",
+        domain=DOMAIN,
         unique_id="test-mac",
         data={},
         source=config_entries.SOURCE_IGNORE,
@@ -2347,7 +2347,7 @@ async def test_zeroconf_with_wifi_ap_ip(hass: HomeAssistant) -> None:
     """Test we ignore the Wi-FI AP IP."""
 
     entry = MockConfigEntry(
-        domain="shelly", unique_id="test-mac", data={CONF_HOST: "2.2.2.2"}
+        domain=DOMAIN, unique_id="test-mac", data={CONF_HOST: "2.2.2.2"}
     )
     entry.add_to_hass(hass)
 
@@ -2444,7 +2444,7 @@ async def test_reauth_successful(
 ) -> None:
     """Test starting a reauthentication flow."""
     entry = MockConfigEntry(
-        domain="shelly",
+        domain=DOMAIN,
         unique_id="test-mac",
         data={CONF_HOST: "0.0.0.0", CONF_GEN: gen},
     )
@@ -2491,7 +2491,7 @@ async def test_reauth_unsuccessful(
 ) -> None:
     """Test reauthentication flow failed."""
     entry = MockConfigEntry(
-        domain="shelly",
+        domain=DOMAIN,
         unique_id="test-mac",
         data={CONF_HOST: "0.0.0.0", CONF_GEN: gen},
     )
@@ -2527,7 +2527,7 @@ async def test_reauth_unsuccessful(
 async def test_reauth_get_info_error(hass: HomeAssistant) -> None:
     """Test reauthentication flow failed with error in get_info()."""
     entry = MockConfigEntry(
-        domain="shelly", unique_id="test-mac", data={CONF_HOST: "0.0.0.0", CONF_GEN: 2}
+        domain=DOMAIN, unique_id="test-mac", data={CONF_HOST: "0.0.0.0", CONF_GEN: 2}
     )
     entry.add_to_hass(hass)
     result = await entry.start_reauth_flow(hass)
@@ -2658,6 +2658,21 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.PASSIVE
 
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_BLE_SCANNER_MODE: BLEScannerMode.AUTO,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.AUTO
+
     await hass.config_entries.async_unload(entry.entry_id)
 
 
@@ -2666,7 +2681,7 @@ async def test_zeroconf_already_configured_triggers_refresh_mac_in_name(
 ) -> None:
     """Test zeroconf discovery triggers refresh when the mac is in the device name."""
     entry = MockConfigEntry(
-        domain="shelly",
+        domain=DOMAIN,
         unique_id="AABBCCDDEEFF",
         data={
             CONF_HOST: "1.1.1.1",
@@ -2707,7 +2722,7 @@ async def test_zeroconf_already_configured_triggers_refresh(
 ) -> None:
     """Test zeroconf discovery triggers refresh via get_info mac."""
     entry = MockConfigEntry(
-        domain="shelly",
+        domain=DOMAIN,
         unique_id="AABBCCDDEEFF",
         data={
             CONF_HOST: "1.1.1.1",
@@ -2753,7 +2768,7 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     entry = MockConfigEntry(
-        domain="shelly",
+        domain=DOMAIN,
         unique_id="AABBCCDDEEFF",
         data={
             CONF_HOST: "1.1.1.1",
@@ -2812,7 +2827,7 @@ async def test_zeroconf_sleeping_device_attempts_configure(
     monkeypatch.setattr(mock_rpc_device, "initialized", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     entry = MockConfigEntry(
-        domain="shelly",
+        domain=DOMAIN,
         unique_id="AABBCCDDEEFF",
         data={
             CONF_HOST: "1.1.1.1",
@@ -2882,7 +2897,7 @@ async def test_zeroconf_sleeping_device_attempts_configure_ws_disabled(
         mock_rpc_device.config, "ws", {"enable": False, "server": "ws://oldha"}
     )
     entry = MockConfigEntry(
-        domain="shelly",
+        domain=DOMAIN,
         unique_id="AABBCCDDEEFF",
         data={
             CONF_HOST: "1.1.1.1",
@@ -2952,7 +2967,7 @@ async def test_zeroconf_sleeping_device_attempts_configure_no_url_available(
     monkeypatch.setattr(mock_rpc_device, "initialized", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     entry = MockConfigEntry(
-        domain="shelly",
+        domain=DOMAIN,
         unique_id="AABBCCDDEEFF",
         data={
             CONF_HOST: "1.1.1.1",
@@ -3053,7 +3068,7 @@ async def test_reconfigure_successful(
 ) -> None:
     """Test starting a reconfiguration flow."""
     entry = MockConfigEntry(
-        domain="shelly",
+        domain=DOMAIN,
         unique_id="test-mac",
         data={CONF_HOST: "0.0.0.0", CONF_GEN: gen},
     )
@@ -3087,7 +3102,7 @@ async def test_reconfigure_unsuccessful(
 ) -> None:
     """Test reconfiguration flow failed."""
     entry = MockConfigEntry(
-        domain="shelly",
+        domain=DOMAIN,
         unique_id="test-mac",
         data={CONF_HOST: "0.0.0.0", CONF_GEN: gen},
     )
@@ -3131,7 +3146,7 @@ async def test_reconfigure_with_exception(
 ) -> None:
     """Test reconfiguration flow when an exception is raised."""
     entry = MockConfigEntry(
-        domain="shelly", unique_id="test-mac", data={CONF_HOST: "0.0.0.0", CONF_GEN: 2}
+        domain=DOMAIN, unique_id="test-mac", data={CONF_HOST: "0.0.0.0", CONF_GEN: 2}
     )
     entry.add_to_hass(hass)
 

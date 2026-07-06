@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
+from typing import override
 
 from pynintendoparental.player import Player
 
@@ -131,11 +132,13 @@ class NintendoParentalControlsDeviceSensorEntity(NintendoDevice, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> datetime | int | float | None:
         """Return the native value."""
         return self.entity_description.value_fn(self._device)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the sensor is available."""
         return super().available and self.entity_description.available_fn(self._device)
@@ -163,6 +166,7 @@ class NintendoParentalControlsPlayerSensorEntity(NintendoDevice, SensorEntity):
         self._attr_unique_id = f"{device.device_id}_{player_id}_{description.key}"
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture."""
         if self.player_id not in self._device.players:
@@ -170,6 +174,7 @@ class NintendoParentalControlsPlayerSensorEntity(NintendoDevice, SensorEntity):
         return self._device.get_player(self.player_id).player_image
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         if self.player_id not in self._device.players:

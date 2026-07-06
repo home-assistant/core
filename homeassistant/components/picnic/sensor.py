@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Literal, cast
+from typing import Any, Literal, cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -228,6 +228,7 @@ class PicnicSensor(SensorEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
         )
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
         data_set = (

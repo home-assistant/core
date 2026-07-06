@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError, ClientResponseError
 from energyid_webhooks.client_v2 import WebhookClient
@@ -15,13 +15,13 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     ConfigSubentryFlow,
 )
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
 from .const import (
-    CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_PROVISIONING_KEY,
     CONF_PROVISIONING_SECRET,
@@ -122,6 +122,7 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
         #    and will show appropriate error/success messages based on current state
         # 4. Timeout allows graceful fallback: user can retry claim or see proper error
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -288,6 +289,7 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:

@@ -232,7 +232,7 @@ def _create_mocked_hole(
                     incorrect_app_password or password not in ["newkey", "apikey"]
                 ):
                     raise HoleError("Authentication failed: Invalid password")
-                raise HoleConnectionError
+                raise HoleConnectionError("Connection error")
 
         async def get_data_side_effect(*_args, **_kwargs):
             """Return data based on the mocked Hole instance state."""

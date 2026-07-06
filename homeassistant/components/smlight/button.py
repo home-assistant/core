@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pysmlight.web import CmdWrapper
 
@@ -128,6 +129,7 @@ class SmButton(SmEntity, ButtonEntity):
         button = f"_{idx}" if idx else ""
         self._attr_unique_id = f"{coordinator.unique_id}-{description.key}{button}"
 
+    @override
     async def async_press(self) -> None:
         """Trigger button press."""
         await self.entity_description.press_fn(self.coordinator.client.cmds, self.idx)

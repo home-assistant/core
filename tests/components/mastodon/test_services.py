@@ -21,6 +21,8 @@ from homeassistant.components.mastodon.const import (
     ATTR_AVATAR_MIME_TYPE,
     ATTR_BOT,
     ATTR_CONTENT_WARNING,
+    ATTR_DELETE_AVATAR,
+    ATTR_DELETE_HEADER,
     ATTR_DISCOVERABLE,
     ATTR_DISPLAY_NAME,
     ATTR_DURATION,
@@ -29,12 +31,13 @@ from homeassistant.components.mastodon.const import (
     ATTR_HEADER_MIME_TYPE,
     ATTR_HIDE_NOTIFICATIONS,
     ATTR_IDEMPOTENCY_KEY,
+    ATTR_IN_REPLY_TO,
     ATTR_LANGUAGE,
-    ATTR_LOCKED,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
     ATTR_NOTE,
     ATTR_QUOTE_APPROVAL_POLICY,
+    ATTR_QUOTED_STATUS,
     ATTR_STATUS,
     ATTR_VISIBILITY,
     DOMAIN,
@@ -47,7 +50,7 @@ from homeassistant.components.mastodon.services import (
     SERVICE_UPDATE_PROFILE,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_LOCKED
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -384,6 +387,8 @@ async def test_unmute_account_failure_api_error(
                 "language": None,
                 "media_ids": None,
                 "sensitive": None,
+                "in_reply_to_id": None,
+                "quoted_status_id": None,
             },
         ),
         (
@@ -397,6 +402,8 @@ async def test_unmute_account_failure_api_error(
                 "language": None,
                 "media_ids": None,
                 "sensitive": None,
+                "in_reply_to_id": None,
+                "quoted_status_id": None,
             },
         ),
         (
@@ -414,6 +421,8 @@ async def test_unmute_account_failure_api_error(
                 "language": None,
                 "media_ids": None,
                 "sensitive": None,
+                "in_reply_to_id": None,
+                "quoted_status_id": None,
             },
         ),
         (
@@ -432,6 +441,8 @@ async def test_unmute_account_failure_api_error(
                 "language": "nl",
                 "media_ids": "1",
                 "sensitive": None,
+                "in_reply_to_id": None,
+                "quoted_status_id": None,
             },
         ),
         (
@@ -451,6 +462,8 @@ async def test_unmute_account_failure_api_error(
                 "language": "en",
                 "media_ids": "1",
                 "sensitive": None,
+                "in_reply_to_id": None,
+                "quoted_status_id": None,
             },
         ),
         (
@@ -464,6 +477,8 @@ async def test_unmute_account_failure_api_error(
                 "idempotency_key": None,
                 "media_ids": None,
                 "sensitive": None,
+                "in_reply_to_id": None,
+                "quoted_status_id": None,
             },
         ),
         (
@@ -480,6 +495,8 @@ async def test_unmute_account_failure_api_error(
                 "quote_approval_policy": None,
                 "media_ids": None,
                 "sensitive": None,
+                "in_reply_to_id": None,
+                "quoted_status_id": None,
             },
         ),
         (
@@ -493,6 +510,38 @@ async def test_unmute_account_failure_api_error(
                 "language": None,
                 "media_ids": None,
                 "sensitive": None,
+                "in_reply_to_id": None,
+                "quoted_status_id": None,
+            },
+        ),
+        (
+            {ATTR_STATUS: "test toot", ATTR_IN_REPLY_TO: "1234567890"},
+            {
+                "status": "test toot",
+                "spoiler_text": None,
+                "visibility": None,
+                "quote_approval_policy": None,
+                "idempotency_key": None,
+                "language": None,
+                "media_ids": None,
+                "sensitive": None,
+                "in_reply_to_id": "1234567890",
+                "quoted_status_id": None,
+            },
+        ),
+        (
+            {ATTR_STATUS: "test toot", ATTR_QUOTED_STATUS: "1234567890"},
+            {
+                "status": "test toot",
+                "spoiler_text": None,
+                "visibility": None,
+                "quote_approval_policy": None,
+                "idempotency_key": None,
+                "language": None,
+                "media_ids": None,
+                "sensitive": None,
+                "in_reply_to_id": None,
+                "quoted_status_id": "1234567890",
             },
         ),
     ],
@@ -817,7 +866,7 @@ async def test_service_update_profile(
             return_value=image.Image(content_type="image/png", content=b"\x89PNG"),
         ),
     ):
-        await hass.services.async_call(
+        response = await hass.services.async_call(
             DOMAIN,
             SERVICE_UPDATE_PROFILE,
             {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, **payload},
@@ -826,6 +875,41 @@ async def test_service_update_profile(
         )
 
     mock_mastodon_client.account_update_credentials.assert_called_with(**kwargs)
+    assert bool(response) is return_response
+
+
+@pytest.mark.parametrize(
+    ("payload", "call_method"),
+    [
+        ({ATTR_DELETE_HEADER: True}, "account_delete_header"),
+        ({ATTR_DELETE_AVATAR: True}, "account_delete_avatar"),
+    ],
+)
+@pytest.mark.parametrize("return_response", [True, False])
+async def test_service_update_profile_delete_pictures(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    payload: dict[str, str],
+    call_method: str,
+    return_response: bool,
+) -> None:
+    """Test the update profile service for deleting pictures."""
+    assert await async_setup_component(hass, "media_source", {})
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_PROFILE,
+        {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, **payload},
+        blocking=True,
+        return_response=return_response,
+    )
+
+    getattr(mock_mastodon_client, call_method).assert_called_once()
+    assert bool(response) is return_response
 
 
 @pytest.mark.parametrize(

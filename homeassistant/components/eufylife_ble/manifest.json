@@ -3,6 +3,12 @@
   "name": "EufyLife",
   "bluetooth": [
     {
+      "local_name": "eufy T9120"
+    },
+    {
+      "local_name": "eufy T9130"
+    },
+    {
       "local_name": "eufy T9140"
     },
     {
@@ -16,6 +22,9 @@
     },
     {
       "local_name": "eufy T9149"
+    },
+    {
+      "local_name": "eufy T9150"
     }
   ],
   "codeowners": ["@bdr99"],
@@ -24,5 +33,5 @@
   "documentation": "https://www.home-assistant.io/integrations/eufylife_ble",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["eufylife-ble-client==0.1.8"]
+  "requirements": ["eufylife-ble-client==0.1.10"]
 }
