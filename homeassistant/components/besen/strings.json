@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_connectable_path": "No connectable Bluetooth path is available for this charger.",
       "not_supported": "This Bluetooth device is not a supported Besen charger."
     },
     "error": {

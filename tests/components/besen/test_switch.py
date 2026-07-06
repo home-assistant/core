@@ -13,6 +13,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -90,6 +91,34 @@ async def test_switch_updates_on_refresh(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("available", "authenticated"),
+    [
+        (False, True),
+        (True, False),
+    ],
+)
+async def test_switch_unavailable_from_client_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_besen_client: BesenClientFixture,
+    available: bool,
+    authenticated: bool,
+) -> None:
+    """Test switch availability follows client availability and authentication."""
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SWITCH])
+
+    mock_besen_client.publish_state(
+        charger_state(available=available, authenticated=authenticated)
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_switch_services(
