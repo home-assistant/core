@@ -7,7 +7,7 @@ from typing import Any, Literal, override
 
 import voluptuous as vol
 
-from homeassistant.const import (  # noqa : F401
+from homeassistant.const import (  # noqa: F401
     ATTR_EDITABLE,
     CONF_ICON,
     CONF_ID,
@@ -40,7 +40,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util import dt as dt_util
 
-from .const import (  # noqa : F401
+from .const import (  # noqa: F401
     ATTR_NEXT_EVENT,
     CONF_ALL_DAYS,
     CONF_DATA,
