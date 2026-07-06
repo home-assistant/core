@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
@@ -35,6 +36,19 @@ async def test_media_player(
 
     await setup_platform(hass, normal_config_entry, [Platform.MEDIA_PLAYER])
     assert_entities(hass, normal_config_entry.entry_id, entity_registry, snapshot)
+
+
+async def test_media_player_volume_step(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+) -> None:
+    """Test volume_step is one Tesla notch as a fraction of the volume range."""
+
+    await setup_platform(hass, normal_config_entry, [Platform.MEDIA_PLAYER])
+
+    entity = hass.data[MEDIA_PLAYER_DOMAIN].get_entity("media_player.test_media_player")
+    # audio_volume_increment / audio_volume_max from the vehicle_data fixture.
+    assert entity.volume_step == pytest.approx(0.333333 / 10.333333)
 
 
 async def test_media_player_alt(
