@@ -1,11 +1,12 @@
 """Test the Google Health config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from google_health_api.exceptions import GoogleHealthApiError
 from google_health_api.model import Identity
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components.google_health.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -17,8 +18,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
+
+API_BASE_URL = "https://health.googleapis.com/v4/users/me"
+IDENTITY_URL = f"{API_BASE_URL}/identity"
+USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -254,3 +260,94 @@ async def test_config_flow_profile_name_error(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Google Health"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    setup_credentials: None,
+) -> None:
+    """Test reauth flow completes successfully."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": "google",
+            "token": {
+                "access_token": "old-access-token",
+                "refresh_token": "old-refresh-token",
+                "scope": " ".join(OAUTH_SCOPES),
+            },
+        },
+        unique_id="mock-health-user-id",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+        },
+        data=config_entry.data,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": "new-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+            "scope": " ".join(OAUTH_SCOPES),
+        },
+    )
+
+    aioclient_mock.get(
+        IDENTITY_URL,
+        json={
+            "name": "users/me/identity",
+            "healthUserId": "mock-health-user-id",
+        },
+    )
+
+    aioclient_mock.get(
+        USERINFO_URL,
+        json={
+            "givenName": "Allen",
+            "name": "Allen Porter",
+        },
+    )
+
+    with patch(
+        "homeassistant.components.google_health.async_setup_entry", return_value=True
+    ) as mock_setup:
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+
+    assert config_entry.data["token"]["access_token"] == "new-access-token"
+    assert config_entry.data["token"]["refresh_token"] == "new-refresh-token"
+    assert len(mock_setup.mock_calls) == 1
