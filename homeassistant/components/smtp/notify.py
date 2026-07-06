@@ -201,6 +201,9 @@ class MailNotifyEntity(NotifyEntity):
         msg["From"] = email.utils.formataddr(
             (self._entry.data.get(CONF_SENDER_NAME), self._entry.data[CONF_SENDER])
         )
+        msg["To"] = email.utils.formataddr(
+            (self._subentry.title, self._subentry.unique_id)
+        )
         msg["X-Mailer"] = "Home Assistant"
         msg["Date"] = email.utils.format_datetime(dt_util.now())
         msg["Message-Id"] = email.utils.make_msgid()
