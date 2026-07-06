@@ -6,7 +6,7 @@ import collections.abc
 from collections.abc import Callable
 import contextlib
 from datetime import timedelta
-from enum import IntEnum, StrEnum
+from enum import ReprEnum
 from functools import lru_cache, partial
 import logging
 import pathlib
@@ -282,20 +282,21 @@ _FINALIZE_CONTAINER_TYPES = (list, set, tuple)
 
 
 def _finalize_output(value: Any, _nested: bool = False) -> Any:
-    """Resolve StrEnum/IntEnum members nested in containers so output round-trips.
+    """Resolve ReprEnum members nested in containers so output round-trips.
 
-    Jinja stringifies containers via repr() of their items, and StrEnum/IntEnum
-    members repr as e.g. <MyEnum.FOO: 'foo'>, which literal_eval cannot parse
-    back into a dict/list. Replace such members inside containers with their
-    underlying value before the container is stringified. Only StrEnum/IntEnum
-    are handled: their value is a literal-safe scalar that already matches their
-    bare str() output, so nested and top-level rendering stay consistent. A bare
-    member is left untouched. ReadOnlyDict is handled explicitly since state
-    attributes use it; other dict subclasses, namedtuples, and result wrappers
-    are left untouched to avoid rebuilding types that don't take an iterable
-    constructor or carry their own str().
+    Jinja stringifies containers via repr() of their items, and enum members
+    repr as e.g. <MyEnum.FOO: 'foo'>, which literal_eval cannot parse back into
+    a dict/list. Replace such members inside containers with their underlying
+    value before the container is stringified. Only ReprEnum members (StrEnum,
+    IntEnum, IntFlag) are handled: they use the mixed-in type's str(), so their
+    value is a literal-safe scalar that already matches their bare str() output
+    and nested/top-level rendering stay consistent. Plain Enum/Flag members are
+    left untouched. ReadOnlyDict is handled explicitly since state attributes
+    use it; other dict subclasses, namedtuples, and result wrappers are left
+    untouched to avoid rebuilding types that don't take an iterable constructor
+    or carry their own str().
     """
-    if _nested and isinstance(value, (StrEnum, IntEnum)):
+    if _nested and isinstance(value, ReprEnum):
         return value.value
     if type(value) in _FINALIZE_DICT_TYPES:
         return {

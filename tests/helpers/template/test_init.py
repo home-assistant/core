@@ -947,6 +947,7 @@ class _Plain(Enum):
 
 class _Flags(IntFlag):
     X = 1
+    Y = 2
 
 
 _ENUM_VARS = {
@@ -954,7 +955,9 @@ _ENUM_VARS = {
     "level": _Level.LOW,
     "legacy": _LegacyStr.FOO,
     "plain": _Plain.A,
-    "flag": _Flags.X,
+    "flag_single": _Flags.X,
+    # IntFlag union, like supported_features (e.g. WeatherEntityFeature); value 3.
+    "flag": _Flags.X | _Flags.Y,
     # Jinja has no set-literal syntax, so a set can only reach output as a var.
     "color_set": {_Color.RED},
     "level_set": {_Level.LOW},
@@ -973,6 +976,9 @@ _ENUM_VARS = {
         pytest.param("{{ {level: 'x'} }}", {1: "x"}, id="intenum-dict-key"),
         pytest.param("{{ [level] }}", [1], id="intenum-list"),
         pytest.param("{{ level_set }}", {1}, id="intenum-set"),
+        pytest.param("{{ {'k': flag_single} }}", {"k": 1}, id="intflag-single"),
+        pytest.param("{{ {'k': flag} }}", {"k": 3}, id="intflag-union-dict-value"),
+        pytest.param("{{ [flag] }}", [3], id="intflag-union-list"),
         pytest.param(
             "{{ {color: {level: [color, level]}} }}",
             {"red": {1: ["red", 1]}},
@@ -988,18 +994,18 @@ _ENUM_VARS = {
 async def test_parse_result_resolves_enums_in_containers(
     hass: HomeAssistant, template_string: str, expected: object
 ) -> None:
-    """StrEnum/IntEnum members in containers resolve to their value and round-trip."""
+    """ReprEnum members in containers resolve to their value and round-trip."""
     assert render(hass, template_string, _ENUM_VARS) == expected
 
 
 @pytest.mark.parametrize(
     "variable",
-    ["legacy", "plain", "flag"],
+    ["legacy", "plain"],
 )
 async def test_parse_result_unsupported_enums_fall_back_to_string(
     hass: HomeAssistant, variable: str
 ) -> None:
-    """Enums other than StrEnum/IntEnum are not resolved, so the container is a str."""
+    """Non-ReprEnum members (plain Enum, legacy mixins) are not resolved."""
     result = render(hass, "{{ {'k': " + variable + "} }}", _ENUM_VARS)
     assert isinstance(result, str)
 
@@ -1018,12 +1024,24 @@ async def test_parse_result_bare_enum_unchanged(
     assert render(hass, template_string, _ENUM_VARS) == expected
 
 
-async def test_parse_result_resolves_enum_keys_in_state_attributes(
+async def test_parse_result_resolves_enums_in_state_attributes(
     hass: HomeAssistant,
 ) -> None:
-    """State attributes (a ReadOnlyDict) with StrEnum keys resolve when rendered."""
-    hass.states.async_set("light.test", "on", {_Color.RED: "rainbow"})
-    assert render(hass, "{{ states.light.test.attributes }}") == {"red": "rainbow"}
+    """State attributes (a ReadOnlyDict) with enum keys/values resolve when rendered.
+
+    Mirrors the reported case: a StrEnum key plus an IntFlag supported_features
+    value (like WeatherEntityFeature) would otherwise make the attributes render
+    as an unparsable string.
+    """
+    hass.states.async_set(
+        "light.test",
+        "on",
+        {_Color.RED: "rainbow", "supported_features": _Flags.X | _Flags.Y},
+    )
+    assert render(hass, "{{ states.light.test.attributes }}") == {
+        "red": "rainbow",
+        "supported_features": 3,
+    }
 
 
 @pytest.mark.parametrize(
