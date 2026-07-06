@@ -1,4 +1,4 @@
-"""Test the OKOK Scale init."""
+"""Test the my-PV init."""
 
 from unittest.mock import AsyncMock
 
