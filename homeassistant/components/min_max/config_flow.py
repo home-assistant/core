@@ -51,8 +51,6 @@ OPTIONS_SCHEMA = vol.Schema(
     }
 )
 
-CONFIG_SCHEMA = vol.Schema({})
-
 
 async def migrate_to_groups(handler: SchemaCommonFlowHandler) -> vol.Schema:
     """Abort flow as migrate to groups."""
