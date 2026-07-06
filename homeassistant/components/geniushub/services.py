@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
@@ -51,10 +52,18 @@ def setup_service_functions(hass: HomeAssistant) -> None:
         registry_entry = registry.async_get(entity_id)
 
         if registry_entry is None or registry_entry.platform != DOMAIN:
-            raise ValueError(f"'{entity_id}' is not a known {DOMAIN} entity")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_entity_id",
+                translation_placeholders={"entity_id": entity_id},
+            )
 
         if registry_entry.domain != "climate":
-            raise ValueError(f"'{entity_id}' is not an {DOMAIN} zone")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_zone",
+                translation_placeholders={"entity_id": entity_id},
+            )
 
         payload = {
             "unique_id": registry_entry.unique_id,
