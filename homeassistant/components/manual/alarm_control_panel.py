@@ -1,7 +1,7 @@
 """Support for manual alarms."""
 
 import datetime
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -255,6 +255,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
             ]
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState:
         """Return the state of the device."""
         if self._state == AlarmControlPanelState.TRIGGERED:
@@ -307,6 +308,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         return self._state_ts + self._pending_time(state) > dt_util.utcnow()
 
     @property
+    @override
     def code_format(self) -> CodeFormat | None:
         """Return one or more digits/characters."""
         if self._code is None:
@@ -315,6 +317,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
             return CodeFormat.NUMBER
         return CodeFormat.TEXT
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._async_validate_code(code, AlarmControlPanelState.DISARMED)
@@ -322,31 +325,37 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         self._state_ts = dt_util.utcnow()
         self.async_write_ha_state()
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._async_validate_code(code, AlarmControlPanelState.ARMED_HOME)
         self._async_update_state(AlarmControlPanelState.ARMED_HOME)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._async_validate_code(code, AlarmControlPanelState.ARMED_AWAY)
         self._async_update_state(AlarmControlPanelState.ARMED_AWAY)
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         self._async_validate_code(code, AlarmControlPanelState.ARMED_NIGHT)
         self._async_update_state(AlarmControlPanelState.ARMED_NIGHT)
 
+    @override
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command."""
         self._async_validate_code(code, AlarmControlPanelState.ARMED_VACATION)
         self._async_update_state(AlarmControlPanelState.ARMED_VACATION)
 
+    @override
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
         self._async_validate_code(code, AlarmControlPanelState.ARMED_CUSTOM_BYPASS)
         self._async_update_state(AlarmControlPanelState.ARMED_CUSTOM_BYPASS)
 
+    @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command.
 
@@ -423,12 +432,12 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         )
 
         raise ServiceValidationError(
-            "Invalid alarm code provided",
             translation_domain=DOMAIN,
             translation_key="invalid_code",
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if self.state in (
@@ -450,17 +459,21 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         """Update state at a scheduled point in time."""
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():
             self._state_ts = state.last_updated
-            if next_state := state.attributes.get(ATTR_NEXT_STATE):
-                # If in arming or pending state we record the transition,
-                # not the current state
-                self._state = AlarmControlPanelState(next_state)
-            else:
-                self._state = AlarmControlPanelState(state.state)
+            try:
+                if next_state := state.attributes.get(ATTR_NEXT_STATE):
+                    # If in arming or pending state we record the transition,
+                    # not the current state
+                    self._state = AlarmControlPanelState(next_state)
+                else:
+                    self._state = AlarmControlPanelState(state.state)
+            except ValueError:
+                return
 
             if prev_state := state.attributes.get(ATTR_PREVIOUS_STATE):
                 self._previous_state = prev_state

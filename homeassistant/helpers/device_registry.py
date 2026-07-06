@@ -8,7 +8,7 @@ from enum import StrEnum
 from functools import lru_cache
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, Unpack
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, Unpack, override
 
 import attr
 from yarl import URL
@@ -35,7 +35,6 @@ from .deprecation import deprecated_function
 from .frame import ReportBehavior, report_usage
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
-from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -461,7 +460,9 @@ class DeviceEntry:
                     "config_entries": list(self.config_entries),
                     "config_entries_subentries": {
                         entry_id: list(subentries)
-                        for entry_id, subentries in self.config_entries_subentries.items()
+                        for entry_id, subentries in (
+                            self.config_entries_subentries.items()
+                        )
                     },
                     "configuration_url": self.configuration_url,
                     "connections": list(self.connections),
@@ -560,7 +561,9 @@ class DeletedDeviceEntry:
                     "config_entries": list(self.config_entries),
                     "config_entries_subentries": {
                         entry_id: list(subentries)
-                        for entry_id, subentries in self.config_entries_subentries.items()
+                        for entry_id, subentries in (
+                            self.config_entries_subentries.items()
+                        )
                     },
                     "connections": list(self.connections),
                     "created_at": self.created_at,
@@ -582,6 +585,7 @@ class DeletedDeviceEntry:
 class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
+    @override
     async def _async_migrate_func(  # noqa: C901
         self,
         old_major_version: int,
@@ -695,6 +699,7 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
         self._connections: dict[tuple[str, str], _EntryTypeT] = {}
         self._identifiers: dict[tuple[str, str], _EntryTypeT] = {}
 
+    @override
     def _index_entry(self, key: str, entry: _EntryTypeT) -> None:
         """Index an entry."""
         for connection in entry.connections:
@@ -702,6 +707,7 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
         for identifier in entry.identifiers:
             self._identifiers[identifier] = entry
 
+    @override
     def _unindex_entry(
         self, key: str, replacement_entry: _EntryTypeT | None = None
     ) -> None:
@@ -764,6 +770,7 @@ class ActiveDeviceRegistryItems(DeviceRegistryItems[DeviceEntry]):
         self._config_entry_id_index: RegistryIndexType = defaultdict(dict)
         self._labels_index: RegistryIndexType = defaultdict(dict)
 
+    @override
     def _index_entry(self, key: str, entry: DeviceEntry) -> None:
         """Index an entry."""
         super()._index_entry(key, entry)
@@ -774,6 +781,7 @@ class ActiveDeviceRegistryItems(DeviceRegistryItems[DeviceEntry]):
         for config_entry_id in entry.config_entries:
             self._config_entry_id_index[config_entry_id][key] = True
 
+    @override
     def _unindex_entry(
         self, key: str, replacement_entry: DeviceEntry | None = None
     ) -> None:
@@ -814,11 +822,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     devices: ActiveDeviceRegistryItems
     deleted_devices: DeviceRegistryItems[DeletedDeviceEntry]
     _device_data: dict[str, DeviceEntry]
-    _loaded_event: asyncio.Event | None = None
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the device registry."""
         self.hass = hass
+        self._loaded_event = asyncio.Event()
         self._store = DeviceRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -827,11 +835,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             minor_version=STORAGE_VERSION_MINOR,
             serialize_in_event_loop=False,
         )
-
-    @callback
-    def async_setup(self) -> None:
-        """Set up the registry."""
-        self._loaded_event = asyncio.Event()
 
     @callback
     def async_get(self, device_id: str) -> DeviceEntry | None:
@@ -1516,10 +1519,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
         self.async_schedule_save()
 
+    @override
     async def _async_load(self) -> None:
         """Load the device registry."""
-        assert self._loaded_event is not None
-        assert not self._loaded_event.is_set()
+        if self._loaded_event.is_set():
+            raise RuntimeError("Device registry is already loaded")
 
         async_setup_cleanup(self.hass, self)
 
@@ -1621,14 +1625,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self._loaded_event.set()
 
     async def async_wait_loaded(self) -> None:
-        """Wait until the device registry is fully loaded.
-
-        Will only wait if the registry had already been set up.
-        """
-        if self._loaded_event is not None:
-            await self._loaded_event.wait()
+        """Wait until the device registry is fully loaded."""
+        await self._loaded_event.wait()
 
     @callback
+    @override
     def _data_to_save(self) -> dict[str, Any]:
         """Return data of device registry to store in a file."""
         # Create intermediate lists to allow this method to be called from a thread
@@ -1768,16 +1769,19 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
 
 @callback
-@singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> DeviceRegistry:
     """Get device registry."""
-    return DeviceRegistry(hass)
+    try:
+        return hass.data[DATA_REGISTRY]
+    except KeyError as ex:
+        raise RuntimeError("Device registry not set up") from ex
 
 
 def async_setup(hass: HomeAssistant) -> None:
     """Set up device registry."""
-    assert DATA_REGISTRY not in hass.data
-    async_get(hass).async_setup()
+    if DATA_REGISTRY in hass.data:
+        raise RuntimeError("Device registry is already set up")
+    hass.data[DATA_REGISTRY] = DeviceRegistry(hass)
 
 
 async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from teltasync import Teltasync, TeltonikaAuthenticationError, TeltonikaConnectionError
 import voluptuous as vol
@@ -96,6 +96,7 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
     MINOR_VERSION = 1
     _discovered_host: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -189,6 +190,7 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -198,7 +200,8 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
         # Store discovered host for later use
         self._discovered_host = host
 
-        # Try to get device info without authentication to get device identifier and name
+        # Try to get device info without authentication
+        # to get device identifier and name
         session = async_get_clientsession(self.hass)
 
         for base_url in get_url_variants(host):
@@ -285,7 +288,8 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception during DHCP confirm")
                 errors["base"] = "unknown"
             else:
-                # Update unique ID to device identifier if we didn't get it during discovery
+                # Update unique ID to device identifier
+                # if we didn't get it during discovery
                 await self.async_set_unique_id(
                     info["device_id"], raise_on_progress=False
                 )

@@ -1,6 +1,6 @@
 """Support for EZVIZ light entity."""
 
-from typing import Any
+from typing import Any, override
 
 from pyezvizapi.constants import DeviceCatagories, DeviceSwitchType, SupportExt
 from pyezvizapi.exceptions import HTTPError, PyEzvizError
@@ -65,6 +65,7 @@ class EzvizLight(EzvizEntity, LightEntity):
             )
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         try:
@@ -94,6 +95,7 @@ class EzvizLight(EzvizEntity, LightEntity):
                 f"Failed to turn on light {self._attr_name}"
             ) from err
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         try:
@@ -112,6 +114,7 @@ class EzvizLight(EzvizEntity, LightEntity):
             ) from err
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_is_on = self.data["switches"].get(DeviceSwitchType.ALARM_LIGHT.value)

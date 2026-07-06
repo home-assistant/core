@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from pyituran import Vehicle
 
@@ -131,6 +132,7 @@ class IturanSensor(IturanBaseEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the device."""
         return self.entity_description.value_fn(self.vehicle)

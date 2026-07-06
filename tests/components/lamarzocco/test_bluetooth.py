@@ -109,7 +109,7 @@ async def test_bt_offline_mode_entity_available_when_cloud_fails(
     device_fixture: ModelName,
     entities: list[tuple[str, str]],
 ) -> None:
-    """Test entities with bt_offline_mode=True remain available when cloud coordinators fail."""
+    """Test bt_offline_mode entities stay available when cloud fails."""
     await async_init_integration(hass, mock_config_entry_bluetooth)
 
     # Check all entities are initially available
@@ -144,7 +144,7 @@ async def test_entity_without_bt_becomes_unavailable_when_cloud_fails_no_bt(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test entities become unavailable when cloud fails and no bluetooth coordinator exists."""
+    """Test entities become unavailable when cloud fails without BT."""
     await async_init_integration(hass, mock_config_entry)
 
     # Water tank sensor (even with bt_offline_mode=True, needs BT coordinator to work)
@@ -324,7 +324,7 @@ async def test_manual_offline_mode(
     freezer: FrozenDateTimeFactory,
     mock_ble_device_from_address: MagicMock,
 ) -> None:
-    """Test that manual offline mode successfully sets up and updates entities via Bluetooth, and marks non-Bluetooth entities as unavailable."""
+    """Test manual offline mode updates entities via Bluetooth."""
 
     mock_config_entry_bluetooth.add_to_hass(hass)
     hass.config_entries.async_update_entry(

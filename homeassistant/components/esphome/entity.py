@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
 import math
-from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar, cast, override
 
 from aioesphomeapi import (
     APIConnectionError,
@@ -53,7 +53,7 @@ def async_static_info_updated(
     platform: entity_platform.EntityPlatform,
     async_add_entities: AddEntitiesCallback,
     info_type: type[_InfoT],
-    entity_type: type[_EntityT],
+    entity_type: Callable[[RuntimeEntryData, EntityInfo, type[_StateT]], _EntityT],
     state_type: type[_StateT],
     infos: list[EntityInfo],
 ) -> None:
@@ -188,7 +188,7 @@ async def platform_async_setup_entry(
     async_add_entities: AddEntitiesCallback,
     *,
     info_type: type[_InfoT],
-    entity_type: type[_EntityT],
+    entity_type: Callable[[RuntimeEntryData, EntityInfo, type[_StateT]], _EntityT],
     state_type: type[_StateT],
     info_filter: Callable[[_InfoT], bool] | None = None,
 ) -> None:
@@ -196,6 +196,11 @@ async def platform_async_setup_entry(
 
     This method is in charge of receiving, distributing and storing
     info and state updates.
+
+    `entity_type` is any callable that builds an entity from
+    `(entry_data, info, state_type)`. A regular entity class satisfies this,
+    and platforms with multiple entity classes can pass a factory function
+    that picks the class per static info.
     """
     entry_data = entry.runtime_data
     entry_data.info[info_type] = {}
@@ -371,6 +376,7 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
                 connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
             )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         entry_data = self._entry_data
@@ -508,6 +514,7 @@ class EsphomeAssistEntity(EsphomeBaseEntity):
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
         await super().async_added_to_hass()

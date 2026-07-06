@@ -58,6 +58,8 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     ATTR_MODE,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -71,6 +73,7 @@ from homeassistant.const import (
     STATE_OPENING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfLength,
     UnitOfTemperature,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
@@ -104,7 +107,7 @@ from homeassistant.helpers.floor_registry import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import as_timestamp
-from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.util.unit_conversion import DistanceConverter, TemperatureConverter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -771,6 +774,33 @@ class PrometheusMetrics:
     def _handle_person(self, state: State) -> None:
         self._numeric_metric(state, "person", "person")
 
+    def _handle_geo_location(self, state: State) -> None:
+        labels = self._labels(state, {"source": state.attributes.get("source", "")})
+        if (value := self.state_as_number(state)) is not None:
+            unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            if unit is not None:
+                value = DistanceConverter.convert(value, unit, UnitOfLength.METERS)
+            self._metric(
+                "geo_location_distance_meters",
+                prometheus_client.Gauge,
+                "Distance of the geo location event from home in meters",
+                labels,
+            ).set(value)
+        if (latitude := state.attributes.get(ATTR_LATITUDE)) is not None:
+            self._metric(
+                "geo_location_latitude_degrees",
+                prometheus_client.Gauge,
+                "Latitude of the geo location event in degrees",
+                labels,
+            ).set(latitude)
+        if (longitude := state.attributes.get(ATTR_LONGITUDE)) is not None:
+            self._metric(
+                "geo_location_longitude_degrees",
+                prometheus_client.Gauge,
+                "Longitude of the geo location event in degrees",
+                labels,
+            ).set(longitude)
+
     def _handle_lock(self, state: State) -> None:
         self._numeric_metric(state, "lock", "lock")
 
@@ -1102,7 +1132,7 @@ class PrometheusMetrics:
             PERCENTAGE: "percent",
         }
         default = unit.replace("/", "_per_")
-        # Unit conversion for CONCENTRATION_MICROGRAMS_PER_CUBIC_METER "μg/m³"
+        # Unit conversion for UnitOfDensity.MICROGRAMS_PER_CUBIC_METER "μg/m³"
         # "μ" == "\u03bc" but the API uses "\u00b5"
         default = default.replace("\u03bc", "\u00b5")
         default = default.lower()

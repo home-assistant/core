@@ -5,7 +5,6 @@ from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
 
 import pytest
-import serial
 
 from homeassistant import config_entries
 from homeassistant.components.dsmr.const import DOMAIN
@@ -193,12 +192,7 @@ async def test_setup_network_rfxtrx(
         ),
     ],
 )
-@patch(
-    "homeassistant.components.dsmr.config_flow.usb.async_scan_serial_ports",
-    return_value=[com_port()],
-)
 async def test_setup_serial(
-    com_mock,
     hass: HomeAssistant,
     dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
     version: str,
@@ -236,12 +230,7 @@ async def test_setup_serial(
     assert result["data"] == entry_data
 
 
-@patch(
-    "homeassistant.components.dsmr.config_flow.usb.async_scan_serial_ports",
-    return_value=[com_port()],
-)
 async def test_setup_serial_rfxtrx(
-    com_mock,
     hass: HomeAssistant,
     dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
     rfxtrx_dsmr_connection_send_validate_fixture: tuple[
@@ -292,65 +281,7 @@ async def test_setup_serial_rfxtrx(
     assert result["data"] == {**entry_data, **SERIAL_DATA}
 
 
-@patch(
-    "homeassistant.components.dsmr.config_flow.usb.async_scan_serial_ports",
-    return_value=[com_port()],
-)
-async def test_setup_serial_manual(
-    com_mock,
-    hass: HomeAssistant,
-    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
-) -> None:
-    """Test we can setup serial with manual entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] is None
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"type": "Serial"},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "setup_serial"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"port": "Enter Manually", "dsmr_version": "2.2"},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "setup_serial_manual_path"
-    assert result["errors"] is None
-
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"port": "/dev/ttyUSB0"}
-        )
-        await hass.async_block_till_done()
-
-    entry_data = {
-        "port": "/dev/ttyUSB0",
-        "dsmr_version": "2.2",
-        "protocol": "dsmr_protocol",
-    }
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "/dev/ttyUSB0"
-    assert result["data"] == {**entry_data, **SERIAL_DATA}
-
-
-@patch(
-    "homeassistant.components.dsmr.config_flow.usb.async_scan_serial_ports",
-    return_value=[com_port()],
-)
 async def test_setup_serial_fail(
-    com_mock,
     hass: HomeAssistant,
     dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
@@ -366,7 +297,7 @@ async def test_setup_serial_fail(
     # override the mock to have it fail the first time and succeed after
     first_fail_connection_factory = AsyncMock(
         return_value=(transport, protocol),
-        side_effect=chain([serial.SerialException], repeat(DEFAULT)),
+        side_effect=chain([OSError], repeat(DEFAULT)),
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -396,12 +327,7 @@ async def test_setup_serial_fail(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@patch(
-    "homeassistant.components.dsmr.config_flow.usb.async_scan_serial_ports",
-    return_value=[com_port()],
-)
 async def test_setup_serial_timeout(
-    com_mock,
     hass: HomeAssistant,
     dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
     rfxtrx_dsmr_connection_send_validate_fixture: tuple[
@@ -457,12 +383,7 @@ async def test_setup_serial_timeout(
     assert result["errors"] == {"base": "cannot_communicate"}
 
 
-@patch(
-    "homeassistant.components.dsmr.config_flow.usb.async_scan_serial_ports",
-    return_value=[com_port()],
-)
 async def test_setup_serial_wrong_telegram(
-    com_mock,
     hass: HomeAssistant,
     dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
     rfxtrx_dsmr_connection_send_validate_fixture: tuple[

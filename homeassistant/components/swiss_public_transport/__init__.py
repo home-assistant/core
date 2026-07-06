@@ -90,7 +90,7 @@ async def async_setup_entry(
             translation_domain=DOMAIN,
             translation_key="invalid_data",
             translation_placeholders={
-                **PLACEHOLDERS,
+                "stationboard_url": PLACEHOLDERS["stationboard_url"],
                 "config_title": entry.title,
                 "error": str(e),
             },
@@ -118,10 +118,6 @@ async def async_migrate_entry(
 ) -> bool:
     """Migrate config entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
-
-    if config_entry.version > 3:
-        # This means the user has downgraded from a future version
-        return False
 
     if config_entry.version == 1 and config_entry.minor_version == 1:
         # Remove wrongly registered devices and entries

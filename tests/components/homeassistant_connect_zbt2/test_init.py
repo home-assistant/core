@@ -23,7 +23,7 @@ from tests.components.usb.conftest import force_usb_polling_watcher  # noqa: F40
 
 
 async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
-    """Test migrating config entries from v1.1 to v1.2 to use the serial number as unique ID."""
+    """Test migrating config entries from v1.1 to v1.2 for serial unique ID."""
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -232,6 +232,75 @@ async def test_config_entry_migration_v2_prefers_active_entry(
     assert hass.config_entries.async_get_entry(sibling_entry.entry_id) is None
     assert active_entry.minor_version == 2
     assert active_entry.unique_id == serial_number
+
+
+async def test_config_entry_migration_v2_removes_duplicates_of_migrated_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test v1.2 migration removes duplicates of an already migrated entry.
+
+    A migrated entry (minor version 2) never runs the migration again, so the
+    remaining minor version 1 duplicates have to remove themselves instead of
+    relying on the canonical entry's migration to remove them.
+    """
+    serial_number = "E072A1D90104"
+    data = {
+        "device": "/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_E072A1D90104-if00",
+        "firmware": "spinel",
+        "firmware_version": (
+            "SL-OPENTHREAD/2.7.2.0_GitHub-fb0446f53; EFR32; Feb 24 2026 00:58:55"
+        ),
+        "manufacturer": "Nabu Casa",
+        "pid": "831A",
+        "product": "ZBT-2",
+        "serial_number": serial_number,
+        "vid": "303A",
+    }
+
+    older_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="303A:831A_E072A1D90104_Nabu Casa_ZBT-2 - Nabu Casa ZBT-2",
+        source="usb",
+        data=dict(data),
+        version=1,
+        minor_version=1,
+    )
+    older_entry.add_to_hass(hass)
+
+    duplicate_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="303A:831A_E072A1D90104_Nabu Casa_ZBT-2",
+        source="import",
+        data=dict(data),
+        version=1,
+        minor_version=1,
+    )
+    duplicate_entry.add_to_hass(hass)
+
+    migrated_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=serial_number,
+        source="import",
+        data=dict(data),
+        version=1,
+        minor_version=2,
+    )
+    migrated_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homeassistant_connect_zbt2.os.path.exists",
+        return_value=True,
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    remaining_entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(remaining_entries) == 1
+    assert remaining_entries[0].entry_id == migrated_entry.entry_id
+    assert remaining_entries[0].minor_version == 2
+    assert remaining_entries[0].unique_id == serial_number
+    assert hass.config_entries.async_get_entry(older_entry.entry_id) is None
+    assert hass.config_entries.async_get_entry(duplicate_entry.entry_id) is None
 
 
 async def test_setup_fails_on_missing_usb_port(hass: HomeAssistant) -> None:

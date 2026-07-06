@@ -1,6 +1,7 @@
 """Support for Notion sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 from aionotion.listener.models import ListenerKind
 
@@ -69,6 +70,7 @@ class NotionSensor(NotionEntity, SensorEntity):
     """Define a Notion sensor."""
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor."""
         if self.listener.definition_id == ListenerKind.TEMPERATURE.value:
@@ -80,6 +82,7 @@ class NotionSensor(NotionEntity, SensorEntity):
         return None
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the value reported by the sensor."""
         if not self.listener.status_localized:

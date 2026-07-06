@@ -4,13 +4,12 @@ from pathlib import Path
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.tests.redundant_usefixtures import (
     RedundantUsefixtures,
 )
 import pytest
 
-from tests.pylint import assert_no_messages
+from tests.pylint import assert_no_messages, walk_checker
 
 
 @pytest.mark.parametrize(
@@ -73,11 +72,9 @@ def test_no_warning(
 ) -> None:
     """Test cases that should not trigger a warning."""
     root_node = astroid.parse(code, "tests.components.test_integration.test_init")
-    walker = ASTWalker(linter)
-    walker.add_checker(usefixtures_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, usefixtures_checker, root_node)
 
 
 def test_single_fixture_redundant(
@@ -95,9 +92,7 @@ async def test_something(hass: HomeAssistant) -> None:
 """,
         "tests.components.test_integration.test_init",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(usefixtures_checker)
-    walker.walk(root_node)
+    walk_checker(linter, usefixtures_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -120,9 +115,7 @@ async def test_something(hass: HomeAssistant) -> None:
 """,
         "tests.components.test_integration.test_init",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(usefixtures_checker)
-    walker.walk(root_node)
+    walk_checker(linter, usefixtures_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -144,9 +137,7 @@ async def test_something(hass: HomeAssistant) -> None:
 """,
         "tests.components.test_integration.test_init",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(usefixtures_checker)
-    walker.walk(root_node)
+    walk_checker(linter, usefixtures_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -171,9 +162,7 @@ async def test_b(hass: HomeAssistant) -> None:
 """,
         "tests.components.test_integration.test_init",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(usefixtures_checker)
-    walker.walk(root_node)
+    walk_checker(linter, usefixtures_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 2
@@ -202,9 +191,7 @@ async def test_something(hass: HomeAssistant) -> None:
     )
     root_node.file = str(test_dir / "test_init.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(usefixtures_checker)
-    walker.walk(root_node)
+    walk_checker(linter, usefixtures_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -235,9 +222,7 @@ async def test_something(hass: HomeAssistant) -> None:
     )
     root_node.file = str(test_dir / "test_init.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(usefixtures_checker)
-    walker.walk(root_node)
+    walk_checker(linter, usefixtures_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -249,7 +234,7 @@ def test_conftest_autouse_named_fixture_redundant(
     usefixtures_checker: RedundantUsefixtures,
     tmp_path: Path,
 ) -> None:
-    """Test that autouse fixtures with name= override are detected by their public name."""
+    """Test autouse fixtures with name= override detection."""
     test_dir = tmp_path / "tests" / "components" / "test_int"
     test_dir.mkdir(parents=True)
 
@@ -268,9 +253,7 @@ async def test_something(hass: HomeAssistant) -> None:
     )
     root_node.file = str(test_dir / "test_init.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(usefixtures_checker)
-    walker.walk(root_node)
+    walk_checker(linter, usefixtures_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -292,8 +275,6 @@ async def test_something(hass: HomeAssistant) -> None:
 """,
         "homeassistant.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(usefixtures_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, usefixtures_checker, root_node)

@@ -9,7 +9,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.indevolt.coordinator import SCAN_INTERVAL
-from homeassistant.components.select import SERVICE_SELECT_OPTION
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -59,14 +62,10 @@ async def test_select_option(
     # Reset mock call count for this iteration
     mock_indevolt.set_data.reset_mock()
 
-    # Update mock data to reflect the new value
-    mock_indevolt.fetch_data.return_value[IndevoltConfig.READ_ENERGY_MODE] = (
-        expected_value
-    )
-
     # Attempt to change option
+    fetch_count_before = mock_indevolt.fetch_data.call_count
     await hass.services.async_call(
-        Platform.SELECT,
+        SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {"entity_id": "select.cms_sf2000_energy_mode", "option": option},
         blocking=True,
@@ -77,7 +76,8 @@ async def test_select_option(
         IndevoltConfig.WRITE_ENERGY_MODE, expected_value
     )
 
-    # Verify updated state
+    # Verify state updated optimistically without a new fetch
+    assert mock_indevolt.fetch_data.call_count == fetch_count_before
     assert (state := hass.states.get("select.cms_sf2000_energy_mode")) is not None
     assert state.state == option
 
@@ -97,7 +97,7 @@ async def test_select_set_option_error(
     # Attempt to change option
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            Platform.SELECT,
+            SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
                 "entity_id": "select.cms_sf2000_energy_mode",
@@ -116,7 +116,7 @@ async def test_select_unavailable_outdoor_portable(
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that entity is unavailable when device is in outdoor/portable mode (value 0)."""
+    """Test entity is unavailable in outdoor/portable mode (value 0)."""
 
     # Update mock data to fake outdoor/portable mode
     mock_indevolt.fetch_data.return_value[IndevoltConfig.READ_ENERGY_MODE] = (

@@ -5,10 +5,9 @@ from pylint.checkers import BaseChecker
 from pylint.interfaces import UNDEFINED
 from pylint.testutils import MessageTest
 from pylint.testutils.unittest_linter import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 import pytest
 
-from . import assert_adds_messages, assert_no_messages
+from . import assert_adds_messages, assert_no_messages, walk_checker
 
 
 @pytest.mark.parametrize(
@@ -34,7 +33,9 @@ from . import assert_adds_messages, assert_no_messages
         ),
         pytest.param(
             """
-        PLATFORMS: list[str] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
+        PLATFORMS: list[str] = [
+            Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR
+        ]
         """,
             id="typed_multiple_platform",
         ),
@@ -58,7 +59,9 @@ from . import assert_adds_messages, assert_no_messages
         ),
         pytest.param(
             """
-        _PLATFORMS: list[str] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
+        _PLATFORMS: list[str] = [
+            Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR
+        ]
         """,
             id="private_typed_multiple_platforms",
         ),
@@ -71,11 +74,9 @@ def test_enforce_sorted_platforms(
 ) -> None:
     """Good test cases."""
     root_node = astroid.parse(code, "homeassistant.components.pylint_test")
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_sorted_platforms_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, enforce_sorted_platforms_checker, root_node)
 
 
 def test_enforce_sorted_platforms_bad(

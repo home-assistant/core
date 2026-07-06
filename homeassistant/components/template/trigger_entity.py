@@ -1,7 +1,7 @@
 """Trigger entity."""
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, override
 
 from homeassistant.const import CONF_VARIABLES
 from homeassistant.core import HomeAssistant, callback
@@ -49,12 +49,19 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         if self.skip_rendered_result is not None:
             self._skip_rendered_result.extend(self.skip_rendered_result)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
         if self.coordinator.data is not None:
+            # The trigger already produced data; rendering it must win over
+            # restored state, so skip restore entirely to avoid clobbering the
+            # freshly rendered attributes.
             self._process_data()
+        else:
+            await self.async_restore_last_state()
 
+    @override
     def _set_unique_id(self, unique_id: str | None) -> None:
         """Set unique id."""
         if unique_id and self.coordinator.unique_id:
@@ -62,6 +69,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         else:
             self._unique_id = unique_id
 
+    @override
     def setup_state_template(
         self,
         attribute: str,
@@ -70,13 +78,16 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
     ) -> None:
         """Set up a template that manages the main state of the entity.
 
-        Requires _state_option to be set on the inheriting class. _state_option represents
-        the configuration option that derives the state. E.g. Template weather entities main state option
-        is 'condition', where switch is 'state'.
+        Requires _state_option to be set on the inheriting
+        class. _state_option represents the configuration
+        option that derives the state. E.g. Template weather
+        entities main state option is 'condition', where
+        switch is 'state'.
         """
         if self._state_option is None:
             raise NotImplementedError(
-                f"{self.__class__.__name__} does not implement '_state_option' for 'setup_state_template'."
+                f"{self.__class__.__name__} does not implement"
+                " '_state_option' for 'setup_state_template'."
             )
 
         if self.add_template(
@@ -89,6 +100,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
             self._to_render_simple.append(self._state_option)
             self._parse_result.add(self._state_option)
 
+    @override
     def setup_template(
         self,
         option: str,
@@ -130,11 +142,13 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
             self._parse_result.add(option)
 
     @property
+    @override
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
         return self.coordinator.referenced_blueprint
 
     @property
+    @override
     def available(self) -> bool:
         """Return availability of the entity."""
         if self._state_render_error:
@@ -142,11 +156,25 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
 
         return super().available
 
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes."""
+        # Override TriggerBaseEntity's extra_state_attributes property to restore Entity's extra state attributes behavior.
+        return self._attr_extra_state_attributes
+
+    @override
+    def restore_attribute(self, conf_attr: str, attr: str, restored_value: Any) -> None:
+        """Restore an attribute from the last value."""
+        self._rendered[conf_attr] = restored_value
+
     @callback
+    @override
     def _render_script_variables(self) -> dict:
         """Render configured variables."""
         return self._rendered_entity_variables or {}
 
+    @override
     def _render_single_template(
         self,
         key: str,
@@ -174,13 +202,15 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
 
         return _SENTINEL
 
+    @override
     def _render_templates(self, variables: dict[str, Any]) -> None:
         """Render templates."""
         self._state_render_error = False
         rendered = dict(self._static_rendered)
 
         # If state fails to render, the entity should go unavailable. Render the
-        # state as a simple template because the result should always be a string or None.
+        # state as a simple template because the result
+        # should always be a string or None.
         if (
             state_option := self._state_option
         ) is not None and state_option in self._to_render_simple:
@@ -196,7 +226,20 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         self._render_single_templates(
             rendered, variables, [state_option] if state_option else []
         )
-        self._render_attributes(rendered, variables)
+
+        if self._attribute_templates:
+            attributes = {}
+            for attribute, template in self._attribute_templates.items():
+                try:
+                    value = template_render_complex(template, variables)
+                    attributes[attribute] = value
+                    variables.update({attribute: value})
+                except TemplateError as err:
+                    log_triggered_template_error(
+                        self.entity_id, err, attribute=attribute
+                    )
+            self._attr_extra_state_attributes = attributes
+
         self._rendered = rendered
 
     def _handle_rendered_results(self) -> bool:
@@ -204,7 +247,8 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         # Handle any templates.
         write_state = False
         if self._state_render_error:
-            # The state errored and the entity is unavailable, do not process any values.
+            # The state errored and the entity is unavailable,
+            # do not process any values.
             return True
 
         for option, entity_template in self._templates.items():
@@ -267,6 +311,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
             self.async_write_ha_state()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator.
 

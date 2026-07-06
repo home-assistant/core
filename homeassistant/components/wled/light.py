@@ -1,7 +1,7 @@
 """Support for LED lights."""
 
 from functools import partial
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -16,6 +16,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.group import IntegrationSpecificGroup
 
 from .const import (
     ATTR_CCT,
@@ -61,28 +62,44 @@ class WLEDMainLight(WLEDEntity, LightEntity):
     _attr_translation_key = "main"
     _attr_supported_features = LightEntityFeature.TRANSITION
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    group: IntegrationSpecificGroup
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED main light."""
         super().__init__(coordinator=coordinator)
         self._attr_unique_id = coordinator.data.info.mac_address
+        self.group = IntegrationSpecificGroup(self, [])
+        self._update_group_member()
+
+    def _update_group_member(self) -> None:
+        """Update group members based on current segments."""
+        segment_unique_ids = [
+            f"{self.coordinator.data.info.mac_address}_{segment_id}"
+            for segment_id in sorted(self.coordinator.segment_ids)
+        ]
+        if segment_unique_ids != self.group.member_unique_ids:
+            self.group.member_unique_ids = segment_unique_ids
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 1..255."""
         return self.coordinator.data.state.brightness
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the light."""
         return bool(self.coordinator.data.state.on)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if this main light is available or not."""
         return self.coordinator.has_main_light and super().available
 
     @wled_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         transition = None
@@ -93,6 +110,7 @@ class WLEDMainLight(WLEDEntity, LightEntity):
         await self.coordinator.wled.master(on=False, transition=transition)
 
     @wled_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         transition = None
@@ -103,6 +121,13 @@ class WLEDMainLight(WLEDEntity, LightEntity):
         await self.coordinator.wled.master(
             on=True, brightness=kwargs.get(ATTR_BRIGHTNESS), transition=transition
         )
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Update attributes when the coordinator updates."""
+        self._update_group_member()
+        super()._handle_coordinator_update()
 
 
 class WLEDSegmentLight(WLEDEntity, LightEntity):
@@ -146,6 +171,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             self._attr_supported_color_modes = set(color_modes)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -153,6 +179,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         )
 
     @property
+    @override
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the color value."""
         if not (color := self.coordinator.data.state.segments[self._segment].color):
@@ -160,6 +187,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         return color.primary[:3]
 
     @property
+    @override
     def rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the color value."""
         if not (color := self.coordinator.data.state.segments[self._segment].color):
@@ -167,12 +195,14 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         return cast(tuple[int, int, int, int], color.primary)
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the CT color value in K."""
         cct = self.coordinator.data.state.segments[self._segment].cct
         return kelvin_to_255_reverse(cct, COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX)
 
     @property
+    @override
     def effect(self) -> str | None:
         """Return the current effect of the light."""
         return self.coordinator.data.effects[
@@ -180,6 +210,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         ].name
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 1..255."""
         state = self.coordinator.data.state
@@ -193,11 +224,13 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         return segment_brightness
 
     @property
+    @override
     def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         return [effect.name for effect in self.coordinator.data.effects.values()]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the light."""
         state = self.coordinator.data.state
@@ -210,6 +243,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         return bool(state.segments[self._segment].on)
 
     @wled_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         transition = None
@@ -227,6 +261,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         )
 
     @wled_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         data: dict[str, Any] = {
@@ -280,11 +315,7 @@ def async_update_segments(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Update segments."""
-    segment_ids = {
-        light.segment_id
-        for light in coordinator.data.state.segments.values()
-        if light.segment_id is not None
-    }
+    segment_ids = coordinator.segment_ids
     new_entities: list[WLEDMainLight | WLEDSegmentLight] = []
 
     # More than 1 segment now? No main? Add main controls

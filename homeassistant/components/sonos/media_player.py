@@ -3,7 +3,9 @@
 import datetime
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Any
+import os
+from typing import TYPE_CHECKING, Any, override
+from urllib.parse import urlparse
 
 from soco import SoCo, alarms
 from soco.core import (
@@ -19,7 +21,6 @@ from sonos_websocket.exception import SonosWebsocketError
 
 from homeassistant.components import media_source, spotify
 from homeassistant.components.media_player import (
-    ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_ARTIST,
@@ -35,6 +36,8 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
     RepeatMode,
+    SearchMedia,
+    SearchMediaQuery,
     async_process_play_media_url,
 )
 from homeassistant.components.plex import PLEX_URI_SCHEME
@@ -60,6 +63,7 @@ from .const import (
     MODELS_TV_ONLY,
     PLAYABLE_MEDIA_TYPES,
     SONOS_CREATE_MEDIA_PLAYER,
+    SONOS_FAVORITES_UPDATED,
     SONOS_MEDIA_UPDATED,
     SONOS_STATE_PLAYING,
     SONOS_STATE_TRANSITIONING,
@@ -88,6 +92,7 @@ SONOS_TO_REPEAT = {meaning: mode for mode, meaning in REPEAT_TO_SONOS.items()}
 
 UPNP_ERRORS_TO_IGNORE = ["701", "711", "712"]
 ANNOUNCE_NOT_SUPPORTED_ERRORS: list[str] = ["globalError"]
+ANNOUNCE_AUDIOCLIP_SUPPORTED_FORMATS: frozenset[str] = frozenset({".mp3", ".wav"})
 
 
 async def async_setup_entry(
@@ -124,8 +129,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.REPEAT_SET
+        | MediaPlayerEntityFeature.SEARCH_MEDIA
         | MediaPlayerEntityFeature.SEEK
-        | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.SHUFFLE_SET
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -139,6 +144,16 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         super().__init__(speaker, config_entry)
         self._attr_unique_id = self.soco.uid
 
+    @property
+    @override
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Flag media player features that are supported."""
+        features = self._attr_supported_features
+        if self.source_list:
+            features |= MediaPlayerEntityFeature.SELECT_SOURCE
+        return features
+
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""
         await super().async_added_to_hass()
@@ -149,6 +164,13 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 self.async_write_media_state,
             )
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SONOS_FAVORITES_UPDATED}-{self.speaker.household_id}",
+                self.async_write_ha_state,
+            )
+        )
 
     @callback
     def async_write_media_state(self, uid: str) -> None:
@@ -157,6 +179,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the media_player is available."""
         return (
@@ -171,15 +194,18 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         return self.speaker.coordinator or self.speaker
 
     @property
+    @override
     def group_members(self) -> list[str] | None:
         """List of entity_ids which are currently grouped together."""
         return self.speaker.sonos_group_entities
 
+    @override
     def __hash__(self) -> int:
         """Return a hash of self."""
         return hash(self.unique_id)
 
     @property
+    @override
     def state(self) -> MediaPlayerState:
         """Return the state of the entity."""
         if self.media.playback_status in (
@@ -199,6 +225,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             return MediaPlayerState.PLAYING
         return MediaPlayerState.IDLE
 
+    @override
     async def _async_fallback_poll(self) -> None:
         """Retrieve latest state by polling."""
         favorites = self.config_entry.runtime_data.favorites[self.speaker.household_id]
@@ -214,21 +241,25 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             self.media.poll_media()
 
     @property
+    @override
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         return self.speaker.volume and self.speaker.volume / 100
 
     @property
+    @override
     def is_volume_muted(self) -> bool | None:
         """Return true if volume is muted."""
         return self.speaker.muted
 
     @property
+    @override
     def shuffle(self) -> bool | None:
         """Shuffling state."""
         return PLAY_MODES[self.media.play_mode][0]
 
     @property
+    @override
     def repeat(self) -> RepeatMode | None:
         """Return current repeat mode."""
         sonos_repeat = PLAY_MODES[self.media.play_mode][1]
@@ -240,56 +271,67 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         return self.coordinator.media
 
     @property
+    @override
     def media_content_id(self) -> str | None:
         """Content id of current playing media."""
         return self.media.uri
 
     @property
+    @override
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         return int(self.media.duration) if self.media.duration else None
 
     @property
+    @override
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         return self.media.position
 
     @property
+    @override
     def media_position_updated_at(self) -> datetime.datetime | None:
         """When was the position of the current playing media valid."""
         return self.media.position_updated_at
 
     @property
+    @override
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         return self.media.image_url or None
 
     @property
+    @override
     def media_channel(self) -> str | None:
         """Channel currently playing."""
         return self.media.channel or None
 
     @property
+    @override
     def media_playlist(self) -> str | None:
         """Title of playlist currently playing."""
         return self.media.playlist_name
 
     @property
+    @override
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         return self.media.artist or None
 
     @property
+    @override
     def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
         return self.media.album_name or None
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Title of current playing media."""
         return self.media.title or None
 
     @property
+    @override
     def source(self) -> str | None:
         """Name of the current input source."""
         return self.media.source_name or None
@@ -305,11 +347,13 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self.soco.volume -= VOLUME_INCREMENT
 
     @soco_error()
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self.soco.volume = round(volume * 100)
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
+    @override
     def set_shuffle(self, shuffle: bool) -> None:
         """Enable/Disable shuffle mode."""
         sonos_shuffle = shuffle
@@ -319,6 +363,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         ]
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
+    @override
     def set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         sonos_shuffle = PLAY_MODES[self.media.play_mode][0]
@@ -328,11 +373,13 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         ]
 
     @soco_error()
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         self.soco.mute = mute
 
     @soco_error()
+    @override
     def select_source(self, source: str) -> None:
         """Select input source."""
         soco = self.coordinator.soco
@@ -386,52 +433,65 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             soco.play_from_queue(0)
 
     @property
+    @override
     def source_list(self) -> list[str]:
         """List of available input sources."""
+        sources: list[str] = []
         model = self.coordinator.model_name.split()[-1].upper()
         if model in MODELS_LINEIN_ONLY:
-            return [SOURCE_LINEIN]
-        if model in MODELS_TV_ONLY:
-            return [SOURCE_TV]
-        if model in MODELS_LINEIN_AND_TV:
-            return [SOURCE_LINEIN, SOURCE_TV]
-        return []
+            sources = [SOURCE_LINEIN]
+        elif model in MODELS_TV_ONLY:
+            sources = [SOURCE_TV]
+        elif model in MODELS_LINEIN_AND_TV:
+            sources = [SOURCE_LINEIN, SOURCE_TV]
+        sources.extend(
+            fav.title for fav in self.speaker.favorites if fav.title not in sources
+        )
+        return sources
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
+    @override
     def media_play(self) -> None:
         """Send play command."""
         self.coordinator.soco.play()
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
+    @override
     def media_stop(self) -> None:
         """Send stop command."""
         self.coordinator.soco.stop()
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
+    @override
     def media_pause(self) -> None:
         """Send pause command."""
         self.coordinator.soco.pause()
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
+    @override
     def media_next_track(self) -> None:
         """Send next track command."""
         self.coordinator.soco.next()
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
+    @override
     def media_previous_track(self) -> None:
         """Send next track command."""
         self.coordinator.soco.previous()
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
+    @override
     def media_seek(self, position: float) -> None:
         """Send seek command."""
         self.coordinator.soco.seek(str(datetime.timedelta(seconds=int(position))))
 
     @soco_error()
+    @override
     def clear_playlist(self) -> None:
         """Clear players playlist."""
         self.coordinator.soco.clear_queue()
 
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -457,6 +517,15 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         if kwargs.get(ATTR_MEDIA_ANNOUNCE):
             volume = kwargs.get("extra", {}).get("volume")
+            ext = os.path.splitext(urlparse(media_id).path)[1].lower()
+            if ext and ext not in ANNOUNCE_AUDIOCLIP_SUPPORTED_FORMATS:
+                _LOGGER.warning(
+                    "Sonos AudioClip announce only supports MP3 and WAV; "
+                    "%s has extension %s and will be attempted as a clip anyway on %s",
+                    media_id,
+                    ext,
+                    self.speaker.zone_name,
+                )
             _LOGGER.debug("Playing %s using websocket audioclip", media_id)
             try:
                 assert self.speaker.websocket
@@ -754,6 +823,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         ]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
         attributes: dict[str, Any] = {}
@@ -764,11 +834,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         if self.media.queue_size:
             attributes["queue_size"] = self.media.queue_size
 
-        if self.source:
-            attributes[ATTR_INPUT_SOURCE] = self.source
-
         return attributes
 
+    @override
     async def async_get_browse_image(
         self,
         media_content_type: MediaType | str,
@@ -791,6 +859,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         return (None, None)
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -806,6 +875,20 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             media_content_type,
         )
 
+    @override
+    async def async_search_media(
+        self,
+        query: SearchMediaQuery,
+    ) -> SearchMedia:
+        """Search the music library for media matching the query."""
+        return await media_browser.async_search_media(
+            self.hass,
+            self.media,
+            self.get_browse_image_url,
+            query,
+        )
+
+    @override
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         speakers = []
@@ -836,6 +919,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             self.hass, self.config_entry, self.speaker, speakers
         )
 
+    @override
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group.
 

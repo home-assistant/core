@@ -2,13 +2,12 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.actions.service_registration import (
     ServiceRegistrationChecker,
 )
 import pytest
 
-from tests.pylint import assert_no_messages
+from tests.pylint import assert_no_messages, walk_checker
 
 
 @pytest.fixture(name="registration_checker")
@@ -68,11 +67,9 @@ def test_no_warning(
 ) -> None:
     """Test cases that should not trigger a warning."""
     root_node = astroid.parse(code, module_name)
-    walker = ASTWalker(linter)
-    walker.add_checker(registration_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, registration_checker, root_node)
 
 
 def test_hass_services_register_flagged(
@@ -87,9 +84,7 @@ async def async_setup_entry(hass, entry):
 """,
         "homeassistant.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(registration_checker)
-    walker.walk(root_node)
+    walk_checker(linter, registration_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -108,9 +103,7 @@ async def async_setup_entry(hass, entry):
 """,
         "homeassistant.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(registration_checker)
-    walker.walk(root_node)
+    walk_checker(linter, registration_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -128,9 +121,7 @@ async def async_setup_entry(hass, entry):
 """,
         "homeassistant.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(registration_checker)
-    walker.walk(root_node)
+    walk_checker(linter, registration_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -148,9 +139,7 @@ async def async_setup_entry(hass, entry):
 """,
         "homeassistant.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(registration_checker)
-    walker.walk(root_node)
+    walk_checker(linter, registration_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -170,9 +159,7 @@ async def async_setup_entry(hass, entry):
 """,
         "homeassistant.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(registration_checker)
-    walker.walk(root_node)
+    walk_checker(linter, registration_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 3
@@ -182,7 +169,7 @@ def test_helper_function_flagged(
     linter: UnittestLinter,
     registration_checker: ServiceRegistrationChecker,
 ) -> None:
-    """Test that services registered in helper functions called from async_setup_entry are flagged."""
+    """Test services in helper functions called from setup are flagged."""
     root_node = astroid.parse(
         """
 def _register_services(hass):
@@ -193,9 +180,7 @@ async def async_setup_entry(hass, entry):
 """,
         "homeassistant.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(registration_checker)
-    walker.walk(root_node)
+    walk_checker(linter, registration_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -219,8 +204,6 @@ async def async_setup_entry(hass, entry):
 """,
         "homeassistant.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(registration_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, registration_checker, root_node)

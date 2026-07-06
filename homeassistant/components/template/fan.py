@@ -1,15 +1,12 @@
 """Support for Template fans."""
 
+from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.fan import (
-    ATTR_DIRECTION,
-    ATTR_OSCILLATING,
-    ATTR_PERCENTAGE,
-    ATTR_PRESET_MODE,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN as FAN_DOMAIN,
@@ -100,6 +97,15 @@ FAN_CONFIG_ENTRY_SCHEMA = FAN_COMMON_SCHEMA.extend(
 )
 
 
+class FanScriptVariable(StrEnum):
+    """Variables for scripts."""
+
+    DIRECTION = "direction"
+    OSCILLATING = "oscillating"
+    PERCENTAGE = "percentage"
+    PRESET_MODE = "preset_mode"
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -156,8 +162,11 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
     _optimistic_entity = True
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
         self.setup_state_template(
@@ -165,7 +174,8 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
             template_validators.boolean(self, CONF_STATE),
         )
 
-        # Ensure legacy template entity functionality by setting percentage to None instead
+        # Ensure legacy template entity functionality by
+        # setting percentage to None instead
         # of the FanEntity default of 0.
         self._attr_percentage = None
         self.setup_template(
@@ -217,10 +227,12 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
                 self._attr_supported_features |= supported_feature
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._attr_is_on
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -231,8 +243,8 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         await self.async_run_script(
             self._action_scripts[CONF_ON_ACTION],
             run_variables={
-                ATTR_PERCENTAGE: percentage,
-                ATTR_PRESET_MODE: preset_mode,
+                FanScriptVariable.PERCENTAGE: percentage,
+                FanScriptVariable.PRESET_MODE: preset_mode,
             },
             context=self._context,
         )
@@ -246,6 +258,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
             self._attr_is_on = True
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self.async_run_script(
@@ -256,6 +269,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
             self._attr_is_on = False
             self.async_write_ha_state()
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage speed of the fan."""
         self._attr_percentage = percentage
@@ -263,7 +277,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         if script := self._action_scripts.get(CONF_SET_PERCENTAGE_ACTION):
             await self.async_run_script(
                 script,
-                run_variables={ATTR_PERCENTAGE: self._attr_percentage},
+                run_variables={FanScriptVariable.PERCENTAGE: self._attr_percentage},
                 context=self._context,
             )
 
@@ -273,6 +287,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         if self._attr_assumed_state or CONF_PERCENTAGE not in self._templates:
             self.async_write_ha_state()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset_mode of the fan."""
         self._attr_preset_mode = preset_mode
@@ -280,7 +295,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         if script := self._action_scripts.get(CONF_SET_PRESET_MODE_ACTION):
             await self.async_run_script(
                 script,
-                run_variables={ATTR_PRESET_MODE: self._attr_preset_mode},
+                run_variables={FanScriptVariable.PRESET_MODE: self._attr_preset_mode},
                 context=self._context,
             )
 
@@ -290,6 +305,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         if self._attr_assumed_state or CONF_PRESET_MODE not in self._templates:
             self.async_write_ha_state()
 
+    @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation of the fan."""
         self._attr_oscillating = oscillating
@@ -298,13 +314,14 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         ) is not None:
             await self.async_run_script(
                 script,
-                run_variables={ATTR_OSCILLATING: self.oscillating},
+                run_variables={FanScriptVariable.OSCILLATING: self.oscillating},
                 context=self._context,
             )
 
         if CONF_OSCILLATING not in self._templates:
             self.async_write_ha_state()
 
+    @override
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         if direction in _VALID_DIRECTIONS:
@@ -314,7 +331,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
             ) is not None:
                 await self.async_run_script(
                     script,
-                    run_variables={ATTR_DIRECTION: direction},
+                    run_variables={FanScriptVariable.DIRECTION: direction},
                     context=self._context,
                 )
             if CONF_DIRECTION not in self._templates:

@@ -2,13 +2,12 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.actions.swallowed_exceptions import (
     SwallowedActionExceptionsChecker,
 )
 import pytest
 
-from tests.pylint import assert_no_messages
+from tests.pylint import assert_no_messages, walk_checker
 
 
 @pytest.fixture(name="error_propagation_checker")
@@ -129,11 +128,9 @@ def test_no_warning(
 ) -> None:
     """Test cases that should not trigger a warning."""
     root_node = astroid.parse(code, "homeassistant.components.test_integration.switch")
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, error_propagation_checker, root_node)
 
 
 def test_log_only_flagged(
@@ -152,9 +149,7 @@ class MySwitch(SwitchEntity):
 """,
         "homeassistant.components.test_integration.switch",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
-    walker.walk(root_node)
+    walk_checker(linter, error_propagation_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -179,9 +174,7 @@ class MySwitch(SwitchEntity):
 """,
         "homeassistant.components.test_integration.switch",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
-    walker.walk(root_node)
+    walk_checker(linter, error_propagation_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -203,9 +196,7 @@ class MySwitch(SwitchEntity):
 """,
         "homeassistant.components.test_integration.switch",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
-    walker.walk(root_node)
+    walk_checker(linter, error_propagation_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -229,9 +220,7 @@ class MySwitch(SwitchEntity):
 """,
         "homeassistant.components.test_integration.switch",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
-    walker.walk(root_node)
+    walk_checker(linter, error_propagation_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -255,9 +244,7 @@ class MySwitch(SwitchEntity):
 """,
         "homeassistant.components.test_integration.switch",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
-    walker.walk(root_node)
+    walk_checker(linter, error_propagation_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -280,9 +267,7 @@ class MySwitch(SwitchEntity):
 """,
         "homeassistant.components.test_integration.switch",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
-    walker.walk(root_node)
+    walk_checker(linter, error_propagation_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -304,9 +289,7 @@ class MySwitch(SwitchEntity):
 """,
         "homeassistant.components.test_integration.switch",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
-    walker.walk(root_node)
+    walk_checker(linter, error_propagation_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -334,9 +317,7 @@ class MySwitch(SwitchEntity):
 """,
         "homeassistant.components.test_integration.switch",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
-    walker.walk(root_node)
+    walk_checker(linter, error_propagation_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 2
@@ -356,9 +337,7 @@ class MySwitch(SwitchEntity):
 """,
         "homeassistant.components.test_integration.switch",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
-    walker.walk(root_node)
+    walk_checker(linter, error_propagation_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -379,11 +358,9 @@ class MySwitch(SwitchEntity):
 """,
         "homeassistant.components.test_integration.switch",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, error_propagation_checker, root_node)
 
 
 def test_decorator_swallows_flagged(
@@ -408,9 +385,7 @@ class MySwitch(SwitchEntity):
 """,
         "homeassistant.components.test_integration.switch",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
-    walker.walk(root_node)
+    walk_checker(linter, error_propagation_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -441,9 +416,7 @@ class MySwitch(SwitchEntity):
 """,
         "homeassistant.components.test_integration.switch",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
-    walker.walk(root_node)
+    walk_checker(linter, error_propagation_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -471,11 +444,9 @@ class MySwitch(SwitchEntity):
 """,
         "homeassistant.components.test_integration.switch",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, error_propagation_checker, root_node)
 
 
 def test_custom_service_method_flagged(
@@ -502,9 +473,7 @@ class MyFan(FanEntity):
 """,
         "homeassistant.components.test_integration.fan",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
-    walker.walk(root_node)
+    walk_checker(linter, error_propagation_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -535,11 +504,9 @@ class MyFan(FanEntity):
 """,
         "homeassistant.components.test_integration.fan",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, error_propagation_checker, root_node)
 
 
 def test_unregistered_custom_method_ignored(
@@ -558,18 +525,16 @@ class MyFan(FanEntity):
 """,
         "homeassistant.components.test_integration.fan",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, error_propagation_checker, root_node)
 
 
 def test_standalone_service_handler_flagged(
     linter: UnittestLinter,
     error_propagation_checker: SwallowedActionExceptionsChecker,
 ) -> None:
-    """Test that standalone service handlers registered via hass.services are checked."""
+    """Test standalone service handlers via hass.services are checked."""
     root_node = astroid.parse(
         """
 async def async_setup(hass, config):
@@ -583,9 +548,7 @@ async def _handle_do_thing(call):
 """,
         "homeassistant.components.test_integration.services",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
-    walker.walk(root_node)
+    walk_checker(linter, error_propagation_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -610,9 +573,7 @@ async def _handle_reset(call):
 """,
         "homeassistant.components.test_integration.services",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
-    walker.walk(root_node)
+    walk_checker(linter, error_propagation_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -637,11 +598,9 @@ async def _handle_do_thing(call):
 """,
         "homeassistant.components.test_integration.services",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, error_propagation_checker, root_node)
 
 
 def test_not_integration_module_ignored(
@@ -660,8 +619,6 @@ class MySwitch(SwitchEntity):
 """,
         "tests.components.test_integration.test_switch",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(error_propagation_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, error_propagation_checker, root_node)

@@ -2,13 +2,12 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.entity_description_defaults import (
     EntityDescriptionDefaultsChecker,
 )
 import pytest
 
-from . import assert_no_messages
+from . import assert_no_messages, walk_checker
 
 # Pre-load EntityDescription so astroid can resolve it in parsed snippets.
 # This avoids depending on component-level imports which may not be
@@ -75,11 +74,9 @@ def test_no_warning(
 ) -> None:
     """Test cases that should not trigger a warning."""
     root_node = astroid.parse(code, "homeassistant.components.test_integration.sensor")
-    walker = ASTWalker(linter)
-    walker.add_checker(defaults_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, defaults_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -161,9 +158,7 @@ def test_redundant_default_flagged(
 ) -> None:
     """Test that redundant defaults are flagged."""
     root_node = astroid.parse(code, "homeassistant.components.test_integration.sensor")
-    walker = ASTWalker(linter)
-    walker.add_checker(defaults_checker)
-    walker.walk(root_node)
+    walk_checker(linter, defaults_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -185,18 +180,16 @@ JobDescription(icon=None)
 """,
         "homeassistant.components.test_integration.sensor",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(defaults_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, defaults_checker, root_node)
 
 
 def test_local_entity_description_name_ignored(
     linter: UnittestLinter,
     defaults_checker: EntityDescriptionDefaultsChecker,
 ) -> None:
-    """Test that a local class named EntityDescription is not confused with the real one."""
+    """Test local EntityDescription class is not confused."""
     root_node = astroid.parse(
         """
 class EntityDescription:
@@ -209,11 +202,9 @@ MyDescription(entity_registry_enabled_default=True)
 """,
         "homeassistant.components.test_integration.sensor",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(defaults_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, defaults_checker, root_node)
 
 
 def test_aliased_description_flagged(
@@ -230,9 +221,7 @@ Alias(key="temperature", icon=None)
 """,
         "homeassistant.components.test_integration.sensor",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(defaults_checker)
-    walker.walk(root_node)
+    walk_checker(linter, defaults_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -256,8 +245,6 @@ EntityDescription(
 """,
         "tests.components.test_integration.test_sensor",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(defaults_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, defaults_checker, root_node)

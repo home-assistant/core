@@ -121,10 +121,6 @@ async def async_migrate_entry(
         config_entry.minor_version,
     )
 
-    if config_entry.version > 2:
-        # This means the user has downgraded from a future version
-        return False
-
     # 1.2 Migrate subentries to include configured numbers to title
     if config_entry.version == 1 and config_entry.minor_version == 1:
         for subentry in config_entry.subentries.values():
