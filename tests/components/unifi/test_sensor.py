@@ -68,11 +68,21 @@ WIRELESS_CLIENT = {
     "tx_bytes-r": 6789000000.0,
     "uptime": 60,
 }
-# Wired client with a locally-administered MAC (U/L bit set in first octet)
-LOCAL_MAC_CLIENT = {
-    "hostname": "Local mac client",
-    "is_wired": True,
+# Wi-Fi client with a private (locally-administered) MAC (U/L bit set in first octet)
+WIRELESS_LOCAL_MAC_CLIENT = {
+    "is_wired": False,
     "mac": "02:00:00:00:00:03",
+    "name": "Wireless local mac client",
+    "oui": "Producer",
+    "rx_bytes-r": 2345000000.0,
+    "tx_bytes-r": 6789000000.0,
+    "uptime": 60,
+}
+# Wired client with a locally-administered MAC (e.g. a Docker container) - not filtered
+WIRED_LOCAL_MAC_CLIENT = {
+    "hostname": "Wired local mac client",
+    "is_wired": True,
+    "mac": "02:00:00:00:00:04",
     "oui": "Producer",
     "wired-rx_bytes-r": 1234000000,
     "wired-tx_bytes-r": 5678000000,
@@ -593,7 +603,7 @@ async def test_wired_client_speed_sensor(
 
 
 @pytest.mark.parametrize(
-    ("config_entry_options", "local_mac_has_sensors"),
+    ("config_entry_options", "wireless_local_mac_has_sensors"),
     [
         (
             {
@@ -608,35 +618,45 @@ async def test_wired_client_speed_sensor(
                 CONF_ALLOW_BANDWIDTH_SENSORS: True,
                 CONF_ALLOW_UPTIME_SENSORS: True,
                 CONF_IGNORE_LOCAL_MAC: True,
-                CONF_CLIENT_SOURCE: [LOCAL_MAC_CLIENT["mac"]],
+                CONF_CLIENT_SOURCE: [WIRELESS_LOCAL_MAC_CLIENT["mac"]],
             },
             True,
         ),
     ],
     ids=["ignored", "allowlist_overrides"],
 )
-@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT, LOCAL_MAC_CLIENT]])
+@pytest.mark.parametrize(
+    "client_payload",
+    [[WIRED_CLIENT, WIRELESS_LOCAL_MAC_CLIENT, WIRED_LOCAL_MAC_CLIENT]],
+)
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_ignore_local_mac_client_sensors(
     hass: HomeAssistant,
-    local_mac_has_sensors: bool,
+    wireless_local_mac_has_sensors: bool,
 ) -> None:
-    """Client sensors are filtered for locally-administered MACs when enabled."""
+    """Only Wi-Fi clients with private MACs are filtered when the option is enabled."""
     # The universal-MAC wired client always keeps its client sensors
     assert hass.states.get("sensor.wired_client_link_speed")
     assert hass.states.get("sensor.wired_client_rx")
     assert hass.states.get("sensor.wired_client_tx")
     assert hass.states.get("sensor.wired_client_uptime")
 
-    # The locally-administered MAC client only keeps them via the allowlist
+    # A wired locally-administered MAC (e.g. Docker) is never filtered
+    assert hass.states.get("sensor.wired_local_mac_client_link_speed")
+    assert hass.states.get("sensor.wired_local_mac_client_rx")
+    assert hass.states.get("sensor.wired_local_mac_client_tx")
+    assert hass.states.get("sensor.wired_local_mac_client_uptime")
+
+    # The Wi-Fi private-MAC client only keeps its sensors via the allowlist
     for entity_id in (
-        "sensor.local_mac_client_link_speed",
-        "sensor.local_mac_client_rx",
-        "sensor.local_mac_client_tx",
-        "sensor.local_mac_client_uptime",
+        "sensor.wireless_local_mac_client_rx",
+        "sensor.wireless_local_mac_client_tx",
+        "sensor.wireless_local_mac_client_uptime",
     ):
-        assert (hass.states.get(entity_id) is not None) == local_mac_has_sensors
+        assert (
+            hass.states.get(entity_id) is not None
+        ) == wireless_local_mac_has_sensors
 
 
 @pytest.mark.parametrize(

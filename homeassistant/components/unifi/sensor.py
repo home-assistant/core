@@ -70,7 +70,12 @@ def async_bandwidth_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
     if obj_id in hub.config.option_supported_clients:
         return True
-    if hub.config.option_ignore_local_mac and is_locally_administered_mac(obj_id):
+    client = hub.api.clients[obj_id]
+    if (
+        hub.config.option_ignore_local_mac
+        and not client.is_wired
+        and is_locally_administered_mac(client.mac)
+    ):
         return False
     return hub.config.option_allow_bandwidth_sensors
 
@@ -80,7 +85,12 @@ def async_uptime_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
     if obj_id in hub.config.option_supported_clients:
         return True
-    if hub.config.option_ignore_local_mac and is_locally_administered_mac(obj_id):
+    client = hub.api.clients[obj_id]
+    if (
+        hub.config.option_ignore_local_mac
+        and not client.is_wired
+        and is_locally_administered_mac(client.mac)
+    ):
         return False
     return hub.config.option_allow_uptime_sensors
 
@@ -114,10 +124,6 @@ def async_wired_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is wired and allowed."""
     client = hub.api.clients[obj_id]
     if not client.is_wired or client.wired_rate_mbps <= 0:
-        return False
-    if obj_id in hub.config.option_supported_clients:
-        return True
-    if hub.config.option_ignore_local_mac and is_locally_administered_mac(obj_id):
         return False
     return True
 

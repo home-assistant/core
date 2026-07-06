@@ -91,7 +91,11 @@ def async_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
 
     client = hub.api.clients[obj_id]
 
-    if hub.config.option_ignore_local_mac and is_locally_administered_mac(client.mac):
+    if (
+        hub.config.option_ignore_local_mac
+        and not client.is_wired
+        and is_locally_administered_mac(client.mac)
+    ):
         return False
 
     if client.mac not in hub.entity_loader.wireless_clients:
