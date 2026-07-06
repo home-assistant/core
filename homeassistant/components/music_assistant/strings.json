@@ -56,7 +56,7 @@
     },
     "image": {
       "party_mode_qr": {
-        "name": "Party mode guest QR code"
+        "name": "Guest qr code"
       }
     },
     "media_player": {
@@ -228,7 +228,7 @@
     },
     "sensor": {
       "party_mode_url": {
-        "name": "Party mode guest URL"
+        "name": "Guest url"
       }
     },
     "switch": {
@@ -251,22 +251,22 @@
         "name": "Party mode"
       },
       "party_mode_anti_burn_in": {
-        "name": "Party mode anti burn-in"
+        "name": "Anti burn-in"
       },
       "party_mode_enable_add_queue": {
-        "name": "Party mode enable guest add to queue"
+        "name": "Enable guest add to queue"
       },
       "party_mode_enable_boost": {
-        "name": "Party mode enable guest boost"
+        "name": "Enable guest boost"
       },
       "party_mode_enable_guest_access": {
-        "name": "Party mode enable guest access"
+        "name": "Enable guest access"
       },
       "party_mode_enable_rate_limiting": {
-        "name": "Party mode enable rate limiting"
+        "name": "Enable rate limiting"
       },
       "party_mode_karaoke_mode": {
-        "name": "Party mode karaoke mode"
+        "name": "Karaoke mode"
       },
       "pure_direct": {
         "name": "Pure direct"

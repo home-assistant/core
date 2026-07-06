@@ -8,7 +8,7 @@ from music_assistant_models.event import MassEvent
 from music_assistant_models.player import PlayerOption, PlayerOptionType
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -85,9 +85,10 @@ async def async_setup_entry(
                 entity_description=SwitchEntityDescription(
                     key=f"party_mode_{switch_key}",
                     translation_key=f"party_mode_{switch_key}",
+                    icon=icon,
                 ),
             )
-            for switch_key in PARTY_MODE_SWITCHES
+            for switch_key, icon in PARTY_MODE_SWITCHES.items()
         ]
         async_add_entities(entities)
 
@@ -129,21 +130,20 @@ class MusicAssistantPlayerConfigSwitch(MusicAssistantPlayerOptionEntity, SwitchE
         )
 
 
-PARTY_MODE_SWITCHES = [
-    "enable_guest_access",
-    "karaoke_mode",
-    "enable_rate_limiting",
-    "enable_boost",
-    "enable_add_queue",
-    "anti_burn_in",
-]
+PARTY_MODE_SWITCHES = {
+    "enable_guest_access": "mdi:account-group",
+    "karaoke_mode": "mdi:microphone",
+    "enable_rate_limiting": "mdi:speedometer",
+    "enable_boost": "mdi:rocket-launch",
+    "enable_add_queue": "mdi:playlist-plus",
+    "anti_burn_in": "mdi:television-shimmer",
+}
 
 
 class MusicAssistantPartyModeSwitch(SwitchEntity):
     """Representation of a Switch entity to control party mode settings."""
 
     _attr_has_entity_name = True
-    _attr_entity_category = EntityCategory.CONFIG
     _attr_should_poll = False
 
     def __init__(
@@ -162,7 +162,7 @@ class MusicAssistantPartyModeSwitch(SwitchEntity):
         provider = self.mass.get_provider(instance_id)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, instance_id)},
-            name=provider.name if provider else "Party Mode",
+            name="Party Mode Plugin",
             manufacturer="Music Assistant",
         )
         self._attr_unique_id = f"{instance_id}_{config_key}"

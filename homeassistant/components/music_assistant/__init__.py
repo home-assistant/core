@@ -297,10 +297,6 @@ async def async_setup_entry(  # noqa: C901
         if current_instance_id and not party_mode_state["instance_id"]:
             party_mode_state["instance_id"] = current_instance_id
             add_party_mode(current_instance_id)
-        # If it was removed
-        elif not current_instance_id and party_mode_state["instance_id"]:
-            remove_party_mode(party_mode_state["instance_id"])
-            party_mode_state["instance_id"] = None
 
     entry.async_on_unload(
         mass.subscribe(handle_providers_updated, EventType.PROVIDERS_UPDATED)

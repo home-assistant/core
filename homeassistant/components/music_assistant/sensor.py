@@ -8,7 +8,7 @@ from music_assistant_models.errors import MusicAssistantError
 from music_assistant_models.event import MassEvent
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -35,7 +35,7 @@ async def async_setup_entry(
                     entity_description=SensorEntityDescription(
                         key="party_mode_url",
                         translation_key="party_mode_url",
-                        entity_category=EntityCategory.DIAGNOSTIC,
+                        icon="mdi:link",
                     ),
                 )
             ]
@@ -60,11 +60,11 @@ class MusicAssistantPartyModeSensor(SensorEntity):
         self.mass = mass
         self.instance_id = instance_id
         self.entity_description = entity_description
-        
+
         provider = self.mass.get_provider(instance_id)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, instance_id)},
-            name=provider.name if provider else "Party Mode",
+            name="Party Mode Plugin",
             manufacturer="Music Assistant",
         )
         self._attr_unique_id = f"{instance_id}_{entity_description.key}"
