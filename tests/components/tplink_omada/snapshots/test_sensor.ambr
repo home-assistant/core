@@ -1,4 +1,171 @@
 # serializer version: 1
+# name: test_entities[sensor.omada_controller_api_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.omada_controller_api_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'API version',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'API version',
+    'platform': 'tplink_omada',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '2b8ebfe7af51afa2f58844e1f9ba0c04_api_version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.omada_controller_api_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Omada Controller API version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.omada_controller_api_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_entities[sensor.omada_controller_device_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disconnected',
+        'connected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.omada_controller_device_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Device status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Device status',
+    'platform': 'tplink_omada',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_status',
+    'unique_id': '2b8ebfe7af51afa2f58844e1f9ba0c04_device_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.omada_controller_device_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'configured': True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Omada Controller Device status',
+      'msp_mode': False,
+      'omada_cloud_url': 'https://omada.tplinkcloud.com',
+      'omadac_category': 'advanced',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disconnected',
+        'connected',
+      ]),
+      'registered_root': True,
+      'support_app': True,
+      'type': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.omada_controller_device_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'connected',
+  })
+# ---
+# name: test_entities[sensor.omada_controller_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.omada_controller_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Version',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Version',
+    'platform': 'tplink_omada',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '2b8ebfe7af51afa2f58844e1f9ba0c04_version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.omada_controller_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Omada Controller Version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.omada_controller_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.2.10.15',
+  })
+# ---
 # name: test_entities[sensor.test_poe_switch_cpu_usage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

@@ -20,7 +20,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import CONF_SITE, create_omada_client
 from .const import DOMAIN
-from .controller import OmadaSiteController
+from .controller import OmadaSiteController, config_entry_controller_unique_id
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
         ) from ex
 
     site_client = await client.get_site_client(OmadaSite("", entry.data[CONF_SITE]))
-    controller = OmadaSiteController(hass, entry, site_client)
+    controller = OmadaSiteController(hass, entry, site_client, client)
     await controller.initialize_first_refresh()
 
     entry.runtime_data = controller
@@ -91,13 +91,15 @@ def _remove_old_devices(
 ) -> None:
     device_registry = dr.async_get(hass)
 
+    controller_unique_id = config_entry_controller_unique_id(entry)
+
     for registered_device in device_registry.devices.get_devices_for_config_entry_id(
         entry.entry_id
     ):
         mac = next(
             (i[1] for i in registered_device.identifiers if i[0] == DOMAIN), None
         )
-        if mac and mac not in omada_devices:
+        if mac and mac not in omada_devices and mac != controller_unique_id:
             device_registry.async_update_device(
                 registered_device.id, remove_config_entry_id=entry.entry_id
             )

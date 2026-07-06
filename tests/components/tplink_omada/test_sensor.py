@@ -6,18 +6,22 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tplink_omada_client import OmadaControllerInfo
 from tplink_omada_client.definitions import DeviceStatus, DeviceStatusCategory
 from tplink_omada_client.devices import OmadaListDevice
+from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import POLL_DEVICES
-from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_json_array_fixture,
+    async_load_json_object_fixture,
     snapshot_platform,
 )
 
@@ -77,6 +81,73 @@ async def test_device_specific_status(
     assert entity and entity.state == "adopt_failed"
 
 
+async def test_controller_status_connected(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test controller status reports connected."""
+    entity = _get_controller_status_state(hass)
+
+    assert entity.state == "connected"
+    assert entity.attributes["configured"] is True
+    assert entity.attributes["type"] == 1
+    assert entity.attributes["support_app"] is True
+    assert "omadac_id" not in entity.attributes
+    assert entity.attributes["registered_root"] is True
+    assert entity.attributes["omadac_category"] == "advanced"
+    assert entity.attributes["msp_mode"] is False
+    assert entity.attributes["omada_cloud_url"] == "https://omada.tplinkcloud.com"
+
+    version_entity = hass.states.get("sensor.omada_controller_version")
+    assert version_entity is not None
+    assert version_entity.state == "6.2.10.15"
+
+    api_version_entity = hass.states.get("sensor.omada_controller_api_version")
+    assert api_version_entity is not None
+    assert api_version_entity.state == "3"
+
+
+async def test_controller_status_disconnected(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_omada_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test controller status reports disconnected when it is not configured."""
+    await _set_controller_configured(hass, mock_omada_client, False)
+
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entity = _get_controller_status_state(hass)
+    assert entity.state == "disconnected"
+    assert entity.attributes["configured"] is False
+
+
+async def test_controller_status_unavailable(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_omada_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test controller sensors are unavailable when controller info cannot update."""
+    mock_omada_client.get_controller_info.side_effect = OmadaClientException()
+
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert _get_controller_status_state(hass).state == STATE_UNAVAILABLE
+    version_entity = hass.states.get("sensor.omada_controller_version")
+    assert version_entity is not None
+    assert version_entity.state == STATE_UNAVAILABLE
+
+    api_version_entity = hass.states.get("sensor.omada_controller_api_version")
+    assert api_version_entity is not None
+    assert api_version_entity.state == STATE_UNAVAILABLE
+
+
 async def test_device_category_status(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -102,6 +173,27 @@ async def test_device_category_status(
 
     entity = hass.states.get(entity_id)
     assert entity and entity.state == "pending"
+
+
+def _get_controller_status_state(hass: HomeAssistant) -> State:
+    entity = hass.states.get("sensor.omada_controller_device_status")
+    assert entity is not None
+    return entity
+
+
+async def _set_controller_configured(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    configured: bool,
+) -> None:
+    controller_info_data = await async_load_json_object_fixture(
+        hass, "controller-info.json", DOMAIN
+    )
+    controller_info_data["configured"] = configured
+    mock_omada_client.get_controller_info.reset_mock()
+    mock_omada_client.get_controller_info.return_value = OmadaControllerInfo(
+        controller_info_data
+    )
 
 
 async def _set_test_device_status(
