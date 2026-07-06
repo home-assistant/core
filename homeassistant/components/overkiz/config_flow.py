@@ -440,6 +440,7 @@ class OverkizConfigFlow(
     ) -> ConfigFlowResult:
         """Handle Somfy multi-account username/password login and site discovery."""
         errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
 
         if user_input:
             self._user = user_input[CONF_USERNAME]
@@ -457,6 +458,8 @@ class OverkizConfigFlow(
                 self._somfy_gateways = await self._somfy_client.discover_gateways()
             except TooManyRequestsError:
                 errors["base"] = "too_many_requests"
+            except ApplicationNotAllowedError:
+                errors["base"] = "application_not_allowed"
             except BadCredentialsError, NotAuthenticatedError:
                 errors["base"] = "invalid_auth"
             except TimeoutError, ClientError, SomfyServiceError:
@@ -465,6 +468,10 @@ class OverkizConfigFlow(
                 errors["base"] = "server_in_maintenance"
             except TooManyAttemptsBannedError:
                 errors["base"] = "too_many_attempts"
+            except UnknownUserError:
+                # Somfy Protect accounts don't use the Overkiz API server; login returns unknown user.
+                description_placeholders["unsupported_device"] = "Somfy Protect"
+                errors["base"] = "unsupported_hardware"
             except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
                 LOGGER.exception("Unknown error")
@@ -485,6 +492,7 @@ class OverkizConfigFlow(
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
+            description_placeholders=description_placeholders,
             errors=errors,
         )
 

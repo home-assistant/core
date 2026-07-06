@@ -207,12 +207,12 @@ async def test_setup_transient_error_retries(
     assert not hass.config_entries.flow.async_progress()
 
 
-async def test_somfy_setup_persists_rotated_token(
+async def test_somfy_setup_dispatches_to_create_somfy_client(
     hass: HomeAssistant,
     mock_somfy_config_entry: MockConfigEntry,
     mock_client: MockOverkizClient,
 ) -> None:
-    """create_somfy_client wires on_token_refresh to persist the rotated token."""
+    """Server.SOMFY entries dispatch to create_somfy_client and load."""
     mock_somfy_config_entry.add_to_hass(hass)
 
     with patch(

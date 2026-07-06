@@ -16,6 +16,8 @@ from pyoverkiz.exceptions import (
     BadCredentialsError,
     MaintenanceError,
     NoSuchTokenError,
+    NotAuthenticatedError,
+    SomfyServiceError,
     TooManyAttemptsBannedError,
     TooManyRequestsError,
     UnknownUserError,
@@ -1465,10 +1467,29 @@ async def test_somfy_flow_no_sites(
     assert result["reason"] == "no_gateways"
 
 
-async def test_somfy_flow_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(BadCredentialsError, "invalid_auth", id="bad_credentials"),
+        pytest.param(NotAuthenticatedError, "invalid_auth", id="not_authenticated"),
+        pytest.param(TooManyRequestsError, "too_many_requests", id="too_many_requests"),
+        pytest.param(SomfyServiceError, "cannot_connect", id="somfy_service_error"),
+        pytest.param(ClientError, "cannot_connect", id="client_error"),
+        pytest.param(
+            MaintenanceError, "server_in_maintenance", id="server_in_maintenance"
+        ),
+        pytest.param(
+            TooManyAttemptsBannedError, "too_many_attempts", id="too_many_attempts"
+        ),
+    ],
+)
+async def test_somfy_flow_error_buckets(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    side_effect: type[Exception],
+    error: str,
 ) -> None:
-    """Invalid Somfy credentials show an error on the somfy step."""
+    """Somfy login/discovery failures map to the expected error bucket."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1478,7 +1499,7 @@ async def test_somfy_flow_invalid_auth(
 
     with patch(
         "pyoverkiz.client.OverkizClient.login",
-        side_effect=BadCredentialsError,
+        side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1487,7 +1508,32 @@ async def test_somfy_flow_invalid_auth(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "somfy"
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": error}
+
+
+async def test_somfy_flow_unsupported_hardware(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """A Somfy Protect account maps to unsupported_hardware."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"hub": "somfy"}
+    )
+
+    with patch(
+        "pyoverkiz.client.OverkizClient.login",
+        side_effect=UnknownUserError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "somfy"
+    assert result["errors"] == {"base": "unsupported_hardware"}
 
 
 async def test_somfy_reauth_success(
