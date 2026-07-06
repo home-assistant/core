@@ -16,7 +16,7 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
-from .helpers import handle_vehicle_command
+from .helpers import firmware_at_least, handle_vehicle_command
 from .models import TeslemetryVehicleData
 
 AVAILABLE = "available"
@@ -37,7 +37,7 @@ async def async_setup_entry(
 
     async_add_entities(
         TeslemetryVehiclePollingUpdateEntity(vehicle, entry.runtime_data.scopes)
-        if vehicle.poll or vehicle.firmware < "2024.44.25"
+        if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.44.25")
         else TeslemetryStreamingUpdateEntity(vehicle, entry.runtime_data.scopes)
         for vehicle in entry.runtime_data.vehicles
     )

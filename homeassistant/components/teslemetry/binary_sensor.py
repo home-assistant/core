@@ -25,6 +25,7 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
+from .helpers import firmware_at_least
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -557,7 +558,7 @@ async def async_setup_entry(
             if (
                 not vehicle.poll
                 and description.streaming_listener
-                and vehicle.firmware >= description.streaming_firmware
+                and firmware_at_least(vehicle.firmware, description.streaming_firmware)
             ):
                 entities.append(
                     TeslemetryVehicleStreamingBinarySensorEntity(vehicle, description)

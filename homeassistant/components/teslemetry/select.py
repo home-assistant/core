@@ -21,7 +21,7 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
-from .helpers import handle_command, handle_vehicle_command
+from .helpers import firmware_at_least, handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 OFF = "off"
@@ -220,7 +220,7 @@ async def async_setup_entry(
                     vehicle, description, entry.runtime_data.scopes
                 )
                 if vehicle.poll
-                or vehicle.firmware < "2024.26"
+                or not firmware_at_least(vehicle.firmware, "2024.26")
                 or description.streaming_listener is None
                 else TeslemetryStreamingSelectEntity(
                     vehicle, description, entry.runtime_data.scopes
