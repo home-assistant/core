@@ -145,6 +145,24 @@
       "equalizer_mid": {
         "name": "Equalizer mid"
       },
+      "party_mode_party_add_queue_limit": {
+        "name": "Add to Queue Limit"
+      },
+      "party_mode_party_add_queue_refill_minutes": {
+        "name": "Add to Queue Refill (Minutes)"
+      },
+      "party_mode_party_boost_limit": {
+        "name": "Boost Limit"
+      },
+      "party_mode_party_boost_refill_minutes": {
+        "name": "Boost Refill (Minutes)"
+      },
+      "party_mode_party_skip_song_limit": {
+        "name": "Skip Song Limit"
+      },
+      "party_mode_party_skip_song_refill_minutes": {
+        "name": "Skip Song Refill (Minutes)"
+      },
       "subwoofer_volume": {
         "name": "Subwoofer volume"
       },
@@ -190,6 +208,47 @@
           "speed": "Speed",
           "stability": "Stability",
           "standard": "Standard"
+        }
+      },
+      "party_mode_boost_badge_color": {
+        "name": "Boost Badge Color",
+        "state": {
+          "00bcd4": "Cyan",
+          "2d6a4f": "Green (Dark)",
+          "3f51b5": "Indigo",
+          "4caf50": "Green (Light)",
+          "8bc34a": "Lime",
+          "9c27b0": "Purple",
+          "673ab7": "Deep Purple",
+          "009688": "Teal",
+          "b55522": "Orange",
+          "e64a19": "Deep Orange",
+          "e91e63": "Magenta",
+          "f06292": "Pink",
+          "ffc107": "Amber",
+          "ffeb3b": "Yellow"
+        }
+      },
+      "party_mode_party_player": {
+        "name": "Party Player"
+      },
+      "party_mode_request_badge_color": {
+        "name": "Request Badge Color",
+        "state": {
+          "00bcd4": "Cyan",
+          "2d6a4f": "Green (Dark)",
+          "3f51b5": "Indigo",
+          "4caf50": "Green (Light)",
+          "8bc34a": "Lime",
+          "9c27b0": "Purple",
+          "673ab7": "Deep Purple",
+          "009688": "Teal",
+          "b55522": "Orange",
+          "e64a19": "Deep Orange",
+          "e91e63": "Magenta",
+          "f06292": "Pink",
+          "ffc107": "Amber",
+          "ffeb3b": "Yellow"
         }
       },
       "sleep": {
@@ -265,8 +324,23 @@
       "party_mode_enable_rate_limiting": {
         "name": "Enable rate limiting"
       },
+      "party_mode_enable_skip_song": {
+        "name": "Enable Skip Song"
+      },
+      "party_mode_hide_back_button": {
+        "name": "Hide Back Button"
+      },
+      "party_mode_highlight_ahead": {
+        "name": "Highlight Ahead"
+      },
       "party_mode_karaoke_mode": {
         "name": "Karaoke mode"
+      },
+      "party_mode_prevent_duplicate_tracks": {
+        "name": "Prevent Duplicate Tracks"
+      },
+      "party_mode_show_progress_bar": {
+        "name": "Show Progress Bar"
       },
       "pure_direct": {
         "name": "Pure direct"
@@ -284,6 +358,12 @@
     "text": {
       "network_name": {
         "name": "Network name"
+      },
+      "party_mode_party_name": {
+        "name": "Party Name"
+      },
+      "party_mode_qr_text": {
+        "name": "QR Text"
       }
     }
   },

@@ -8,7 +8,7 @@ from music_assistant_models.event import MassEvent
 from music_assistant_models.player import PlayerOption, PlayerOptionType
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -86,9 +86,10 @@ async def async_setup_entry(
                     key=f"party_mode_{switch_key}",
                     translation_key=f"party_mode_{switch_key}",
                     icon=icon,
+                    entity_category=category,
                 ),
             )
-            for switch_key, icon in PARTY_MODE_SWITCHES.items()
+            for switch_key, (icon, category) in PARTY_MODE_SWITCHES.items()
         ]
         async_add_entities(entities)
 
@@ -131,12 +132,17 @@ class MusicAssistantPlayerConfigSwitch(MusicAssistantPlayerOptionEntity, SwitchE
 
 
 PARTY_MODE_SWITCHES = {
-    "enable_guest_access": "mdi:account-group",
-    "karaoke_mode": "mdi:microphone",
-    "enable_rate_limiting": "mdi:speedometer",
-    "enable_boost": "mdi:rocket-launch",
-    "enable_add_queue": "mdi:playlist-plus",
-    "anti_burn_in": "mdi:television-shimmer",
+    "enable_guest_access": ("mdi:account-group", None),
+    "karaoke_mode": ("mdi:microphone", None),
+    "highlight_ahead": ("mdi:format-color-highlight", EntityCategory.CONFIG),
+    "hide_back_button": ("mdi:arrow-left-box", EntityCategory.CONFIG),
+    "show_progress_bar": ("mdi:progress-clock", EntityCategory.CONFIG),
+    "enable_rate_limiting": ("mdi:speedometer", EntityCategory.CONFIG),
+    "enable_add_queue": ("mdi:playlist-plus", EntityCategory.CONFIG),
+    "prevent_duplicate_tracks": ("mdi:playlist-check", EntityCategory.CONFIG),
+    "enable_boost": ("mdi:rocket-launch", EntityCategory.CONFIG),
+    "enable_skip_song": ("mdi:skip-next", EntityCategory.CONFIG),
+    "anti_burn_in": ("mdi:television-shimmer", EntityCategory.CONFIG),
 }
 
 
