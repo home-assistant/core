@@ -2573,6 +2573,52 @@ async def test_get_or_create_via_device_and_via_device_id_not_allowed(
     assert device_2.via_device_id == via.id
 
 
+async def test_via_device_prefers_same_config_entry(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """The deprecated via_device resolves to the via device in the same config entry."""
+    entry_1 = MockConfigEntry()
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry()
+    entry_2.add_to_hass(hass)
+    # Two via devices share an identifier, one per config entry
+    via_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("hue", "via")}
+    )
+    via_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("hue", "via")}
+    )
+    assert via_1.id != via_2.id
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id,
+        identifiers={("hue", "device")},
+        via_device=("hue", "via"),
+    )
+    assert device.via_device_id == via_2.id
+
+
+async def test_via_device_falls_back_to_other_config_entry(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """The deprecated via_device falls back to a via device in another config entry."""
+    entry_1 = MockConfigEntry()
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry()
+    entry_2.add_to_hass(hass)
+    # The via device only exists in entry_1
+    via_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("hue", "via")}
+    )
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id,
+        identifiers={("hue", "device")},
+        via_device=("hue", "via"),
+    )
+    assert device.via_device_id == via_1.id
+
+
 async def test_loading_saving_data(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:

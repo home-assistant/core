@@ -1358,9 +1358,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     "`via_device` is deprecated, pass `via_device_id` only"
                 )
             # Resolve the deprecated via_device to a device id. The identifier is not
-            # scoped to a config entry, so this lookup is ambiguous, which is why
-            # via_device is deprecated.
-            if (via := self.devices.get_entry(identifiers={via_device})) is None:
+            # unique across config entries, so prefer a via device in the same config
+            # entry, falling back to any config entry (a via device may legitimately
+            # belong to a different config entry). This ambiguity is why via_device is
+            # deprecated.
+            via = self.devices.get_entry(
+                identifiers={via_device}, config_entry_id=config_entry_id
+            ) or self.devices.get_entry(identifiers={via_device})
+            if via is None:
                 report_usage(
                     "calls `device_registry.async_get_or_create` referencing a "
                     f"non existing `via_device` {via_device}, "

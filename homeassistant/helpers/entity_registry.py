@@ -1028,7 +1028,10 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
                 if not (entry := data[key]).disabled_by or include_disabled_entities
             ]
         # A pre-migration composite device id resolves to the entities of the split
-        # devices it was migrated into
+        # devices it was migrated into. device_id is kept in the list because the slow
+        # path is also hit for a device that was just removed (no longer in
+        # device_registry.devices) whose entities still need to be found - e.g. when the
+        # entity registry prunes the entities of a removed device.
         device_ids = [
             device_id,
             *(

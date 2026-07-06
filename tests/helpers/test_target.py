@@ -1011,11 +1011,16 @@ async def test_async_track_target_selector_no_on_entities_update(
 COMPOSITE_ID = "composite0000000000000000000000"
 
 
-def _composite_device_storage(
-    entry_a: MockConfigEntry, entry_b: MockConfigEntry
-) -> dict[str, Any]:
-    """Return a v1.10 device registry store with one composite device."""
-    return {
+@pytest.mark.parametrize("load_registries", [False])
+async def test_target_trickle_down_to_splits(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Targeting the legacy id reaches the split devices' entities."""
+    entry_a = MockConfigEntry(domain="domain_a")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="domain_b")
+    entry_b.add_to_hass(hass)
+    hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 10,
         "data": {
@@ -1051,18 +1056,6 @@ def _composite_device_storage(
             "deleted_devices": [],
         },
     }
-
-
-@pytest.mark.parametrize("load_registries", [False])
-async def test_target_trickle_down_to_splits(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> None:
-    """Targeting the legacy id reaches the split devices' entities."""
-    entry_a = MockConfigEntry(domain="domain_a")
-    entry_a.add_to_hass(hass)
-    entry_b = MockConfigEntry(domain="domain_b")
-    entry_b.add_to_hass(hass)
-    hass_storage[dr.STORAGE_KEY] = _composite_device_storage(entry_a, entry_b)
     hass_storage[er.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 1,

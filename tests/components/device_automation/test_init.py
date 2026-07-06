@@ -1756,11 +1756,20 @@ async def test_async_get_device_automations_platform_reraises_exceptions(
 COMPOSITE_ID = "composite0000000000000000000000"
 
 
-def _composite_device_storage(
-    entry_a: MockConfigEntry, entry_b: MockConfigEntry
-) -> dict[str, Any]:
-    """Return a v1.10 device registry store with one composite device."""
-    return {
+@pytest.mark.parametrize("load_registries", [False])
+async def test_device_automation_resolves_legacy_id(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """A device automation legacy id resolves to the split owning its domain's entry.
+
+    Automations for an entity platform domain are left as the composite id, which the
+    restored composite device and async_entries_for_device handle directly.
+    """
+    entry_a = MockConfigEntry(domain="domain_a")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="domain_b")
+    entry_b.add_to_hass(hass)
+    hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 10,
         "data": {
@@ -1796,22 +1805,6 @@ def _composite_device_storage(
             "deleted_devices": [],
         },
     }
-
-
-@pytest.mark.parametrize("load_registries", [False])
-async def test_device_automation_resolves_legacy_id(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> None:
-    """A device automation legacy id resolves to the split owning its domain's entry.
-
-    Automations for an entity platform domain are left as the composite id, which the
-    restored composite device and async_entries_for_device handle directly.
-    """
-    entry_a = MockConfigEntry(domain="domain_a")
-    entry_a.add_to_hass(hass)
-    entry_b = MockConfigEntry(domain="domain_b")
-    entry_b.add_to_hass(hass)
-    hass_storage[dr.STORAGE_KEY] = _composite_device_storage(entry_a, entry_b)
 
     dr.async_setup(hass)
     await dr.async_load(hass)
