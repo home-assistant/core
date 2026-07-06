@@ -1,7 +1,7 @@
 """The my-PV integration for Home Assistant."""
 
 from my_pv import MyPVLocalDevice
-from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
+from my_pv.exceptions import MyPVAuthenticationError
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
@@ -28,11 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool
             )
     except MyPVAuthenticationError as exc:
         raise ConfigEntryAuthFailed from exc
-    except MyPVConnectionError as exc:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect",
-        ) from exc
 
     coordinator = MyPVCoordinator(hass, entry, device)
 
