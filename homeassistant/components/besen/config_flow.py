@@ -1,11 +1,11 @@
-"""Config flow for Besen BS20."""
+"""Config flow for Besen."""
 
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from besen_bs20.client import BesenBS20Client
-from besen_bs20.const import DEFAULT_PIN
-from besen_bs20.exceptions import CannotConnect, InvalidAuth, NoConnectablePath
+from besen.client import BesenClient
+from besen.const import DEFAULT_PIN
+from besen.exceptions import CannotConnect, InvalidAuth, NoConnectablePath
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -76,7 +76,7 @@ async def _async_validate_input(
     if _ble_device_provider() is None:
         raise NoConnectablePath("No connectable Bluetooth path is available")
 
-    client = BesenBS20Client(
+    client = BesenClient(
         address=address,
         pin=pin,
         ble_device_provider=_ble_device_provider,
@@ -91,8 +91,8 @@ async def _async_validate_input(
         await client.async_stop()
 
 
-class BesenBS20ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a Besen BS20 config flow."""
+class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a Besen config flow."""
 
     VERSION = 1
 
@@ -151,7 +151,7 @@ class BesenBS20ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
-                _LOGGER.exception("Unexpected Besen BS20 setup error")
+                _LOGGER.exception("Unexpected Besen setup error")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
@@ -196,7 +196,7 @@ class BesenBS20ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
-                _LOGGER.exception("Unexpected Besen BS20 setup error")
+                _LOGGER.exception("Unexpected Besen setup error")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(

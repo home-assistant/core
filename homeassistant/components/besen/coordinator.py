@@ -1,13 +1,13 @@
-"""Coordinator for Besen BS20 push updates."""
+"""Coordinator for Besen push updates."""
 
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
 import logging
 from typing import TYPE_CHECKING, override
 
-from besen_bs20.client import BesenBS20Client
-from besen_bs20.exceptions import CommandFailed
-from besen_bs20.models import BesenBS20Data
+from besen.client import BesenClient
+from besen.exceptions import CommandFailed
+from besen.models import BesenData
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -16,19 +16,19 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN
 
 if TYPE_CHECKING:
-    from . import BesenBS20ConfigEntry
+    from . import BesenConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class BesenBS20Coordinator(DataUpdateCoordinator[BesenBS20Data]):
-    """Coordinate Besen BS20 state updates."""
+class BesenCoordinator(DataUpdateCoordinator[BesenData]):
+    """Coordinate Besen state updates."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: BesenBS20ConfigEntry,
-        client: BesenBS20Client,
+        config_entry: BesenConfigEntry,
+        client: BesenClient,
     ) -> None:
         """Initialize the coordinator."""
 
@@ -67,13 +67,13 @@ class BesenBS20Coordinator(DataUpdateCoordinator[BesenBS20Data]):
         await self.client.async_stop()
 
     @override
-    async def _async_update_data(self) -> BesenBS20Data:
+    async def _async_update_data(self) -> BesenData:
         """Return latest push state for manual refresh requests."""
 
         return self.client.state
 
     @callback
-    def _handle_client_update(self, data: BesenBS20Data) -> None:
+    def _handle_client_update(self, data: BesenData) -> None:
         """Publish a client state update."""
 
         self.async_set_updated_data(data)

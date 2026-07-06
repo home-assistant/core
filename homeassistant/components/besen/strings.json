@@ -1,39 +1,39 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This charger is already configured.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_connectable_path": "No connectable Bluetooth path is available for this charger.",
-      "not_supported": "This Bluetooth device is not a supported Besen BS20 charger."
+      "not_supported": "This Bluetooth device is not a supported Besen charger."
     },
     "error": {
-      "cannot_connect": "Cannot connect to the charger. Check Bluetooth proxy range and active connection support.",
-      "invalid_auth": "The charger rejected the PIN.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "no_connectable_path": "No connectable Bluetooth path is available for this charger.",
-      "unknown": "Unexpected error"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{name}",
     "step": {
       "bluetooth_confirm": {
         "data": {
-          "pin": "PIN"
+          "pin": "[%key:common::config_flow::data::pin%]"
         },
         "data_description": {
           "pin": "The 6-digit Bluetooth PIN configured on the charger."
         },
         "description": "Enter the 6-digit Bluetooth PIN for this charger.",
-        "title": "Set up Besen BS20"
+        "title": "Set up Besen"
       },
       "user": {
         "data": {
-          "address": "Bluetooth address",
-          "pin": "PIN"
+          "address": "[%key:common::config_flow::data::device%]",
+          "pin": "[%key:common::config_flow::data::pin%]"
         },
         "data_description": {
           "address": "The BLE address of the charger advertising as ACP#...",
           "pin": "The 6-digit Bluetooth PIN configured on the charger."
         },
         "description": "Enter the Bluetooth address and PIN for your charger.",
-        "title": "Set up Besen BS20"
+        "title": "Set up Besen"
       }
     }
   },

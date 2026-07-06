@@ -1,10 +1,10 @@
-"""Constants for the Besen BS20 integration."""
+"""Constants for the Besen integration."""
 
 from typing import Final
 
 from homeassistant.const import Platform
 
-DOMAIN: Final = "besen_bs20"
-NAME: Final = "Besen BS20"
+DOMAIN: Final = "besen"
+NAME: Final = "Besen"
 
 PLATFORMS: Final = [Platform.SWITCH]

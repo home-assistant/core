@@ -1,9 +1,9 @@
-"""Besen BS20 Home Assistant integration."""
+"""Besen Home Assistant integration."""
 
 import logging
 
-from besen_bs20.client import BesenBS20Client
-from besen_bs20.exceptions import CannotConnect, InvalidAuth
+from besen.client import BesenClient
+from besen.exceptions import CannotConnect, InvalidAuth
 from bleak.backends.device import BLEDevice
 
 from homeassistant.components import bluetooth
@@ -14,18 +14,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DOMAIN, PLATFORMS
-from .coordinator import BesenBS20Coordinator
+from .coordinator import BesenCoordinator
 
-type BesenBS20ConfigEntry = ConfigEntry[BesenBS20Coordinator]
+type BesenConfigEntry = ConfigEntry[BesenCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: BesenBS20ConfigEntry,
+    entry: BesenConfigEntry,
 ) -> bool:
-    """Set up Besen BS20 from a config entry."""
+    """Set up Besen from a config entry."""
 
     address = entry.data[CONF_ADDRESS]
     pin = entry.data[CONF_PIN]
@@ -49,14 +49,14 @@ async def async_setup_entry(
             translation_placeholders={"reason": reason},
         )
 
-    client = BesenBS20Client(
+    client = BesenClient(
         address=address,
         pin=pin,
         ble_device_provider=_ble_device_provider,
         logger=_LOGGER,
         advertised_name=entry.data.get(CONF_NAME),
     )
-    coordinator = BesenBS20Coordinator(hass, entry, client)
+    coordinator = BesenCoordinator(hass, entry, client)
 
     try:
         await coordinator.async_start()
@@ -76,9 +76,9 @@ async def async_setup_entry(
 
 async def async_unload_entry(
     hass: HomeAssistant,
-    entry: BesenBS20ConfigEntry,
+    entry: BesenConfigEntry,
 ) -> bool:
-    """Unload a Besen BS20 config entry."""
+    """Unload a Besen config entry."""
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

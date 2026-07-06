@@ -644,8 +644,8 @@ batinfo==0.4.2
 # homeassistant.components.scrape
 beautifulsoup4==4.13.3
 
-# homeassistant.components.besen_bs20
-besen-bs20==0.2.2
+# homeassistant.components.besen
+besen==0.3.0
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
