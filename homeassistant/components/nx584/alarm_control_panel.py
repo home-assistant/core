@@ -154,13 +154,14 @@ class NX584Alarm(AlarmControlPanelEntity):
                 "Unable to connect to %(host)s: %(reason)s",
                 {"host": self._url, "reason": ex},
             )
-            self._attr_alarm_state = None
-            zones = []
+            self._attr_available = False
+            return
         except IndexError:
             _LOGGER.error("NX584 reports no partitions")
-            self._attr_alarm_state = None
-            zones = []
+            self._attr_available = False
+            return
 
+        self._attr_available = True
         bypassed = False
         for zone in zones:
             if zone["bypassed"]:

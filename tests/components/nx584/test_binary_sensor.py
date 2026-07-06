@@ -312,3 +312,42 @@ def test_nx584_watcher_run_retries_failures(mock_sleep) -> None:
             watcher.run()
         assert mock_inner.call_count == 3
     mock_sleep.assert_has_calls([mock.call(10), mock.call(10)])
+
+
+@mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
+@mock.patch("time.sleep")
+def test_nx584_watcher_run_marks_zones_unavailable_on_connection_error(
+    mock_sleep, mock_update
+) -> None:
+    """Test zone sensors are marked unavailable when the host disconnects."""
+    zone_sensor = nx584.NX584ZoneSensor(
+        {"number": 1, "name": "foo", "state": False}, "motion"
+    )
+    watcher = nx584.NX584Watcher(None, {1: zone_sensor})
+
+    with mock.patch.object(watcher, "_run") as mock_inner:
+        mock_inner.side_effect = [requests.exceptions.ConnectionError, StopMe]
+        with pytest.raises(StopMe):
+            watcher.run()
+
+    assert zone_sensor.available is False
+    assert mock_update.called
+
+
+@mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
+def test_nx584_watcher_run_marks_zones_available_after_reconnect(mock_update) -> None:
+    """Test zone sensors become available again once the panel is reachable."""
+    zone_sensor = nx584.NX584ZoneSensor(
+        {"number": 1, "name": "foo", "state": False}, "motion"
+    )
+    zone_sensor._attr_available = False
+
+    client = mock.MagicMock()
+    client.get_events.side_effect = [None, StopMe]
+    watcher = nx584.NX584Watcher(client, {1: zone_sensor})
+
+    with pytest.raises(StopMe):
+        watcher._run()
+
+    assert zone_sensor.available is True
+    assert mock_update.called

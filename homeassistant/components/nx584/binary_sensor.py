@@ -208,9 +208,17 @@ class NX584Watcher(threading.Thread):
             if event.get("type") == "zone_status":
                 self._process_zone_event(event)
 
+    def _set_zones_available(self, available: bool) -> None:
+        """Mark all zone sensors as (un)available and refresh their state."""
+        for zone_sensor in self._zone_sensors.values():
+            if zone_sensor.available != available:
+                zone_sensor._attr_available = available  # noqa: SLF001
+                zone_sensor.schedule_update_ha_state()
+
     def _run(self):
         """Throw away any existing events so we don't replay history."""
         self._client.get_events()
+        self._set_zones_available(True)
         while True:
             if events := self._client.get_events():
                 self._process_events(events)
@@ -223,4 +231,5 @@ class NX584Watcher(threading.Thread):
                 self._run()
             except requests.exceptions.ConnectionError:
                 _LOGGER.error("Failed to reach NX584 server")
+                self._set_zones_available(False)
                 time.sleep(10)

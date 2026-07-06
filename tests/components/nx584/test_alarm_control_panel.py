@@ -3,6 +3,7 @@
 from unittest import mock
 
 import pytest
+import requests
 
 from homeassistant.components.nx584 import alarm_control_panel as nx584
 from homeassistant.components.nx584.const import DOMAIN
@@ -70,3 +71,42 @@ async def test_async_setup_entry_creates_alarm_panel(hass: HomeAssistant) -> Non
         await hass.async_block_till_done()
 
     assert hass.states.get("alarm_control_panel.nx584") is not None
+
+
+def test_update_marks_entity_unavailable_on_connection_error() -> None:
+    """Test that a connection error is handled and marks the entity unavailable."""
+    client = mock.MagicMock()
+    client.list_partitions.side_effect = requests.exceptions.ConnectionError
+    alarm = nx584.NX584Alarm("NX584", client, "http://1.1.1.1:5007")
+
+    alarm.update()
+
+    assert alarm.available is False
+
+
+def test_update_marks_entity_unavailable_when_no_partitions_reported() -> None:
+    """Test that a missing partition list is handled and marks the entity unavailable."""
+    client = mock.MagicMock()
+    client.list_partitions.return_value = []
+    alarm = nx584.NX584Alarm("NX584", client, "http://1.1.1.1:5007")
+
+    alarm.update()
+
+    assert alarm.available is False
+
+
+def test_update_restores_availability_after_reconnect() -> None:
+    """Test the entity becomes available again once the panel is reachable again."""
+    client = mock.MagicMock()
+    client.list_partitions.side_effect = requests.exceptions.ConnectionError
+    alarm = nx584.NX584Alarm("NX584", client, "http://1.1.1.1:5007")
+    alarm.update()
+    assert alarm.available is False
+
+    client.list_partitions.side_effect = None
+    client.list_partitions.return_value = [{"armed": False, "condition_flags": []}]
+    client.list_zones.return_value = []
+
+    alarm.update()
+
+    assert alarm.available is True
