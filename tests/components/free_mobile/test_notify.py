@@ -37,9 +37,8 @@ async def config_entry(
     return entry
 
 
-async def test_send_message(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_send_sms: MagicMock
-) -> None:
+@pytest.mark.usefixtures("config_entry")
+async def test_send_message(hass: HomeAssistant, mock_send_sms: MagicMock) -> None:
     """Test sending a message successfully."""
     mock_send_sms.return_value = MagicMock(status_code=HTTPStatus.OK)
 
@@ -68,9 +67,9 @@ async def test_send_message(
         ),
     ],
 )
+@pytest.mark.usefixtures("config_entry")
 async def test_send_message_errors(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
     mock_send_sms: MagicMock,
     status_code: HTTPStatus,
     translation_key: str,
