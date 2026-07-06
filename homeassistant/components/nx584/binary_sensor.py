@@ -152,7 +152,9 @@ async def async_setup_entry(
     """Set up the NX584 binary sensor platform from a config entry."""
     data = entry.runtime_data
     exclude_zones = entry.options.get(CONF_EXCLUDE_ZONES, [])
-    zone_types = entry.options.get(CONF_ZONE_TYPES, {})
+    # Options are persisted as JSON, so zone numbers come back as string keys
+    # after a reload; re-run the schema to restore int keys and enum values.
+    zone_types = ZONE_TYPES_SCHEMA(entry.options.get(CONF_ZONE_TYPES, {}))
 
     zone_sensors = await hass.async_add_executor_job(
         _build_zone_sensors, data.client, exclude_zones, zone_types, entry.entry_id

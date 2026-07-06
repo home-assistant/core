@@ -182,14 +182,30 @@ async def test_async_setup_entry_creates_zone_sensors(
         assert (DOMAIN, entry.entry_id) in device_entry.identifiers
 
 
+@pytest.mark.parametrize(
+    "zone_types",
+    [
+        pytest.param({3: "motion"}, id="python_types"),
+        pytest.param(
+            {"3": "motion"},
+            id="json_roundtripped_types",
+        ),
+    ],
+)
 async def test_async_setup_entry_applies_options(
-    hass: HomeAssistant, fake_zones: list[dict[str, object]]
+    hass: HomeAssistant,
+    fake_zones: list[dict[str, object]],
+    zone_types: dict[int | str, str],
 ) -> None:
-    """Test the binary_sensor platform applies exclude_zones and zone_types options."""
+    """Test the binary_sensor platform applies exclude_zones and zone_types options.
+
+    Config entry options are persisted as JSON, so after a reload the
+    zone_types keys come back as strings instead of ints.
+    """
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "1.1.1.1", CONF_PORT: 5007},
-        options={"exclude_zones": [2], "zone_types": {3: "motion"}},
+        options={"exclude_zones": [2], "zone_types": zone_types},
         title="NX584",
     )
     entry.add_to_hass(hass)
