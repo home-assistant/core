@@ -5158,6 +5158,30 @@ async def test_subscribe_config_parameter_updates(
     assert msg["event"] != initial_state
     assert msg["event"]["52-112-0-2"] == 1
 
+    # Validate that a non config parameter value update does not trigger an event
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": multisensor_6.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": "Air temperature",
+                "newValue": 68,
+                "prevValue": 9,
+                "propertyName": "Air temperature",
+            },
+        },
+    )
+    client.driver.controller.receive_event(event)
+    await hass.async_block_till_done()
+
+    with pytest.raises(TimeoutError):
+        await ws_client.receive_json(timeout=0.1)
+
     # Test sending command with improper entry ID fails
     await ws_client.send_json(
         {
