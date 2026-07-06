@@ -1,7 +1,7 @@
 """Config flow for BLE Battery Management System integration."""
 
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiobmsble.utils import bms_identify
 import voluptuous as vol
@@ -65,6 +65,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return str(bms_class.get_bms_module())
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -108,6 +109,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=self.context.get("title_placeholders"),
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

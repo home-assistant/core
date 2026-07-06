@@ -1,7 +1,7 @@
 """Platform for sensor integration."""
 
 from collections.abc import Callable
-from typing import Final, cast
+from typing import Final, cast, override
 
 from aiobmsble import BMSpackvalue, BMSSample
 
@@ -48,7 +48,6 @@ from .const import (
     ATTR_RSSI,
     ATTR_RUNTIME,
     ATTR_TEMP_SENSORS,
-    DOMAIN,
     LOGGER,
 )
 from .coordinator import BTBmsCoordinator
@@ -266,12 +265,13 @@ class BMSSensor(CoordinatorEntity[BTBmsCoordinator], SensorEntity):
         self, bms: BTBmsCoordinator, descr: BmsEntityDescription, unique_id: str
     ) -> None:
         """Initialize the BMS sensor."""
-        self._attr_unique_id = f"{DOMAIN}-{unique_id}-{descr.key}"
+        self._attr_unique_id = f"{unique_id}-{descr.key}"
         self._attr_device_info = bms.device_info
         self.entity_description = descr
         super().__init__(bms)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, list[int | float]] | None:
         """Return entity specific state attributes, e.g. cell voltages."""
         if self.coordinator.data and self.entity_description.attr_fn:
@@ -280,6 +280,7 @@ class BMSSensor(CoordinatorEntity[BTBmsCoordinator], SensorEntity):
         return None
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the sensor value."""
         return (
@@ -300,7 +301,7 @@ class RSSISensor(SensorEntity):
     ) -> None:
         """Initialize the BMS sensor."""
 
-        self._attr_unique_id = f"{DOMAIN}-{unique_id}-{descr.key}"
+        self._attr_unique_id = f"{unique_id}-{descr.key}"
         self._attr_device_info = bms.device_info
         self.entity_description = descr
         self._bms: Final = bms
@@ -330,7 +331,7 @@ class LQSensor(SensorEntity):
     ) -> None:
         """Initialize the BMS link quality sensor."""
 
-        self._attr_unique_id = f"{DOMAIN}-{unique_id}-{descr.key}"
+        self._attr_unique_id = f"{unique_id}-{descr.key}"
         self._attr_device_info = bms.device_info
         self.entity_description = descr
         self._bms: Final = bms

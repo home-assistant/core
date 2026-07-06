@@ -4,7 +4,7 @@ from collections import deque
 from datetime import timedelta
 from itertools import islice
 from time import monotonic
-from typing import Final
+from typing import Final, override
 
 from aiobmsble import BMSSample
 from aiobmsble.basebms import BaseBMS
@@ -82,6 +82,7 @@ class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
 
         return self._link_q.count(True) * 100 // len(self._link_q)
 
+    @override
     async def async_shutdown(self) -> None:
         """Shutdown coordinator and any connection."""
         LOGGER.debug("Shutting down BMS (%s)", self.name)
@@ -108,6 +109,7 @@ class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
 
         return self._stale
 
+    @override
     async def _async_setup(self) -> None:
         bms_info: Final = await self._device.device_info()
         self.device_info.update(
@@ -123,6 +125,7 @@ class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
             )
         )
 
+    @override
     async def _async_update_data(self) -> BMSSample:
         """Return the latest data from the device."""
 
