@@ -11,9 +11,15 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from tests.common import MockConfigEntry
+
+TEST_ENTRY_ID = "test_entry_id"
 
 
 @pytest.mark.parametrize(
@@ -70,14 +76,26 @@ async def test_async_setup_entry_creates_alarm_panel(hass: HomeAssistant) -> Non
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.states.get("alarm_control_panel.nx584") is not None
+    state = hass.states.get("alarm_control_panel.nx584")
+    assert state is not None
+
+    entity_registry = er.async_get(hass)
+    entity_entry = entity_registry.async_get(state.entity_id)
+    assert entity_entry is not None
+    assert entity_entry.unique_id == entry.entry_id
+    assert entity_entry.device_id is not None
+
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry is not None
+    assert (DOMAIN, entry.entry_id) in device_entry.identifiers
 
 
 def test_update_marks_entity_unavailable_on_connection_error() -> None:
     """Test that a connection error is handled and marks the entity unavailable."""
     client = mock.MagicMock()
     client.list_partitions.side_effect = requests.exceptions.ConnectionError
-    alarm = nx584.NX584Alarm("NX584", client, "http://1.1.1.1:5007")
+    alarm = nx584.NX584Alarm(client, "http://1.1.1.1:5007", TEST_ENTRY_ID)
 
     alarm.update()
 
@@ -88,7 +106,7 @@ def test_update_marks_entity_unavailable_when_no_partitions_reported() -> None:
     """Test that a missing partition list is handled and marks the entity unavailable."""
     client = mock.MagicMock()
     client.list_partitions.return_value = []
-    alarm = nx584.NX584Alarm("NX584", client, "http://1.1.1.1:5007")
+    alarm = nx584.NX584Alarm(client, "http://1.1.1.1:5007", TEST_ENTRY_ID)
 
     alarm.update()
 
@@ -99,7 +117,7 @@ def test_update_restores_availability_after_reconnect() -> None:
     """Test the entity becomes available again once the panel is reachable again."""
     client = mock.MagicMock()
     client.list_partitions.side_effect = requests.exceptions.ConnectionError
-    alarm = nx584.NX584Alarm("NX584", client, "http://1.1.1.1:5007")
+    alarm = nx584.NX584Alarm(client, "http://1.1.1.1:5007", TEST_ENTRY_ID)
     alarm.update()
     assert alarm.available is False
 
@@ -110,3 +128,13 @@ def test_update_restores_availability_after_reconnect() -> None:
     alarm.update()
 
     assert alarm.available is True
+
+
+def test_nx584_alarm_has_unique_id_and_device_info() -> None:
+    """Test the NX584 alarm panel exposes a unique_id and device_info."""
+    alarm = nx584.NX584Alarm(mock.MagicMock(), "http://1.1.1.1:5007", TEST_ENTRY_ID)
+
+    assert alarm.unique_id == TEST_ENTRY_ID
+    assert alarm.device_info["identifiers"] == {(DOMAIN, TEST_ENTRY_ID)}
+    assert alarm.has_entity_name is True
+    assert alarm.name is None

@@ -24,6 +24,7 @@ from homeassistant.helpers import (
     entity_platform,
     issue_registry as ir,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -122,7 +123,7 @@ async def async_setup_entry(
     """Set up the NX584 alarm control panel from a config entry."""
     data = entry.runtime_data
 
-    entity = NX584Alarm(entry.title, data.client, data.url)
+    entity = NX584Alarm(data.client, data.url, entry.entry_id)
     async_add_entities([entity])
 
     _async_register_services()
@@ -137,12 +138,15 @@ class NX584Alarm(AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
     _attr_code_arm_required = False
+    _attr_has_entity_name = True
+    _attr_name = None
 
-    def __init__(self, name: str, alarm_client: client.Client, url: str) -> None:
+    def __init__(self, alarm_client: client.Client, url: str, entry_id: str) -> None:
         """Init the nx584 alarm panel."""
-        self._attr_name = name
         self._alarm = alarm_client
         self._url = url
+        self._attr_unique_id = entry_id
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, entry_id)})
 
     def update(self) -> None:
         """Process new events from panel."""

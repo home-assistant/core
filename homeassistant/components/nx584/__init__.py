@@ -9,6 +9,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+
+from .const import DOMAIN
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
 
@@ -37,6 +40,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: NX584ConfigEntry) -> boo
         raise ConfigEntryNotReady(f"Unable to connect to {url}") from ex
 
     entry.runtime_data = NX584Data(client=alarm_client, url=url)
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        name=entry.title,
+        manufacturer="NX584",
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

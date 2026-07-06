@@ -1,6 +1,7 @@
 """The tests for the nx584 sensor platform."""
 
 from unittest import mock
+from unittest.mock import MagicMock
 
 import pytest
 import requests
@@ -11,9 +12,15 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from tests.common import MockConfigEntry
+
+TEST_ENTRY_ID = "test_entry_id"
 
 
 class StopMe(Exception):
@@ -21,7 +28,7 @@ class StopMe(Exception):
 
 
 @pytest.fixture
-def fake_zones():
+def fake_zones() -> list[dict[str, object]]:
     """Fixture for fake zones.
 
     Returns:
@@ -36,7 +43,7 @@ def fake_zones():
 
 
 @pytest.fixture
-def fake_client(fake_zones):
+def fake_client(fake_zones: list[dict[str, object]]) -> MagicMock:
     """Fixture for a fake nx584 client."""
     client = mock.MagicMock()
     client.list_zones.return_value = fake_zones
@@ -44,9 +51,11 @@ def fake_client(fake_zones):
     return client
 
 
-def test_build_zone_sensors_defaults(fake_client, fake_zones) -> None:
+def test_build_zone_sensors_defaults(
+    fake_client: MagicMock, fake_zones: list[dict[str, object]]
+) -> None:
     """Test building zone sensors with no exclusions or overrides."""
-    zone_sensors = nx584._build_zone_sensors(fake_client, [], {})
+    zone_sensors = nx584._build_zone_sensors(fake_client, [], {}, TEST_ENTRY_ID)
 
     assert set(zone_sensors) == {1, 2, 3}
     for number, sensor in zone_sensors.items():
@@ -54,36 +63,42 @@ def test_build_zone_sensors_defaults(fake_client, fake_zones) -> None:
             zone["name"] for zone in fake_zones if zone["number"] == number
         )
         assert sensor.device_class == "opening"
+        assert sensor.unique_id == f"{TEST_ENTRY_ID}_zone_{number}"
+        assert sensor.device_info["identifiers"] == {(DOMAIN, TEST_ENTRY_ID)}
 
 
-def test_build_zone_sensors_excludes_and_overrides(fake_client, fake_zones) -> None:
+def test_build_zone_sensors_excludes_and_overrides(
+    fake_client: MagicMock, fake_zones: list[dict[str, object]]
+) -> None:
     """Test building zone sensors with exclusions and type overrides."""
-    zone_sensors = nx584._build_zone_sensors(fake_client, [2], {3: "motion"})
+    zone_sensors = nx584._build_zone_sensors(
+        fake_client, [2], {3: "motion"}, TEST_ENTRY_ID
+    )
 
     assert set(zone_sensors) == {1, 3}
     assert zone_sensors[1].device_class == "opening"
     assert zone_sensors[3].device_class == "motion"
 
 
-def test_build_zone_sensors_connection_error(fake_client) -> None:
+def test_build_zone_sensors_connection_error(fake_client: MagicMock) -> None:
     """Test building zone sensors when the panel can't be reached."""
     fake_client.list_zones.side_effect = requests.exceptions.ConnectionError
 
-    assert nx584._build_zone_sensors(fake_client, [], {}) is None
+    assert nx584._build_zone_sensors(fake_client, [], {}, TEST_ENTRY_ID) is None
 
 
-def test_build_zone_sensors_version_too_old(fake_client) -> None:
+def test_build_zone_sensors_version_too_old(fake_client: MagicMock) -> None:
     """Test building zone sensors when the panel firmware is too old."""
     fake_client.get_version.return_value = "1.0"
 
-    assert nx584._build_zone_sensors(fake_client, [], {}) is None
+    assert nx584._build_zone_sensors(fake_client, [], {}, TEST_ENTRY_ID) is None
 
 
-def test_build_zone_sensors_no_zones(fake_client) -> None:
+def test_build_zone_sensors_no_zones(fake_client: MagicMock) -> None:
     """Test building zone sensors when the panel reports no zones."""
     fake_client.list_zones.return_value = []
 
-    assert nx584._build_zone_sensors(fake_client, [], {}) == {}
+    assert nx584._build_zone_sensors(fake_client, [], {}, TEST_ENTRY_ID) == {}
 
 
 @pytest.mark.parametrize(
@@ -127,12 +142,13 @@ async def test_async_setup_platform_imports_config(
 
 
 async def test_async_setup_entry_creates_zone_sensors(
-    hass: HomeAssistant, fake_zones
+    hass: HomeAssistant, fake_zones: list[dict[str, object]]
 ) -> None:
     """Test setting up the binary_sensor platform from a config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "1.1.1.1", CONF_PORT: 5007},
+        title="NX584",
     )
     entry.add_to_hass(hass)
 
@@ -150,18 +166,31 @@ async def test_async_setup_entry_creates_zone_sensors(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
     for zone in fake_zones:
-        assert hass.states.get(f"binary_sensor.{zone['name']}") is not None
+        state = hass.states.get(f"binary_sensor.nx584_{zone['name']}")
+        assert state is not None
+
+        entity_entry = entity_registry.async_get(state.entity_id)
+        assert entity_entry is not None
+        assert entity_entry.unique_id == f"{entry.entry_id}_zone_{zone['number']}"
+        assert entity_entry.device_id is not None
+
+        device_entry = device_registry.async_get(entity_entry.device_id)
+        assert device_entry is not None
+        assert (DOMAIN, entry.entry_id) in device_entry.identifiers
 
 
 async def test_async_setup_entry_applies_options(
-    hass: HomeAssistant, fake_zones
+    hass: HomeAssistant, fake_zones: list[dict[str, object]]
 ) -> None:
     """Test the binary_sensor platform applies exclude_zones and zone_types options."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "1.1.1.1", CONF_PORT: 5007},
         options={"exclude_zones": [2], "zone_types": {3: "motion"}},
+        title="NX584",
     )
     entry.add_to_hass(hass)
 
@@ -179,21 +208,23 @@ async def test_async_setup_entry_applies_options(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.front") is not None
-    assert hass.states.get("binary_sensor.back") is None
-    assert hass.states.get("binary_sensor.inside") is not None
+    assert hass.states.get("binary_sensor.nx584_front") is not None
+    assert hass.states.get("binary_sensor.nx584_back") is None
+    assert hass.states.get("binary_sensor.nx584_inside") is not None
     assert (
-        hass.states.get("binary_sensor.inside").attributes["device_class"] == "motion"
+        hass.states.get("binary_sensor.nx584_inside").attributes["device_class"]
+        == "motion"
     )
 
 
 async def test_async_setup_entry_registers_bypass_services(
-    hass: HomeAssistant, fake_zones
+    hass: HomeAssistant, fake_zones: list[dict[str, object]]
 ) -> None:
     """Test the bypass/unbypass services target the correct zone's client."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "1.1.1.1", CONF_PORT: 5007},
+        title="NX584",
     )
     entry.add_to_hass(hass)
 
@@ -214,7 +245,7 @@ async def test_async_setup_entry_registers_bypass_services(
         await hass.services.async_call(
             DOMAIN,
             "bypass",
-            {"entity_id": "binary_sensor.front"},
+            {"entity_id": "binary_sensor.nx584_front"},
             blocking=True,
         )
         mock_client.set_bypass.assert_called_once_with(1, True)
@@ -223,7 +254,7 @@ async def test_async_setup_entry_registers_bypass_services(
         await hass.services.async_call(
             DOMAIN,
             "unbypass",
-            {"entity_id": "binary_sensor.front"},
+            {"entity_id": "binary_sensor.nx584_front"},
             blocking=True,
         )
         mock_client.set_bypass.assert_called_once_with(1, False)
@@ -232,12 +263,14 @@ async def test_async_setup_entry_registers_bypass_services(
 def test_nx584_zone_sensor_normal() -> None:
     """Test for the NX584 zone sensor."""
     zone = {"number": 1, "name": "foo", "state": True}
-    sensor = nx584.NX584ZoneSensor(zone, "motion", mock.MagicMock())
+    sensor = nx584.NX584ZoneSensor(zone, "motion", mock.MagicMock(), TEST_ENTRY_ID)
     assert sensor.name == "foo"
     assert not sensor.should_poll
     assert sensor.is_on
     assert sensor.extra_state_attributes["zone_number"] == 1
     assert not sensor.extra_state_attributes["bypassed"]
+    assert sensor.unique_id == f"{TEST_ENTRY_ID}_zone_1"
+    assert sensor.device_info["identifiers"] == {(DOMAIN, TEST_ENTRY_ID)}
 
     zone["state"] = False
     assert not sensor.is_on
@@ -246,7 +279,7 @@ def test_nx584_zone_sensor_normal() -> None:
 def test_nx584_zone_sensor_bypassed() -> None:
     """Test for the NX584 zone sensor."""
     zone = {"number": 1, "name": "foo", "state": True, "bypassed": True}
-    sensor = nx584.NX584ZoneSensor(zone, "motion", mock.MagicMock())
+    sensor = nx584.NX584ZoneSensor(zone, "motion", mock.MagicMock(), TEST_ENTRY_ID)
     assert sensor.name == "foo"
     assert not sensor.should_poll
     assert sensor.is_on
@@ -263,7 +296,7 @@ def test_nx584_zone_sensor_zone_bypass() -> None:
     """Test that zone_bypass calls set_bypass with True."""
     zone = {"number": 3, "name": "foo", "state": True}
     client = mock.MagicMock()
-    sensor = nx584.NX584ZoneSensor(zone, "motion", client)
+    sensor = nx584.NX584ZoneSensor(zone, "motion", client, TEST_ENTRY_ID)
 
     sensor.zone_bypass()
 
@@ -274,7 +307,7 @@ def test_nx584_zone_sensor_zone_unbypass() -> None:
     """Test that zone_unbypass calls set_bypass with False."""
     zone = {"number": 3, "name": "foo", "state": True}
     client = mock.MagicMock()
-    sensor = nx584.NX584ZoneSensor(zone, "motion", client)
+    sensor = nx584.NX584ZoneSensor(zone, "motion", client, TEST_ENTRY_ID)
 
     sensor.zone_unbypass()
 
@@ -282,13 +315,13 @@ def test_nx584_zone_sensor_zone_unbypass() -> None:
 
 
 @mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
-def test_nx584_watcher_process_zone_event(mock_update) -> None:
+def test_nx584_watcher_process_zone_event(mock_update: MagicMock) -> None:
     """Test the processing of zone events."""
     zone1 = {"number": 1, "name": "foo", "state": True}
     zone2 = {"number": 2, "name": "bar", "state": True}
     zones = {
-        1: nx584.NX584ZoneSensor(zone1, "motion", mock.MagicMock()),
-        2: nx584.NX584ZoneSensor(zone2, "motion", mock.MagicMock()),
+        1: nx584.NX584ZoneSensor(zone1, "motion", mock.MagicMock(), TEST_ENTRY_ID),
+        2: nx584.NX584ZoneSensor(zone2, "motion", mock.MagicMock(), TEST_ENTRY_ID),
     }
     watcher = nx584.NX584Watcher(None, zones)
     watcher._process_zone_event({"zone": 1, "zone_state": False})
@@ -297,10 +330,12 @@ def test_nx584_watcher_process_zone_event(mock_update) -> None:
 
 
 @mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
-def test_nx584_watcher_process_zone_event_updates_bypass(mock_update) -> None:
+def test_nx584_watcher_process_zone_event_updates_bypass(
+    mock_update: MagicMock,
+) -> None:
     """Test the processing of zone events updates bypass state."""
     zone = {"number": 1, "name": "foo", "state": True, "bypassed": False}
-    zones = {1: nx584.NX584ZoneSensor(zone, "motion", mock.MagicMock())}
+    zones = {1: nx584.NX584ZoneSensor(zone, "motion", mock.MagicMock(), TEST_ENTRY_ID)}
     watcher = nx584.NX584Watcher(None, zones)
 
     watcher._process_zone_event(
@@ -318,7 +353,7 @@ def test_nx584_watcher_process_zone_event_updates_bypass(mock_update) -> None:
 
 
 @mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
-def test_nx584_watcher_process_zone_event_missing_zone(mock_update) -> None:
+def test_nx584_watcher_process_zone_event_missing_zone(mock_update: MagicMock) -> None:
     """Test the processing of zone events with missing zones."""
     watcher = nx584.NX584Watcher(None, {})
     watcher._process_zone_event({"zone": 1, "zone_state": False})
@@ -358,7 +393,7 @@ def test_nx584_watcher_run_with_zone_events() -> None:
 
 
 @mock.patch("time.sleep")
-def test_nx584_watcher_run_retries_failures(mock_sleep) -> None:
+def test_nx584_watcher_run_retries_failures(mock_sleep: MagicMock) -> None:
     """Test the retries with failures."""
     empty_me = [1, 2]
 
@@ -381,11 +416,14 @@ def test_nx584_watcher_run_retries_failures(mock_sleep) -> None:
 @mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
 @mock.patch("time.sleep")
 def test_nx584_watcher_run_marks_zones_unavailable_on_connection_error(
-    mock_sleep, mock_update
+    mock_sleep: MagicMock, mock_update: MagicMock
 ) -> None:
     """Test zone sensors are marked unavailable when the host disconnects."""
     zone_sensor = nx584.NX584ZoneSensor(
-        {"number": 1, "name": "foo", "state": False}, "motion", mock.MagicMock()
+        {"number": 1, "name": "foo", "state": False},
+        "motion",
+        mock.MagicMock(),
+        TEST_ENTRY_ID,
     )
     watcher = nx584.NX584Watcher(None, {1: zone_sensor})
 
@@ -399,10 +437,15 @@ def test_nx584_watcher_run_marks_zones_unavailable_on_connection_error(
 
 
 @mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
-def test_nx584_watcher_run_marks_zones_available_after_reconnect(mock_update) -> None:
+def test_nx584_watcher_run_marks_zones_available_after_reconnect(
+    mock_update: MagicMock,
+) -> None:
     """Test zone sensors become available again once the panel is reachable."""
     zone_sensor = nx584.NX584ZoneSensor(
-        {"number": 1, "name": "foo", "state": False}, "motion", mock.MagicMock()
+        {"number": 1, "name": "foo", "state": False},
+        "motion",
+        mock.MagicMock(),
+        TEST_ENTRY_ID,
     )
     zone_sensor._attr_available = False
 
