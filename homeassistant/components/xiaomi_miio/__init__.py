@@ -141,9 +141,6 @@ LAZY_DISCOVER_FOR_MODEL = {
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the component."""
     async_setup_services(hass)
-    async_setup_light_services(hass)
-    async_setup_switch_services(hass)
-    async_setup_fan_services(hass)
     return True
 
 
