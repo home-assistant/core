@@ -131,6 +131,131 @@ async def test_import_success(hass: HomeAssistant) -> None:
     assert result["data"] == TEST_DATA
 
 
+async def test_import_binary_sensor_after_alarm_control_panel_applies_zone_options(
+    hass: HomeAssistant,
+) -> None:
+    """Test a later YAML import with zone options updates an existing entry.
+
+    The alarm_control_panel platform has no exclude_zones/zone_types, so if it
+    imports first it creates the entry with empty options. The binary_sensor
+    platform's later import must still be able to apply its zone options to
+    that same entry instead of losing them.
+    """
+    with (
+        patch(
+            "homeassistant.components.nx584.config_flow.client.Client.list_zones",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.nx584.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=TEST_DATA,
+        )
+        await hass.async_block_till_done()
+
+        entries = hass.config_entries.async_entries(DOMAIN)
+        assert len(entries) == 1
+        assert entries[0].options == {}
+
+        binary_sensor_import_config = {
+            **TEST_DATA,
+            "exclude_zones": [2],
+            "zone_types": {3: "motion"},
+        }
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=binary_sensor_import_config,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entries[0].options == {
+        "exclude_zones": [2],
+        "zone_types": {3: "motion"},
+    }
+
+
+async def test_import_alarm_control_panel_after_binary_sensor_keeps_zone_options(
+    hass: HomeAssistant,
+) -> None:
+    """Test a later YAML import without zone options doesn't erase existing ones."""
+    binary_sensor_import_config = {
+        **TEST_DATA,
+        "exclude_zones": [2],
+        "zone_types": {3: "motion"},
+    }
+
+    with (
+        patch(
+            "homeassistant.components.nx584.config_flow.client.Client.list_zones",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.nx584.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=binary_sensor_import_config,
+        )
+        await hass.async_block_till_done()
+
+        entries = hass.config_entries.async_entries(DOMAIN)
+        assert len(entries) == 1
+        assert entries[0].options == {
+            "exclude_zones": [2],
+            "zone_types": {3: "motion"},
+        }
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=TEST_DATA,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entries[0].options == {
+        "exclude_zones": [2],
+        "zone_types": {3: "motion"},
+    }
+
+
+async def test_import_second_panel_creates_separate_entry(hass: HomeAssistant) -> None:
+    """Test importing a second panel with a different host/port is not treated as a match."""
+    MockConfigEntry(domain=DOMAIN, data=TEST_DATA).add_to_hass(hass)
+    other_panel = {CONF_HOST: "2.2.2.2", CONF_PORT: 5008}
+
+    with (
+        patch(
+            "homeassistant.components.nx584.config_flow.client.Client.list_zones",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.nx584.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=other_panel
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == other_panel[CONF_HOST]
+    assert result["data"] == other_panel
+
+
 async def test_import_already_configured(hass: HomeAssistant) -> None:
     """Test importing YAML config aborts if already configured."""
     MockConfigEntry(domain=DOMAIN, data=TEST_DATA).add_to_hass(hass)

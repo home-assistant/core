@@ -90,7 +90,24 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
         host: str = import_config[CONF_HOST]
         port: int = import_config[CONF_PORT]
 
-        self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
+        # Only the binary_sensor YAML platform supports exclude_zones/zone_types;
+        # whichever platform's import runs first creates the entry, so the other
+        # platform's import must still be able to apply these to it afterwards.
+        zone_options: dict[str, Any] | None = None
+        if CONF_EXCLUDE_ZONES in import_config:
+            zone_options = {
+                CONF_EXCLUDE_ZONES: import_config[CONF_EXCLUDE_ZONES],
+                CONF_ZONE_TYPES: import_config[CONF_ZONE_TYPES],
+            }
+
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data[CONF_HOST] != host or entry.data[CONF_PORT] != port:
+                continue
+            if zone_options is not None and entry.options != zone_options:
+                return self.async_update_reload_and_abort(
+                    entry, options=zone_options, reason="already_configured"
+                )
+            return self.async_abort(reason="already_configured")
 
         try:
             await _async_validate_connection(self.hass, host, port)
@@ -98,7 +115,9 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
-            title=host, data={CONF_HOST: host, CONF_PORT: port}
+            title=host,
+            data={CONF_HOST: host, CONF_PORT: port},
+            options=zone_options or {},
         )
 
     @staticmethod

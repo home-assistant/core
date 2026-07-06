@@ -107,7 +107,7 @@ def test_build_zone_sensors_no_zones(fake_client: MagicMock) -> None:
         pytest.param(
             "already_configured",
             HOMEASSISTANT_DOMAIN,
-            "deprecated_yaml",
+            f"deprecated_yaml_{DOMAIN}",
             id="already_configured",
         ),
         pytest.param(
@@ -231,6 +231,40 @@ async def test_async_setup_entry_applies_options(
         hass.states.get("binary_sensor.nx584_inside").attributes["device_class"]
         == "motion"
     )
+
+
+async def test_async_setup_entry_stops_watcher_on_unload(
+    hass: HomeAssistant, fake_zones: list[dict[str, object]]
+) -> None:
+    """Test the watcher thread is signalled to stop when the config entry unloads."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 5007},
+        title="NX584",
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        mock.patch("homeassistant.components.nx584.client.Client") as mock_client_cls,
+        mock.patch(
+            "homeassistant.components.nx584.binary_sensor.NX584Watcher"
+        ) as mock_watcher_cls,
+    ):
+        mock_client = mock_client_cls.return_value
+        mock_client.list_zones.return_value = fake_zones
+        mock_client.get_version.return_value = "1.1"
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        mock_watcher = mock_watcher_cls.return_value
+        assert mock_watcher.start.called
+        assert not mock_watcher.stop.called
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_watcher.stop.assert_called_once()
 
 
 async def test_async_setup_entry_registers_bypass_services(
@@ -450,6 +484,31 @@ def test_nx584_watcher_run_marks_zones_unavailable_on_connection_error(
 
     assert zone_sensor.available is False
     assert mock_update.called
+
+
+def test_nx584_watcher_stop_signals_run_loop_to_exit() -> None:
+    """Test stop() causes the outer run loop to exit without polling further."""
+    watcher = nx584.NX584Watcher(mock.MagicMock(), {})
+    watcher.stop()
+
+    with mock.patch.object(watcher, "_run") as mock_inner:
+        watcher.run()
+
+    assert not mock_inner.called
+
+
+@mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
+def test_nx584_watcher_stop_signals_inner_loop_to_exit(mock_update: MagicMock) -> None:
+    """Test stop() causes _run() to exit after the current poll instead of looping."""
+    client = mock.MagicMock()
+    client.get_events.return_value = None
+    watcher = nx584.NX584Watcher(client, {})
+    watcher.stop()
+
+    watcher._run()
+
+    # Only the initial throwaway call is made; the polling loop never runs.
+    assert client.get_events.call_count == 1
 
 
 @mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")

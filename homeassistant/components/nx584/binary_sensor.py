@@ -14,15 +14,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_platform,
-    issue_registry as ir,
-)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -30,7 +24,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import NX584ConfigEntry
+from . import NX584ConfigEntry, async_import_yaml_config
 from .const import (
     CONF_EXCLUDE_ZONES,
     CONF_ZONE_TYPES,
@@ -107,41 +101,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the NX584 binary sensor platform from YAML, importing it as a config entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-    )
-    if (
-        result.get("type") is FlowResultType.ABORT
-        and result.get("reason") != "already_configured"
-    ):
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{result.get('reason')}",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_yaml_import_issue",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "NX584",
-            },
-        )
-        return
-
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        "deprecated_yaml",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "NX584",
-        },
-    )
+    await async_import_yaml_config(hass, config)
 
 
 async def async_setup_entry(
@@ -166,6 +126,7 @@ async def async_setup_entry(
     async_add_entities(zone_sensors.values())
     watcher = NX584Watcher(data.client, zone_sensors)
     watcher.start()
+    entry.async_on_unload(watcher.stop)
 
     _async_register_services()
 
@@ -230,6 +191,12 @@ class NX584Watcher(threading.Thread):
         self.daemon = True
         self._client = client
         self._zone_sensors = zone_sensors
+        self._stop_event = threading.Event()
+
+    @callback
+    def stop(self) -> None:
+        """Signal the watcher thread to stop processing events."""
+        self._stop_event.set()
 
     def _process_zone_event(self, event):
         zone = event["zone"]
@@ -258,14 +225,14 @@ class NX584Watcher(threading.Thread):
         """Throw away any existing events so we don't replay history."""
         self._client.get_events()
         self._set_zones_available(True)
-        while True:
+        while not self._stop_event.is_set():
             if events := self._client.get_events():
                 self._process_events(events)
 
     @override
     def run(self):
         """Run the watcher."""
-        while True:
+        while not self._stop_event.is_set():
             try:
                 self._run()
             except requests.exceptions.ConnectionError:

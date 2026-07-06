@@ -28,7 +28,7 @@ TEST_ENTRY_ID = "test_entry_id"
         pytest.param(
             "already_configured",
             HOMEASSISTANT_DOMAIN,
-            "deprecated_yaml",
+            f"deprecated_yaml_{DOMAIN}",
             id="already_configured",
         ),
         pytest.param(
