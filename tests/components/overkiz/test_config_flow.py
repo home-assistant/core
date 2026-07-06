@@ -1340,6 +1340,15 @@ async def test_somfy_full_flow_single_site(
         result["flow_id"], {"hub": "somfy"}
     )
 
+    # Somfy is part of SERVERS_WITH_LOCAL_API, so the local/cloud choice is
+    # shown before the multi-account login starts.
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "local_or_cloud"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud"}
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "somfy"
 
@@ -1395,6 +1404,12 @@ async def test_somfy_full_flow_multiple_sites(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"hub": "somfy"}
+    )
+
+    assert result["step_id"] == "local_or_cloud"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud"}
     )
 
     assert result["step_id"] == "somfy"
@@ -1465,6 +1480,12 @@ async def test_somfy_flow_no_sites(
         result["flow_id"], {"hub": "somfy"}
     )
 
+    assert result["step_id"] == "local_or_cloud"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud"}
+    )
+
     with (
         patch("pyoverkiz.client.OverkizClient.login", return_value=True),
         patch(
@@ -1511,6 +1532,12 @@ async def test_somfy_flow_error_buckets(
         result["flow_id"], {"hub": "somfy"}
     )
 
+    assert result["step_id"] == "local_or_cloud"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud"}
+    )
+
     with patch(
         "pyoverkiz.client.OverkizClient.login",
         side_effect=side_effect,
@@ -1534,6 +1561,12 @@ async def test_somfy_flow_unsupported_hardware(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"hub": "somfy"}
+    )
+
+    assert result["step_id"] == "local_or_cloud"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud"}
     )
 
     with patch(

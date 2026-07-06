@@ -156,10 +156,6 @@ class OverkizConfigFlow(
             if self._server == Server.REXEL:
                 return await self.async_step_pick_implementation()
 
-            # Somfy multi-account uses username/password login plus site discovery.
-            if self._server == Server.SOMFY:
-                return await self.async_step_somfy()
-
             return await self.async_step_cloud()
 
         return self.async_show_form(
@@ -186,6 +182,10 @@ class OverkizConfigFlow(
             # Rexel authenticates via OAuth2 (Azure AD B2C with PKCE).
             if self._server == Server.REXEL:
                 return await self.async_step_pick_implementation()
+
+            # Somfy multi-account uses username/password login plus site discovery.
+            if self._server == Server.SOMFY:
+                return await self.async_step_somfy()
 
             return await self.async_step_cloud()
 
@@ -608,7 +608,9 @@ class OverkizConfigFlow(
         elif self._server != Server.REXEL:
             self._user = entry_data[CONF_USERNAME]
 
-        if self._server == Server.SOMFY:
+        # Somfy cloud reauth re-runs the multi-account login; local reauth
+        # falls through to the standard host/token flow.
+        if self._server == Server.SOMFY and self._api_type == APIType.CLOUD:
             return await self.async_step_somfy()
 
         return await self.async_step_user(dict(entry_data))
