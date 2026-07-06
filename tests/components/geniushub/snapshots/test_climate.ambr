@@ -152,8 +152,8 @@
       ]),
       'status': dict({
         'mode': 'off',
-        'output': 0,
         'occupied': 'False',
+        'output': 0,
         'override': dict({
           'duration': 0,
           'setpoint': 28,
@@ -240,8 +240,8 @@
       ]),
       'status': dict({
         'mode': 'off',
-        'output': 0,
         'occupied': 'True',
+        'output': 0,
         'override': dict({
           'duration': 0,
           'setpoint': 20,
@@ -328,8 +328,8 @@
       ]),
       'status': dict({
         'mode': 'off',
-        'output': 0,
         'occupied': 'False',
+        'output': 0,
         'override': dict({
           'duration': 0,
           'setpoint': 20,
@@ -416,8 +416,8 @@
       ]),
       'status': dict({
         'mode': 'off',
-        'output': 0,
         'occupied': 'False',
+        'output': 0,
         'override': dict({
           'duration': 0,
           'setpoint': 20,
@@ -589,8 +589,8 @@
       ]),
       'status': dict({
         'mode': 'off',
-        'output': 0,
         'occupied': 'False',
+        'output': 0,
         'override': dict({
           'duration': 0,
           'setpoint': 28,
