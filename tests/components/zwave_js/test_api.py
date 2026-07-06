@@ -3496,7 +3496,7 @@ async def test_subscribe_config_parameter_updates(
     client,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test the subscribe_config_parameters command."""
+    """Test the subscribe_config_parameter_updates command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
     multisensor_6_device = get_device(hass, multisensor_6)
