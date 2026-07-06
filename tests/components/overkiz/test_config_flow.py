@@ -1379,3 +1379,60 @@ async def test_somfy_full_flow_single_site(
     assert result["data"]["gateway_id"] == TEST_GATEWAY_ID
     assert "password" not in result["data"]
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_somfy_full_flow_multiple_sites(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """A multi-site Somfy account shows the gateway selection step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"hub": "somfy"}
+    )
+
+    assert result["step_id"] == "somfy"
+
+    credentials = SomfyTokenCredentials(
+        refresh_token=TEST_REFRESH_TOKEN,
+        site_oid=TEST_SITE_OID,
+        region=TEST_REGION,
+        gateway_id=TEST_GATEWAY_ID2,
+    )
+
+    with (
+        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.discover_gateways",
+            return_value=[
+                GatewayCandidate(gateway_id=TEST_GATEWAY_ID, label="Home"),
+                GatewayCandidate(gateway_id=TEST_GATEWAY_ID2, label="Cabin"),
+            ],
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.select_gateway"
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.to_credentials",
+            return_value=credentials,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "select_gateway"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"gateway_id": TEST_GATEWAY_ID2}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Cabin"
+    assert result["result"].unique_id == TEST_GATEWAY_ID2
+    assert result["data"]["gateway_id"] == TEST_GATEWAY_ID2
+    assert result["data"]["site_oid"] == TEST_SITE_OID
+    assert len(mock_setup_entry.mock_calls) == 1

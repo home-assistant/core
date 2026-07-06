@@ -382,13 +382,20 @@ class OverkizConfigFlow(
     async def async_step_select_gateway(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Let the user pick a gateway on a multi-gateway Rexel account."""
+        """Let the user pick a gateway on a multi-gateway account."""
+        if self._server == Server.SOMFY:
+            candidates = self._somfy_gateways
+        else:
+            candidates = self._rexel_gateways
+
         if user_input:
             gateway = next(
                 candidate
-                for candidate in self._rexel_gateways
+                for candidate in candidates
                 if candidate.gateway_id == user_input[CONF_GATEWAY_ID]
             )
+            if self._server == Server.SOMFY:
+                return await self._async_create_somfy_entry(gateway)
             return await self._async_create_rexel_entry(gateway)
 
         return self.async_show_form(
@@ -399,7 +406,7 @@ class OverkizConfigFlow(
                         {
                             candidate.gateway_id: candidate.label
                             or candidate.gateway_id
-                            for candidate in self._rexel_gateways
+                            for candidate in candidates
                         }
                     ),
                 }
