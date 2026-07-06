@@ -126,7 +126,8 @@ def _async_get_system_for_service_call(call: ServiceCall) -> SystemType:
     ) is None:
         raise vol.Invalid("Invalid device ID specified")
 
-    assert alarm_control_panel_device_entry.via_device_id
+    if TYPE_CHECKING:
+        assert alarm_control_panel_device_entry.via_device_id
 
     if (
         base_station_device_entry := device_registry.async_get(
