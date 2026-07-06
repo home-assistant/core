@@ -4,7 +4,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.easywave.const import DOMAIN
+from homeassistant.components.easywave.const import (
+    DOMAIN,
+    EVENT_TYPE_GATEWAY_CONNECTED,
+    EVENT_TYPE_GATEWAY_DISCONNECTED,
+)
 from homeassistant.components.easywave.sensor import EasywaveGatewaySensor
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
@@ -168,7 +172,9 @@ async def test_handle_coordinator_update_fires_connected_event(
     await hass.async_block_till_done()
 
     gateway_sensor.coordinator.fire_device_event.assert_called_with(
-        gateway_sensor._entry.entry_id, "gateway_connected"
+        gateway_sensor._entry.entry_id,
+        EVENT_TYPE_GATEWAY_CONNECTED,
+        subtype="connected",
     )
 
 
@@ -188,7 +194,9 @@ async def test_handle_coordinator_update_fires_disconnected_event(
     await hass.async_block_till_done()
 
     gateway_sensor.coordinator.fire_device_event.assert_called_with(
-        gateway_sensor._entry.entry_id, "gateway_disconnected"
+        gateway_sensor._entry.entry_id,
+        EVENT_TYPE_GATEWAY_DISCONNECTED,
+        subtype="disconnected",
     )
 
 

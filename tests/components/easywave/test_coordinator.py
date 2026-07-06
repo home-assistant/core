@@ -2,18 +2,32 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from easywave_home_control.codec import MeasurementType, SensorTelegramEvent
+from easywave_home_control.codec import (
+    ButtonFunction,
+    ButtonPushEvent,
+    ButtonReleaseEvent,
+    MeasurementType,
+    SensorTelegramEvent,
+)
 from easywave_home_control.codec.common import TimerDuration
+from easywave_home_control.codec.events import EasywaveButton
 from easywave_home_control.codec.sensors import (
     SensorMeasurementPayload,
     SensorPayloadFormat,
 )
 import pytest
 
-from homeassistant.components.easywave.const import DEVICE_SCAN_INTERVAL, DOMAIN
+from homeassistant.components.easywave.const import (
+    DEVICE_SCAN_INTERVAL,
+    DOMAIN,
+    EVENT_TYPE_BUTTON_PRESS,
+    EVENT_TYPE_BUTTON_RELEASE,
+)
 from homeassistant.components.easywave.coordinator import EasywaveCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
+
+from .conftest import MOCK_TRANSMITTER_DEVICE_ID, MOCK_TRANSMITTER_SERIAL
 
 from tests.common import MockConfigEntry
 
@@ -390,3 +404,94 @@ async def test_async_shutdown_error(
     await coordinator.async_shutdown()
 
     mock_transceiver.dispose.assert_awaited_once()
+
+
+def _make_transmitter_entity() -> MagicMock:
+    """Return a mock transmitter entity registered on the coordinator."""
+    entity = MagicMock()
+    entity.transmitter_serial = MOCK_TRANSMITTER_SERIAL
+    entity.device_id = MOCK_TRANSMITTER_DEVICE_ID
+    return entity
+
+
+def test_dispatch_button_push_fires_device_event(
+    coordinator: EasywaveCoordinator,
+) -> None:
+    """Button push telegrams fire a device automation event for known transmitters."""
+    coordinator.fire_device_event = MagicMock()
+    entity = _make_transmitter_entity()
+    coordinator.register_transmitter_entities([entity])
+    event = ButtonPushEvent(
+        transmitter_serial=bytes.fromhex(MOCK_TRANSMITTER_SERIAL),
+        button=EasywaveButton.A,
+        function=ButtonFunction.DEFAULT,
+        should_ignore=False,
+    )
+
+    coordinator._dispatch_button_push(event)
+
+    entity.handle_telegram.assert_called_once_with(event)
+    entity.handle_battery_status.assert_called_once_with(False)
+    coordinator.fire_device_event.assert_called_once_with(
+        MOCK_TRANSMITTER_DEVICE_ID,
+        EVENT_TYPE_BUTTON_PRESS,
+        subtype="a",
+    )
+
+
+def test_dispatch_button_push_skips_low_battery_event(
+    coordinator: EasywaveCoordinator,
+) -> None:
+    """Low-battery telegrams update entities but do not fire button press triggers."""
+    coordinator.fire_device_event = MagicMock()
+    entity = _make_transmitter_entity()
+    coordinator.register_transmitter_entities([entity])
+    event = ButtonPushEvent(
+        transmitter_serial=bytes.fromhex(MOCK_TRANSMITTER_SERIAL),
+        button=EasywaveButton.A,
+        function=ButtonFunction.LOW_BATTERY,
+        should_ignore=False,
+    )
+
+    coordinator._dispatch_button_push(event)
+
+    entity.handle_battery_status.assert_called_once_with(True)
+    coordinator.fire_device_event.assert_not_called()
+
+
+def test_dispatch_button_push_ignores_unknown_transmitter(
+    coordinator: EasywaveCoordinator,
+) -> None:
+    """Button push telegrams from unknown transmitters are ignored."""
+    coordinator.fire_device_event = MagicMock()
+    event = ButtonPushEvent(
+        transmitter_serial=bytes.fromhex("cc" * 16),
+        button=EasywaveButton.B,
+        function=ButtonFunction.DEFAULT,
+        should_ignore=False,
+    )
+
+    coordinator._dispatch_button_push(event)
+
+    coordinator.fire_device_event.assert_not_called()
+
+
+def test_dispatch_button_release_fires_device_event(
+    coordinator: EasywaveCoordinator,
+) -> None:
+    """Button release telegrams fire a device automation event."""
+    coordinator.fire_device_event = MagicMock()
+    entity = _make_transmitter_entity()
+    coordinator.register_transmitter_entities([entity])
+    event = ButtonReleaseEvent(
+        transmitter_serial=bytes.fromhex(MOCK_TRANSMITTER_SERIAL),
+    )
+
+    coordinator._dispatch_button_release(event)
+
+    entity.handle_telegram.assert_called_once_with(event)
+    coordinator.fire_device_event.assert_called_once_with(
+        MOCK_TRANSMITTER_DEVICE_ID,
+        EVENT_TYPE_BUTTON_RELEASE,
+        subtype="released",
+    )

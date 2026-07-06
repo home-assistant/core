@@ -121,6 +121,27 @@
       }
     }
   },
+  "device_automation": {
+    "trigger_subtype": {
+      "a": "Button A",
+      "b": "Button B",
+      "c": "Button C",
+      "connected": "Connected",
+      "d": "Button D",
+      "disconnected": "Disconnected",
+      "low": "Low",
+      "ok": "OK",
+      "released": "Not pressed"
+    },
+    "trigger_type": {
+      "battery_low": "Battery low",
+      "battery_normal": "Battery OK",
+      "button_press": "Button pressed ({subtype})",
+      "button_release": "Button released",
+      "gateway_connected": "Gateway connected",
+      "gateway_disconnected": "Gateway disconnected"
+    }
+  },
   "entity": {
     "sensor": {
       "battery_warning": {
@@ -166,6 +187,36 @@
       "options": {
         "unknown": "Unknown"
       }
+    }
+  },
+  "triggers": {
+    "button_press_a": {
+      "description": "Triggers when button A is pressed.",
+      "name": "Button A pressed"
+    },
+    "button_press_b": {
+      "description": "Triggers when button B is pressed.",
+      "name": "Button B pressed"
+    },
+    "button_press_c": {
+      "description": "Triggers when button C is pressed.",
+      "name": "Button C pressed"
+    },
+    "button_press_d": {
+      "description": "Triggers when button D is pressed.",
+      "name": "Button D pressed"
+    },
+    "button_release": {
+      "description": "Triggers when the button is released (impulse mode only).",
+      "name": "Button released"
+    },
+    "gateway_connected": {
+      "description": "Triggers when the RX11 USB transceiver is connected.",
+      "name": "Gateway connected"
+    },
+    "gateway_disconnected": {
+      "description": "Triggers when the RX11 USB transceiver is disconnected.",
+      "name": "Gateway disconnected"
     }
   }
 }

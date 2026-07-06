@@ -19,7 +19,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEVICE_SCAN_INTERVAL, DOMAIN, EVENT_EASYWAVE
+from .const import (
+    DEVICE_SCAN_INTERVAL,
+    DOMAIN,
+    EVENT_EASYWAVE,
+    EVENT_TYPE_BUTTON_PRESS,
+    EVENT_TYPE_BUTTON_RELEASE,
+)
 from .transceiver import RX11Transceiver
 
 if TYPE_CHECKING:
@@ -295,23 +301,40 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Dispatch a button push event to matching entities."""
         serial_hex = event.transmitter_serial.hex()
         is_low_battery = event.function == ButtonFunction.LOW_BATTERY
+        matched_device_id: str | None = None
 
         for entity in list(self._transmitter_entities):
             if _serial_hex_matches(event.transmitter_serial, entity.transmitter_serial):
                 entity.handle_telegram(event)
                 entity.handle_battery_status(is_low_battery)
-        if not any(
-            _serial_hex_matches(event.transmitter_serial, entity.transmitter_serial)
-            for entity in self._transmitter_entities
-        ):
+                matched_device_id = entity.device_id
+        if matched_device_id is None:
             _LOGGER.debug("Received EW push from unknown transmitter: %s", serial_hex)
+            return
+        if event.function == ButtonFunction.LOW_BATTERY:
+            return
+        button_letter = "abcd"[event.button] if event.button < 4 else None
+        if button_letter is not None:
+            self.fire_device_event(
+                matched_device_id,
+                EVENT_TYPE_BUTTON_PRESS,
+                subtype=button_letter,
+            )
 
     @callback
     def _dispatch_button_release(self, event: ButtonReleaseEvent) -> None:
         """Dispatch a button release event to matching entities."""
+        matched_device_id: str | None = None
         for entity in list(self._transmitter_entities):
             if _serial_hex_matches(event.transmitter_serial, entity.transmitter_serial):
                 entity.handle_telegram(event)
+                matched_device_id = entity.device_id
+        if matched_device_id is not None:
+            self.fire_device_event(
+                matched_device_id,
+                EVENT_TYPE_BUTTON_RELEASE,
+                subtype="released",
+            )
 
     @callback
     def _dispatch_sensor_telegram(self, event: SensorTelegramEvent) -> None:
@@ -347,15 +370,24 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 ", ".join(configured) if configured else "none",
             )
 
-    def fire_device_event(self, device_id: str, event_type: str) -> None:
-        """Fire a homeassistant event for gateway/battery state changes."""
+    def fire_device_event(
+        self,
+        easywave_device_id: str,
+        event_type: str,
+        **event_data: Any,
+    ) -> None:
+        """Fire a homeassistant event for device automations."""
         device_registry = dr.async_get(self.hass)
         device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, device_id)}
+            identifiers={(DOMAIN, easywave_device_id)}
         )
         if device_entry is None:
             return
         self.hass.bus.async_fire(
             EVENT_EASYWAVE,
-            {"device_id": device_entry.id, "type": event_type},
+            {
+                "device_id": device_entry.id,
+                "type": event_type,
+                **event_data,
+            },
         )

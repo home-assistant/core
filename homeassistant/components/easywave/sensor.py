@@ -38,8 +38,14 @@ from .const import (
     DOMAIN,
     ENTRY_TYPE_NEO_SENSOR,
     ENTRY_TYPE_TRANSMITTER,
+    EVENT_TYPE_BATTERY_LOW,
+    EVENT_TYPE_BATTERY_NORMAL,
+    EVENT_TYPE_GATEWAY_CONNECTED,
+    EVENT_TYPE_GATEWAY_DISCONNECTED,
     TRANSMITTER_GROUPING_GROUP,
     TRANSMITTER_SWITCH_IMPULSE,
+    EasywaveGatewayFeature,
+    transmitter_trigger_features,
 )
 from .coordinator import EasywaveCoordinator
 from .entity import (
@@ -100,6 +106,7 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_options = STATUS_KEYS
+    _attr_supported_features = EasywaveGatewayFeature.GATEWAY_STATUS
 
     def __init__(
         self, entry: EasywaveConfigEntry, coordinator: EasywaveCoordinator
@@ -156,11 +163,15 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
 
                 if new_status == "connected":
                     self.coordinator.fire_device_event(
-                        self._entry.entry_id, "gateway_connected"
+                        self._entry.entry_id,
+                        EVENT_TYPE_GATEWAY_CONNECTED,
+                        subtype="connected",
                     )
                 elif new_status == "disconnected":
                     self.coordinator.fire_device_event(
-                        self._entry.entry_id, "gateway_disconnected"
+                        self._entry.entry_id,
+                        EVENT_TYPE_GATEWAY_DISCONNECTED,
+                        subtype="disconnected",
                     )
 
             self._current_status = new_status
@@ -282,6 +293,9 @@ class EasywaveTransmitterLastButtonSensor(EasywaveTransmitterEntity, RestoreSens
         if switch_mode == TRANSMITTER_SWITCH_IMPULSE:
             options.append(_BUTTON_STATE_RELEASED)
         self._attr_options = options
+        self._attr_supported_features = transmitter_trigger_features(
+            button_count, switch_mode
+        )
         self._switch_mode = switch_mode
         self._native_value: str | None = None
 
@@ -400,7 +414,9 @@ class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor)
             if self._native_value != _BATTERY_STATE_LOW:
                 self._native_value = _BATTERY_STATE_LOW
                 self.async_write_ha_state()
-                self._coordinator.fire_device_event(self._device_id, "battery_low")
+                self._coordinator.fire_device_event(
+                    self._device_id, EVENT_TYPE_BATTERY_LOW, subtype="low"
+                )
             return
         if self._native_value == _BATTERY_STATE_OK:
             return
@@ -409,7 +425,9 @@ class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor)
             self._native_value = _BATTERY_STATE_OK
             self._ok_streak = 0
             self.async_write_ha_state()
-            self._coordinator.fire_device_event(self._device_id, "battery_normal")
+            self._coordinator.fire_device_event(
+                self._device_id, EVENT_TYPE_BATTERY_NORMAL, subtype="ok"
+            )
 
 
 class EasywaveNeoSensorTemperatureSensor(EasywaveNeoSensorEntity, RestoreSensor):

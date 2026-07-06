@@ -1,6 +1,7 @@
 """Constants for the Easywave integration."""
 
 from datetime import timedelta
+from enum import IntFlag
 from typing import Final
 
 DOMAIN: Final = "easywave"
@@ -118,8 +119,16 @@ def get_frequency_for_pid(pid: int | None) -> str | None:
     return None
 
 
-# Event fired for gateway/battery state changes (usable in event automations).
+# Event fired for gateway/battery/button state changes (usable in automations).
 EVENT_EASYWAVE: Final = f"{DOMAIN}_event"
+
+# Device trigger event types
+EVENT_TYPE_BUTTON_PRESS: Final = "button_press"
+EVENT_TYPE_BUTTON_RELEASE: Final = "button_release"
+EVENT_TYPE_BATTERY_LOW: Final = "battery_low"
+EVENT_TYPE_BATTERY_NORMAL: Final = "battery_normal"
+EVENT_TYPE_GATEWAY_CONNECTED: Final = "gateway_connected"
+EVENT_TYPE_GATEWAY_DISCONNECTED: Final = "gateway_disconnected"
 
 # ── Config Entry / Device Storage ────────────────────────────────────────────
 CONF_DEVICE_TITLE: Final = "title"
@@ -159,6 +168,41 @@ BUTTON_A: Final = 0
 BUTTON_B: Final = 1
 BUTTON_C: Final = 2
 BUTTON_D: Final = 3
+
+
+class EasywaveTransmitterFeature(IntFlag):
+    """Feature flags for transmitter last-button sensor trigger filtering."""
+
+    BUTTON_A = 1
+    BUTTON_B = 2
+    BUTTON_C = 4
+    BUTTON_D = 8
+    BUTTON_RELEASE = 16
+
+
+_BUTTON_FEATURE_BY_INDEX: Final = (
+    EasywaveTransmitterFeature.BUTTON_A,
+    EasywaveTransmitterFeature.BUTTON_B,
+    EasywaveTransmitterFeature.BUTTON_C,
+    EasywaveTransmitterFeature.BUTTON_D,
+)
+
+
+def transmitter_trigger_features(button_count: int, switch_mode: str) -> int:
+    """Return supported trigger feature flags for a group-mode transmitter."""
+    features = EasywaveTransmitterFeature(0)
+    for index in range(min(button_count, 4)):
+        features |= _BUTTON_FEATURE_BY_INDEX[index]
+    if switch_mode == TRANSMITTER_SWITCH_IMPULSE:
+        features |= EasywaveTransmitterFeature.BUTTON_RELEASE
+    return features.value
+
+
+class EasywaveGatewayFeature(IntFlag):
+    """Feature flag for the RX11 gateway status sensor trigger filtering."""
+
+    GATEWAY_STATUS = 32
+
 
 # ── Learning Mode ────────────────────────────────────────────────────────────
 LEARNING_TIMEOUT: Final = 30  # seconds
