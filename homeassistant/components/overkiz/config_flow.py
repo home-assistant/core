@@ -20,6 +20,7 @@ from pyoverkiz.exceptions import (
     MaintenanceError,
     NoSuchTokenError,
     NotAuthenticatedError,
+    SomfyServiceError,
     TooManyAttemptsBannedError,
     TooManyRequestsError,
     UnknownUserError,
@@ -32,6 +33,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_REGION,
     CONF_TOKEN,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -45,6 +47,8 @@ from .const import (
     CONF_API_TYPE,
     CONF_GATEWAY_ID,
     CONF_HUB,
+    CONF_REFRESH_TOKEN,
+    CONF_SITE_OID,
     DEFAULT_SERVER,
     DOMAIN,
     LOGGER,
@@ -75,6 +79,9 @@ class OverkizConfigFlow(
 
     _rexel_gateways: list[GatewayCandidate]
     _rexel_oauth_data: dict[str, Any]
+
+    _somfy_client: OverkizClient
+    _somfy_gateways: list[GatewayCandidate]
 
     @property
     @override
@@ -134,6 +141,10 @@ class OverkizConfigFlow(
             # Rexel authenticates via OAuth2 (Azure AD B2C with PKCE).
             if self._server == Server.REXEL:
                 return await self.async_step_pick_implementation()
+
+            # Somfy multi-account uses username/password login plus site discovery.
+            if self._server == Server.SOMFY:
+                return await self.async_step_somfy()
 
             return await self.async_step_cloud()
 
@@ -416,6 +427,89 @@ class OverkizConfigFlow(
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title=gateway.label or "Rexel", data=data)
+
+    async def async_step_somfy(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle Somfy multi-account username/password login and site discovery."""
+        errors: dict[str, str] = {}
+
+        if user_input:
+            self._user = user_input[CONF_USERNAME]
+            session = async_create_clientsession(self.hass)
+            self._somfy_client = OverkizClient(
+                server=Server.SOMFY,
+                credentials=UsernamePasswordCredentials(
+                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                ),
+                session=session,
+            )
+
+            try:
+                await self._somfy_client.login(register_event_listener=False)
+                self._somfy_gateways = await self._somfy_client.discover_gateways()
+            except TooManyRequestsError:
+                errors["base"] = "too_many_requests"
+            except BadCredentialsError, NotAuthenticatedError:
+                errors["base"] = "invalid_auth"
+            except TimeoutError, ClientError, SomfyServiceError:
+                errors["base"] = "cannot_connect"
+            except MaintenanceError:
+                errors["base"] = "server_in_maintenance"
+            except TooManyAttemptsBannedError:
+                errors["base"] = "too_many_attempts"
+            except Exception:  # noqa: BLE001
+                errors["base"] = "unknown"
+                LOGGER.exception("Unknown error")
+            else:
+                if not self._somfy_gateways:
+                    return self.async_abort(reason="no_gateways")
+
+                if len(self._somfy_gateways) == 1:
+                    return await self._async_create_somfy_entry(self._somfy_gateways[0])
+
+                return await self.async_step_select_gateway()
+
+        return self.async_show_form(
+            step_id="somfy",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME, default=self._user): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+        )
+
+    async def _async_create_somfy_entry(
+        self, gateway: GatewayCandidate
+    ) -> ConfigFlowResult:
+        """Scope the client to the chosen site and persist its token bundle."""
+        self._somfy_client.select_gateway(gateway.gateway_id)
+        credentials = self._somfy_client.to_credentials()
+
+        await self.async_set_unique_id(gateway.gateway_id, raise_on_progress=False)
+
+        data = {
+            CONF_HUB: Server.SOMFY,
+            CONF_API_TYPE: APIType.CLOUD,
+            CONF_REFRESH_TOKEN: credentials.refresh_token,
+            CONF_SITE_OID: credentials.site_oid,
+            CONF_REGION: credentials.region,
+            CONF_GATEWAY_ID: gateway.gateway_id,
+        }
+
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
+            )
+
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=gateway.label or gateway.gateway_id, data=data
+        )
 
     @override
     async def async_step_dhcp(
