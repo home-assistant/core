@@ -5,7 +5,7 @@ from typing import Any, Self, override
 
 import voluptuous as vol
 
-from homeassistant.const import (
+from homeassistant.const import (  # noqa : F401
     ATTR_EDITABLE,
     ATTR_MODE,
     CONF_ICON,
@@ -23,6 +23,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
+
+from .const import InputTextEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -191,7 +193,13 @@ class InputText(collection.CollectionEntity, RestoreEntity):
     """Represent a text box."""
 
     _unrecorded_attributes = frozenset(
-        {ATTR_EDITABLE, ATTR_MAX, ATTR_MIN, ATTR_MODE, ATTR_PATTERN}
+        {
+            InputTextEntityStateAttribute.EDITABLE,
+            InputTextEntityStateAttribute.MAX,
+            InputTextEntityStateAttribute.MIN,
+            InputTextEntityStateAttribute.MODE,
+            InputTextEntityStateAttribute.PATTERN,
+        }
     )
 
     _attr_should_poll = False
@@ -265,11 +273,11 @@ class InputText(collection.CollectionEntity, RestoreEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
-            ATTR_EDITABLE: self.editable,
-            ATTR_MIN: self._minimum,
-            ATTR_MAX: self._maximum,
-            ATTR_PATTERN: self._config.get(CONF_PATTERN),
-            ATTR_MODE: self._config[CONF_MODE],
+            InputTextEntityStateAttribute.EDITABLE: self.editable,
+            InputTextEntityStateAttribute.MIN: self._minimum,
+            InputTextEntityStateAttribute.MAX: self._maximum,
+            InputTextEntityStateAttribute.PATTERN: self._config.get(CONF_PATTERN),
+            InputTextEntityStateAttribute.MODE: self._config[CONF_MODE],
         }
 
     @override
