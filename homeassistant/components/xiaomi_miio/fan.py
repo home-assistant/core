@@ -40,6 +40,7 @@ from homeassistant.util.percentage import (
 
 from .const import (
     CONF_FLOW_TYPE,
+    FAN_DATA_KEY as DATA_KEY,
     FEATURE_FLAGS_AIRFRESH,
     FEATURE_FLAGS_AIRFRESH_A1,
     FEATURE_FLAGS_AIRFRESH_T2017,
@@ -90,8 +91,6 @@ from .entity import XiaomiCoordinatedMiioEntity
 from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-
-DATA_KEY = "fan.xiaomi_miio"
 
 ATTR_MODE_NATURE = "nature"
 ATTR_MODE_NORMAL = "normal"

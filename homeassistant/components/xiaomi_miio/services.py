@@ -11,7 +11,10 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import (
+    ATTR_SCENE,
     DOMAIN,
+    FAN_DATA_KEY,
+    LIGHT_DATA_KEY,
     SERVICE_EYECARE_MODE_OFF,
     SERVICE_EYECARE_MODE_ON,
     SERVICE_NIGHT_LIGHT_MODE_OFF,
@@ -26,10 +29,8 @@ from .const import (
     SERVICE_SET_SCENE,
     SERVICE_SET_WIFI_LED_OFF,
     SERVICE_SET_WIFI_LED_ON,
+    SWITCH_DATA_KEY,
 )
-from .fan import DATA_KEY as FAN_DATA_KEY
-from .light import ATTR_SCENE, DATA_KEY as LIGHT_DATA_KEY
-from .switch import DATA_KEY as SWITCH_DATA_KEY
 from .typing import ServiceMethodDetails
 
 _LOGGER = logging.getLogger(__name__)
@@ -119,6 +120,10 @@ FAN_SERVICE_TO_METHOD = {
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services."""
+
+    _async_setup_fan_services(hass)
+    _async_setup_light_services(hass)
+    _async_setup_switch_services(hass)
 
     # Vacuum Services
     service.async_register_platform_entity_service(
@@ -220,7 +225,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
 
 
-def async_setup_light_services(hass: HomeAssistant) -> None:
+def _async_setup_light_services(hass: HomeAssistant) -> None:
     """Set up Xiaomi Miio light services."""
     hass.data.setdefault(LIGHT_DATA_KEY, {})
 
@@ -258,7 +263,7 @@ def async_setup_light_services(hass: HomeAssistant) -> None:
         )
 
 
-def async_setup_switch_services(hass: HomeAssistant) -> None:
+def _async_setup_switch_services(hass: HomeAssistant) -> None:
     """Set up Xiaomi Miio switch services."""
     hass.data.setdefault(SWITCH_DATA_KEY, {})
 
@@ -294,7 +299,7 @@ def async_setup_switch_services(hass: HomeAssistant) -> None:
         )
 
 
-def async_setup_fan_services(hass: HomeAssistant) -> None:
+def _async_setup_fan_services(hass: HomeAssistant) -> None:
     """Set up Xiaomi Miio fan services."""
     hass.data.setdefault(FAN_DATA_KEY, {})
 

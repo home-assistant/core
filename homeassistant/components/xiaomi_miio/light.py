@@ -37,9 +37,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util, dt as dt_util
 
 from .const import (
+    ATTR_SCENE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,
+    LIGHT_DATA_KEY as DATA_KEY,
     MODELS_LIGHT_BULB,
     MODELS_LIGHT_CEILING,
     MODELS_LIGHT_EYECARE,
@@ -52,7 +54,6 @@ from .typing import XiaomiMiioConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Xiaomi Philips Light"
-DATA_KEY = "light.xiaomi_miio"
 
 # The light does not accept cct values < 1
 CCT_MIN = 1
@@ -62,7 +63,6 @@ DELAYED_TURN_OFF_MAX_DEVIATION_SECONDS = 4
 DELAYED_TURN_OFF_MAX_DEVIATION_MINUTES = 1
 
 SUCCESS = ["ok"]
-ATTR_SCENE = "scene"
 ATTR_DELAYED_TURN_OFF = "delayed_turn_off"
 ATTR_NIGHT_LIGHT_MODE = "night_light_mode"
 ATTR_AUTOMATIC_COLOR_TEMPERATURE = "automatic_color_temperature"

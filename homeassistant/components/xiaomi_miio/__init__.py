@@ -73,12 +73,7 @@ from .const import (
 )
 from .coordinator import UPDATE_INTERVAL, GatewayDeviceCoordinator
 from .gateway import ConnectXiaomiGateway
-from .services import (
-    async_setup_fan_services,
-    async_setup_light_services,
-    async_setup_services,
-    async_setup_switch_services,
-)
+from .services import async_setup_services
 from .typing import XiaomiMiioConfigEntry, XiaomiMiioRuntimeData
 
 _LOGGER = logging.getLogger(__name__)

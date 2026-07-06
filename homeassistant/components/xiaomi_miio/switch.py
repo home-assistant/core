@@ -108,6 +108,7 @@ from .const import (
     MODELS_PURIFIER_MIIO,
     MODELS_PURIFIER_MIOT,
     SUCCESS,
+    SWITCH_DATA_KEY as DATA_KEY,
 )
 from .coordinator import GatewayDeviceCoordinator
 from .entity import XiaomiCoordinatedMiioEntity, XiaomiGatewayDevice, XiaomiMiioEntity
@@ -116,7 +117,6 @@ from .typing import XiaomiMiioConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Xiaomi Miio Switch"
-DATA_KEY = "switch.xiaomi_miio"
 
 MODEL_POWER_STRIP_V2 = "zimi.powerstrip.v2"
 MODEL_PLUG_V3 = "chuangmi.plug.v3"
