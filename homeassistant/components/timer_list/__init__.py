@@ -2,16 +2,16 @@
 
 A timer list entity holds many independent countdown timers (its *items*),
 mirroring how a to-do list holds many to-do items. The entity state is the
-number of active timers. Timers are kept in memory only: they do not survive a
-restart of Home Assistant in this first version (see the module-level notes on
-``async_will_remove_from_hass``).
+number of active timers. This module defines the abstract entity, the shared
+data model, and the generic services/websocket API; storing timers and
+scheduling their completion is left to concrete implementations such as
+``local_timer_list``.
 """
 
 from collections.abc import Callable
 import copy
 import dataclasses
 from datetime import datetime, timedelta
-from functools import partial
 import logging
 from typing import Any, final, override
 
@@ -27,13 +27,11 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util, ulid as ulid_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_DURATION,
@@ -54,8 +52,6 @@ _LOGGER = logging.getLogger(__name__)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
-
-_FINISHED_STATUSES = (TimerStatus.FINISHED, TimerStatus.CANCELLED)
 
 
 @dataclasses.dataclass
@@ -218,28 +214,29 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 class TimerListEntity(Entity):
-    """An entity that holds a list of independent countdown timers."""
+    """An entity that holds a list of independent countdown timers.
+
+    This base class only provides the event/listener plumbing shared by the
+    websocket API and triggers. Concrete implementations are responsible for
+    storing timers and scheduling their completion.
+    """
 
     _attr_should_poll = False
 
     def __init__(self) -> None:
         """Initialize the timer list."""
-        self._timers: dict[str, TimerItem] = {}
-        self._cancel_callbacks: dict[str, CALLBACK_TYPE] = {}
         self._update_listeners: list[Callable[[TimerListEvent], None]] = []
 
     @property
     @override
     def state(self) -> int:
         """Return the number of active timers."""
-        return sum(
-            timer.status == TimerStatus.ACTIVE for timer in self._timers.values()
-        )
+        return sum(timer.status == TimerStatus.ACTIVE for timer in self.timers)
 
     @property
     def timers(self) -> list[TimerItem]:
         """Return the timers in the list."""
-        return list(self._timers.values())
+        raise NotImplementedError
 
     async def async_start_timer(
         self,
@@ -249,156 +246,35 @@ class TimerListEntity(Entity):
         finish_action: TimerFinishAction,
     ) -> str:
         """Create and start a new timer, returning its id."""
-        now = dt_util.utcnow()
-        timer_id = ulid_util.ulid_now()
-        timer = TimerItem(
-            timer_id=timer_id,
-            name=name,
-            status=TimerStatus.ACTIVE,
-            finish_action=finish_action,
-            duration=duration,
-            created_at=now,
-            finishes_at=now + duration,
-        )
-        self._timers[timer_id] = timer
-        self._schedule(timer)
-        self._notify(TimerListEventType.STARTED, timer)
-        return timer_id
+        raise NotImplementedError
 
     async def async_pause_timer(self, timer_id: str) -> None:
         """Pause an active timer."""
-        timer = self._get_timer(timer_id)
-        if timer.status != TimerStatus.ACTIVE or timer.finishes_at is None:
-            return
-        timer.remaining = max(timedelta(0), timer.finishes_at - dt_util.utcnow())
-        timer.finishes_at = None
-        timer.status = TimerStatus.PAUSED
-        self._unschedule(timer_id)
-        self._notify(TimerListEventType.UPDATED, timer)
+        raise NotImplementedError
 
     async def async_unpause_timer(self, timer_id: str) -> None:
         """Resume a paused timer."""
-        timer = self._get_timer(timer_id)
-        if timer.status != TimerStatus.PAUSED or timer.remaining is None:
-            return
-        timer.finishes_at = dt_util.utcnow() + timer.remaining
-        timer.remaining = None
-        timer.status = TimerStatus.ACTIVE
-        self._schedule(timer)
-        self._notify(TimerListEventType.UPDATED, timer)
+        raise NotImplementedError
 
     async def async_cancel_timer(self, timer_id: str) -> None:
-        """Cancel a timer.
-
-        The timer is retained in the ``cancelled`` state only when its finish
-        action is ``archive``; otherwise it is removed.
-        """
-        timer = self._get_timer(timer_id)
-        self._unschedule(timer_id)
-        timer.status = TimerStatus.CANCELLED
-        timer.finishes_at = None
-        timer.remaining = None
-        timer.finished_at = dt_util.utcnow()
-        self._notify(TimerListEventType.CANCELLED, timer)
-        if timer.finish_action != TimerFinishAction.ARCHIVE:
-            del self._timers[timer_id]
-            self._notify(TimerListEventType.REMOVED, timer)
+        """Cancel a timer."""
+        raise NotImplementedError
 
     async def async_cancel_all_timers(self) -> None:
         """Cancel every active or paused timer."""
-        for timer_id in [
-            timer.timer_id
-            for timer in self._timers.values()
-            if timer.status in (TimerStatus.ACTIVE, TimerStatus.PAUSED)
-        ]:
-            await self.async_cancel_timer(timer_id)
+        raise NotImplementedError
 
     async def async_add_time(self, timer_id: str, duration: timedelta) -> None:
         """Add (or, with a negative duration, remove) time on a timer."""
-        timer = self._get_timer(timer_id)
-        if timer.status == TimerStatus.ACTIVE and timer.finishes_at is not None:
-            now = dt_util.utcnow()
-            finishes_at = timer.finishes_at + duration
-            if finishes_at <= now:
-                self._unschedule(timer_id)
-                self._async_timer_finished(timer_id, now)
-                return
-            timer.finishes_at = finishes_at
-            self._schedule(timer)
-        elif timer.status == TimerStatus.PAUSED and timer.remaining is not None:
-            timer.remaining = max(timedelta(0), timer.remaining + duration)
-        else:
-            return
-        self._notify(TimerListEventType.UPDATED, timer)
+        raise NotImplementedError
 
     async def async_remove_timer(self, timer_id: str) -> None:
         """Remove a timer from the list regardless of its status."""
-        timer = self._get_timer(timer_id)
-        self._unschedule(timer_id)
-        del self._timers[timer_id]
-        self._notify(TimerListEventType.REMOVED, timer)
+        raise NotImplementedError
 
     async def async_clear_finished_timers(self) -> None:
         """Remove all finished and cancelled (archived) timers."""
-        for timer_id in [
-            timer.timer_id
-            for timer in self._timers.values()
-            if timer.status in _FINISHED_STATUSES
-        ]:
-            timer = self._timers.pop(timer_id)
-            self._notify(TimerListEventType.REMOVED, timer)
-
-    def _get_timer(self, timer_id: str) -> TimerItem:
-        """Return a timer by id or raise if it does not exist."""
-        if (timer := self._timers.get(timer_id)) is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="timer_not_found",
-                translation_placeholders={"timer_id": timer_id},
-            )
-        return timer
-
-    @callback
-    def _schedule(self, timer: TimerItem) -> None:
-        """Schedule (or reschedule) the finish callback for a timer."""
-        self._unschedule(timer.timer_id)
-        assert timer.finishes_at is not None
-        self._cancel_callbacks[timer.timer_id] = async_track_point_in_utc_time(
-            self.hass,
-            partial(self._async_timer_finished, timer.timer_id),
-            timer.finishes_at,
-        )
-
-    @callback
-    def _unschedule(self, timer_id: str) -> None:
-        """Cancel a pending finish callback, if any."""
-        if cancel := self._cancel_callbacks.pop(timer_id, None):
-            cancel()
-
-    @callback
-    def _async_timer_finished(self, timer_id: str, now: datetime) -> None:
-        """Handle a timer reaching its finish time."""
-        self._cancel_callbacks.pop(timer_id, None)
-        if (timer := self._timers.get(timer_id)) is None:
-            return
-
-        timer.status = TimerStatus.FINISHED
-        timer.finishes_at = None
-        timer.remaining = None
-        timer.finished_at = dt_util.utcnow()
-        self._notify(TimerListEventType.FINISHED, timer)
-
-        if timer.finish_action == TimerFinishAction.REMOVE:
-            self._timers.pop(timer_id, None)
-            self._notify(TimerListEventType.REMOVED, timer)
-        elif timer.finish_action == TimerFinishAction.RESTART:
-            restarted_at = dt_util.utcnow()
-            timer.status = TimerStatus.ACTIVE
-            timer.created_at = restarted_at
-            timer.finishes_at = restarted_at + timer.duration
-            timer.finished_at = None
-            self._schedule(timer)
-            self._notify(TimerListEventType.STARTED, timer)
+        raise NotImplementedError
 
     @final
     @callback
@@ -418,6 +294,7 @@ class TimerListEntity(Entity):
 
         return unsubscribe
 
+    @final
     @callback
     def _notify(self, event_type: TimerListEventType, timer: TimerItem) -> None:
         """Push a change event to subscribers and write entity state."""
@@ -425,13 +302,6 @@ class TimerListEntity(Entity):
         for listener in list(self._update_listeners):
             listener(event)
         self.async_write_ha_state()
-
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Cancel all pending finish callbacks."""
-        for cancel in self._cancel_callbacks.values():
-            cancel()
-        self._cancel_callbacks.clear()
 
 
 async def _async_start_timer(
