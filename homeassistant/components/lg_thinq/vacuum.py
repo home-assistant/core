@@ -65,15 +65,6 @@ ROBOT_STATUS_TO_HA = {
     "clean_select_gozone": VacuumActivity.CLEANING,
     "error": VacuumActivity.ERROR,
 }
-ROBOT_BATT_TO_HA = {
-    "moveless": 5,
-    "dock_level": 5,
-    "low": 30,
-    "mid": 50,
-    "high": 90,
-    "full": 100,
-    "over_charge": 100,
-}
 _LOGGER = logging.getLogger(__name__)
 
 
