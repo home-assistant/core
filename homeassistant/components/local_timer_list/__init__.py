@@ -8,6 +8,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
+from .timer_list import LocalTimerListEntity
+
+__all__ = ["LocalTimerListEntity"]
+
 PLATFORMS = [Platform.TIMER_LIST]
 
 

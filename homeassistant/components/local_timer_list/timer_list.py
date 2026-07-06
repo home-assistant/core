@@ -31,7 +31,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the local timer list entity from a config entry."""
-    async_add_entities([LocalTimerListEntity(config_entry)])
+    async_add_entities(
+        [
+            LocalTimerListEntity(
+                name=config_entry.data[CONF_TIMER_LIST_NAME],
+                unique_id=config_entry.entry_id,
+            )
+        ]
+    )
 
 
 class LocalTimerListEntity(TimerListEntity):
@@ -44,11 +51,11 @@ class LocalTimerListEntity(TimerListEntity):
         | TimerListEntityFeature.ADD_TIME
     )
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, *, name: str, unique_id: str) -> None:
         """Initialize the timer list."""
         super().__init__()
-        self._attr_name = config_entry.data[CONF_TIMER_LIST_NAME]
-        self._attr_unique_id = config_entry.entry_id
+        self._attr_name = name
+        self._attr_unique_id = unique_id
         self._timers: dict[str, TimerItem] = {}
         self._cancel_callbacks: dict[str, CALLBACK_TYPE] = {}
 
