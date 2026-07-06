@@ -21,7 +21,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             {
                 **entry.data,
                 CONF_NAME: entry.title,
-                "entry_id": entry.entry_id,
             },
             {},
         )
@@ -31,13 +30,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry.
-
-    The legacy notify platform skips re-registering a service that is already
-    present, so the previous FreeSMSNotificationService (and its stale access
-    token) would otherwise stay in place until Home Assistant is restarted.
-    Removing our own service by name lets async_setup_entry register a fresh
-    one, without touching other notify integrations' services.
-    """
+    """Unload a config entry."""
     hass.services.async_remove(NOTIFY_DOMAIN, slugify(entry.title))
     return True

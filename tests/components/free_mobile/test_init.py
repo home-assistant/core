@@ -8,12 +8,7 @@ import pytest
 from homeassistant.components.free_mobile.const import DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_NAME,
-    CONF_PLATFORM,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -28,15 +23,6 @@ def mock_send_sms() -> Generator[MagicMock]:
     """Mock the Free Mobile SMS client."""
     with patch("freesms.FreeClient.send_sms") as mock_send_sms:
         yield mock_send_sms
-
-
-@pytest.fixture
-def mock_free_client() -> Generator[MagicMock]:
-    """Mock the FreeClient constructor to capture its arguments."""
-    with patch(
-        "homeassistant.components.free_mobile.notify.FreeClient"
-    ) as mock_free_client:
-        yield mock_free_client
 
 
 async def test_entry_setup_unload(hass: HomeAssistant) -> None:
@@ -58,8 +44,7 @@ async def test_unload_entry_removes_notify_service(hass: HomeAssistant) -> None:
 
     The legacy notify platform skips re-registering a service that already
     exists, so unloading must remove it explicitly for a subsequent reload
-    (e.g. after reconfigure/reauth) to pick up fresh data such as a new
-    access token.
+    to pick up fresh data.
     """
     entry = MockConfigEntry(domain=DOMAIN, title="Maman", data=MOCK_CONFIG)
     entry.add_to_hass(hass)
@@ -72,30 +57,6 @@ async def test_unload_entry_removes_notify_service(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert not hass.services.has_service(NOTIFY_DOMAIN, "maman")
-
-
-async def test_reconfigure_reloads_with_new_token(
-    hass: HomeAssistant, mock_free_client: MagicMock
-) -> None:
-    """Test the new access token is used to build the client without a restart."""
-    entry = MockConfigEntry(domain=DOMAIN, title="Maman", data=MOCK_CONFIG)
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    mock_free_client.assert_called_with(
-        MOCK_CONFIG[CONF_USERNAME], MOCK_CONFIG[CONF_ACCESS_TOKEN]
-    )
-
-    result = await entry.start_reconfigure_flow(hass)
-    await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_ACCESS_TOKEN: "new-token"}
-    )
-    await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-    assert entry.data == {**MOCK_CONFIG, CONF_ACCESS_TOKEN: "new-token"}
-    mock_free_client.assert_called_with(MOCK_CONFIG[CONF_USERNAME], "new-token")
 
 
 async def test_import(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:

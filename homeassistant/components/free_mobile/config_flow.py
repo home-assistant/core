@@ -1,6 +1,5 @@
 """Config flow for the Free Mobile integration."""
 
-from collections.abc import Mapping
 from typing import Any, override
 
 import voluptuous as vol
@@ -24,17 +23,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
                 autocomplete="username",
             ),
         ),
-        vol.Required(CONF_ACCESS_TOKEN): TextSelector(
-            TextSelectorConfig(
-                type=TextSelectorType.PASSWORD,
-                autocomplete="current-password",
-            ),
-        ),
-    }
-)
-
-STEP_ACCESS_TOKEN_DATA_SCHEMA = vol.Schema(
-    {
         vol.Required(CONF_ACCESS_TOKEN): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
@@ -90,48 +78,4 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_USERNAME: import_info[CONF_USERNAME],
                 CONF_ACCESS_TOKEN: import_info[CONF_ACCESS_TOKEN],
             },
-        )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfigure flow to update the access token."""
-        entry = self._get_reconfigure_entry()
-
-        if user_input is not None:
-            return self.async_update_reload_and_abort(
-                entry,
-                data_updates=user_input,
-            )
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(
-                data_schema=STEP_ACCESS_TOKEN_DATA_SCHEMA,
-                suggested_values=entry.data,
-            ),
-        )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Perform reauth upon an authentication error."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm reauthentication dialog."""
-        entry = self._get_reauth_entry()
-
-        if user_input is not None:
-            return self.async_update_reload_and_abort(
-                entry,
-                data_updates=user_input,
-            )
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=self.add_suggested_values_to_schema(
-                data_schema=STEP_ACCESS_TOKEN_DATA_SCHEMA,
-                suggested_values=entry.data,
-            ),
         )

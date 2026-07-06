@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components.free_mobile.const import DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -87,22 +87,3 @@ async def test_send_message_errors(
 
     assert exc.value.translation_domain == DOMAIN
     assert exc.value.translation_key == translation_key
-
-
-async def test_send_message_forbidden_triggers_reauth(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_send_sms: MagicMock
-) -> None:
-    """Test a 403 response starts a reauth flow."""
-    mock_send_sms.return_value = MagicMock(status_code=HTTPStatus.FORBIDDEN)
-
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            NOTIFY_DOMAIN,
-            "maman",
-            {"message": "Hello World"},
-            blocking=True,
-        )
-    await hass.async_block_till_done()
-
-    flows = config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})
-    assert list(flows)

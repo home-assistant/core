@@ -10,7 +10,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -41,12 +41,7 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
-    entry = hass.config_entries.async_get_entry(discovery_info["entry_id"])
-    if entry is None:
-        return None
-
     return FreeSMSNotificationService(
-        entry,
         discovery_info[CONF_USERNAME],
         discovery_info[CONF_ACCESS_TOKEN],
     )
@@ -55,9 +50,8 @@ async def async_get_service(
 class FreeSMSNotificationService(BaseNotificationService):
     """Implement a notification service for the Free Mobile SMS service."""
 
-    def __init__(self, entry: ConfigEntry, username: str, access_token: str) -> None:
+    def __init__(self, username: str, access_token: str) -> None:
         """Initialize the service."""
-        self._entry = entry
         self.free_client = FreeClient(username, access_token)
 
     @override
@@ -76,7 +70,6 @@ class FreeSMSNotificationService(BaseNotificationService):
                 translation_key="rate_limit_exceeded",
             )
         if resp.status_code == HTTPStatus.FORBIDDEN:
-            self.hass.add_job(self._entry.async_start_reauth, self.hass)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
