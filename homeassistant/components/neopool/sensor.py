@@ -1,11 +1,22 @@
 """Sensor platform for the NeoPool integration."""
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, override
 
-from neopool_modbus.capabilities import has_filtvalve, is_ionization_present
+from neopool_modbus.capabilities import (
+    has_filtvalve,
+    has_heating_relay,
+    has_variable_speed_pump,
+    is_chlorine_module_present,
+    is_conductivity_module_present,
+    is_hydrolysis_present,
+    is_ionization_present,
+    is_ph_module_present,
+    is_redox_module_present,
+    is_temperature_active,
+)
 from neopool_modbus.decoders import (
     FILTRATION_MODE_LABELS,
     FILTRATION_SPEED_STATE_LABELS,
@@ -17,7 +28,6 @@ from neopool_modbus.decoders import (
     decode_ion_polarity,
     decode_ph_alarm,
     decode_ph_pump_status,
-    get_filtration_pump_type,
     is_hydrolysis_in_percent,
     ph_pump_options,
 )
@@ -49,7 +59,7 @@ PARALLEL_UPDATES = 0
 class NeoPoolSensorEntityDescription(SensorEntityDescription):
     """Describes a NeoPool sensor entity."""
 
-    supported_fn: Callable[[dict[str, Any], Mapping[str, Any]], bool] | None = None
+    supported_fn: Callable[[dict[str, Any]], bool] | None = None
     value_fn: Callable[[dict[str, Any]], Any] | None = None
     options_fn: Callable[[dict[str, Any]], list[str]] | None = None
     unit_fn: Callable[[dict[str, Any]], str | None] | None = None
@@ -62,7 +72,7 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         translation_key="ion_current",
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        supported_fn=lambda data, opts: is_ionization_present(data),
+        supported_fn=is_ionization_present,
     ),
     "MBF_HIDRO_CURRENT": NeoPoolSensorEntityDescription(
         key="MBF_HIDRO_CURRENT",
@@ -70,7 +80,7 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        supported_fn=lambda data, opts: bool(data.get("Hydrolysis module detected")),
+        supported_fn=is_hydrolysis_present,
         unit_fn=lambda data: (
             UnitOfRatio.PERCENTAGE if is_hydrolysis_in_percent(data) else "g/h"
         ),
@@ -80,9 +90,7 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         key="MBF_MEASURE_PH",
         device_class=SensorDeviceClass.PH,
         state_class=SensorStateClass.MEASUREMENT,
-        supported_fn=lambda data, opts: (
-            data.get("pH measurement module detected") is True
-        ),
+        supported_fn=is_ph_module_present,
     ),
     "MBF_MEASURE_RX": NeoPoolSensorEntityDescription(
         key="MBF_MEASURE_RX",
@@ -90,18 +98,14 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        supported_fn=lambda data, opts: (
-            data.get("Redox measurement module detected") is True
-        ),
+        supported_fn=is_redox_module_present,
     ),
     "MBF_MEASURE_CL": NeoPoolSensorEntityDescription(
         key="MBF_MEASURE_CL",
         translation_key="measure_cl",
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        supported_fn=lambda data, opts: (
-            data.get("Chlorine measurement module detected") is True
-        ),
+        supported_fn=is_chlorine_module_present,
     ),
     "MBF_MEASURE_CONDUCTIVITY": NeoPoolSensorEntityDescription(
         key="MBF_MEASURE_CONDUCTIVITY",
@@ -109,9 +113,7 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        supported_fn=lambda data, opts: (
-            data.get("Conductivity measurement module detected") is True
-        ),
+        supported_fn=is_conductivity_module_present,
     ),
     "MBF_MEASURE_TEMPERATURE": NeoPoolSensorEntityDescription(
         key="MBF_MEASURE_TEMPERATURE",
@@ -119,7 +121,7 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        supported_fn=lambda data, opts: bool(data.get("MBF_PAR_TEMPERATURE_ACTIVE")),
+        supported_fn=is_temperature_active,
     ),
     "MBF_HIDRO_VOLTAGE": NeoPoolSensorEntityDescription(
         key="MBF_HIDRO_VOLTAGE",
@@ -130,7 +132,7 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=1,
         entity_registry_enabled_default=False,
-        supported_fn=lambda data, opts: bool(data.get("Hydrolysis module detected")),
+        supported_fn=is_hydrolysis_present,
     ),
     "MBF_PAR_FILT_MODE": NeoPoolSensorEntityDescription(
         key="MBF_PAR_FILT_MODE",
@@ -146,9 +148,7 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         options=list(PH_STATUS_ALARM_LABELS.values()),
         value_fn=decode_ph_alarm,
-        supported_fn=lambda data, opts: (
-            data.get("pH measurement module detected") is True
-        ),
+        supported_fn=is_ph_module_present,
     ),
     "HIDRO_POLARITY": NeoPoolSensorEntityDescription(
         key="HIDRO_POLARITY",
@@ -156,7 +156,7 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         device_class=SensorDeviceClass.ENUM,
         options=list(HIDRO_POLARITY_LABELS),
         value_fn=decode_hidro_polarity,
-        supported_fn=lambda data, opts: bool(data.get("Hydrolysis module detected")),
+        supported_fn=is_hydrolysis_present,
     ),
     "ION_POLARITY": NeoPoolSensorEntityDescription(
         key="ION_POLARITY",
@@ -164,7 +164,7 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         device_class=SensorDeviceClass.ENUM,
         options=list(ION_POLARITY_LABELS),
         value_fn=decode_ion_polarity,
-        supported_fn=lambda data, opts: is_ionization_present(data),
+        supported_fn=is_ionization_present,
     ),
     "PH_PUMP_STATUS": NeoPoolSensorEntityDescription(
         key="PH_PUMP_STATUS",
@@ -173,9 +173,7 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         options_fn=ph_pump_options,
         value_fn=decode_ph_pump_status,
-        supported_fn=lambda data, opts: (
-            data.get("pH measurement module detected") is True
-        ),
+        supported_fn=is_ph_module_present,
     ),
     "FILTRATION_SPEED": NeoPoolSensorEntityDescription(
         key="FILTRATION_SPEED",
@@ -183,18 +181,15 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         device_class=SensorDeviceClass.ENUM,
         options=list(FILTRATION_SPEED_STATE_LABELS),
         value_fn=lambda data: data.get("filtration_speed_state"),
-        supported_fn=lambda data, opts: bool(
-            get_filtration_pump_type(data.get("MBF_PAR_FILTRATION_CONF", 0))
-        ),
+        supported_fn=has_variable_speed_pump,
     ),
     "MBF_PAR_INTELLIGENT_INTERVALS": NeoPoolSensorEntityDescription(
         key="MBF_PAR_INTELLIGENT_INTERVALS",
         translation_key="intelligent_intervals",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        supported_fn=lambda data, opts: (
-            bool(data.get("MBF_PAR_HEATING_GPIO"))
-            and bool(data.get("MBF_PAR_TEMPERATURE_ACTIVE"))
+        supported_fn=lambda data: (
+            has_heating_relay(data) and is_temperature_active(data)
         ),
     ),
     "MBF_PAR_INTELLIGENT_TT_NEXT_INTERVAL": NeoPoolSensorEntityDescription(
@@ -205,9 +200,8 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         value_fn=lambda data: calculate_next_interval_time(
             data.get("MBF_PAR_INTELLIGENT_TT_NEXT_INTERVAL")
         ),
-        supported_fn=lambda data, opts: (
-            bool(data.get("MBF_PAR_HEATING_GPIO"))
-            and bool(data.get("MBF_PAR_TEMPERATURE_ACTIVE"))
+        supported_fn=lambda data: (
+            has_heating_relay(data) and is_temperature_active(data)
         ),
     ),
     "MBF_PAR_FILTVALVE_REMAINING": NeoPoolSensorEntityDescription(
@@ -217,7 +211,7 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        supported_fn=lambda data, opts: has_filtvalve(data),
+        supported_fn=has_filtvalve,
     ),
     "CELL_RUNTIME_TOTAL": NeoPoolSensorEntityDescription(
         key="CELL_RUNTIME_TOTAL",
@@ -229,7 +223,7 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         suggested_display_precision=0,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        supported_fn=lambda data, opts: bool(data.get("Hydrolysis module detected")),
+        supported_fn=is_hydrolysis_present,
     ),
     "CELL_RUNTIME_PART": NeoPoolSensorEntityDescription(
         key="CELL_RUNTIME_PART",
@@ -241,7 +235,7 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         suggested_display_precision=0,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        supported_fn=lambda data, opts: bool(data.get("Hydrolysis module detected")),
+        supported_fn=is_hydrolysis_present,
     ),
     "CELL_RUNTIME_POLA": NeoPoolSensorEntityDescription(
         key="CELL_RUNTIME_POLA",
@@ -253,7 +247,7 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         suggested_display_precision=0,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        supported_fn=lambda data, opts: bool(data.get("Hydrolysis module detected")),
+        supported_fn=is_hydrolysis_present,
     ),
     "CELL_RUNTIME_POLB": NeoPoolSensorEntityDescription(
         key="CELL_RUNTIME_POLB",
@@ -265,7 +259,7 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         suggested_display_precision=0,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        supported_fn=lambda data, opts: bool(data.get("Hydrolysis module detected")),
+        supported_fn=is_hydrolysis_present,
     ),
     "CELL_RUNTIME_POL_CHANGES": NeoPoolSensorEntityDescription(
         key="CELL_RUNTIME_POL_CHANGES",
@@ -274,7 +268,7 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         suggested_display_precision=0,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        supported_fn=lambda data, opts: bool(data.get("Hydrolysis module detected")),
+        supported_fn=is_hydrolysis_present,
     ),
 }
 
@@ -290,8 +284,7 @@ async def async_setup_entry(
     async_add_entities(
         NeoPoolSensor(coordinator, key, desc)
         for key, desc in SENSOR_DESCRIPTIONS.items()
-        if desc.supported_fn is None
-        or desc.supported_fn(coordinator.data, entry.options)
+        if desc.supported_fn is None or desc.supported_fn(coordinator.data)
     )
 
 
