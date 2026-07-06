@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_cloud_all_sensors[binary_sensor.bedroom-entry]
+# name: test_cloud_all_sensors[binary_sensor.bedroom_demand-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.bedroom',
+    'entity_id': 'binary_sensor.bedroom_demand',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Bedroom',
+    'object_id_base': 'Bedroom Demand',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
     'original_icon': None,
-    'original_name': 'Bedroom',
+    'original_name': 'Bedroom Demand',
     'platform': 'geniushub',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,11 +36,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.bedroom-state]
+# name: test_cloud_all_sensors[binary_sensor.bedroom_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Bedroom',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Demand',
       'status': dict({
         'mode': 'off',
         'override': dict({
@@ -52,14 +52,14 @@
       }),
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bedroom',
+    'entity_id': 'binary_sensor.bedroom_demand',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.bedroom_socket-entry]
+# name: test_cloud_all_sensors[binary_sensor.bedroom_socket_demand-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -73,7 +73,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.bedroom_socket',
+    'entity_id': 'binary_sensor.bedroom_socket_demand',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -81,12 +81,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Bedroom Socket',
+    'object_id_base': 'Bedroom Socket Demand',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
     'original_icon': None,
-    'original_name': 'Bedroom Socket',
+    'original_name': 'Bedroom Socket Demand',
     'platform': 'geniushub',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -96,11 +96,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.bedroom_socket-state]
+# name: test_cloud_all_sensors[binary_sensor.bedroom_socket_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Bedroom Socket',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Socket Demand',
       'status': dict({
         'mode': 'timer',
         'override': dict({
@@ -111,14 +111,14 @@
       }),
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bedroom_socket',
+    'entity_id': 'binary_sensor.bedroom_socket_demand',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.ensuite-entry]
+# name: test_cloud_all_sensors[binary_sensor.ensuite_demand-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -132,7 +132,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.ensuite',
+    'entity_id': 'binary_sensor.ensuite_demand',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -140,12 +140,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Ensuite',
+    'object_id_base': 'Ensuite Demand',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
     'original_icon': None,
-    'original_name': 'Ensuite',
+    'original_name': 'Ensuite Demand',
     'platform': 'geniushub',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -155,11 +155,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.ensuite-state]
+# name: test_cloud_all_sensors[binary_sensor.ensuite_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Ensuite',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ensuite Demand',
       'status': dict({
         'mode': 'off',
         'occupied': 'False',
@@ -172,14 +172,14 @@
       }),
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.ensuite',
+    'entity_id': 'binary_sensor.ensuite_demand',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.guest_room-entry]
+# name: test_cloud_all_sensors[binary_sensor.guest_room_demand-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -193,7 +193,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.guest_room',
+    'entity_id': 'binary_sensor.guest_room_demand',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -201,12 +201,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Guest room',
+    'object_id_base': 'Guest room Demand',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
     'original_icon': None,
-    'original_name': 'Guest room',
+    'original_name': 'Guest room Demand',
     'platform': 'geniushub',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -216,11 +216,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.guest_room-state]
+# name: test_cloud_all_sensors[binary_sensor.guest_room_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Guest room',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Guest room Demand',
       'status': dict({
         'mode': 'off',
         'occupied': 'True',
@@ -233,14 +233,14 @@
       }),
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.guest_room',
+    'entity_id': 'binary_sensor.guest_room_demand',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.hall-entry]
+# name: test_cloud_all_sensors[binary_sensor.hall_demand-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -254,7 +254,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.hall',
+    'entity_id': 'binary_sensor.hall_demand',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -262,12 +262,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Hall',
+    'object_id_base': 'Hall Demand',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
     'original_icon': None,
-    'original_name': 'Hall',
+    'original_name': 'Hall Demand',
     'platform': 'geniushub',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -277,11 +277,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.hall-state]
+# name: test_cloud_all_sensors[binary_sensor.hall_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Hall',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hall Demand',
       'status': dict({
         'mode': 'off',
         'occupied': 'False',
@@ -294,14 +294,14 @@
       }),
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.hall',
+    'entity_id': 'binary_sensor.hall_demand',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.hot_water-entry]
+# name: test_cloud_all_sensors[binary_sensor.hot_water_demand-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -315,7 +315,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.hot_water',
+    'entity_id': 'binary_sensor.hot_water_demand',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -323,12 +323,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Hot Water',
+    'object_id_base': 'Hot Water Demand',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
     'original_icon': None,
-    'original_name': 'Hot Water',
+    'original_name': 'Hot Water Demand',
     'platform': 'geniushub',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -338,11 +338,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.hot_water-state]
+# name: test_cloud_all_sensors[binary_sensor.hot_water_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Hot Water',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hot Water Demand',
       'status': dict({
         'mode': 'override',
         'override': dict({
@@ -354,14 +354,14 @@
       }),
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.hot_water',
+    'entity_id': 'binary_sensor.hot_water_demand',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.kitchen-entry]
+# name: test_cloud_all_sensors[binary_sensor.kitchen_demand-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -375,7 +375,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.kitchen',
+    'entity_id': 'binary_sensor.kitchen_demand',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -383,12 +383,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Kitchen',
+    'object_id_base': 'Kitchen Demand',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
     'original_icon': None,
-    'original_name': 'Kitchen',
+    'original_name': 'Kitchen Demand',
     'platform': 'geniushub',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -398,11 +398,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.kitchen-state]
+# name: test_cloud_all_sensors[binary_sensor.kitchen_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Kitchen',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Demand',
       'status': dict({
         'mode': 'off',
         'occupied': 'False',
@@ -415,14 +415,14 @@
       }),
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.kitchen',
+    'entity_id': 'binary_sensor.kitchen_demand',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.kitchen_socket-entry]
+# name: test_cloud_all_sensors[binary_sensor.kitchen_socket_demand-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -436,7 +436,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.kitchen_socket',
+    'entity_id': 'binary_sensor.kitchen_socket_demand',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -444,12 +444,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Kitchen Socket',
+    'object_id_base': 'Kitchen Socket Demand',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
     'original_icon': None,
-    'original_name': 'Kitchen Socket',
+    'original_name': 'Kitchen Socket Demand',
     'platform': 'geniushub',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -459,11 +459,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.kitchen_socket-state]
+# name: test_cloud_all_sensors[binary_sensor.kitchen_socket_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Kitchen Socket',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Socket Demand',
       'status': dict({
         'mode': 'timer',
         'override': dict({
@@ -474,14 +474,14 @@
       }),
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.kitchen_socket',
+    'entity_id': 'binary_sensor.kitchen_socket_demand',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.lounge-entry]
+# name: test_cloud_all_sensors[binary_sensor.lounge_demand-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -495,7 +495,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.lounge',
+    'entity_id': 'binary_sensor.lounge_demand',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -503,12 +503,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Lounge',
+    'object_id_base': 'Lounge Demand',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
     'original_icon': None,
-    'original_name': 'Lounge',
+    'original_name': 'Lounge Demand',
     'platform': 'geniushub',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -518,11 +518,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.lounge-state]
+# name: test_cloud_all_sensors[binary_sensor.lounge_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Lounge',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lounge Demand',
       'status': dict({
         'mode': 'off',
         'override': dict({
@@ -534,7 +534,7 @@
       }),
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.lounge',
+    'entity_id': 'binary_sensor.lounge_demand',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -594,7 +594,7 @@
     'state': 'on',
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.study-entry]
+# name: test_cloud_all_sensors[binary_sensor.study_demand-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -608,7 +608,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.study',
+    'entity_id': 'binary_sensor.study_demand',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -616,12 +616,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Study',
+    'object_id_base': 'Study Demand',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
     'original_icon': None,
-    'original_name': 'Study',
+    'original_name': 'Study Demand',
     'platform': 'geniushub',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -631,11 +631,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.study-state]
+# name: test_cloud_all_sensors[binary_sensor.study_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Study',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Demand',
       'status': dict({
         'mode': 'off',
         'occupied': 'False',
@@ -648,14 +648,14 @@
       }),
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.study',
+    'entity_id': 'binary_sensor.study_demand',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.study_socket-entry]
+# name: test_cloud_all_sensors[binary_sensor.study_socket_demand-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -669,7 +669,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.study_socket',
+    'entity_id': 'binary_sensor.study_socket_demand',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -677,12 +677,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Study Socket',
+    'object_id_base': 'Study Socket Demand',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
     'original_icon': None,
-    'original_name': 'Study Socket',
+    'original_name': 'Study Socket Demand',
     'platform': 'geniushub',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -692,11 +692,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cloud_all_sensors[binary_sensor.study_socket-state]
+# name: test_cloud_all_sensors[binary_sensor.study_socket_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Study Socket',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Socket Demand',
       'status': dict({
         'mode': 'off',
         'override': dict({
@@ -707,7 +707,7 @@
       }),
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.study_socket',
+    'entity_id': 'binary_sensor.study_socket_demand',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

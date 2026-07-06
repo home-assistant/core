@@ -77,7 +77,11 @@ class GeniusZoneDemand(GeniusZone, BinarySensorEntity):
         super().__init__(broker, zone)
 
         self._unique_id = f"{broker.hub_uid}_zone_{zone.id}_demand"
-        self._attr_name = f"{zone.name} Demand"
+    @property
+    @override
+    def name(self) -> str:
+        """Return the name of the binary sensor."""
+        return f"{self._zone.name} Demand"
 
     @property
     @override
