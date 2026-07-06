@@ -31,8 +31,7 @@ VALVE = FixtureDevice(
     "io://1234-5678-1698/15702199#1",
     "climate.maple_residence_garden_radiator",
 )
-# Atlantic MODBUSLINK heater without core:RegulationModeState and
-# io:TargetHeatingLevelState states.
+# modbuslink:AtlanticElectricalHeaterWithAdjustableTemperatureSetpointMBLComponent
 COZYTOUCH = FixtureDevice(
     "setup/cloud_atlantic_cozytouch.json",
     "modbuslink://1234-5678-5643/1#1",
