@@ -2,11 +2,17 @@
 
 from typing import override
 
+from pysmlight.const import Events as SmEvents
 from pysmlight.exceptions import SmlightError
 from pysmlight.models import IRPayload
 
-from homeassistant.components.infrared import InfraredCommand, InfraredEmitterEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.components.infrared import (
+    InfraredCommand,
+    InfraredEmitterEntity,
+    InfraredReceivedSignal,
+    InfraredReceiverEntity,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -26,7 +32,12 @@ async def async_setup_entry(
     coordinator = entry.runtime_data.data
 
     if coordinator.data.info.has_peripherals:
-        async_add_entities([SmInfraredEntity(coordinator)])
+        async_add_entities(
+            [
+                SmInfraredEntity(coordinator),
+                SmInfraredReceiverEntity(coordinator),
+            ]
+        )
 
 
 class SmInfraredEntity(SmEntity, InfraredEmitterEntity):
@@ -37,7 +48,7 @@ class SmInfraredEntity(SmEntity, InfraredEmitterEntity):
     def __init__(self, coordinator: SmDataUpdateCoordinator) -> None:
         """Initialize the SLZB-Ultima infrared."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.unique_id}-infrared-emitter"
+        self._attr_unique_id = f"{coordinator.unique_id}-infrared-emitter"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @override
     async def async_send_command(self, command: InfraredCommand) -> None:
@@ -59,3 +70,27 @@ class SmInfraredEntity(SmEntity, InfraredEmitterEntity):
                 translation_key="send_ir_code_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
+
+
+class SmInfraredReceiverEntity(SmEntity, InfraredReceiverEntity):
+    """Representation of a SLZB-Ultima infrared receiver."""
+
+    def __init__(self, coordinator: SmDataUpdateCoordinator) -> None:
+        """Initialize the SLZB-Ultima infrared receiver."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.unique_id}-receiver"
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register SSE callbacks when entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.client.sse.register_callback(
+                SmEvents.IR_CODE, self._handle_ir_code
+            )
+        )
+
+    @callback
+    def _handle_ir_code(self, timings: list[int]) -> None:
+        """Handle received IR code."""
+        self._handle_received_signal(InfraredReceivedSignal(timings=timings))

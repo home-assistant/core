@@ -10,7 +10,7 @@
 # ast-serialize is an internal mypy dependency
 ast-serialize==0.3.0
 astroid==4.0.4
-coverage==7.14.1
+coverage==7.14.3
 freezegun==1.5.5
 # librt is an internal mypy dependency
 librt==0.11.0
@@ -27,7 +27,7 @@ pytest-asyncio==1.4.0
 pytest-aiohttp==1.1.1
 pytest-cov==7.1.0
 pytest-freezer==0.4.9
-pytest-github-actions-annotate-failures==0.4.0
+pytest-github-actions-annotate-failures==0.4.2
 pytest-socket==0.8.0
 pytest-sugar==1.1.1
 pytest-timeout==2.4.0
@@ -38,7 +38,7 @@ pytest==9.0.3
 requests==2.34.2
 requests-mock==1.12.1
 respx==0.23.1
-syrupy==5.3.2
+syrupy==5.3.4
 tqdm==4.67.1
 types-aiofiles==24.1.0.20250822
 types-atomicwrites==1.4.5.1
