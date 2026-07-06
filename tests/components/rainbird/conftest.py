@@ -156,6 +156,13 @@ def setup_platforms(
 
 
 @pytest.fixture(autouse=True)
+def mock_pacing() -> Generator[None]:
+    """Fixture to mock request pacing delay to avoid sleeps in tests."""
+    with patch("pyrainbird.async_client.LOCAL_MIN_DELAY", 0.0):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def aioclient_mock(hass: HomeAssistant) -> Generator[AiohttpClientMocker]:
     """Context manager to mock aiohttp client."""
     mocker = AiohttpClientMocker()
