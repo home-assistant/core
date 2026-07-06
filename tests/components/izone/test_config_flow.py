@@ -959,43 +959,6 @@ async def test_homekit_aborts_when_discovery_startup_fails(
     assert result["reason"] == "discovery_failed"
 
 
-@pytest.mark.parametrize(
-    ("context", "data"),
-    [
-        pytest.param(
-            {
-                "source": config_entries.SOURCE_INTEGRATION_DISCOVERY,
-                "unique_id": 1,
-            },
-            {CONF_HOST: "192.0.2.1"},
-            id="non_string_uid",
-        ),
-        pytest.param(
-            {
-                "source": config_entries.SOURCE_INTEGRATION_DISCOVERY,
-                "unique_id": "000000001",
-            },
-            {CONF_HOST: 1},
-            id="non_string_host",
-        ),
-    ],
-)
-async def test_integration_discovery_aborts_on_invalid_payload(
-    hass: HomeAssistant,
-    context: dict,
-    data: dict,
-) -> None:
-    """Integration discovery aborts when uid or host is not a string."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context=context,
-        data=data,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
-
-
 async def test_integration_discovery_aborts_for_yaml_excluded_uid(
     hass: HomeAssistant,
 ) -> None:
@@ -1491,10 +1454,10 @@ async def test_homekit_aborts_for_ignored_uid(
     mock_discover_controllers.assert_not_called()
 
 
-async def test_confirm_aborts_invalid_flow_state_when_controller_data_missing(
+async def test_confirm_asserts_when_controller_data_is_missing(
     hass: HomeAssistant,
 ) -> None:
-    """Confirm aborts with invalid_flow_state when required state is missing."""
+    """Confirm asserts when required controller data is unexpectedly missing."""
     controller = _make_controller("000000001", "192.0.2.1")
 
     with patch(
@@ -1507,10 +1470,8 @@ async def test_confirm_aborts_invalid_flow_state_when_controller_data_missing(
 
     flow = hass.config_entries.flow._progress[result["flow_id"]]
     flow._discovered_controller_ip = None
-    result = await flow.async_step_confirm()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "invalid_flow_state"
+    with pytest.raises(AssertionError):
+        await flow.async_step_confirm()
 
 
 async def test_confirm_aborts_when_refresh_discovers_no_controllers(
@@ -1539,10 +1500,10 @@ async def test_confirm_aborts_when_refresh_discovers_no_controllers(
     assert result["reason"] == "no_devices_found"
 
 
-async def test_confirm_aborts_when_unique_id_is_not_string(
+async def test_confirm_asserts_when_unique_id_is_not_string(
     hass: HomeAssistant,
 ) -> None:
-    """Confirm aborts when flow unique_id is not a string."""
+    """Confirm asserts when flow unique_id is unexpectedly not a string."""
     controller = _make_controller("000000001", "192.0.2.1")
 
     with patch(
@@ -1556,14 +1517,14 @@ async def test_confirm_aborts_when_unique_id_is_not_string(
     flow = hass.config_entries.flow._progress[result["flow_id"]]
     flow.context["unique_id"] = None
 
-    with patch(
-        "homeassistant.components.izone.discovery.async_discover_controllers",
-        return_value={controller.device_uid: controller},
+    with (
+        patch(
+            "homeassistant.components.izone.discovery.async_discover_controllers",
+            return_value={controller.device_uid: controller},
+        ),
+        pytest.raises(AssertionError),
     ):
-        result = await flow.async_step_confirm({})
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
+        await flow.async_step_confirm({})
 
 
 async def test_confirm_aborts_when_unique_id_controller_not_found(

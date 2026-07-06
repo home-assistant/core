@@ -231,10 +231,8 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
         """Handle fan-out, YAML import secondaries, and runtime discovery."""
-        uid = self.context.get("unique_id")
-        host = discovery_info.get(CONF_HOST)
-        if not isinstance(uid, str) or not isinstance(host, str):
-            return self.async_abort(reason="no_devices_found")
+        uid = self.context["unique_id"]
+        host = discovery_info[CONF_HOST]
         if uid in izone_discovery.yaml_excluded_uids(self.hass):
             return self.async_abort(reason="no_devices_found")
 
@@ -252,26 +250,18 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             controller_uid = self.unique_id
             host = self._discovered_controller_ip
-            if (
-                not isinstance(controller_uid, str)
-                or not controller_uid
-                or not isinstance(host, str)
-                or not host
-            ):
-                _LOGGER.error(
-                    "Config flow confirm reached with invalid data (source=%s)",
-                    self.context.get("source"),
-                )
-                return self.async_abort(reason="invalid_flow_state")
-            if "title_placeholders" not in self.context:
-                self.context["title_placeholders"] = {
-                    "name": self._entry_title(controller_uid),
-                }
+            assert isinstance(controller_uid, str)
+            assert controller_uid
+            assert host is not None
+            host_str = str(host)
+            self.context["title_placeholders"] = {
+                "name": self._entry_title(controller_uid),
+            }
             return self.async_show_form(
                 step_id="confirm",
                 description_placeholders={
                     "controller_uid": controller_uid,
-                    "host": host,
+                    "host": host_str,
                 },
             )
 
@@ -285,8 +275,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
 
         uid = self.unique_id
-        if not isinstance(uid, str):
-            return self.async_abort(reason="no_devices_found")
+        assert isinstance(uid, str)
 
         controller = controllers.get(uid)
         if controller is None:
