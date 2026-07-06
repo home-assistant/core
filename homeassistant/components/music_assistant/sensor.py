@@ -1,6 +1,7 @@
 """Music Assistant Sensor platform."""
 
-from __future__ import annotations
+from datetime import datetime, timedelta
+from typing import override
 
 from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.enums import EventType
@@ -12,6 +13,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 
 from . import MusicAssistantConfigEntry
 from .const import DOMAIN, LOGGER
@@ -60,8 +62,6 @@ class MusicAssistantPartyModeSensor(SensorEntity):
         self.mass = mass
         self.instance_id = instance_id
         self.entity_description = entity_description
-
-        provider = self.mass.get_provider(instance_id)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, instance_id)},
             name="Party Mode Plugin",
@@ -69,6 +69,7 @@ class MusicAssistantPartyModeSensor(SensorEntity):
         )
         self._attr_unique_id = f"{instance_id}_{entity_description.key}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await self.async_on_update()
@@ -78,6 +79,18 @@ class MusicAssistantPartyModeSensor(SensorEntity):
                 EventType.PROVIDERS_UPDATED,
             )
         )
+        self.async_on_remove(
+            async_track_time_interval(
+                self.hass,
+                self._handle_timer,
+                timedelta(hours=1),
+            )
+        )
+
+    async def _handle_timer(self, _now: datetime) -> None:
+        """Handle periodic update."""
+        await self.async_on_update()
+        self.async_write_ha_state()
 
     async def __on_mass_update(self, event: MassEvent) -> None:
         """Call when we receive an event from MusicAssistant."""

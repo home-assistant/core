@@ -1,8 +1,8 @@
 """Music Assistant Image platform."""
 
-from __future__ import annotations
-
+from datetime import datetime, timedelta
 import io
+from typing import override
 
 from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.enums import EventType
@@ -15,6 +15,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
 
 from . import MusicAssistantConfigEntry
@@ -68,15 +69,15 @@ class MusicAssistantPartyModeImage(ImageEntity):
         self.instance_id = instance_id
         self.entity_description = entity_description
         self._current_url: str | None = None
-
-        provider = self.mass.get_provider(instance_id)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, instance_id)},
             name="Party Mode Plugin",
             manufacturer="Music Assistant",
         )
         self._attr_unique_id = f"{instance_id}_{entity_description.key}"
+        self._image_bytes: bytes | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await self.async_on_update()
@@ -86,6 +87,18 @@ class MusicAssistantPartyModeImage(ImageEntity):
                 EventType.PROVIDERS_UPDATED,
             )
         )
+        self.async_on_remove(
+            async_track_time_interval(
+                self.hass,
+                self._handle_timer,
+                timedelta(hours=1),
+            )
+        )
+
+    async def _handle_timer(self, _now: datetime) -> None:
+        """Handle periodic update."""
+        await self.async_on_update()
+        self.async_write_ha_state()
 
     async def __on_mass_update(self, event: MassEvent) -> None:
         """Call when we receive an event from MusicAssistant."""
@@ -102,19 +115,20 @@ class MusicAssistantPartyModeImage(ImageEntity):
                 buffer = io.BytesIO()
                 qr.save(buffer, kind="png", scale=4)
                 self._attr_image_last_updated = dt_util.utcnow()
-                self._cached_image = buffer.getvalue()
+                self._image_bytes = buffer.getvalue()
             self._attr_available = True
         except MusicAssistantError as err:
             LOGGER.debug("Failed to fetch party URL for QR: %s", err)
             self._current_url = None
-            self._cached_image = None
+            self._image_bytes = None
             self._attr_available = False
         except Exception as err:  # noqa: BLE001
             LOGGER.debug("Unexpected error fetching party URL for QR: %s", err)
             self._current_url = None
-            self._cached_image = None
+            self._image_bytes = None
             self._attr_available = False
 
+    @override
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
-        return self._cached_image
+        return self._image_bytes

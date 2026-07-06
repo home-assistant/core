@@ -158,8 +158,6 @@ class MusicAssistantPartyModeSwitch(SwitchEntity):
         self.instance_id = instance_id
         self.config_key = config_key
         self.entity_description = entity_description
-
-        provider = self.mass.get_provider(instance_id)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, instance_id)},
             name="Party Mode Plugin",
