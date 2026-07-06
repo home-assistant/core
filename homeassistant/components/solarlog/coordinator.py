@@ -154,6 +154,13 @@ class SolarLogDeviceDataCoordinator(DataUpdateCoordinator[dict[int, InverterData
             await self.solarlog.update_device_list()
             inverter_data = await self.solarlog.update_inverter_data()
         except SolarLogAuthenticationError as ex:
+            # check, if only access token has expired, try to renew it and retry data update
+            if await self.config_entry.runtime_data.basic_data_coordinator.renew_authentication():
+                # login was successful, retry data update
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_failed",
+                ) from ex
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
@@ -286,6 +293,13 @@ class SolarLogLongtimeDataCoordinator(DataUpdateCoordinator[EnergyData]):
                 timeout=self.connection_timeout
             )
         except SolarLogAuthenticationError as ex:
+            # check, if only access token has expired, try to renew it and retry data update
+            if await self.config_entry.runtime_data.basic_data_coordinator.renew_authentication():
+                # login was successful, retry data update
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_failed",
+                ) from ex
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
