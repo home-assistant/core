@@ -61,7 +61,7 @@ class MigrateToGroupSensorFlow(RepairsFlow):
                 data=config,
             )
 
-            if import_result["type"] != FlowResultType.CREATE_ENTRY:
+            if import_result["type"] is not FlowResultType.CREATE_ENTRY:
                 if TYPE_CHECKING:
                     assert import_result["description_placeholders"]
                 return self.async_abort(
