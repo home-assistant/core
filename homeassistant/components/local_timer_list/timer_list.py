@@ -113,16 +113,6 @@ class LocalTimerListEntity(TimerListEntity):
         self._enforce_archive_limit()
 
     @override
-    async def async_cancel_all_timers(self) -> None:
-        """Cancel every active or paused timer."""
-        for timer_id in [
-            timer.timer_id
-            for timer in self._timers.values()
-            if timer.status in (TimerStatus.ACTIVE, TimerStatus.PAUSED)
-        ]:
-            await self.async_cancel_timer(timer_id)
-
-    @override
     async def async_add_time(self, timer_id: str, duration: timedelta) -> None:
         """Add (or, with a negative duration, remove) time on a timer."""
         timer = self._get_timer(timer_id)
@@ -148,17 +138,6 @@ class LocalTimerListEntity(TimerListEntity):
         self._unschedule(timer_id)
         del self._timers[timer_id]
         self._notify(TimerListEventType.REMOVED, timer)
-
-    @override
-    async def async_clear_finished_timers(self) -> None:
-        """Remove all finished and cancelled (archived) timers."""
-        for timer_id in [
-            timer.timer_id
-            for timer in self._timers.values()
-            if timer.status in _FINISHED_STATUSES
-        ]:
-            timer = self._timers.pop(timer_id)
-            self._notify(TimerListEventType.REMOVED, timer)
 
     def _get_timer(self, timer_id: str) -> TimerItem:
         """Return a timer by id or raise if it does not exist."""

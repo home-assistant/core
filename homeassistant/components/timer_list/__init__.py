@@ -150,12 +150,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         required_features=[TimerListEntityFeature.CANCEL_TIMER],
     )
     component.async_register_entity_service(
-        TimerListServices.CANCEL_ALL_TIMERS,
-        None,
-        "async_cancel_all_timers",
-        required_features=[TimerListEntityFeature.CANCEL_TIMER],
-    )
-    component.async_register_entity_service(
         TimerListServices.ADD_TIME,
         {
             vol.Required(ATTR_TIMER_ID): cv.string,
@@ -177,11 +171,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         TimerListServices.REMOVE_TIMER,
         {vol.Required(ATTR_TIMER_ID): cv.string},
         "async_remove_timer",
-    )
-    component.async_register_entity_service(
-        TimerListServices.CLEAR_FINISHED_TIMERS,
-        None,
-        "async_clear_finished_timers",
     )
     component.async_register_entity_service(
         TimerListServices.GET_TIMERS,
@@ -245,20 +234,12 @@ class TimerListEntity(Entity):
         """Cancel a timer."""
         raise NotImplementedError
 
-    async def async_cancel_all_timers(self) -> None:
-        """Cancel every active or paused timer."""
-        raise NotImplementedError
-
     async def async_add_time(self, timer_id: str, duration: timedelta) -> None:
         """Add (or, with a negative duration, remove) time on a timer."""
         raise NotImplementedError
 
     async def async_remove_timer(self, timer_id: str) -> None:
         """Remove a timer from the list regardless of its status."""
-        raise NotImplementedError
-
-    async def async_clear_finished_timers(self) -> None:
-        """Remove all finished and cancelled (archived) timers."""
         raise NotImplementedError
 
     @final

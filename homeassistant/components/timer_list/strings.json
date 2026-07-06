@@ -34,10 +34,6 @@
       },
       "name": "Add time"
     },
-    "cancel_all_timers": {
-      "description": "Cancels every active and paused timer on a timer list.",
-      "name": "Cancel all timers"
-    },
     "cancel_timer": {
       "description": "Cancels a timer.",
       "fields": {
@@ -47,10 +43,6 @@
         }
       },
       "name": "Cancel timer"
-    },
-    "clear_finished_timers": {
-      "description": "Removes all finished and cancelled timers from a timer list.",
-      "name": "Clear finished timers"
     },
     "get_timers": {
       "description": "Gets the timers on a timer list.",

@@ -8,14 +8,8 @@
     "add_time": {
       "service": "mdi:timer-plus-outline"
     },
-    "cancel_all_timers": {
-      "service": "mdi:timer-cancel-outline"
-    },
     "cancel_timer": {
       "service": "mdi:timer-cancel-outline"
-    },
-    "clear_finished_timers": {
-      "service": "mdi:timer-remove-outline"
     },
     "get_timers": {
       "service": "mdi:timer-outline"
