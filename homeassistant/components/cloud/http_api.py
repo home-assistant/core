@@ -52,6 +52,7 @@ from .const import (
     DATA_CLOUD_LOG_HANDLER,
     EVENT_CLOUD_EVENT,
     LOGIN_MFA_TIMEOUT,
+    ONBOARDING_ITEMS,
     PREF_ALEXA_REPORT_STATE,
     PREF_DISABLE_2FA,
     PREF_ENABLE_ALEXA,
@@ -59,7 +60,6 @@ from .const import (
     PREF_ENABLE_GOOGLE,
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
-    PREF_ONBOARDING_COMPLETED,
     PREF_REMOTE_ALLOW_REMOTE_ENABLE,
     PREF_TTS_DEFAULT_VOICE,
     REQUEST_TIMEOUT,
@@ -103,6 +103,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_remote_disconnect)
     websocket_api.async_register_command(hass, websocket_webrtc_ice_servers)
     websocket_api.async_register_command(hass, websocket_cloud_onboarding_postpone)
+    websocket_api.async_register_command(hass, websocket_cloud_onboarding_complete)
 
     websocket_api.async_register_command(hass, google_assistant_get)
     websocket_api.async_register_command(hass, google_assistant_list)
@@ -803,7 +804,6 @@ def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
         vol.Optional(PREF_TTS_DEFAULT_VOICE): vol.All(
             vol.Coerce(tuple), validate_language_voice
         ),
-        vol.Optional(PREF_ONBOARDING_COMPLETED): bool,
     }
 )
 @websocket_api.async_response
@@ -863,6 +863,31 @@ async def websocket_cloud_onboarding_postpone(
     cloud = hass.data[DATA_CLOUD]
     postponed_until = (dt_util.utcnow() + timedelta(hours=24)).isoformat()
     await cloud.client.prefs.async_update(onboarding_postponed_until=postponed_until)
+    connection.send_result(msg["id"], await _account_data(hass, cloud))
+
+
+@websocket_api.require_admin
+@_require_cloud_login
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "cloud/onboarding/complete",
+        vol.Required("items"): [vol.In(ONBOARDING_ITEMS)],
+    }
+)
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+async def websocket_cloud_onboarding_complete(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle request to complete onboarding items."""
+    cloud = hass.data[DATA_CLOUD]
+    onboarded_items = list(cloud.client.prefs.onboarded_items)
+    new_items = [item for item in msg["items"] if item not in onboarded_items]
+    if new_items:
+        onboarded_items.extend(dict.fromkeys(new_items))
+        await cloud.client.prefs.async_update(onboarded_items=onboarded_items)
     connection.send_result(msg["id"], await _account_data(hass, cloud))
 
 
@@ -952,6 +977,7 @@ async def _account_data(
         "google_local_connected": google_config.is_local_connected,
         "logged_in": True,
         "prefs": client.prefs.as_dict(),
+        "onboarding_completed": client.prefs.onboarding_completed,
         "is_onboarding_postponed": client.prefs.is_onboarding_postponed,
         "remote_certificate": certificate,
         "remote_certificate_status": remote.certificate_status,

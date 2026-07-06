@@ -24,6 +24,7 @@ from .const import (
     DEFAULT_GOOGLE_REPORT_STATE,
     DEFAULT_TTS_DEFAULT_VOICE,
     DOMAIN,
+    ONBOARDING_ITEMS,
     PREF_ALEXA_DEFAULT_EXPOSE,
     PREF_ALEXA_ENTITY_CONFIGS,
     PREF_ALEXA_REPORT_STATE,
@@ -42,7 +43,7 @@ from .const import (
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_GOOGLE_SETTINGS_VERSION,
     PREF_INSTANCE_ID,
-    PREF_ONBOARDING_COMPLETED,
+    PREF_ONBOARDED_ITEMS,
     PREF_ONBOARDING_POSTPONED_UNTIL,
     PREF_REMOTE_ALLOW_REMOTE_ENABLE,
     PREF_REMOTE_DOMAIN,
@@ -178,7 +179,7 @@ class CloudPreferences:
         google_settings_version: int | UndefinedType = UNDEFINED,
         remote_allow_remote_enable: bool | UndefinedType = UNDEFINED,
         remote_domain: str | None | UndefinedType = UNDEFINED,
-        onboarding_completed: bool | UndefinedType = UNDEFINED,
+        onboarded_items: list[str] | UndefinedType = UNDEFINED,
         onboarding_postponed_until: str | None | UndefinedType = UNDEFINED,
         remote_enabled: bool | UndefinedType = UNDEFINED,
         tts_default_voice: tuple[str, str] | UndefinedType = UNDEFINED,
@@ -202,7 +203,7 @@ class CloudPreferences:
                     (PREF_GOOGLE_REPORT_STATE, google_report_state),
                     (PREF_GOOGLE_SECURE_DEVICES_PIN, google_secure_devices_pin),
                     (PREF_GOOGLE_SETTINGS_VERSION, google_settings_version),
-                    (PREF_ONBOARDING_COMPLETED, onboarding_completed),
+                    (PREF_ONBOARDED_ITEMS, onboarded_items),
                     (PREF_ONBOARDING_POSTPONED_UNTIL, onboarding_postponed_until),
                     (PREF_REMOTE_ALLOW_REMOTE_ENABLE, remote_allow_remote_enable),
                     (PREF_REMOTE_DOMAIN, remote_domain),
@@ -254,7 +255,7 @@ class CloudPreferences:
             PREF_GOOGLE_DEFAULT_EXPOSE: self.google_default_expose,
             PREF_GOOGLE_REPORT_STATE: self.google_report_state,
             PREF_GOOGLE_SECURE_DEVICES_PIN: self.google_secure_devices_pin,
-            PREF_ONBOARDING_COMPLETED: self.onboarding_completed,
+            PREF_ONBOARDED_ITEMS: self.onboarded_items,
             PREF_ONBOARDING_POSTPONED_UNTIL: self.onboarding_postponed_until,
             PREF_REMOTE_ALLOW_REMOTE_ENABLE: self.remote_allow_remote_enable,
             PREF_TTS_DEFAULT_VOICE: self.tts_default_voice,
@@ -369,12 +370,15 @@ class CloudPreferences:
         return self._prefs.get(PREF_INSTANCE_ID)
 
     @property
+    def onboarded_items(self) -> list[str]:
+        """Return list of completed onboarding items."""
+        onboarded_items: list[str] = self._prefs.get(PREF_ONBOARDED_ITEMS, [])
+        return onboarded_items
+
+    @property
     def onboarding_completed(self) -> bool:
-        """Return if onboarding is completed."""
-        cloud_onboarding_completed: bool = self._prefs.get(
-            PREF_ONBOARDING_COMPLETED, False
-        )
-        return cloud_onboarding_completed
+        """Return if all onboarding items are completed."""
+        return ONBOARDING_ITEMS.issubset(self.onboarded_items)
 
     @property
     def onboarding_postponed_until(self) -> str | None:
@@ -461,7 +465,7 @@ class CloudPreferences:
             PREF_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
             PREF_INSTANCE_ID: uuid.uuid4().hex,
             PREF_GOOGLE_SECURE_DEVICES_PIN: None,
-            PREF_ONBOARDING_COMPLETED: False,
+            PREF_ONBOARDED_ITEMS: [],
             PREF_ONBOARDING_POSTPONED_UNTIL: None,
             PREF_REMOTE_DOMAIN: None,
             PREF_REMOTE_ALLOW_REMOTE_ENABLE: True,
