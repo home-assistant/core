@@ -118,6 +118,11 @@ class SyncthingClient:
         """Get config namespace client."""
         return self._client.config
 
+    @property
+    def initial_events_processed(self) -> bool:
+        """Whether initial events have been received and processed."""
+        return self._initial_events_processed
+
     def subscribe(self) -> None:
         """Start event listener coroutine."""
         self._listen_task = asyncio.create_task(self._listen())

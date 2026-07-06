@@ -17,7 +17,7 @@ from homeassistant.components.syncthing.const import (
     SERVER_UNAVAILABLE,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import dispatcher, entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -353,3 +353,29 @@ async def test_device_sensor_initial_events_ready(
         assert state is not None and state.state == expected_state
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
+
+async def test_device_sensor_direct_compute_after_events_ready(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    mock_syncthing: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity added after INITIAL_EVENTS_READY derives state from the buffer."""
+    connected_event = await hass.async_add_executor_job(
+        load_json_object_fixture, "device_connected_event.json", DOMAIN
+    )
+    client = entry.runtime_data
+    client._initial_events = [connected_event]
+    client._initial_events_processed = True
+
+    await hass.config_entries.async_unload_platforms(entry, [Platform.SENSOR])
+    await hass.async_block_till_done()
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SERVER_ID_SHORT_HA}-{DEVICE_ID}"
+    )
+    state = hass.states.get(entity_id) if entity_id else None
+    assert state is not None and state.state == "connected"

@@ -505,6 +505,9 @@ class DeviceSensor(SensorEntity):
         self.subscribe()
         self.async_on_remove(self.unsubscribe)
 
+        if self._syncthing.initial_events_processed:
+            self._state = self._get_initial_device_state()
+
         await self.async_update_status()
 
     def _get_initial_device_state(self) -> dict[str, Any]:
