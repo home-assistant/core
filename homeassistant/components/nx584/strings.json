@@ -23,6 +23,23 @@
       "title": "NX584 YAML configuration deprecated"
     }
   },
+  "options": {
+    "error": {
+      "invalid_zone_options": "Exclude zones must be a list of zone numbers, and zone types must be a mapping of zone numbers to binary sensor device classes."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "exclude_zones": "Excluded zones",
+          "zone_types": "Zone device classes"
+        },
+        "data_description": {
+          "exclude_zones": "List of zone numbers to exclude from Home Assistant, for example: 2, 7.",
+          "zone_types": "Mapping of zone numbers to a binary sensor device class, for example: zone 3 mapped to motion. Zones not listed default to opening."
+        }
+      }
+    }
+  },
   "services": {
     "bypass_zone": {
       "description": "Bypasses a zone.",

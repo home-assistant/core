@@ -10,7 +10,6 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -27,24 +26,23 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import NX584ConfigEntry
-from .const import DOMAIN
+from .const import (
+    CONF_EXCLUDE_ZONES,
+    CONF_ZONE_TYPES,
+    DOMAIN,
+    EXCLUDE_ZONES_SCHEMA,
+    ZONE_TYPES_SCHEMA,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_EXCLUDE_ZONES = "exclude_zones"
-CONF_ZONE_TYPES = "zone_types"
 
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 5007
 BYPASS_ZONE_FLAGS = {"Bypass", "Inhibit"}
 
-ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA})
-
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_EXCLUDE_ZONES, default=[]): vol.All(
-            cv.ensure_list, [cv.positive_int]
-        ),
+        vol.Optional(CONF_EXCLUDE_ZONES, default=[]): EXCLUDE_ZONES_SCHEMA,
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_ZONE_TYPES, default={}): ZONE_TYPES_SCHEMA,
@@ -134,9 +132,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the NX584 binary sensor platform from a config entry."""
     data = entry.runtime_data
+    exclude_zones = entry.options.get(CONF_EXCLUDE_ZONES, [])
+    zone_types = entry.options.get(CONF_ZONE_TYPES, {})
 
     zone_sensors = await hass.async_add_executor_job(
-        _build_zone_sensors, data.client, [], {}
+        _build_zone_sensors, data.client, exclude_zones, zone_types
     )
     if not zone_sensors:
         _LOGGER.warning("No zones found on NX584")

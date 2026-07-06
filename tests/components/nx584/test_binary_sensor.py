@@ -154,6 +154,39 @@ async def test_async_setup_entry_creates_zone_sensors(
         assert hass.states.get(f"binary_sensor.{zone['name']}") is not None
 
 
+async def test_async_setup_entry_applies_options(
+    hass: HomeAssistant, fake_zones
+) -> None:
+    """Test the binary_sensor platform applies exclude_zones and zone_types options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 5007},
+        options={"exclude_zones": [2], "zone_types": {3: "motion"}},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        mock.patch("homeassistant.components.nx584.client.Client") as mock_client_cls,
+        mock.patch("homeassistant.components.nx584.binary_sensor.NX584Watcher"),
+    ):
+        mock_client = mock_client_cls.return_value
+        mock_client.list_zones.return_value = fake_zones
+        mock_client.list_partitions.return_value = [
+            {"armed": False, "condition_flags": []}
+        ]
+        mock_client.get_version.return_value = "1.1"
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.front") is not None
+    assert hass.states.get("binary_sensor.back") is None
+    assert hass.states.get("binary_sensor.inside") is not None
+    assert (
+        hass.states.get("binary_sensor.inside").attributes["device_class"] == "motion"
+    )
+
+
 def test_nx584_zone_sensor_normal() -> None:
     """Test for the NX584 zone sensor."""
     zone = {"number": 1, "name": "foo", "state": True}

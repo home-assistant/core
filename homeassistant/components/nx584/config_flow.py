@@ -7,12 +7,26 @@ from nx584 import client
 import requests
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.selector import ObjectSelector
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
+from .const import (
+    CONF_EXCLUDE_ZONES,
+    CONF_ZONE_TYPES,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    DOMAIN,
+    EXCLUDE_ZONES_SCHEMA,
+    ZONE_TYPES_SCHEMA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,6 +34,13 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+    }
+)
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_EXCLUDE_ZONES, default=list): ObjectSelector(),
+        vol.Optional(CONF_ZONE_TYPES, default=dict): ObjectSelector(),
     }
 )
 
@@ -78,4 +99,44 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=host, data={CONF_HOST: host, CONF_PORT: port}
+        )
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> NX584OptionsFlowHandler:
+        """Return the options flow."""
+        return NX584OptionsFlowHandler()
+
+
+class NX584OptionsFlowHandler(OptionsFlowWithReload):
+    """Handle an options flow for nx584 binary sensor zones."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the exclude_zones and zone_types binary sensor options."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                options = {
+                    CONF_EXCLUDE_ZONES: EXCLUDE_ZONES_SCHEMA(
+                        user_input[CONF_EXCLUDE_ZONES]
+                    ),
+                    CONF_ZONE_TYPES: ZONE_TYPES_SCHEMA(user_input[CONF_ZONE_TYPES]),
+                }
+            except vol.Invalid:
+                errors["base"] = "invalid_zone_options"
+            else:
+                return self.async_create_entry(data=options)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
+            errors=errors,
         )

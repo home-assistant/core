@@ -155,3 +155,57 @@ async def test_import_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test configuring exclude_zones and zone_types through the options flow."""
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_DATA)
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.nx584.client.Client") as mock_client_cls,
+        patch("homeassistant.components.nx584.binary_sensor.NX584Watcher"),
+    ):
+        mock_client_cls.return_value.list_zones.return_value = []
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={"exclude_zones": [2], "zone_types": {"3": "motion"}},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options == {"exclude_zones": [2], "zone_types": {3: "motion"}}
+
+
+async def test_options_flow_invalid_input(hass: HomeAssistant) -> None:
+    """Test the options flow rejects malformed zone options."""
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_DATA)
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.nx584.client.Client") as mock_client_cls,
+        patch("homeassistant.components.nx584.binary_sensor.NX584Watcher"),
+    ):
+        mock_client_cls.return_value.list_zones.return_value = []
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "exclude_zones": [2],
+                "zone_types": {"3": "not_a_device_class"},
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_zone_options"}
