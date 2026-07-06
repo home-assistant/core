@@ -8,6 +8,8 @@ import pytest
 from homeassistant.components.my_pv.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
+from . import ELWA2_SERIAL_NUMBER
+
 from tests.common import MockConfigEntry
 
 
@@ -21,7 +23,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_HOST: "127.0.0.1",
             CONF_PASSWORD: "test-password",
         },
-        unique_id="1601500000000000",
+        unique_id=ELWA2_SERIAL_NUMBER,
     )
 
 
@@ -33,3 +35,27 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         return_value=True,
     ) as mock_setup:
         yield mock_setup
+
+
+@pytest.fixture
+def mock_my_pv_client() -> Generator[AsyncMock]:
+    """Mock the my-PV client across the integration."""
+    with (
+        patch(
+            "my_pv.MyPVLocalDevice",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.my_pv.config_flow.MyPVLocalDevice",
+            new=mock_client,
+        ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice",
+            new=mock_client,
+        ),
+    ):
+        client = mock_client.return_value
+        client.serial_number = ELWA2_SERIAL_NUMBER
+        client.model = "AC ELWA 2"
+
+        yield client
