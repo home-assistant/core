@@ -806,10 +806,10 @@ async def test_timer_events(
         True,
     )
 
-    # Increase timer beyond original time and check total_seconds has increased
+    # Increase timer beyond original time. created_seconds (the timer's
+    # original duration) stays fixed; only seconds_left grows.
     mock_client.send_voice_assistant_timer_event.reset_mock()
 
-    total_seconds += 5 * 60
     await intent_helper.async_handle(
         hass,
         "test",
