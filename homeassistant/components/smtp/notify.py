@@ -317,16 +317,18 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
                 mail.sendmail(self._sender, recipients, msg.as_string())
                 break
             except SMTPServerDisconnected:
-                _LOGGER.debug("Full exception:", exc_info=True)
                 _LOGGER.warning(
-                    "SMTPServerDisconnected sending mail: retrying connection"
+                    "SMTPServerDisconnected sending mail: retrying connection",
+                    exc_info=_LOGGER.isEnabledFor(logging.DEBUG),
                 )
                 with suppress(SMTPException):
                     mail.quit()
                 mail = self.connect()
             except SMTPException:
-                _LOGGER.debug("Full exception:", exc_info=True)
-                _LOGGER.warning("SMTPException sending mail: retrying connection")
+                _LOGGER.warning(
+                    "SMTPException sending mail: retrying connection",
+                    exc_info=_LOGGER.isEnabledFor(logging.DEBUG),
+                )
                 with suppress(SMTPException):
                     mail.quit()
                 mail = self.connect()
