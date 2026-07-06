@@ -40,11 +40,13 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
         )
         self.client = client
         self._remove_listener: Callable[[], None] | None = None
+        self._client_stopped = True
 
     async def async_start(self) -> None:
         """Start listening to charger updates."""
 
         self._remove_listener = self.client.add_listener(self._handle_client_update)
+        self._client_stopped = False
         try:
             await self.client.async_start()
         except Exception:
@@ -52,7 +54,7 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
                 self._remove_listener()
                 self._remove_listener = None
             with suppress(Exception):
-                await self.client.async_stop()
+                await self._async_stop_client()
             raise
         self.async_set_updated_data(self.client.state)
 
@@ -64,7 +66,7 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
         if self._remove_listener is not None:
             self._remove_listener()
             self._remove_listener = None
-        await self.client.async_stop()
+        await self._async_stop_client()
 
     @override
     async def _async_update_data(self) -> BesenData:
@@ -99,3 +101,11 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
             ) from err
+
+    async def _async_stop_client(self) -> None:
+        """Stop the client if it is still running."""
+
+        if self._client_stopped:
+            return
+        await self.client.async_stop()
+        self._client_stopped = True
