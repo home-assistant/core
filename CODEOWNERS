@@ -1263,6 +1263,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/nut/ @bdraco @ollo69 @pestevez @tdfountain
 /homeassistant/components/nws/ @MatthewFlamm @kamiyo
 /tests/components/nws/ @MatthewFlamm @kamiyo
+/homeassistant/components/nx584/ @chrodriguez
+/tests/components/nx584/ @chrodriguez
 /homeassistant/components/nyt_games/ @joostlek
 /tests/components/nyt_games/ @joostlek
 /homeassistant/components/nzbget/ @chriscla
