@@ -26,6 +26,7 @@ from .helpers import (
 
 from tests.common import snapshot_platform
 
+# io:HeatingValveIOComponent
 VALVE = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "io://1234-5678-1698/15702199#1",
