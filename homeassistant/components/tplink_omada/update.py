@@ -109,6 +109,9 @@ class OmadaControllerUpdate(
         self._attr_unique_id = (
             f"{controller_info_coordinator.data.omadac_id}_controller_firmware"
         )
+        self.async_on_remove(
+            controller_info_coordinator.async_add_listener(self._handle_coordinator_update)
+        )
         self._update_attrs()
 
     @property
