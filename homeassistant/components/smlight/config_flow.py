@@ -329,15 +329,14 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             return await self.async_step_no_settings()
 
         if user_input is not None:
-            scanner_mode = user_input.get(CONF_BLE_SCANNER_MODE)
-            if scanner_mode is not None:
-                current_mode = get_ble_scanner_mode(self.config_entry, info)
-                if scanner_mode != current_mode:
-                    remote_adapter_enabled = scanner_mode != BLEScannerMode.DISABLED
-                    try:
-                        await coordinator.client.set_ble_proxy(remote_adapter_enabled)
-                    except SmlightConnectionError, SmlightAuthError:
-                        errors["base"] = "cannot_connect"
+            scanner_mode = user_input[CONF_BLE_SCANNER_MODE]
+            current_mode = get_ble_scanner_mode(self.config_entry, info)
+            if scanner_mode != current_mode:
+                remote_adapter_enabled = scanner_mode != BLEScannerMode.DISABLED
+                try:
+                    await coordinator.client.set_ble_proxy(remote_adapter_enabled)
+                except SmlightConnectionError, SmlightAuthError:
+                    errors["base"] = "cannot_connect"
 
             if not errors:
                 return self.async_create_entry(title="", data=user_input)
