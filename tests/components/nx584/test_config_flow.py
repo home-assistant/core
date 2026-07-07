@@ -231,6 +231,55 @@ async def test_import_alarm_control_panel_after_binary_sensor_keeps_zone_options
     }
 
 
+async def test_import_after_restart_does_not_reload_with_same_zone_options(
+    hass: HomeAssistant,
+) -> None:
+    """Test re-importing unchanged zone options after a restart doesn't reload.
+
+    Config entry options are persisted as JSON, so zone_types keys round-trip
+    as strings across a restart. The freshly-validated YAML import has int
+    keys instead, so the comparison must normalize before deciding to reload.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=TEST_DATA,
+        options={"exclude_zones": [2], "zone_types": {"3": "motion"}},
+    )
+    entry.add_to_hass(hass)
+
+    binary_sensor_import_config = {
+        **TEST_DATA,
+        "exclude_zones": [2],
+        "zone_types": {3: "motion"},
+    }
+
+    with (
+        patch(
+            "homeassistant.components.nx584.config_flow.client.Client.list_zones",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.nx584.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_setup_entry.call_count == 1
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=binary_sensor_import_config,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.options == {"exclude_zones": [2], "zone_types": {"3": "motion"}}
+    assert mock_setup_entry.call_count == 1
+
+
 async def test_import_second_panel_creates_separate_entry(hass: HomeAssistant) -> None:
     """Test importing a second panel with a different host/port is not treated as a match."""
     MockConfigEntry(domain=DOMAIN, data=TEST_DATA).add_to_hass(hass)

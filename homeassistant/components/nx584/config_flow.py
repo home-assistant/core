@@ -103,10 +103,21 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_HOST] != host or entry.data[CONF_PORT] != port:
                 continue
-            if zone_options is not None and entry.options != zone_options:
-                return self.async_update_reload_and_abort(
-                    entry, options=zone_options, reason="already_configured"
+            if zone_options is not None:
+                # Options are persisted as JSON, so zone_types keys come back
+                # as strings; re-run the schema so the comparison below isn't
+                # fooled into reloading the entry on every restart.
+                current_zone_types = ZONE_TYPES_SCHEMA(
+                    entry.options.get(CONF_ZONE_TYPES, {})
                 )
+                if (
+                    entry.options.get(CONF_EXCLUDE_ZONES, [])
+                    != zone_options[CONF_EXCLUDE_ZONES]
+                    or current_zone_types != zone_options[CONF_ZONE_TYPES]
+                ):
+                    return self.async_update_reload_and_abort(
+                        entry, options=zone_options, reason="already_configured"
+                    )
             return self.async_abort(reason="already_configured")
 
         try:
