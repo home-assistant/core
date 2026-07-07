@@ -23,7 +23,6 @@ SIGTERM (or until main asks for a graceful shutdown over the channel — see
 import asyncio
 from collections.abc import Awaitable, Callable
 import contextlib
-import json
 import logging
 import os
 import signal
@@ -39,6 +38,7 @@ from hass_client.entity_bridge import EntityBridge
 from hass_client.entry_runner import EntryRunner
 from hass_client.event_mirror import EventMirror
 from hass_client.flow_runner import FlowRunner
+from hass_client.messages import encode_json
 from hass_client.protocol import MSG_GET_TRANSLATIONS, MSG_READY, MSG_SHUTDOWN
 from hass_client.sandbox_bridge import ChannelSandboxBridge
 from hass_client.service_mirror import ServiceMirror
@@ -296,7 +296,7 @@ class SandboxRuntime:
             flow_runner.hass, msg.language, list(msg.domains)
         )
         if strings:
-            result.strings.update(strings)
+            result.strings = encode_json(strings)
         return result
 
     async def _run_graceful_shutdown(self) -> pb.ShutdownResult:
@@ -353,17 +353,20 @@ class SandboxRuntime:
             stored = restore_data.async_get_stored_states()
             if stored:
                 # Coerce HA-specific types (Fragment / State / datetime)
-                # to plain primitives by round-tripping through orjson.
-                # ``prepare_save_json`` is the same serialiser ``Store``
-                # uses on its way to disk; we just intercept the bytes.
+                # via ``prepare_save_json`` — the same serialiser ``Store``
+                # uses on its way to disk — and ship the JSON bytes as-is.
                 wrapped = {
                     "version": restore_state.STORAGE_VERSION,
                     "minor_version": 1,
                     "key": restore_state.STORAGE_KEY,
                     "data": [item.as_dict() for item in stored],
                 }
-                _mode, json_bytes = json_helper.prepare_save_json(wrapped, encoder=None)
-                result.restore_state.update(json.loads(json_bytes))
+                _mode, json_data = json_helper.prepare_save_json(wrapped, encoder=None)
+                result.restore_state = (
+                    json_data
+                    if isinstance(json_data, bytes)
+                    else json_data.encode("utf-8")
+                )
         except Exception:
             _LOGGER.exception("sandbox %s: restore-state collect failed", self.group)
 

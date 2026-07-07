@@ -13,7 +13,7 @@ from homeassistant.components.sandbox import proxy_flow as proxy_flow_module
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
 from homeassistant.components.sandbox.channel import Channel
 from homeassistant.components.sandbox.manager import SandboxManager
-from homeassistant.components.sandbox.messages import struct_to_dict
+from homeassistant.components.sandbox.messages import decode_json_dict, encode_json
 from homeassistant.components.sandbox.proxy_flow import SandboxFlowProxy
 from homeassistant.components.sandbox.router import SandboxFlowRouter
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -118,7 +118,7 @@ async def test_full_flow_user_to_create_entry(
         handler="test_proxy_full",
         title="Proxy Title",
     )
-    create_entry.data.update({"host": "1.2.3.4"})
+    create_entry.data = encode_json({"host": "1.2.3.4"})
     responses = [
         # Response to flow_init — show a form
         pb.FlowResult(
@@ -156,12 +156,12 @@ async def test_full_flow_user_to_create_entry(
 
     assert len(stub.init_calls) == 1
     assert stub.init_calls[0].handler == "test_proxy_full"
-    assert struct_to_dict(stub.init_calls[0].context)["source"] == SOURCE_USER
+    assert decode_json_dict(stub.init_calls[0].context)["source"] == SOURCE_USER
     # proto: a USER-source init carries no `data` field (was `data is None`).
     assert not stub.init_calls[0].HasField("data")
     assert len(stub.step_calls) == 1
     assert stub.step_calls[0].flow_id == "sandbox-flow-1"
-    assert struct_to_dict(stub.step_calls[0].user_input) == {"host": "1.2.3.4"}
+    assert decode_json_dict(stub.step_calls[0].user_input) == {"host": "1.2.3.4"}
 
     # The new ConfigEntry is tagged with the sandbox group via the
     # ConfigEntry.sandbox first-class field (keeps the tag off entry.data
@@ -194,8 +194,8 @@ async def test_create_entry_carries_version_and_options(
         version=2,
         minor_version=3,
     )
-    create_entry.data.update({"host": "1.2.3.4"})
-    create_entry.options.update({"poll_interval": 30})
+    create_entry.data = encode_json({"host": "1.2.3.4"})
+    create_entry.options = encode_json({"poll_interval": 30})
     responses = [create_entry]
 
     with (
@@ -234,7 +234,7 @@ async def test_form_with_errors_reshows(
         handler="test_proxy_errors",
         step_id="user",
     )
-    reshow.errors.update({"host": "invalid_host"})
+    reshow.errors = encode_json({"host": "invalid_host"})
     responses = [
         pb.FlowResult(
             type=FlowResultType.FORM.value,
@@ -305,14 +305,14 @@ async def test_menu_flow_renders_and_navigates(
         handler="test_proxy_menu",
         step_id="user",
     )
-    menu.menu_options.extend(["option_a", "option_b"])
+    menu.menu_options = encode_json(["option_a", "option_b"])
     create_entry = pb.FlowResult(
         type=FlowResultType.CREATE_ENTRY.value,
         flow_id="sandbox-flow-menu",
         handler="test_proxy_menu",
         title="Done",
     )
-    create_entry.data.update({"chosen": "a"})
+    create_entry.data = encode_json({"chosen": "a"})
     responses = [menu, create_entry]
 
     with (
@@ -337,7 +337,9 @@ async def test_menu_flow_renders_and_navigates(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     # The menu selection forwarded as a navigation choice, not a fresh step.
     assert len(stub.step_calls) == 1
-    assert struct_to_dict(stub.step_calls[0].user_input) == {"next_step_id": "option_a"}
+    assert decode_json_dict(stub.step_calls[0].user_input) == {
+        "next_step_id": "option_a"
+    }
 
 
 async def test_menu_dict_options_round_trip(
@@ -352,7 +354,7 @@ async def test_menu_dict_options_round_trip(
         step_id="user",
     )
     # Crosses as a list of [id, label] pairs.
-    menu.menu_options.extend([["a", "Option A"], ["b", "Option B"]])
+    menu.menu_options = encode_json([["a", "Option A"], ["b", "Option B"]])
     responses = [menu]
 
     with (
@@ -416,9 +418,9 @@ async def test_discovery_flow_marshals_service_info(
 ) -> None:
     """A zeroconf-sourced flow flattens its ServiceInfo + DiscoveryKey safely.
 
-    Without the JSON coercion, ``dict_to_struct`` raises on the
-    ``ZeroconfServiceInfo`` (IPv4Address fields) / ``DiscoveryKey`` and the
-    discovery flow crashes unhandled.
+    Without the ``_to_jsonable`` flattening, the ``ZeroconfServiceInfo``
+    (IPv4Address fields) / ``DiscoveryKey`` would cross as lossy ``str()``
+    fallbacks instead of rebuildable per-field dicts.
     """
     mock_integration(hass, MockModule("test_proxy_discovery"))
     responses = [
@@ -460,7 +462,7 @@ async def test_discovery_flow_marshals_service_info(
 
     assert result["type"] is FlowResultType.ABORT
     assert len(stub.init_calls) == 1
-    ctx = struct_to_dict(stub.init_calls[0].context)
+    ctx = decode_json_dict(stub.init_calls[0].context)
     assert ctx["source"] == "zeroconf"
     # The DiscoveryKey dataclass crossed as a JSON-safe dict.
     assert ctx["discovery_key"] == {
@@ -470,7 +472,7 @@ async def test_discovery_flow_marshals_service_info(
     }
     # The ServiceInfo dataclass crossed as a JSON-safe dict (IPs stringified,
     # derived ``host``/``addresses`` properties absent — fields only).
-    data = struct_to_dict(stub.init_calls[0].data)
+    data = decode_json_dict(stub.init_calls[0].data)
     assert data["ip_address"] == "1.2.3.4"
     assert data["ip_addresses"] == ["1.2.3.4"]
     assert data["hostname"] == "device.local."

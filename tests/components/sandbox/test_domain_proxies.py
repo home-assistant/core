@@ -28,8 +28,9 @@ from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
 from homeassistant.components.sandbox.bridge import SandboxBridge
 from homeassistant.components.sandbox.channel import Channel
 from homeassistant.components.sandbox.messages import (
+    decode_json_dict,
+    encode_json,
     make_entity_description,
-    struct_to_dict,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -398,7 +399,7 @@ async def test_phase13_proxy_smoke(
         state_changed = pb.StateChanged(
             sandbox_entity_id=sandbox_entity_id, state=state_value
         )
-        state_changed.attributes.update(dict(state_attrs))
+        state_changed.attributes = encode_json(dict(state_attrs))
         await sandbox_channel.push("sandbox/state_changed", state_changed)
         # Let the state push run.
         for _ in range(20):
@@ -419,7 +420,7 @@ async def test_phase13_proxy_smoke(
         assert len(calls) == 1, f"{domain}: expected one call_service RPC"
         assert calls[0].domain == domain
         assert calls[0].service == expected_service
-        assert struct_to_dict(calls[0].target) == {"entity_id": [sandbox_entity_id]}
+        assert decode_json_dict(calls[0].target) == {"entity_id": [sandbox_entity_id]}
 
 
 async def test_upsert_clears_dropped_device_class(

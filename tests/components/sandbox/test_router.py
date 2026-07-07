@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
 from homeassistant.components.sandbox.manager import SandboxManager
-from homeassistant.components.sandbox.messages import struct_to_dict
+from homeassistant.components.sandbox.messages import decode_json_dict
 from homeassistant.components.sandbox.proxy_flow import SandboxFlowProxy
 from homeassistant.components.sandbox.router import (
     SandboxFlowRouter,
@@ -150,7 +150,7 @@ async def test_async_setup_entry_routes_to_sandbox(
     assert received[0].title == "Test"
     # Sandbox group is carried as a first-class ConfigEntry field now;
     # entry.data on the wire is exactly what the integration sees.
-    assert struct_to_dict(received[0].data) == {}
+    assert decode_json_dict(received[0].data) == {}
 
 
 async def test_async_setup_entry_marks_setup_error_on_failure(

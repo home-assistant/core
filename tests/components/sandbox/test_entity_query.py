@@ -5,7 +5,7 @@ Two layers are covered:
 * **Round-trip rebuild helpers** — the highest-risk part (the
   ``as_dict``-vs-constructor asymmetry). Each rich type is serialised with its
   own serialiser and rebuilt with the proxy's helper; the re-serialised result
-  must match, with no wire/Struct in the loop.
+  must match, with no wire in the loop.
 * **Proxy behaviour** — a wired bridge + in-memory channel pair, a stub
   sandbox-side handler, and an assertion that the proxy returns the rebuilt
   typed object (or surfaces the translated error).
@@ -37,9 +37,9 @@ from homeassistant.components.sandbox.entity.media_player import (
 )
 from homeassistant.components.sandbox.entity.vacuum import _segment_from_dict
 from homeassistant.components.sandbox.messages import (
-    dict_to_struct,
+    decode_json_dict,
+    encode_json,
     make_entity_description,
-    struct_to_dict,
 )
 from homeassistant.components.vacuum import Segment
 from homeassistant.config_entries import ConfigEntry
@@ -188,8 +188,8 @@ async def test_calendar_get_events_proxy(
     async def _on_call(payload: pb.CallService) -> pb.CallServiceResult:
         captured.append(payload)
         result = pb.CallServiceResult()
-        result.response.data.CopyFrom(
-            dict_to_struct({sandbox_entity_id: {"events": [event_dict]}})
+        result.response.data = encode_json(
+            {sandbox_entity_id: {"events": [event_dict]}}
         )
         return result
 
@@ -209,7 +209,7 @@ async def test_calendar_get_events_proxy(
     assert events[0].summary == "Lunch"
     assert captured[0].service == "get_events"
     assert captured[0].return_response is True
-    data = struct_to_dict(captured[0].service_data)
+    data = decode_json_dict(captured[0].service_data)
     assert data["start_date_time"] == start.isoformat()
     assert data["end_date_time"] == end.isoformat()
 
@@ -243,9 +243,7 @@ async def test_weather_forecast_proxy(
     async def _on_call(payload: pb.CallService) -> pb.CallServiceResult:
         captured.append(payload)
         result = pb.CallServiceResult()
-        result.response.data.CopyFrom(
-            dict_to_struct({sandbox_entity_id: {"forecast": forecast}})
-        )
+        result.response.data = encode_json({sandbox_entity_id: {"forecast": forecast}})
         return result
 
     sandbox_channel.register("sandbox/call_service", _on_call)
@@ -260,7 +258,7 @@ async def test_weather_forecast_proxy(
 
     assert result == forecast
     assert captured[0].service == "get_forecasts"
-    assert struct_to_dict(captured[0].service_data) == {"type": forecast_type}
+    assert decode_json_dict(captured[0].service_data) == {"type": forecast_type}
 
 
 async def test_browse_media_proxy(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -290,7 +288,7 @@ async def test_browse_media_proxy(hass: HomeAssistant, entry: ConfigEntry) -> No
     async def _on_call(payload: pb.CallService) -> pb.CallServiceResult:
         captured.append(payload)
         result = pb.CallServiceResult()
-        result.response.data.CopyFrom(dict_to_struct({sandbox_entity_id: browse}))
+        result.response.data = encode_json({sandbox_entity_id: browse})
         return result
 
     sandbox_channel.register("sandbox/call_service", _on_call)
@@ -310,7 +308,7 @@ async def test_browse_media_proxy(hass: HomeAssistant, entry: ConfigEntry) -> No
     assert result.children is not None
     assert result.children[0].title == "Song"
     assert captured[0].service == "browse_media"
-    data = struct_to_dict(captured[0].service_data)
+    data = decode_json_dict(captured[0].service_data)
     assert data == {"media_content_type": "library", "media_content_id": "root"}
 
 
@@ -360,7 +358,7 @@ def _entity_query_responder(captured: list[pb.EntityQuery], value: Any) -> Any:
     async def _on_query(payload: pb.EntityQuery) -> pb.EntityQueryResult:
         captured.append(payload)
         result = pb.EntityQueryResult()
-        result.result.CopyFrom(dict_to_struct({"value": value}))
+        result.result = encode_json({"value": value})
         return result
 
     return _on_query
@@ -398,7 +396,7 @@ async def test_search_media_proxy(hass: HomeAssistant, entry: ConfigEntry) -> No
     assert isinstance(result, SearchMedia)
     assert result.result[0].title == "Jazz Hit"
     assert captured[0].method == "async_internal_search_media"
-    assert struct_to_dict(captured[0].args) == {"search_query": "jazz"}
+    assert decode_json_dict(captured[0].args) == {"search_query": "jazz"}
 
 
 async def test_release_notes_proxy(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -421,7 +419,7 @@ async def test_release_notes_proxy(hass: HomeAssistant, entry: ConfigEntry) -> N
 
     assert result == "## 1.1\n- Fixed things"
     assert captured[0].method == "async_release_notes"
-    assert struct_to_dict(captured[0].args) == {}
+    assert decode_json_dict(captured[0].args) == {}
 
 
 async def test_get_segments_proxy(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -499,7 +497,7 @@ async def test_calendar_mutation_proxy(
 
     assert result is None
     assert captured[0].method == expected_method
-    assert struct_to_dict(captured[0].args) == expected_args
+    assert decode_json_dict(captured[0].args) == expected_args
 
 
 # --- EntityQuery error paths ----------------------------------------------

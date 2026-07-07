@@ -38,7 +38,7 @@ from datetime import datetime, timedelta
 import logging
 import os
 from pathlib import Path
-from typing import Any, NamedTuple, cast
+from typing import Any, NamedTuple
 
 import voluptuous as vol
 
@@ -76,7 +76,7 @@ from homeassistant.util.file import write_utf8_file_atomic
 from ._proto import sandbox_pb2 as pb
 from .channel import Channel, ChannelClosedError, ChannelRemoteError
 from .const import UNIQUE_ID_SEPARATOR
-from .messages import dict_to_struct, listvalue_to_list, struct_to_dict
+from .messages import decode_json, decode_json_dict, encode_json
 from .protocol import (
     MSG_CALL_SERVICE,
     MSG_ENTITY_QUERY,
@@ -191,9 +191,9 @@ class SandboxEntityDescription:
                 else None
             ),
             supported_features=description.supported_features,
-            capabilities=struct_to_dict(initial.capabilities),
+            capabilities=decode_json_dict(initial.capabilities),
             initial_state=initial.state if initial.HasField("state") else None,
-            initial_attributes=struct_to_dict(initial.attributes),
+            initial_attributes=decode_json_dict(initial.attributes),
             device_info=device_info,
         )
 
@@ -305,7 +305,7 @@ class SandboxBridge:
         request = pb.EntityQuery(
             sandbox_entity_id=sandbox_entity_id,
             method=method,
-            args=dict_to_struct(_wire_safe(args)),
+            args=encode_json(args),
         )
         if context is not None:
             request.context_id = context.id
@@ -317,7 +317,7 @@ class SandboxBridge:
             raise HomeAssistantError(
                 f"Sandbox {self.group!r} channel closed mid-query"
             ) from err
-        return struct_to_dict(result.result).get("value")
+        return decode_json_dict(result.result).get("value")
 
     async def _raw_call_service(
         self,
@@ -333,8 +333,8 @@ class SandboxBridge:
         request = pb.CallService(
             domain=domain,
             service=service,
-            target=dict_to_struct(target),
-            service_data=dict_to_struct(_wire_safe(service_data)),
+            target=encode_json(target),
+            service_data=encode_json(service_data),
             return_response=return_response,
         )
         if context_id is not None:
@@ -574,7 +574,7 @@ class SandboxBridge:
         if proxy is None:
             return
         state_str = msg.state if msg.HasField("state") else None
-        attributes = struct_to_dict(msg.attributes)
+        attributes = decode_json_dict(msg.attributes)
         context = (
             self._resolve_context(msg.context_id)
             if msg.HasField("context_id")
@@ -631,7 +631,7 @@ class SandboxBridge:
             return pb.RegisterServiceResult(ok=True, installed=False)
 
         forwarder = _build_service_forwarder(self, domain, service, supports_response)
-        schema = reconstruct_schema(listvalue_to_list(msg.schema))
+        schema = reconstruct_schema(decode_json(msg.schema))
         self.hass.services.async_register(
             domain,
             service,
@@ -660,13 +660,13 @@ class SandboxBridge:
         data = await self._store_server.async_load(_validate_key(msg.key))
         result = pb.StoreLoadResult()
         if data is not None:
-            result.data.update(data)
+            result.data = encode_json(data)
         return result
 
     async def _handle_store_save(self, msg: pb.StoreSave) -> pb.StoreSaveResult:
         """Persist a sandbox-side ``Store.async_save`` flush."""
         await self._store_server.async_save(
-            _validate_key(msg.key), struct_to_dict(msg.data)
+            _validate_key(msg.key), decode_json_dict(msg.data)
         )
         return pb.StoreSaveResult(ok=True)
 
@@ -738,7 +738,7 @@ class SandboxBridge:
                 event_type,
             )
             return
-        event_data = struct_to_dict(msg.event_data)
+        event_data = decode_json_dict(msg.event_data)
         context = (
             self._resolve_context(msg.context_id)
             if msg.HasField("context_id")
@@ -1089,7 +1089,7 @@ def _build_service_forwarder(
         if supports_response is SupportsResponse.NONE:
             return None
         if response.HasField("response"):
-            return struct_to_dict(response.response.data)
+            return decode_json_dict(response.response.data)
         return None
 
     return _forward
@@ -1112,20 +1112,6 @@ def _rebuild_invalid(data: Mapping[str, Any]) -> vol.Invalid:
     """Rebuild a single :class:`vol.Invalid` from its serialized payload."""
     path = data.get("path") or None
     return vol.Invalid(data.get("msg", ""), path=path)
-
-
-def _wire_safe(data: dict[str, Any]) -> dict[str, Any]:
-    """Coerce a dict to plain JSON-safe values before ``dict_to_struct``.
-
-    Validated service data can legally hold ``datetime`` (``cv.datetime``
-    schemas), enums, or sets — ``Struct.update`` rejects those with a bare
-    ``ValueError``. Round-trip through HA's JSON encoder so the wire sees
-    the same shapes a websocket service call would.
-    """
-    if not data:
-        return {}
-    _mode, json_bytes = json_helper.prepare_save_json(data, encoder=None)
-    return cast(dict[str, Any], json_util.json_loads(json_bytes))
 
 
 def _translate_remote_error(err: ChannelRemoteError) -> Exception:

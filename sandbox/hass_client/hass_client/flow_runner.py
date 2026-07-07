@@ -53,7 +53,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from ._proto import sandbox_pb2 as pb
 from .channel import Channel
-from .messages import struct_to_dict
+from .messages import decode_json_dict, encode_json
 from .schema_bridge import serialize_schema
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,8 +75,8 @@ _SCALAR_STRING_FIELDS = (
     "description",
 )
 
-# Dynamic dict fields → Struct fields of the same name on the proto.
-_STRUCT_FIELDS = (
+# Dynamic dict fields → JSON-bytes fields of the same name on the proto.
+_DYNAMIC_DICT_FIELDS = (
     "data",
     "options",
     "errors",
@@ -168,8 +168,8 @@ class FlowRunner:
             await self.hass.async_stop(force=True)
 
     async def _handle_flow_init(self, msg: pb.FlowInit) -> pb.FlowResult:
-        context = struct_to_dict(msg.context)
-        data = struct_to_dict(msg.data) if msg.HasField("data") else None
+        context = decode_json_dict(msg.context)
+        data = decode_json_dict(msg.data) if msg.HasField("data") else None
         # Discovery-sourced flows carry their context/payload as JSON-safe
         # dicts (the proxy flattened the *ServiceInfo / DiscoveryKey objects);
         # rebuild the real types so async_step_<source> sees what it expects.
@@ -181,7 +181,7 @@ class FlowRunner:
 
     async def _handle_flow_step(self, msg: pb.FlowStep) -> pb.FlowResult:
         user_input = (
-            struct_to_dict(msg.user_input) if msg.HasField("user_input") else None
+            decode_json_dict(msg.user_input) if msg.HasField("user_input") else None
         )
         result = await self.hass.config_entries.flow.async_configure(
             msg.flow_id, user_input
@@ -229,17 +229,17 @@ def _marshal_result(
         out.preview = str(result["preview"])
     menu_options = result.get("menu_options")
     if menu_options is not None:
-        out.menu_options.extend(_marshal_menu_options(menu_options))
+        out.menu_options = encode_json(_marshal_menu_options(menu_options))
     if result.get("sort") is not None:
         out.sort = bool(result["sort"])
-    for key in _STRUCT_FIELDS:
+    for key in _DYNAMIC_DICT_FIELDS:
         value = result.get(key)
         if isinstance(value, Mapping):
-            getattr(out, key).update(_to_json_safe(dict(value)))
+            setattr(out, key, encode_json(dict(value)))
     if result.get("data_schema") is not None:
         serialized = serialize_schema(result["data_schema"])
         if serialized is not None:
-            out.data_schema.extend(serialized)
+            out.data_schema = encode_json(serialized)
         else:
             # voluptuous_serialize couldn't render it; flag the gap so the
             # proxy still surfaces a (schema-less) form rather than abort.
@@ -253,7 +253,7 @@ def _marshal_result(
             out.has_data_schema = True
     context_value = result.get("context")
     if isinstance(context_value, Mapping):
-        out.context.update(_to_json_safe(dict(context_value)))
+        out.context = encode_json(dict(context_value))
     elif flow_manager is not None:
         # FORM / SHOW_PROGRESS / EXTERNAL_STEP results don't include the
         # flow's context (only CREATE_ENTRY does). Look it up so the proxy
@@ -268,7 +268,7 @@ def _marshal_result(
             if partial is not None:
                 ctx = partial.get("context")
                 if isinstance(ctx, Mapping):
-                    out.context.update(_to_json_safe(dict(ctx)))
+                    out.context = encode_json(dict(ctx))
     return out
 
 
@@ -367,23 +367,6 @@ def _flow_type_value(value: Any) -> str:
     """Return the string value of a FlowResult ``type`` (enum or string)."""
     if isinstance(value, FlowResultType):
         return value.value
-    return str(value)
-
-
-def _to_json_safe(value: Any) -> Any:
-    """Recursively coerce a value into JSON-safe primitives."""
-    if isinstance(value, Mapping):
-        return {str(k): _to_json_safe(v) for k, v in value.items()}
-    if isinstance(value, (list, tuple, set, frozenset)):
-        return [_to_json_safe(v) for v in value]
-    if isinstance(value, FlowResultType):
-        return value.value
-    if isinstance(value, (str, int, float, bool)) or value is None:
-        return value
-    # Generic enum-ish: fall through to .value if available, otherwise str().
-    enum_value = getattr(value, "value", None)
-    if enum_value is not None and isinstance(enum_value, (str, int, float, bool)):
-        return enum_value
     return str(value)
 
 

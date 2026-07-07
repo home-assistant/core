@@ -1,4 +1,3 @@
-from google.protobuf import struct_pb2 as _struct_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
@@ -126,14 +125,14 @@ class EntrySetup(_message.Message):
     entry_id: str
     domain: str
     title: str
-    data: _struct_pb2.Struct
-    options: _struct_pb2.Struct
+    data: bytes
+    options: bytes
     source: str
     unique_id: str
     version: int
     minor_version: int
     integration_source: IntegrationSource
-    def __init__(self, entry_id: _Optional[str] = ..., domain: _Optional[str] = ..., title: _Optional[str] = ..., data: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., options: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., source: _Optional[str] = ..., unique_id: _Optional[str] = ..., version: _Optional[int] = ..., minor_version: _Optional[int] = ..., integration_source: _Optional[_Union[IntegrationSource, _Mapping]] = ...) -> None: ...
+    def __init__(self, entry_id: _Optional[str] = ..., domain: _Optional[str] = ..., title: _Optional[str] = ..., data: _Optional[bytes] = ..., options: _Optional[bytes] = ..., source: _Optional[str] = ..., unique_id: _Optional[str] = ..., version: _Optional[int] = ..., minor_version: _Optional[int] = ..., integration_source: _Optional[_Union[IntegrationSource, _Mapping]] = ...) -> None: ...
 
 class EntrySetupResult(_message.Message):
     __slots__ = ("ok", "reason")
@@ -165,17 +164,17 @@ class CallService(_message.Message):
     RETURN_RESPONSE_FIELD_NUMBER: _ClassVar[int]
     domain: str
     service: str
-    target: _struct_pb2.Struct
-    service_data: _struct_pb2.Struct
+    target: bytes
+    service_data: bytes
     context_id: str
     return_response: bool
-    def __init__(self, domain: _Optional[str] = ..., service: _Optional[str] = ..., target: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., service_data: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., context_id: _Optional[str] = ..., return_response: bool = ...) -> None: ...
+    def __init__(self, domain: _Optional[str] = ..., service: _Optional[str] = ..., target: _Optional[bytes] = ..., service_data: _Optional[bytes] = ..., context_id: _Optional[str] = ..., return_response: bool = ...) -> None: ...
 
 class ServiceResponse(_message.Message):
     __slots__ = ("data",)
     DATA_FIELD_NUMBER: _ClassVar[int]
-    data: _struct_pb2.Struct
-    def __init__(self, data: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ...) -> None: ...
+    data: bytes
+    def __init__(self, data: _Optional[bytes] = ...) -> None: ...
 
 class CallServiceResult(_message.Message):
     __slots__ = ("response",)
@@ -191,15 +190,15 @@ class EntityQuery(_message.Message):
     CONTEXT_ID_FIELD_NUMBER: _ClassVar[int]
     sandbox_entity_id: str
     method: str
-    args: _struct_pb2.Struct
+    args: bytes
     context_id: str
-    def __init__(self, sandbox_entity_id: _Optional[str] = ..., method: _Optional[str] = ..., args: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., context_id: _Optional[str] = ...) -> None: ...
+    def __init__(self, sandbox_entity_id: _Optional[str] = ..., method: _Optional[str] = ..., args: _Optional[bytes] = ..., context_id: _Optional[str] = ...) -> None: ...
 
 class EntityQueryResult(_message.Message):
     __slots__ = ("result",)
     RESULT_FIELD_NUMBER: _ClassVar[int]
-    result: _struct_pb2.Struct
-    def __init__(self, result: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ...) -> None: ...
+    result: bytes
+    def __init__(self, result: _Optional[bytes] = ...) -> None: ...
 
 class GetTranslations(_message.Message):
     __slots__ = ("language", "domains")
@@ -214,8 +213,8 @@ class GetTranslationsResult(_message.Message):
     LANGUAGE_FIELD_NUMBER: _ClassVar[int]
     STRINGS_FIELD_NUMBER: _ClassVar[int]
     language: str
-    strings: _struct_pb2.Struct
-    def __init__(self, language: _Optional[str] = ..., strings: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ...) -> None: ...
+    strings: bytes
+    def __init__(self, language: _Optional[str] = ..., strings: _Optional[bytes] = ...) -> None: ...
 
 class Shutdown(_message.Message):
     __slots__ = ()
@@ -228,8 +227,8 @@ class ShutdownResult(_message.Message):
     RESTORE_STATE_FIELD_NUMBER: _ClassVar[int]
     ok: bool
     unloaded: int
-    restore_state: _struct_pb2.Struct
-    def __init__(self, ok: bool = ..., unloaded: _Optional[int] = ..., restore_state: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ...) -> None: ...
+    restore_state: bytes
+    def __init__(self, ok: bool = ..., unloaded: _Optional[int] = ..., restore_state: _Optional[bytes] = ...) -> None: ...
 
 class Ping(_message.Message):
     __slots__ = ()
@@ -251,17 +250,17 @@ class FlowInit(_message.Message):
     CONTEXT_FIELD_NUMBER: _ClassVar[int]
     DATA_FIELD_NUMBER: _ClassVar[int]
     handler: str
-    context: _struct_pb2.Struct
-    data: _struct_pb2.Struct
-    def __init__(self, handler: _Optional[str] = ..., context: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., data: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ...) -> None: ...
+    context: bytes
+    data: bytes
+    def __init__(self, handler: _Optional[str] = ..., context: _Optional[bytes] = ..., data: _Optional[bytes] = ...) -> None: ...
 
 class FlowStep(_message.Message):
     __slots__ = ("flow_id", "user_input")
     FLOW_ID_FIELD_NUMBER: _ClassVar[int]
     USER_INPUT_FIELD_NUMBER: _ClassVar[int]
     flow_id: str
-    user_input: _struct_pb2.Struct
-    def __init__(self, flow_id: _Optional[str] = ..., user_input: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ...) -> None: ...
+    user_input: bytes
+    def __init__(self, flow_id: _Optional[str] = ..., user_input: _Optional[bytes] = ...) -> None: ...
 
 class FlowAbort(_message.Message):
     __slots__ = ("flow_id",)
@@ -306,16 +305,16 @@ class FlowResult(_message.Message):
     preview: str
     version: int
     minor_version: int
-    data: _struct_pb2.Struct
-    options: _struct_pb2.Struct
-    errors: _struct_pb2.Struct
-    description_placeholders: _struct_pb2.Struct
-    context: _struct_pb2.Struct
-    data_schema: _struct_pb2.ListValue
+    data: bytes
+    options: bytes
+    errors: bytes
+    description_placeholders: bytes
+    context: bytes
+    data_schema: bytes
     has_data_schema: bool
-    menu_options: _struct_pb2.ListValue
+    menu_options: bytes
     sort: bool
-    def __init__(self, type: _Optional[str] = ..., flow_id: _Optional[str] = ..., handler: _Optional[str] = ..., step_id: _Optional[str] = ..., reason: _Optional[str] = ..., title: _Optional[str] = ..., description: _Optional[str] = ..., last_step: bool = ..., preview: _Optional[str] = ..., version: _Optional[int] = ..., minor_version: _Optional[int] = ..., data: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., options: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., errors: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., description_placeholders: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., context: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., data_schema: _Optional[_Union[_struct_pb2.ListValue, _Mapping]] = ..., has_data_schema: bool = ..., menu_options: _Optional[_Union[_struct_pb2.ListValue, _Mapping]] = ..., sort: bool = ...) -> None: ...
+    def __init__(self, type: _Optional[str] = ..., flow_id: _Optional[str] = ..., handler: _Optional[str] = ..., step_id: _Optional[str] = ..., reason: _Optional[str] = ..., title: _Optional[str] = ..., description: _Optional[str] = ..., last_step: bool = ..., preview: _Optional[str] = ..., version: _Optional[int] = ..., minor_version: _Optional[int] = ..., data: _Optional[bytes] = ..., options: _Optional[bytes] = ..., errors: _Optional[bytes] = ..., description_placeholders: _Optional[bytes] = ..., context: _Optional[bytes] = ..., data_schema: _Optional[bytes] = ..., has_data_schema: bool = ..., menu_options: _Optional[bytes] = ..., sort: bool = ...) -> None: ...
 
 class EntityInfo(_message.Message):
     __slots__ = ("description", "device_info")
@@ -346,9 +345,9 @@ class InitialState(_message.Message):
     CAPABILITIES_FIELD_NUMBER: _ClassVar[int]
     ATTRIBUTES_FIELD_NUMBER: _ClassVar[int]
     state: str
-    capabilities: _struct_pb2.Struct
-    attributes: _struct_pb2.Struct
-    def __init__(self, state: _Optional[str] = ..., capabilities: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., attributes: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ...) -> None: ...
+    capabilities: bytes
+    attributes: bytes
+    def __init__(self, state: _Optional[str] = ..., capabilities: _Optional[bytes] = ..., attributes: _Optional[bytes] = ...) -> None: ...
 
 class EntityDescription(_message.Message):
     __slots__ = ("entry_id", "domain", "sandbox_entity_id", "unique_id", "has_entity_name", "info", "initial")
@@ -394,9 +393,9 @@ class StateChanged(_message.Message):
     CONTEXT_ID_FIELD_NUMBER: _ClassVar[int]
     sandbox_entity_id: str
     state: str
-    attributes: _struct_pb2.Struct
+    attributes: bytes
     context_id: str
-    def __init__(self, sandbox_entity_id: _Optional[str] = ..., state: _Optional[str] = ..., attributes: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., context_id: _Optional[str] = ...) -> None: ...
+    def __init__(self, sandbox_entity_id: _Optional[str] = ..., state: _Optional[str] = ..., attributes: _Optional[bytes] = ..., context_id: _Optional[str] = ...) -> None: ...
 
 class RegisterService(_message.Message):
     __slots__ = ("domain", "service", "supports_response", "schema")
@@ -407,8 +406,8 @@ class RegisterService(_message.Message):
     domain: str
     service: str
     supports_response: str
-    schema: _struct_pb2.ListValue
-    def __init__(self, domain: _Optional[str] = ..., service: _Optional[str] = ..., supports_response: _Optional[str] = ..., schema: _Optional[_Union[_struct_pb2.ListValue, _Mapping]] = ...) -> None: ...
+    schema: bytes
+    def __init__(self, domain: _Optional[str] = ..., service: _Optional[str] = ..., supports_response: _Optional[str] = ..., schema: _Optional[bytes] = ...) -> None: ...
 
 class RegisterServiceResult(_message.Message):
     __slots__ = ("ok", "installed")
@@ -440,9 +439,9 @@ class FireEvent(_message.Message):
     EVENT_DATA_FIELD_NUMBER: _ClassVar[int]
     CONTEXT_ID_FIELD_NUMBER: _ClassVar[int]
     event_type: str
-    event_data: _struct_pb2.Struct
+    event_data: bytes
     context_id: str
-    def __init__(self, event_type: _Optional[str] = ..., event_data: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., context_id: _Optional[str] = ...) -> None: ...
+    def __init__(self, event_type: _Optional[str] = ..., event_data: _Optional[bytes] = ..., context_id: _Optional[str] = ...) -> None: ...
 
 class StoreLoad(_message.Message):
     __slots__ = ("key",)
@@ -453,16 +452,16 @@ class StoreLoad(_message.Message):
 class StoreLoadResult(_message.Message):
     __slots__ = ("data",)
     DATA_FIELD_NUMBER: _ClassVar[int]
-    data: _struct_pb2.Struct
-    def __init__(self, data: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ...) -> None: ...
+    data: bytes
+    def __init__(self, data: _Optional[bytes] = ...) -> None: ...
 
 class StoreSave(_message.Message):
     __slots__ = ("key", "data")
     KEY_FIELD_NUMBER: _ClassVar[int]
     DATA_FIELD_NUMBER: _ClassVar[int]
     key: str
-    data: _struct_pb2.Struct
-    def __init__(self, key: _Optional[str] = ..., data: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ...) -> None: ...
+    data: bytes
+    def __init__(self, key: _Optional[str] = ..., data: _Optional[bytes] = ...) -> None: ...
 
 class StoreSaveResult(_message.Message):
     __slots__ = ("ok",)

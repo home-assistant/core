@@ -19,7 +19,7 @@ from typing import Any
 from hass_client._proto import sandbox_pb2 as pb
 from hass_client.channel import Channel
 from hass_client.codec_protobuf import ProtobufCodec
-from hass_client.messages import struct_to_dict
+from hass_client.messages import decode_json_dict
 from hass_client.protocol import MSG_SHUTDOWN, MSG_STORE_LOAD, MSG_STORE_SAVE
 from hass_client.sandbox import SandboxRuntime
 import pytest
@@ -153,7 +153,7 @@ async def test_shutdown_returns_restore_state_payload(
 
     assert reply.ok is True
     assert reply.HasField("restore_state")
-    restore_payload = struct_to_dict(reply.restore_state)
+    restore_payload = decode_json_dict(reply.restore_state)
     assert restore_payload["version"] == restore_state.STORAGE_VERSION
     assert restore_payload["key"] == restore_state.STORAGE_KEY
     entity_ids = [item["state"]["entity_id"] for item in restore_payload["data"]]
@@ -223,7 +223,7 @@ async def test_shutdown_flushes_pending_delay_save(
     save_keys = [save.key for save in saves]
     assert "phase12_test" in save_keys
     saved = next(save for save in saves if save.key == "phase12_test")
-    assert struct_to_dict(saved.data)["data"] == {"pending": True}
+    assert decode_json_dict(saved.data)["data"] == {"pending": True}
     capsys.readouterr()
 
 

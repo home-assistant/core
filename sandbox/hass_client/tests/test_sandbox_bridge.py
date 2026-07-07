@@ -24,7 +24,7 @@ from hass_client._proto import sandbox_pb2 as pb
 from hass_client.channel import Channel, ChannelRemoteError
 from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.flow_runner import FlowRunner
-from hass_client.messages import struct_to_dict
+from hass_client.messages import decode_json_dict, encode_json
 from hass_client.sandbox_bridge import ChannelSandboxBridge
 from hass_client.testing._jsoncodec import JsonCodec
 import pytest
@@ -317,13 +317,13 @@ async def test_channel_bridge_maps_store_rpcs() -> None:
     removed: list[str] = []
 
     async def _on_save(msg: pb.StoreSave) -> pb.StoreSaveResult:
-        saved[msg.key] = struct_to_dict(msg.data)
+        saved[msg.key] = decode_json_dict(msg.data)
         return pb.StoreSaveResult(ok=True)
 
     async def _on_load(msg: pb.StoreLoad) -> pb.StoreLoadResult:
         result = pb.StoreLoadResult()
         if msg.key in saved:
-            result.data.update(saved[msg.key])
+            result.data = encode_json(saved[msg.key])
         return result
 
     async def _on_remove(msg: pb.StoreRemove) -> pb.StoreRemoveResult:
@@ -342,9 +342,8 @@ async def test_channel_bridge_maps_store_rpcs() -> None:
         await bridge.async_store_save("wire", dict(wrapped))
 
         assert saved["wire"]["data"] == {"k": "v"}
-        # ``async_store_load`` returns a plain dict (struct_to_dict of the
-        # wrapped envelope); Struct round-trips numbers as float but ``==``
-        # still holds against the saved dict.
+        # ``async_store_load`` returns a plain dict (decoded from the
+        # wrapped JSON envelope), numbers included with native types.
         assert await bridge.async_store_load("wire") == saved["wire"]
 
         await bridge.async_store_remove("wire")

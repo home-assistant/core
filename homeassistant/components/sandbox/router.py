@@ -29,7 +29,7 @@ from ._proto import sandbox_pb2 as pb
 from .channel import ChannelClosedError, ChannelRemoteError
 from .classifier import SandboxAssignment, classify
 from .manager import SandboxManager
-from .messages import dict_to_struct
+from .messages import encode_json
 from .protocol import MSG_ENTRY_SETUP, MSG_ENTRY_UNLOAD
 from .proxy_flow import SandboxFlowProxy
 from .sources import SandboxSourceError, async_resolve_integration_source
@@ -247,8 +247,8 @@ async def _entry_setup_payload(
         entry_id=entry.entry_id,
         domain=entry.domain,
         title=entry.title,
-        data=dict_to_struct(dict(entry.data)),
-        options=dict_to_struct(dict(entry.options)),
+        data=encode_json(dict(entry.data)),
+        options=encode_json(dict(entry.options)),
         source=entry.source,
         version=entry.version,
         minor_version=entry.minor_version,

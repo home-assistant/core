@@ -26,8 +26,9 @@ from homeassistant.components.sandbox.bridge import _CONTEXT_TTL, SandboxBridge
 from homeassistant.components.sandbox.channel import Frame
 from homeassistant.components.sandbox.codec_protobuf import ProtobufCodec
 from homeassistant.components.sandbox.messages import (
+    decode_json_dict,
+    encode_json,
     make_entity_description,
-    struct_to_dict,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant
@@ -79,7 +80,7 @@ def test_protobuf_codec_round_trip_is_byte_identical() -> None:
     assert decoded.payload.info.description.name == "Kitchen"
     assert decoded.payload.info.description.supported_features == 3
     assert decoded.payload.initial.state == "on"
-    assert struct_to_dict(decoded.payload.initial.capabilities) == {
+    assert decode_json_dict(decoded.payload.initial.capabilities) == {
         "supported_color_modes": ["onoff", "brightness"]
     }
 
@@ -249,7 +250,7 @@ async def test_state_changed_unknown_context_gets_fresh_no_user(
         changed = pb.StateChanged(
             sandbox_entity_id="light.lamp", state="on", context_id="sandbox-ctx-1"
         )
-        changed.attributes.update({"color_mode": "onoff"})
+        changed.attributes = encode_json({"color_mode": "onoff"})
         await sandbox_channel.push("sandbox/state_changed", changed)
 
         for _ in range(200):

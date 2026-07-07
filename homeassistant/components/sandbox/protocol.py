@@ -13,7 +13,7 @@ generated from ``sandbox/proto/sandbox.proto``. The payload shapes described
 below are the *logical* contract for each call — they are carried as those
 typed proto messages, not free-form dicts (only genuinely dynamic fields, e.g.
 ``service_data`` / state attributes / serialized voluptuous schemas, cross
-as ``Struct`` / ``ListValue``). A registry-free line-oriented JSON codec lives
+as orjson-encoded JSON ``bytes``). A registry-free line-oriented JSON codec lives
 in the test helpers as the channel-core test/debug wire.
 
 Main → Sandbox calls:

@@ -35,7 +35,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from ._proto import sandbox_pb2 as pb
 from .channel import ChannelClosedError, ChannelRemoteError
-from .messages import dict_to_struct, listvalue_to_list, struct_to_dict
+from .messages import decode_json, decode_json_dict, encode_json
 from .schema_bridge import reconstruct_schema
 
 if TYPE_CHECKING:
@@ -49,14 +49,14 @@ _BACKGROUND_ABORTS: set = set()
 
 
 def _to_jsonable(value: Any) -> Any:
-    """Coerce a flow ``context`` / first-step payload into Struct-safe data.
+    """Coerce a flow ``context`` / first-step payload into plain JSON data.
 
-    Discovery flows carry objects a :class:`Struct` can't hold: the
+    Discovery flows carry objects with no generic JSON shape: the
     ``*ServiceInfo`` dataclass as the first-step ``user_input`` (with
     ``IPv4Address`` fields, sets, …) and a :class:`DiscoveryKey` dataclass in
-    ``context``. Walk the structure into plain JSON primitives so
-    :func:`dict_to_struct` succeeds; the sandbox side rebuilds the real objects
-    from the same field names (see ``flow_runner._rehydrate_discovery``).
+    ``context``. Walk the structure into plain JSON primitives, flattening
+    dataclasses to per-field dicts, so the sandbox side rebuilds the real
+    objects from the same field names (see ``flow_runner._rehydrate_discovery``).
     """
     if isinstance(value, Mapping):
         return {str(key): _to_jsonable(val) for key, val in value.items()}
@@ -163,10 +163,10 @@ class SandboxFlowProxy(ConfigFlow):
                 # DISCOVERY, …) gets its discovery payload here.
                 request = pb.FlowInit(
                     handler=self._handler_key,
-                    context=dict_to_struct(_to_jsonable(dict(self.context))),
+                    context=encode_json(_to_jsonable(dict(self.context))),
                 )
                 if user_input is not None:
-                    request.data.CopyFrom(dict_to_struct(_to_jsonable(user_input)))
+                    request.data = encode_json(_to_jsonable(user_input))
                 result = await channel.call("sandbox/flow_init", request)
                 self._sandbox_flow_id = (
                     result.flow_id if result.HasField("flow_id") else None
@@ -179,9 +179,9 @@ class SandboxFlowProxy(ConfigFlow):
                     # as a ``{"next_step_id": <chosen>}`` selection on its menu
                     # step, not a fresh step call.
                     self._awaiting_menu_selection = False
-                    step.user_input.CopyFrom(dict_to_struct({"next_step_id": step_id}))
+                    step.user_input = encode_json({"next_step_id": step_id})
                 elif user_input is not None:
-                    step.user_input.CopyFrom(dict_to_struct(user_input))
+                    step.user_input = encode_json(user_input)
                 result = await channel.call("sandbox/flow_step", step)
         except ChannelClosedError:
             self._terminated = True
@@ -203,8 +203,9 @@ class SandboxFlowProxy(ConfigFlow):
             return self.async_abort(reason="sandbox_flow_error")
         except (TypeError, ValueError) as err:
             # Backstop: an unmapped payload type slipped past ``_to_jsonable``
-            # and ``Struct.update`` rejected it. Abort cleanly rather than let
-            # the marshalling exception crash the flow unhandled.
+            # and ``encode_json`` rejected it (orjson raises a TypeError
+            # subclass). Abort cleanly rather than let the marshalling
+            # exception crash the flow unhandled.
             _LOGGER.warning(
                 "Sandbox %r could not marshal %s step %s payload: %s; aborting",
                 self._sandbox_group,
@@ -229,7 +230,7 @@ class SandboxFlowProxy(ConfigFlow):
         """
         if not result.HasField("context"):
             return
-        remote = struct_to_dict(result.context)
+        remote = decode_json_dict(result.context)
         if "unique_id" not in remote:
             return
         unique_id = remote["unique_id"]
@@ -250,15 +251,15 @@ class SandboxFlowProxy(ConfigFlow):
         """
         result_type = FlowResultType(result.type)
         placeholders = (
-            struct_to_dict(result.description_placeholders)
+            decode_json_dict(result.description_placeholders)
             if result.HasField("description_placeholders")
             else None
         )
 
         if result_type is FlowResultType.CREATE_ENTRY:
-            entry_data = struct_to_dict(result.data)
+            entry_data = decode_json_dict(result.data)
             options = (
-                struct_to_dict(result.options) if result.HasField("options") else None
+                decode_json_dict(result.options) if result.HasField("options") else None
             )
             self._terminated = True
             # ``async_create_entry`` stamps the created result's
@@ -302,7 +303,7 @@ class SandboxFlowProxy(ConfigFlow):
             )
 
         if result_type is FlowResultType.FORM:
-            data_schema = reconstruct_schema(listvalue_to_list(result.data_schema))
+            data_schema = reconstruct_schema(decode_json(result.data_schema))
             if data_schema is None and result.has_data_schema:
                 _LOGGER.debug(
                     "Sandbox %r returned a FORM with an unserialisable"
@@ -310,7 +311,7 @@ class SandboxFlowProxy(ConfigFlow):
                     self._sandbox_group,
                 )
             errors = (
-                struct_to_dict(result.errors) if result.HasField("errors") else None
+                decode_json_dict(result.errors) if result.HasField("errors") else None
             )
             return self.async_show_form(
                 step_id=result.step_id if result.HasField("step_id") else step_id,
@@ -323,7 +324,7 @@ class SandboxFlowProxy(ConfigFlow):
 
         if result_type is FlowResultType.MENU:
             menu_options = _reconstruct_menu_options(
-                listvalue_to_list(result.menu_options)
+                decode_json(result.menu_options) or []
             )
             # The framework will dispatch ``async_step_<chosen>`` for the
             # option the user picks; mark that the next forwarded step is a

@@ -10,7 +10,7 @@ from hass_client.channel import Channel
 from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.event_mirror import EventMirror
 from hass_client.flow_runner import FlowRunner
-from hass_client.messages import struct_to_dict
+from hass_client.messages import decode_json_dict
 import pytest
 
 
@@ -94,7 +94,7 @@ async def test_owned_domain_event_is_forwarded(
 
     assert len(forwarded) == 1
     assert forwarded[0].event_type == "zha_event"
-    assert struct_to_dict(forwarded[0].event_data)["command"] == "on"
+    assert decode_json_dict(forwarded[0].event_data)["command"] == "on"
 
     await mirror.async_stop()
 

@@ -13,7 +13,6 @@ save, same channel error handling. The difference is *how* it's wired —
 at module scope.
 """
 
-import json
 import logging
 from typing import Any
 
@@ -22,7 +21,7 @@ from homeassistant.util.json import SerializationError
 
 from ._proto import sandbox_pb2 as pb
 from .channel import Channel, ChannelClosedError, ChannelRemoteError
-from .messages import dict_to_struct, struct_to_dict
+from .messages import decode_json_dict
 from .protocol import MSG_STORE_LOAD, MSG_STORE_REMOVE, MSG_STORE_SAVE
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,30 +56,31 @@ class ChannelSandboxBridge:
             return None
         if not result.HasField("data"):
             return None
-        return struct_to_dict(result.data)
+        return decode_json_dict(result.data)
 
     async def async_store_save(self, key: str, data: Any) -> None:
         """Push the wrapped payload to main instead of writing to disk.
 
         ``Store`` callers may hand us HA-specific types (``Fragment`` from
         ``State.json_fragment``, ``set``/``tuple``, ``datetime``, ``Path``,
-        ``as_dict``-shaped objects). The channel transports plain JSON, so
-        we run the payload through orjson's HA-aware encoder first and parse
-        the resulting bytes back to primitives before handing it off — the
-        same trip ``Store.async_save`` would take on its way to disk, just
-        intercepted before the bytes hit a file.
+        ``as_dict``-shaped objects). The wire field carries JSON bytes, so
+        the payload is run through orjson's HA-aware encoder — the same trip
+        ``Store.async_save`` would take on its way to disk — and the bytes
+        ship as-is, no re-parse.
         """
         if "data_func" in data:
             data["data"] = data.pop("data_func")()
         try:
-            _mode, json_bytes = json_helper.prepare_save_json(data, encoder=None)
-            payload = json.loads(json_bytes)
+            _mode, json_data = json_helper.prepare_save_json(data, encoder=None)
         except SerializationError:
             _LOGGER.exception("sandbox store[%s]: payload not serialisable", key)
             return
+        json_bytes = (
+            json_data if isinstance(json_data, bytes) else json_data.encode("utf-8")
+        )
         try:
             await self._channel.call(
-                MSG_STORE_SAVE, pb.StoreSave(key=key, data=dict_to_struct(payload))
+                MSG_STORE_SAVE, pb.StoreSave(key=key, data=json_bytes)
             )
         except ChannelClosedError:
             _LOGGER.warning("sandbox store[%s]: channel closed mid-save", key)

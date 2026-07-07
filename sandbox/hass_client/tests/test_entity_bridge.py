@@ -23,7 +23,7 @@ from hass_client.channel import Channel
 from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.entity_bridge import EntityBridge
 from hass_client.flow_runner import FlowRunner
-from hass_client.messages import struct_to_dict
+from hass_client.messages import decode_json_dict
 import pytest
 
 from homeassistant.config_entries import ConfigEntry
@@ -290,7 +290,7 @@ async def test_bridge_emits_register_and_state_pushes(
     assert len(state_calls) == 1
     assert state_calls[0].sandbox_entity_id == "demo.lamp"
     assert state_calls[0].state == "on"
-    assert struct_to_dict(state_calls[0].attributes)["brightness"] == 200
+    assert decode_json_dict(state_calls[0].attributes)["brightness"] == 200
 
     await bridge.async_stop()
 
@@ -300,9 +300,9 @@ async def test_state_push_serialises_datetime_attributes(
 ) -> None:
     """Datetime attribute values survive the push path as ISO strings.
 
-    ``Struct.update`` rejects a raw datetime with ValueError inside the
+    ``encode_json``'s HA-aware encoder coerces the raw datetime inside the
     fire-and-forget push task — the push must arrive with the value
-    coerced via ``json_safe`` instead of the task dying.
+    serialised instead of the task dying.
     """
     main, sandbox = channels
     hass, component = hass_with_demo_component
@@ -344,7 +344,7 @@ async def test_state_push_serialises_datetime_attributes(
 
     assert len(state_calls) == 1
     assert state_calls[0].state == "on"
-    attributes = struct_to_dict(state_calls[0].attributes)
+    attributes = decode_json_dict(state_calls[0].attributes)
     assert attributes["detected_at"] == detected_at.isoformat()
 
     await bridge.async_stop()
@@ -478,7 +478,7 @@ async def test_state_update_during_register_is_flushed(
 
     assert len(state_calls) == 1
     assert state_calls[0].state == "on"
-    assert struct_to_dict(state_calls[0].attributes)["brightness"] == 200
+    assert decode_json_dict(state_calls[0].attributes)["brightness"] == 200
 
     await bridge.async_stop()
 
