@@ -1779,7 +1779,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_events[mock_doorbell][event.mock_doorbell_button-entry]
+# name: test_events[mock_doorbell][event.mock_doorbell_doorbell-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1787,7 +1787,7 @@
     'area_id': None,
     'capabilities': dict({
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
-        'initial_press',
+        'ring',
         'short_release',
         'long_press',
         'long_release',
@@ -1800,7 +1800,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.mock_doorbell_button',
+    'entity_id': 'event.mock_doorbell_doorbell',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1808,36 +1808,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Button',
+    'object_id_base': 'Doorbell',
     'options': dict({
     }),
-    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
     'original_icon': None,
-    'original_name': 'Button',
+    'original_name': 'Doorbell',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'button',
-    'unique_id': '00000000000004D2-000000000000003F-MatterNodeDevice-1-GenericSwitch-59-1',
+    'translation_key': 'doorbell',
+    'unique_id': '00000000000004D2-000000000000003F-MatterNodeDevice-1-Doorbell-59-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[mock_doorbell][event.mock_doorbell_button-state]
+# name: test_events[mock_doorbell][event.mock_doorbell_doorbell-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'doorbell',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
-        'initial_press',
+        'ring',
         'short_release',
         'long_press',
         'long_release',
       ]),
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Doorbell Button',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Doorbell Doorbell',
     }),
     'context': <ANY>,
-    'entity_id': 'event.mock_doorbell_button',
+    'entity_id': 'event.mock_doorbell_doorbell',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

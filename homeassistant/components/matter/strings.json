@@ -196,6 +196,28 @@
             }
           }
         }
+      },
+      "doorbell": {
+        "name": "Doorbell",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "ring": "Ring",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
       }
     },
     "fan": {
