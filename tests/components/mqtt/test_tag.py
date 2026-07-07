@@ -570,24 +570,41 @@ async def test_cleanup_tag(
     async_fire_mqtt_message(hass, "homeassistant/tag/bla2/config", data2)
     await hass.async_block_till_done()
 
-    # Verify device registry entries are created
+    # Verify device registry entries are created. Identifiers are unique per config
+    # entry, so the test config entry and MQTT get separate "helloworld" devices
     device_entry1 = device_registry.async_get_device(
-        identifiers={("mqtt", "helloworld")}
+        identifiers={("mqtt", "helloworld")},
+        config_entry_id=config_entry.entry_id,
     )
     assert device_entry1 is not None
-    assert device_entry1.config_entries == {config_entry.entry_id, mqtt_entry.entry_id}
+    assert device_entry1.config_entries == {config_entry.entry_id}
+    mqtt_device_entry1 = device_registry.async_get_device(
+        identifiers={("mqtt", "helloworld")},
+        config_entry_id=mqtt_entry.entry_id,
+    )
+    assert mqtt_device_entry1 is not None
+    assert mqtt_device_entry1.config_entries == {mqtt_entry.entry_id}
     device_entry2 = device_registry.async_get_device(identifiers={("mqtt", "hejhopp")})
     assert device_entry2 is not None
 
-    # Remove other config entry from the device
+    # Removing the test config entry deletes its device; the MQTT device is untouched
+    # and MQTT does not clear its discovery topic
     device_registry.async_update_device(
         device_entry1.id, remove_config_entry_id=config_entry.entry_id
     )
-    device_entry1 = device_registry.async_get_device(
-        identifiers={("mqtt", "helloworld")}
+    assert (
+        device_registry.async_get_device(
+            identifiers={("mqtt", "helloworld")},
+            config_entry_id=config_entry.entry_id,
+        )
+        is None
     )
-    assert device_entry1 is not None
-    assert device_entry1.config_entries == {mqtt_entry.entry_id}
+    mqtt_device_entry1 = device_registry.async_get_device(
+        identifiers={("mqtt", "helloworld")},
+        config_entry_id=mqtt_entry.entry_id,
+    )
+    assert mqtt_device_entry1 is not None
+    assert mqtt_device_entry1.config_entries == {mqtt_entry.entry_id}
     device_entry2 = device_registry.async_get_device(identifiers={("mqtt", "hejhopp")})
     assert device_entry2 is not None
     mqtt_mock.async_publish.assert_not_called()
@@ -595,7 +612,7 @@ async def test_cleanup_tag(
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     response = await ws_client.remove_device(
-        device_entry1.id, mqtt_config_entry.entry_id
+        mqtt_device_entry1.id, mqtt_config_entry.entry_id
     )
     assert response["success"]
     await hass.async_block_till_done()
