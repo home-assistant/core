@@ -107,11 +107,10 @@ class UnifiEntityLoader:
         """Restore recently seen inactive clients and prune stale ones.
 
         The UniFi controller keeps a record of every client it has ever seen.
-        Restoring all of them on every startup is what makes installations pile
-        up thousands of stale client devices. Only clients seen within the
-        retention window, or explicitly selected or blocked, are restored.
-        Trackers falling outside that window are removed together with their
-        device so the registry stops growing unbounded.
+        Only clients seen within the retention window, or explicitly selected
+        or blocked, are restored. Trackers falling outside that window are
+        removed together with their device so the registry does not grow
+        unbounded.
         """
         config = self.hub.config
         api = self.hub.api
