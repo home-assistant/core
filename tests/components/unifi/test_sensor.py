@@ -598,14 +598,7 @@ async def test_wired_client_speed_sensor_not_created_when_untracked(
     device_registry: dr.DeviceRegistry,
     client_payload: list[dict[str, Any]],
 ) -> None:
-    """Verify untracked wired clients do not create a link speed sensor or device.
-
-    With client tracking disabled the link speed sensor must not be created for
-    wired clients. The sensor is disabled by default, but the device registry
-    entry is created before that check, so an untracked wired client would
-    otherwise still spawn a client device. This is the root cause of UniFi
-    installs ending up with thousands of phantom client devices.
-    """
+    """Verify untracked wired clients create neither a link speed sensor nor a device."""
     assert entity_registry.async_get("sensor.wired_client_link_speed") is None
     assert (
         device_registry.async_get_device(

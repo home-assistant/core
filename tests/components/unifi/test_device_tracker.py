@@ -638,26 +638,27 @@ async def test_pruning_stale_restored_clients(
     config_entry_factory: ConfigEntryFactoryType,
     clients_all_payload: list[dict[str, Any]],
 ) -> None:
-    """Restore recently seen inactive clients but prune stale ones and their device.
-
-    The controller keeps every client it has ever seen. Restoring all of them on
-    every startup is what made installations pile up thousands of stale client
-    devices, so clients seen outside the retention window are removed together
-    with their device instead of being resurrected again.
-    """
+    """Restore recently seen inactive clients but prune stale ones and their device."""
     recent, stale = clients_all_payload
+    # Client with a tracker but absent from clients_all, e.g. a failed fetch
+    absent_mac = "00:00:00:00:00:07"
+
     entries: dict[str, er.RegistryEntry] = {}
-    for client in clients_all_payload:
-        entries[client["mac"]] = entity_registry.async_get_or_create(
+    for mac, hostname in (
+        (recent["mac"], "recent"),
+        (stale["mac"], "stale"),
+        (absent_mac, "absent"),
+    ):
+        entries[mac] = entity_registry.async_get_or_create(
             TRACKER_DOMAIN,
             DOMAIN,
-            f"site_id-{client['mac']}",
-            suggested_object_id=client["hostname"],
+            f"site_id-{mac}",
+            suggested_object_id=hostname,
             config_entry=config_entry,
         )
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, client["mac"])},
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
         )
 
     await config_entry_factory()
@@ -677,6 +678,12 @@ async def test_pruning_stale_restored_clients(
             connections={(dr.CONNECTION_NETWORK_MAC, stale["mac"])}
         )
         is None
+    )
+
+    # Client absent from clients_all is left untouched, never pruned on missing data
+    assert entity_registry.async_get(entries[absent_mac].entity_id)
+    assert device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, absent_mac)}
     )
 
 

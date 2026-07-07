@@ -133,8 +133,13 @@ class UnifiEntityLoader:
             if mac in api.clients or mac in always_restore:
                 continue
 
-            client = api.clients_all.get(mac)
-            if client is not None and not self._client_is_stale(client, now):
+            # Absent means the controller no longer reports it or the
+            # clients_all fetch failed this cycle. Never prune on that, a failed
+            # fetch would wipe every tracker and its device.
+            if (client := api.clients_all.get(mac)) is None:
+                continue
+
+            if not self._client_is_stale(client, now):
                 api.clients.process_raw([dict(client.raw)])
                 continue
 
