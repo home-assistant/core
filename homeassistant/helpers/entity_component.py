@@ -203,6 +203,26 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         await platform.async_reset()
         return True
 
+    @callback
+    def async_register_remote_platform(
+        self, config_entry: ConfigEntry, platform: EntityPlatform
+    ) -> None:
+        """Register a pre-built EntityPlatform for a remote integration.
+
+        Used by ``sandbox`` to attach a proxy ``EntityPlatform`` whose
+        entities live on this Home Assistant instance but whose owning
+        integration runs in a child process. The platform is keyed by the
+        config entry just like ``async_setup_entry`` keys its own; a later
+        ``async_unload_entry`` removes it the same way.
+        """
+        key = config_entry.entry_id
+        if key in self._platforms:
+            raise ValueError(
+                f"Config entry {config_entry.title} ({key}) for {self.domain}"
+                " has already been setup!"
+            )
+        self._platforms[key] = platform
+
     async def async_extract_from_service(
         self, service_call: ServiceCall, expand_group: bool = True
     ) -> list[_EntityT]:

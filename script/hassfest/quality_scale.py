@@ -2071,6 +2071,7 @@ NO_QUALITY_SCALE = [
     "raspberry_pi",
     "recovery_mode",
     "repairs",
+    "sandbox",
     "schedule",
     "script",
     "search",

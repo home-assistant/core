@@ -1,0 +1,11 @@
+{
+  "domain": "sandbox",
+  "name": "Sandbox",
+  "codeowners": [],
+  "dependencies": ["websocket_api"],
+  "documentation": "https://www.home-assistant.io/integrations/sandbox",
+  "integration_type": "system",
+  "iot_class": "local_push",
+  "quality_scale": "internal",
+  "requirements": ["protobuf==6.32.0"]
+}

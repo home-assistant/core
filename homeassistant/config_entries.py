@@ -21,7 +21,7 @@ from functools import cache
 import logging
 from random import randint
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Self, TypedDict, cast, override
+from typing import TYPE_CHECKING, Any, Protocol, Self, TypedDict, cast, override
 
 from async_interrupt import interrupt
 from propcache.api import cached_property
@@ -287,6 +287,7 @@ UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {
     "pref_disable_polling",
     "minor_version",
     "version",
+    "sandbox",
 }
 
 
@@ -311,6 +312,7 @@ class ConfigFlowResult(FlowResult[ConfigFlowContext, str], total=False):
     minor_version: int
     options: Mapping[str, Any]
     result: ConfigEntry
+    sandbox: str
     subentries: Iterable[ConfigSubentryData]
     version: int
 
@@ -427,6 +429,7 @@ class ConfigEntry[_DataT = Any]:
     created_at: datetime
     modified_at: datetime
     discovery_keys: MappingProxyType[str, tuple[DiscoveryKey, ...]]
+    sandbox: str | None
 
     def __init__(
         self,
@@ -442,6 +445,7 @@ class ConfigEntry[_DataT = Any]:
         options: Mapping[str, Any] | None,
         pref_disable_new_entities: bool | None = None,
         pref_disable_polling: bool | None = None,
+        sandbox: str | None = None,
         source: str,
         state: ConfigEntryState = ConfigEntryState.NOT_LOADED,
         subentries_data: Iterable[ConfigSubentryData | ConfigSubentryDataWithId] | None,
@@ -558,6 +562,11 @@ class ConfigEntry[_DataT = Any]:
         _setter(self, "created_at", created_at or utcnow())
         _setter(self, "modified_at", modified_at or utcnow())
         _setter(self, "discovery_keys", discovery_keys)
+
+        # Sandbox group this entry belongs to, or None for non-sandboxed
+        # entries. Set by sandbox at flow completion (CREATE_ENTRY) and
+        # consulted by ConfigEntries.router on every setup/unload.
+        _setter(self, "sandbox", sandbox)
 
     @override
     def __repr__(self) -> str:
@@ -1204,7 +1213,7 @@ class ConfigEntry[_DataT = Any]:
 
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this entry."""
-        return {
+        result: dict[str, Any] = {
             "created_at": self.created_at.isoformat(),
             "data": dict(self.data),
             "discovery_keys": dict(self.discovery_keys),
@@ -1222,6 +1231,11 @@ class ConfigEntry[_DataT = Any]:
             "unique_id": self.unique_id,
             "version": self.version,
         }
+        # Persist sandbox tag only when set, to keep on-disk shape lean
+        # for the common (non-sandboxed) case.
+        if self.sandbox is not None:
+            result["sandbox"] = self.sandbox
+        return result
 
     @callback
     def async_on_unload(
@@ -1813,6 +1827,7 @@ class ConfigEntriesFlowManager(
             domain=result["handler"],
             minor_version=result["minor_version"],
             options=result["options"],
+            sandbox=result.get("sandbox"),
             source=flow.context["source"],
             subentries_data=result["subentries"],
             title=result["title"],
@@ -1850,12 +1865,20 @@ class ConfigEntriesFlowManager(
 
         Handler key is the domain of the component that we want to set up.
         """
-        handler = await _async_get_flow_handler(
-            self.hass, handler_key, self._hass_config
-        )
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
 
+        if (router := self.config_entries.router) is not None and (
+            flow := await router.async_create_flow(
+                handler_key, context=context, data=data
+            )
+        ) is not None:
+            flow.init_step = context["source"]
+            return flow
+
+        handler = await _async_get_flow_handler(
+            self.hass, handler_key, self._hass_config
+        )
         flow = handler()
         flow.init_step = context["source"]
         return flow
@@ -2118,6 +2141,30 @@ class ConfigEntryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
         return data
 
 
+class ConfigEntryRouter(Protocol):
+    """Hook protocol for routing config flows and entry setup elsewhere.
+
+    Currently used by `sandbox` to divert flows and config-entry setup to
+    a sandbox subprocess. Each method returns ``None`` to fall through to
+    the default behaviour and a concrete value to take over.
+    """
+
+    async def async_create_flow(
+        self,
+        handler_key: str,
+        *,
+        context: ConfigFlowContext,
+        data: Any,
+    ) -> ConfigFlow | None:
+        """Return a flow handler that will run the flow, or None to fall through."""
+
+    async def async_setup_entry(self, entry: ConfigEntry) -> bool | None:
+        """Set up the entry and return success, or None to fall through."""
+
+    async def async_unload_entry(self, entry: ConfigEntry) -> bool | None:
+        """Unload the entry and return success, or None to fall through."""
+
+
 class ConfigEntries:
     """Manage the configuration entries.
 
@@ -2133,6 +2180,8 @@ class ConfigEntries:
         self._hass_config = hass_config
         self._entries = ConfigEntryItems(hass)
         self._store = ConfigEntryStore(hass)
+        # Optional hook for diverting flows and entry setup (used by sandbox).
+        self.router: ConfigEntryRouter | None = None
         EntityRegistryDisabledHandler(hass).async_setup()
 
     @callback
@@ -2325,6 +2374,8 @@ class ConfigEntries:
                 options=entry["options"],
                 pref_disable_new_entities=entry["pref_disable_new_entities"],
                 pref_disable_polling=entry["pref_disable_polling"],
+                # Optional — pre-Phase-17 entries don't carry this key.
+                sandbox=entry.get("sandbox"),
                 source=entry["source"],
                 subentries_data=entry["subentries"],
                 title=entry["title"],
@@ -2400,6 +2451,11 @@ class ConfigEntries:
                 f" be in the {ConfigEntryState.NOT_LOADED} state"
             )
 
+        if self.router is not None:
+            result = await self.router.async_setup_entry(entry)
+            if result is not None:
+                return result
+
         # Setup Component if not set up yet
         if entry.domain in self.hass.config.components:
             if _lock:
@@ -2430,6 +2486,14 @@ class ConfigEntries:
                 f" '{entry.entry_id}' cannot be unloaded because it is in the non"
                 f" recoverable state {entry.state}"
             )
+
+        if self.router is not None:
+            result = await self.router.async_unload_entry(entry)
+            if result is not None:
+                entry._async_set_state(  # noqa: SLF001
+                    self.hass, ConfigEntryState.NOT_LOADED, None
+                )
+                return result
 
         if _lock:
             async with entry.setup_lock:
@@ -2531,6 +2595,7 @@ class ConfigEntries:
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
         pref_disable_polling: bool | UndefinedType = UNDEFINED,
+        sandbox: str | None | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         unique_id: str | None | UndefinedType = UNDEFINED,
         version: int | UndefinedType = UNDEFINED,
@@ -2551,6 +2616,7 @@ class ConfigEntries:
             options=options,
             pref_disable_new_entities=pref_disable_new_entities,
             pref_disable_polling=pref_disable_polling,
+            sandbox=sandbox,
             title=title,
             unique_id=unique_id,
             version=version,
@@ -2569,6 +2635,7 @@ class ConfigEntries:
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
         pref_disable_polling: bool | UndefinedType = UNDEFINED,
+        sandbox: str | None | UndefinedType = UNDEFINED,
         subentries: dict[str, ConfigSubentry] | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         unique_id: str | None | UndefinedType = UNDEFINED,
@@ -2619,6 +2686,7 @@ class ConfigEntries:
             ("minor_version", minor_version),
             ("pref_disable_new_entities", pref_disable_new_entities),
             ("pref_disable_polling", pref_disable_polling),
+            ("sandbox", sandbox),
             ("title", title),
             ("version", version),
         ):

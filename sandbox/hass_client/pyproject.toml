@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hass-client"
+version = "0.1.0"
+description = "Sandbox client library — the hass_client runtime for the sandbox protocol."
+readme = "README.md"
+requires-python = ">=3.14.2"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Paulus Schoutsen" }]
+dependencies = [
+  "aiohttp>=3.11.0",
+  "homeassistant",
+  "protobuf==6.32.0",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.3.0",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3.0",
+  "pytest-asyncio>=1.3.0",
+]
+
+[tool.setuptools]
+include-package-data = true
+zip-safe = false
+
+[tool.setuptools.packages.find]
+include = ["hass_client*"]
+
+[tool.setuptools.package-data]
+hass_client = ["py.typed"]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.uv.sources]
+homeassistant = { path = "../..", editable = true }
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

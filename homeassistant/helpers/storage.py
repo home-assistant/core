@@ -32,6 +32,7 @@ from homeassistant.util.file import WriteError, write_utf8_file, write_utf8_file
 from homeassistant.util.hass_dict import HassKey
 
 from . import json as json_helper
+from .sandbox_context import current_sandbox
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
 # mypy: no-check-untyped-defs
@@ -357,6 +358,14 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
             # We make a copy because code might assume it's safe to mutate loaded data
             # and we don't want that to mess with what we're trying to store.
             data = deepcopy(data)
+        elif sandbox := current_sandbox.get():
+            # A sandbox runtime routes Store IO to main instead of local
+            # disk. Fetch the wrapped envelope from the bridge; the migration
+            # block below runs unchanged regardless of whether the dict came
+            # from disk or from the bridge (design choice B).
+            data = await sandbox.async_store_load(self.key)
+            if data is None:
+                return None
         elif cache := self._manager.async_fetch(self.key):
             exists, data = cache
             if not exists:
@@ -589,6 +598,17 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
                 _LOGGER.error("Error writing config for %s: %s", self.key, err)
 
     async def _async_write_data(self, data: dict) -> None:
+        if sandbox := current_sandbox.get():
+            # A sandbox runtime routes the wrapped envelope to main instead
+            # of writing to local disk. Branching here (rather than in
+            # async_save) is load-bearing: async_save, async_delay_save, and
+            # the EVENT_HOMEASSISTANT_FINAL_WRITE flush all funnel their
+            # writes through _async_handle_write_data -> _async_write_data,
+            # so a single branch here covers every write path uniformly. The
+            # bridge owns the envelope normalisation (resolving any pending
+            # data_func), orjson preserialise, and transport.
+            await sandbox.async_store_save(self.key, data)
+            return
         if self._serialize_in_event_loop:
             if "data_func" in data:
                 data["data"] = data.pop("data_func")()
@@ -626,6 +646,11 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         self._manager.async_invalidate(self.key)
         self._async_cleanup_delay_listener()
         self._async_cleanup_final_write_listener()
+
+        if sandbox := current_sandbox.get():
+            # A sandbox runtime unlinks on main, not on local disk.
+            await sandbox.async_store_remove(self.key)
+            return
 
         with suppress(FileNotFoundError):
             await self.hass.async_add_executor_job(os.unlink, self.path)

@@ -9548,6 +9548,144 @@ async def test_state_cache_is_cleared_on_entry_disable(hass: HomeAssistant) -> N
     assert loaded["disabled_by"] == "user"
 
 
+def test_sandbox_default_is_none_and_omitted_from_storage() -> None:
+    """An untagged entry leaves ``sandbox`` out of the on-disk payload."""
+    entry = MockConfigEntry(domain="test")
+    assert entry.sandbox is None
+    dict_repr = entry.as_dict()
+    assert "sandbox" not in dict_repr
+    stored = json_loads(json_dumps(entry.as_storage_fragment))
+    assert "sandbox" not in stored
+
+
+def test_sandbox_is_persisted_when_set() -> None:
+    """A tagged entry serialises ``sandbox`` into ``as_dict``/storage."""
+    entry = MockConfigEntry(domain="test", sandbox="built-in")
+    assert entry.sandbox == "built-in"
+    dict_repr = entry.as_dict()
+    assert dict_repr["sandbox"] == "built-in"
+    stored = json_loads(json_dumps(entry.as_storage_fragment))
+    assert stored["sandbox"] == "built-in"
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_sandbox_round_trip_through_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """An entry stored with ``sandbox`` loads back with the field set."""
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": config_entries.STORAGE_VERSION,
+        "minor_version": config_entries.STORAGE_VERSION_MINOR,
+        "key": config_entries.STORAGE_KEY,
+        "data": {
+            "entries": [
+                {
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "data": {"host": "1.2.3.4"},
+                    "disabled_by": None,
+                    "discovery_keys": {},
+                    "domain": "hue",
+                    "entry_id": "abc",
+                    "minor_version": 1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "options": {},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "sandbox": "built-in",
+                    "source": "user",
+                    "subentries": [],
+                    "title": "Hue",
+                    "unique_id": None,
+                    "version": 1,
+                }
+            ]
+        },
+    }
+
+    manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
+
+    entries = manager.async_entries()
+    assert len(entries) == 1
+    assert entries[0].sandbox == "built-in"
+    # entry.data is untouched — the tag rides on the first-class field.
+    assert dict(entries[0].data) == {"host": "1.2.3.4"}
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_sandbox_absent_from_storage_loads_as_none(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Pre-Phase-17 entries with no ``sandbox`` key load with ``sandbox=None``."""
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": config_entries.STORAGE_VERSION,
+        "minor_version": config_entries.STORAGE_VERSION_MINOR,
+        "key": config_entries.STORAGE_KEY,
+        "data": {
+            "entries": [
+                {
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "data": {},
+                    "disabled_by": None,
+                    "discovery_keys": {},
+                    "domain": "sun",
+                    "entry_id": "abc",
+                    "minor_version": 1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "options": {},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "source": "import",
+                    "subentries": [],
+                    "title": "Sun",
+                    "unique_id": None,
+                    "version": 1,
+                }
+            ]
+        },
+    }
+
+    manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
+
+    entries = manager.async_entries()
+    assert len(entries) == 1
+    assert entries[0].sandbox is None
+
+
+async def test_async_update_entry_sets_sandbox(hass: HomeAssistant) -> None:
+    """``async_update_entry(entry, sandbox=...)`` mutates and persists the field."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    assert entry.sandbox is None
+
+    changed = hass.config_entries.async_update_entry(entry, sandbox="built-in")
+    assert changed is True
+    assert entry.sandbox == "built-in"
+
+    # Idempotent update returns False.
+    changed = hass.config_entries.async_update_entry(entry, sandbox="built-in")
+    assert changed is False
+
+    # Storage cache is refreshed so the new value lands on disk.
+    stored = json_loads(json_dumps(entry.as_storage_fragment))
+    assert stored["sandbox"] == "built-in"
+
+    # And it can be cleared back to None.
+    changed = hass.config_entries.async_update_entry(entry, sandbox=None)
+    assert changed is True
+    assert entry.sandbox is None
+    stored = json_loads(json_dumps(entry.as_storage_fragment))
+    assert "sandbox" not in stored
+
+
+def test_sandbox_cannot_be_set_directly() -> None:
+    """``entry.sandbox = ...`` is rejected — must go through update_entry."""
+    entry = MockConfigEntry(domain="test")
+    with pytest.raises(AttributeError):
+        entry.sandbox = "built-in"
+
+
 @pytest.mark.parametrize(
     ("original_unique_id", "new_unique_id", "count"),
     [
