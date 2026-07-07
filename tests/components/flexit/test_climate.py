@@ -1,5 +1,6 @@
 """Tests for the Flexit climate platform."""
 
+import logging
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -30,7 +31,7 @@ ENTITY_ID = "climate.flexit"
 HUB_NAME = "modbus_hub"
 
 # Default register map matching a plausible, "healthy" device response.
-DEFAULT_REGISTERS: dict[tuple[str, int], int] = {
+DEFAULT_REGISTERS: dict[tuple[str, int], int | None] = {
     (CALL_TYPE_REGISTER_HOLDING, 8): 215,  # target_temperature -> 21.5
     (CALL_TYPE_REGISTER_INPUT, 9): 200,  # current_temperature -> 20.0
     (CALL_TYPE_REGISTER_HOLDING, 17): 2,  # fan_mode index -> "Medium"
@@ -78,7 +79,7 @@ async def _setup_flexit(
 ) -> AsyncMock:
     """Set up the flexit climate platform backed by a mocked Modbus hub."""
     hub, mock_call = _mock_hub(
-        registers if registers is not None else DEFAULT_REGISTERS
+        registers if registers is not None else DEFAULT_REGISTERS.copy()
     )
     hass.data.setdefault(DATA_MODBUS_HUBS, {})[HUB_NAME] = hub
 
@@ -225,6 +226,7 @@ async def test_async_set_temperature(hass: HomeAssistant) -> None:
 
 async def test_async_set_temperature_write_failure_does_not_update_state(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a failed Modbus write does not update target_temperature."""
     registers = DEFAULT_REGISTERS.copy()
@@ -232,9 +234,12 @@ async def test_async_set_temperature_write_failure_does_not_update_state(
     mock_call = await _setup_flexit(hass, registers)
     mock_call.side_effect = None
     mock_call.return_value = None
+    caplog.set_level(logging.ERROR, logger="homeassistant.components.flexit.climate")
 
     await async_set_temperature(hass, temperature=22.5, entity_id=ENTITY_ID)
 
+    mock_call.assert_any_await(1, 8, 225, CALL_TYPE_WRITE_REGISTER)
+    assert "Modbus error setting target temperature to Flexit" in caplog.text
     assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] is None
 
 
@@ -250,6 +255,7 @@ async def test_async_set_fan_mode(hass: HomeAssistant) -> None:
 
 async def test_async_set_fan_mode_write_failure_does_not_update_state(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a failed Modbus write does not update fan_mode."""
     registers = DEFAULT_REGISTERS.copy()
@@ -257,7 +263,10 @@ async def test_async_set_fan_mode_write_failure_does_not_update_state(
     mock_call = await _setup_flexit(hass, registers)
     mock_call.side_effect = None
     mock_call.return_value = None
+    caplog.set_level(logging.ERROR, logger="homeassistant.components.flexit.climate")
 
     await async_set_fan_mode(hass, "High", entity_id=ENTITY_ID)
 
+    mock_call.assert_any_await(1, 17, 3, CALL_TYPE_WRITE_REGISTER)
+    assert "Modbus error setting fan mode to Flexit" in caplog.text
     assert hass.states.get(ENTITY_ID).attributes[ATTR_FAN_MODE] is None
