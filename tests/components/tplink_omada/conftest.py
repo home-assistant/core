@@ -5,13 +5,14 @@ from functools import partial
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from tplink_omada_client import OmadaSite
+from tplink_omada_client import OmadaControllerInfo, OmadaSite
 from tplink_omada_client.clients import (
     OmadaConnectedClient,
     OmadaNetworkClient,
     OmadaWiredClient,
     OmadaWirelessClient,
 )
+from tplink_omada_client.definitions import OmadaControllerUpdateInfo
 from tplink_omada_client.devices import (
     OmadaFirmwareUpdate,
     OmadaGateway,
@@ -30,6 +31,34 @@ from tests.common import (
     async_load_json_array_fixture,
     async_load_json_object_fixture,
 )
+
+
+def _mock_controller_update_info() -> OmadaControllerUpdateInfo:
+    """Return mocked controller update information."""
+    return OmadaControllerUpdateInfo(
+        {
+            "hardware": {
+                "upgrade": False,
+                "currentVersion": "6.2.10.17",
+            },
+            "software": {
+                "upgrade": False,
+                "currentVersion": "6.2.10.17",
+            },
+        }
+    )
+
+
+def _mock_controller_info() -> OmadaControllerInfo:
+    """Return mocked controller information."""
+    return OmadaControllerInfo(
+        {
+            "controllerVer": "6.2.10.17",
+            "configured": True,
+            "omadacId": "12345",
+            "type": "OC200",
+        }
+    )
 
 
 @pytest.fixture
@@ -87,7 +116,6 @@ async def mock_omada_site_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMoc
     switch1_ports = [OmadaSwitchPortDetails(p) for p in switch1_ports_data]
     site_client.get_switch_ports = AsyncMock(return_value=switch1_ports)
 
-    # Mock firmware update API
     async def get_firmware_details(
         device: OmadaListDevice,
     ) -> OmadaFirmwareUpdate | None:
@@ -189,6 +217,10 @@ def mock_omada_client(mock_omada_site_client: AsyncMock) -> Generator[MagicMock]
 
         client.get_site_client.return_value = mock_omada_site_client
         client.login.return_value = "12345"
+        client.get_controller_info = AsyncMock(return_value=_mock_controller_info())
+        client.check_firmware_updates = AsyncMock(
+            return_value=_mock_controller_update_info()
+        )
         client.get_controller_name.return_value = "OC200"
         client.get_sites.return_value = [OmadaSite("Display Name", "SiteId")]
         yield client
@@ -206,6 +238,10 @@ def mock_omada_clients_only_client(
         client = client_mock.return_value
 
         client.get_site_client.return_value = mock_omada_clients_only_site_client
+        client.get_controller_info = AsyncMock(return_value=_mock_controller_info())
+        client.check_firmware_updates = AsyncMock(
+            return_value=_mock_controller_update_info()
+        )
         yield client
 
 

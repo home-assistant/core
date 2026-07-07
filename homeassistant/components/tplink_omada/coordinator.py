@@ -5,8 +5,14 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, NamedTuple, override
 
-from tplink_omada_client import OmadaSiteClient, OmadaSwitchPortDetails
+from tplink_omada_client import (
+    OmadaClient,
+    OmadaControllerInfo,
+    OmadaSiteClient,
+    OmadaSwitchPortDetails,
+)
 from tplink_omada_client.clients import OmadaWirelessClient
+from tplink_omada_client.definitions import OmadaControllerUpdateInfo
 from tplink_omada_client.devices import (
     OmadaFirmwareUpdate,
     OmadaGateway,
@@ -65,6 +71,47 @@ class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
     async def poll_update(self) -> dict[str, _T]:
         """Poll the current data from the controller."""
         raise NotImplementedError("Update method not implemented")
+
+
+class ControllerStatus(NamedTuple):
+    """Controller information and update status."""
+
+    info: OmadaControllerInfo
+    updates: OmadaControllerUpdateInfo
+
+
+class OmadaControllerCoordinator(DataUpdateCoordinator[ControllerStatus]):
+    """Coordinator for Omada controller information and update details."""
+
+    config_entry: OmadaConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
+        omada_client: OmadaClient,
+    ) -> None:
+        """Initialize the controller coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="Omada API Data - Controller",
+            update_interval=timedelta(seconds=POLL_DEVICES),
+        )
+        self.omada_client = omada_client
+
+    @override
+    async def _async_update_data(self) -> ControllerStatus:
+        """Fetch controller data from the API."""
+        try:
+            async with asyncio.timeout(10):
+                info = await self.omada_client.get_controller_info()
+                updates = await self.omada_client.check_firmware_updates()
+        except OmadaClientException as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+        return ControllerStatus(info=info, updates=updates)
 
 
 class OmadaSwitchPortCoordinator(OmadaCoordinator[OmadaSwitchPortDetails]):

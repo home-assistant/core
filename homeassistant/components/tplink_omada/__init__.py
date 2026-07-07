@@ -50,7 +50,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 
     try:
         client = await create_omada_client(hass, entry.data)
-        await client.login()
+        controller_id = await client.login()
+        controller_name = await client.get_controller_name()
 
     except (LoginFailed, UnsupportedControllerVersion) as ex:
         raise ConfigEntryAuthFailed(
@@ -67,10 +68,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
         ) from ex
 
     site_client = await client.get_site_client(OmadaSite("", entry.data[CONF_SITE]))
-    controller = OmadaSiteController(hass, entry, site_client)
+    controller = OmadaSiteController(
+        hass, entry, client, site_client, controller_id, controller_name
+    )
     await controller.initialize_first_refresh()
 
     entry.runtime_data = controller
+
+    _register_controller_device(hass, entry)
 
     _remove_old_devices(hass, entry, controller.devices_coordinator.data)
 
@@ -84,12 +89,31 @@ async def async_unload_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bo
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
+def _register_controller_device(
+    hass: HomeAssistant,
+    entry: OmadaConfigEntry,
+) -> None:
+    controller = entry.runtime_data
+    controller_info = controller.controller_coordinator.data.info
+    device_registry = dr.async_get(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, controller.controller_id)},
+        manufacturer="TP-Link",
+        model=controller.controller_name,
+        name=controller.controller_name,
+        sw_version=controller_info.controller_version,
+    )
+
+
 def _remove_old_devices(
     hass: HomeAssistant,
     entry: OmadaConfigEntry,
     omada_devices: dict[str, OmadaListDevice],
 ) -> None:
     device_registry = dr.async_get(hass)
+    controller_id = entry.runtime_data.controller_id
 
     for registered_device in device_registry.devices.get_devices_for_config_entry_id(
         entry.entry_id
@@ -97,7 +121,7 @@ def _remove_old_devices(
         mac = next(
             (i[1] for i in registered_device.identifiers if i[0] == DOMAIN), None
         )
-        if mac and mac not in omada_devices:
+        if mac and mac != controller_id and mac not in omada_devices:
             device_registry.async_update_device(
                 registered_device.id, remove_config_entry_id=entry.entry_id
             )
