@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
 from teslemetry_stream import TeslemetryStreamVehicle
 from teslemetry_stream.const import TeslaLocation
@@ -78,7 +79,9 @@ async def async_setup_entry(
 
     for vehicle in entry.runtime_data.vehicles:
         for description in DESCRIPTIONS:
-            if vehicle.poll or vehicle.firmware < description.streaming_firmware:
+            if vehicle.poll or not firmware_at_least(
+                vehicle.firmware, description.streaming_firmware
+            ):
                 if description.polling_prefix:
                     entities.append(
                         TeslemetryVehiclePollingDeviceTrackerEntity(
