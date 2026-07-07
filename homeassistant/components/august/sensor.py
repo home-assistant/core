@@ -170,7 +170,7 @@ class AugustOperatorSensor(AugustEntity, RestoreSensor):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Restore ATTR_CHANGED_BY on startup.
+        """Restore attributes on startup.
 
         It is likely no longer in the activity log.
         """
