@@ -2,7 +2,13 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from easywave_home_control.codec import SensorLearnPayload, SensorTelegramEvent
+from easywave_home_control.codec import (
+    ButtonFunction,
+    ButtonPushEvent,
+    SensorLearnPayload,
+    SensorTelegramEvent,
+)
+from easywave_home_control.codec.events import EasywaveButton
 
 from homeassistant.components.easywave.const import (
     CONF_BUTTON_COUNT,
@@ -119,13 +125,16 @@ MOCK_SENSOR_SERIAL = "bb" * 16
 NEO_SENSOR_CAPABILITIES = (1 << 4) | (1 << 5)
 
 
-def _make_transmitter_telegram(serial_hex: str = MOCK_TRANSMITTER_SERIAL) -> dict:
+def _make_transmitter_telegram(
+    serial_hex: str = MOCK_TRANSMITTER_SERIAL,
+) -> ButtonPushEvent:
     """Return a mock button-press telegram."""
-    return {
-        "info_type": 0x01,
-        "serial": bytes.fromhex(serial_hex),
-        "button": 0,
-    }
+    return ButtonPushEvent(
+        transmitter_serial=bytes.fromhex(serial_hex),
+        button=EasywaveButton.A,
+        function=ButtonFunction.DEFAULT,
+        should_ignore=False,
+    )
 
 
 def _make_sensor_learn_telegram(

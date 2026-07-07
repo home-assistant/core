@@ -36,15 +36,13 @@ _BUTTON_COUNT_MAP: dict[str, int] = {
 
 
 def _normalize_learned_transmitter(telegram: Any) -> dict[str, Any] | None:
-    """Return learned transmitter data from a codec event or test dict."""
-    if isinstance(telegram, ButtonPushEvent):
-        return {
-            "serial": telegram.transmitter_serial,
-            "button": telegram.button,
-        }
-    if isinstance(telegram, dict) and telegram.get("info_type") == 0x01:
-        return telegram
-    return None
+    """Return learned transmitter data from a codec event."""
+    if not isinstance(telegram, ButtonPushEvent):
+        return None
+    return {
+        "serial": telegram.transmitter_serial,
+        "button": telegram.button,
+    }
 
 
 def _normalize_learned_sensor(telegram: Any) -> dict[str, Any] | None:

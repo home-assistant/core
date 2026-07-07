@@ -53,12 +53,6 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return subentries supported by this handler."""
         return {SUBENTRY_DEVICE: EasywaveDeviceSubentryFlowHandler}
 
-    def _abort_if_hub_already_configured(self) -> ConfigFlowResult | None:
-        """Abort when the RX11 hub is already configured."""
-        if self._async_current_entries(include_ignore=False):
-            return self.async_abort(reason="already_configured")
-        return None
-
     def _abort_if_frequency_not_permitted(
         self, pid: int | None
     ) -> ConfigFlowResult | None:
@@ -88,8 +82,6 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Entry point for adding the RX11 gateway."""
-        if abort := self._abort_if_hub_already_configured():
-            return abort
         return await self.async_step_ports()
 
     async def async_step_ports(
@@ -151,9 +143,6 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
     @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB discovery."""
-        if abort := self._abort_if_hub_already_configured():
-            return abort
-
         vid = int(discovery_info.vid, 16)
         pid = int(discovery_info.pid, 16)
         if (vid, pid) not in SUPPORTED_USB_IDS:

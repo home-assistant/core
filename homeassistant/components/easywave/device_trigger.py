@@ -76,6 +76,22 @@ class _GatewayMarker:
 _GATEWAY_MARKER = _GatewayMarker()
 
 
+def _stored_device_id(stored: Any) -> str | None:
+    """Return a device id from a stored options record."""
+    if not isinstance(stored, dict):
+        return None
+    device_id = stored.get(CONF_DEVICE_ID)
+    return device_id if isinstance(device_id, str) else None
+
+
+def _stored_device_data(stored: Any) -> dict[str, Any] | None:
+    """Return device data from a stored options record."""
+    if not isinstance(stored, dict):
+        return None
+    data = stored.get(CONF_DEVICE_DATA)
+    return data if isinstance(data, dict) else None
+
+
 def _find_easywave_config_entry(
     hass: HomeAssistant, device: dr.DeviceEntry
 ) -> ConfigEntry | None:
@@ -105,7 +121,7 @@ def _find_easywave_config_entry(
         if easywave_id == entry.entry_id:
             return entry
         if any(
-            stored[CONF_DEVICE_ID] == easywave_id
+            _stored_device_id(stored) == easywave_id
             for stored in entry.options.get(CONF_DEVICES, [])
         ):
             return entry
@@ -133,8 +149,9 @@ def _get_device_data(
         return _GATEWAY_MARKER
 
     for stored in entry.options.get(CONF_DEVICES, []):
-        if stored[CONF_DEVICE_ID] == easywave_id:
-            return dict(stored[CONF_DEVICE_DATA])
+        if _stored_device_id(stored) == easywave_id:
+            if (data := _stored_device_data(stored)) is not None:
+                return data
     return None
 
 

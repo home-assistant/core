@@ -442,10 +442,10 @@ class RX11Transceiver:
                 )
                 await asyncio.sleep(wait_time)
 
-        self.hw_version = hw_version or "unknown"
-        self.fw_version = fw_version or "unknown"
+        self.hw_version = hw_version
+        self.fw_version = fw_version
 
-        if not hw_version and not fw_version:
+        if hw_version is None and fw_version is None:
             _LOGGER.warning("Version query failed")
             return False
         return True

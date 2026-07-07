@@ -1,7 +1,6 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "frequency_not_permitted": "This device operates on {frequency}, which is not permitted in your configured Home Assistant region ({country}).",
       "no_devices_found": "No serial ports found. Make sure the RX11 USB Transceiver is plugged in and recognized by the system."
     },

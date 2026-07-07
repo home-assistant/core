@@ -7,6 +7,7 @@ from homeassistant.components.easywave.const import (
     DOMAIN,
     EVENT_EASYWAVE,
     EVENT_TYPE_BUTTON_PRESS,
+    EVENT_TYPE_BUTTON_RELEASE,
     EVENT_TYPE_GATEWAY_CONNECTED,
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
@@ -164,6 +165,62 @@ async def test_easywave_gateway_connected_trigger_fires(
     await hass.async_block_till_done()
 
     assert len(service_calls) == 1
+
+
+async def test_easywave_button_press_a_trigger_ignores_non_matching_events(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Purpose-specific trigger ignores events with wrong type, device, or subtype."""
+    await _async_setup_entry(hass)
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)}
+    )
+    assert device is not None
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "trigger": "easywave.button_press_a",
+                    "target": {"device_id": device.id},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(
+        EVENT_EASYWAVE,
+        {
+            "device_id": device.id,
+            "type": EVENT_TYPE_BUTTON_RELEASE,
+            "subtype": "released",
+        },
+    )
+    hass.bus.async_fire(
+        EVENT_EASYWAVE,
+        {
+            "device_id": "other-device",
+            "type": EVENT_TYPE_BUTTON_PRESS,
+            "subtype": "a",
+        },
+    )
+    hass.bus.async_fire(
+        EVENT_EASYWAVE,
+        {
+            "device_id": device.id,
+            "type": EVENT_TYPE_BUTTON_PRESS,
+            "subtype": "b",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert service_calls == []
 
 
 async def test_get_triggers_for_target_transmitter(

@@ -10,6 +10,7 @@ from homeassistant.components import automation, device_automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.easywave import device_trigger
 from homeassistant.components.easywave.const import (
+    CONF_DEVICE_DATA,
     DOMAIN,
     EVENT_EASYWAVE,
     EVENT_TYPE_BATTERY_LOW,
@@ -464,6 +465,26 @@ async def test_find_easywave_config_entry_returns_none_for_unknown_identifier(
 async def test_get_trigger_capabilities(hass: HomeAssistant) -> None:
     """Device trigger capabilities are empty for Easywave."""
     assert await device_trigger.async_get_trigger_capabilities(hass, {}) == {}
+
+
+def test_stored_device_helpers_ignore_invalid_records() -> None:
+    """Malformed stored device records are ignored safely."""
+    assert device_trigger._stored_device_id("invalid") is None
+    assert device_trigger._stored_device_data("invalid") is None
+    assert device_trigger._stored_device_id({CONF_DEVICE_ID: 123}) is None
+    assert device_trigger._stored_device_data({CONF_DEVICE_ID: "device"}) is None
+    assert (
+        device_trigger._stored_device_data(
+            {CONF_DEVICE_ID: "device", CONF_DEVICE_DATA: "invalid"}
+        )
+        is None
+    )
+    assert (
+        device_trigger._stored_device_data(
+            {CONF_DEVICE_ID: "device", CONF_DEVICE_DATA: {}}
+        )
+        == {}
+    )
 
 
 async def test_get_triggers_ignores_non_dict_device_data(
