@@ -47,7 +47,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
         raise ConfigEntryNotReady from err
 
     shc_info = session.information
-    if shc_info.updateState.name == "UPDATE_AVAILABLE":
+    # SHCSession is constructed with lazy=False above, so its constructor runs
+    # _enumerate_all() -> authenticate() synchronously: authenticate() either
+    # raises (in which case the SHCSession(...) call above already raised, and
+    # we never reach this line) or unconditionally populates
+    # _shc_information. So `information` is guaranteed non-None here.
+    assert shc_info is not None
+    # get_unique_id() (called from SHCInformation.__init__ above) always sets
+    # _unique_id to a str before returning, on every code path that doesn't
+    # raise SHCConnectionError -- so unique_id is also guaranteed non-None here.
+    assert shc_info.unique_id is not None
+    if (
+        shc_info.updateState is not None
+        and shc_info.updateState.name == "UPDATE_AVAILABLE"
+    ):
         _LOGGER.warning("Please check for software updates in the Bosch Smart Home App")
 
     entry.runtime_data = session

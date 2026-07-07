@@ -1,6 +1,6 @@
 """Bosch Smart Home Controller base entity."""
 
-from typing import override
+from typing import Any, override
 
 from boschshcpy import SHCDevice, SHCIntrusionSystem
 
@@ -13,7 +13,7 @@ from .const import DOMAIN
 
 
 async def async_remove_devices(
-    hass: HomeAssistant, entity: SHCBaseEntity, entry_id: str
+    hass: HomeAssistant, entity: SHCBaseEntity[Any], entry_id: str
 ) -> None:
     """Get item that is removed from session."""
     dev_registry = dr.async_get(hass)
@@ -22,17 +22,21 @@ async def async_remove_devices(
         dev_registry.async_update_device(device.id, remove_config_entry_id=entry_id)
 
 
-class SHCBaseEntity(Entity):
+# SHCBaseEntity is shared by SHCEntity (always backed by a real SHCDevice) and
+# SHCDomainEntity (always backed by the single SHCIntrusionSystem domain
+# service) -- the two are never interchangeable at runtime. Binding each
+# subclass hierarchy to its own concrete type parameter (rather than leaving
+# `_device` typed as the full union on the shared base) lets mypy know which
+# attributes are actually available at each call site.
+class SHCBaseEntity[_DeviceT: (SHCDevice | SHCIntrusionSystem)](Entity):
     """Base representation of a SHC entity."""
 
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(
-        self, device: SHCDevice | SHCIntrusionSystem, parent_id: str, entry_id: str
-    ) -> None:
+    def __init__(self, device: _DeviceT, parent_id: str, entry_id: str) -> None:
         """Initialize the generic SHC device."""
-        self._device = device
+        self._device: _DeviceT = device
         self._entry_id = entry_id
 
     @override
@@ -60,10 +64,10 @@ class SHCBaseEntity(Entity):
         return self._device.id
 
 
-class SHCEntity(SHCBaseEntity):
+class SHCEntity[_SHCDeviceT: SHCDevice](SHCBaseEntity[_SHCDeviceT]):
     """Representation of a SHC device entity."""
 
-    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+    def __init__(self, device: _SHCDeviceT, parent_id: str, entry_id: str) -> None:
         """Initialize generic SHC device."""
         self._attr_unique_id = device.serial
         self._attr_device_info = DeviceInfo(
@@ -100,7 +104,7 @@ class SHCEntity(SHCBaseEntity):
         return self._device.status == "AVAILABLE"
 
 
-class SHCDomainEntity(SHCBaseEntity):
+class SHCDomainEntity(SHCBaseEntity[SHCIntrusionSystem]):
     """Representation of a SHC domain service entity."""
 
     def __init__(
