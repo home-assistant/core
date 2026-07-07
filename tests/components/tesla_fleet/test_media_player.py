@@ -61,8 +61,7 @@ async def test_media_player_volume_step(
         )
 
     # One notch up from the vehicle_data fixture's audio_volume of 1.6667 in a
-    # 10.333333 range: (1.6667 + 0.333333) / 10.333333. The old inverted formula
-    # would land at ~0.4516, roughly nine times too large a jump.
+    # 10.333333 range: (1.6667 + 0.333333) / 10.333333.
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == pytest.approx(
         0.1935516, abs=1e-4
