@@ -102,6 +102,13 @@ POSITIONABLE_ROLLER_SHUTTER_UNO = FixtureDevice(
     "io://1234-5678-1516/3656107",
     "cover.maple_residence_hallway_shutter",
 )
+# Uno device physically closed (TargetClosureState=100) while its
+# unreliable OpenClosedState remains "open"
+CLOSED_ROLLER_SHUTTER_UNO = FixtureDevice(
+    "setup/local_somfy_tahoma_switch_europe_2.json",
+    "io://1234-5678-1516/3897767",
+    "cover.back_door_shutter",
+)
 POSITIONABLE_DUAL_ROLLER_SHUTTER = FixtureDevice(
     "setup/cloud_somfy_tahoma_switch_sc_europe.json",
     "io://1234-5678-5010/12931361",
@@ -751,6 +758,23 @@ async def test_is_closed_falls_back_to_position(
     state = hass.states.get(POSITIONABLE_VENETIAN_BLIND.entity_id)
     assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 50
+
+
+async def test_is_closed_ignores_unreliable_open_closed_state(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test Uno covers derive closed state from position, not OpenClosedState.
+
+    RollerShutterUnoIO devices report a sentinel ClosureState (124) and an
+    unreliable OpenClosedState that stays "open" even when physically closed.
+    is_closed must fall back to the position derived from TargetClosureState.
+    """
+    await setup_overkiz_integration(fixture=CLOSED_ROLLER_SHUTTER_UNO.fixture)
+
+    state = hass.states.get(CLOSED_ROLLER_SHUTTER_UNO.entity_id)
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+    assert state.state == CoverState.CLOSED
 
 
 async def test_cover_tilt_services(
