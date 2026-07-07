@@ -18,7 +18,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN, MANUFACTURER
-from .data_handler import NetatmoConfigEntry, NetatmoDataHandler, async_get_loaded_entry
+from .coordinator import NetatmoConfigEntry, NetatmoDataHandler, async_get_loaded_entry
 
 _LOGGER = logging.getLogger(__name__)
 MIME_TYPE = "application/x-mpegURL"
