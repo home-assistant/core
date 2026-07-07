@@ -309,6 +309,44 @@ async def test_register_service_with_schema_validates_on_main(
         del bridge
 
 
+async def test_teardown_removes_mirrored_service_forwarders(
+    hass: HomeAssistant,
+) -> None:
+    """Bridge teardown sweeps the mirrored services off main's registry.
+
+    Each forwarder closes over the (now dead) channel, and a respawned
+    sandbox's re-registration is skipped by the has_service() guard — a
+    stale forwarder would fail every call until HA restarts.
+    """
+    MockConfigEntry(domain="mock_svc", title="Mock", sandbox="built-in").add_to_hass(
+        hass
+    )
+    main_channel, sandbox_channel = make_channel_pair(
+        name_a="main-teardown", name_b="sandbox-teardown"
+    )
+    bridge = SandboxBridge(hass, group="built-in", channel=main_channel)
+    main_channel.start()
+    sandbox_channel.start()
+
+    try:
+        result = await sandbox_channel.call(
+            "sandbox/register_service",
+            pb.RegisterService(
+                domain="mock_svc", service="do_thing", supports_response="none"
+            ),
+        )
+        assert result.installed is True
+        assert hass.services.has_service("mock_svc", "do_thing")
+
+        await bridge.async_teardown()
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+    assert not hass.services.has_service("mock_svc", "do_thing")
+    assert bridge._mirrored_services == set()
+
+
 # ---------------------------------------------------------------------------
 # 3. unique_id propagation
 # ---------------------------------------------------------------------------

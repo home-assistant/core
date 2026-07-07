@@ -51,25 +51,7 @@ class SandboxProxyEntity(Entity):
         self._sandbox_available: bool = True
 
         self._attr_unique_id = description.unique_id
-        self._attr_has_entity_name = description.has_entity_name
-        if description.name:
-            self._attr_name = description.name
-        if description.icon:
-            self._attr_icon = description.icon
-        if description.entity_category:
-            with contextlib.suppress(ValueError):
-                self._attr_entity_category = EntityCategory(description.entity_category)
-        if description.device_class:
-            self._attr_device_class = description.device_class
-        self._attr_supported_features = self._coerce_supported_features(
-            description.supported_features
-        )
-        # Surface the sandbox-side DeviceInfo so EntityPlatform's normal
-        # async_add_entities path runs dr.async_get_or_create and links
-        # the proxy to the matching DeviceEntry (idempotent with the
-        # pre-creation the bridge does).
-        if description.device_info is not None:
-            self._attr_device_info = cast(DeviceInfo, description.device_info)
+        self._apply_description(description)
 
     def _coerce_supported_features(self, value: int | None) -> IntFlag | int:
         """Coerce ``supported_features`` into the domain's IntFlag.
@@ -104,6 +86,35 @@ class SandboxProxyEntity(Entity):
         """
         return None
 
+    def _apply_description(self, description: SandboxEntityDescription) -> None:
+        """Mirror the registration-carried fields onto the entity attrs.
+
+        Shared by ``__init__`` and the upsert path so init and refresh can't
+        drift; clearing is symmetric — a field dropped from a re-sent
+        registration clears the mirrored attribute rather than sticking.
+        """
+        self.description = description
+        self._attr_has_entity_name = description.has_entity_name
+        self._attr_name = description.name or None
+        self._attr_icon = description.icon or None
+        self._attr_entity_category = None
+        if description.entity_category:
+            with contextlib.suppress(ValueError):
+                self._attr_entity_category = EntityCategory(description.entity_category)
+        self._attr_device_class = description.device_class or None
+        self._attr_supported_features = self._coerce_supported_features(
+            description.supported_features
+        )
+        # Surface the sandbox-side DeviceInfo so EntityPlatform's normal
+        # async_add_entities path runs dr.async_get_or_create and links
+        # the proxy to the matching DeviceEntry (idempotent with the
+        # pre-creation the bridge does).
+        self._attr_device_info = (
+            cast(DeviceInfo, description.device_info)
+            if description.device_info is not None
+            else None
+        )
+
     def sandbox_update_description(self, description: SandboxEntityDescription) -> None:
         """Refresh mirrored attributes from a re-sent registration (upsert).
 
@@ -113,22 +124,7 @@ class SandboxProxyEntity(Entity):
         fields (name / icon / category / device_class / features /
         device_info) are refreshed here.
         """
-        self.description = description
-        self._attr_has_entity_name = description.has_entity_name
-        self._attr_name = description.name or None
-        self._attr_icon = description.icon or None
-        if description.entity_category:
-            with contextlib.suppress(ValueError):
-                self._attr_entity_category = EntityCategory(description.entity_category)
-        else:
-            self._attr_entity_category = None
-        if description.device_class:
-            self._attr_device_class = description.device_class
-        self._attr_supported_features = self._coerce_supported_features(
-            description.supported_features
-        )
-        if description.device_info is not None:
-            self._attr_device_info = cast(DeviceInfo, description.device_info)
+        self._apply_description(description)
         if self.hass is not None:
             self.async_write_ha_state()
 

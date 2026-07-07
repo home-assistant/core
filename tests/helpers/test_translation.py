@@ -912,6 +912,58 @@ async def test_sandbox_translation_provider_overlay(hass: HomeAssistant) -> None
     assert title == {"component.sandboxed_custom.title": "Sandboxed Custom"}
 
 
+async def test_sandbox_translation_provider_without_title_gets_catalog_fallback(
+    hass: HomeAssistant,
+) -> None:
+    """Provider strings lacking "title" still get the catalog title fill-in.
+
+    The provider overlay is merged before the title fallback loop, so a
+    provider dict without a "title" key receives the catalog descriptor's
+    title (like disk strings get ``integration.name``) while its other
+    strings survive untouched.
+    """
+
+    async def _provider(
+        languages: list[str], components: set[str]
+    ) -> dict[str, dict[str, Any]]:
+        if "sandboxed_custom" not in components:
+            return {}
+        return {
+            language: {
+                "sandboxed_custom": {
+                    "config": {"step": {"user": {"title": "Set up"}}},
+                }
+            }
+            for language in languages
+        }
+
+    unregister_provider = translation.async_register_sandbox_translation_provider(
+        hass, _provider
+    )
+    unregister_catalog = loader.async_register_sandbox_catalog_provider(
+        hass, lambda: [{"domain": "sandboxed_custom", "name": "Sandboxed Custom"}]
+    )
+    try:
+        with patch(
+            "homeassistant.helpers.translation.async_get_integrations",
+            return_value={
+                "sandboxed_custom": loader.IntegrationNotFound("sandboxed_custom")
+            },
+        ):
+            config = await translation.async_get_translations(
+                hass, "en", "config", {"sandboxed_custom"}
+            )
+            title = await translation.async_get_translations(
+                hass, "en", "title", {"sandboxed_custom"}
+            )
+    finally:
+        unregister_provider()
+        unregister_catalog()
+
+    assert config == {"component.sandboxed_custom.config.step.user.title": "Set up"}
+    assert title == {"component.sandboxed_custom.title": "Sandboxed Custom"}
+
+
 async def test_sandbox_translation_provider_degrades_to_empty(
     hass: HomeAssistant,
 ) -> None:

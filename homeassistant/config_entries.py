@@ -2159,10 +2159,22 @@ class ConfigEntryRouter(Protocol):
         """Return a flow handler that will run the flow, or None to fall through."""
 
     async def async_setup_entry(self, entry: ConfigEntry) -> bool | None:
-        """Set up the entry and return success, or None to fall through."""
+        """Set up the entry remotely.
+
+        Return True on success (core marks the entry LOADED) or None to
+        fall through to the default setup. Raise ConfigEntryError on
+        failure — core marks the entry SETUP_ERROR with the message.
+        The router must not mutate entry state itself.
+        """
 
     async def async_unload_entry(self, entry: ConfigEntry) -> bool | None:
-        """Unload the entry and return success, or None to fall through."""
+        """Unload the entry remotely.
+
+        Return True on success (core marks the entry NOT_LOADED) or None
+        to fall through to the default unload. Raise ConfigEntryError if
+        the entry cannot be unloaded — core leaves the entry state (and
+        the loaded remote entry) untouched.
+        """
 
 
 class ConfigEntries:
@@ -2453,8 +2465,7 @@ class ConfigEntries:
             )
 
         if self.router is not None:
-            result = await self.router.async_setup_entry(entry)
-            if result is not None:
+            if (result := await self._async_router_setup(entry, _lock)) is not None:
                 return result
 
         # Setup Component if not set up yet
@@ -2477,6 +2488,32 @@ class ConfigEntries:
             entry.state is ConfigEntryState.LOADED  # type: ignore[comparison-overlap]
         )
 
+    async def _async_router_setup(self, entry: ConfigEntry, _lock: bool) -> bool | None:
+        """Run the router's remote setup under the entry's setup lock.
+
+        Core owns the entry state on both sides of the router contract:
+        True marks LOADED, a ConfigEntryError marks SETUP_ERROR with the
+        message, None falls through to the default setup path (the lock is
+        released first, so the default path can take it again).
+        """
+        if _lock:
+            async with entry.setup_lock:
+                return await self._async_router_setup_locked(entry)
+        return await self._async_router_setup_locked(entry)
+
+    async def _async_router_setup_locked(self, entry: ConfigEntry) -> bool | None:
+        assert self.router is not None
+        try:
+            result = await self.router.async_setup_entry(entry)
+        except ConfigEntryError as err:
+            entry._async_set_state(  # noqa: SLF001
+                self.hass, ConfigEntryState.SETUP_ERROR, str(err)
+            )
+            return False
+        if result:
+            entry._async_set_state(self.hass, ConfigEntryState.LOADED, None)  # noqa: SLF001
+        return result
+
     async def async_unload(self, entry_id: str, _lock: bool = True) -> bool:
         """Unload a config entry."""
         entry = self.async_get_known_entry(entry_id)
@@ -2489,11 +2526,7 @@ class ConfigEntries:
             )
 
         if self.router is not None:
-            result = await self.router.async_unload_entry(entry)
-            if result is not None:
-                entry._async_set_state(  # noqa: SLF001
-                    self.hass, ConfigEntryState.NOT_LOADED, None
-                )
+            if (result := await self._async_router_unload(entry, _lock)) is not None:
                 return result
 
         if _lock:
@@ -2501,6 +2534,39 @@ class ConfigEntries:
                 return await entry.async_unload(self.hass)
 
         return await entry.async_unload(self.hass)
+
+    async def _async_router_unload(
+        self, entry: ConfigEntry, _lock: bool
+    ) -> bool | None:
+        """Run the router's remote unload under the entry's setup lock.
+
+        True marks the entry NOT_LOADED; a ConfigEntryError means the
+        remote side refused the unload — the entry stays in its current
+        state (still loaded remotely) and False is returned. None falls
+        through to the default unload path.
+        """
+        if _lock:
+            async with entry.setup_lock:
+                return await self._async_router_unload_locked(entry)
+        return await self._async_router_unload_locked(entry)
+
+    async def _async_router_unload_locked(self, entry: ConfigEntry) -> bool | None:
+        assert self.router is not None
+        try:
+            result = await self.router.async_unload_entry(entry)
+        except ConfigEntryError as err:
+            _LOGGER.error(
+                "Router failed to unload entry %s (%s): %s",
+                entry.title,
+                entry.domain,
+                err,
+            )
+            return False
+        if result:
+            entry._async_set_state(  # noqa: SLF001
+                self.hass, ConfigEntryState.NOT_LOADED, None
+            )
+        return result
 
     @callback
     def async_schedule_reload(self, entry_id: str) -> None:

@@ -241,7 +241,7 @@ class EntityBridge:
         initial_attributes = None
         if hasattr(new_state, "state"):
             initial_state = new_state.state
-            initial_attributes = dict(new_state.attributes)
+            initial_attributes = json_safe(dict(new_state.attributes))
         try:
             await self._channel.call(
                 MSG_REGISTER_ENTITY,
@@ -291,7 +291,7 @@ class EntityBridge:
         state = self.hass.states.get(entity_id)
         if state is not None:
             initial_state = state.state
-            initial_attributes = dict(state.attributes)
+            initial_attributes = json_safe(dict(state.attributes))
         try:
             await self._channel.call(
                 MSG_REGISTER_ENTITY,
@@ -308,7 +308,10 @@ class EntityBridge:
         msg = pb.StateChanged(sandbox_entity_id=entity_id)
         if new_state.state is not None:
             msg.state = new_state.state
-        msg.attributes.update(dict(new_state.attributes))
+        # json_safe: attribute values may hold datetimes/enums/sets that
+        # Struct.update rejects with ValueError — outside the try below,
+        # inside a fire-and-forget task, leaving main's proxy stale forever.
+        msg.attributes.update(json_safe(dict(new_state.attributes)))
         # Forward only the context id — never parent_id / user_id. Main
         # resolves it to a Context attributed to the sandbox system user.
         context = getattr(new_state, "context", None)

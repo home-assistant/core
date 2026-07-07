@@ -132,6 +132,20 @@ async def _async_get_component_strings(
             _load_translations_files_by_language, files_to_load_by_language
         )
 
+    # Sandboxed integrations have no ``translations/<lang>.json`` on main —
+    # registered providers pull the real strings over the sandbox channel.
+    # Merge them before the title fallback below, so a provider dict without
+    # "title" gets the same fill-in as disk strings; a provider claims only
+    # domains it owns and never raises (a dead channel degrades to empty).
+    if providers := hass.data.get(DATA_SANDBOX_TRANSLATION_PROVIDERS):
+        language_list = list(languages)
+        for provider in providers:
+            overlay = await provider(language_list, components)
+            for language, by_domain in overlay.items():
+                loaded_translations_by_language.setdefault(language, {}).update(
+                    by_domain
+                )
+
     # Sandbox-only customs have no on-disk Integration, so their title falls
     # back to the catalog descriptor instead (name, or a localized title).
     catalog = async_get_sandbox_catalog(hass)
@@ -275,9 +289,6 @@ class _TranslationCache:
         translation_by_language_strings = await _async_get_component_strings(
             self.hass, languages, components, integrations
         )
-        await self._async_overlay_sandbox_strings(
-            languages, components, translation_by_language_strings
-        )
 
         # English is always the fallback language so we load them first
         self._build_category_cache(
@@ -300,35 +311,6 @@ class _TranslationCache:
                 loaded_english_components.update(components)
 
         loaded[language].update(components)
-
-    async def _async_overlay_sandbox_strings(
-        self,
-        languages: list[str],
-        components: set[str],
-        translation_by_language_strings: dict[str, dict[str, Any]],
-    ) -> None:
-        """Splice sandboxed integrations' strings onto the disk-loaded set.
-
-        A sandboxed custom integration has no code — and so no
-        ``translations/<lang>.json`` — on main:
-        :func:`async_get_integrations` returned an ``IntegrationNotFound`` for
-        it, and :func:`_async_get_component_strings` produced an empty entry.
-        Registered providers fetch the real strings over the sandbox channel;
-        we merge them in *before* :meth:`_build_category_cache` so they go
-        through the same flatten / English-fallback / ``loaded`` machinery as
-        disk strings. A provider claims only the domains it owns and never
-        raises (a dead channel degrades to empty), so a sandbox cannot wedge
-        the frontend translation path.
-        """
-        providers = self.hass.data.get(DATA_SANDBOX_TRANSLATION_PROVIDERS)
-        if not providers:
-            return
-        for provider in providers:
-            overlay = await provider(languages, components)
-            for language, by_domain in overlay.items():
-                translation_by_language_strings.setdefault(language, {}).update(
-                    by_domain
-                )
 
     def _validate_placeholders(
         self,

@@ -3294,6 +3294,52 @@ async def test_entry_unload_invalid_state(
     assert entry.state is state
 
 
+@pytest.mark.parametrize(
+    ("unload_side_effect", "expected_result", "expected_state"),
+    [
+        pytest.param(
+            None,
+            True,
+            config_entries.ConfigEntryState.NOT_LOADED,
+            id="router-unloads",
+        ),
+        pytest.param(
+            ConfigEntryError("sandbox refused the unload"),
+            False,
+            config_entries.ConfigEntryState.LOADED,
+            id="router-refuses",
+        ),
+    ],
+)
+async def test_entry_unload_router_owns_entry_state(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    unload_side_effect: ConfigEntryError | None,
+    expected_result: bool,
+    expected_state: config_entries.ConfigEntryState,
+) -> None:
+    """A router unload marks NOT_LOADED on True and keeps LOADED on refusal.
+
+    The ConfigEntryRouter contract: raising ConfigEntryError means the
+    remote side refused the unload — async_unload returns False and the
+    entry state must stay LOADED (the entry is still loaded remotely).
+    """
+    entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
+    entry.add_to_hass(hass)
+
+    router = Mock(
+        spec_set=["async_create_flow", "async_setup_entry", "async_unload_entry"]
+    )
+    router.async_unload_entry = AsyncMock(
+        return_value=True, side_effect=unload_side_effect
+    )
+    manager.router = router
+
+    assert await manager.async_unload(entry.entry_id) is expected_result
+    assert entry.state is expected_state
+    router.async_unload_entry.assert_awaited_once_with(entry)
+
+
 async def test_entry_reload_succeed(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:

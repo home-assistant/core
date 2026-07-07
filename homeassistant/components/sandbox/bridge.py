@@ -38,7 +38,7 @@ from datetime import datetime, timedelta
 import logging
 import os
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, cast
 
 import voluptuous as vol
 
@@ -305,7 +305,7 @@ class SandboxBridge:
         request = pb.EntityQuery(
             sandbox_entity_id=sandbox_entity_id,
             method=method,
-            args=dict_to_struct(args),
+            args=dict_to_struct(_wire_safe(args)),
         )
         if context is not None:
             request.context_id = context.id
@@ -334,7 +334,7 @@ class SandboxBridge:
             domain=domain,
             service=service,
             target=dict_to_struct(target),
-            service_data=dict_to_struct(service_data),
+            service_data=dict_to_struct(_wire_safe(service_data)),
             return_response=return_response,
         )
         if context_id is not None:
@@ -813,6 +813,14 @@ class SandboxBridge:
         )
         for entry_id in entry_ids:
             await self._async_teardown_entry(entry_id)
+        # Remove the mirrored service forwarders — each closes over this
+        # bridge's (now dead) channel, and a respawned sandbox's
+        # re-registration is skipped by the has_service() guard, so a stale
+        # forwarder would fail every call until HA restarts.
+        for domain, service in self._mirrored_services:
+            if self.hass.services.has_service(domain, service):
+                self.hass.services.async_remove(domain, service)
+        self._mirrored_services.clear()
 
     async def _async_teardown_entry(self, entry_id: str) -> None:
         """Remove every platform + proxy this bridge added for one entry.
@@ -1104,6 +1112,20 @@ def _rebuild_invalid(data: Mapping[str, Any]) -> vol.Invalid:
     """Rebuild a single :class:`vol.Invalid` from its serialized payload."""
     path = data.get("path") or None
     return vol.Invalid(data.get("msg", ""), path=path)
+
+
+def _wire_safe(data: dict[str, Any]) -> dict[str, Any]:
+    """Coerce a dict to plain JSON-safe values before ``dict_to_struct``.
+
+    Validated service data can legally hold ``datetime`` (``cv.datetime``
+    schemas), enums, or sets — ``Struct.update`` rejects those with a bare
+    ``ValueError``. Round-trip through HA's JSON encoder so the wire sees
+    the same shapes a websocket service call would.
+    """
+    if not data:
+        return {}
+    _mode, json_bytes = json_helper.prepare_save_json(data, encoder=None)
+    return cast(dict[str, Any], json_util.json_loads(json_bytes))
 
 
 def _translate_remote_error(err: ChannelRemoteError) -> Exception:

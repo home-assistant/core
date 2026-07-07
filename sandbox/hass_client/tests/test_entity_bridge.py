@@ -11,7 +11,7 @@ emit synthetic state events.
 """
 
 import asyncio
-from datetime import datetime
+from datetime import UTC, datetime
 import logging
 import tempfile
 from typing import Any
@@ -291,6 +291,61 @@ async def test_bridge_emits_register_and_state_pushes(
     assert state_calls[0].sandbox_entity_id == "demo.lamp"
     assert state_calls[0].state == "on"
     assert struct_to_dict(state_calls[0].attributes)["brightness"] == 200
+
+    await bridge.async_stop()
+
+
+async def test_state_push_serialises_datetime_attributes(
+    channels: tuple[Channel, Channel], hass_with_demo_component
+) -> None:
+    """Datetime attribute values survive the push path as ISO strings.
+
+    ``Struct.update`` rejects a raw datetime with ValueError inside the
+    fire-and-forget push task — the push must arrive with the value
+    coerced via ``json_safe`` instead of the task dying.
+    """
+    main, sandbox = channels
+    hass, component = hass_with_demo_component
+
+    state_calls: list[pb.StateChanged] = []
+
+    async def _on_register(msg: pb.EntityDescription) -> pb.RegisterEntityResult:
+        return pb.RegisterEntityResult(entity_id="demo.lamp_main")
+
+    async def _on_state(msg: pb.StateChanged) -> None:
+        state_calls.append(msg)
+
+    main.register("sandbox/register_entity", _on_register)
+    main.register("sandbox/state_changed", _on_state)
+    main.start()
+    sandbox.start()
+
+    entity = _FakeEntity()
+    component._entities[entity.entity_id] = entity  # noqa: SLF001
+
+    bridge = EntityBridge(hass)
+    bridge.register(sandbox)
+    await _register_initial(bridge, hass, entity)
+
+    detected_at = datetime(2026, 5, 24, 11, 0, tzinfo=UTC)
+    hass.bus.async_fire(
+        EVENT_STATE_CHANGED,
+        {
+            "entity_id": entity.entity_id,
+            "old_state": State(entity.entity_id, "off", {}),
+            "new_state": State(entity.entity_id, "on", {"detected_at": detected_at}),
+        },
+    )
+
+    for _ in range(50):
+        if state_calls:
+            break
+        await asyncio.sleep(0)
+
+    assert len(state_calls) == 1
+    assert state_calls[0].state == "on"
+    attributes = struct_to_dict(state_calls[0].attributes)
+    assert attributes["detected_at"] == detected_at.isoformat()
 
     await bridge.async_stop()
 

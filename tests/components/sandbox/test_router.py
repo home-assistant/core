@@ -15,7 +15,12 @@ from homeassistant.components.sandbox.router import (
 from homeassistant.components.sandbox.sources import (
     async_register_sandbox_source_resolver,
 )
-from homeassistant.config_entries import SOURCE_USER, ConfigEntry, ConfigFlowContext
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlowContext,
+)
 from homeassistant.core import HomeAssistant
 
 from ._helpers import FakeSandboxManager, make_channel_pair
@@ -151,7 +156,7 @@ async def test_async_setup_entry_routes_to_sandbox(
 async def test_async_setup_entry_marks_setup_error_on_failure(
     hass: HomeAssistant, manager: FakeSandboxManager
 ) -> None:
-    """A sandbox refusing entry_setup propagates as SETUP_ERROR."""
+    """A sandbox refusing entry_setup raises; core maps it to SETUP_ERROR."""
     channel_a, channel_b = make_channel_pair()
 
     async def _entry_setup(_payload: pb.EntrySetup) -> pb.EntrySetupResult:
@@ -170,14 +175,16 @@ async def test_async_setup_entry_marks_setup_error_on_failure(
     )
     entry.add_to_hass(hass)
     router = SandboxFlowRouter(hass, cast(SandboxManager, manager))
+    hass.config_entries.router = router
 
     try:
-        result = await router.async_setup_entry(cast(ConfigEntry, entry))
+        result = await hass.config_entries.async_setup(entry.entry_id)
     finally:
         await channel_a.close()
         await channel_b.close()
 
     assert result is False
+    assert entry.state is ConfigEntryState.SETUP_ERROR
     assert entry.reason == "boom"
 
 

@@ -93,7 +93,12 @@ def install_router_engagement_counter() -> Callable[[], None]:
     original = SandboxFlowRouter.async_setup_entry
 
     async def counted(self: Any, entry: Any) -> bool | None:
-        result = await original(self, entry)
+        try:
+            result = await original(self, entry)
+        except Exception:
+            # Only routed entries raise — a failed remote setup still engaged.
+            _ENGAGEMENT["entry_setups"] += 1
+            raise
         if result is not None:
             _ENGAGEMENT["entry_setups"] += 1
         return result

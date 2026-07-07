@@ -19,13 +19,9 @@ doesn't yank a running entry into a different sandbox).
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigEntryState,
-    ConfigFlow,
-    ConfigFlowContext,
-)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowContext
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.translation import async_invalidate_translations
 from homeassistant.loader import async_get_integration
 
@@ -84,23 +80,24 @@ class SandboxFlowRouter:
         )
 
     async def async_setup_entry(self, entry: ConfigEntry) -> bool | None:
-        """Hand a sandboxed entry to the manager and run its setup remotely."""
+        """Hand a sandboxed entry to the manager and run its setup remotely.
+
+        Core owns the entry state: True marks the entry LOADED, a raised
+        :class:`ConfigEntryError` marks it SETUP_ERROR with the message.
+        """
         group = entry.sandbox
         if group is None:
             return None
         try:
             sandbox = await self._manager.ensure_started(group)
-        except Exception:
+        except Exception as err:
             _LOGGER.exception(
                 "Sandbox group %r failed to start for entry %s (%s)",
                 group,
                 entry.title,
                 entry.domain,
             )
-            entry._async_set_state(  # noqa: SLF001
-                self._hass, ConfigEntryState.SETUP_ERROR, "Sandbox failed to start"
-            )
-            return False
+            raise ConfigEntryError("Sandbox failed to start") from err
 
         channel = sandbox.channel
         if channel is None:
@@ -110,10 +107,7 @@ class SandboxFlowRouter:
                 entry.title,
                 entry.domain,
             )
-            entry._async_set_state(  # noqa: SLF001
-                self._hass, ConfigEntryState.SETUP_ERROR, "Sandbox channel down"
-            )
-            return False
+            raise ConfigEntryError("Sandbox channel down")
 
         try:
             payload = await _entry_setup_payload(self._hass, entry)
@@ -124,13 +118,10 @@ class SandboxFlowRouter:
                 entry.domain,
                 err,
             )
-            entry._async_set_state(  # noqa: SLF001
-                self._hass, ConfigEntryState.SETUP_ERROR, str(err)
-            )
-            return False
+            raise ConfigEntryError(str(err)) from err
         try:
             result = await channel.call(MSG_ENTRY_SETUP, payload)
-        except ChannelClosedError:
+        except ChannelClosedError as err:
             # The router runs *outside* ConfigEntry.async_setup, so the
             # SETUP_RETRY timer (async_call_later) that core wires there is
             # never armed for a sandbox entry — setting SETUP_RETRY here would
@@ -139,37 +130,30 @@ class SandboxFlowRouter:
             # honestly instead; the entry stays recoverable via a manual
             # reload. (Follow-up: a router-driven true retry — see
             # ARCHITECTURE.md §5.)
-            entry._async_set_state(  # noqa: SLF001
-                self._hass,
-                ConfigEntryState.SETUP_ERROR,
-                "Sandbox channel closed during setup; reload to retry",
-            )
-            return False
+            raise ConfigEntryError(
+                "Sandbox channel closed during setup; reload to retry"
+            ) from err
         except ChannelRemoteError as err:
-            entry._async_set_state(  # noqa: SLF001
-                self._hass,
-                ConfigEntryState.SETUP_ERROR,
-                f"Sandbox raised {err.error_type or 'error'}: {err.error}",
-            )
-            return False
+            raise ConfigEntryError(
+                f"Sandbox raised {err.error_type or 'error'}: {err.error}"
+            ) from err
 
         if not result.ok:
             reason = (
                 result.reason if result.HasField("reason") else "sandbox refused setup"
             )
-            entry._async_set_state(  # noqa: SLF001
-                self._hass, ConfigEntryState.SETUP_ERROR, reason
-            )
-            return False
+            raise ConfigEntryError(reason)
 
-        entry._async_set_state(self._hass, ConfigEntryState.LOADED, None)  # noqa: SLF001
         return True
 
     async def async_unload_entry(self, entry: ConfigEntry) -> bool | None:
         """Push the unload back to the sandbox if the entry is sandboxed.
 
         Returns ``None`` for non-sandbox entries so the normal HA unload
-        path runs.
+        path runs. True means unloaded (core marks the entry NOT_LOADED);
+        a raised :class:`ConfigEntryError` means a live sandbox refused the
+        unload — the main-side proxies stay in place and core leaves the
+        entry state untouched.
         """
         group = entry.sandbox
         if group is None:
@@ -203,7 +187,7 @@ class SandboxFlowRouter:
             )
             await self._async_unload_main_side(group, entry)
             return True
-        except ChannelRemoteError:
+        except ChannelRemoteError as err:
             # A live sandbox refused the unload — the entry is still loaded
             # remotely, so leave the main-side proxies in place and report
             # the failure.
@@ -213,9 +197,11 @@ class SandboxFlowRouter:
                 entry.title,
                 entry.domain,
             )
-            return False
+            raise ConfigEntryError(f"Sandbox refused to unload: {err.error}") from err
+        if not result.ok:
+            raise ConfigEntryError("Sandbox reported the unload failed")
         await self._async_unload_main_side(group, entry)
-        return result.ok
+        return True
 
     async def _async_unload_main_side(self, group: str, entry: ConfigEntry) -> None:
         """Tear down the main-side proxies + platform slot for ``entry``.
