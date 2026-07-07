@@ -46,7 +46,6 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
             # avoid a duplicate cloud request.
             lock_data = {"data": self._locks}
         else:
-            # 1. Checking loqed-connection
             cloud_api_client = cloud_loqed.CloudAPIClient(
                 session,
                 data[CONF_API_TOKEN],
