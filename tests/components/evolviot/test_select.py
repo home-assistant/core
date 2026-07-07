@@ -101,6 +101,31 @@ async def test_selected_option_stays_visible_when_backend_returns_unknown(
     assert entity.current_option == "wave"
 
 
+async def test_numeric_pattern_state_maps_to_option(hass: HomeAssistant) -> None:
+    """Test numeric pattern state maps to the matching option."""
+    coordinator = _coordinator(hass)
+    coordinator.data["states"]["select.evolviot_pattern"]["state"] = "2"
+    entity = EvolvIOTSelect(
+        coordinator,
+        coordinator.entities["select.evolviot_pattern"],
+    )
+
+    assert entity.current_option == "wave"
+
+
+async def test_unknown_state_uses_numeric_raw_value(hass: HomeAssistant) -> None:
+    """Test unknown state falls back to a numeric raw value."""
+    coordinator = _coordinator(hass)
+    coordinator.data["states"]["select.evolviot_pattern"]["state"] = "unknown"
+    coordinator.data["states"]["select.evolviot_pattern"]["raw_value"] = 2
+    entity = EvolvIOTSelect(
+        coordinator,
+        coordinator.entities["select.evolviot_pattern"],
+    )
+
+    assert entity.current_option == "wave"
+
+
 async def test_stale_switch_pattern_entity_is_classified_as_select(
     hass: HomeAssistant,
 ) -> None:

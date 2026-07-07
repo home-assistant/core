@@ -54,13 +54,22 @@ class EvolvIOTSelect(EvolvIOTEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the current selected option."""
-        value = self.backend_state.get("state", self.backend_state.get("raw_value"))
         options = self.options
+        state_value = self.backend_state.get("state")
+        raw_value = self.backend_state.get("raw_value")
+        value = raw_value if state_value in (None, "", "unknown", "unavailable") else state_value
+
         if value in (None, "", "unknown", "unavailable"):
             if self._optimistic_option in options:
                 return self._optimistic_option
             return options[0] if options else None
-        return str(value)
+
+        option = _option_from_value(value, options)
+        if option is not None:
+            return option
+        if self._optimistic_option in options:
+            return self._optimistic_option
+        return None
 
     @property
     def options(self) -> list[str]:
@@ -91,3 +100,19 @@ class EvolvIOTSelect(EvolvIOTEntity, SelectEntity):
         await self._async_send_command({"value": option})
         self._optimistic_option = option
         self.async_write_ha_state()
+
+
+def _option_from_value(value: Any, options: list[str]) -> str | None:
+    """Return a select option from a backend state value."""
+    value_string = str(value)
+    if value_string in options:
+        return value_string
+
+    try:
+        option_index = int(value_string)
+    except ValueError:
+        return None
+
+    if 0 <= option_index < len(options):
+        return options[option_index]
+    return None
