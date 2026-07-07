@@ -366,7 +366,7 @@ async def _drive_polling(
     mock_add_listener: AsyncMock,
     value: int,
 ) -> None:
-    """Push an out-of-range steering wheel level through the polling path."""
+    """Push a steering wheel level through the polling path."""
     data = deepcopy(VEHICLE_DATA_ALT)
     data["response"]["climate_state"]["steering_wheel_heat_level"] = value
     mock_vehicle_data.return_value = data
@@ -381,7 +381,7 @@ async def _drive_streaming(
     mock_add_listener: AsyncMock,
     value: int,
 ) -> None:
-    """Push an out-of-range steering wheel level through the streaming path."""
+    """Push a steering wheel level through the streaming path."""
     mock_add_listener.send(
         {
             "vin": VEHICLE_DATA_ALT["response"]["vin"],
@@ -392,13 +392,20 @@ async def _drive_streaming(
 
 
 @pytest.mark.parametrize(
-    ("metadata", "driver", "value"),
+    ("metadata", "driver"),
     [
-        pytest.param(METADATA_LEGACY, _drive_polling, 3, id="polling_out_of_range"),
-        pytest.param(METADATA, _drive_streaming, 3, id="streaming_out_of_range"),
+        pytest.param(METADATA_LEGACY, _drive_polling, id="polling"),
+        pytest.param(METADATA, _drive_streaming, id="streaming"),
     ],
 )
-async def test_steering_wheel_heat_out_of_range(
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(3, HIGH, id="level_3_high"),
+        pytest.param(4, HIGH, id="out_of_range_clamped"),
+    ],
+)
+async def test_steering_wheel_heat_levels(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_vehicle_data: AsyncMock,
@@ -410,12 +417,13 @@ async def test_steering_wheel_heat_out_of_range(
         Awaitable[None],
     ],
     value: int,
+    expected: str,
 ) -> None:
-    """A steering wheel level above the modeled options clamps to the top one.
+    """Steering wheel heat models 0-3 and clamps anything beyond.
 
-    Tesla reports steering_wheel_heat_level 3 on some vehicles even though only
-    off/low/high (0-2) are modeled; the extra level must clamp to the nearest
-    known level (high) rather than raising IndexError while updating the entity.
+    Tesla reports steering_wheel_heat_level 3 (a real 4th level, high) on some
+    vehicles, so level 3 must resolve to high; a value beyond the modeled range
+    clamps to the nearest known level instead of raising IndexError.
     """
     freezer.move_to("2024-01-01 00:00:00+00:00")
     mock_metadata.return_value = metadata
@@ -426,7 +434,7 @@ async def test_steering_wheel_heat_out_of_range(
     await hass.async_block_till_done()
 
     state = hass.states.get("select.test_steering_wheel_heater")
-    assert state.state == HIGH
+    assert state.state == expected
 
 
 async def test_export_rule_restore(

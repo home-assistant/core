@@ -173,6 +173,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         options=[
             OFF,
             LOW,
+            MEDIUM,
             HIGH,
         ],
     ),
@@ -289,9 +290,8 @@ class TeslemetryVehiclePollingSelectEntity(
         """Handle updated data from the coordinator."""
         self._climate = bool(self.get("climate_state_is_climate_on"))
         value = self._value
-        # Tesla can report a steering-wheel heat level above the modeled
-        # options (e.g. 3 with only off/low/high); clamp to the nearest known
-        # level rather than erroring.
+        # Defensive clamp: Tesla could report a level outside the modeled
+        # range, so map it to the nearest known option rather than erroring.
         if isinstance(value, int):
             options = self.entity_description.options
             self._attr_current_option = options[max(0, min(value, len(options) - 1))]
@@ -340,9 +340,8 @@ class TeslemetryStreamingSelectEntity(
 
     def _value_callback(self, value: int | None) -> None:
         """Update the value of the entity."""
-        # Tesla can report a steering-wheel heat level above the modeled
-        # options (e.g. 3 with only off/low/high); clamp to the nearest known
-        # level rather than erroring.
+        # Defensive clamp: Tesla could report a level outside the modeled
+        # range, so map it to the nearest known option rather than erroring.
         if isinstance(value, int):
             options = self.entity_description.options
             self._attr_current_option = options[max(0, min(value, len(options) - 1))]
