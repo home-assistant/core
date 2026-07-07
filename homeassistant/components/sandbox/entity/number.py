@@ -1,5 +1,7 @@
 """Sandbox proxy for ``number`` entities."""
 
+from typing import override
+
 from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
@@ -16,6 +18,7 @@ class SandboxNumberEntity(SandboxProxyEntity, NumberEntity):
     """Proxy for a ``number`` entity in a sandbox."""
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Parse the cached number state."""
         value = self._state_cache.get("state")
@@ -27,24 +30,28 @@ class SandboxNumberEntity(SandboxProxyEntity, NumberEntity):
             return None
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the configured minimum."""
         value = self.description.capabilities.get(ATTR_MIN)
         return float(value) if value is not None else super().native_min_value
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the configured maximum."""
         value = self.description.capabilities.get(ATTR_MAX)
         return float(value) if value is not None else super().native_max_value
 
     @property
+    @override
     def native_step(self) -> float | None:
         """Return the configured step."""
         value = self.description.capabilities.get(ATTR_STEP)
         return float(value) if value is not None else None
 
     @property
+    @override
     def mode(self) -> NumberMode:
         """Return the configured display mode."""
         value = self.description.capabilities.get("mode")
@@ -55,6 +62,7 @@ class SandboxNumberEntity(SandboxProxyEntity, NumberEntity):
         except ValueError:
             return NumberMode.AUTO
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Forward set_value as ``number.set_value``."""
         await self._call_service("set_value", value=value)

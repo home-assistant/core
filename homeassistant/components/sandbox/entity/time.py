@@ -1,6 +1,7 @@
 """Sandbox proxy for ``time`` entities."""
 
 from datetime import time
+from typing import override
 
 from homeassistant.components.time import TimeEntity
 from homeassistant.util import dt as dt_util
@@ -13,6 +14,7 @@ class SandboxTimeEntity(SandboxProxyEntity, TimeEntity):
     """Proxy for a ``time`` entity in a sandbox."""
 
     @property
+    @override
     def native_value(self) -> time | None:
         """Parse the cached ISO time string."""
         value = self._state_cache.get("state")
@@ -23,6 +25,7 @@ class SandboxTimeEntity(SandboxProxyEntity, TimeEntity):
         except TypeError, ValueError:
             return None
 
+    @override
     async def async_set_value(self, value: time) -> None:
         """Forward set_value as ``time.set_value``."""
         await self._call_service("set_value", time=value.isoformat())

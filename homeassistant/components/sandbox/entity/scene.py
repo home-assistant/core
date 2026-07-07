@@ -5,7 +5,7 @@ sandbox in practice. The proxy ships anyway for symmetry — the full
 set is covered so a future classifier change doesn't surprise us.
 """
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.scene import Scene
 from homeassistant.core import Context
@@ -17,6 +17,7 @@ from . import SandboxProxyEntity
 class SandboxSceneEntity(SandboxProxyEntity, Scene):
     """Proxy for a ``scene`` entity in a sandbox."""
 
+    @override
     def sandbox_apply_state(
         self,
         state: str | None,
@@ -29,6 +30,7 @@ class SandboxSceneEntity(SandboxProxyEntity, Scene):
             self._BaseScene__last_activated = state
         super().sandbox_apply_state(state, attributes, context)
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Forward activate as ``scene.turn_on``."""
         await self._call_service("turn_on", **kwargs)

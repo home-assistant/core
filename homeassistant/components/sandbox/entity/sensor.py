@@ -1,5 +1,7 @@
 """Sandbox proxy for ``sensor`` entities."""
 
+from typing import override
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 
@@ -11,11 +13,13 @@ class SandboxSensorEntity(SandboxProxyEntity, SensorEntity):
     """Proxy for a ``sensor`` entity in a sandbox."""
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """Return the cached state as the sensor's native value."""
         return self._state_cache.get("state")
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the cached unit of measurement."""
         return self._state_cache.get(

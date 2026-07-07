@@ -1,6 +1,6 @@
 """Sandbox proxy for ``notify`` entities."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.notify import NotifyEntity, NotifyEntityFeature
 from homeassistant.core import Context
@@ -14,6 +14,7 @@ class SandboxNotifyEntity(SandboxProxyEntity, NotifyEntity):
 
     _features_flag = NotifyEntityFeature
 
+    @override
     def sandbox_apply_state(
         self,
         state: str | None,
@@ -26,6 +27,7 @@ class SandboxNotifyEntity(SandboxProxyEntity, NotifyEntity):
             self._NotifyEntity__last_notified_isoformat = state
         super().sandbox_apply_state(state, attributes, context)
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Forward send_message."""
         await self._call_service("send_message", message=message, title=title)

@@ -1,6 +1,6 @@
 """Sandbox proxy for ``update`` entities."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
@@ -31,37 +31,44 @@ class SandboxUpdateEntity(SandboxProxyEntity, UpdateEntity):
     _features_flag = UpdateEntityFeature
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Return the cached installed version."""
         return self._state_cache.get(ATTR_INSTALLED_VERSION)
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Return the cached latest version."""
         return self._state_cache.get(ATTR_LATEST_VERSION)
 
     @property
+    @override
     def release_summary(self) -> str | None:
         """Return the cached release summary."""
         return self._state_cache.get(_ATTR_RELEASE_SUMMARY)
 
     @property
+    @override
     def release_url(self) -> str | None:
         """Return the cached release URL."""
         return self._state_cache.get(_ATTR_RELEASE_URL)
 
     @property
+    @override
     def title(self) -> str | None:
         """Return the cached title."""
         return self._state_cache.get(_ATTR_TITLE)
 
     @property
+    @override
     def in_progress(self) -> bool | None:
         """Return the cached progress flag."""
         value = self._state_cache.get(_ATTR_IN_PROGRESS)
         return None if value is None else bool(value)
 
     @property
+    @override
     def update_percentage(self) -> int | float | None:
         """Return the cached progress percentage."""
         value = self._state_cache.get(_ATTR_UPDATE_PERCENTAGE)
@@ -73,10 +80,12 @@ class SandboxUpdateEntity(SandboxProxyEntity, UpdateEntity):
             return None
 
     @property
+    @override
     def auto_update(self) -> bool:
         """Return the cached auto-update flag."""
         return bool(self._state_cache.get(_ATTR_AUTO_UPDATE, False))
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -86,6 +95,7 @@ class SandboxUpdateEntity(SandboxProxyEntity, UpdateEntity):
             payload["version"] = version
         await self._call_service("install", **payload)
 
+    @override
     async def async_release_notes(self) -> str | None:
         """Return the release notes via ``EntityQuery`` (a plain str/None)."""
         return await self._entity_query("async_release_notes")

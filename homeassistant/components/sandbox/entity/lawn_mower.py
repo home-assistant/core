@@ -1,5 +1,7 @@
 """Sandbox proxy for ``lawn_mower`` entities."""
 
+from typing import override
+
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
     LawnMowerEntity,
@@ -16,6 +18,7 @@ class SandboxLawnMowerEntity(SandboxProxyEntity, LawnMowerEntity):
     _features_flag = LawnMowerEntityFeature
 
     @property
+    @override
     def activity(self) -> LawnMowerActivity | None:
         """Return the cached mowing activity."""
         value = self._state_cache.get("state")
@@ -26,14 +29,17 @@ class SandboxLawnMowerEntity(SandboxProxyEntity, LawnMowerEntity):
         except ValueError:
             return None
 
+    @override
     async def async_start_mowing(self) -> None:
         """Forward start_mowing."""
         await self._call_service("start_mowing")
 
+    @override
     async def async_dock(self) -> None:
         """Forward dock."""
         await self._call_service("dock")
 
+    @override
     async def async_pause(self) -> None:
         """Forward pause."""
         await self._call_service("pause")
