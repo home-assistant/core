@@ -1,6 +1,6 @@
 """Tests for the STIEBEL ELTRON integration."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from pymodbus.exceptions import ModbusException
 from pystiebeleltron import StiebelEltronModbusError
@@ -89,3 +89,42 @@ async def test_async_setup_entry_coordinator_update_fails(
 
     assert result is False
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_unload_entry_closes_connection(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lwz_api: MagicMock,
+) -> None:
+    """Test unloading the config entry closes the Modbus connection."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert result is True
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_lwz_api.close.assert_awaited_once()
+
+
+async def test_unload_entry_does_not_close_connection_if_platform_unload_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lwz_api: MagicMock,
+) -> None:
+    """Test the connection is not closed if platform unload fails."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        return_value=False,
+    ):
+        result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert result is False
+    mock_lwz_api.close.assert_not_awaited()
