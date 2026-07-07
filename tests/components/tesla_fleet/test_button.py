@@ -10,7 +10,7 @@ from tesla_fleet_api.exceptions import NotOnWhitelistFault
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, setup_platform
@@ -80,7 +80,7 @@ async def test_homelink_no_location(
 
     with (
         patch("tesla_fleet_api.tesla.VehicleFleet.trigger_homelink") as command,
-        pytest.raises(ServiceValidationError) as error,
+        pytest.raises(HomeAssistantError) as error,
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
