@@ -65,12 +65,22 @@ def classify_domain_sync(domain: str) -> str | None:
     return GROUP_BUILT_IN
 
 
-_ENGAGEMENT = {"entry_setups": 0}
+_ENGAGEMENT = {"entry_setups": 0, "tagged": 0}
 
 
 def engagement_count() -> int:
     """Router-driven sandbox ``entry_setup`` count for this pytest session."""
     return _ENGAGEMENT["entry_setups"]
+
+
+def tagged_count() -> int:
+    """How many MockConfigEntry instances the autotag routed to a sandbox.
+
+    Zero means the integration legitimately classifies to main (camera/
+    tts/ALWAYS_MAIN/system) — vanilla behavior is the correct measurement
+    and a zero engagement count is expected, not a lane regression.
+    """
+    return _ENGAGEMENT["tagged"]
 
 
 def install_router_engagement_counter() -> Callable[[], None]:
@@ -150,6 +160,7 @@ def install_mock_config_entry_autotag() -> Callable[[], None]:
         if self.sandbox is None:
             group = classify_domain_sync(self.domain)
             if group is not None:
+                _ENGAGEMENT["tagged"] += 1
                 # ``ConfigEntry`` enforces ``sandbox`` updates via
                 # ``async_update_entry``; in tests the entry hasn't been
                 # registered yet so we mirror the framework's
@@ -174,4 +185,5 @@ __all__ = [
     "engagement_count",
     "install_mock_config_entry_autotag",
     "install_router_engagement_counter",
+    "tagged_count",
 ]

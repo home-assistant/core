@@ -37,7 +37,11 @@ from typing import TYPE_CHECKING, Any
 import pytest
 import pytest_asyncio
 
-from hass_client.testing._autotag import configure_compat_plugin, engagement_count
+from hass_client.testing._autotag import (
+    configure_compat_plugin,
+    engagement_count,
+    tagged_count,
+)
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -76,7 +80,8 @@ def pytest_terminal_summary(
 ) -> None:
     """Report how often the sandbox router actually engaged (see run_compat)."""
     terminalreporter.write_line(
-        f"sandbox-compat: router entry_setup engaged {engagement_count()} time(s)"
+        f"sandbox-compat: router entry_setup engaged {engagement_count()} time(s),"
+        f" {tagged_count()} entries tagged"
     )
 
 

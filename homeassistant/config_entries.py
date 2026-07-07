@@ -707,6 +707,23 @@ class ConfigEntry[_DataT = Any]:
         if self.source == SOURCE_IGNORE or self.disabled_by:
             return
 
+        # The router consult lives here — the single funnel every setup path
+        # uses (ConfigEntries.async_setup, setup.py's component-setup path at
+        # boot, the SETUP_RETRY timer) — so a routed entry can never slip
+        # into local setup. Core owns the state on both sides of the router
+        # contract: True marks LOADED, ConfigEntryError marks SETUP_ERROR
+        # with the message, None falls through to local setup.
+        if (router := hass.config_entries.router) is not None:
+            try:
+                result = await router.async_setup_entry(self)
+            except ConfigEntryError as err:
+                self._async_set_state(hass, ConfigEntryState.SETUP_ERROR, str(err))
+                return
+            if result is not None:
+                if result:
+                    self._async_set_state(hass, ConfigEntryState.LOADED, None)
+                return
+
         current_entry.set(self)
         try:
             await self.__async_setup_with_context(hass, integration)
@@ -2463,9 +2480,19 @@ class ConfigEntries:
                 f" be in the {ConfigEntryState.NOT_LOADED} state"
             )
 
-        if self.router is not None:
-            if (result := await self._async_router_setup(entry, _lock)) is not None:
-                return result
+        # A routed entry never needs its component set up on main — a custom
+        # (HACS) integration has no code here, so async_setup_component would
+        # fail before the entry ever reached the router. entry.async_setup
+        # performs the actual router consult.
+        if self.router is not None and entry.sandbox is not None:
+            if _lock:
+                async with entry.setup_lock:
+                    await entry.async_setup(self.hass)
+            else:
+                await entry.async_setup(self.hass)
+            return (
+                entry.state is ConfigEntryState.LOADED  # type: ignore[comparison-overlap]
+            )
 
         # Setup Component if not set up yet
         if entry.domain in self.hass.config.components:
@@ -2486,32 +2513,6 @@ class ConfigEntries:
         return (
             entry.state is ConfigEntryState.LOADED  # type: ignore[comparison-overlap]
         )
-
-    async def _async_router_setup(self, entry: ConfigEntry, _lock: bool) -> bool | None:
-        """Run the router's remote setup under the entry's setup lock.
-
-        Core owns the entry state on both sides of the router contract:
-        True marks LOADED, a ConfigEntryError marks SETUP_ERROR with the
-        message, None falls through to the default setup path (the lock is
-        released first, so the default path can take it again).
-        """
-        if _lock:
-            async with entry.setup_lock:
-                return await self._async_router_setup_locked(entry)
-        return await self._async_router_setup_locked(entry)
-
-    async def _async_router_setup_locked(self, entry: ConfigEntry) -> bool | None:
-        assert self.router is not None
-        try:
-            result = await self.router.async_setup_entry(entry)
-        except ConfigEntryError as err:
-            entry._async_set_state(  # noqa: SLF001
-                self.hass, ConfigEntryState.SETUP_ERROR, str(err)
-            )
-            return False
-        if result:
-            entry._async_set_state(self.hass, ConfigEntryState.LOADED, None)  # noqa: SLF001
-        return result
 
     async def async_unload(self, entry_id: str, _lock: bool = True) -> bool:
         """Unload a config entry."""
