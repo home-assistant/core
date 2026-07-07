@@ -131,8 +131,6 @@ class StiebelEltron(StiebelEltronEntity, ClimateEntity):
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
-        if self.preset_mode:
-            return
         new_mode = HA_TO_LWZ_HVAC[hvac_mode]
         _LOGGER.debug("async_set_hvac_mode: %s -> %s", self._attr_hvac_mode, new_mode)
         try:
@@ -145,8 +143,7 @@ class StiebelEltron(StiebelEltronEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (target_temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            raise HomeAssistantError("target temperature must be provided")
+        target_temperature = kwargs[ATTR_TEMPERATURE]
         _LOGGER.debug("async_set_temperature: %s", target_temperature)
         try:
             await self.coordinator.api_client.set_target_temp(target_temperature)
