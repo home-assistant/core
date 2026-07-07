@@ -24,11 +24,6 @@ from .entity import SHCEntity
 
 PARALLEL_UPDATES = 1
 
-# auto/manual aren't standard HA presets (unlike boost/eco), so only these two
-# need defining here — see SHCClimateControlEntity's docstring for the mapping.
-PRESET_AUTO = "auto"
-PRESET_MANUAL = "manual"
-
 
 def _set_cool_mode(device: SHCClimateControl) -> None:
     """Set device to cooling mode."""
@@ -69,8 +64,12 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
     """Representation of a SHC room climate control.
 
     Two orthogonal Bosch axes are mapped onto HA:
-      Direction axis  → hvac_mode:   summer_mode=True→OFF, cooling_mode=True→COOL, else→HEAT
-      Regulation axis → preset_mode: AUTOMATIC→"auto", MANUAL→"manual", + boost/eco overrides
+      Direction axis  → hvac_mode:   summer_mode=True→OFF, cooling_mode=True→COOL,
+                                      operation_mode=AUTOMATIC→AUTO, else→HEAT
+      Regulation axis → preset_mode: transient overrides only — boost/eco
+    AUTO is a real hvac_mode (not a preset) so the thermostat card renders as
+    idle/following-schedule instead of permanently showing the HEAT color
+    while the schedule is in control.
     """
 
     _attr_name = None
@@ -79,12 +78,23 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_max_temp = 30.0
     _attr_min_temp = 5.0
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.TURN_OFF
-        | ClimateEntityFeature.TURN_ON
-    )
+
+    @property
+    @override
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return supported features.
+
+        PRESET_MODE is only advertised when the device actually has a boost
+        or eco override to offer.
+        """
+        features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
+        if self.preset_modes:
+            features |= ClimateEntityFeature.PRESET_MODE
+        return features
 
     @property
     @override
@@ -106,8 +116,8 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
         Maps the Bosch direction field onto HA hvac_mode:
           summer_mode=True                              → OFF
           supports_cooling=True + cooling_mode=True    → COOL
-          otherwise                                     → HEAT
-        The AUTOMATIC/MANUAL regulation axis is expressed via preset_mode.
+          operation_mode=AUTOMATIC                      → AUTO
+          otherwise (MANUAL)                            → HEAT
         """
         if self._device.summer_mode:
             return HVACMode.OFF
@@ -115,13 +125,19 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
         if self._device.supports_cooling and self._device.cooling_mode:
             return HVACMode.COOL
 
+        if (
+            self._device.operation_mode
+            == SHCClimateControl.RoomClimateControlService.OperationMode.AUTOMATIC
+        ):
+            return HVACMode.AUTO
+
         return HVACMode.HEAT
 
     @property
     @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return available hvac modes."""
-        modes = [HVACMode.HEAT]
+        modes = [HVACMode.AUTO, HVACMode.HEAT]
         if self._device.supports_cooling:
             modes.append(HVACMode.COOL)
         modes.append(HVACMode.OFF)
@@ -144,13 +160,11 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
     @property
     @override
     def preset_mode(self) -> str | None:
-        """Return preset mode (regulation axis).
+        """Return preset mode (transient overrides only).
 
-        Maps the Bosch regulation fields onto HA preset_mode:
-          boost_mode=True               → "boost"
-          low=True (eco)                → "eco"   (only if device has `low`)
-          operation_mode=AUTOMATIC      → "auto"
-          operation_mode=MANUAL (else)  → "manual"
+        boost_mode=True   → "boost"  (only if device supports boost)
+        low=True (eco)    → "eco"    (only if device has `low`)
+        otherwise         → None
         """
         if self._device.supports_boost_mode and self._device.boost_mode:
             return PRESET_BOOST
@@ -158,24 +172,22 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
         if self._device.supports_low and self._device.low:
             return PRESET_ECO
 
-        if (
-            self._device.operation_mode
-            == SHCClimateControl.RoomClimateControlService.OperationMode.AUTOMATIC
-        ):
-            return PRESET_AUTO
-
-        return PRESET_MANUAL
+        return None
 
     @property
     @override
     def preset_modes(self) -> list[str] | None:
-        """Return available preset modes."""
-        presets = [PRESET_AUTO, PRESET_MANUAL]
+        """Return available preset modes.
+
+        Returns None when the device offers neither override (no PRESET_MODE
+        feature is advertised in that case).
+        """
+        presets = []
         if self._device.supports_boost_mode:
             presets.append(PRESET_BOOST)
         if self._device.supports_low:
             presets.append(PRESET_ECO)
-        return presets
+        return presets or None
 
     @override
     def set_temperature(self, **kwargs: Any) -> None:
@@ -194,6 +206,12 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
                 translation_placeholders={"name": self._device.name},
             )
 
+        if hvac_mode == HVACMode.AUTO:
+            # The schedule controls the setpoint in AUTO; honour the mode
+            # change and stop here rather than falling through to the
+            # AUTOMATIC→MANUAL write below.
+            return
+
         if self.preset_mode == PRESET_BOOST:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -202,8 +220,12 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
             )
 
         # SHC rejects a setpoint write while operationMode=AUTOMATIC. Drop to
-        # MANUAL first — matching the Bosch app — regardless of whether an
-        # hvac_mode was also supplied, since that axis is independent.
+        # MANUAL first — matching the Bosch app. A bare temperature write
+        # (or one paired with hvac_mode=cool, which doesn't touch
+        # operation_mode) can still reach here with AUTOMATIC in effect; an
+        # explicit hvac_mode=heat has already flipped it to MANUAL above via
+        # set_hvac_mode, and hvac_mode=auto returned earlier — either way,
+        # unconditionally checking here is always correct.
         if (
             self._device.operation_mode
             == SHCClimateControl.RoomClimateControlService.OperationMode.AUTOMATIC
@@ -226,10 +248,20 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
         if self._device.supports_low and self._device.low:
             self._device.low = False
 
-        if hvac_mode == HVACMode.HEAT:
+        if hvac_mode == HVACMode.AUTO:
             self._device.summer_mode = False
             if self._device.supports_cooling:
                 self._device.cooling_mode = False
+            self._device.operation_mode = (
+                SHCClimateControl.RoomClimateControlService.OperationMode.AUTOMATIC
+            )
+        elif hvac_mode == HVACMode.HEAT:
+            self._device.summer_mode = False
+            if self._device.supports_cooling:
+                self._device.cooling_mode = False
+            self._device.operation_mode = (
+                SHCClimateControl.RoomClimateControlService.OperationMode.MANUAL
+            )
         elif hvac_mode == HVACMode.COOL:
             _set_cool_mode(self._device)
         elif hvac_mode == HVACMode.OFF:
@@ -239,10 +271,8 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
 
     @override
     def set_preset_mode(self, preset_mode: str) -> None:
-        """Set preset mode (regulation axis).
+        """Set preset mode (transient overrides only).
 
-        "auto"   → operationMode=AUTOMATIC (follow schedule)
-        "manual" → operationMode=MANUAL + clear boost + clear eco
         "boost"  → boost_mode=True
         "eco"    → low=True  (only if device exposes `low`)
         """
@@ -258,31 +288,11 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
                 self._device.boost_mode = False
             self._device.low = True
 
-        elif preset_mode == PRESET_AUTO:
-            # Clear overrides then set schedule mode
-            if self._device.supports_boost_mode and self._device.boost_mode:
-                self._device.boost_mode = False
-            if self._device.supports_low and self._device.low:
-                self._device.low = False
-            self._device.operation_mode = (
-                SHCClimateControl.RoomClimateControlService.OperationMode.AUTOMATIC
-            )
-
-        elif preset_mode == PRESET_MANUAL:
-            # Clear overrides then set manual mode
-            if self._device.supports_boost_mode and self._device.boost_mode:
-                self._device.boost_mode = False
-            if self._device.supports_low and self._device.low:
-                self._device.low = False
-            self._device.operation_mode = (
-                SHCClimateControl.RoomClimateControlService.OperationMode.MANUAL
-            )
-
     @override
     def turn_on(self) -> None:
         """Turn the climate device on."""
         if self.hvac_mode == HVACMode.OFF:
-            self.set_hvac_mode(HVACMode.HEAT)
+            self.set_hvac_mode(HVACMode.AUTO)
 
     @override
     def turn_off(self) -> None:

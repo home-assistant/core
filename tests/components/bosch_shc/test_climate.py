@@ -8,7 +8,6 @@ from boschshcpy.services_impl import RoomClimateControlService
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bosch_shc.climate import PRESET_AUTO, PRESET_MANUAL
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
@@ -175,13 +174,27 @@ async def test_climate_current_and_target_temperature(
 
 
 @pytest.mark.parametrize(
-    ("supports_cooling", "summer_mode", "cooling_mode", "expected"),
+    ("supports_cooling", "summer_mode", "cooling_mode", "operation_mode", "expected"),
     [
-        pytest.param(False, False, False, HVACMode.HEAT, id="heating_only_heat"),
-        pytest.param(False, True, False, HVACMode.OFF, id="heating_only_off"),
-        pytest.param(True, False, True, HVACMode.COOL, id="cooling_capable_cool"),
         pytest.param(
-            True, True, True, HVACMode.OFF, id="summer_mode_wins_over_cooling"
+            False, False, False, OM_CC.MANUAL, HVACMode.HEAT, id="heating_only_heat"
+        ),
+        pytest.param(
+            False, True, False, OM_CC.MANUAL, HVACMode.OFF, id="heating_only_off"
+        ),
+        pytest.param(
+            True, False, True, OM_CC.MANUAL, HVACMode.COOL, id="cooling_capable_cool"
+        ),
+        pytest.param(
+            True,
+            True,
+            True,
+            OM_CC.MANUAL,
+            HVACMode.OFF,
+            id="summer_mode_wins_over_cooling",
+        ),
+        pytest.param(
+            False, False, False, OM_CC.AUTOMATIC, HVACMode.AUTO, id="automatic_is_auto"
         ),
     ],
 )
@@ -192,9 +205,10 @@ async def test_climate_hvac_mode(
     supports_cooling: bool,
     summer_mode: bool,
     cooling_mode: bool,
+    operation_mode: RoomClimateControlService.OperationMode,
     expected: HVACMode,
 ) -> None:
-    """hvac_mode reflects the direction axis (summer_mode, then cooling_mode)."""
+    """hvac_mode reflects direction (summer_mode, cooling_mode) then operation_mode."""
     state = await _setup_single_climate_control(
         hass,
         mock_config_entry,
@@ -202,6 +216,7 @@ async def test_climate_hvac_mode(
         supports_cooling=supports_cooling,
         summer_mode=summer_mode,
         cooling_mode=cooling_mode,
+        operation_mode=operation_mode,
     )
     assert state.state == expected
 
@@ -209,9 +224,13 @@ async def test_climate_hvac_mode(
 @pytest.mark.parametrize(
     ("supports_cooling", "expected_modes"),
     [
-        pytest.param(False, {HVACMode.HEAT, HVACMode.OFF}, id="heating_only"),
         pytest.param(
-            True, {HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF}, id="cooling_capable"
+            False, {HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF}, id="heating_only"
+        ),
+        pytest.param(
+            True,
+            {HVACMode.AUTO, HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF},
+            id="cooling_capable",
         ),
     ],
 )
@@ -262,12 +281,11 @@ async def test_climate_hvac_action(
 
 
 @pytest.mark.parametrize(
-    ("boost_mode", "low", "operation_mode", "expected"),
+    ("boost_mode", "low", "expected"),
     [
-        pytest.param(True, False, OM_CC.MANUAL, PRESET_BOOST, id="boost_wins"),
-        pytest.param(False, True, OM_CC.MANUAL, PRESET_ECO, id="eco"),
-        pytest.param(False, False, OM_CC.AUTOMATIC, PRESET_AUTO, id="auto"),
-        pytest.param(False, False, OM_CC.MANUAL, PRESET_MANUAL, id="manual"),
+        pytest.param(True, False, PRESET_BOOST, id="boost_wins"),
+        pytest.param(False, True, PRESET_ECO, id="eco"),
+        pytest.param(False, False, None, id="no_override_active"),
     ],
 )
 async def test_climate_preset_mode(
@@ -276,31 +294,25 @@ async def test_climate_preset_mode(
     mock_session: MagicMock,
     boost_mode: bool,
     low: bool,
-    operation_mode: RoomClimateControlService.OperationMode,
-    expected: str,
+    expected: str | None,
 ) -> None:
-    """preset_mode follows boost > eco > auto/manual precedence."""
+    """preset_mode follows boost > eco > None precedence (AUTO/MANUAL live in hvac_mode)."""
     state = await _setup_single_climate_control(
         hass,
         mock_config_entry,
         mock_session,
         boost_mode=boost_mode,
         low=low,
-        operation_mode=operation_mode,
     )
-    assert state.attributes[ATTR_PRESET_MODE] == expected
+    assert state.attributes.get(ATTR_PRESET_MODE) == expected
 
 
 @pytest.mark.parametrize(
     ("supports_boost_mode", "supports_low", "expected"),
     [
-        pytest.param(
-            True,
-            True,
-            {PRESET_AUTO, PRESET_MANUAL, PRESET_BOOST, PRESET_ECO},
-            id="all_supported",
-        ),
-        pytest.param(False, False, {PRESET_AUTO, PRESET_MANUAL}, id="none_supported"),
+        pytest.param(True, True, {PRESET_BOOST, PRESET_ECO}, id="both_supported"),
+        pytest.param(True, False, {PRESET_BOOST}, id="only_boost"),
+        pytest.param(False, True, {PRESET_ECO}, id="only_eco"),
     ],
 )
 async def test_climate_preset_modes(
@@ -320,6 +332,24 @@ async def test_climate_preset_modes(
         supports_low=supports_low,
     )
     assert set(state.attributes[ATTR_PRESET_MODES]) == expected
+
+
+async def test_climate_no_preset_mode_feature_when_unsupported(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+) -> None:
+    """PRESET_MODE (and its attributes) are absent without boost/eco support."""
+    state = await _setup_single_climate_control(
+        hass,
+        mock_config_entry,
+        mock_session,
+        supports_boost_mode=False,
+        supports_low=False,
+    )
+    assert ATTR_PRESET_MODE not in state.attributes
+    assert ATTR_PRESET_MODES not in state.attributes
+    assert not (
+        state.attributes[ATTR_SUPPORTED_FEATURES] & ClimateEntityFeature.PRESET_MODE
+    )
 
 
 async def test_climate_supported_features(
@@ -558,11 +588,19 @@ async def test_climate_control_set_temperature_fails_when_boost(
 
 
 @pytest.mark.parametrize(
-    ("hvac_mode", "expected_summer_mode", "expected_cooling_mode"),
+    (
+        "hvac_mode",
+        "expected_summer_mode",
+        "expected_cooling_mode",
+        "expected_operation_mode",
+    ),
     [
-        pytest.param(HVACMode.HEAT, False, False, id="heat"),
-        pytest.param(HVACMode.OFF, True, False, id="off"),
-        pytest.param(HVACMode.COOL, False, True, id="cool"),
+        pytest.param(HVACMode.AUTO, False, False, OM_CC.AUTOMATIC, id="auto"),
+        pytest.param(HVACMode.HEAT, False, False, OM_CC.MANUAL, id="heat"),
+        # OFF/COOL don't touch operation_mode, so it stays at the device's
+        # starting value (MANUAL, set below).
+        pytest.param(HVACMode.OFF, True, False, OM_CC.MANUAL, id="off"),
+        pytest.param(HVACMode.COOL, False, True, OM_CC.MANUAL, id="cool"),
     ],
 )
 async def test_climate_control_set_hvac_mode(
@@ -572,10 +610,14 @@ async def test_climate_control_set_hvac_mode(
     hvac_mode: HVACMode,
     expected_summer_mode: bool,
     expected_cooling_mode: bool,
+    expected_operation_mode: RoomClimateControlService.OperationMode,
 ) -> None:
     """set_hvac_mode writes the direction-axis fields for each target mode."""
     device = _make_climate_device(
-        supports_cooling=True, summer_mode=False, cooling_mode=False
+        supports_cooling=True,
+        summer_mode=False,
+        cooling_mode=False,
+        operation_mode=OM_CC.MANUAL,
     )
     mock_session.device_helper.climate_controls = [device]
     await _setup_climate_platform(hass, mock_config_entry, mock_session)
@@ -590,17 +632,14 @@ async def test_climate_control_set_hvac_mode(
 
     assert device.summer_mode is expected_summer_mode
     assert device.cooling_mode is expected_cooling_mode
+    assert device.operation_mode == expected_operation_mode
 
 
 @pytest.mark.parametrize(
-    ("preset_mode", "expect_boost", "expect_low", "expect_operation_mode"),
+    ("preset_mode", "expect_boost", "expect_low"),
     [
-        # boost/eco don't touch operation_mode, so it stays at the device's
-        # starting value (MANUAL, set below).
-        pytest.param(PRESET_BOOST, True, False, OM_CC.MANUAL, id="boost"),
-        pytest.param(PRESET_ECO, False, True, OM_CC.MANUAL, id="eco"),
-        pytest.param(PRESET_AUTO, False, False, OM_CC.AUTOMATIC, id="auto"),
-        pytest.param(PRESET_MANUAL, False, False, OM_CC.MANUAL, id="manual"),
+        pytest.param(PRESET_BOOST, True, False, id="boost"),
+        pytest.param(PRESET_ECO, False, True, id="eco"),
     ],
 )
 async def test_climate_control_set_preset_mode(
@@ -610,9 +649,12 @@ async def test_climate_control_set_preset_mode(
     preset_mode: str,
     expect_boost: bool,
     expect_low: bool,
-    expect_operation_mode: RoomClimateControlService.OperationMode,
 ) -> None:
-    """set_preset_mode writes the regulation-axis fields for each preset."""
+    """set_preset_mode writes the override fields for boost/eco.
+
+    Neither preset touches operation_mode — that axis now lives entirely in
+    hvac_mode (AUTO/HEAT).
+    """
     device = _make_climate_device(
         supports_cooling=True,
         boost_mode=False,
@@ -632,14 +674,16 @@ async def test_climate_control_set_preset_mode(
 
     assert device.boost_mode is expect_boost
     assert device.low is expect_low
-    assert device.operation_mode == expect_operation_mode
+    assert device.operation_mode == OM_CC.MANUAL
 
 
 async def test_climate_control_turn_on_from_off(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
 ) -> None:
-    """turn_on switches an OFF device to HEAT."""
-    device = _make_climate_device(supports_cooling=True, summer_mode=True)
+    """turn_on switches an OFF device to AUTO (follow the schedule)."""
+    device = _make_climate_device(
+        supports_cooling=True, summer_mode=True, operation_mode=OM_CC.MANUAL
+    )
     mock_session.device_helper.climate_controls = [device]
     await _setup_climate_platform(hass, mock_config_entry, mock_session)
     (entity_id,) = hass.states.async_entity_ids(CLIMATE_DOMAIN)
@@ -649,6 +693,7 @@ async def test_climate_control_turn_on_from_off(
     )
 
     assert device.summer_mode is False
+    assert device.operation_mode == OM_CC.AUTOMATIC
 
 
 async def test_climate_control_turn_off_from_heat(

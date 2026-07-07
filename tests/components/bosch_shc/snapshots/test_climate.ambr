@@ -76,6 +76,7 @@
     'area_id': None,
     'capabilities': dict({
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.OFF: 'off'>,
@@ -83,8 +84,6 @@
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'auto',
-        'manual',
         'boost',
         'eco',
       ]),
@@ -127,16 +126,15 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Room',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.OFF: 'off'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'manual',
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'auto',
-        'manual',
         'boost',
         'eco',
       ]),

@@ -43,27 +43,7 @@
       }
     }
   },
-  "exceptions": {
-    "set_temperature_while_boost": {
-      "message": "Cannot set temperature on {name} while it is in boost mode."
-    },
-    "set_temperature_while_off": {
-      "message": "Cannot set temperature on {name} while it is off."
-    }
-  },
   "entity": {
-    "climate": {
-      "room_climate_control": {
-        "state_attributes": {
-          "preset_mode": {
-            "state": {
-              "auto": "Auto",
-              "manual": "Manual"
-            }
-          }
-        }
-      }
-    },
     "sensor": {
       "air_quality": {
         "name": "Air quality"
@@ -91,6 +71,14 @@
       "routing": {
         "name": "Routing"
       }
+    }
+  },
+  "exceptions": {
+    "set_temperature_while_boost": {
+      "message": "Cannot set temperature on {name} while it is in boost mode."
+    },
+    "set_temperature_while_off": {
+      "message": "Cannot set temperature on {name} while it is off."
     }
   }
 }
