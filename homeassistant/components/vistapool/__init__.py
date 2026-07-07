@@ -163,7 +163,6 @@ async def _async_add_coordinator(
     coordinator = VistapoolDataUpdateCoordinator(
         hass, entry, entry.runtime_data.auth, entry.runtime_data.api, pool_id, pool_name
     )
-    entry.runtime_data.coordinators[pool_id] = coordinator
     try:
         await _async_initial_refresh(coordinator, first=first)
         try:
@@ -171,9 +170,9 @@ async def _async_add_coordinator(
         except AquariteError as exc:
             raise ConfigEntryNotReady from exc
     except ConfigEntryNotReady:
-        del entry.runtime_data.coordinators[pool_id]
         await coordinator.async_shutdown()
         raise
+    entry.runtime_data.coordinators[pool_id] = coordinator
     return coordinator
 
 

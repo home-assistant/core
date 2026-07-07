@@ -133,12 +133,13 @@ async def test_user_pools_snapshot_adds_new_pool(
     mock_vistapool_client: AsyncMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test a user-pools snapshot containing a new pool adds a coordinator and device."""
+    """Test a user-pools snapshot with a new pool creates its device and entities."""
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert set(mock_config_entry.runtime_data.coordinators) == {MOCK_POOL_ID}
+    assert hass.states.get("sensor.my_pool_temperature") is not None
+    assert hass.states.get("sensor.spa_temperature") is None
 
     mock_vistapool_client.get_pools.return_value = {
         MOCK_POOL_ID: MOCK_POOL_NAME,
@@ -148,10 +149,7 @@ async def test_user_pools_snapshot_adds_new_pool(
     snapshot_cb([MOCK_POOL_ID, _SECOND_POOL_ID])
     await hass.async_block_till_done()
 
-    assert set(mock_config_entry.runtime_data.coordinators) == {
-        MOCK_POOL_ID,
-        _SECOND_POOL_ID,
-    }
+    assert hass.states.get("sensor.spa_temperature") is not None
     assert device_registry.async_get_device(identifiers={(DOMAIN, _SECOND_POOL_ID)})
 
 
@@ -174,17 +172,14 @@ async def test_user_pools_snapshot_retries_new_pool_after_refresh_failure(
     snapshot_cb([MOCK_POOL_ID, _SECOND_POOL_ID])
     await hass.async_block_till_done()
 
-    assert set(mock_config_entry.runtime_data.coordinators) == {MOCK_POOL_ID}
+    assert hass.states.get("sensor.spa_temperature") is None
 
     mock_vistapool_client.fetch_pool_data.side_effect = None
     mock_vistapool_client.fetch_pool_data.return_value = {}
     snapshot_cb([MOCK_POOL_ID, _SECOND_POOL_ID])
     await hass.async_block_till_done()
 
-    assert set(mock_config_entry.runtime_data.coordinators) == {
-        MOCK_POOL_ID,
-        _SECOND_POOL_ID,
-    }
+    assert hass.states.get("sensor.spa_temperature") is not None
 
 
 async def test_user_pools_snapshot_no_change_is_noop(
