@@ -23,7 +23,7 @@ from .const import DOMAIN
 from .coordinator import OMIEConfigEntry
 from .util import CET, pick_series_cet
 
-ATTR_COUNTRY: Final = "country"
+ATTR_COUNTRIES: Final = "countries"
 
 
 class Country(StrEnum):
@@ -31,14 +31,15 @@ class Country(StrEnum):
 
     ES = "es"
     PT = "pt"
-    BOTH = "both"
 
 
 SERVICE_GET_PRICES_FOR_DATE: Final = "get_prices_for_date"
 SERVICE_GET_PRICES_SCHEMA: Final = vol.Schema(
     {
         vol.Required(ATTR_DATE): cv.date,
-        vol.Required(ATTR_COUNTRY, default=Country.BOTH): vol.Coerce(Country),
+        vol.Required(ATTR_COUNTRIES, default=[Country.ES, Country.PT]): vol.All(
+            cv.ensure_list, [vol.Coerce(Country)]
+        ),
     }
 )
 
@@ -58,7 +59,7 @@ async def _get_prices_for_date(call: ServiceCall) -> ServiceResponse:
         )
     entry = loaded_entries[0]
     market_date: dt.date = call.data[ATTR_DATE]
-    country: Country = call.data[ATTR_COUNTRY]
+    countries: list[Country] = call.data[ATTR_COUNTRIES]
 
     if market_date < QUARTER_HOURLY_START_DATE:
         raise ServiceValidationError(
@@ -102,7 +103,7 @@ async def _get_prices_for_date(call: ServiceCall) -> ServiceResponse:
             for start, price_mwh in pick_series_cet(results, series_name).items()
         ]
         for area, series_name in _SERIES_BY_AREA.items()
-        if country in (area, Country.BOTH)
+        if area in countries
     }
 
 

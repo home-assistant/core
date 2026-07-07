@@ -4,13 +4,15 @@ get_prices_for_date:
       required: true
       selector:
         date:
-    country:
+    countries:
       required: true
-      default: both
+      default:
+        - es
+        - pt
       selector:
         select:
+          multiple: true
           options:
             - es
             - pt
-            - both
           translation_key: country

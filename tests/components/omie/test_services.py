@@ -10,7 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.omie.const import DOMAIN
 from homeassistant.components.omie.services import (
-    ATTR_COUNTRY,
+    ATTR_COUNTRIES,
     SERVICE_GET_PRICES_FOR_DATE,
 )
 from homeassistant.const import ATTR_DATE
@@ -26,11 +26,11 @@ TEST_DST_DATE = "2025-10-26"
 
 
 @pytest.mark.parametrize(
-    "country",
+    "countries",
     [
-        pytest.param("es", id="spain"),
-        pytest.param("pt", id="portugal"),
-        pytest.param("both", id="both"),
+        pytest.param(["es"], id="spain"),
+        pytest.param(["pt"], id="portugal"),
+        pytest.param(["es", "pt"], id="both"),
     ],
 )
 async def test_get_prices_for_date(
@@ -38,7 +38,7 @@ async def test_get_prices_for_date(
     mock_config_entry: MockConfigEntry,
     mock_pyomie: MagicMock,
     mock_omie_results_jan15: OMIEResults,
-    country: str,
+    countries: list[str],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the get_prices_for_date service response."""
@@ -50,7 +50,7 @@ async def test_get_prices_for_date(
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_PRICES_FOR_DATE,
-        {ATTR_DATE: TEST_DATE, ATTR_COUNTRY: country},
+        {ATTR_DATE: TEST_DATE, ATTR_COUNTRIES: countries},
         blocking=True,
         return_response=True,
     )
@@ -96,7 +96,7 @@ async def test_get_prices_for_date_dst_fall_back(
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_PRICES_FOR_DATE,
-        {ATTR_DATE: TEST_DST_DATE, ATTR_COUNTRY: "es"},
+        {ATTR_DATE: TEST_DST_DATE, ATTR_COUNTRIES: ["es"]},
         blocking=True,
         return_response=True,
     )

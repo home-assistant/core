@@ -39,7 +39,6 @@
   "selector": {
     "country": {
       "options": {
-        "both": "Both",
         "es": "Spain",
         "pt": "Portugal"
       }
@@ -49,9 +48,9 @@
     "get_prices_for_date": {
       "description": "Retrieves the electricity spot prices (in €/kWh) for a specific date. Prices for the next day are published daily at around 13:30 CET.",
       "fields": {
-        "country": {
-          "description": "The country to get the prices for.",
-          "name": "Country"
+        "countries": {
+          "description": "The countries to get the prices for.",
+          "name": "Countries"
         },
         "date": {
           "description": "The date to get the prices for.",
