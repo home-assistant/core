@@ -173,7 +173,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         options=[
             OFF,
             LOW,
-            MEDIUM,
             HIGH,
         ],
     ),

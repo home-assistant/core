@@ -401,8 +401,8 @@ async def _drive_streaming(
 @pytest.mark.parametrize(
     ("value", "expected"),
     [
-        pytest.param(3, HIGH, id="level_3_high"),
-        pytest.param(4, HIGH, id="out_of_range_clamped"),
+        pytest.param(2, HIGH, id="level_2_clamped"),
+        pytest.param(3, HIGH, id="level_3_clamped"),
     ],
 )
 async def test_steering_wheel_heat_levels(
@@ -419,7 +419,7 @@ async def test_steering_wheel_heat_levels(
     value: int,
     expected: str,
 ) -> None:
-    """Level 3 resolves to high and a value beyond the range clamps to high."""
+    """A level beyond the last modeled option clamps to that option, high."""
     freezer.move_to("2024-01-01 00:00:00+00:00")
     mock_metadata.return_value = metadata
 
