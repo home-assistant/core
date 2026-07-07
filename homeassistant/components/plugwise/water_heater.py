@@ -129,7 +129,7 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
     @override
     def current_temperature(self) -> float | None:
         """Return the current water temperature."""
-        return self.device.get(self.entity_description.key, {}).get("current")
+        return self.device[self.entity_description.key].get("current")
 
     @property
     @override
@@ -144,7 +144,18 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
     @override
     def target_temperature(self) -> float | None:
         """Return the water temperature we try to reach."""
-        return self.device.get(self.entity_description.key, {}).get("setpoint")
+        return self.device[self.entity_description.key].get("setpoint")
+
+    @plugwise_command
+    @override
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
+            await self.coordinator.api.set_number(
+                self._dev_id,
+                self.entity_description.key,
+                float(temperature),
+            )
 
     @plugwise_command
     @override
@@ -182,15 +193,3 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
             DHW_MODE, self._dev_id, self._list_type, self._operation_mode
         )
         self._mode_off = False
-
-    @plugwise_command
-    @override
-    async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            await self.coordinator.api.set_number(
-                self._dev_id,
-                self.entity_description.key,
-                float(temperature),
-            )
-
