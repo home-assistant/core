@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 
 
-# pylint: disable=hass-enforce-class-module
+# pylint: disable=home-assistant-enforce-class-module
 @dataclass(frozen=True, kw_only=True)
 class WibeeeSensorEntityDescription(SensorEntityDescription):
     """Describe a Wibeee sensor entity."""
@@ -106,7 +106,6 @@ SENSOR_TYPES: dict[str, WibeeeSensorEntityDescription] = {
     "factor_potencia": WibeeeSensorEntityDescription(
         key="factor_potencia",
         translation_key="power_factor",
-        native_unit_of_measurement=None,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -121,14 +120,12 @@ SENSOR_TYPES: dict[str, WibeeeSensorEntityDescription] = {
         key="energia_reactiva_ind",
         translation_key="inductive_reactive_energy",
         native_unit_of_measurement=UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
-        device_class=None,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "energia_reactiva_cap": WibeeeSensorEntityDescription(
         key="energia_reactiva_cap",
         translation_key="capacitive_reactive_energy",
         native_unit_of_measurement=UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
-        device_class=None,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
@@ -137,7 +134,6 @@ SENSOR_TYPES: dict[str, WibeeeSensorEntityDescription] = {
         translation_key="angle",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DEGREE,
-        device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
@@ -146,7 +142,6 @@ SENSOR_TYPES: dict[str, WibeeeSensorEntityDescription] = {
         translation_key="thd_current",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
-        device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
@@ -200,7 +195,6 @@ SENSOR_TYPES: dict[str, WibeeeSensorEntityDescription] = {
         translation_key="thd_voltage",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
-        device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),

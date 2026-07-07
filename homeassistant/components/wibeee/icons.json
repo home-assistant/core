@@ -11,7 +11,7 @@
         "default": "mdi:angle-acute"
       },
       "apparent_power": {
-        "default": "mdi:flash-circle"
+        "default": "mdi:lightning-bolt-circle"
       },
       "capacitive_reactive_energy": {
         "default": "mdi:alpha-e-circle-outline"

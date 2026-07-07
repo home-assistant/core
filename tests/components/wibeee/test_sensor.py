@@ -102,57 +102,31 @@ async def test_sensors_polling_mode_keeps_all_keys(
     assert registry.async_get(f"sensor.wibeee_{MOCK_MAC[-4:]}_angle") is not None
 
 
-async def test_sensor_setup_no_data_returns_early(
-    hass: HomeAssistant,
+async def test_sensor_setup_no_known_phases(
+    hass: HomeAssistant, mock_wibeee_api: MagicMock
 ) -> None:
-    """sensor.async_setup_entry must return early when coordinator has no data."""
-    from homeassistant.components.wibeee.sensor import (  # noqa: PLC0415
-        async_setup_entry,
+    """No sensors are created when the device returns no known phases."""
+    mock_wibeee_api.async_fetch_sensors_data.return_value = {
+        "unknown_phase": {"vrms": "230"},
+    }
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_MAC,
+        title="Wibeee 2233",
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_MAC_ADDRESS: MOCK_MAC,
+            CONF_WIBEEE_ID: MOCK_WIBEEE_ID,
+        },
+        options={},
+        version=1,
     )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-    coordinator = MagicMock()
-    coordinator.data = None
-    runtime = MagicMock()
-    runtime.coordinator = coordinator
-    runtime.device_info = MagicMock(mac_addr_short="2233", ip_addr=MOCK_HOST)
-    entry = MagicMock()
-    entry.runtime_data = runtime
-    entry.options = {}
-
-    added: list = []
-
-    def _add(entities, update_before_add=False) -> None:
-        added.extend(entities)
-
-    await async_setup_entry(hass, entry, _add)
-    assert added == []
-
-
-async def test_sensor_setup_no_phases_returns_early(
-    hass: HomeAssistant,
-) -> None:
-    """sensor.async_setup_entry must return early when no known phases found."""
-    from homeassistant.components.wibeee.sensor import (  # noqa: PLC0415
-        async_setup_entry,
-    )
-
-    coordinator = MagicMock()
-    # Data with only unknown phase keys → discovered_phases stays empty.
-    coordinator.data = {"unknown_phase": {"vrms": "230"}}
-    runtime = MagicMock()
-    runtime.coordinator = coordinator
-    runtime.device_info = MagicMock(mac_addr_short="2233", ip_addr=MOCK_HOST)
-    entry = MagicMock()
-    entry.runtime_data = runtime
-    entry.options = {}
-
-    added: list = []
-
-    def _add(entities, update_before_add=False) -> None:
-        added.extend(entities)
-
-    await async_setup_entry(hass, entry, _add)
-    assert added == []
+    assert hass.states.async_all("sensor") == []
 
 
 async def test_sensor_native_value_non_dict_data(

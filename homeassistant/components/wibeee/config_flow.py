@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from pywibeee import WibeeeAPI
@@ -58,6 +58,7 @@ class WibeeeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_host: str | None = None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -80,6 +81,7 @@ class WibeeeConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_host = host
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
