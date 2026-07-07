@@ -185,7 +185,7 @@ def _parse_rgb_color(value: Any) -> tuple[int, int, int] | None:
                 max(0, min(255, int(green))),
                 max(0, min(255, int(blue))),
             )
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return None
 
     return None

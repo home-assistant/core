@@ -88,11 +88,7 @@ class EvolvIOTSelect(EvolvIOTEntity, SelectEntity):
         if isinstance(value_list, list):
             return [str(value) for value in value_list]
         if isinstance(value_list, str):
-            return [
-                value.strip()
-                for value in value_list.split(",")
-                if value.strip()
-            ]
+            return [value.strip() for value in value_list.split(",") if value.strip()]
 
         return []
 
