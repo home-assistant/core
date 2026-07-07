@@ -1,24 +1,27 @@
 """Tests for the luci integration."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
-from homeassistant.components.luci.config_flow import InvalidAuth
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.luci.const import DOMAIN
-from homeassistant.components.luci.device_tracker import async_setup_scanner
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
-SCANNER_CONFIG = {
-    CONF_HOST: "192.168.1.1",
-    CONF_USERNAME: "root",
-    CONF_PASSWORD: "password",
+YAML_CONFIG = {
+    DEVICE_TRACKER_DOMAIN: {
+        CONF_PLATFORM: DOMAIN,
+        CONF_HOST: "192.168.1.1",
+        CONF_USERNAME: "root",
+        CONF_PASSWORD: "password",
+    }
 }
 
 
@@ -71,15 +74,16 @@ async def test_setup_entry_invalid_auth(
     assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
-async def test_async_setup_scanner_invalid_auth(hass: HomeAssistant) -> None:
-    """Test async_setup_scanner creates an issue on invalid auth."""
-    with patch(
-        "homeassistant.components.luci.config_flow._try_connect",
-        side_effect=InvalidAuth,
-    ):
-        result = await async_setup_scanner(hass, SCANNER_CONFIG, AsyncMock())
+@pytest.mark.usefixtures("mock_device_tracker_conf")
+async def test_yaml_import_invalid_auth(
+    hass: HomeAssistant, mock_luci_client: MagicMock
+) -> None:
+    """Test importing YAML config creates an issue on invalid auth."""
+    mock_luci_client.is_logged_in.return_value = False
 
-    assert result is True
+    assert await async_setup_component(hass, DEVICE_TRACKER_DOMAIN, YAML_CONFIG)
+    await hass.async_block_till_done()
+
     issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(DOMAIN, "yaml_import_invalid_auth")
     assert issue is not None
@@ -87,15 +91,16 @@ async def test_async_setup_scanner_invalid_auth(hass: HomeAssistant) -> None:
     assert issue.translation_placeholders == {"host": "192.168.1.1"}
 
 
-async def test_async_setup_scanner_cannot_connect(hass: HomeAssistant) -> None:
-    """Test async_setup_scanner creates an issue on connection failure."""
-    with patch(
-        "homeassistant.components.luci.config_flow._try_connect",
-        side_effect=ConnectionError,
-    ):
-        result = await async_setup_scanner(hass, SCANNER_CONFIG, AsyncMock())
+@pytest.mark.usefixtures("mock_device_tracker_conf")
+async def test_yaml_import_cannot_connect(
+    hass: HomeAssistant, mock_luci_client: MagicMock
+) -> None:
+    """Test importing YAML config creates an issue on connection failure."""
+    mock_luci_client.is_logged_in.side_effect = RequestsConnectionError
 
-    assert result is True
+    assert await async_setup_component(hass, DEVICE_TRACKER_DOMAIN, YAML_CONFIG)
+    await hass.async_block_till_done()
+
     issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(DOMAIN, "yaml_import_cannot_connect")
     assert issue is not None
