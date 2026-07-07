@@ -14,6 +14,7 @@ from homeassistant.helpers import config_validation as cv
 from ..const import (
     PUSH_SUBSCRIPTION_ENTITY_IDS,
     PUSH_SUBSCRIPTION_ID,
+    PUSH_SUBSCRIPTION_MAX_ENTITY_IDS,
     PUSH_SUBSCRIPTION_TARGET,
     PUSH_SUBSCRIPTION_TOKEN,
 )
@@ -38,7 +39,7 @@ def _unique_entity_ids(entity_ids: list[str]) -> list[str]:
         vol.Required(PUSH_SUBSCRIPTION_ENTITY_IDS): vol.All(
             cv.ensure_list,
             [cv.entity_id],
-            vol.Length(min=1, max=50),
+            vol.Length(min=1, max=PUSH_SUBSCRIPTION_MAX_ENTITY_IDS),
             _unique_entity_ids,
         ),
         vol.Optional(PUSH_SUBSCRIPTION_TARGET): cv.string,

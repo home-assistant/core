@@ -123,6 +123,9 @@ PUSH_SUBSCRIPTION_DEBOUNCE_SECONDS = 5.0
 # the oldest, bounding the number of state listeners a single device can arm.
 PUSH_SUBSCRIPTION_MAX_PER_DEVICE = 50
 
+# Maximum entity_ids accepted per subscription.
+PUSH_SUBSCRIPTION_MAX_ENTITY_IDS = 50
+
 SCHEMA_APP_DATA = vol.Schema(
     {
         vol.Inclusive(ATTR_PUSH_TOKEN, "push_cloud"): cv.string,
