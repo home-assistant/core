@@ -67,14 +67,14 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
 
     def get_next_15_interval(self, now: datetime) -> datetime:
         """Compute next time we need to notify listeners."""
-        next_run = now + timedelta(minutes=15)
+        next_run = get_nordpool_current_time() + timedelta(minutes=15)
         next_minute = next_run.minute // 15 * 15
         next_run = next_run.replace(minute=next_minute, second=0, microsecond=0)
 
         LOGGER.debug(
             "Next listener update at %s", next_run.astimezone(NORDPOOL_TIMEZONE)
         )
-        return next_run
+        return next_run.astimezone(dt_util.UTC)
 
     @override
     async def async_shutdown(self) -> None:
