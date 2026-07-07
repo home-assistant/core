@@ -219,7 +219,7 @@ class Flexit(ClimateEntity):
             _LOGGER.error("Error reading value from Flexit modbus adapter")
             return None
 
-        return result.registers[0]
+        return int(result.registers[0])
 
     async def _async_read_temp_from_register(
         self, register_type: str, register: int
