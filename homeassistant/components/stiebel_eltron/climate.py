@@ -19,6 +19,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import StiebelEltronConfigEntry
+from .const import DOMAIN
 from .coordinator import StiebelEltronDataCoordinator
 from .entity import StiebelEltronEntity
 
@@ -137,7 +138,10 @@ class StiebelEltron(StiebelEltronEntity, ClimateEntity):
             await self.coordinator.api_client.set_operation(new_mode)
         except ModbusException as e:
             _LOGGER.error("Error setting HVAC mode: %s", e)
-            raise HomeAssistantError("Failed to set HVAC mode") from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_hvac_mode_failed",
+            ) from e
         await self.coordinator.async_request_refresh()
 
     @override
@@ -149,7 +153,10 @@ class StiebelEltron(StiebelEltronEntity, ClimateEntity):
             await self.coordinator.api_client.set_target_temp(target_temperature)
         except ModbusException as e:
             _LOGGER.error("Error setting target temperature: %s", e)
-            raise HomeAssistantError("Failed to set target temperature") from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_temperature_failed",
+            ) from e
         await self.coordinator.async_request_refresh()
 
     @override
@@ -163,5 +170,8 @@ class StiebelEltron(StiebelEltronEntity, ClimateEntity):
             await self.coordinator.api_client.set_operation(new_preset)
         except ModbusException as e:
             _LOGGER.error("Error setting preset mode: %s", e)
-            raise HomeAssistantError("Failed to set preset mode") from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_preset_mode_failed",
+            ) from e
         await self.coordinator.async_request_refresh()

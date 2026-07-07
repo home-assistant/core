@@ -9,7 +9,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
-from .const import DEFAULT_PORT
+from .const import DEFAULT_PORT, DOMAIN
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,9 +27,15 @@ async def async_setup_entry(
     try:
         model = await get_controller_model(host, port)
     except ModbusException as exception:
-        raise ConfigEntryNotReady("Could not connect to device") from exception
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from exception
     except StiebelEltronModbusError as exception:
-        raise ConfigEntryError(exception) from exception
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="modbus_data_error",
+        ) from exception
 
     coordinator = StiebelEltronDataCoordinator(hass, entry, model, host, port)
 

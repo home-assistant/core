@@ -70,4 +70,8 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator[None]):
                 await self.api_client.connect()
             await self.api_client.async_update()
         except ModbusException as exception:
-            raise UpdateFailed(exception) from exception
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(exception)},
+            ) from exception
