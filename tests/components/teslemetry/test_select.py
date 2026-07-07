@@ -419,12 +419,7 @@ async def test_steering_wheel_heat_levels(
     value: int,
     expected: str,
 ) -> None:
-    """Steering wheel heat models 0-3 and clamps anything beyond.
-
-    Tesla reports steering_wheel_heat_level 3 (a real 4th level, high) on some
-    vehicles, so level 3 must resolve to high; a value beyond the modeled range
-    clamps to the nearest known level instead of raising IndexError.
-    """
+    """Level 3 resolves to high and a value beyond the range clamps to high."""
     freezer.move_to("2024-01-01 00:00:00+00:00")
     mock_metadata.return_value = metadata
 

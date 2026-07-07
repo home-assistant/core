@@ -449,6 +449,7 @@
         "state": {
           "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
           "off": "[%key:common::state::off%]"
         }
       },
