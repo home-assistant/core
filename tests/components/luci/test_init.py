@@ -1,12 +1,14 @@
 """Tests for the luci integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant.components.luci.config_flow import InvalidAuth
 from homeassistant.components.luci.const import DOMAIN
 from homeassistant.components.luci.device_tracker import async_setup_scanner
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -32,6 +34,41 @@ async def test_unload_entry(
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_setup_entry_cannot_connect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_luci_client: MagicMock,
+) -> None:
+    """Test setup fails with ConfigEntryNotReady on connection error."""
+    mock_luci_client.is_logged_in.side_effect = RequestsConnectionError
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_invalid_auth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_luci_client: MagicMock,
+) -> None:
+    """Test setup fails with ConfigEntryAuthFailed and starts a reauth flow."""
+    mock_luci_client.is_logged_in.return_value = False
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_async_setup_scanner_invalid_auth(hass: HomeAssistant) -> None:
