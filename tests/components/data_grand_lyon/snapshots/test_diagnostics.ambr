@@ -32,6 +32,8 @@
       'version': 1,
     }),
     'coordinator_data': dict({
+      'park_and_rides': dict({
+      }),
       'stops': dict({
         'stop_1': list([
           dict({
@@ -55,6 +57,59 @@
             'type': 'T',
           }),
         ]),
+      }),
+      'velov_stations': dict({
+      }),
+    }),
+  })
+# ---
+# name: test_config_entry_diagnostics_with_park_and_ride
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'data_grand_lyon',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+        dict({
+          'data': dict({
+            'park_id': 'P+R Gorge de Loup',
+          }),
+          'subentry_type': 'park_and_ride',
+          'title': 'Gorge de Loup',
+          'unique_id': 'park_and_ride_P+R Gorge de Loup',
+        }),
+      ]),
+      'title': 'Data Grand Lyon',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'coordinator_data': dict({
+      'park_and_rides': dict({
+        'park_1': dict({
+          'capacite': 240,
+          'gid': 10,
+          'horaires': '24h/24',
+          'id': 'P+R Gorge de Loup',
+          'last_update': '2026-04-10T14:00:00',
+          'last_update_fme': '2026-04-10T13:55:00',
+          'nb_tot_place_dispo': 42,
+          'nom': 'Gorge de Loup',
+          'p_surv': True,
+          'place_handi': 6,
+        }),
+      }),
+      'stops': dict({
       }),
       'velov_stations': dict({
       }),
@@ -93,6 +148,8 @@
       'version': 1,
     }),
     'coordinator_data': dict({
+      'park_and_rides': dict({
+      }),
       'stops': dict({
       }),
       'velov_stations': dict({
