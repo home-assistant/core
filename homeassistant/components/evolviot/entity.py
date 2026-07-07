@@ -222,13 +222,15 @@ class EvolvIOTEntity(CoordinatorEntity[EvolvIOTDataUpdateCoordinator]):
             "value": value,
         }
 
-    def _local_command_value(self, payload: dict[str, Any]) -> int | None:
+    def _local_command_value(self, payload: dict[str, Any]) -> Any | None:
         """Map Home Assistant command payload to local ESP command value."""
         command = payload.get("command")
         if command == "turn_on":
             return 1
         if command == "turn_off":
             return 0
+        if "value" in payload:
+            return payload["value"]
         if "brightness" in payload:
             return max(0, min(100, int(payload["brightness"])))
         if "percentage" in payload:
@@ -258,6 +260,9 @@ class EvolvIOTEntity(CoordinatorEntity[EvolvIOTDataUpdateCoordinator]):
         elif "percentage" in payload:
             state["state"] = "on" if int(payload["percentage"]) > 0 else "off"
             attributes["percentage"] = int(payload["percentage"])
+        elif "value" in payload:
+            state["state"] = str(payload["value"])
+            state["raw_value"] = payload["value"]
 
         state["available"] = True
         if attributes:

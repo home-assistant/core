@@ -295,7 +295,7 @@ class EvolvIOTApi:
         endpoint: str,
         device_secret: str,
         switch_name: str,
-        value: float | bool,
+        value: float | bool | str,
     ) -> None:
         """Send an encrypted command directly to an ESP over local HTTP."""
         local_payload = {
