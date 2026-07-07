@@ -103,6 +103,7 @@ class GardenaBluetoothValveX(GardenaBluetoothEntity, ValveEntity):
     _attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
     _attr_device_class = ValveDeviceClass.WATER
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Derive the required characteristics from the concrete service."""
         super().__init_subclass__(**kwargs)
@@ -131,11 +132,13 @@ class GardenaBluetoothValveX(GardenaBluetoothEntity, ValveEntity):
         )
         self._attr_unique_id = f"{coordinator.address}-{self._service.state.unique_id}"
 
+    @override
     def _handle_coordinator_update(self) -> None:
         state = self.coordinator.get_cached(self._service.state)
         self._attr_is_closed = None if state is None else not state
         super()._handle_coordinator_update()
 
+    @override
     async def async_open_valve(self, **kwargs: Any) -> None:
         """Open the valve for the configured manual watering duration."""
         cached = self.coordinator.get_cached(self._service.manual_watering_duration)
@@ -147,6 +150,7 @@ class GardenaBluetoothValveX(GardenaBluetoothEntity, ValveEntity):
         self._attr_is_closed = False
         self.async_write_ha_state()
 
+    @override
     async def async_close_valve(self, **kwargs: Any) -> None:
         """Close the valve."""
         await self.coordinator.write(

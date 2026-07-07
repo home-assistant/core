@@ -97,6 +97,7 @@ class GardenaBluetoothValveXSwitch(GardenaBluetoothEntity, SwitchEntity):
     _attr_is_on: bool | None = None
     _attr_entity_registry_enabled_default = False
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Derive the required characteristics from the concrete service."""
         super().__init_subclass__(**kwargs)
@@ -121,14 +122,14 @@ class GardenaBluetoothValveXSwitch(GardenaBluetoothEntity, SwitchEntity):
                 self._service.available.uuid,
             },
         )
-        self._attr_unique_id = (
-            f"{coordinator.address}-{self._service.state.unique_id}-switch"
-        )
+        self._attr_unique_id = f"{coordinator.address}-{self._service.state.unique_id}"
 
+    @override
     def _handle_coordinator_update(self) -> None:
         self._attr_is_on = self.coordinator.get_cached(self._service.state)
         super()._handle_coordinator_update()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on for the configured manual watering duration."""
         cached = self.coordinator.get_cached(self._service.manual_watering_duration)
@@ -140,6 +141,7 @@ class GardenaBluetoothValveXSwitch(GardenaBluetoothEntity, SwitchEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.write(
