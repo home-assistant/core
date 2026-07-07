@@ -169,7 +169,7 @@ class EvolvIOTApi:
         try:
             async with self._session.get(
                 self.health_url,
-                ssl=None if self.verify_ssl else False,
+                ssl=self.verify_ssl,
             ) as response:
                 response.raise_for_status()
                 await response.text()
@@ -194,7 +194,7 @@ class EvolvIOTApi:
                     "client_id": client_id,
                     "client_secret": client_secret,
                 },
-                ssl=None if self.verify_ssl else False,
+                ssl=self.verify_ssl,
             ) as response:
                 if response.status in (401, 403):
                     raise EvolvIOTAuthError("Invalid EvolvIOT OAuth credentials")
@@ -217,7 +217,7 @@ class EvolvIOTApi:
         try:
             async with self._session.post(
                 f"{self.api_base_url}/device/authorize",
-                ssl=None if self.verify_ssl else False,
+                ssl=self.verify_ssl,
             ) as response:
                 response.raise_for_status()
                 data = await response.json(content_type=None)
@@ -236,7 +236,7 @@ class EvolvIOTApi:
                     "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
                     "device_code": device_code,
                 },
-                ssl=None if self.verify_ssl else False,
+                ssl=self.verify_ssl,
             ) as response:
                 data = await response.json(content_type=None)
                 if response.status >= 400:
@@ -387,7 +387,7 @@ class EvolvIOTApi:
                 method.upper(),
                 url,
                 headers=headers,
-                ssl=None if self.verify_ssl else False,
+                ssl=self.verify_ssl,
                 **kwargs,
             ) as response:
                 if response.status in (401, 403):
@@ -429,7 +429,7 @@ class EvolvIOTApi:
             async with self._session.post(
                 f"{self.api_base_url}/oauth/token",
                 data=data,
-                ssl=None if self.verify_ssl else False,
+                ssl=self.verify_ssl,
             ) as response:
                 if response.status >= 400:
                     return False

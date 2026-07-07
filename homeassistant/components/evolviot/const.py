@@ -2,7 +2,20 @@
 
 from datetime import timedelta
 
-from homeassistant.const import Platform
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_VERIFY_SSL,
+    Platform,
+)
+
+__all__ = [
+    "CONF_ACCESS_TOKEN",
+    "CONF_CLIENT_ID",
+    "CONF_CLIENT_SECRET",
+    "CONF_VERIFY_SSL",
+]
 
 DOMAIN = "evolviot"
 NAME = "EvolvIOT"
@@ -15,24 +28,12 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 STORAGE_VERSION = 1
 STORAGE_KEY_PREFIX = DOMAIN
 
-CONF_ACCESS_TOKEN = "access_token"
 CONF_API_BASE_URL = "api_base_url"
 CONF_AUTHORIZATION_CODE = "authorization_code"
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 CONF_REFRESH_TOKEN = "refresh_token"
-CONF_VERIFY_SSL = "verify_ssl"
 
 DATA_API = "api"
 DATA_COORDINATOR = "coordinator"
 DATA_KNOWN_ENTITIES = "known_entities"
 
-PLATFORMS = (
-    Platform.SWITCH,
-    Platform.LIGHT,
-    Platform.NUMBER,
-    Platform.SELECT,
-    Platform.FAN,
-    Platform.SENSOR,
-    Platform.BINARY_SENSOR,
-)
+PLATFORMS = (Platform.SWITCH,)

@@ -2,9 +2,9 @@
 
 import asyncio
 from contextlib import suppress
-from typing import Any
+from typing import Any, override
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -50,6 +50,7 @@ class EvolvIOTEntity(CoordinatorEntity[EvolvIOTDataUpdateCoordinator]):
         return self.coordinator.states.get(self._backend_entity_id, {})
 
     @property
+    @override
     def available(self) -> bool:
         """Return availability from cloud or local device reachability."""
         state = self.backend_state
@@ -58,6 +59,7 @@ class EvolvIOTEntity(CoordinatorEntity[EvolvIOTDataUpdateCoordinator]):
         return bool(state.get("available", True) or state.get("local_available"))
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Expose useful EvolvIOT metadata."""
         entity = self.backend_entity
@@ -229,12 +231,6 @@ class EvolvIOTEntity(CoordinatorEntity[EvolvIOTDataUpdateCoordinator]):
             return 1
         if command == "turn_off":
             return 0
-        if "value" in payload:
-            return payload["value"]
-        if "brightness" in payload:
-            return max(0, min(100, int(payload["brightness"])))
-        if "percentage" in payload:
-            return max(0, min(100, int(payload["percentage"])))
         return None
 
     def _apply_optimistic_state(self, payload: dict[str, Any]) -> None:
@@ -254,15 +250,6 @@ class EvolvIOTEntity(CoordinatorEntity[EvolvIOTDataUpdateCoordinator]):
             state["state"] = "on"
         elif command == "turn_off":
             state["state"] = "off"
-        elif "brightness" in payload:
-            state["state"] = "on" if int(payload["brightness"]) > 0 else "off"
-            attributes["brightness"] = int(payload["brightness"])
-        elif "percentage" in payload:
-            state["state"] = "on" if int(payload["percentage"]) > 0 else "off"
-            attributes["percentage"] = int(payload["percentage"])
-        elif "value" in payload:
-            state["state"] = str(payload["value"])
-            state["raw_value"] = payload["value"]
 
         state["available"] = True
         if attributes:

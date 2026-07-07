@@ -4,13 +4,14 @@ import asyncio
 import base64
 from contextlib import suppress
 from io import BytesIO
-from typing import Any
+from typing import Any, override
 
 from PIL import Image
 import qrcode
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import UnknownFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -95,7 +96,10 @@ class EvolvIOTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             verify_ssl=self._verify_ssl,
         )
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None):
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Start app-based pairing immediately."""
         errors: dict[str, str] = {}
 
@@ -121,7 +125,9 @@ class EvolvIOTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_pair()
 
-    async def async_step_pair(self, user_input: dict[str, Any] | None = None):
+    async def async_step_pair(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Show pairing details while polling for app approval."""
         errors: dict[str, str] = {}
 
@@ -210,7 +216,7 @@ class EvolvIOTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception:  # noqa: BLE001
             self._pairing = {}
 
-    async def _async_refresh_pairing(self, error: str):
+    async def _async_refresh_pairing(self, error: str) -> ConfigFlowResult:
         """Replace the expired/invalid pairing session with a fresh one."""
         try:
             await self._async_start_pairing()
@@ -250,6 +256,7 @@ class EvolvIOTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
     ) -> config_entries.OptionsFlow:
@@ -262,23 +269,25 @@ class EvolvIOTOptionsFlow(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize the options flow."""
-        self.config_entry = config_entry
+        self._config_entry = config_entry
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Update stored connection details."""
         if user_input is not None:
             data = {
-                **self.config_entry.data,
+                **self._config_entry.data,
                 CONF_API_BASE_URL: normalize_api_base_url(
                     user_input[CONF_API_BASE_URL]
                 ),
                 CONF_VERIFY_SSL: bool(user_input.get(CONF_VERIFY_SSL, True)),
             }
-            self.hass.config_entries.async_update_entry(self.config_entry, data=data)
-            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+            self.hass.config_entries.async_update_entry(self._config_entry, data=data)
+            await self.hass.config_entries.async_reload(self._config_entry.entry_id)
             return self.async_create_entry(title="", data={})
 
         return self.async_show_form(
             step_id="init",
-            data_schema=_connection_schema(dict(self.config_entry.data)),
+            data_schema=_connection_schema(dict(self._config_entry.data)),
         )

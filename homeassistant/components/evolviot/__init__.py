@@ -3,9 +3,7 @@
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import EvolvIOTApi, normalize_api_base_url
@@ -22,7 +20,7 @@ from .const import (
     DOMAIN,
     PLATFORMS,
 )
-from .coordinator import EvolvIOTDataUpdateCoordinator, evolviot_entity_domain
+from .coordinator import EvolvIOTDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -53,7 +51,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = EvolvIOTDataUpdateCoordinator(hass, api, entry.entry_id)
     await coordinator.async_load_cache()
     await coordinator.async_config_entry_first_refresh()
-    _remove_stale_entity_registry_entries(hass, coordinator)
 
     runtime_data = {
         DATA_API: api,
@@ -73,34 +70,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-def _remove_stale_entity_registry_entries(
-    hass: HomeAssistant,
-    coordinator: EvolvIOTDataUpdateCoordinator,
-) -> None:
-    """Remove old entities whose EvolvIOT control type changed domains."""
-    entity_registry = er.async_get(hass)
-
-    for entity in coordinator.entities.values():
-        unique_id = entity.get("unique_id")
-        if not unique_id:
-            continue
-
-        current_platform = _platform_for_evolviot_domain(evolviot_entity_domain(entity))
-        for platform in PLATFORMS:
-            if platform == current_platform:
-                continue
-            if entity_id := entity_registry.async_get_entity_id(
-                platform,
-                DOMAIN,
-                str(unique_id),
-            ):
-                entity_registry.async_remove(entity_id)
-
-
-def _platform_for_evolviot_domain(domain: str) -> Platform | str:
-    """Return the HA platform that hosts an EvolvIOT effective domain."""
-    if domain == "color":
-        return Platform.LIGHT
-    return domain

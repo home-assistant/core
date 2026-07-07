@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.evolviot import async_unload_entry
 from homeassistant.components.evolviot.const import (
     CONF_ACCESS_TOKEN,
     CONF_API_BASE_URL,
@@ -13,6 +12,7 @@ from homeassistant.components.evolviot.const import (
     DATA_KNOWN_ENTITIES,
     DEFAULT_API_BASE_URL,
     DOMAIN,
+    PLATFORMS,
 )
 from homeassistant.core import HomeAssistant
 
@@ -54,7 +54,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
 
     assert mock_load_cache.await_count == 1
     assert mock_first_refresh.await_count == 1
-    mock_forward_setups.assert_awaited_once()
+    mock_forward_setups.assert_awaited_once_with(entry, PLATFORMS)
     assert DOMAIN in hass.data
     assert entry.entry_id in hass.data[DOMAIN]
     assert DATA_API in hass.data[DOMAIN][entry.entry_id]
@@ -74,14 +74,32 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         },
     )
     entry.add_to_hass(hass)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
 
-    with patch.object(
-        hass.config_entries,
-        "async_unload_platforms",
-        new=AsyncMock(return_value=True),
-    ) as mock_unload_platforms:
-        assert await async_unload_entry(hass, entry)
+    with (
+        patch(
+            "homeassistant.components.evolviot.EvolvIOTDataUpdateCoordinator."
+            "async_load_cache",
+            new=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.evolviot.EvolvIOTDataUpdateCoordinator."
+            "async_config_entry_first_refresh",
+            new=AsyncMock(),
+        ),
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            new=AsyncMock(),
+        ),
+        patch.object(
+            hass.config_entries,
+            "async_unload_platforms",
+            new=AsyncMock(return_value=True),
+        ) as mock_unload_platforms,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert await hass.config_entries.async_unload(entry.entry_id)
 
-    mock_unload_platforms.assert_awaited_once()
+    mock_unload_platforms.assert_awaited_once_with(entry, PLATFORMS)
     assert entry.entry_id not in hass.data[DOMAIN]

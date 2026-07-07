@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
@@ -62,9 +62,10 @@ class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return [
             entity
             for entity in self.entities.values()
-            if evolviot_entity_domain(entity) == domain
+            if entity.get("domain") == domain
         ]
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch fresh data from EvolvIOT."""
         states_payload: dict[str, Any] = {}
@@ -118,7 +119,6 @@ class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if "value" in local_status:
                 self._apply_local_state(
                     state,
-                    entities[entity_id],
                     local_status["value"],
                 )
             states[entity_id] = state
@@ -260,78 +260,14 @@ class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _apply_local_state(
         self,
         state: dict[str, Any],
-        entity: dict[str, Any],
         value: Any,
     ) -> None:
         """Apply a local status value to a Home Assistant state payload."""
-        domain = evolviot_entity_domain(entity)
-        attributes = dict(state.get("attributes") or {})
         state["raw_value"] = value
 
-        if domain in {"switch", "light", "binary_sensor", "fan"}:
-            numeric_value: float | None
-            try:
-                numeric_value = float(value)
-            except TypeError, ValueError:
-                numeric_value = None
-                normalized = str(value).lower()
-                is_on = normalized in {"on", "true", "1"}
-            else:
-                is_on = numeric_value > 0
+        try:
+            is_on = float(value) > 0
+        except TypeError, ValueError:
+            is_on = str(value).lower() in {"on", "true", "1"}
 
-            state["state"] = "on" if is_on else "off"
-            if domain == "fan" and is_on and numeric_value is not None:
-                attributes["percentage"] = max(0, min(100, round(numeric_value)))
-            if (
-                domain == "light"
-                and entity.get("capabilities", {}).get("supports_brightness")
-                and numeric_value is not None
-            ):
-                attributes["brightness"] = max(0, min(100, round(numeric_value)))
-        else:
-            state["state"] = str(value)
-
-        if attributes:
-            state["attributes"] = attributes
-
-
-def evolviot_entity_domain(entity: dict[str, Any]) -> str:
-    """Return the Home Assistant domain for an EvolvIOT backend entity."""
-    capabilities = entity.get("capabilities") or {}
-    control = entity.get("control") or {}
-    key = _entity_metadata_value(entity, control).lower()
-    presentation = str(control.get("presentation") or "").lower()
-
-    if (
-        capabilities.get("supports_select")
-        or "pattern" in key
-        or presentation == "dropdown"
-    ):
-        return "select"
-
-    if (
-        capabilities.get("supports_color")
-        or "color" in key
-        or presentation == "color_palette"
-    ):
-        return "color"
-
-    if capabilities.get("supports_brightness") or "brightness" in key:
-        return "number"
-
-    return str(entity.get("domain") or "")
-
-
-def _entity_metadata_value(entity: dict[str, Any], control: dict[str, Any]) -> str:
-    """Return searchable entity metadata for fallback classification."""
-    return " ".join(
-        str(value or "")
-        for value in (
-            control.get("key"),
-            control.get("name"),
-            control.get("appliance_name"),
-            entity.get("unique_id"),
-            entity.get("entity_id"),
-            entity.get("name"),
-        )
-    )
+        state["state"] = "on" if is_on else "off"
