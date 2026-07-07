@@ -32,12 +32,12 @@ a :class:`SubprocessSandbox` handle once the subprocess is running.
 from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 import pytest_asyncio
 
-from hass_client.testing._autotag import install_mock_config_entry_autotag
+from hass_client.testing._autotag import configure_compat_plugin, engagement_count
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -48,27 +48,36 @@ DEFAULT_GROUP = "built-in"
 
 _MARK_NO_FREEZER = "no_sandbox_freezer"
 
-_unpatch_autotag: Callable[[], None] | None = None
+_unconfigure: Callable[[], None] | None = None
 
 
 def pytest_configure(config: pytest.Config) -> None:
-    """Register the ``no_sandbox_freezer`` marker and install the autotag patch."""
+    """Register the freezer marker; install autotag + engagement counter."""
     config.addinivalue_line(
         "markers",
         f"{_MARK_NO_FREEZER}: skip the test when the real-subprocess sandbox"
         " plugin is active (freezer + subprocess clock skew hangs the channel)",
     )
-    global _unpatch_autotag  # noqa: PLW0603
-    if _unpatch_autotag is None:
-        _unpatch_autotag = install_mock_config_entry_autotag()
+    global _unconfigure  # noqa: PLW0603
+    if _unconfigure is None:
+        _unconfigure = configure_compat_plugin()
 
 
 def pytest_unconfigure(config: pytest.Config) -> None:
-    """Restore the original ``MockConfigEntry.add_to_hass`` on session exit."""
-    global _unpatch_autotag  # noqa: PLW0603
-    if _unpatch_autotag is not None:
-        _unpatch_autotag()
-        _unpatch_autotag = None
+    """Restore the patched hooks on session exit."""
+    global _unconfigure  # noqa: PLW0603
+    if _unconfigure is not None:
+        _unconfigure()
+        _unconfigure = None
+
+
+def pytest_terminal_summary(
+    terminalreporter: Any, exitstatus: int, config: pytest.Config
+) -> None:
+    """Report how often the sandbox router actually engaged (see run_compat)."""
+    terminalreporter.write_line(
+        f"sandbox-compat: router entry_setup engaged {engagement_count()} time(s)"
+    )
 
 
 def pytest_collection_modifyitems(
@@ -95,9 +104,17 @@ def pytest_collection_modifyitems(
         if item.get_closest_marker(_MARK_NO_FREEZER) is not None:
             item.add_marker(skip_freezer)
             continue
-        fixtures = getattr(item, "fixturenames", ())
+        fixtures = getattr(item, "fixturenames", None)
+        if fixtures is None:
+            continue
         if "freezer" in fixtures:
             item.add_marker(skip_freezer)
+            continue
+        # Inject the subprocess sandbox into every hass-using test — the
+        # autotag alone leaves ``hass.config_entries.router`` None, and a
+        # tagged entry then quietly sets up locally (lane no-op).
+        if "hass" in fixtures and "sandbox_subprocess" not in fixtures:
+            fixtures.append("sandbox_subprocess")
 
 
 @dataclass

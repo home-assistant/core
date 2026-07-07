@@ -58,6 +58,8 @@ _SUMMARY_RE = {
     "skipped": re.compile(r"(\d+) skipped"),
 }
 
+_ENGAGED_RE = re.compile(r"sandbox-compat: router entry_setup engaged (\d+) time")
+
 
 @dataclass
 class Result:
@@ -68,6 +70,7 @@ class Result:
     failed: int = 0
     errors: int = 0
     skipped: int = 0
+    engaged: int = 0
     status: str = "no_tests"
 
     @property
@@ -129,13 +132,19 @@ def run_one(integration: str, plugin: str, *, timeout: float = 300.0) -> Result:
         for field, pattern in _SUMMARY_RE.items():
             if (match := pattern.search(line)) is not None:
                 setattr(result, field, int(match.group(1)))
+    if (match := _ENGAGED_RE.search(output)) is not None:
+        result.engaged = int(match.group(1))
 
     if result.total == 0:
         result.status = "no_tests"
-    elif result.failed == 0 and result.errors == 0:
-        result.status = "pass"
-    else:
+    elif result.failed != 0 or result.errors != 0:
         result.status = "issues"
+    elif result.engaged == 0 and result.passed > 0:
+        # Tests passed but nothing ever routed through a sandbox — the
+        # plugin regressed to a no-op; do NOT report this as compatibility.
+        result.status = "no_op"
+    else:
+        result.status = "pass"
 
     if result.status in ("issues", "timeout"):
         ERRORS_DIR.mkdir(parents=True, exist_ok=True)
@@ -147,7 +156,9 @@ def write_csv(results: list[Result], path: Path) -> None:
     """Persist per-integration results as CSV."""
     with path.open("w", newline="") as fh:
         writer = csv.writer(fh)
-        writer.writerow(["integration", "status", "passed", "failed", "errors", "skipped"])
+        writer.writerow(
+            ["integration", "status", "passed", "failed", "errors", "skipped", "engaged"]
+        )
         for result in results:
             writer.writerow(
                 [
@@ -157,13 +168,20 @@ def write_csv(results: list[Result], path: Path) -> None:
                     result.failed,
                     result.errors,
                     result.skipped,
+                    result.engaged,
                 ]
             )
 
 
 def write_report(results: list[Result], plugin: str, path: Path) -> None:
     """Write a short Markdown summary suitable for review."""
-    counts: dict[str, int] = {"pass": 0, "issues": 0, "timeout": 0, "no_tests": 0}
+    counts: dict[str, int] = {
+        "pass": 0,
+        "issues": 0,
+        "timeout": 0,
+        "no_tests": 0,
+        "no_op": 0,
+    }
     totals = {"passed": 0, "failed": 0, "errors": 0, "skipped": 0}
     for result in results:
         counts[result.status] = counts.get(result.status, 0) + 1
@@ -181,6 +199,7 @@ def write_report(results: list[Result], plugin: str, path: Path) -> None:
         "",
         f"- Integrations passing: **{counts.get('pass', 0)}**",
         f"- Integrations with issues: **{counts.get('issues', 0)}**",
+        f"- No-op runs (sandbox never engaged): **{counts.get('no_op', 0)}**",
         f"- Timeouts: **{counts.get('timeout', 0)}**",
         f"- No tests collected: **{counts.get('no_tests', 0)}**",
         "",
@@ -191,13 +210,14 @@ def write_report(results: list[Result], plugin: str, path: Path) -> None:
         "",
         "## Per-integration results",
         "",
-        "| integration | status | passed | failed | errors | skipped |",
-        "| --- | --- | ---: | ---: | ---: | ---: |",
+        "| integration | status | passed | failed | errors | skipped | engaged |",
+        "| --- | --- | ---: | ---: | ---: | ---: | ---: |",
     ]
     for result in results:
         lines.append(
             f"| {result.integration} | {result.status} | {result.passed} |"
             f" {result.failed} | {result.errors} | {result.skipped} |"
+            f" {result.engaged} |"
         )
     path.write_text("\n".join(lines) + "\n")
 
@@ -262,6 +282,14 @@ def main(argv: list[str] | None = None) -> int:
     write_report(results, plugin, args.report)
     print(f"\nWrote {args.csv}")
     print(f"Wrote {args.report}")
+
+    if results and all(result.engaged == 0 for result in results):
+        print(
+            "ERROR: no test in the entire run routed an entry through a"
+            " sandbox — the compat lane is a no-op.",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 
