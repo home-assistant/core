@@ -61,9 +61,22 @@ def mock_motion_detector2() -> MagicMock:
 
 
 async def _setup_button_platform(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    platforms: list[Platform],
 ) -> None:
-    """Set up the bosch_shc config entry with only the button platform loaded."""
+    """Set up the bosch_shc config entry with only the button platform loaded.
+
+    Mirrors conftest.py's `init_integration` fixture exactly (same patch
+    targets), but as a plain coroutine instead of a fixture: tests here need
+    to finish configuring `mock_session.device_helper`/`.scenarios` *before*
+    `async_setup` runs, which a fixture can't do — fixtures resolve (and so
+    would call setup) before the test body executes. `platforms` is the
+    fixture already defined in this file (`[Platform.BUTTON]`), injected the
+    same way `init_integration` receives it, so there is only one place that
+    decides which platform this test module loads.
+    """
     mock_config_entry.add_to_hass(hass)
     with (
         patch(
@@ -71,7 +84,7 @@ async def _setup_button_platform(
             return_value=mock_session,
         ),
         patch("homeassistant.components.bosch_shc.async_get_instance"),
-        patch("homeassistant.components.bosch_shc.PLATFORMS", [Platform.BUTTON]),
+        patch("homeassistant.components.bosch_shc.PLATFORMS", platforms),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -84,6 +97,7 @@ async def test_buttons(
     mock_config_entry: MockConfigEntry,
     mock_session: MagicMock,
     mock_motion_detector2: MagicMock,
+    platforms: list[Platform],
 ) -> None:
     """Every button entity is created for a fully-featured SHC installation."""
     mock_session.scenarios = [_make_scenario("sc-1", "Good Night")]
@@ -98,7 +112,7 @@ async def test_buttons(
     ]
     mock_session.device_helper.motion_detectors2 = [mock_motion_detector2]
 
-    await _setup_button_platform(hass, mock_config_entry, mock_session)
+    await _setup_button_platform(hass, mock_config_entry, mock_session, platforms)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -180,6 +194,7 @@ async def test_button_press(
     device_key: str,
     mock_attr: str,
     call_args: tuple[Any, ...],
+    platforms: list[Platform],
 ) -> None:
     """Pressing a button calls the matching boschshcpy method with the right args."""
     scenario = _make_scenario("sc-1", "Good Night")
@@ -190,7 +205,7 @@ async def test_button_press(
     mock_session.device_helper.smoke_detectors = [smoke_detector]
     mock_session.device_helper.motion_detectors2 = [mock_motion_detector2]
 
-    await _setup_button_platform(hass, mock_config_entry, mock_session)
+    await _setup_button_platform(hass, mock_config_entry, mock_session, platforms)
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -223,6 +238,7 @@ async def test_motion_detector2_optional_buttons_skipped(
     supports_walk_test: bool,
     walk_state_present: bool,
     supports_detection_test: bool,
+    platforms: list[Platform],
 ) -> None:
     """Walk-test and detection-test buttons are only created when supported."""
     device = _make_device(SHCMotionDetector2, "md2-serial", "md2-id")
@@ -231,7 +247,7 @@ async def test_motion_detector2_optional_buttons_skipped(
     device.supports_detection_test = supports_detection_test
     mock_session.device_helper.motion_detectors2 = [device]
 
-    await _setup_button_platform(hass, mock_config_entry, mock_session)
+    await _setup_button_platform(hass, mock_config_entry, mock_session, platforms)
 
     entity_ids = {
         entry.entity_id
@@ -264,6 +280,7 @@ async def test_button_press_error(
     entity_id: str,
     device_key: str,
     mock_attr: str,
+    platforms: list[Platform],
 ) -> None:
     """A library error while pressing a button surfaces as a HomeAssistantError."""
     scenario = _make_scenario("sc-1", "Good Night")
@@ -276,7 +293,7 @@ async def test_button_press_error(
         "Test error"
     )
 
-    await _setup_button_platform(hass, mock_config_entry, mock_session)
+    await _setup_button_platform(hass, mock_config_entry, mock_session, platforms)
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(

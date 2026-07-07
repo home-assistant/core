@@ -143,7 +143,14 @@ async def async_setup_entry(
 
 
 class SHCScenarioButton(ButtonEntity):
-    """Button entity that triggers a Bosch SHC scenario (not an SHCDevice, so no SHCEntity)."""
+    """Button entity that triggers a Bosch SHC scenario.
+
+    A "scenario" is a routine stored on the SHC controller itself (defined
+    via the Bosch SmartHome app) that the controller runs when triggered —
+    not an SHCDevice, so no SHCEntity, and not the same as a Home Assistant
+    `scene` (which applies a saved state snapshot from HA's side); this is
+    closer to firing a remote, Bosch-defined automation on a single API call.
+    """
 
     _attr_has_entity_name = True
     _attr_icon = "mdi:script-text-play"
