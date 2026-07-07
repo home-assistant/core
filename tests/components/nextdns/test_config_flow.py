@@ -13,7 +13,7 @@ from homeassistant.components.nextdns.const import (
     SUBENTRY_TYPE_PROFILE,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigSubentry
-from homeassistant.const import CONF_API_KEY, CONF_PROFILE_NAME
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -45,7 +45,7 @@ async def test_form_create_entry(
     assert result["step_id"] == "profiles"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PROFILE_NAME: "Fake Profile"}
+        result["flow_id"], {CONF_PROFILE_ID: "xyz12"}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -105,7 +105,7 @@ async def test_form_errors(
     assert result["step_id"] == "profiles"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PROFILE_NAME: "Fake Profile"}
+        result["flow_id"], {CONF_PROFILE_ID: "xyz12"}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY

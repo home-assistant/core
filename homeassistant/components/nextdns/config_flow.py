@@ -17,7 +17,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_PROFILE_NAME
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -112,8 +112,7 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            profile_name = user_input[CONF_PROFILE_NAME]
-            profile_id = self.nextdns.get_profile_id(profile_name)
+            profile_id = user_input[CONF_PROFILE_ID]
 
             return self.async_create_entry(
                 title="NextDNS",
@@ -122,7 +121,7 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
                     {
                         "subentry_type": SUBENTRY_TYPE_PROFILE,
                         "data": {CONF_PROFILE_ID: profile_id},
-                        "title": profile_name,
+                        "title": self.nextdns.get_profile_name(profile_id),
                         "unique_id": profile_id,
                     },
                 ],
@@ -132,8 +131,17 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="profiles",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_PROFILE_NAME): vol.In(
-                        [profile.name for profile in self.nextdns.profiles]
+                    vol.Required(CONF_PROFILE_ID): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(
+                                    value=profile.id,
+                                    label=profile.name,
+                                )
+                                for profile in self.nextdns.profiles
+                            ],
+                            mode=SelectSelectorMode.LIST,
+                        )
                     )
                 }
             ),
@@ -236,11 +244,6 @@ class ProfileSubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             profile_id = user_input[CONF_PROFILE_ID]
-            profile_name = next(
-                profile.name
-                for profile in self.nextdns.profiles
-                if profile.id == profile_id
-            )
 
             if any(
                 subentry.unique_id == profile_id
@@ -249,7 +252,7 @@ class ProfileSubentryFlowHandler(ConfigSubentryFlow):
                 errors["base"] = "already_configured"
             else:
                 return self.async_create_entry(
-                    title=profile_name,
+                    title=self.nextdns.get_profile_name(profile_id),
                     data={CONF_PROFILE_ID: profile_id},
                     unique_id=profile_id,
                 )

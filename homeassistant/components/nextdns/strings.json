@@ -15,10 +15,10 @@
     "step": {
       "profiles": {
         "data": {
-          "profile_name": "Profile"
+          "profile_id": "Profile"
         },
         "data_description": {
-          "profile_name": "The NextDNS configuration profile you want to integrate"
+          "profile_id": "The NextDNS configuration profile you want to integrate"
         }
       },
       "reauth_confirm": {
@@ -63,10 +63,10 @@
       "step": {
         "user": {
           "data": {
-            "profile_id": "[%key:component::nextdns::config::step::profiles::data::profile_name%]"
+            "profile_id": "[%key:component::nextdns::config::step::profiles::data::profile_id%]"
           },
           "data_description": {
-            "profile_id": "[%key:component::nextdns::config::step::profiles::data_description::profile_name%]"
+            "profile_id": "[%key:component::nextdns::config::step::profiles::data_description::profile_id%]"
           },
           "description": "Select the NextDNS profile you want to add.",
           "title": "Add NextDNS profile"

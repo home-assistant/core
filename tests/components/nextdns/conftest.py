@@ -112,7 +112,11 @@ def mock_nextdns_client(mock_nextdns: AsyncMock) -> AsyncMock:
     client.get_analytics_protocols.return_value = ANALYTICS_PROTOCOLS
     client.get_analytics_status.return_value = ANALYTICS_STATUS
     client.get_profile_id = Mock(return_value="xyz12")
-    client.get_profile_name = Mock(return_value="Fake Profile")
+    client.get_profile_name = Mock(
+        side_effect=lambda profile_id: next(
+            profile.name for profile in client.profiles if profile.id == profile_id
+        )
+    )
     client.get_profiles.return_value = PROFILES
     client.get_settings.return_value = SETTINGS
     client.set_setting.return_value = True
