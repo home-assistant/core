@@ -3,8 +3,6 @@
 from dataclasses import asdict
 from typing import Any
 
-import attr
-
 from homeassistant.components.diagnostics import async_redact_data, entity_entry_as_dict
 from homeassistant.const import ATTR_CONFIGURATION_URL, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
@@ -75,7 +73,7 @@ def _async_device_as_dict(hass: HomeAssistant, device: DeviceEntry) -> dict[str,
     # Gather information how this device is represented in Home Assistant
     entity_registry = er.async_get(hass)
 
-    data = async_redact_data(attr.asdict(device), REDACT_CONFIG)
+    data = async_redact_data(dr.device_entry_as_dict(device), REDACT_CONFIG)
     data["entities"] = []
     entities: list[dict[str, Any]] = data["entities"]
 

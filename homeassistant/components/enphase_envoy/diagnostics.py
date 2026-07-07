@@ -5,7 +5,6 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientResponse
-from attr import asdict
 from pyenphase.envoy import Envoy
 from pyenphase.exceptions import EnvoyError
 
@@ -111,10 +110,7 @@ async def async_get_config_entry_diagnostics(
                 state_dict.pop("context", None)
             entity_dict = entity_entry_as_dict(entity)
             entities.append({"entity": entity_dict, "state": state_dict})
-        device_dict = asdict(device)
-        device_dict.pop("_cache", None)
-        # This can be removed when suggested_area is removed from DeviceEntry
-        device_dict.pop("_suggested_area")
+        device_dict = dr.device_entry_as_dict(device)
         device_entities.append({"device": device_dict, "entities": entities})
 
     # remove envoy serial
