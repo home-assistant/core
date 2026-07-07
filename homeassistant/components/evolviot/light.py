@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_COORDINATOR, DATA_KNOWN_ENTITIES, DOMAIN
-from .coordinator import EvolvIOTDataUpdateCoordinator
+from .coordinator import EvolvIOTDataUpdateCoordinator, evolviot_entity_domain
 from .entity import EvolvIOTEntity
 
 PLATFORM_DOMAIN = "light"
@@ -40,7 +40,7 @@ async def async_setup_entry(
             if entity_id in known:
                 continue
             known.add(entity_id)
-            if entity.get("domain") == COLOR_DOMAIN:
+            if evolviot_entity_domain(entity) == COLOR_DOMAIN:
                 entities.append(EvolvIOTColorLight(coordinator, entity))
             else:
                 entities.append(EvolvIOTLight(coordinator, entity))
