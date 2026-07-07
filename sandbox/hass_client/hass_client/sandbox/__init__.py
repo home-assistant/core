@@ -162,14 +162,14 @@ class SandboxRuntime:
             # every coroutine the runtime spawns inherits it (asyncio copies
             # the context at `create_task` time).
             #
-            # Ordering caveat (see the plan's touch-points audit): registries
-            # whose `Store` is constructed AND first loaded inside
-            # `FlowRunner.create` already ran their `async_load` against the
-            # sandbox tempdir before this point, so they keep their local
-            # file backing. `restore_state`'s `async_load` runs *after* this
-            # set, so it routes to main — which is what we want. If a future
-            # refactor moves a registry's first `async_load` to straddle this
-            # line, that registry would silently start routing to main.
+            # Ordering caveat: `FlowRunner.create` explicitly loads the
+            # area/category/device/entity/floor/issue/label registries before
+            # this point, so their Stores bind to the sandbox tempdir and keep
+            # their local file backing. `restore_state`'s `async_load` runs
+            # *after* this set, so it routes to main — which is what we want.
+            # If a future refactor moves a registry's first `async_load` to
+            # straddle this line, that registry would silently start routing
+            # to main.
             assert current_sandbox.get() is None, (
                 "current_sandbox already set — two sandbox runtimes sharing "
                 "one event loop? (see plan Risk #3)"

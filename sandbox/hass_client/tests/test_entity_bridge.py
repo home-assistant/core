@@ -567,12 +567,8 @@ async def test_device_registry_update_resends_linked_entities(
     sandbox.start()
 
     # Link the entity to a device in the registry so the device-update
-    # handler can find it via its device_id. The sandbox-private hass does
-    # not bootstrap the registries, so set them up explicitly and register a
-    # config entry the device can hang off.
-    dr.async_setup(hass)
-    await dr.async_load(hass, load_empty=True)
-    await er.async_load(hass, load_empty=True)
+    # handler can find it via its device_id (FlowRunner.create loads the
+    # registries), and register a config entry the device can hang off.
     config_entry = ConfigEntry(
         version=1,
         minor_version=1,

@@ -33,7 +33,7 @@ import pytest
 import pytest_asyncio
 
 from hass_client.sandbox import SandboxRuntime
-from hass_client.testing._autotag import install_mock_config_entry_autotag
+from hass_client.testing._autotag import configure_compat_plugin, engagement_count
 from hass_client.testing._inproc import make_inproc_channel_pair
 
 if TYPE_CHECKING:
@@ -43,22 +43,53 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_GROUP = "built-in"
 
-_unpatch_autotag: Callable[[], None] | None = None
+_unconfigure: Callable[[], None] | None = None
 
 
 def pytest_configure(config: pytest.Config) -> None:
-    """Patch ``MockConfigEntry.add_to_hass`` so the classifier path fires."""
-    global _unpatch_autotag  # noqa: PLW0603
-    if _unpatch_autotag is None:
-        _unpatch_autotag = install_mock_config_entry_autotag()
+    """Install the autotag patch + router engagement counter."""
+    global _unconfigure  # noqa: PLW0603
+    if _unconfigure is None:
+        _unconfigure = configure_compat_plugin()
 
 
 def pytest_unconfigure(config: pytest.Config) -> None:
-    """Restore the original ``MockConfigEntry.add_to_hass`` on session exit."""
-    global _unpatch_autotag  # noqa: PLW0603
-    if _unpatch_autotag is not None:
-        _unpatch_autotag()
-        _unpatch_autotag = None
+    """Restore the patched hooks on session exit."""
+    global _unconfigure  # noqa: PLW0603
+    if _unconfigure is not None:
+        _unconfigure()
+        _unconfigure = None
+
+
+def pytest_collection_modifyitems(
+    config: pytest.Config, items: list[pytest.Item]
+) -> None:
+    """Inject the in-process sandbox into every ``hass``-using test.
+
+    The autotag alone only marks entries with a group; with no sandbox
+    set up, ``hass.config_entries.router`` stays ``None`` and every
+    tagged entry quietly sets up locally — the lane measures nothing.
+    Requesting the fixture here makes the router path real for each test.
+    """
+    for item in items:
+        fixtures = getattr(item, "fixturenames", None)
+        if fixtures is None or "hass" not in fixtures:
+            continue
+        if "sandbox_inprocess" not in fixtures:
+            fixtures.append("sandbox_inprocess")
+
+
+def pytest_terminal_summary(
+    terminalreporter: Any, exitstatus: int, config: pytest.Config
+) -> None:
+    """Report how often the sandbox router actually engaged.
+
+    ``run_compat.py`` parses this line; zero engagements on a suite that
+    sets up config entries means the lane regressed to a no-op.
+    """
+    terminalreporter.write_line(
+        f"sandbox-compat: router entry_setup engaged {engagement_count()} time(s)"
+    )
 
 
 @dataclass

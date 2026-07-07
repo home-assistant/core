@@ -65,6 +65,66 @@ def classify_domain_sync(domain: str) -> str | None:
     return GROUP_BUILT_IN
 
 
+_ENGAGEMENT = {"entry_setups": 0}
+
+
+def engagement_count() -> int:
+    """Router-driven sandbox ``entry_setup`` count for this pytest session."""
+    return _ENGAGEMENT["entry_setups"]
+
+
+def install_router_engagement_counter() -> Callable[[], None]:
+    """Count every router-driven sandbox entry setup.
+
+    The compat lane's honesty guard: a run whose counter stays at zero
+    never routed anything through a sandbox, so ``run_compat.py`` can
+    flag it as a no-op instead of reporting vanilla-test results as
+    sandbox compatibility. Idempotent; returns an unpatch callable.
+    """
+    # Lazy import: the HA integration tree must not load at plugin
+    # import time (same rule as the classifier import below).
+    from homeassistant.components.sandbox.router import (  # noqa: PLC0415
+        SandboxFlowRouter,
+    )
+
+    if getattr(SandboxFlowRouter, "_sandbox_counter_patched", False):
+        return lambda: None
+
+    original = SandboxFlowRouter.async_setup_entry
+
+    async def counted(self: Any, entry: Any) -> bool | None:
+        result = await original(self, entry)
+        if result is not None:
+            _ENGAGEMENT["entry_setups"] += 1
+        return result
+
+    SandboxFlowRouter.async_setup_entry = counted
+    SandboxFlowRouter._sandbox_counter_patched = True  # noqa: SLF001
+
+    def restore() -> None:
+        SandboxFlowRouter.async_setup_entry = original
+        with contextlib.suppress(AttributeError):
+            delattr(SandboxFlowRouter, "_sandbox_counter_patched")
+
+    return restore
+
+
+def configure_compat_plugin() -> Callable[[], None]:
+    """Install the autotag patch + engagement counter; returns the undo.
+
+    Shared by both compat plugins' ``pytest_configure`` so the install /
+    restore pairing lives in one place.
+    """
+    unpatch_autotag = install_mock_config_entry_autotag()
+    unpatch_counter = install_router_engagement_counter()
+
+    def restore() -> None:
+        unpatch_counter()
+        unpatch_autotag()
+
+    return restore
+
+
 def install_mock_config_entry_autotag() -> Callable[[], None]:
     """Patch :meth:`MockConfigEntry.add_to_hass` to inject the sandbox group.
 
@@ -103,4 +163,10 @@ def install_mock_config_entry_autotag() -> Callable[[], None]:
     return restore
 
 
-__all__ = ["classify_domain_sync", "install_mock_config_entry_autotag"]
+__all__ = [
+    "classify_domain_sync",
+    "configure_compat_plugin",
+    "engagement_count",
+    "install_mock_config_entry_autotag",
+    "install_router_engagement_counter",
+]

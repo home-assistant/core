@@ -16,6 +16,7 @@ that can't be serialised. The docstring in ``_marshal_result`` is the
 load-bearing note for how the schema is later marshalled.
 """
 
+import asyncio
 from collections.abc import Callable, Mapping
 import contextlib
 import ipaddress
@@ -30,6 +31,18 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import BaseServiceInfo, FlowResultType, UnknownFlow
+from homeassistant.helpers import (
+    area_registry as ar,
+    category_registry as cr,
+    device_registry as dr,
+    entity,
+    entity_registry as er,
+    floor_registry as fr,
+    frame,
+    issue_registry as ir,
+    label_registry as lr,
+    translation,
+)
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -111,6 +124,25 @@ class FlowRunner:
         # has built its default one, so we inherit all the wiring.
         hass.config_entries.flow = _SandboxFlowManager(hass, hass.config_entries, {})
         loader.async_setup(hass)
+        # The registry subset of bootstrap's async_load_base_functionality —
+        # a bare hass never runs bootstrap, and an unloaded EntityRegistry
+        # has no ``.entities``, so a real EntityPlatform cannot add a single
+        # entity without these. Runs before the runtime opens the channel and
+        # sets ``current_sandbox``, so registry Stores bind to the sandbox's
+        # local tempdir (fresh per process), never route to main.
+        entity.async_setup(hass)
+        frame.async_setup(hass)
+        translation.async_setup(hass)
+        dr.async_setup(hass)
+        await asyncio.gather(
+            ar.async_load(hass),
+            cr.async_load(hass),
+            dr.async_load(hass),
+            er.async_load(hass),
+            fr.async_load(hass),
+            ir.async_load(hass),
+            lr.async_load(hass),
+        )
         return cls(hass)
 
     def register(self, channel: Channel) -> None:

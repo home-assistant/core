@@ -20,6 +20,7 @@ import pytest
 from homeassistant import config_entries as ha_config_entries, loader as ha_loader
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 
@@ -390,3 +391,37 @@ async def test_entity_query_method_raises(
     with pytest.raises(ChannelRemoteError) as err:
         await main.call("sandbox/entity_query", msg)
     assert err.value.error_type == "ServiceValidationError"
+
+
+async def test_entry_setup_real_platform_adds_entities(
+    channels: tuple[Channel, Channel], runner: EntryRunner
+) -> None:
+    """A real integration's entity platform adds entities on the private hass.
+
+    Regression test for the missing registry loads: an unloaded
+    ``EntityRegistry`` has no ``.entities``, so every
+    ``EntityPlatform._async_add_entity`` died with ``AttributeError`` while
+    ``entry_setup`` still reported ok — the sandbox bridged zero entities.
+    Driving the real ``sun`` integration end-to-end pins the whole path.
+    """
+    main, sandbox = channels
+    runner.register(sandbox)
+    main.start()
+    sandbox.start()
+
+    payload = pb.EntrySetup(
+        entry_id="sun_entry",
+        domain="sun",
+        title="Sun",
+        source="user",
+        version=1,
+        minor_version=1,
+    )
+    result = await main.call("sandbox/entry_setup", payload)
+    assert result.ok, result.reason
+
+    hass = runner.hass
+    await hass.async_block_till_done()
+    assert hass.states.get("sun.sun") is not None
+    ent_reg = er.async_get(hass)
+    assert ent_reg.async_get_entity_id("sensor", "sun", "sun_entry-next_dawn")

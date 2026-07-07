@@ -100,7 +100,7 @@ def _make_item(
 ) -> MagicMock:
     """Construct a fake pytest item with the given fixtures/markers."""
     item = MagicMock(spec=pytest.Item)
-    item.fixturenames = fixturenames
+    item.fixturenames = list(fixturenames)
     item.get_closest_marker.side_effect = lambda name: (
         MagicMock() if name in markers else None
     )
@@ -128,11 +128,35 @@ def test_conftest_sandbox_skips_marker_tagged_tests() -> None:
     assert args[0].name == "skip"
 
 
-def test_conftest_sandbox_leaves_unrelated_tests_alone() -> None:
-    """Tests without the freezer fixture or marker are left untouched."""
+def test_conftest_sandbox_injects_sandbox_into_hass_tests() -> None:
+    """A hass-using test gets the ``sandbox_subprocess`` fixture injected.
+
+    Without the injection the plugin only tags entries — the router stays
+    ``None`` and the compat lane is a no-op.
+    """
     item = _make_item(fixturenames=("hass",))
     cs_plugin.pytest_collection_modifyitems(MagicMock(), [item])
     assert not item.add_marker.called
+    assert "sandbox_subprocess" in item.fixturenames
+
+
+def test_conftest_sandbox_leaves_non_hass_tests_alone() -> None:
+    """Tests without hass, the freezer fixture, or the marker are untouched."""
+    item = _make_item(fixturenames=("tmp_path",))
+    cs_plugin.pytest_collection_modifyitems(MagicMock(), [item])
+    assert not item.add_marker.called
+    assert item.fixturenames == ["tmp_path"]
+
+
+def test_inprocess_plugin_injects_sandbox_into_hass_tests() -> None:
+    """The in-process plugin injects ``sandbox_inprocess`` the same way."""
+    from hass_client.testing import pytest_plugin as inproc_plugin  # noqa: PLC0415
+
+    item = _make_item(fixturenames=("hass",))
+    other = _make_item(fixturenames=("tmp_path",))
+    inproc_plugin.pytest_collection_modifyitems(MagicMock(), [item, other])
+    assert "sandbox_inprocess" in item.fixturenames
+    assert other.fixturenames == ["tmp_path"]
 
 
 def test_autotag_sets_mock_config_entry_sandbox() -> None:
