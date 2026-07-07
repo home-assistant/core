@@ -88,9 +88,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         invert_position=False,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
     ),
-    # Needs override to omit is_closed_state: these devices report a sentinel
-    # ClosureState (124) and an unreliable OpenClosedState that stays "open"
-    # even when closed, so closed state is derived from position instead.
+    # Needs override to omit is_closed_state, since OpenClosedState is unreliable
     # uiClass is RollerShutter
     OverkizCoverDescription(
         key=UIWidget.POSITIONABLE_ROLLER_SHUTTER_UNO,
