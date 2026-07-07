@@ -191,12 +191,9 @@ class OverkizConfigFlow(
     async def async_step_pick_implementation(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Start the Rexel OAuth2 flow, ensuring its client credential exists.
-
-        Rexel's public OAuth2 client is auto-imported at startup, but a user can
-        remove it from the Application credentials menu. Re-importing here means a
-        fresh setup always has it available, without requiring a restart.
-        """
+        """Start the Rexel OAuth2 flow, re-importing the credential if removed."""
+        # Re-import here so a fresh setup works even after the user removed the
+        # auto-imported credential, without requiring a restart.
         await async_import_client_credential(
             self.hass,
             DOMAIN,
