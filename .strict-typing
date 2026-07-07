@@ -347,6 +347,7 @@ homeassistant.components.light.*
 homeassistant.components.linkplay.*
 homeassistant.components.litejet.*
 homeassistant.components.litterrobot.*
+homeassistant.components.llama_cpp.*
 homeassistant.components.local_ip.*
 homeassistant.components.local_todo.*
 homeassistant.components.lock.*
@@ -378,6 +379,7 @@ homeassistant.components.min_max.*
 homeassistant.components.minecraft_server.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
+homeassistant.components.modbus_connection.*
 homeassistant.components.modem_callerid.*
 homeassistant.components.mold_indicator.*
 homeassistant.components.monzo.*
@@ -393,6 +395,7 @@ homeassistant.components.nam.*
 homeassistant.components.namecheapdns.*
 homeassistant.components.nasweb.*
 homeassistant.components.neato.*
+homeassistant.components.neopool.*
 homeassistant.components.nest.*
 homeassistant.components.netatmo.*
 homeassistant.components.network.*

@@ -6,18 +6,24 @@ import logging
 from typing import Any, override
 
 from roborock.devices.traits.b01 import Q10PropertiesApi
-from roborock.devices.traits.b01.q10 import DoNotDisturbTrait
+from roborock.devices.traits.b01.q10 import (
+    ButtonLightTrait,
+    ChildLockTrait,
+    DoNotDisturbTrait,
+    DustCollectionTrait,
+)
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.common import RoborockSwitchBase
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import EntityCategory
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN
 from .coordinator import (
@@ -86,11 +92,14 @@ class RoborockSwitchDescriptionA01(SwitchEntityDescription):
     data_protocol: RoborockDyadDataProtocol | RoborockZeoProtocol
 
 
+type Q10SwitchTrait = ChildLockTrait | DoNotDisturbTrait | DustCollectionTrait
+
+
 @dataclass(frozen=True, kw_only=True)
 class RoborockSwitchDescriptionQ10(SwitchEntityDescription):
     """Class to describe a Roborock Q10 switch entity."""
 
-    trait: Callable[[Q10PropertiesApi], DoNotDisturbTrait | None]
+    trait: Callable[[Q10PropertiesApi], Q10SwitchTrait | None]
 
 
 A01_SWITCH_DESCRIPTIONS: list[RoborockSwitchDescriptionA01] = [
@@ -109,7 +118,19 @@ Q10_SWITCH_DESCRIPTIONS: list[RoborockSwitchDescriptionQ10] = [
         translation_key="dnd_switch",
         entity_category=EntityCategory.CONFIG,
         trait=lambda traits: traits.do_not_disturb,
-    )
+    ),
+    RoborockSwitchDescriptionQ10(
+        key="child_lock",
+        translation_key="child_lock",
+        entity_category=EntityCategory.CONFIG,
+        trait=lambda traits: traits.child_lock,
+    ),
+    RoborockSwitchDescriptionQ10(
+        key="dust_collection",
+        translation_key="dust_collection",
+        entity_category=EntityCategory.CONFIG,
+        trait=lambda traits: traits.dust_collection,
+    ),
 ]
 
 
@@ -158,6 +179,13 @@ async def async_setup_entry(
                 )
                 for description in Q10_SWITCH_DESCRIPTIONS
                 if (q10_trait := description.trait(coordinator.api)) is not None
+            )
+            entities.append(
+                RoborockSwitchQ10ButtonLight(
+                    f"button_light_{coordinator.duid_slug}",
+                    coordinator,
+                    coordinator.api.button_light,
+                )
             )
         async_add_entities(entities)
 
@@ -290,7 +318,7 @@ class RoborockSwitchQ10(RoborockCoordinatedEntityB01Q10, SwitchEntity):
         unique_id: str,
         coordinator: RoborockB01Q10UpdateCoordinator,
         description: RoborockSwitchDescriptionQ10,
-        trait: DoNotDisturbTrait,
+        trait: Q10SwitchTrait,
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
@@ -330,3 +358,63 @@ class RoborockSwitchQ10(RoborockCoordinatedEntityB01Q10, SwitchEntity):
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._trait.is_on
+
+
+class RoborockSwitchQ10ButtonLight(
+    RoborockCoordinatedEntityB01Q10, SwitchEntity, RestoreEntity
+):
+    """A class to toggle the indicator / button light of a Roborock Q10 device.
+
+    The device does not report the light state, so the switch is write-only
+    and assumes the state of the last successful command, restored across
+    restarts.
+    """
+
+    _attr_assumed_state = True
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "button_light"
+
+    def __init__(
+        self,
+        unique_id: str,
+        coordinator: RoborockB01Q10UpdateCoordinator,
+        trait: ButtonLightTrait,
+    ) -> None:
+        """Initialize the entity."""
+        self._trait = trait
+        super().__init__(unique_id, coordinator)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the last assumed state."""
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) is not None and (
+            last_state.state in (STATE_ON, STATE_OFF)
+        ):
+            self._attr_is_on = last_state.state == STATE_ON
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the light."""
+        try:
+            await self._trait.disable()
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_options_failed",
+            ) from err
+        self._attr_is_on = False
+        self.async_write_ha_state()
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the light."""
+        try:
+            await self._trait.enable()
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_options_failed",
+            ) from err
+        self._attr_is_on = True
+        self.async_write_ha_state()

@@ -1,5 +1,4 @@
 """Support for the Netatmo cameras."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
 from typing import Any, cast, override
@@ -24,8 +23,6 @@ from .const import (
     CAMERA_LIGHT_MODES,
     CAMERA_TRIGGERS,
     CONF_URL_SECURITY,
-    DATA_CAMERAS,
-    DATA_EVENTS,
     DOMAIN,
     EVENT_TYPE_CONNECTION,
     EVENT_TYPE_DISCONNECTION,
@@ -137,7 +134,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 )
             )
 
-        self.hass.data[DOMAIN][DATA_CAMERAS][self.device.entity_id] = self.device.name
+        self.data_handler.cameras[self.device.entity_id] = self.device.name
 
     @callback
     def handle_event(self, event: dict) -> None:
@@ -281,8 +278,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             self._attr_is_streaming = self.device.monitoring
             self._attr_motion_detection_enabled = self.device.monitoring
 
-        self.hass.data[DOMAIN][DATA_EVENTS][self.device.entity_id] = (
-            self.process_events(self.device.events)
+        self.data_handler.events[self.device.entity_id] = self.process_events(
+            self.device.events
         )
 
     def process_events(self, event_list: list[NaEvent]) -> dict:
