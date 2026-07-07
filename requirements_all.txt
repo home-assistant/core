@@ -648,7 +648,7 @@ beautifulsoup4==4.13.3
 bizkaibus==0.1.1
 
 # homeassistant.components.esphome
-bleak-esphome==3.9.4
+bleak-esphome==3.9.7
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.6.1
@@ -1743,7 +1743,7 @@ ondilo==0.5.0
 onedrive-personal-sdk==0.1.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==4.2.0
+onvif-zeep-async==4.2.1
 
 # homeassistant.components.onvif
 onvif_parsers==2.3.0
@@ -3195,7 +3195,7 @@ tololib==1.2.2
 toonapi==0.3.0
 
 # homeassistant.components.totalconnect
-total-connect-client==2025.12.2
+total-connect-client==2026.7
 
 # homeassistant.components.tplink_omada
 tplink-omada-client==1.5.8
