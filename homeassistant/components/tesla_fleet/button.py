@@ -93,7 +93,7 @@ class TeslaFleetButtonEntity(TeslaFleetVehicleEntity, ButtonEntity):
         if (lat := self.coordinator.data.get("drive_state_latitude")) is None or (
             lon := self.coordinator.data.get("drive_state_longitude")
         ) is None:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="homelink_no_location",
             )
