@@ -6,10 +6,10 @@ from typing import Any, override
 import numpy as np
 
 from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
     CONF_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     SensorEntity,
+    SensorEntityCapabilityAttribute,
 )
 from homeassistant.const import (
     CONF_ATTRIBUTE,
@@ -180,7 +180,9 @@ class CompensationSensor(SensorEntity):
             self._attr_device_class = device_class
 
         if self._attr_state_class is None and (
-            state_class := new_state.attributes.get(ATTR_STATE_CLASS)
+            state_class := new_state.attributes.get(
+                SensorEntityCapabilityAttribute.STATE_CLASS
+            )
         ):
             self._attr_state_class = state_class
 
