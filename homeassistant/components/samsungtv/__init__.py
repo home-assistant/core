@@ -1,13 +1,11 @@
 """The Samsung TV integration."""
 
-from collections.abc import Coroutine, Mapping
+from collections.abc import Mapping
 from functools import partial
 from typing import Any
-from urllib.parse import urlparse
 
 import getmac
 
-from homeassistant.components import ssdp
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -21,21 +19,12 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.debounce import Debouncer
 
 from .bridge import SamsungTVBridge, mac_from_device_info, model_requires_encryption
-from .const import (
-    CONF_SESSION_ID,
-    CONF_SSDP_MAIN_TV_AGENT_LOCATION,
-    CONF_SSDP_RENDERING_CONTROL_LOCATION,
-    DOMAIN,
-    ENTRY_RELOAD_COOLDOWN,
-    LOGGER,
-    METHOD_ENCRYPTED_WEBSOCKET,
-    UPNP_SVC_MAIN_TV_AGENT,
-    UPNP_SVC_RENDERING_CONTROL,
-)
+from .const import CONF_SESSION_ID, DOMAIN, LOGGER, METHOD_ENCRYPTED_WEBSOCKET
 from .coordinator import SamsungTVConfigEntry, SamsungTVDataUpdateCoordinator
+from .helpers import DebouncedEntryReloader
+from .ssdp_discovery import async_update_ssdp_locations
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
@@ -52,64 +41,6 @@ def _async_get_device_bridge(
         data[CONF_PORT],
         data,
     )
-
-
-class DebouncedEntryReloader:
-    """Reload only after the timer expires."""
-
-    def __init__(self, hass: HomeAssistant, entry: SamsungTVConfigEntry) -> None:
-        """Init the debounced entry reloader."""
-        self.hass = hass
-        self.entry = entry
-        self.token = self.entry.data.get(CONF_TOKEN)
-        self._debounced_reload: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
-            hass,
-            LOGGER,
-            cooldown=ENTRY_RELOAD_COOLDOWN,
-            immediate=False,
-            function=self._async_reload_entry,
-        )
-
-    async def async_call(
-        self, hass: HomeAssistant, entry: SamsungTVConfigEntry
-    ) -> None:
-        """Start the countdown for a reload."""
-        if (new_token := entry.data.get(CONF_TOKEN)) != self.token:
-            LOGGER.debug("Skipping reload as its a token update")
-            self.token = new_token
-            return  # Token updates should not trigger a reload
-        LOGGER.debug("Calling debouncer to get a reload after cooldown")
-        await self._debounced_reload.async_call()
-
-    @callback
-    def async_shutdown(self) -> None:
-        """Cancel any pending reload."""
-        self._debounced_reload.async_shutdown()
-
-    async def _async_reload_entry(self) -> None:
-        """Reload entry."""
-        LOGGER.debug("Reloading entry %s", self.entry.title)
-        await self.hass.config_entries.async_reload(self.entry.entry_id)
-
-
-async def _async_update_ssdp_locations(
-    hass: HomeAssistant, entry: SamsungTVConfigEntry
-) -> None:
-    """Update ssdp locations from discovery cache."""
-    updates = {}
-    for ssdp_st, key in (
-        (UPNP_SVC_RENDERING_CONTROL, CONF_SSDP_RENDERING_CONTROL_LOCATION),
-        (UPNP_SVC_MAIN_TV_AGENT, CONF_SSDP_MAIN_TV_AGENT_LOCATION),
-    ):
-        for discovery_info in await ssdp.async_get_discovery_info_by_st(hass, ssdp_st):
-            location = discovery_info.ssdp_location
-            host = urlparse(location).hostname
-            if host == entry.data[CONF_HOST]:
-                updates[key] = location
-                break
-
-    if updates:
-        hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -> bool:
@@ -148,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) ->
     )
     entry.async_on_unload(stop_bridge)
 
-    await _async_update_ssdp_locations(hass, entry)
+    await async_update_ssdp_locations(hass, entry)
 
     # We must not await after we setup the reload or there
     # will be a race where the config flow will see the entry

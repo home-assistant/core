@@ -96,7 +96,7 @@ async def test_setup_updates_from_ssdp(hass: HomeAssistant) -> None:
         raise ValueError(f"Unknown st {mock_st}")
 
     with patch(
-        "homeassistant.components.samsungtv.ssdp.async_get_discovery_info_by_st",
+        "homeassistant.components.samsungtv.ssdp_discovery.async_get_discovery_info_by_st",
         _mock_async_get_discovery_info_by_st,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
