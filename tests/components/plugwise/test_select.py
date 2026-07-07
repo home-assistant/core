@@ -97,7 +97,7 @@ async def test_adam_select_regulation_mode(
     assert mock_smile_adam_heat_cool.set_select.call_count == 1
     mock_smile_adam_heat_cool.set_select.assert_called_with(
         SELECT_REGULATION_MODE,
-        "bc93488efab249e5bc54fd7e175a6f91",
+        "da224107914542988a88561b4452b0f6",
         "heating",
         "on",
     )
