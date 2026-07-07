@@ -412,6 +412,27 @@ async def test_send_push_posts_payload(
     assert payload["registration_info"]["webhook_id"] == push_webhook_id
 
 
+async def test_send_push_omits_target_when_unset(
+    hass: HomeAssistant,
+    webhook_client: TestClient,
+    push_webhook_id: str,
+) -> None:
+    """The payload leaves out target entirely when it was not registered."""
+    await _register_subscription(webhook_client, push_webhook_id, target=None)
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    sub = hass.data[DOMAIN][DATA_PUSH_SUBSCRIPTIONS][push_webhook_id][SUB_ID]
+
+    session = _mock_session_post(status=HTTPStatus.CREATED)
+
+    with patch(GET_SESSION, return_value=session):
+        await _send_subscription_push(hass, entry, SUB_ID, sub)
+
+    payload = session.post.call_args.kwargs["json"]
+    assert PUSH_SUBSCRIPTION_TARGET not in payload[PUSH_SUBSCRIPTION_TRIGGER]
+    assert payload[PUSH_SUBSCRIPTION_TRIGGER][PUSH_SUBSCRIPTION_ID] == SUB_ID
+
+
 async def test_send_push_swallows_client_error(
     hass: HomeAssistant,
     webhook_client: TestClient,

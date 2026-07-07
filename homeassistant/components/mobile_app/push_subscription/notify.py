@@ -71,11 +71,12 @@ async def _send_subscription_push(
     if ATTR_OS_VERSION in entry.data:
         reg_info[ATTR_OS_VERSION] = entry.data[ATTR_OS_VERSION]
 
+    trigger: dict[str, Any] = {PUSH_SUBSCRIPTION_ID: sub_id}
+    if (target := sub[PUSH_SUBSCRIPTION_TARGET]) is not None:
+        trigger[PUSH_SUBSCRIPTION_TARGET] = target
+
     payload = {
-        PUSH_SUBSCRIPTION_TRIGGER: {
-            PUSH_SUBSCRIPTION_ID: sub_id,
-            PUSH_SUBSCRIPTION_TARGET: sub[PUSH_SUBSCRIPTION_TARGET],
-        },
+        PUSH_SUBSCRIPTION_TRIGGER: trigger,
         ATTR_PUSH_TOKEN: sub[PUSH_SUBSCRIPTION_TOKEN],
         "registration_info": reg_info,
     }
