@@ -99,7 +99,8 @@ class EvolvIOTSelect(EvolvIOTEntity, SelectEntity):
         """Set EvolvIOT state to the selected option."""
         await self._async_send_command({"value": option})
         self._optimistic_option = option
-        self.async_write_ha_state()
+        if self.hass is not None:
+            self.async_write_ha_state()
 
 
 def _option_from_value(value: Any, options: list[str]) -> str | None:
