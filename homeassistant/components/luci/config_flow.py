@@ -1,7 +1,7 @@
 """Config flow for the OpenWrt (luci) integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from openwrt_luci_rpc import OpenWrtRpc
 from requests.exceptions import ConnectionError as RequestsConnectionError
@@ -38,6 +38,7 @@ class LuciConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from openwrt_luci_rpc import OpenWrtRpc
 from openwrt_luci_rpc.exceptions import LuciRpcUnknownError
@@ -40,6 +40,7 @@ class LuciCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.router = router
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the router."""
         try:
