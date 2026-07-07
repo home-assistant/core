@@ -5,7 +5,6 @@ import logging
 from typing import Any, override
 
 from neopool_modbus import NeoPoolModbusClient
-from neopool_modbus.decoders import parse_version
 from neopool_modbus.exceptions import NeoPoolError
 from neopool_modbus.registers import MAX_RELAY_GPIO, find_corrupted_gpio_registers
 
@@ -43,7 +42,6 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=entry,
         )
         self.client = client
-        self._firmware = "?"
         self._corrupted_gpio_state: frozenset[tuple[str, int]] | None = None
 
     def _check_gpio_registers(self, data: dict[str, Any]) -> None:
@@ -97,12 +95,6 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        self._firmware = parse_version(data.get("MBF_POWER_MODULE_VERSION"))
         self._check_gpio_registers(data)
 
         return data
-
-    @property
-    def firmware(self) -> str:
-        """Return the device firmware version string."""
-        return self._firmware

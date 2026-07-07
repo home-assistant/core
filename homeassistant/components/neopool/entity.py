@@ -31,6 +31,6 @@ class NeoPoolEntity(CoordinatorEntity[NeoPoolCoordinator]):
             name=NAME,
             model=f"{model_prefix}{machine_type}".strip(),
             manufacturer="Hayward (Sugar Valley)",
-            sw_version=f"v{self.coordinator.firmware} (v{parse_version(data.get('MBF_PAR_VERSION'))})",
+            sw_version=f"v{parse_version(data.get('MBF_POWER_MODULE_VERSION'))} (v{parse_version(data.get('MBF_PAR_VERSION'))})",
             serial_number=unique_id,
         )
