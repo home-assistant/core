@@ -57,6 +57,7 @@ from roborock.devices.traits.v1.valley_electricity_timer import (
 )
 from roborock.devices.traits.v1.volume import SoundVolumeTrait
 from roborock.devices.traits.v1.wash_towel_mode import WashTowelModeTrait
+from roborock.map.b01_q10_map_parser import Q10Room
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
 
 from homeassistant.components.roborock.const import (
@@ -167,6 +168,46 @@ def create_b01_q7_trait() -> Mock:
     return b01_trait
 
 
+def attach_update_listeners(trait: Mock) -> Callable[[], None]:
+    """Give a mock Q10 trait working add_update_listener support.
+
+    Returns a callback that notifies all currently registered listeners,
+    mimicking a push update from the device.
+    """
+    listeners: list[Callable[[], None]] = []
+
+    def add_update_listener(cb: Callable[[], None]) -> Callable[[], None]:
+        listeners.append(cb)
+        return lambda: listeners.remove(cb)
+
+    trait.add_update_listener = Mock(side_effect=add_update_listener)
+
+    def notify() -> None:
+        for cb in listeners:
+            cb()
+
+    return notify
+
+
+def make_q10_switch_trait(
+    on_change: Callable[[bool], None] | None = None,
+) -> AsyncMock:
+    """Create a mock Q10 switch-like trait (is_on / enable / disable)."""
+    trait = AsyncMock()
+    trait.is_on = True
+    notify = attach_update_listeners(trait)
+
+    def _set(value: bool) -> None:
+        trait.is_on = value
+        if on_change is not None:
+            on_change(value)
+        notify()
+
+    trait.enable = AsyncMock(side_effect=lambda: _set(True))
+    trait.disable = AsyncMock(side_effect=lambda: _set(False))
+    return trait
+
+
 def create_b01_q10_trait() -> Mock:
     """Create B01 Q10 trait for Q10 devices.
 
@@ -181,11 +222,27 @@ def create_b01_q10_trait() -> Mock:
     for attr_name, value in vars(status_data).items():
         if not attr_name.startswith("_"):
             setattr(status, attr_name, value)
+    status.not_disturb = True
     q10_trait.status = status
 
     q10_trait.vacuum = AsyncMock()
     q10_trait.command = AsyncMock()
     q10_trait.refresh = AsyncMock()
+    q10_trait.do_not_disturb = make_q10_switch_trait(
+        on_change=lambda value: setattr(q10_trait.status, "not_disturb", value)
+    )
+    q10_trait.child_lock = make_q10_switch_trait()
+    q10_trait.dust_collection = make_q10_switch_trait()
+    # The button light trait is write-only (enable/disable, no is_on)
+    q10_trait.button_light = Mock(spec=["enable", "disable"])
+    q10_trait.button_light.enable = AsyncMock()
+    q10_trait.button_light.disable = AsyncMock()
+
+    q10_trait.map = Mock()
+    q10_trait.map.rooms = [
+        Q10Room(id=9, raw_name="rr_bedroom", pixel_value=36, pixel_count=100),
+        Q10Room(id=10, raw_name="rr_living_room", pixel_value=40, pixel_count=200),
+    ]
     return q10_trait
 
 

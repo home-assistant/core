@@ -11,6 +11,10 @@ import pytest
 from homeassistant.components.aladdin_connect import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -59,25 +63,37 @@ async def test_unload_entry(
 
 
 @pytest.mark.parametrize(
-    ("status", "expected_state"),
+    ("exc", "expected_state"),
     [
-        (http.HTTPStatus.UNAUTHORIZED, ConfigEntryState.SETUP_ERROR),
-        (http.HTTPStatus.INTERNAL_SERVER_ERROR, ConfigEntryState.SETUP_RETRY),
+        (
+            OAuth2TokenRequestReauthError(
+                request_info=RequestInfo("", "POST", {}, ""),
+                status=http.HTTPStatus.UNAUTHORIZED,
+                domain=DOMAIN,
+            ),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            OAuth2TokenRequestError(
+                request_info=RequestInfo("", "POST", {}, ""),
+                status=http.HTTPStatus.INTERNAL_SERVER_ERROR,
+                domain=DOMAIN,
+            ),
+            ConfigEntryState.SETUP_RETRY,
+        ),
     ],
     ids=["auth_failure", "server_error"],
 )
 async def test_setup_entry_token_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    status: http.HTTPStatus,
+    exc: OAuth2TokenRequestError,
     expected_state: ConfigEntryState,
 ) -> None:
     """Test setup entry fails when token validation fails."""
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-        side_effect=ClientResponseError(
-            RequestInfo("", "POST", {}, ""), None, status=status
-        ),
+        side_effect=exc,
     ):
         await init_integration(hass, mock_config_entry)
 

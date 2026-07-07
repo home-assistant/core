@@ -99,7 +99,7 @@
     'supported_features': 0,
     'translation_key': 'co2',
     'unique_id': '12:34:56:26:68:92-co2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_entity[sensor.baby_bedroom_carbon_dioxide-state]
@@ -111,7 +111,7 @@
       'latitude': 13.377726,
       'longitude': 52.516263,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.baby_bedroom_carbon_dioxide',
@@ -226,7 +226,7 @@
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '12:34:56:26:68:92-humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.baby_bedroom_humidity-state]
@@ -238,7 +238,7 @@
       'latitude': 13.377726,
       'longitude': 52.516263,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.baby_bedroom_humidity',
@@ -680,7 +680,7 @@
     'supported_features': 0,
     'translation_key': 'co2',
     'unique_id': '12:34:56:26:69:0c-co2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_entity[sensor.bedroom_carbon_dioxide-state]
@@ -690,7 +690,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_carbon_dioxide',
@@ -803,7 +803,7 @@
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '12:34:56:26:69:0c-humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.bedroom_humidity-state]
@@ -813,7 +813,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_humidity',
@@ -1185,7 +1185,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '222452125-12:34:56:20:f5:8c-battery',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.bureau_modulate_battery-state]
@@ -1195,7 +1195,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bureau Modulate Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bureau_modulate_battery',
@@ -1402,7 +1402,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1002003001-1002003001-humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.corridor_corridor_humidity-state]
@@ -1412,7 +1412,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Corridor Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.corridor_corridor_humidity',
@@ -1743,7 +1743,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-avg-humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.home_avg_humidity-state]
@@ -1755,7 +1755,7 @@
       'latitude': 32.17901225,
       'longitude': -117.17901225,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_avg_humidity',
@@ -2347,7 +2347,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-max-humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.home_max_humidity-state]
@@ -2359,7 +2359,7 @@
       'latitude': 32.17901225,
       'longitude': -117.17901225,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_max_humidity',
@@ -2951,7 +2951,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-min-humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.home_min_humidity-state]
@@ -2963,7 +2963,7 @@
       'latitude': 32.17901225,
       'longitude': -117.17901225,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_min_humidity',
@@ -3487,7 +3487,7 @@
     'supported_features': 0,
     'translation_key': 'co2',
     'unique_id': '12:34:56:25:cf:a8-co2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_entity[sensor.kitchen_carbon_dioxide-state]
@@ -3499,7 +3499,7 @@
       'latitude': 13.377726,
       'longitude': 52.516263,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_carbon_dioxide',
@@ -3614,7 +3614,7 @@
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '12:34:56:25:cf:a8-humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.kitchen_humidity-state]
@@ -3626,7 +3626,7 @@
       'latitude': 13.377726,
       'longitude': 52.516263,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_humidity',
@@ -4325,7 +4325,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2746182631-12:34:56:00:01:ae-battery',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.livingroom_battery-state]
@@ -4335,7 +4335,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Livingroom Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.livingroom_battery',
@@ -4381,7 +4381,7 @@
     'supported_features': 0,
     'translation_key': 'co2',
     'unique_id': '12:34:56:26:65:14-co2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_entity[sensor.livingroom_carbon_dioxide-state]
@@ -4393,7 +4393,7 @@
       'latitude': 13.377726,
       'longitude': 52.516263,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.livingroom_carbon_dioxide',
@@ -4508,7 +4508,7 @@
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '12:34:56:26:65:14-humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.livingroom_humidity-state]
@@ -4520,7 +4520,7 @@
       'latitude': 13.377726,
       'longitude': 52.516263,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.livingroom_humidity',
@@ -4964,7 +4964,7 @@
     'supported_features': 0,
     'translation_key': 'co2',
     'unique_id': '12:34:56:3e:c5:46-co2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_entity[sensor.parents_bedroom_carbon_dioxide-state]
@@ -4976,7 +4976,7 @@
       'latitude': 13.377726,
       'longitude': 52.516263,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.parents_bedroom_carbon_dioxide',
@@ -5091,7 +5091,7 @@
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '12:34:56:3e:c5:46-humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.parents_bedroom_humidity-state]
@@ -5103,7 +5103,7 @@
       'latitude': 13.377726,
       'longitude': 52.516263,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.parents_bedroom_humidity',
@@ -5644,7 +5644,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2833524037-12:34:56:03:a5:54-battery',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.valve1_battery-state]
@@ -5654,7 +5654,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Valve1 Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.valve1_battery',
@@ -5700,7 +5700,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2940411577-12:34:56:03:a0:ac-battery',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.valve2_battery-state]
@@ -5710,7 +5710,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Valve2 Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.valve2_battery',
@@ -5820,7 +5820,7 @@
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': '12:34:56:80:7e:18-battery_percent',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.villa_bathroom_battery-state]
@@ -5830,7 +5830,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Villa Bathroom Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.villa_bathroom_battery',
@@ -5876,7 +5876,7 @@
     'supported_features': 0,
     'translation_key': 'co2',
     'unique_id': '12:34:56:80:7e:18-co2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_entity[sensor.villa_bathroom_carbon_dioxide-state]
@@ -5886,7 +5886,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Villa Bathroom Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.villa_bathroom_carbon_dioxide',
@@ -5932,7 +5932,7 @@
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '12:34:56:80:7e:18-humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.villa_bathroom_humidity-state]
@@ -5942,7 +5942,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Villa Bathroom Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.villa_bathroom_humidity',
@@ -6200,7 +6200,7 @@
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': '12:34:56:80:44:92-battery_percent',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.villa_bedroom_battery-state]
@@ -6210,7 +6210,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Villa Bedroom Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.villa_bedroom_battery',
@@ -6256,7 +6256,7 @@
     'supported_features': 0,
     'translation_key': 'co2',
     'unique_id': '12:34:56:80:44:92-co2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_entity[sensor.villa_bedroom_carbon_dioxide-state]
@@ -6266,7 +6266,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Villa Bedroom Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.villa_bedroom_carbon_dioxide',
@@ -6312,7 +6312,7 @@
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '12:34:56:80:44:92-humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.villa_bedroom_humidity-state]
@@ -6322,7 +6322,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Villa Bedroom Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.villa_bedroom_humidity',
@@ -6580,7 +6580,7 @@
     'supported_features': 0,
     'translation_key': 'co2',
     'unique_id': '12:34:56:80:bb:26-co2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_entity[sensor.villa_carbon_dioxide-state]
@@ -6592,7 +6592,7 @@
       'latitude': 46.123456,
       'longitude': 6.1234567,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.villa_carbon_dioxide',
@@ -6638,7 +6638,7 @@
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': '12:34:56:03:1b:e4-battery_percent',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.villa_garden_battery-state]
@@ -6648,7 +6648,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Villa Garden Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.villa_garden_battery',
@@ -7172,7 +7172,7 @@
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '12:34:56:80:bb:26-humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.villa_humidity-state]
@@ -7184,7 +7184,7 @@
       'latitude': 46.123456,
       'longitude': 6.1234567,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.villa_humidity',
@@ -7291,7 +7291,7 @@
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': '12:34:56:80:1c:42-battery_percent',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.villa_outdoor_battery-state]
@@ -7301,7 +7301,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Villa Outdoor Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.villa_outdoor_battery',
@@ -7347,7 +7347,7 @@
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '12:34:56:80:1c:42-humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.villa_outdoor_humidity-state]
@@ -7357,7 +7357,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Villa Outdoor Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.villa_outdoor_humidity',
@@ -7668,7 +7668,7 @@
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': '12:34:56:80:c1:ea-battery_percent',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.villa_rain_battery-state]
@@ -7678,7 +7678,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Villa Rain Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.villa_rain_battery',
@@ -8223,7 +8223,7 @@
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': '12:34:56:00:86:99-battery',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entity[sensor.window_hall_battery-state]
@@ -8233,7 +8233,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Window Hall Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.window_hall_battery',
