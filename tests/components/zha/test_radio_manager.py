@@ -510,11 +510,8 @@ async def test_create_zigpy_app_forwards_device_resolver(
 ) -> None:
     """Test that `create_zigpy_app` forwards the device resolver to zigpy.
 
-    Quirk resolution now lives in the ZHA gateway, not zigpy, so zigpy only
-    quirk-resolves devices loaded from the database when a resolver is passed.
-    Regression test: without forwarding the resolver, the early device trigger
-    cache is built from bare, un-quirked devices and quirk-defined triggers
-    (e.g. remote button presses) go missing.
+    zigpy only quirk-resolves devices loaded from the database when a
+    resolver is passed, so quirk-defined triggers would be missing otherwise.
     """
     radio_manager.radio_type = RadioType.ezsp
     radio_manager.device_settings = {CONF_DEVICE_PATH: "/dev/ttyZigbee"}

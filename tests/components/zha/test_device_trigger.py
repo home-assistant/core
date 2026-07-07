@@ -570,9 +570,8 @@ async def test_device_trigger_cache_built_with_quirk_resolver(
 ) -> None:
     """Test the early device trigger cache is built with quirk resolution.
 
-    Regression test: the cache is populated from a throwaway zigpy app whose
-    database devices must be quirk-resolved, otherwise quirk-defined triggers
-    (e.g. remote button presses) are missing whenever the cache is used as a
+    Regression test: without quirk resolution, quirk-defined triggers (e.g.
+    remote button presses) are missing whenever the cache is used as a
     fallback (i.e. before ZHA has finished loading).
     """
     resolvers: list[Callable | None] = []
