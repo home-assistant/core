@@ -2554,6 +2554,12 @@
           "iot_class": "cloud_polling",
           "name": "Google Gemini"
         },
+        "google_health": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Health"
+        },
         "google_mail": {
           "integration_type": "service",
           "config_flow": true,
@@ -4629,6 +4635,12 @@
       "name": "Neo",
       "integration_type": "virtual",
       "supported_by": "shelly"
+    },
+    "neopool": {
+      "name": "NeoPool",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "ness_alarm": {
       "name": "Ness Alarm",
