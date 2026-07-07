@@ -57,14 +57,15 @@ class EvolvIOTSelect(EvolvIOTEntity, SelectEntity):
         options = self.options
         state_value = self.backend_state.get("state")
         raw_value = self.backend_state.get("raw_value")
-        value = raw_value if state_value in (None, "", "unknown", "unavailable") else state_value
 
-        if value in (None, "", "unknown", "unavailable"):
+        if state_value in (None, "", "unknown", "unavailable"):
             if self._optimistic_option in options:
                 return self._optimistic_option
+            if (raw_option := _option_from_value(raw_value, options)) is not None:
+                return raw_option
             return options[0] if options else None
 
-        option = _option_from_value(value, options)
+        option = _option_from_value(state_value, options)
         if option is not None:
             return option
         if self._optimistic_option in options:
