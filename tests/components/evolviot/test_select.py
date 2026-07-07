@@ -101,3 +101,31 @@ async def test_stale_switch_pattern_entity_is_classified_as_select(
         coordinator.entities["switch.evolviot_pattern"]
     ]
     assert coordinator.entities_for_domain("switch") == []
+
+
+async def test_pattern_name_fallback_is_classified_as_select(
+    hass: HomeAssistant,
+) -> None:
+    """Test pattern metadata without capabilities is classified as select."""
+    coordinator = EvolvIOTDataUpdateCoordinator(
+        hass,
+        AsyncMock(spec=EvolvIOTApi),
+        "test-entry",
+    )
+    coordinator.async_set_updated_data(
+        {
+            "entities": {
+                "switch.evolviot_pattern": {
+                    "entity_id": "switch.evolviot_pattern",
+                    "unique_id": "LDC123/pattern",
+                    "domain": "switch",
+                    "name": "LDC pattern",
+                },
+            },
+        }
+    )
+
+    assert coordinator.entities_for_domain("select") == [
+        coordinator.entities["switch.evolviot_pattern"]
+    ]
+    assert coordinator.entities_for_domain("switch") == []

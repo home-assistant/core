@@ -57,7 +57,18 @@ class EvolvIOTLight(EvolvIOTEntity, LightEntity):
     @property
     def _supports_brightness(self) -> bool:
         capabilities = self.backend_entity.get("capabilities") or {}
-        return bool(capabilities.get("supports_brightness"))
+        control = self.backend_entity.get("control") or {}
+        metadata = " ".join(
+            str(value or "")
+            for value in (
+                control.get("key"),
+                control.get("name"),
+                self.backend_entity.get("unique_id"),
+                self.backend_entity.get("entity_id"),
+                self.backend_entity.get("name"),
+            )
+        ).lower()
+        return bool(capabilities.get("supports_brightness")) or "brightness" in metadata
 
     @property
     def supported_color_modes(self) -> set[ColorMode]:
