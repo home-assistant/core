@@ -1,10 +1,12 @@
 """Tests for the Plugwise water_heater platform."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from freezegun.api import FrozenDateTimeFactory
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.water_heater import (
     ATTR_OPERATION_MODE,
     DOMAIN as WATER_HEATER_DOMAIN,
@@ -15,7 +17,6 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
-from syrupy.assertion import SnapshotAssertion
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -38,25 +39,35 @@ async def test_adam_water_heater_snapshot(
 
 
 async def test_adam_water_heater_setpoint_change(
-    hass: HomeAssistant, mock_smile_adam_jip: MagicMock, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    mock_smile_adam_jip: MagicMock,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test Adam water_heater setpoint-change."""
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "water_heater.opentherm_dhw_temperature", ATTR_TEMPERATURE: 65},
+        {
+            ATTR_ENTITY_ID: "water_heater.opentherm_dhw_temperature",
+            ATTR_TEMPERATURE: 65,
+        },
         blocking=True,
     )
     assert mock_smile_adam_jip.set_number.call_count == 1
     mock_smile_adam_jip.set_number.assert_called_with(
-        "e4684553153b44afbef2200885f379dc", "dhw_temperature", 65.0,
+        "e4684553153b44afbef2200885f379dc",
+        "dhw_temperature",
+        65.0,
     )
 
     with pytest.raises(ServiceNotSupported):
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
             SERVICE_SET_OPERATION_MODE,
-            {ATTR_ENTITY_ID: "water_heater.opentherm_boiler_temperature", ATTR_OPERATION_MODE: "eco"},
+            {
+                ATTR_ENTITY_ID: "water_heater.opentherm_boiler_temperature",
+                ATTR_OPERATION_MODE: "eco",
+            },
             blocking=True,
         )
     assert mock_smile_adam_jip.set_dhw_mode.call_count == 0
@@ -64,7 +75,10 @@ async def test_adam_water_heater_setpoint_change(
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
         SERVICE_SET_OPERATION_MODE,
-        {ATTR_ENTITY_ID: "water_heater.opentherm_dhw_temperature", ATTR_OPERATION_MODE: "eco"},
+        {
+            ATTR_ENTITY_ID: "water_heater.opentherm_dhw_temperature",
+            ATTR_OPERATION_MODE: "eco",
+        },
         blocking=True,
     )
     assert mock_smile_adam_jip.set_dhw_mode.call_count == 1
@@ -100,7 +114,10 @@ async def test_anna_water_heater_mode_change(
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
         SERVICE_SET_OPERATION_MODE,
-        {ATTR_ENTITY_ID: "water_heater.opentherm_dhw_temperature", ATTR_OPERATION_MODE: "off"},
+        {
+            ATTR_ENTITY_ID: "water_heater.opentherm_dhw_temperature",
+            ATTR_OPERATION_MODE: "off",
+        },
         blocking=True,
     )
     assert mock_smile_anna.set_dhw_mode.call_count == 1
@@ -118,7 +135,10 @@ async def test_anna_water_heater_mode_change(
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
             SERVICE_SET_OPERATION_MODE,
-            {ATTR_ENTITY_ID: "water_heater.opentherm_dhw_temperature", ATTR_OPERATION_MODE: "boost"},
+            {
+                ATTR_ENTITY_ID: "water_heater.opentherm_dhw_temperature",
+                ATTR_OPERATION_MODE: "boost",
+            },
             blocking=True,
         )
         assert mock_smile_anna.set_dhw_mode.call_count == 2

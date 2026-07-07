@@ -35,12 +35,14 @@ from .util import plugwise_command
 
 PARALLEL_UPDATES = 0
 
+
 @dataclass(frozen=True, kw_only=True)
 class PlugwiseWaterHeaterEntityDescription(WaterHeaterEntityDescription):
     """Class describing Plugwise WaterHeater entities."""
 
     key: WaterHeaterType
     options_key: WaterHeaterOptionsType | None
+
 
 # Upstream + is there a reason we didn't rename this one prefixed?
 WATERHEATER_TYPES = (
@@ -57,6 +59,7 @@ WATERHEATER_TYPES = (
         options_key=DHW_MODES,
     ),
 )
+
 
 async def async_setup_entry(
     _hass: HomeAssistant,
@@ -81,7 +84,9 @@ async def async_setup_entry(
                         PlugwiseWaterHeaterEntity(coordinator, device_id, description)
                     )
                     LOGGER.debug(
-                        "Add %s %s water_heater", device["name"], description.translation_key
+                        "Add %s %s water_heater",
+                        device["name"],
+                        description.translation_key,
                     )
 
         async_add_entities(entities)
@@ -174,7 +179,9 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
             await self.async_turn_on()
             return
 
-        await self.coordinator.api.set_dhw_mode(DHW_MODE, self._dev_id, self._list_type, self._operation_mode)
+        await self.coordinator.api.set_dhw_mode(
+            DHW_MODE, self._dev_id, self._list_type, self._operation_mode
+        )
 
     @plugwise_command
     @override

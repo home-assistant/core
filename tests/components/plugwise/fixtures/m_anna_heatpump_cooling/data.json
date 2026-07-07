@@ -37,10 +37,7 @@
     },
     "dev_class": "heater_central",
     "dhw_mode": "eco",
-    "dhw_modes": [
-      "comfort",
-      "eco"
-    ],
+    "dhw_modes": ["comfort", "eco"],
     "dhw_temperature": {
       "current": 41.5,
       "lower_bound": 35.0,
@@ -62,10 +59,7 @@
   },
   "3cb70739631c4d17a86b8b12e8a5161b": {
     "active_preset": "home",
-    "available_schedules": [
-      "standaard",
-      "off"
-    ],
+    "available_schedules": ["standaard", "off"],
     "climate_mode": "auto",
     "control_state": "cooling",
     "dev_class": "thermostat",
@@ -74,13 +68,7 @@
     "location": "c784ee9fdab44e1395b8dee7d7a497d5",
     "model": "ThermoTouch",
     "name": "Anna",
-    "preset_modes": [
-      "no_frost",
-      "home",
-      "away",
-      "asleep",
-      "vacation"
-    ],
+    "preset_modes": ["no_frost", "home", "away", "asleep", "vacation"],
     "select_schedule": "standaard",
     "sensors": {
       "cooling_activation_outdoor_temperature": 21.0,

@@ -300,24 +300,24 @@
       }
     },
     "water_heater": {
-        "boiler_temperature": {
-            "name": "Boiler temperature"
-        },
-        "dhw_temperature": {
-            "name": "DHW temperature",
-            "state_attributes": {
-              "dhw_modes": {
-                "state": {
-                  "auto": "Auto",
-                  "boost": "Boost",
-                  "comfort": "Comfort",
-                  "eco": "Eco",
-                  "off": "Off"
-              }
+      "boiler_temperature": {
+        "name": "Boiler temperature"
+      },
+      "dhw_temperature": {
+        "name": "DHW temperature",
+        "state_attributes": {
+          "dhw_modes": {
+            "state": {
+              "auto": "Auto",
+              "boost": "Boost",
+              "comfort": "Comfort",
+              "eco": "Eco",
+              "off": "Off"
             }
           }
         }
-     }
+      }
+    }
   },
   "exceptions": {
     "authentication_failed": {
