@@ -20,7 +20,6 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -137,20 +136,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) -
     return unload_ok
 
 
-async def async_remove_config_entry_device(
-    hass: HomeAssistant,
-    entry: VistapoolConfigEntry,
-    device_entry: dr.DeviceEntry,
-) -> bool:
-    """Allow manual device removal only when the pool is no longer in the account."""
-    pool_ids = {
-        identifier[1]
-        for identifier in device_entry.identifiers
-        if identifier[0] == DOMAIN
-    }
-    return not pool_ids.intersection(entry.runtime_data.coordinators)
-
-
 async def _async_initial_refresh(
     coordinator: VistapoolDataUpdateCoordinator, *, first: bool
 ) -> None:
@@ -226,13 +211,3 @@ async def _async_reconcile_pools(
             async_dispatcher_send(
                 hass, f"{SIGNAL_NEW_POOL}_{entry.entry_id}", coordinator
             )
-
-        if stale := current - fetched:
-            device_registry = dr.async_get(hass)
-            for pool_id in stale:
-                coordinator = entry.runtime_data.coordinators.pop(pool_id)
-                await coordinator.async_shutdown()
-                if device := device_registry.async_get_device(
-                    identifiers={(DOMAIN, pool_id)}
-                ):
-                    device_registry.async_remove_device(device.id)
