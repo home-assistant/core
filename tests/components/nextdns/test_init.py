@@ -103,9 +103,10 @@ async def test_migrate_entry_v1_to_v2(
     mock_config_entry_v1: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migration from version 1 to version 2."""
-    # Create old device with old-style identifiers before migration
+    # Create old device and entity with old-style identifiers before migration
     mock_config_entry_v1.add_to_hass(hass)
     device_registry.async_get_or_create(
         config_entry_id=mock_config_entry_v1.entry_id,
@@ -113,6 +114,12 @@ async def test_migrate_entry_v1_to_v2(
         manufacturer="NextDNS Inc.",
         name="Fake Profile",
         entry_type=dr.DeviceEntryType.SERVICE,
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "xyz12_dns_queries",
+        config_entry=mock_config_entry_v1,
     )
 
     await hass.config_entries.async_setup(mock_config_entry_v1.entry_id)
@@ -141,6 +148,12 @@ async def test_migrate_entry_v1_to_v2(
     assert device.config_entries_subentries == {
         mock_config_entry_v1.entry_id: {subentry.subentry_id}
     }
+
+    # Verify entity was migrated and linked to subentry
+    entity_entry = entity_registry.async_get("sensor.nextdns_xyz12_dns_queries")
+    assert entity_entry is not None
+    assert entity_entry.config_entry_id == mock_config_entry_v1.entry_id
+    assert entity_entry.config_subentry_id == subentry.subentry_id
 
 
 async def test_migrate_entry_v1_to_v2_merge_same_api_key(
