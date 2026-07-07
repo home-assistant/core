@@ -2241,8 +2241,12 @@ async def test_async_update_device_fans_out_to_composite(
     )
 
     composite = device_registry.async_get_device(identifiers={("test", "shared")})
+    # disabled_by and the descriptive serial_number both fan out to every underlying
+    # device.
     device_registry.async_update_device(
-        composite.id, disabled_by=dr.DeviceEntryDisabler.USER
+        composite.id,
+        disabled_by=dr.DeviceEntryDisabler.USER,
+        serial_number="SN-123",
     )
     assert (
         device_registry.async_get(device_1.id).disabled_by
@@ -2252,6 +2256,8 @@ async def test_async_update_device_fans_out_to_composite(
         device_registry.async_get(device_2.id).disabled_by
         is dr.DeviceEntryDisabler.USER
     )
+    assert device_registry.async_get(device_1.id).serial_number == "SN-123"
+    assert device_registry.async_get(device_2.id).serial_number == "SN-123"
 
     # The same composite id keeps working after that mutation - it is rebuilt from the
     # remembered lookup rather than a cached snapshot. remove_config_entry_id only
@@ -2281,6 +2287,78 @@ async def test_async_remove_device_fans_out_to_composite(
     device_registry.async_remove_device(composite.id)
     assert device_1.id not in device_registry.devices
     assert device_2.id not in device_registry.devices
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_async_get_device_composite_reuses_pre_migration_id(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """A composite over migration splits reuses the pre-migration device id.
+
+    Backwards compatibility for unmodified integrations: before the rewrite a shared
+    connection resolved to one device with a stable id that stored references
+    (automations, an entity device_id, a fired event device_id) use. The composite over
+    that device's splits reuses the same id, so those references keep resolving; a
+    transient id is minted only for a runtime ambiguity between independent devices.
+    """
+    entry_a = MockConfigEntry(domain="domain_a")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="domain_b")
+    entry_b.add_to_hass(hass)
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 12,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": [entry_a.entry_id, entry_b.entry_id],
+                    "config_entries_subentries": {
+                        entry_a.entry_id: [None],
+                        entry_b.entry_id: [None],
+                    },
+                    "configuration_url": None,
+                    "connections": [["mac", "aa:bb:cc:dd:ee:ff"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": "composite00000000000000000000",
+                    "identifiers": [["domain_a", "1"], ["domain_b", "2"]],
+                    "labels": [],
+                    "manufacturer": None,
+                    "model": None,
+                    "name": None,
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "primary_config_entry": entry_a.entry_id,
+                    "serial_number": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                }
+            ],
+            "deleted_devices": [],
+        },
+    }
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    # A connections-only lookup matches both splits -> composite reuses the old id
+    composite = registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")}
+    )
+    assert composite is not None
+    assert composite.id == "composite00000000000000000000"
+    assert composite.id not in registry.devices
+    # It is the same composite async_get resolves for the old id
+    assert registry.async_get("composite00000000000000000000").id == composite.id
+    # An identifier lookup still domain-resolves to the single owning split (real id)
+    resolved = registry.async_get_device(identifiers={("domain_a", "1")})
+    assert resolved.id in registry.devices
+    assert resolved.config_entry_id == entry_a.entry_id
 
 
 async def test_composite_device_id_survives_registry_change(
@@ -2335,7 +2413,6 @@ async def test_composite_device_id_survives_registry_change(
         pytest.param(
             {"merge_identifiers": {("test", "extra")}}, id="merge_identifiers"
         ),
-        pytest.param({"serial_number": "serial"}, id="serial_number"),
     ],
 )
 async def test_async_update_device_composite_drops_identity_args(
@@ -2357,9 +2434,10 @@ async def test_async_update_device_composite_drops_identity_args(
     )
     composite = device_registry.async_get_device(identifiers={("test", "shared")})
 
-    # No raise; the arg is ignored with a warning and the devices are untouched
+    # No raise; the arg is ignored with a report-issue warning, devices untouched
     device_registry.async_update_device(composite.id, **update_kwargs)
-    assert "composite device" in caplog.text
+    assert "config_entry_id" in caplog.text
+    assert "report this issue" in caplog.text
     assert device_registry.async_get(device_1.id) is device_1
     assert device_registry.async_get(device_2.id) is device_2
 
