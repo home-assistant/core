@@ -1,6 +1,7 @@
 """Contains fixtures for Loqed tests."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
+from contextlib import contextmanager
 import json
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -14,6 +15,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_load_fixture
+
+type PatchLockCreationFlow = Callable[[dict[str, Any], loqed.Lock, str], Any]
 
 
 @pytest.fixture(name="config_entry")
@@ -100,3 +103,36 @@ async def integration_fixture(
         await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         yield config_entry
+
+
+@pytest.fixture(name="patch_lock_creation_flow")
+def patch_lock_creation_flow_fixture() -> PatchLockCreationFlow:
+    """Patch config-flow calls used when creating a lock entry."""
+
+    @contextmanager
+    def _patch_lock_creation_flow(
+        all_locks_response: dict[str, Any],
+        lock: loqed.Lock,
+        webhook_id: str,
+    ) -> Any:
+        with (
+            patch(
+                "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
+                return_value=all_locks_response,
+            ),
+            patch(
+                "loqedAPI.loqed.LoqedAPI.async_get_lock",
+                return_value=lock,
+            ),
+            patch(
+                "homeassistant.components.loqed.async_setup_entry",
+                return_value=True,
+            ),
+            patch(
+                "homeassistant.components.webhook.async_generate_id",
+                return_value=webhook_id,
+            ),
+        ):
+            yield
+
+    return _patch_lock_creation_flow

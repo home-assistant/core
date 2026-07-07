@@ -1,5 +1,6 @@
 """Test the Loqed config flow."""
 
+from collections.abc import Callable
 from ipaddress import ip_address
 import json
 from typing import Any
@@ -59,7 +60,10 @@ async def _async_init_user_flow(hass: HomeAssistant) -> dict[str, Any]:
     return result
 
 
-async def test_create_entry_zeroconf(hass: HomeAssistant) -> None:
+async def test_create_entry_zeroconf(
+    hass: HomeAssistant,
+    patch_lock_creation_flow: Callable[[dict[str, Any], loqed.Lock, str], Any],
+) -> None:
     """Test we get can create a lock via zeroconf."""
     lock_result = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
 
@@ -82,24 +86,7 @@ async def test_create_entry_zeroconf(hass: HomeAssistant) -> None:
         await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
     )
 
-    with (
-        patch(
-            "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
-            return_value=all_locks_response,
-        ),
-        patch(
-            "loqedAPI.loqed.LoqedAPI.async_get_lock",
-            return_value=mock_lock,
-        ),
-        patch(
-            "homeassistant.components.loqed.async_setup_entry",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.webhook.async_generate_id",
-            return_value=webhook_id,
-        ),
-    ):
+    with patch_lock_creation_flow(all_locks_response, mock_lock, webhook_id):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -126,7 +113,9 @@ async def test_create_entry_zeroconf(hass: HomeAssistant) -> None:
 
 
 async def test_create_entry_user(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    patch_lock_creation_flow: Callable[[dict[str, Any], loqed.Lock, str], Any],
 ) -> None:
     """Test we can create a lock via manual entry."""
     result = await _async_init_user_flow(hass)
@@ -138,24 +127,7 @@ async def test_create_entry_user(
     )
     found_lock = all_locks_response["data"][0]
 
-    with (
-        patch(
-            "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
-            return_value=all_locks_response,
-        ),
-        patch(
-            "loqedAPI.loqed.LoqedAPI.async_get_lock",
-            return_value=mock_lock,
-        ),
-        patch(
-            "homeassistant.components.loqed.async_setup_entry",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.webhook.async_generate_id",
-            return_value=webhook_id,
-        ),
-    ):
+    with patch_lock_creation_flow(all_locks_response, mock_lock, webhook_id):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_TOKEN: TEST_API_TOKEN},
@@ -179,7 +151,9 @@ async def test_create_entry_user(
 
 
 async def test_create_entry_user_with_pick_lock(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    patch_lock_creation_flow: Callable[[dict[str, Any], loqed.Lock, str], Any],
 ) -> None:
     """Test we can create a lock via manual entry when multiple locks exist."""
     result = await _async_init_user_flow(hass)
@@ -194,24 +168,7 @@ async def test_create_entry_user_with_pick_lock(
     second_lock["name"] = "MyOtherLock"
     all_locks_response["data"].append(second_lock)
 
-    with (
-        patch(
-            "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
-            return_value=all_locks_response,
-        ),
-        patch(
-            "loqedAPI.loqed.LoqedAPI.async_get_lock",
-            return_value=mock_lock,
-        ),
-        patch(
-            "homeassistant.components.loqed.async_setup_entry",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.webhook.async_generate_id",
-            return_value=webhook_id,
-        ),
-    ):
+    with patch_lock_creation_flow(all_locks_response, mock_lock, webhook_id):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_TOKEN: TEST_API_TOKEN},
@@ -263,7 +220,9 @@ async def test_cannot_connect(
 
 
 async def test_recover_after_cannot_connect(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    patch_lock_creation_flow: Callable[[dict[str, Any], loqed.Lock, str], Any],
 ) -> None:
     """Test we can recover from a connection error and create an entry."""
     result = await _async_init_user_flow(hass)
@@ -288,24 +247,7 @@ async def test_recover_after_cannot_connect(
     )
     found_lock = all_locks_response["data"][0]
 
-    with (
-        patch(
-            "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
-            return_value=all_locks_response,
-        ),
-        patch(
-            "loqedAPI.loqed.LoqedAPI.async_get_lock",
-            return_value=mock_lock,
-        ),
-        patch(
-            "homeassistant.components.loqed.async_setup_entry",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.webhook.async_generate_id",
-            return_value=webhook_id,
-        ),
-    ):
+    with patch_lock_creation_flow(all_locks_response, mock_lock, webhook_id):
         success_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_TOKEN: TEST_API_TOKEN},
