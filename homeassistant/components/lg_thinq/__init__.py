@@ -95,12 +95,8 @@ async def async_setup_coordinators(
     except ThinQAPIException as exc:
         raise ConfigEntryNotReady(exc.message) from exc
     except (ClientError, TimeoutError) as exc:
-        # A transient network/DNS failure (e.g. Home Assistant starting before
-        # the network is ready after a reboot) surfaces as an aiohttp
-        # ClientError or a timeout rather than a ThinQAPIException. Treat it as
-        # "not ready yet" so Home Assistant retries with backoff instead of
-        # failing setup permanently.
-        raise ConfigEntryNotReady(str(exc)) from exc
+        # Transient network/DNS errors aren't ThinQAPIException; retry setup.
+        raise ConfigEntryNotReady from exc
 
     if not bridge_list:
         _LOGGER.warning("No devices registered with the correct profile")
