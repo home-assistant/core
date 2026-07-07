@@ -31,6 +31,8 @@ CONF_MIN_TEMP = "min_temp"
 CONF_MIN_VALUE = "min_value"
 CONF_MSG_WAIT = "message_wait_milliseconds"
 CONF_NAN_VALUE = "nan_value"
+CONF_NUMBERS = "numbers"
+CONF_NUMBER_STEP = "step"
 CONF_PARITY = "parity"
 CONF_PRECISION = "precision"
 CONF_SCALE = "scale"
@@ -173,6 +175,7 @@ PLATFORMS = (
     (Platform.COVER, CONF_COVERS),
     (Platform.LIGHT, CONF_LIGHTS),
     (Platform.FAN, CONF_FANS),
+    (Platform.NUMBER, CONF_NUMBERS),
     (Platform.SENSOR, CONF_SENSORS),
     (Platform.SWITCH, CONF_SWITCHES),
 )
