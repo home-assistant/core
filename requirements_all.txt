@@ -2860,6 +2860,9 @@ qingping-ble==1.1.5
 # homeassistant.components.qnap
 qnapstats==0.4.0
 
+# homeassistant.components.evolviot
+qrcode[pil]==8.2
+
 # homeassistant.components.quantum_gateway
 quantum-gateway==0.0.8
 
