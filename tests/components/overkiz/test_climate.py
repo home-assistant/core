@@ -1,16 +1,19 @@
 """Tests for the Overkiz climate platform."""
 
 from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import OverkizState
 from pyoverkiz.models import Event
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import ATTR_HVAC_ACTION, HVACAction
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
 from .helpers import (
@@ -21,11 +24,25 @@ from .helpers import (
     device_unavailable_event,
 )
 
+from tests.common import snapshot_platform
+
+# io:HeatingValveIOComponent
 VALVE = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "io://1234-5678-1698/15702199#1",
     "climate.maple_residence_garden_radiator",
 )
+# modbuslink:AtlanticElectricalHeaterWithAdjustableTemperatureSetpointMBLComponent
+COZYTOUCH = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch.json",
+    "modbuslink://1234-5678-5643/1#1",
+    "climate.living_room_heater",
+)
+
+SNAPSHOT_FIXTURES = [
+    VALVE,
+    COZYTOUCH,
+]
 
 
 @pytest.fixture(autouse=True)
@@ -33,6 +50,25 @@ def fixture_platforms() -> Generator[None]:
     """Limit platforms to climate only."""
     with patch("homeassistant.components.overkiz.PLATFORMS", [Platform.CLIMATE]):
         yield
+
+
+@pytest.mark.parametrize(
+    "device",
+    SNAPSHOT_FIXTURES,
+    ids=[Path(device.fixture).name for device in SNAPSHOT_FIXTURES],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_climate_entities_snapshot(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    device: FixtureDevice,
+) -> None:
+    """Test representative real setups via snapshot."""
+    config_entry = await setup_overkiz_integration(fixture=device.fixture)
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_valve_hvac_action_none_state(
