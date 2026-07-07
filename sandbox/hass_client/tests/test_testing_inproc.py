@@ -11,7 +11,7 @@ shape and the channel pair's call/response round-trip.
 import asyncio
 
 from hass_client._proto import sandbox_pb2 as pb
-from hass_client.messages import struct_to_dict
+from hass_client.messages import decode_json_dict, encode_json
 from hass_client.testing._inproc import _LoopbackWriter, make_inproc_channel_pair
 
 
@@ -52,7 +52,7 @@ async def test_make_inproc_channel_pair_round_trips_a_call() -> None:
 
     async def handler(payload: pb.StoreLoad) -> pb.StoreLoadResult:
         result = pb.StoreLoadResult()
-        result.data.update({"echo": "ok", "saw": payload.key})
+        result.data = encode_json({"echo": "ok", "saw": payload.key})
         return result
 
     rt_channel.register("sandbox/store_load", handler)
@@ -63,7 +63,7 @@ async def test_make_inproc_channel_pair_round_trips_a_call() -> None:
             mgr_channel.call("sandbox/store_load", pb.StoreLoad(key="hi")),
             timeout=2.0,
         )
-        assert struct_to_dict(result.data) == {"echo": "ok", "saw": "hi"}
+        assert decode_json_dict(result.data) == {"echo": "ok", "saw": "hi"}
     finally:
         await mgr_channel.close()
         await rt_channel.close()

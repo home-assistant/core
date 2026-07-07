@@ -14,7 +14,7 @@ from hass_client.channel import Channel, ChannelRemoteError
 from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.entry_runner import EntryRunner
 from hass_client.flow_runner import FlowRunner
-from hass_client.messages import struct_to_dict
+from hass_client.messages import decode_json_dict, encode_json
 import pytest
 
 from homeassistant import config_entries as ha_config_entries, loader as ha_loader
@@ -141,7 +141,7 @@ async def test_entry_setup_calls_integration_setup_entry(
         version=1,
         minor_version=1,
     )
-    payload.data.update({"host": "1.2.3.4", "port": 8123})
+    payload.data = encode_json({"host": "1.2.3.4", "port": 8123})
     result = await main.call("sandbox/entry_setup", payload)
 
     assert result.ok
@@ -149,7 +149,7 @@ async def test_entry_setup_calls_integration_setup_entry(
     assert len(setup_calls) == 1
     assert setup_calls[0].entry_id == "test_entry_id_5"
     assert setup_calls[0].data["host"] == "1.2.3.4"
-    # Int config survives the Struct wire as int, not float (Phase 7).
+    # Int config survives the JSON wire as int, not float.
     assert setup_calls[0].data["port"] == 8123
     assert isinstance(setup_calls[0].data["port"], int)
 
@@ -275,14 +275,14 @@ async def test_call_service_dispatches_through_services(
     runner.hass.services.async_register("test_call", "do_it", _svc_handler)
 
     call_msg = pb.CallService(domain="test_call", service="do_it")
-    call_msg.service_data.update({"hello": "world", "brightness": 255})
+    call_msg.service_data = encode_json({"hello": "world", "brightness": 255})
     result = await main.call("sandbox/call_service", call_msg)
 
     # No return_response: proto result has no `response` field set (was
     # `result is None` on the dict wire).
     assert not result.HasField("response")
     assert seen == [{"hello": "world", "brightness": 255}]
-    # Int service-data field arrives as int on the sandbox side (Phase 7).
+    # Int service-data field arrives as int on the sandbox side.
     assert isinstance(seen[0]["brightness"], int)
 
 
@@ -327,7 +327,7 @@ async def test_entity_query_invokes_method(
 
     msg = pb.EntityQuery(sandbox_entity_id="update.demo", method="async_release_notes")
     result = await main.call("sandbox/entity_query", msg)
-    assert struct_to_dict(result.result) == {"value": "## notes"}
+    assert decode_json_dict(result.result) == {"value": "## notes"}
 
 
 async def test_entity_query_passes_kwargs(
@@ -341,9 +341,9 @@ async def test_entity_query_passes_kwargs(
     _install_fake_entity(runner, "update.demo")
 
     msg = pb.EntityQuery(sandbox_entity_id="update.demo", method="echo")
-    msg.args.update({"a": "x", "b": "y"})
+    msg.args = encode_json({"a": "x", "b": "y"})
     result = await main.call("sandbox/entity_query", msg)
-    assert struct_to_dict(result.result) == {"value": {"a": "x", "b": "y"}}
+    assert decode_json_dict(result.result) == {"value": {"a": "x", "b": "y"}}
 
 
 async def test_entity_query_unknown_entity(

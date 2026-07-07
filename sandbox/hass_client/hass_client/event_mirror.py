@@ -40,10 +40,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 
-from ._json import json_safe
 from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
+from .messages import encode_json
 from .protocol import MSG_FIRE_EVENT
 
 _LOGGER = logging.getLogger(__name__)
@@ -104,7 +104,7 @@ class EventMirror:
         if not self.approved.approves_event(event_type):
             return
         msg = pb.FireEvent(event_type=event_type)
-        msg.event_data.update(json_safe(dict(event.data)))
+        msg.event_data = encode_json(dict(event.data))
         # Forward only the context id — never parent_id / user_id.
         if event.context is not None and event.context.id:
             msg.context_id = event.context.id

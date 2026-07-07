@@ -29,7 +29,7 @@ from homeassistant.components.sandbox.bridge import (
     SandboxBridge,
 )
 from homeassistant.components.sandbox.channel import Channel, ChannelRemoteError
-from homeassistant.components.sandbox.messages import struct_to_dict
+from homeassistant.components.sandbox.messages import decode_json_dict, encode_json
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 
@@ -61,7 +61,7 @@ async def test_store_save_writes_to_namespaced_path(hass: HomeAssistant) -> None
         "data": {"hello": "world"},
     }
     save = pb.StoreSave(key="demo_key")
-    save.data.update(wrapped)
+    save.data = encode_json(wrapped)
     try:
         result = await sandbox_channel.call("sandbox/store_save", save)
     finally:
@@ -85,7 +85,7 @@ async def test_store_load_returns_saved_payload(hass: HomeAssistant) -> None:
         "data": {"counter": 42},
     }
     save = pb.StoreSave(key="demo_key")
-    save.data.update(wrapped)
+    save.data = encode_json(wrapped)
     try:
         await sandbox_channel.call("sandbox/store_save", save)
         loaded = await sandbox_channel.call(
@@ -95,7 +95,7 @@ async def test_store_load_returns_saved_payload(hass: HomeAssistant) -> None:
         await main_channel.close()
         await sandbox_channel.close()
 
-    assert struct_to_dict(loaded.data) == wrapped
+    assert decode_json_dict(loaded.data) == wrapped
 
 
 async def test_store_load_missing_key_returns_none(hass: HomeAssistant) -> None:
@@ -117,7 +117,7 @@ async def test_store_remove_unlinks_file(hass: HomeAssistant) -> None:
     """``store_remove`` removes the on-disk file."""
     _bridge, main_channel, sandbox_channel = await _wire(hass)
     save = pb.StoreSave(key="to_remove")
-    save.data.update(
+    save.data = encode_json(
         {
             "version": 1,
             "minor_version": 1,
@@ -206,7 +206,7 @@ async def test_store_rejects_oversized_value(hass: HomeAssistant) -> None:
     _bridge, main_channel, sandbox_channel = await _wire(hass)
     oversized = "x" * (_STORE_MAX_VALUE_BYTES + 1)
     save = pb.StoreSave(key="too_big")
-    save.data.update(
+    save.data = encode_json(
         {
             "version": 1,
             "minor_version": 1,
@@ -235,7 +235,7 @@ async def test_store_groups_are_isolated(hass: HomeAssistant) -> None:
         "data": {"side": "built-in"},
     }
     save = pb.StoreSave(key="shared_key")
-    save.data.update(wrapped)
+    save.data = encode_json(wrapped)
     try:
         await sandbox_a.call("sandbox/store_save", save)
         # The custom-group bridge cannot see built-in's data.
@@ -264,7 +264,7 @@ async def test_store_survives_bridge_restart(hass: HomeAssistant) -> None:
         "data": {"survives": True},
     }
     save = pb.StoreSave(key="persistent")
-    save.data.update(wrapped)
+    save.data = encode_json(wrapped)
     try:
         await sandbox_a.call("sandbox/store_save", save)
     finally:
@@ -281,4 +281,4 @@ async def test_store_survives_bridge_restart(hass: HomeAssistant) -> None:
         await main_b.close()
         await sandbox_b.close()
 
-    assert struct_to_dict(loaded.data) == wrapped
+    assert decode_json_dict(loaded.data) == wrapped

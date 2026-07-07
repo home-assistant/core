@@ -26,7 +26,7 @@ from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
 from homeassistant.components.sandbox.bridge import SandboxBridge
 from homeassistant.components.sandbox.channel import Channel
 from homeassistant.components.sandbox.manager import SandboxManager
-from homeassistant.components.sandbox.messages import struct_to_dict
+from homeassistant.components.sandbox.messages import decode_json_dict, encode_json
 from homeassistant.components.sandbox.router import SandboxFlowRouter
 from homeassistant.components.sandbox.schema_bridge import reconstruct_schema
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -224,7 +224,7 @@ async def test_flow_form_renders_reconstructed_schema(
         handler="mock_schema",
         step_id="user",
     )
-    form.data_schema.extend(serialized_schema)
+    form.data_schema = encode_json(serialized_schema)
     responses = [form]
 
     with (
@@ -284,7 +284,7 @@ async def test_register_service_with_schema_validates_on_main(
         service="do_thing",
         supports_response="none",
     )
-    register_service.schema.extend(schema_payload)
+    register_service.schema = encode_json(schema_payload)
 
     try:
         result = await sandbox_channel.call(
@@ -302,7 +302,7 @@ async def test_register_service_with_schema_validates_on_main(
             "mock_svc", "do_thing", {"host": "1.2.3.4"}, blocking=True
         )
         assert len(seen) == 1
-        assert struct_to_dict(seen[0].service_data) == {"host": "1.2.3.4"}
+        assert decode_json_dict(seen[0].service_data) == {"host": "1.2.3.4"}
     finally:
         await main_channel.close()
         await sandbox_channel.close()
@@ -363,7 +363,7 @@ async def test_unique_id_propagates_to_proxy_context(
         handler="mock_unique",
         step_id="user",
     )
-    form.context.update({"source": SOURCE_USER, "unique_id": "abc-123"})
+    form.context = encode_json({"source": SOURCE_USER, "unique_id": "abc-123"})
     responses = [form]
 
     with (
@@ -397,7 +397,7 @@ async def test_duplicate_unique_id_aborts_second_flow(
         handler="mock_duplicate",
         step_id="user",
     )
-    form_a.context.update({"source": SOURCE_USER, "unique_id": "dup-1"})
+    form_a.context = encode_json({"source": SOURCE_USER, "unique_id": "dup-1"})
     responses_a = [form_a]
     form_b = pb.FlowResult(
         type=FlowResultType.FORM.value,
@@ -405,7 +405,7 @@ async def test_duplicate_unique_id_aborts_second_flow(
         handler="mock_duplicate",
         step_id="user",
     )
-    form_b.context.update({"source": SOURCE_USER, "unique_id": "dup-1"})
+    form_b.context = encode_json({"source": SOURCE_USER, "unique_id": "dup-1"})
     responses_b = [form_b]
 
     with (

@@ -9,9 +9,11 @@
 // Field conventions:
 //   * Genuinely dynamic payloads (service_data, target, state attributes,
 //     capabilities, flow `data`/`errors`/`context`, the wrapped Store
-//     envelope) cross as `google.protobuf.Struct`; the serialized
-//     voluptuous schema (a list of field dicts) crosses as
-//     `google.protobuf.ListValue`. Everything else is an explicit field.
+//     envelope, the serialized voluptuous schema) cross as `bytes` holding
+//     orjson-encoded JSON (UTF-8). Numbers keep their native int/float
+//     types end to end. `optional bytes` marks fields where presence
+//     (unset vs empty payload) is load-bearing; plain `bytes` fields treat
+//     empty bytes as an empty payload. Everything else is an explicit field.
 //   * Context security: only `context_id` ever crosses from the sandbox.
 //     `parent_id` / `user_id` are NEVER on the wire — main resolves the id
 //     to its own authoritative Context at dispatch time.
@@ -19,8 +21,6 @@
 syntax = "proto3";
 
 package sandbox;
-
-import "google/protobuf/struct.proto";
 
 // --- Envelope -------------------------------------------------------------
 
@@ -110,8 +110,8 @@ message EntrySetup {
   string entry_id = 1;
   string domain = 2;
   string title = 3;
-  google.protobuf.Struct data = 4;
-  google.protobuf.Struct options = 5;
+  bytes data = 4;     // JSON object
+  bytes options = 5;  // JSON object
   string source = 6;
   optional string unique_id = 7;
   int32 version = 8;
@@ -137,8 +137,8 @@ message EntryUnloadResult {
 message CallService {
   string domain = 1;
   string service = 2;
-  google.protobuf.Struct target = 3;        // dynamic
-  google.protobuf.Struct service_data = 4;  // dynamic
+  bytes target = 3;        // dynamic, JSON object
+  bytes service_data = 4;  // dynamic, JSON object
   optional string context_id = 5;           // wire-safe: only the id
   bool return_response = 6;
 }
@@ -146,7 +146,7 @@ message CallService {
 // Typed envelope so every call-service response goes through the same shape;
 // the dynamic payload sits inside `data`.
 message ServiceResponse {
-  google.protobuf.Struct data = 1;
+  bytes data = 1;  // JSON object
 }
 
 message CallServiceResult {
@@ -164,14 +164,14 @@ message CallServiceResult {
 message EntityQuery {
   string sandbox_entity_id = 1;
   string method = 2;                       // e.g. "async_search_media"
-  google.protobuf.Struct args = 3;         // kwargs, dynamic
+  bytes args = 3;                          // kwargs, dynamic JSON object
   optional string context_id = 4;          // same wire-safe id rule as CallService
 }
 
 message EntityQueryResult {
-  // Wrapped as {"value": <return>} so scalar / list / None returns are all
-  // representable (a Struct's top level must be an object).
-  google.protobuf.Struct result = 1;
+  // Wrapped as {"value": <return>} so the empty-bytes "no payload" default
+  // is distinguishable from a genuine None/scalar/list return.
+  bytes result = 1;  // JSON object
 }
 
 // --- get_translations (main -> sandbox) -----------------------------------
@@ -187,11 +187,12 @@ message GetTranslations {
 
 message GetTranslationsResult {
   string language = 1;
-  // { domain: <raw strings.json dict> } — the un-flattened nesting a
-  // translations/<lang>.json holds, with `title` already filled in from the
-  // integration name (main has no Integration for a custom domain so it
-  // cannot run that fallback). Domains the sandbox does not own are omitted.
-  google.protobuf.Struct strings = 2;
+  // JSON object { domain: <raw strings.json dict> } — the un-flattened
+  // nesting a translations/<lang>.json holds, with `title` already filled in
+  // from the integration name (main has no Integration for a custom domain
+  // so it cannot run that fallback). Domains the sandbox does not own are
+  // omitted.
+  bytes strings = 2;
 }
 
 // --- shutdown / ping (main -> sandbox) ------------------------------------
@@ -201,7 +202,7 @@ message Shutdown {}
 message ShutdownResult {
   bool ok = 1;
   int32 unloaded = 2;
-  optional google.protobuf.Struct restore_state = 3;  // wrapped Store envelope
+  optional bytes restore_state = 3;  // wrapped Store envelope, JSON object
 }
 
 message Ping {}
@@ -218,13 +219,13 @@ message Ready {}
 
 message FlowInit {
   string handler = 1;
-  google.protobuf.Struct context = 2;  // dynamic
-  google.protobuf.Struct data = 3;     // dynamic (initial flow data)
+  bytes context = 2;         // dynamic, JSON object
+  optional bytes data = 3;   // dynamic, JSON object (unset = no initial data)
 }
 
 message FlowStep {
   string flow_id = 1;
-  google.protobuf.Struct user_input = 2;  // dynamic
+  optional bytes user_input = 2;  // dynamic, JSON object (unset = no input)
 }
 
 message FlowAbort {
@@ -234,8 +235,10 @@ message FlowAbort {
 message FlowAbortResult {}
 
 // Marshalled FlowResult. Scalar fields are explicit; the dynamic dicts
-// (data / errors / context / description_placeholders) are Struct; the
-// serialized voluptuous schema is a ListValue of field dicts.
+// (data / errors / context / description_placeholders) are JSON-object
+// bytes; the serialized voluptuous schema is JSON bytes holding a list of
+// field dicts. `optional` marks the dicts whose set-vs-unset distinction
+// the main-side proxy reads via HasField (None vs {} matter there).
 message FlowResult {
   string type = 1;
   optional string flow_id = 2;
@@ -248,19 +251,19 @@ message FlowResult {
   optional string preview = 9;
   optional int32 version = 10;
   optional int32 minor_version = 11;
-  google.protobuf.Struct data = 12;
-  google.protobuf.Struct options = 13;
-  google.protobuf.Struct errors = 14;
-  google.protobuf.Struct description_placeholders = 15;
-  google.protobuf.Struct context = 16;
-  google.protobuf.ListValue data_schema = 17;
+  bytes data = 12;                            // JSON object
+  optional bytes options = 13;                // JSON object
+  optional bytes errors = 14;                 // JSON object
+  optional bytes description_placeholders = 15;  // JSON object
+  optional bytes context = 16;                // JSON object
+  bytes data_schema = 17;                     // JSON list of field dicts
   // True when a data_schema existed on the sandbox flow but could not be
   // serialized — main then renders a schema-less form rather than abort.
   bool has_data_schema = 18;
-  // MENU result: the navigation options. A list[str] form crosses as a list
-  // of step-id strings; a dict[str,str] (id -> label) form crosses as a list
-  // of [id, label] pairs so order and labels survive.
-  google.protobuf.ListValue menu_options = 19;
+  // MENU result: the navigation options as a JSON list. A list[str] form
+  // crosses as a list of step-id strings; a dict[str,str] (id -> label) form
+  // crosses as a list of [id, label] pairs so order and labels survive.
+  bytes menu_options = 19;
   optional bool sort = 20;  // MENU: frontend sort hint
 }
 
@@ -285,8 +288,8 @@ message EntityInfo {
 // first time.
 message InitialState {
   optional string state = 1;
-  google.protobuf.Struct capabilities = 2;  // dynamic
-  google.protobuf.Struct attributes = 3;    // dynamic
+  bytes capabilities = 2;  // dynamic, JSON object
+  bytes attributes = 3;    // dynamic, JSON object
 }
 
 // Outer wire message for register_entity. Sub-messages group by HA's own
@@ -320,7 +323,7 @@ message UnregisterEntityResult {
 message StateChanged {
   string sandbox_entity_id = 1;
   optional string state = 2;
-  google.protobuf.Struct attributes = 3;  // dynamic
+  bytes attributes = 3;  // dynamic, JSON object
   optional string context_id = 4;
 }
 
@@ -330,7 +333,7 @@ message RegisterService {
   string domain = 1;
   string service = 2;
   string supports_response = 3;          // "none" / "optional" / "only"
-  google.protobuf.ListValue schema = 4;  // serialized voluptuous, empty = none
+  bytes schema = 4;  // serialized voluptuous as a JSON list, empty = none
 }
 
 message RegisterServiceResult {
@@ -352,7 +355,7 @@ message UnregisterServiceResult {
 
 message FireEvent {
   string event_type = 1;
-  google.protobuf.Struct event_data = 2;  // dynamic
+  bytes event_data = 2;  // dynamic, JSON object
   optional string context_id = 3;
 }
 
@@ -363,12 +366,12 @@ message StoreLoad {
 }
 
 message StoreLoadResult {
-  optional google.protobuf.Struct data = 1;  // wrapped envelope, unset = miss
+  optional bytes data = 1;  // wrapped envelope, JSON object, unset = miss
 }
 
 message StoreSave {
   string key = 1;
-  google.protobuf.Struct data = 2;  // wrapped envelope
+  bytes data = 2;  // wrapped envelope, JSON object
 }
 
 message StoreSaveResult {

@@ -2,7 +2,7 @@
 
 Covers :func:`hass_client.sandbox._collect_component_strings` (the loader that
 mirrors core's translation read) and :meth:`SandboxRuntime._handle_get_translations`
-(the channel handler that packs the result into a ``Struct``). The sandbox
+(the channel handler that packs the result into JSON bytes). The sandbox
 holds the ``Integration`` for a custom domain — main does not — so this is
 where the raw ``translations/<lang>.json`` and the ``title`` pre-fill come
 from.
@@ -15,6 +15,7 @@ from typing import Any
 
 from hass_client._proto import sandbox_pb2 as pb
 from hass_client.flow_runner import FlowRunner
+from hass_client.messages import decode_json_dict
 from hass_client.sandbox import SandboxRuntime, _collect_component_strings
 import pytest
 
@@ -108,10 +109,10 @@ async def test_collect_strings_empty_domains_returns_empty(
     assert await _collect_component_strings(hass, "en", []) == {}
 
 
-async def test_handle_get_translations_packs_struct(
+async def test_handle_get_translations_packs_strings(
     hass: HomeAssistant, tmp_path: Path
 ) -> None:
-    """The channel handler returns the raw dict packed into the result Struct."""
+    """The channel handler returns the raw dict packed into JSON bytes."""
     _install_custom_integration(
         hass,
         tmp_path,
@@ -127,7 +128,7 @@ async def test_handle_get_translations_packs_struct(
     )
 
     assert result.language == "en"
-    packed = dict(result.strings)
+    packed = decode_json_dict(result.strings)
     assert packed["packed_custom"]["title"] == "My Custom"
     assert packed["packed_custom"]["entity"]["sensor"]["w"]["name"] == "W"
 

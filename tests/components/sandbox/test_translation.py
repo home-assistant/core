@@ -16,6 +16,7 @@ import pytest
 from homeassistant.components.sandbox import SandboxData
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
 from homeassistant.components.sandbox.channel import Channel
+from homeassistant.components.sandbox.messages import encode_json
 from homeassistant.components.sandbox.protocol import MSG_GET_TRANSLATIONS
 from homeassistant.components.sandbox.proxy_flow import SandboxFlowProxy
 from homeassistant.components.sandbox.router import SandboxFlowRouter
@@ -44,7 +45,7 @@ def _serving_channel(
 
     async def _handler(msg: pb.GetTranslations) -> pb.GetTranslationsResult:
         result = pb.GetTranslationsResult(language=msg.language)
-        result.strings.update(
+        result.strings = encode_json(
             {domain: payload[domain] for domain in msg.domains if domain in payload}
         )
         return result
@@ -68,9 +69,9 @@ def _forging_channel(
 
     async def _handler(msg: pb.GetTranslations) -> pb.GetTranslationsResult:
         result = pb.GetTranslationsResult(language=msg.language)
-        for domain in msg.domains:
-            result.strings.update({domain: _CUSTOM_STRINGS})
-        result.strings.update(extra)
+        strings = dict.fromkeys(msg.domains, _CUSTOM_STRINGS)
+        strings.update(extra)
+        result.strings = encode_json(strings)
         return result
 
     sandbox.register(MSG_GET_TRANSLATIONS, _handler)

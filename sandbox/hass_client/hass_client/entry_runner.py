@@ -10,7 +10,6 @@ ephemeral state used by the integration's lifecycle hooks.
 
 import logging
 from types import MappingProxyType
-from typing import Any
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -18,11 +17,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import DATA_INSTANCES
 
-from ._json import json_safe
 from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
-from .messages import dict_to_struct, struct_to_dict
+from .messages import decode_json_dict, encode_json
 from .protocol import (
     MSG_CALL_SERVICE,
     MSG_ENTITY_QUERY,
@@ -147,8 +145,8 @@ class EntryRunner:
         ``Invalid``). Main maps those back to ``TypeError`` /
         ``HomeAssistantError`` in :mod:`bridge`'s exception translator.
         """
-        target = struct_to_dict(msg.target)
-        service_data = struct_to_dict(msg.service_data)
+        target = decode_json_dict(msg.target)
+        service_data = decode_json_dict(msg.service_data)
         if msg.return_response:
             result = await self.hass.services.async_call(
                 msg.domain,
@@ -159,7 +157,10 @@ class EntryRunner:
                 return_response=True,
             )
             response = pb.CallServiceResult()
-            response.response.data.CopyFrom(dict_to_struct(_json_safe(result)))
+            # encode_json's as_dict-aware encoder carries rich response values
+            # (e.g. {entity_id: BrowseMedia}) in the same wire shape the
+            # websocket API would serialise.
+            response.response.data = encode_json(result or {})
             return response
         await self.hass.services.async_call(
             msg.domain,
@@ -190,9 +191,9 @@ class EntryRunner:
                 f"entity_query: {msg.sandbox_entity_id!r} has no method"
                 f" {msg.method!r}"
             )
-        value = await method(**struct_to_dict(msg.args))
+        value = await method(**decode_json_dict(msg.args))
         result = pb.EntityQueryResult()
-        result.result.CopyFrom(dict_to_struct(_json_safe({"value": value})))
+        result.result = encode_json({"value": value})
         return result
 
 
@@ -206,21 +207,6 @@ def _resolve_entity(hass: HomeAssistant, entity_id: str) -> Entity:
     return entity
 
 
-def _json_safe(result: Any) -> dict[str, Any]:
-    """Coerce a service response into a plain JSON-safe dict.
-
-    Entity service responses are keyed by entity_id and the value may be a
-    rich object rather than a plain dict — ``media_player.browse_media``
-    returns ``{entity_id: BrowseMedia}``, for instance. ``dict_to_struct``
-    only accepts JSON scalars/dicts/lists, so the response is run through the
-    same ``as_dict``-aware JSON encoder the websocket API uses for service
-    responses, yielding the exact wire shape main rebuilds from.
-    """
-    if not result:
-        return {}
-    return json_safe(result)
-
-
 def _entry_from_proto(msg: pb.EntrySetup) -> ConfigEntry:
     """Rebuild a :class:`ConfigEntry` from the typed ``EntrySetup`` message.
 
@@ -232,8 +218,8 @@ def _entry_from_proto(msg: pb.EntrySetup) -> ConfigEntry:
         minor_version=msg.minor_version,
         domain=msg.domain,
         title=msg.title,
-        data=MappingProxyType(struct_to_dict(msg.data)),
-        options=MappingProxyType(struct_to_dict(msg.options)),
+        data=MappingProxyType(decode_json_dict(msg.data)),
+        options=MappingProxyType(decode_json_dict(msg.options)),
         source=msg.source,
         unique_id=msg.unique_id if msg.HasField("unique_id") else None,
         entry_id=msg.entry_id,

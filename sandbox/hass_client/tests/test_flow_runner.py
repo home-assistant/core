@@ -20,7 +20,7 @@ from hass_client.flow_runner import (
     _marshal_menu_options,
     _rehydrate_discovery,
 )
-from hass_client.messages import dict_to_struct, listvalue_to_list, struct_to_dict
+from hass_client.messages import decode_json, decode_json_dict, encode_json
 import pytest
 import voluptuous as vol
 
@@ -177,7 +177,7 @@ async def test_flow_init_returns_form(
     sandbox.start()
 
     init_msg = pb.FlowInit(handler="phase4_demo")
-    init_msg.context.update({"source": "user"})
+    init_msg.context = encode_json({"source": "user"})
     result = await main.call("sandbox/flow_init", init_msg)
 
     assert result.type == "form"
@@ -186,7 +186,7 @@ async def test_flow_init_returns_form(
     # voluptuous_serialize.convert produces, so the proxy on main can
     # rebuild a usable vol.Schema (or hand the list straight to the
     # frontend).
-    assert listvalue_to_list(result.data_schema) == [
+    assert decode_json(result.data_schema) == [
         {"name": "host", "type": "string", "required": True}
     ]
     assert result.has_data_schema is not True
@@ -202,15 +202,15 @@ async def test_flow_step_creates_entry(
     sandbox.start()
 
     init_msg = pb.FlowInit(handler="phase4_demo")
-    init_msg.context.update({"source": "user"})
+    init_msg.context = encode_json({"source": "user"})
     init_result = await main.call("sandbox/flow_init", init_msg)
     step_msg = pb.FlowStep(flow_id=init_result.flow_id)
-    step_msg.user_input.CopyFrom(dict_to_struct({"host": "1.2.3.4"}))
+    step_msg.user_input = encode_json({"host": "1.2.3.4"})
     step_result = await main.call("sandbox/flow_step", step_msg)
 
     assert step_result.type == "create_entry"
     assert step_result.title == "Demo 1.2.3.4"
-    assert struct_to_dict(step_result.data) == {"host": "1.2.3.4"}
+    assert decode_json_dict(step_result.data) == {"host": "1.2.3.4"}
 
 
 async def test_create_entry_marshals_version_and_options(
@@ -232,7 +232,7 @@ async def test_create_entry_marshals_version_and_options(
     runner.hass.config.components.add("phase4_versioned")
     try:
         init_msg = pb.FlowInit(handler="phase4_versioned")
-        init_msg.context.update({"source": "user"})
+        init_msg.context = encode_json({"source": "user"})
         result = await main.call("sandbox/flow_init", init_msg)
     finally:
         ha_config_entries.HANDLERS.pop("phase4_versioned", None)
@@ -244,7 +244,7 @@ async def test_create_entry_marshals_version_and_options(
     assert result.type == "create_entry"
     assert result.version == 2
     assert result.minor_version == 3
-    assert struct_to_dict(result.options) == {"poll_interval": 30}
+    assert decode_json_dict(result.options) == {"poll_interval": 30}
 
 
 async def test_menu_marshals_options(
@@ -266,7 +266,7 @@ async def test_menu_marshals_options(
     runner.hass.config.components.add("phase4_menu")
     try:
         init_msg = pb.FlowInit(handler="phase4_menu")
-        init_msg.context.update({"source": "user"})
+        init_msg.context = encode_json({"source": "user"})
         result = await main.call("sandbox/flow_init", init_msg)
     finally:
         ha_config_entries.HANDLERS.pop("phase4_menu", None)
@@ -275,7 +275,7 @@ async def test_menu_marshals_options(
 
     assert result.type == "menu"
     assert result.step_id == "user"
-    assert listvalue_to_list(result.menu_options) == ["alpha", "beta"]
+    assert decode_json(result.menu_options) == ["alpha", "beta"]
 
 
 async def test_zeroconf_discovery_rebuilds_service_info(
@@ -299,9 +299,9 @@ async def test_zeroconf_discovery_rebuilds_service_info(
     runner.hass.config.components.add("phase4_zeroconf")
     try:
         init_msg = pb.FlowInit(handler="phase4_zeroconf")
-        init_msg.context.update({"source": "zeroconf"})
+        init_msg.context = encode_json({"source": "zeroconf"})
         # The wire payload is the proxy's JSON-flattened ZeroconfServiceInfo.
-        init_msg.data.update(
+        init_msg.data = encode_json(
             {
                 "ip_address": "1.2.3.4",
                 "ip_addresses": ["1.2.3.4"],
@@ -322,7 +322,7 @@ async def test_zeroconf_discovery_rebuilds_service_info(
 
     assert result.type == "create_entry"
     assert result.title == "1.2.3.4"
-    assert struct_to_dict(result.data) == {"host": "1.2.3.4", "name": "device"}
+    assert decode_json_dict(result.data) == {"host": "1.2.3.4", "name": "device"}
 
 
 def test_rehydrate_discovery_rebuilds_objects() -> None:
@@ -365,14 +365,14 @@ async def test_flow_step_validation_error_returns_form(
     sandbox.start()
 
     init_msg = pb.FlowInit(handler="phase4_demo")
-    init_msg.context.update({"source": "user"})
+    init_msg.context = encode_json({"source": "user"})
     init_result = await main.call("sandbox/flow_init", init_msg)
     step_msg = pb.FlowStep(flow_id=init_result.flow_id)
-    step_msg.user_input.CopyFrom(dict_to_struct({"host": "bad"}))
+    step_msg.user_input = encode_json({"host": "bad"})
     step_result = await main.call("sandbox/flow_step", step_msg)
 
     assert step_result.type == "form"
-    assert struct_to_dict(step_result.errors) == {"host": "invalid_host"}
+    assert decode_json_dict(step_result.errors) == {"host": "invalid_host"}
 
 
 async def test_flow_init_marshals_unique_id(
@@ -385,11 +385,11 @@ async def test_flow_init_marshals_unique_id(
     sandbox.start()
 
     init_msg = pb.FlowInit(handler="phase4_demo")
-    init_msg.context.update({"source": "user", "unique_id": "demo-abc"})
+    init_msg.context = encode_json({"source": "user", "unique_id": "demo-abc"})
     result = await main.call("sandbox/flow_init", init_msg)
 
     assert result.type == "form"
-    assert struct_to_dict(result.context).get("unique_id") == "demo-abc"
+    assert decode_json_dict(result.context).get("unique_id") == "demo-abc"
 
 
 async def test_flow_abort_is_idempotent(

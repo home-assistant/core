@@ -40,8 +40,8 @@ def _browse_media_from_dict(data: dict[str, Any]) -> BrowseMedia:
     ``BrowseMedia.as_dict`` is frontend-shaped — it carries
     ``children_media_class`` and emits ``not_shown`` / ``children`` only at the
     parent level — so fields map across explicitly rather than via a ``**data``
-    splat. ``children`` recurses; numbers arriving as floats through the wire
-    Struct are coerced back to the constructor's ``int`` / ``bool`` types.
+    splat. ``children`` recurses; the JSON wire keeps native number types, and
+    the explicit ``int()`` / ``bool()`` casts guard the constructor's types.
     """
     children = data.get("children")
     return BrowseMedia(

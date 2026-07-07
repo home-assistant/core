@@ -29,6 +29,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
+from .messages import encode_json
 from .protocol import MSG_REGISTER_SERVICE, MSG_UNREGISTER_SERVICE
 from .schema_bridge import serialize_schema
 
@@ -131,7 +132,7 @@ class ServiceMirror:
         )
         schema = _service_schema(self.hass, domain, service)
         if schema:
-            msg.schema.extend(schema)
+            msg.schema = encode_json(schema)
         self._mirrored.add(key)
         asyncio.create_task(  # noqa: RUF006
             self._push_register(msg, key),

@@ -15,8 +15,9 @@ from homeassistant.components.sandbox.bridge import (
 )
 from homeassistant.components.sandbox.channel import Channel, ChannelRemoteError
 from homeassistant.components.sandbox.messages import (
+    decode_json_dict,
+    encode_json,
     make_entity_description,
-    struct_to_dict,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
@@ -247,7 +248,9 @@ async def test_state_changed_push_updates_proxy(
     try:
         result = await sandbox_channel.call("sandbox/register_entity", register)
         state_changed = pb.StateChanged(sandbox_entity_id="light.lamp", state=STATE_ON)
-        state_changed.attributes.update({"brightness": 250, "color_mode": "brightness"})
+        state_changed.attributes = encode_json(
+            {"brightness": 250, "color_mode": "brightness"}
+        )
         await sandbox_channel.push("sandbox/state_changed", state_changed)
         # Give the push handler a tick to land.
         for _ in range(20):
@@ -306,7 +309,7 @@ async def test_proxy_method_translates_to_call_service(
     assert len(calls) == 1
     assert calls[0].domain == "light"
     assert calls[0].service == "turn_on"
-    assert struct_to_dict(calls[0].target) == {"entity_id": ["light.bedroom"]}
+    assert decode_json_dict(calls[0].target) == {"entity_id": ["light.bedroom"]}
 
 
 async def test_proxy_method_concurrent_calls_each_own_rpc(
@@ -350,7 +353,7 @@ async def test_proxy_method_concurrent_calls_each_own_rpc(
     # One RPC per entity call (no coalescing in the first iteration).
     assert len(calls) == len(sandbox_ids)
     assert all(c.domain == "light" and c.service == "turn_on" for c in calls)
-    targeted = sorted(struct_to_dict(c.target)["entity_id"][0] for c in calls)
+    targeted = sorted(decode_json_dict(c.target)["entity_id"][0] for c in calls)
     assert targeted == sorted(sandbox_ids)
 
 
@@ -577,7 +580,7 @@ async def test_register_service_installs_forwarder(hass: HomeAssistant) -> None:
     assert len(seen_calls) == 1
     assert seen_calls[0].domain == "mirror_demo"
     assert seen_calls[0].service == "do_thing"
-    assert struct_to_dict(seen_calls[0].service_data) == {"foo": "bar"}
+    assert decode_json_dict(seen_calls[0].service_data) == {"foo": "bar"}
 
 
 async def test_forwarded_context_restores_on_echoed_state(
@@ -638,7 +641,7 @@ async def test_forwarded_context_restores_on_echoed_state(
         changed = pb.StateChanged(
             sandbox_entity_id="light.lamp", state="on", context_id=user_context.id
         )
-        changed.attributes.update({"color_mode": "onoff"})
+        changed.attributes = encode_json({"color_mode": "onoff"})
         await sandbox_channel.push("sandbox/state_changed", changed)
 
         for _ in range(200):
@@ -742,7 +745,9 @@ async def test_fire_event_lands_on_main_bus(hass: HomeAssistant) -> None:
 
     try:
         fire_event = pb.FireEvent(event_type="zha_event")
-        fire_event.event_data.update({"command": "on", "device_ieee": "0a:0b:0c"})
+        fire_event.event_data = encode_json(
+            {"command": "on", "device_ieee": "0a:0b:0c"}
+        )
         await sandbox_channel.push("sandbox/fire_event", fire_event)
         # Give the push handler a tick to run.
         for _ in range(20):
@@ -789,7 +794,7 @@ async def test_fire_event_forged_type_dropped(
 
     try:
         forged = pb.FireEvent(event_type=event_type)
-        forged.event_data.update({"injected": True})
+        forged.event_data = encode_json({"injected": True})
         await sandbox_channel.push("sandbox/fire_event", forged)
         # Let the push handler run; the event must never reach the bus.
         for _ in range(20):

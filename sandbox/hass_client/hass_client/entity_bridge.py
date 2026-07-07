@@ -29,7 +29,7 @@ from ._json import json_safe
 from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
-from .messages import make_entity_description
+from .messages import encode_json, make_entity_description
 from .protocol import MSG_REGISTER_ENTITY, MSG_STATE_CHANGED, MSG_UNREGISTER_ENTITY
 
 _LOGGER = logging.getLogger(__name__)
@@ -241,7 +241,7 @@ class EntityBridge:
         initial_attributes = None
         if hasattr(new_state, "state"):
             initial_state = new_state.state
-            initial_attributes = json_safe(dict(new_state.attributes))
+            initial_attributes = dict(new_state.attributes)
         try:
             await self._channel.call(
                 MSG_REGISTER_ENTITY,
@@ -291,7 +291,7 @@ class EntityBridge:
         state = self.hass.states.get(entity_id)
         if state is not None:
             initial_state = state.state
-            initial_attributes = json_safe(dict(state.attributes))
+            initial_attributes = dict(state.attributes)
         try:
             await self._channel.call(
                 MSG_REGISTER_ENTITY,
@@ -308,10 +308,10 @@ class EntityBridge:
         msg = pb.StateChanged(sandbox_entity_id=entity_id)
         if new_state.state is not None:
             msg.state = new_state.state
-        # json_safe: attribute values may hold datetimes/enums/sets that
-        # Struct.update rejects with ValueError — outside the try below,
-        # inside a fire-and-forget task, leaving main's proxy stale forever.
-        msg.attributes.update(json_safe(dict(new_state.attributes)))
+        # encode_json coerces attribute values that may hold
+        # datetimes/enums/sets, so an odd attribute can't raise outside the
+        # try below (a fire-and-forget task) and leave main's proxy stale.
+        msg.attributes = encode_json(dict(new_state.attributes))
         # Forward only the context id — never parent_id / user_id. Main
         # resolves it to a Context attributed to the sandbox system user.
         context = getattr(new_state, "context", None)

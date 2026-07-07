@@ -20,7 +20,7 @@ from homeassistant.core import Context
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from ..messages import struct_to_dict
+from ..messages import decode_json_dict
 
 if TYPE_CHECKING:
     from ..bridge import SandboxBridge, SandboxEntityDescription
@@ -189,7 +189,7 @@ class SandboxProxyEntity(Entity):
         if not return_response:
             return result
         if result.HasField("response"):
-            return struct_to_dict(result.response.data)
+            return decode_json_dict(result.response.data)
         return {}
 
     async def _entity_query(self, method: str, **args: Any) -> Any:

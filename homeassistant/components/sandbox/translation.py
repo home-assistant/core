@@ -33,7 +33,7 @@ from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from ._proto import sandbox_pb2 as pb
 from .channel import Channel, ChannelClosedError, ChannelRemoteError
-from .messages import struct_to_dict
+from .messages import decode_json_dict
 from .protocol import MSG_GET_TRANSLATIONS
 from .proxy_flow import SandboxFlowProxy
 
@@ -154,4 +154,4 @@ class SandboxTranslationProvider:
                 err,
             )
             return {}
-        return struct_to_dict(result.strings)
+        return decode_json_dict(result.strings)

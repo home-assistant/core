@@ -19,7 +19,10 @@ from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
 from homeassistant.components.sandbox.bridge import SandboxBridge
 from homeassistant.components.sandbox.channel import Channel
 from homeassistant.components.sandbox.manager import SandboxManager
-from homeassistant.components.sandbox.messages import make_entity_description
+from homeassistant.components.sandbox.messages import (
+    encode_json,
+    make_entity_description,
+)
 from homeassistant.components.sandbox.router import SandboxFlowRouter
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
@@ -99,7 +102,7 @@ async def test_crash_respawn_reregisters_entity(
         result2 = await sandbox2.call("sandbox/register_entity", payload)
         # Live state still flows on the new bridge.
         update = pb.StateChanged(sandbox_entity_id=_SANDBOX_ENTITY_ID, state=STATE_OFF)
-        update.attributes.update({"color_mode": "onoff"})
+        update.attributes = encode_json({"color_mode": "onoff"})
         await sandbox2.push("sandbox/state_changed", update)
         for _ in range(20):
             if hass.states.get(entity_id).state == STATE_OFF:
