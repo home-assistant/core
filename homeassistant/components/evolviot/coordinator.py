@@ -299,21 +299,39 @@ def evolviot_entity_domain(entity: dict[str, Any]) -> str:
     """Return the Home Assistant domain for an EvolvIOT backend entity."""
     capabilities = entity.get("capabilities") or {}
     control = entity.get("control") or {}
-    key = str(control.get("key") or "").lower()
+    key = _entity_metadata_value(entity, control).lower()
     presentation = str(control.get("presentation") or "").lower()
 
     if (
         capabilities.get("supports_select")
-        or key == "pattern"
+        or "pattern" in key
         or presentation == "dropdown"
     ):
         return "select"
 
     if (
         capabilities.get("supports_color")
-        or key == "color"
+        or "color" in key
         or presentation == "color_palette"
     ):
         return "color"
 
+    if capabilities.get("supports_brightness") or "brightness" in key:
+        return "light"
+
     return str(entity.get("domain") or "")
+
+
+def _entity_metadata_value(entity: dict[str, Any], control: dict[str, Any]) -> str:
+    """Return searchable entity metadata for fallback classification."""
+    return " ".join(
+        str(value or "")
+        for value in (
+            control.get("key"),
+            control.get("name"),
+            control.get("appliance_name"),
+            entity.get("unique_id"),
+            entity.get("entity_id"),
+            entity.get("name"),
+        )
+    )
