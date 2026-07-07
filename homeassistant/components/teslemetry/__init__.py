@@ -5,7 +5,7 @@ from collections.abc import Callable
 from functools import partial
 from typing import Any, Final, cast
 
-from aiohttp import ClientError, ClientResponseError
+from aiohttp import ClientError
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     Forbidden,
@@ -20,10 +20,15 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -89,18 +94,32 @@ async def _get_access_token(oauth_session: OAuth2Session) -> str:
         oauth_session.valid_token,
         oauth_session.token.get("expires_at"),
     )
+    setup_in_progress = (
+        oauth_session.config_entry.state is ConfigEntryState.SETUP_IN_PROGRESS
+    )
     try:
         await oauth_session.async_ensure_token_valid()
-    except ClientResponseError as err:
-        if err.status == 401:
+    except OAuth2TokenRequestReauthError as err:
+        if setup_in_progress:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
             ) from err
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="not_ready_connection_error",
-        ) from err
+        # Not in setup: let the coordinator's own OAuth2TokenRequestError
+        # handling stop polling and (re)start reauth without tearing
+        # down the already-loaded entry.
+        oauth_session.config_entry.async_start_reauth(oauth_session.hass)
+        raise
+    except OAuth2TokenRequestError as err:
+        # Recoverable (e.g. 429/5xx). During setup this backs off via the
+        # normal ConfigEntryNotReady retry; once loaded, let it propagate so
+        # the coordinator treats it as a transient failed update instead.
+        if setup_in_progress:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="not_ready_connection_error",
+            ) from err
+        raise
     except (KeyError, TypeError) as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
