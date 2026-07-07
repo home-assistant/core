@@ -1,12 +1,11 @@
 """Services for the Netatmo integration."""
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN
-from .data_handler import NetatmoConfigEntry
+from .data_handler import NetatmoConfigEntry, async_get_loaded_entry
 from .webhook import async_register_webhook, async_unregister_webhook
 
 SERVICE_REGISTER_WEBHOOK = "register_webhook"
@@ -15,10 +14,7 @@ SERVICE_UNREGISTER_WEBHOOK = "unregister_webhook"
 
 def _get_loaded_entry(hass: HomeAssistant) -> NetatmoConfigEntry:
     """Return the loaded config entry or raise if unavailable."""
-    entry: NetatmoConfigEntry | None = (
-        hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, DOMAIN)
-    )
-    if entry is None or entry.state is not ConfigEntryState.LOADED:
+    if (entry := async_get_loaded_entry(hass)) is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="entry_not_loaded",
