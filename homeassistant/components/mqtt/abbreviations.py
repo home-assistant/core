@@ -108,6 +108,7 @@ ABBREVIATIONS = {
     "mode_stat_t": "mode_state_topic",
     "mode_stat_tpl": "mode_state_template",
     "modes": "modes",
+    "msg_exp_int": "message_expiry_interval",
     "name": "name",
     "o": "origin",
     "off_dly": "off_delay",
@@ -187,7 +188,6 @@ ABBREVIATIONS = {
     "rgbww_cmd_t": "rgbww_command_topic",
     "rgbww_stat_t": "rgbww_state_topic",
     "rgbww_val_tpl": "rgbww_value_template",
-    "segmnts": "segments",
     "send_cmd_t": "send_command_topic",
     "send_if_off": "send_if_off",
     "set_fan_spd_t": "set_fan_speed_topic",
@@ -258,6 +258,7 @@ ABBREVIATIONS = {
     "tit": "title",
     "t": "topic",
     "trns": "transition",
+    "tz": "timezone",
     "uniq_id": "unique_id",
     "unit_of_meas": "unit_of_measurement",
     "url_t": "url_topic",
@@ -272,6 +273,7 @@ ABBREVIATIONS = {
     "l_ver_t": "latest_version_topic",
     "l_ver_tpl": "latest_version_template",
     "pl_inst": "payload_install",
+    "vis": "visible_by_default",
 }
 
 DEVICE_ABBREVIATIONS = {

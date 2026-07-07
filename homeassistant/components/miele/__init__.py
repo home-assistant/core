@@ -1,13 +1,16 @@
 """The Miele integration."""
 
-from __future__ import annotations
-
-from aiohttp import ClientError, ClientResponseError
+from aiohttp import ClientError
 from pymiele import MieleAPI
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -63,20 +66,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> boo
     auth = AsyncConfigEntryAuth(async_get_clientsession(hass), session)
     try:
         await auth.async_get_access_token()
-    except ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="config_entry_auth_failed",
-            ) from err
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="config_entry_not_ready",
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="config_entry_auth_failed"
         ) from err
-    except ClientError as err:
+    except (OAuth2TokenRequestError, ClientError) as err:
         raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="config_entry_not_ready",
+            translation_domain=DOMAIN, translation_key="config_entry_not_ready"
         ) from err
 
     # Setup MieleAPI and coordinator for data fetch

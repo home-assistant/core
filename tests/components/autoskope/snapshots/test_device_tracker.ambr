@@ -5,7 +5,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -39,12 +41,15 @@
 # name: test_all_entities[device_tracker.test_vehicle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Vehicle',
-      'gps_accuracy': 6.0,
-      'icon': 'mdi:car',
-      'latitude': 50.1109221,
-      'longitude': 8.6821267,
-      'source_type': <SourceType.GPS: 'gps'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Vehicle',
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 6.0,
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:car',
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
+      ]),
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 50.1109221,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 8.6821267,
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.test_vehicle',

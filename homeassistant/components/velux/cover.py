@@ -1,9 +1,7 @@
 """Support for Velux covers."""
 
-from __future__ import annotations
-
 from enum import StrEnum
-from typing import Any
+from typing import Any, override
 
 from pyvlx.opening_device import (
     Awning,
@@ -39,7 +37,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up cover(s) for Velux platform."""
-    pyvlx = config_entry.runtime_data
+    pyvlx = config_entry.runtime_data.pyvlx
 
     entities: list[VeluxCover] = []
     for node in pyvlx.nodes:
@@ -97,36 +95,47 @@ class VeluxCover(VeluxEntity, CoverEntity):
                 self._attr_device_class = CoverDeviceClass.SHUTTER
 
     @property
-    def current_cover_position(self) -> int:
+    @override
+    def current_cover_position(self) -> int | None:
         """Return the current position of the cover."""
+        if not self.node.position.known:
+            return None
         return 100 - self.node.position.position_percent
 
     @property
-    def is_closed(self) -> bool:
+    @override
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
+        if not self.node.position.known:
+            return None
         return self.node.position.closed
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self.node.is_opening
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self.node.is_closing
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.node.close(wait_for_completion=False)
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.node.open(wait_for_completion=False)
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position_percent = 100 - kwargs[ATTR_POSITION]
@@ -136,6 +145,7 @@ class VeluxCover(VeluxEntity, CoverEntity):
         )
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.node.stop(wait_for_completion=False)
@@ -168,34 +178,46 @@ class VeluxDualRollerShutter(VeluxCover):
         self.part = part
 
     @property
-    def current_cover_position(self) -> int:
-        """Return the current position of the cover."""
+    def _part_position(self) -> Position:
+        """Return the pyvlx Position for this part of the shutter."""
         if self.part == VeluxDualRollerPart.UPPER:
-            return 100 - self.node.position_upper_curtain.position_percent
+            return self.node.position_upper_curtain
         if self.part == VeluxDualRollerPart.LOWER:
-            return 100 - self.node.position_lower_curtain.position_percent
-        return 100 - self.node.position.position_percent
+            return self.node.position_lower_curtain
+        return self.node.position
 
     @property
-    def is_closed(self) -> bool:
+    @override
+    def current_cover_position(self) -> int | None:
+        """Return the current position of the cover."""
+        position = self._part_position
+        if not position.known:
+            return None
+        return 100 - position.position_percent
+
+    @property
+    @override
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        if self.part == VeluxDualRollerPart.UPPER:
-            return self.node.position_upper_curtain.closed
-        if self.part == VeluxDualRollerPart.LOWER:
-            return self.node.position_lower_curtain.closed
-        return self.node.position.closed
+        position = self._part_position
+        if not position.known:
+            return None
+        return position.closed
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.node.close(curtain=self.part, wait_for_completion=False)
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.node.open(curtain=self.part, wait_for_completion=False)
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position_percent = 100 - kwargs[ATTR_POSITION]
@@ -225,26 +247,33 @@ class VeluxBlind(VeluxCover):
         )
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int | None:
         """Return the current tilt position of the cover."""
+        if not self.node.orientation.known:
+            return None
         return 100 - self.node.orientation.position_percent
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close cover tilt."""
         await self.node.close_orientation(wait_for_completion=False)
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open cover tilt."""
         await self.node.open_orientation(wait_for_completion=False)
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop cover tilt."""
         await self.node.stop_orientation(wait_for_completion=False)
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move cover tilt to a specific position."""
         position_percent = 100 - kwargs[ATTR_TILT_POSITION]

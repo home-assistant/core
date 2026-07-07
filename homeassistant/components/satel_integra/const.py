@@ -1,6 +1,6 @@
 """Constants for the Satel Integra integration."""
 
-DEFAULT_CONF_ARM_HOME_MODE = 1
+DEFAULT_CONF_ARM_HOME_MODE = "1"
 DEFAULT_PORT = 7094
 
 DOMAIN = "satel_integra"
@@ -17,5 +17,6 @@ CONF_SWITCHABLE_OUTPUT_NUMBER = "switchable_output_number"
 
 CONF_ARM_HOME_MODE = "arm_home_mode"
 CONF_ZONE_TYPE = "type"
+CONF_ENCRYPTION_KEY = "encryption_key"
 
-ZONES = "zones"
+CONF_ENABLE_TEMPERATURE_SENSOR = "enable_temperature_sensor"

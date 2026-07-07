@@ -1,22 +1,20 @@
 """Coordinator for Tedee locks."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 import time
-from typing import Any
+from typing import Any, override
 
 from aiotedee import (
-    TedeeClient,
     TedeeClientException,
     TedeeDataUpdateException,
     TedeeLocalAuthException,
+    TedeeLocalClient,
     TedeeLock,
     TedeeWebhookException,
 )
-from aiotedee.bridge import TedeeBridge
+from aiotedee.models import TedeeBridge
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -52,7 +50,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             update_interval=SCAN_INTERVAL,
         )
 
-        self.tedee_client = TedeeClient(
+        self.tedee_client = TedeeLocalClient(
             local_token=self.config_entry.data[CONF_LOCAL_ACCESS_TOKEN],
             local_ip=self.config_entry.data[CONF_HOST],
             session=async_get_clientsession(hass),
@@ -63,6 +61,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         self.new_lock_callbacks: list[Callable[[list[TedeeLock]], None]] = []
         self.tedee_webhook_id: int | None = None
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
 
@@ -72,6 +71,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         _LOGGER.debug("Update coordinator: Getting bridge from API")
         await self._async_update(_async_get_bridge)
 
+    @override
     async def _async_update_data(self) -> dict[int, TedeeLock]:
         """Fetch data from API endpoint."""
 
@@ -98,9 +98,10 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         try:
             await update_fn()
         except TedeeLocalAuthException as ex:
+            # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
-                translation_key="authentification_failed",
+                translation_key="authentication_failed",
             ) from ex
 
         except TedeeDataUpdateException as ex:

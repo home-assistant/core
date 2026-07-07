@@ -1,7 +1,5 @@
 """Component to interface with cameras."""
 
-from __future__ import annotations
-
 import asyncio
 import collections
 from collections.abc import Awaitable, Callable, Coroutine
@@ -14,7 +12,7 @@ import logging
 import os
 from random import SystemRandom
 import time
-from typing import Any, Final, final
+from typing import Any, Final, final, override
 
 from aiohttp import hdrs, web
 import attr
@@ -48,6 +46,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    EntityStateAttribute,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -58,7 +57,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, VolDictType
-from homeassistant.loader import bind_hass
 
 from .const import (
     CAMERA_IMAGE_TIMEOUT,
@@ -71,6 +69,7 @@ from .const import (
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
     SERVICE_RECORD,
+    CameraEntityStateAttribute,
     CameraState,
     StreamType,
 )
@@ -163,7 +162,6 @@ class CameraCapabilities:
     frontend_stream_types: set[StreamType]
 
 
-@bind_hass
 async def async_request_stream(hass: HomeAssistant, entity_id: str, fmt: str) -> str:
     """Request a stream for a camera entity."""
     camera = get_camera_from_entity_id(hass, entity_id)
@@ -212,7 +210,6 @@ async def _async_get_image(
     raise HomeAssistantError("Unable to get image")
 
 
-@bind_hass
 async def async_get_image(
     hass: HomeAssistant,
     entity_id: str,
@@ -247,14 +244,12 @@ async def _async_get_stream_image(
     return None
 
 
-@bind_hass
 async def async_get_stream_source(hass: HomeAssistant, entity_id: str) -> str | None:
     """Fetch the stream source for a camera entity."""
     camera = get_camera_from_entity_id(hass, entity_id)
     return await camera.stream_source()
 
 
-@bind_hass
 async def async_get_mjpeg_stream(
     hass: HomeAssistant, request: web.Request, entity_id: str
 ) -> web.StreamResponse | None:
@@ -428,7 +423,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """The base class for camera entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {"access_token", "entity_picture"}
+        {CameraEntityStateAttribute.ACCESS_TOKEN, EntityStateAttribute.ENTITY_PICTURE}
     )
 
     # Entity Properties
@@ -452,7 +447,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self.stream: Stream | None = None
         self.stream_options: dict[str, str | bool | float] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
-        self.access_tokens: collections.deque = collections.deque([], 2)
+        self.access_tokens: collections.deque = collections.deque(maxlen=2)
         self._warned_old_signature = False
         self.async_update_token()
         self._create_stream_lock: asyncio.Lock | None = None
@@ -463,6 +458,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         )
 
     @cached_property
+    @override
     def entity_picture(self) -> str:
         """Return a link to the camera feed as entity picture."""
         if self._attr_entity_picture is not None:
@@ -475,6 +471,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return False
 
     @cached_property
+    @override
     def supported_features(self) -> CameraEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
@@ -510,6 +507,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_frame_interval
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if (stream := self.stream) and not stream.available:
@@ -552,10 +550,13 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     ) -> None:
         """Handle the async WebRTC offer.
 
-        Async means that it could take some time to process the offer and responses/message
-        will be sent with the send_message callback.
-        This method is used by cameras with CameraEntityFeature.STREAM.
-        An integration overriding this method must also implement async_on_webrtc_candidate.
+        Async means that it could take some time to process
+        the offer and responses/message will be sent with the
+        send_message callback.
+        This method is used by cameras with
+        CameraEntityFeature.STREAM.
+        An integration overriding this method must also
+        implement async_on_webrtc_candidate.
 
         Integrations can override with a native WebRTC implementation.
         """
@@ -601,6 +602,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @property
     @final
+    @override
     def state(self) -> str:
         """Return the camera state."""
         if self.is_recording:
@@ -648,18 +650,23 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
-    def state_attributes(self) -> dict[str, str | None]:
+    @override
+    def state_attributes(self) -> dict[str, str | bool | None]:
         """Return the camera state attributes."""
-        attrs = {"access_token": self.access_tokens[-1]}
+        attrs: dict[str, str | bool | None] = {
+            CameraEntityStateAttribute.ACCESS_TOKEN: self.access_tokens[-1]
+        }
 
         if model := self.model:
-            attrs["model_name"] = model
+            attrs[CameraEntityStateAttribute.MODEL_NAME] = model
 
         if brand := self.brand:
-            attrs["brand"] = brand
+            attrs[CameraEntityStateAttribute.BRAND] = brand
 
         if motion_detection_enabled := self.motion_detection_enabled:
-            attrs["motion_detection"] = motion_detection_enabled
+            attrs[CameraEntityStateAttribute.MOTION_DETECTION] = (
+                motion_detection_enabled
+            )
 
         return attrs
 
@@ -669,6 +676,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self.access_tokens.append(hex(_RND.getrandbits(256))[2:])
         self.__dict__.pop("entity_picture", None)
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_internal_added_to_hass()
@@ -714,7 +722,10 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     @callback
     def async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
-        """Return the WebRTC client configuration and extend it with the registered ice servers."""
+        """Return the WebRTC client configuration.
+
+        Extend it with the registered ice servers.
+        """
         config = self._async_get_webrtc_client_configuration()
 
         ice_servers = async_get_ice_servers(self.hass)
@@ -760,12 +771,13 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return CameraCapabilities(frontend_stream_types)
 
     @callback
-    def async_write_ha_state(self) -> None:
+    @override
+    def _async_write_ha_state(self) -> None:
         """Write the state to the state machine.
 
         Schedules async_refresh_providers if support of streams have changed.
         """
-        super().async_write_ha_state()
+        super()._async_write_ha_state()
         if self.__supports_stream != (
             supports_stream := self.supported_features & CameraEntityFeature.STREAM
         ):
@@ -786,7 +798,9 @@ class CameraView(HomeAssistantView):
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
         if (camera := self.component.get_entity(entity_id)) is None:
-            raise web.HTTPNotFound
+            raise (
+                web.HTTPNotFound if request[KEY_AUTHENTICATED] else web.HTTPUnauthorized
+            )
 
         authenticated = (
             request[KEY_AUTHENTICATED]
@@ -794,11 +808,15 @@ class CameraView(HomeAssistantView):
         )
 
         if not authenticated:
-            # Attempt with invalid bearer token, raise unauthorized
-            # so ban middleware can handle it.
             if hdrs.AUTHORIZATION in request.headers:
+                # A failed request that carried an Authorization header is a real
+                # Bearer auth attempt — return 401 and let the ban middleware count
+                # it as a wrong login.
                 raise web.HTTPUnauthorized
-            # Invalid sigAuth or camera access token
+            # No Authorization header: most likely a benign signed-URL / query-
+            # token request whose token has expired (e.g. a browser tab left
+            # open that re-fetches resources later). Return 403 so it doesn't
+            # register as a wrong login and ban the user's own IP.
             raise web.HTTPForbidden
 
         if not camera.is_on:
@@ -818,6 +836,7 @@ class CameraImageView(CameraView):
     url = "/api/camera_proxy/{entity_id}"
     name = "api:camera:image"
 
+    @override
     async def handle(self, request: web.Request, camera: Camera) -> web.Response:
         """Serve camera image."""
         width = request.query.get("width")
@@ -841,6 +860,7 @@ class CameraMjpegStream(CameraView):
     url = "/api/camera_proxy_stream/{entity_id}"
     name = "api:camera:stream"
 
+    @override
     async def handle(self, request: web.Request, camera: Camera) -> web.StreamResponse:
         """Serve camera stream, possibly with interval."""
         if (interval_str := request.query.get("interval")) is None:
@@ -931,6 +951,7 @@ async def websocket_get_prefs(
         vol.Optional(PREF_ORIENTATION): vol.Coerce(Orientation),
     }
 )
+@websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_update_prefs(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
@@ -985,6 +1006,7 @@ class _TemplateCameraEntity:
         self._report_issue()
         return getattr(self._camera, name)
 
+    @override
     def __str__(self) -> str:
         """Forward to the camera entity."""
         self._report_issue()
@@ -1005,7 +1027,9 @@ async def async_handle_snapshot_service(
     # check if we allow to access to that file
     if not hass.config.is_allowed_path(snapshot_file):
         raise HomeAssistantError(
-            f"Cannot write `{snapshot_file}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+            f"Cannot write `{snapshot_file}`, no access to path;"
+            " `allowlist_external_dirs` may need to be adjusted"
+            " in `configuration.yaml`"
         )
 
     try:

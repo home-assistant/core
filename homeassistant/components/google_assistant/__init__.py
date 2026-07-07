@@ -1,14 +1,11 @@
 """Support for Actions on Google Assistant Smart Home Control."""
-
-from __future__ import annotations
-
-import logging
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -30,14 +27,12 @@ from .const import (  # noqa: F401
     DEFAULT_EXPOSED_DOMAINS,
     DOMAIN,
     EVENT_QUERY_RECEIVED,
-    SERVICE_REQUEST_SYNC,
     SOURCE_CLOUD,
 )
 from .http import GoogleAssistantView, GoogleConfig
+from .services import async_register_services
 
 from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401, isort:skip
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_ALLOW_UNLOCK = "allow_unlock"
 
@@ -106,6 +101,9 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_CONFIG] = yaml_config[DOMAIN]
 
+    if CONF_SERVICE_ACCOUNT in yaml_config[DOMAIN]:
+        async_register_services(hass)
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
@@ -149,25 +147,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bo
 
     if google_config.should_report_state:
         google_config.async_enable_report_state()
-
-    async def request_sync_service_handler(call: ServiceCall) -> None:
-        """Handle request sync service calls."""
-        agent_user_id = call.data.get("agent_user_id") or call.context.user_id
-
-        if agent_user_id is None:
-            _LOGGER.warning(
-                "No agent_user_id supplied for request_sync. Call as a user or pass in"
-                " user id as agent_user_id"
-            )
-            return
-
-        await google_config.async_sync_entities(agent_user_id)
-
-    # Register service only if key is provided
-    if CONF_SERVICE_ACCOUNT in config:
-        hass.services.async_register(
-            DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler
-        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

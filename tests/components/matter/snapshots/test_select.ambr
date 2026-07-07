@@ -1,187 +1,4 @@
 # serializer version: 1
-# name: test_selects[aqara_door_window_p2][select.aqara_door_and_window_sensor_p2_sensitivity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        '10 mm',
-        '20 mm',
-        '30 mm',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.aqara_door_and_window_sensor_p2_sensitivity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Sensitivity',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Sensitivity',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'sensitivity_level',
-    'unique_id': '00000000000004D2-000000000000005B-MatterNodeDevice-1-AqaraBooleanStateConfigurationCurrentSensitivityLevel-128-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[aqara_door_window_p2][select.aqara_door_and_window_sensor_p2_sensitivity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Aqara Door and Window Sensor P2 Sensitivity',
-      'options': list([
-        '10 mm',
-        '20 mm',
-        '30 mm',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.aqara_door_and_window_sensor_p2_sensitivity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '30 mm',
-  })
-# ---
-# name: test_selects[aqara_motion_p2][select.aqara_motion_and_light_sensor_p2_sensitivity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'low',
-        'standard',
-        'high',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.aqara_motion_and_light_sensor_p2_sensitivity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Sensitivity',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Sensitivity',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'sensitivity_level',
-    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[aqara_motion_p2][select.aqara_motion_and_light_sensor_p2_sensitivity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Aqara Motion and Light Sensor P2 Sensitivity',
-      'options': list([
-        'low',
-        'standard',
-        'high',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.aqara_motion_and_light_sensor_p2_sensitivity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'standard',
-  })
-# ---
-# name: test_selects[aqara_presence_fp300][select.presence_multi_sensor_fp300_1_sensitivity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'low',
-        'standard',
-        'high',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.presence_multi_sensor_fp300_1_sensitivity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Sensitivity',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Sensitivity',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'sensitivity_level',
-    'unique_id': '00000000000004D2-00000000000000CD-MatterNodeDevice-1-AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[aqara_presence_fp300][select.presence_multi_sensor_fp300_1_sensitivity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Presence Multi-Sensor FP300 1 Sensitivity',
-      'options': list([
-        'low',
-        'standard',
-        'high',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.presence_multi_sensor_fp300_1_sensitivity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'low',
-  })
-# ---
 # name: test_selects[aqara_thermostat_w500][select.floor_heating_thermostat_temperature_display_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -189,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
@@ -227,8 +44,8 @@
 # name: test_selects[aqara_thermostat_w500][select.floor_heating_thermostat_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Floor Heating Thermostat Temperature display mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Temperature display mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
@@ -248,7 +65,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
       ]),
@@ -286,8 +103,8 @@
 # name: test_selects[aqara_u200][select.aqara_smart_lock_u200_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aqara Smart Lock U200 Operating mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Lock U200 Operating mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
       ]),
@@ -307,7 +124,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Dark',
         'Medium',
         'Light',
@@ -346,8 +163,8 @@
 # name: test_selects[color_temperature_light][select.mock_color_temperature_light_lighting-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Color Temperature Light Lighting',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Color Temperature Light Lighting',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Dark',
         'Medium',
         'Light',
@@ -368,7 +185,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -408,8 +225,8 @@
 # name: test_selects[color_temperature_light][select.mock_color_temperature_light_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Color Temperature Light Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Color Temperature Light Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -431,7 +248,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Vacuum & Mop',
         'Vacuum-Only',
         'Mop after Vacuum',
@@ -470,8 +287,8 @@
 # name: test_selects[ecovacs_deebot][select.ecodeebot_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ecodeebot Clean mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ecodeebot Clean mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Vacuum & Mop',
         'Vacuum-Only',
         'Mop after Vacuum',
@@ -492,7 +309,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Auto Mop & Vacuum',
         'Auto Vacuum',
         'Auto Deep Mop & Vacuum',
@@ -536,8 +353,8 @@
 # name: test_selects[eufy_vacuum_omni_e28][select.2bavs_ab6031x_44pe_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '2BAVS-AB6031X-44PE Clean mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '2BAVS-AB6031X-44PE Clean mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Auto Mop & Vacuum',
         'Auto Vacuum',
         'Auto Deep Mop & Vacuum',
@@ -563,7 +380,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -603,8 +420,8 @@
 # name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_bottom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Energy 20ECN4101 Power-on behavior (bottom)',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 Power-on behavior (bottom)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -626,7 +443,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -666,8 +483,8 @@
 # name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Energy 20ECN4101 Power-on behavior (top)',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 Power-on behavior (top)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -689,7 +506,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -729,8 +546,8 @@
 # name: test_selects[eve_energy_plug][select.eve_energy_plug_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Energy Plug Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Plug Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -752,7 +569,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -792,8 +609,8 @@
 # name: test_selects[eve_energy_plug_patched][select.eve_energy_plug_patched_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Energy Plug Patched Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Plug Patched Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -815,7 +632,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
@@ -853,8 +670,8 @@
 # name: test_selects[eve_thermo_v4][select.eve_thermo_20ebp1701_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo 20EBP1701 Temperature display mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Thermo 20EBP1701 Temperature display mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
@@ -874,7 +691,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
@@ -912,8 +729,8 @@
 # name: test_selects[eve_thermo_v5][select.eve_thermo_20ecd1701_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo 20ECD1701 Temperature display mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Thermo 20ECD1701 Temperature display mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
@@ -933,7 +750,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Dark',
         'Medium',
         'Light',
@@ -972,8 +789,8 @@
 # name: test_selects[extended_color_light][select.mock_extended_color_light_lighting-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Extended Color Light Lighting',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Extended Color Light Lighting',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Dark',
         'Medium',
         'Light',
@@ -994,7 +811,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -1034,8 +851,8 @@
 # name: test_selects[extended_color_light][select.mock_extended_color_light_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Extended Color Light Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Extended Color Light Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -1050,67 +867,6 @@
     'state': 'previous',
   })
 # ---
-# name: test_selects[heiman_motion_sensor_m1][select.smart_motion_sensor_sensitivity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'low',
-        'standard',
-        'high',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.smart_motion_sensor_sensitivity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Sensitivity',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Sensitivity',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'sensitivity_level',
-    'unique_id': '00000000000004D2-0000000000000058-MatterNodeDevice-1-HeimanOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[heiman_motion_sensor_m1][select.smart_motion_sensor_sensitivity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Smart motion sensor Sensitivity',
-      'options': list([
-        'low',
-        'standard',
-        'high',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.smart_motion_sensor_sensitivity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'high',
-  })
-# ---
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_button_press_delay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1118,7 +874,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'No Delay',
         '300ms',
         '400ms',
@@ -1162,8 +918,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_button_press_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Button Press Delay',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Button Press Delay',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'No Delay',
         '300ms',
         '400ms',
@@ -1189,7 +945,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Instant',
         '500ms',
         '800ms',
@@ -1240,8 +996,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_dimming_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Dimming Speed',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Dimming Speed',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Instant',
         '500ms',
         '800ms',
@@ -1274,7 +1030,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Red',
         'Orange',
         'Lemon',
@@ -1323,8 +1079,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_led_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch LED Color',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch LED Color',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Red',
         'Orange',
         'Lemon',
@@ -1355,7 +1111,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Solid',
         'Fast Blink',
         'Slow Blink',
@@ -1408,8 +1164,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_led_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch LED Effect',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch LED Effect',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Solid',
         'Fast Blink',
         'Slow Blink',
@@ -1444,7 +1200,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Local Protection Disable',
         'Local Protection Enable',
       ]),
@@ -1482,8 +1238,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_local_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Local Protection',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Local Protection',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Local Protection Disable',
         'Local Protection Enable',
       ]),
@@ -1503,7 +1259,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Local Timer Disable',
         'Local Timer Enable',
       ]),
@@ -1541,8 +1297,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_local_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Local Timer',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Local Timer',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Local Timer Disable',
         'Local Timer Enable',
       ]),
@@ -1562,7 +1318,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -1602,8 +1358,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_power_on_behavior_load_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Power-on behavior (Load Control)',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Power-on behavior (Load Control)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -1625,7 +1381,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -1665,8 +1421,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_power_on_behavior_rgb_indicator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Power-on behavior (RGB Indicator)',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Power-on behavior (RGB Indicator)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -1688,7 +1444,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Smart Bulb Disable',
         'Smart Bulb Enable',
       ]),
@@ -1726,8 +1482,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_smart_bulb_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Smart Bulb Mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Smart Bulb Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Smart Bulb Disable',
         'Smart Bulb Enable',
       ]),
@@ -1747,7 +1503,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'On/Off+Single',
         'On/Off+AUX',
         'Dimmer+Single',
@@ -1787,8 +1543,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_switch_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Switch Mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Switch Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'On/Off+Single',
         'On/Off+AUX',
         'Dimmer+Single',
@@ -1810,7 +1566,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Leading',
         'Trailing',
       ]),
@@ -1848,8 +1604,8 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_dimming_edge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Dimming Edge',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Dimming Edge',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Leading',
         'Trailing',
       ]),
@@ -1869,7 +1625,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Instant',
         '500ms',
         '800ms',
@@ -1920,8 +1676,8 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_dimming_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Dimming Speed',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Dimming Speed',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Instant',
         '500ms',
         '800ms',
@@ -1954,7 +1710,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Red',
         'Orange',
         'Lemon',
@@ -2003,8 +1759,8 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_led_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli LED Color',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli LED Color',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Red',
         'Orange',
         'Lemon',
@@ -2035,7 +1791,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2075,8 +1831,8 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_power_on_behavior_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Power-on behavior (1)',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Power-on behavior (1)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2098,7 +1854,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2138,8 +1894,8 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_power_on_behavior_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Power-on behavior (6)',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Power-on behavior (6)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2161,7 +1917,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Relay Click Enable',
         'Relay Click Disable',
       ]),
@@ -2199,8 +1955,8 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Relay',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Relay',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Relay Click Enable',
         'Relay Click Disable',
       ]),
@@ -2220,7 +1976,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Smart Bulb Disable',
         'Smart Bulb Enable',
       ]),
@@ -2258,8 +2014,8 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_smart_bulb_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Smart Bulb Mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Smart Bulb Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Smart Bulb Disable',
         'Smart Bulb Enable',
       ]),
@@ -2279,7 +2035,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'OnOff+Single',
         'OnOff+Dumb',
         'OnOff+AUX',
@@ -2322,8 +2078,8 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_switch_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Switch Mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Switch Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'OnOff+Single',
         'OnOff+Dumb',
         'OnOff+AUX',
@@ -2348,7 +2104,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
@@ -2386,8 +2142,8 @@
 # name: test_selects[longan_link_thermostat][select.longan_link_hvac_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Longan link HVAC Temperature display mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Longan link HVAC Temperature display mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
@@ -2407,7 +2163,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Low',
         'Medium',
         'High',
@@ -2446,8 +2202,8 @@
 # name: test_selects[mock_cooktop][select.mock_cooktop_temperature_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Cooktop Temperature level',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Cooktop Temperature level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Low',
         'Medium',
         'High',
@@ -2468,7 +2224,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Red',
         'Orange',
         'Lemon',
@@ -2517,8 +2273,8 @@
 # name: test_selects[mock_dimmable_light][select.mock_dimmable_light_led_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Dimmable Light LED Color',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Dimmable Light LED Color',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Red',
         'Orange',
         'Lemon',
@@ -2549,7 +2305,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2589,8 +2345,8 @@
 # name: test_selects[mock_dimmable_light][select.mock_dimmable_light_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Dimmable Light Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Dimmable Light Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2612,7 +2368,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2652,8 +2408,8 @@
 # name: test_selects[mock_dimmable_plugin_unit][select.dimmable_plugin_unit_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dimmable Plugin Unit Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmable Plugin Unit Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2675,7 +2431,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
       ]),
@@ -2713,8 +2469,8 @@
 # name: test_selects[mock_door_lock][select.mock_door_lock_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Operating mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock Operating mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
       ]),
@@ -2734,7 +2490,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2774,8 +2530,8 @@
 # name: test_selects[mock_door_lock][select.mock_door_lock_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2797,7 +2553,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'silent',
         'low',
         'medium',
@@ -2837,8 +2593,8 @@
 # name: test_selects[mock_door_lock][select.mock_door_lock_sound_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Sound volume',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock Sound volume',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'silent',
         'low',
         'medium',
@@ -2860,7 +2616,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
       ]),
@@ -2898,8 +2654,8 @@
 # name: test_selects[mock_door_lock_with_unbolt][select.mock_door_lock_with_unbolt_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock with unbolt Operating mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with unbolt Operating mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
       ]),
@@ -2919,7 +2675,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2959,8 +2715,8 @@
 # name: test_selects[mock_door_lock_with_unbolt][select.mock_door_lock_with_unbolt_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock with unbolt Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with unbolt Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2982,7 +2738,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'silent',
         'low',
         'medium',
@@ -3022,8 +2778,8 @@
 # name: test_selects[mock_door_lock_with_unbolt][select.mock_door_lock_with_unbolt_sound_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock with unbolt Sound volume',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with unbolt Sound volume',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'silent',
         'low',
         'medium',
@@ -3045,7 +2801,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Low',
         'Medium',
         'High',
@@ -3084,8 +2840,8 @@
 # name: test_selects[mock_laundry_dryer][select.mock_laundrydryer_temperature_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Laundrydryer Temperature level',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Laundrydryer Temperature level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Low',
         'Medium',
         'High',
@@ -3106,7 +2862,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
       ]),
@@ -3144,8 +2900,8 @@
 # name: test_selects[mock_lock][select.mock_lock_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Lock Operating mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lock Operating mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
       ]),
@@ -3165,7 +2921,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'silent',
         'low',
         'medium',
@@ -3205,8 +2961,8 @@
 # name: test_selects[mock_lock][select.mock_lock_sound_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Lock Sound volume',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lock Sound volume',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'silent',
         'low',
         'medium',
@@ -3228,7 +2984,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '100',
         '200',
         '300',
@@ -3274,8 +3030,8 @@
 # name: test_selects[mock_microwave_oven][select.mock_microwave_oven_power_level_w-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Microwave Oven Power level (W)',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Microwave Oven Power level (W)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '100',
         '200',
         '300',
@@ -3303,7 +3059,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3343,8 +3099,8 @@
 # name: test_selects[mock_mounted_dimmable_load_control_fixture][select.mock_mounted_dimmable_load_control_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Mounted dimmable load control Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Mounted dimmable load control Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3366,7 +3122,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3406,8 +3162,8 @@
 # name: test_selects[mock_on_off_plugin_unit][select.mock_onoffpluginunit_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock OnOffPluginUnit Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock OnOffPluginUnit Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3429,7 +3185,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3469,8 +3225,8 @@
 # name: test_selects[mock_onoff_light][select.mock_onoff_light_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock OnOff Light Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock OnOff Light Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3492,7 +3248,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3532,8 +3288,8 @@
 # name: test_selects[mock_onoff_light_alt_name][select.mock_onoff_light_power_on_behavior_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock OnOff Light Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock OnOff Light Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3555,7 +3311,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3595,8 +3351,8 @@
 # name: test_selects[mock_onoff_light_no_name][select.mock_light_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Light Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Light Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3618,7 +3374,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Bake',
         'Convection',
         'Grill',
@@ -3663,8 +3419,8 @@
 # name: test_selects[mock_oven][select.mock_oven_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Oven Mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Oven Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Bake',
         'Convection',
         'Grill',
@@ -3691,7 +3447,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Low',
         'Medium',
         'High',
@@ -3730,8 +3486,8 @@
 # name: test_selects[mock_oven][select.mock_oven_temperature_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Oven Temperature level',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Oven Temperature level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Low',
         'Medium',
         'High',
@@ -3752,7 +3508,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'minimum',
         'maximum',
@@ -3792,8 +3548,8 @@
 # name: test_selects[mock_pump][select.mock_pump_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Pump mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Pump mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'minimum',
         'maximum',
@@ -3815,7 +3571,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3855,8 +3611,8 @@
 # name: test_selects[mock_switch_unit][select.mock_switchunit_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock SwitchUnit Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock SwitchUnit Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3878,7 +3634,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
@@ -3916,8 +3672,8 @@
 # name: test_selects[mock_thermostat][select.mock_thermostat_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Thermostat Temperature display mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Thermostat Temperature display mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
@@ -3937,7 +3693,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Quick',
         'Auto',
         'Deep Clean',
@@ -3978,8 +3734,8 @@
 # name: test_selects[mock_vacuum_cleaner][select.mock_vacuum_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Vacuum Clean mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Vacuum Clean mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Quick',
         'Auto',
         'Deep Clean',
@@ -4002,7 +3758,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -4042,8 +3798,8 @@
 # name: test_selects[onoff_light_with_levelcontrol_present][select.d215s_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'D215S Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'D215S Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -4065,7 +3821,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Quiet, Vacuum Only',
         'Auto, Vacuum Only',
         'Deep Clean, Vacuum Only',
@@ -4110,8 +3866,8 @@
 # name: test_selects[roborock_saros_10][select.robotic_vacuum_cleaner_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robotic Vacuum Cleaner Clean mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robotic Vacuum Cleaner Clean mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Quiet, Vacuum Only',
         'Auto, Vacuum Only',
         'Deep Clean, Vacuum Only',
@@ -4138,7 +3894,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'privacy',
         'no_remote_lock_unlock',
@@ -4177,8 +3933,8 @@
 # name: test_selects[secuyou_smart_lock][select.secuyou_smart_lock_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Secuyou Smart Lock Operating mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Secuyou Smart Lock Operating mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'privacy',
         'no_remote_lock_unlock',
@@ -4199,7 +3955,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'No energy management (forecast only)',
         'Device optimizes (no local or grid control)',
         'Optimized within building',
@@ -4240,8 +3996,8 @@
 # name: test_selects[silabs_evse_charging][select.evse_energy_management_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'evse Energy management mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'evse Energy management mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'No energy management (forecast only)',
         'Device optimizes (no local or grid control)',
         'Optimized within building',
@@ -4264,7 +4020,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Manual',
         'Auto-scheduled',
         'Solar',
@@ -4304,8 +4060,8 @@
 # name: test_selects[silabs_evse_charging][select.evse_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'evse Mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'evse Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Manual',
         'Auto-scheduled',
         'Solar',
@@ -4327,7 +4083,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'normal',
       ]),
@@ -4365,8 +4121,8 @@
 # name: test_selects[silabs_laundrywasher][select.laundrywasher_number_of_rinses-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LaundryWasher Number of rinses',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LaundryWasher Number of rinses',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'normal',
       ]),
@@ -4386,7 +4142,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Off',
         'Low',
         'Medium',
@@ -4426,8 +4182,8 @@
 # name: test_selects[silabs_laundrywasher][select.laundrywasher_spin_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LaundryWasher Spin speed',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LaundryWasher Spin speed',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Off',
         'Low',
         'Medium',
@@ -4449,7 +4205,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Cold',
         'Colors',
         'Whites',
@@ -4488,8 +4244,8 @@
 # name: test_selects[silabs_laundrywasher][select.laundrywasher_temperature_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LaundryWasher Temperature level',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LaundryWasher Temperature level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Cold',
         'Colors',
         'Whites',
@@ -4503,6 +4259,69 @@
     'state': 'Colors',
   })
 # ---
+# name: test_selects[silabs_range_hood][select.sl_rangehood_power_on_behavior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.sl_rangehood_power_on_behavior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000072-MatterNodeDevice-2-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[silabs_range_hood][select.sl_rangehood_power_on_behavior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SL-RangeHood Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.sl_rangehood_power_on_behavior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
 # name: test_selects[silabs_refrigerator][select.refrigerator_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -4510,7 +4329,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Normal',
         'Rapid Cool',
         'Rapid Freeze',
@@ -4549,8 +4368,8 @@
 # name: test_selects[silabs_refrigerator][select.refrigerator_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Normal',
         'Rapid Cool',
         'Rapid Freeze',
@@ -4571,7 +4390,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'No energy management (forecast only)',
         'Device optimizes (no local or grid control)',
         'Optimized within building',
@@ -4612,8 +4431,8 @@
 # name: test_selects[silabs_water_heater][select.water_heater_energy_management_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Water Heater Energy management mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Heater Energy management mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'No energy management (forecast only)',
         'Device optimizes (no local or grid control)',
         'Optimized within building',
@@ -4636,7 +4455,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Quick',
         'Auto',
         'Deep Clean',
@@ -4677,8 +4496,8 @@
 # name: test_selects[switchbot_k11_plus][select.k11_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'K11+ Clean mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'K11+ Clean mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Quick',
         'Auto',
         'Deep Clean',
@@ -4701,7 +4520,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -4741,8 +4560,8 @@
 # name: test_selects[yandex_smart_socket][select.yndx_00540_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'YNDX-00540 Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'YNDX-00540 Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',

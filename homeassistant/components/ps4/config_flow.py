@@ -1,7 +1,7 @@
 """Config Flow for PlayStation 4."""
 
 from collections import OrderedDict
-from typing import Any
+from typing import Any, override
 
 from pyps4_2ndscreen.errors import CredentialTimeout
 from pyps4_2ndscreen.helpers import Helper
@@ -58,6 +58,7 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
         self.location: location_util.LocationInfo | None = None
         self.device_list: list[str] = []
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -215,6 +216,8 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
         link_schema[vol.Required(CONF_CODE)] = vol.All(
             vol.Strip, vol.Length(max=PIN_LENGTH), vol.Coerce(int)
         )
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=home-assistant-config-flow-name-field
         link_schema[vol.Required(CONF_NAME, default=DEFAULT_NAME)] = str
 
         return self.async_show_form(

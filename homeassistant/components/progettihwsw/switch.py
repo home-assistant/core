@@ -3,12 +3,11 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from ProgettiHWSW.relay import Relay
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -16,19 +15,19 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import setup_switch
-from .const import DEFAULT_POLLING_INTERVAL_SEC, DOMAIN
+from . import ProgettiHWSWConfigEntry, setup_switch
+from .const import DEFAULT_POLLING_INTERVAL_SEC
 
-_LOGGER = logging.getLogger(DOMAIN)
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ProgettiHWSWConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switches from a config entry."""
-    board_api = hass.data[DOMAIN][config_entry.entry_id]
+    board_api = config_entry.runtime_data
     relay_count = config_entry.data["relay_count"]
 
     async def async_update_data():
@@ -64,22 +63,26 @@ class ProgettihwswSwitch(CoordinatorEntity, SwitchEntity):
         self._switch = switch
         self._attr_name = name
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._switch.control(True)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._switch.control(False)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the state of switch."""
         await self._switch.toggle()
         await self.coordinator.async_request_refresh()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Get switch state."""
         return self.coordinator.data[self._switch.id]

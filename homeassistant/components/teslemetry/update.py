@@ -1,9 +1,8 @@
 """Update platform for Teslemetry integration."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.teslemetry import Vehicle
 
@@ -39,7 +38,7 @@ async def async_setup_entry(
 
     async_add_entities(
         TeslemetryVehiclePollingUpdateEntity(vehicle, entry.runtime_data.scopes)
-        if vehicle.poll or vehicle.firmware < "2024.44.25"
+        if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.44.25")
         else TeslemetryStreamingUpdateEntity(vehicle, entry.runtime_data.scopes)
         for vehicle in entry.runtime_data.vehicles
     )
@@ -51,6 +50,7 @@ class TeslemetryUpdateEntity(TeslemetryRootEntity, UpdateEntity):
     api: Vehicle
     _attr_supported_features = UpdateEntityFeature.PROGRESS
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -79,6 +79,7 @@ class TeslemetryVehiclePollingUpdateEntity(
             "vehicle_state_software_update_status",
         )
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
 
@@ -147,6 +148,7 @@ class TeslemetryStreamingUpdateEntity(
             "vehicle_state_software_update_status",
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -211,7 +213,7 @@ class TeslemetryStreamingUpdateEntity(
         self.async_write_ha_state()
 
     def _async_handle_software_update_scheduled_start_time(
-        self, value: str | None
+        self, value: int | None
     ) -> None:
         """Handle software update scheduled start time."""
 

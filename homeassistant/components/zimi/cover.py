@@ -1,9 +1,7 @@
 """Platform for cover integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -46,27 +44,32 @@ class ZimiCover(ZimiEntity, CoverEntity):
         | CoverEntityFeature.STOP
     )
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover/door."""
         _LOGGER.debug("Sending close_cover() for %s", self.name)
         await self._device.close_door()
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return the current cover/door position."""
         return self._device.percentage
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return true if cover is closed."""
         return self._device.is_closed
 
     @property
+    @override
     def is_closing(self) -> bool | None:
         """Return true if cover is closing."""
         return self._device.is_closing
 
     @property
+    @override
     def is_opening(self) -> bool | None:
         """Return true if cover is opening."""
         return self._device.is_opening
@@ -76,17 +79,20 @@ class ZimiCover(ZimiEntity, CoverEntity):
         """Return true if cover is open."""
         return self._device.is_open
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover/door."""
         _LOGGER.debug("Sending open_cover() for %s", self.name)
         await self._device.open_door()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Open the cover/door to a specified percentage."""
         position = kwargs.get("position", 0)
         _LOGGER.debug("Sending set_cover_position(%d) for %s", position, self.name)
         await self._device.open_to_percentage(position)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         _LOGGER.debug(

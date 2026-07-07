@@ -1,7 +1,7 @@
 """Support for OpenWRT (luci) routers."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -64,7 +64,7 @@ async def async_setup_scanner(
         },
     )
 
-    if result["type"] == FlowResultType.ABORT:
+    if result["type"] is FlowResultType.ABORT:
         reason = result["reason"]
         if reason in ("invalid_auth", "cannot_connect"):
             ir.async_create_issue(
@@ -131,16 +131,19 @@ class LuciScannerEntity(CoordinatorEntity[LuciCoordinator], ScannerEntity):
         self._attr_name = device.hostname or mac
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return the unique ID of the entity."""
         return self._attr_unique_id
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the router."""
         return self._mac in self.coordinator.data
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self._mac in self.coordinator.data:

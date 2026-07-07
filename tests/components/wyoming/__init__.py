@@ -22,7 +22,6 @@ from wyoming.info import (
     WakeProgram,
 )
 
-from homeassistant.components.wyoming import DOMAIN
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.core import HomeAssistant
 
@@ -236,4 +235,6 @@ async def reload_satellite(
         # _run_mock: satellite task does not actually run
         await hass.config_entries.async_reload(config_entry_id)
 
-    return hass.data[DOMAIN][config_entry_id].device
+    entry = hass.config_entries.async_get_entry(config_entry_id)
+    assert entry is not None
+    return entry.runtime_data.device

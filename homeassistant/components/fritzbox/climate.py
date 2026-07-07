@@ -1,8 +1,6 @@
 """Support for AVM FRITZ!SmartHome thermostat devices."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -97,7 +95,8 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
         super().__init__(coordinator, ain)
 
     @callback
-    def async_write_ha_state(self) -> None:
+    @override
+    def _async_write_ha_state(self) -> None:
         """Write the state to the HASS state machine."""
         if self.data.holiday_active:
             self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
@@ -109,9 +108,10 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             self._attr_supported_features = SUPPORTED_FEATURES
             self._attr_hvac_modes = HVAC_MODES
             self._attr_preset_modes = PRESET_MODES
-        return super().async_write_ha_state()
+        return super()._async_write_ha_state()
 
     @property
+    @override
     def current_temperature(self) -> float:
         """Return the current temperature."""
         if self.data.has_temperature_sensor and self.data.temperature is not None:
@@ -119,6 +119,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
         return self.data.actual_temperature  # type: ignore [no-any-return]
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.data.target_temperature in [ON_API_TEMPERATURE, OFF_API_TEMPERATURE]:
@@ -130,6 +131,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
         await self.hass.async_add_executor_job(self.data.set_hkr_state, hkr_state, True)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         self.check_active_or_lock_mode()
@@ -144,6 +146,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             return
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return the current operation mode."""
         if self.data.holiday_active:
@@ -155,6 +158,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
 
         return HVACMode.HEAT
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         self.check_active_or_lock_mode()
@@ -173,6 +177,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             await self.async_set_temperature(temperature=target_temp)
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return current preset mode."""
         if self.data.holiday_active:
@@ -189,6 +194,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             return PRESET_ECO
         return None
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         self.check_active_or_lock_mode()

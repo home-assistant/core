@@ -1,7 +1,7 @@
 """Config flow for epson integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -23,6 +23,8 @@ DATA_SCHEMA = vol.Schema(
             )
         ),
         vol.Required(CONF_HOST): str,
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=home-assistant-config-flow-name-field
         vol.Required(CONF_NAME, default=DOMAIN): str,
     }
 )
@@ -36,6 +38,7 @@ class EpsonConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

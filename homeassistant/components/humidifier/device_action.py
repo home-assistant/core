@@ -1,7 +1,5 @@
 """Provides device actions for Humidifier."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.device_automation import (
@@ -124,7 +122,12 @@ async def async_get_action_capabilities(
                 hass, config[CONF_ENTITY_ID]
             )
             available_modes = (
-                get_capability(hass, entry.entity_id, const.ATTR_AVAILABLE_MODES) or []
+                get_capability(
+                    hass,
+                    entry.entity_id,
+                    const.HumidifierEntityCapabilityAttribute.AVAILABLE_MODES,
+                )
+                or []
             )
         except HomeAssistantError:
             available_modes = []

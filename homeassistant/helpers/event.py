@@ -1,7 +1,5 @@
 """Helpers for listening to events."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine, Iterable, Mapping, Sequence
@@ -12,7 +10,7 @@ from functools import partial, wraps
 import logging
 from random import randint
 import time
-from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar, override
 
 from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
@@ -36,8 +34,7 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
-from homeassistant.exceptions import HomeAssistantError, TemplateError
-from homeassistant.loader import bind_hass
+from homeassistant.exceptions import TemplateError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.event_type import EventType
@@ -94,7 +91,7 @@ _TypedDictT = TypeVar("_TypedDictT", bound=Mapping[str, Any])
 
 
 @dataclass(slots=True, frozen=True)
-class _KeyedEventTracker(Generic[_TypedDictT]):
+class _KeyedEventTracker(Generic[_TypedDictT]):  # noqa: UP046
     """Class to track events by key."""
 
     key: HassKey[_KeyedEventData[_TypedDictT]]
@@ -118,7 +115,7 @@ class _KeyedEventTracker(Generic[_TypedDictT]):
 
 
 @dataclass(slots=True, frozen=True)
-class _KeyedEventData(Generic[_TypedDictT]):
+class _KeyedEventData(Generic[_TypedDictT]):  # noqa: UP046
     """Class to track data for events by key."""
 
     listener: CALLBACK_TYPE
@@ -199,7 +196,6 @@ def threaded_listener_factory[**_P](
 
 
 @callback
-@bind_hass
 def async_track_state_change(
     hass: HomeAssistant,
     entity_ids: str | Iterable[str],
@@ -305,7 +301,6 @@ def async_track_state_change(
 track_state_change = threaded_listener_factory(async_track_state_change)
 
 
-@bind_hass
 def async_track_state_change_event(
     hass: HomeAssistant,
     entity_ids: str | Iterable[str],
@@ -316,10 +311,6 @@ def async_track_state_change_event(
 
     Unlike async_track_state_change, async_track_state_change_event
     passes the full event to the callback.
-
-    The action will not be called immediately, but will be scheduled to run
-    in the next event loop iteration, even if the action is decorated with
-    @callback.
 
     In order to avoid having to iterate a long list
     of EVENT_STATE_CHANGED and fire and create a job
@@ -334,16 +325,6 @@ def async_track_state_change_event(
     if not (entity_ids := _async_string_to_lower_list(entity_ids)):
         return _remove_empty_listener
     return _async_track_state_change_event(hass, entity_ids, action, job_type)
-
-
-@callback
-def _async_dispatch_entity_id_event_soon[_StateEventDataT: EventStateEventData](
-    hass: HomeAssistant,
-    callbacks: dict[str, list[HassJob[[Event[_StateEventDataT]], Any]]],
-    event: Event[_StateEventDataT],
-) -> None:
-    """Dispatch to listeners soon to ensure one event loop runs before dispatch."""
-    hass.loop.call_soon(_async_dispatch_entity_id_event, hass, callbacks, event)
 
 
 @callback
@@ -379,12 +360,11 @@ def _async_state_filter[_StateEventDataT: EventStateEventData](
 _KEYED_TRACK_STATE_CHANGE = _KeyedEventTracker(
     key=_TRACK_STATE_CHANGE_DATA,
     event_type=EVENT_STATE_CHANGED,
-    dispatcher_callable=_async_dispatch_entity_id_event_soon,
+    dispatcher_callable=_async_dispatch_entity_id_event,
     filter_callable=_async_state_filter,
 )
 
 
-@bind_hass
 def _async_track_state_change_event(
     hass: HomeAssistant,
     entity_ids: str | Iterable[str],
@@ -403,7 +383,7 @@ def _async_track_state_change_event(
 _KEYED_TRACK_STATE_REPORT = _KeyedEventTracker(
     key=_TRACK_STATE_REPORT_DATA,
     event_type=EVENT_STATE_REPORTED,
-    dispatcher_callable=_async_dispatch_entity_id_event_soon,
+    dispatcher_callable=_async_dispatch_entity_id_event,
     filter_callable=_async_state_filter,
 )
 
@@ -537,7 +517,6 @@ _KEYED_TRACK_ENTITY_REGISTRY_UPDATED = _KeyedEventTracker(
 )
 
 
-@bind_hass
 @callback
 def async_track_entity_registry_updated_event(
     hass: HomeAssistant,
@@ -649,7 +628,6 @@ def _async_domain_added_filter(
     )
 
 
-@bind_hass
 def async_track_state_added_domain(
     hass: HomeAssistant,
     domains: str | Iterable[str],
@@ -670,7 +648,6 @@ _KEYED_TRACK_STATE_ADDED_DOMAIN = _KeyedEventTracker(
 )
 
 
-@bind_hass
 def _async_track_state_added_domain(
     hass: HomeAssistant,
     domains: str | Iterable[str],
@@ -707,7 +684,6 @@ _KEYED_TRACK_STATE_REMOVED_DOMAIN = _KeyedEventTracker(
 )
 
 
-@bind_hass
 def async_track_state_removed_domain(
     hass: HomeAssistant,
     domains: str | Iterable[str],
@@ -863,17 +839,12 @@ class _TrackStateChangeFiltered:
 
 
 @callback
-@bind_hass
 def async_track_state_change_filtered(
     hass: HomeAssistant,
     track_states: TrackStates,
     action: Callable[[Event[EventStateChangedData]], Any],
 ) -> _TrackStateChangeFiltered:
     """Track state changes with a TrackStates filter that can be updated.
-
-    The action will not be called immediately, but will be scheduled to run
-    in the next event loop iteration, even if the action is decorated with
-    @callback.
 
     Args:
         hass:
@@ -894,7 +865,6 @@ def async_track_state_change_filtered(
 
 
 @callback
-@bind_hass
 def async_track_template(
     hass: HomeAssistant,
     template: Template,
@@ -1000,19 +970,12 @@ class TrackTemplateResultInfo:
 
         self._last_result: dict[Template, bool | str | TemplateError] = {}
 
-        for track_template_ in track_templates:
-            if track_template_.template.hass:
-                continue
-
-            raise HomeAssistantError(
-                "Calls async_track_template_result with template without hass"
-            )
-
         self._rate_limit = KeyedRateLimit(hass)
         self._info: dict[Template, RenderInfo] = {}
         self._track_state_changes: _TrackStateChangeFiltered | None = None
         self._time_listeners: dict[Template, Callable[[], None]] = {}
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
         return f"<TrackTemplateResultInfo {self._info}>"
@@ -1339,7 +1302,6 @@ type TrackTemplateResultListener = Callable[
 
 
 @callback
-@bind_hass
 def async_track_template_result(
     hass: HomeAssistant,
     track_templates: Sequence[TrackTemplate],
@@ -1357,11 +1319,7 @@ def async_track_template_result(
     evaluation is different from the previous run, the action is passed
     the result.
 
-    The action will not be called immediately, but will be scheduled to run
-    in the next event loop iteration, even if the action is decorated with
-    @callback.
-
-    If the template results in an TemplateError, this will be returned to
+    If the template results in a TemplateError, this will be returned to
     the listener the first time this happens but not for subsequent errors.
     Once the template returns to a non-error condition the result is sent
     to the action as usual.
@@ -1392,7 +1350,6 @@ def async_track_template_result(
 
 
 @callback
-@bind_hass
 def async_track_same_state(
     hass: HomeAssistant,
     period: timedelta,
@@ -1460,7 +1417,6 @@ track_same_state = threaded_listener_factory(async_track_same_state)
 
 
 @callback
-@bind_hass
 def async_track_point_in_time(
     hass: HomeAssistant,
     action: HassJob[[datetime], Coroutine[Any, Any, None] | None]
@@ -1540,7 +1496,6 @@ class _TrackPointUTCTime:
 
 
 @callback
-@bind_hass
 def async_track_point_in_utc_time(
     hass: HomeAssistant,
     action: HassJob[[datetime], Coroutine[Any, Any, None] | None]
@@ -1575,7 +1530,6 @@ def _run_async_call_action(
 
 
 @callback
-@bind_hass
 def async_call_at(
     hass: HomeAssistant,
     action: HassJob[[datetime], Coroutine[Any, Any, None] | None]
@@ -1595,7 +1549,6 @@ def async_call_at(
 
 
 @callback
-@bind_hass
 def async_call_later(
     hass: HomeAssistant,
     delay: float | timedelta,
@@ -1675,7 +1628,6 @@ class _TrackTimeInterval:
 
 
 @callback
-@bind_hass
 def async_track_time_interval(
     hass: HomeAssistant,
     action: Callable[[datetime], Coroutine[Any, Any, None] | None],
@@ -1761,7 +1713,6 @@ class SunListener:
 
 
 @callback
-@bind_hass
 def async_track_sunrise(
     hass: HomeAssistant, action: Callable[[], None], offset: timedelta | None = None
 ) -> CALLBACK_TYPE:
@@ -1777,7 +1728,6 @@ track_sunrise = threaded_listener_factory(async_track_sunrise)
 
 
 @callback
-@bind_hass
 def async_track_sunset(
     hass: HomeAssistant, action: Callable[[], None], offset: timedelta | None = None
 ) -> CALLBACK_TYPE:
@@ -1853,7 +1803,6 @@ class _TrackUTCTimeChange:
 
 
 @callback
-@bind_hass
 def async_track_utc_time_change(
     hass: HomeAssistant,
     action: Callable[[datetime], Coroutine[Any, Any, None] | None],
@@ -1901,7 +1850,6 @@ track_utc_time_change = threaded_listener_factory(async_track_utc_time_change)
 
 
 @callback
-@bind_hass
 def async_track_time_change(
     hass: HomeAssistant,
     action: Callable[[datetime], Coroutine[Any, Any, None] | None],

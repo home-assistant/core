@@ -1,8 +1,7 @@
 """Coordinator for the Casper Glow integration."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from bleak import BleakError
 from bluetooth_data_tools import monotonic_time_coarse
@@ -19,7 +18,7 @@ from homeassistant.components.bluetooth.active_update_coordinator import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
-from .const import STATE_POLL_INTERVAL
+from .const import SORTED_BRIGHTNESS_LEVELS, STATE_POLL_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +50,15 @@ class CasperGlowCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         )
         self.title = title
 
+        # The device API couples brightness and dimming time into a
+        # single command (set_brightness_and_dimming_time), so both
+        # values must be tracked here for cross-entity use.
+        self.last_brightness_pct: int = (
+            device.state.brightness_level
+            if device.state.brightness_level is not None
+            else SORTED_BRIGHTNESS_LEVELS[0]
+        )
+
     @callback
     def _needs_poll(
         self,
@@ -67,6 +75,7 @@ class CasperGlowCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         """Poll device state."""
         await self.device.query_state()
 
+    @override
     async def _async_poll(self) -> None:
         """Poll the device and log availability changes."""
         assert self._last_service_info
@@ -93,6 +102,7 @@ class CasperGlowCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         self._async_handle_bluetooth_poll()
 
     @callback
+    @override
     def _async_handle_bluetooth_event(
         self,
         service_info: BluetoothServiceInfoBleak,

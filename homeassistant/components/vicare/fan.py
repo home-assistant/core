@@ -1,11 +1,9 @@
 """Viessmann ViCare ventilation device."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import enum
 import logging
-from typing import Any
+from typing import Any, override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
@@ -182,6 +180,7 @@ class ViCareFan(ViCareEntity, FanEntity):
                 self._attr_percentage = 0
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the entity is on."""
         if VentilationQuickmode.STANDBY in self._attributes[
@@ -191,11 +190,13 @@ class ViCareFan(ViCareEntity, FanEntity):
 
         return self.percentage is not None and self.percentage > 0
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self._api.activateVentilationQuickmode(str(VentilationQuickmode.STANDBY))
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon to use in the frontend."""
         if VentilationQuickmode.STANDBY in self._attributes[
@@ -223,6 +224,7 @@ class ViCareFan(ViCareEntity, FanEntity):
                         return f"mdi:fan-speed-{level}"
         return "mdi:fan"
 
+    @override
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         if self._attr_preset_mode != str(VentilationMode.PERMANENT):
@@ -236,6 +238,7 @@ class ViCareFan(ViCareEntity, FanEntity):
         _LOGGER.debug("changing ventilation level to %s", level)
         self._api.setVentilationLevel(level)
 
+    @override
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         target_mode = VentilationMode.to_vicare_mode(preset_mode)
@@ -243,6 +246,7 @@ class ViCareFan(ViCareEntity, FanEntity):
         self._api.activateVentilationMode(target_mode)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Show Device Attributes."""
         return self._attributes

@@ -1,15 +1,15 @@
 """Support for Tuya Cover."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
-from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.definition.cover import (
+    CoverDefinition,
+    get_default_definition,
+)
 from tuya_device_handlers.device_wrapper.cover import (
     ControlBackModePercentageMappingWrapper,
     CoverClosedEnumWrapper,
-    CoverInstructionBooleanWrapper,
     CoverInstructionEnumWrapper,
     CoverInstructionSpecialEnumWrapper,
 )
@@ -33,8 +33,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 
 
@@ -153,21 +153,6 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
 }
 
 
-def _get_instruction_wrapper(
-    device: CustomerDevice, description: TuyaCoverEntityDescription
-) -> DeviceWrapper | None:
-    """Get the instruction wrapper for the cover entity."""
-    if enum_wrapper := description.instruction_wrapper.find_dpcode(
-        device, description.key, prefer_function=True
-    ):
-        return enum_wrapper
-
-    # Fallback to a boolean wrapper if available
-    return CoverInstructionBooleanWrapper.find_dpcode(
-        device, description.key, prefer_function=True
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -184,32 +169,19 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := COVERS.get(device.category):
                 entities.extend(
-                    TuyaCoverEntity(
-                        device,
-                        manager,
-                        description,
-                        current_position=description.position_wrapper.find_dpcode(
-                            device, description.current_position
-                        ),
-                        current_state_wrapper=description.current_state_wrapper.find_dpcode(
-                            device, description.current_state
-                        ),
-                        instruction_wrapper=_get_instruction_wrapper(
-                            device, description
-                        ),
-                        set_position=description.position_wrapper.find_dpcode(
-                            device, description.set_position, prefer_function=True
-                        ),
-                        tilt_position=description.position_wrapper.find_dpcode(
-                            device,
-                            (DPCode.ANGLE_HORIZONTAL, DPCode.ANGLE_VERTICAL),
-                            prefer_function=True,
-                        ),
-                    )
+                    TuyaCoverEntity(device, manager, description, definition)
                     for description in descriptions
                     if (
-                        description.key in device.function
-                        or description.key in device.status_range
+                        definition := get_default_definition(
+                            device,
+                            current_position_dpcode=description.current_position,
+                            current_state_dpcode=description.current_state,
+                            current_state_wrapper=description.current_state_wrapper,
+                            instruction_dpcode=description.key,
+                            instruction_wrapper=description.instruction_wrapper,
+                            position_wrapper=description.position_wrapper,
+                            set_position_dpcode=description.set_position,
+                        )
                     )
                 )
 
@@ -232,42 +204,41 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaCoverEntityDescription,
-        *,
-        current_position: DeviceWrapper[int] | None,
-        current_state_wrapper: DeviceWrapper[bool] | None,
-        instruction_wrapper: DeviceWrapper[TuyaCoverAction] | None,
-        set_position: DeviceWrapper[int] | None,
-        tilt_position: DeviceWrapper[int] | None,
+        definition: CoverDefinition,
     ) -> None:
         """Init Tuya Cover."""
         super().__init__(device, device_manager, description)
         self._attr_supported_features = CoverEntityFeature(0)
 
-        self._current_position = current_position or set_position
-        self._current_state_wrapper = current_state_wrapper
-        self._instruction_wrapper = instruction_wrapper
-        self._set_position = set_position
-        self._tilt_position = tilt_position
+        self._current_position = (
+            definition.current_position_wrapper or definition.set_position_wrapper
+        )
+        self._current_state_wrapper = definition.current_state_wrapper
+        self._instruction_wrapper = definition.instruction_wrapper
+        self._set_position = definition.set_position_wrapper
+        self._tilt_position = definition.tilt_position_wrapper
 
-        if instruction_wrapper:
-            if TuyaCoverAction.OPEN in instruction_wrapper.options:
+        if definition.instruction_wrapper:
+            if TuyaCoverAction.OPEN in definition.instruction_wrapper.options:
                 self._attr_supported_features |= CoverEntityFeature.OPEN
-            if TuyaCoverAction.CLOSE in instruction_wrapper.options:
+            if TuyaCoverAction.CLOSE in definition.instruction_wrapper.options:
                 self._attr_supported_features |= CoverEntityFeature.CLOSE
-            if TuyaCoverAction.STOP in instruction_wrapper.options:
+            if TuyaCoverAction.STOP in definition.instruction_wrapper.options:
                 self._attr_supported_features |= CoverEntityFeature.STOP
 
-        if set_position:
+        if definition.set_position_wrapper:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
-        if tilt_position:
+        if definition.tilt_position_wrapper:
             self._attr_supported_features |= CoverEntityFeature.SET_TILT_POSITION
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return cover current position."""
         return self._read_wrapper(self._current_position)
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt.
 
@@ -276,6 +247,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         return self._read_wrapper(self._tilt_position)
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return true if cover is closed."""
         # If it's available, prefer the position over the current state
@@ -284,6 +256,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
         return self._read_wrapper(self._current_state_wrapper)
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if self._set_position is not None:
@@ -300,6 +273,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                 self._instruction_wrapper, TuyaCoverAction.OPEN
             )
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         if self._set_position is not None:
@@ -316,12 +290,14 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                 self._instruction_wrapper, TuyaCoverAction.CLOSE
             )
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self._async_send_wrapper_updates(
             self._set_position, kwargs[ATTR_POSITION]
         )
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         if (
@@ -332,6 +308,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                 self._instruction_wrapper, TuyaCoverAction.STOP
             )
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         await self._async_send_wrapper_updates(

@@ -1,4 +1,4 @@
 # serializer version: 1
 # name: test_setup[default]
-  dict_keys(['refresh_system', 'reset_system', 'set_system_mode', 'clear_zone_override', 'set_zone_override'])
+  dict_keys(['refresh_system', 'reset_system', 'set_system_mode', 'clear_zone_override', 'set_zone_override', 'set_dhw_override'])
 # ---

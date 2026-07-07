@@ -5,17 +5,23 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiogithubapi import (
+    GitHubAuthenticatedUserModel,
     GitHubLoginDeviceModel,
     GitHubLoginOauthModel,
     GitHubRateLimitModel,
 )
 import pytest
 
-from homeassistant.components.github.const import CONF_REPOSITORIES, DOMAIN
+from homeassistant.components.github.const import (
+    CONF_REPOSITORY,
+    DOMAIN,
+    SUBENTRY_TYPE_REPOSITORY,
+)
+from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 
-from .const import MOCK_ACCESS_TOKEN, TEST_REPOSITORY
+from .const import MOCK_ACCESS_TOKEN
 
 from tests.common import (
     MockConfigEntry,
@@ -25,13 +31,32 @@ from tests.common import (
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_subentries() -> list[ConfigSubentryDataWithId]:
+    """Fixture for subentries."""
+    return [
+        ConfigSubentryDataWithId(
+            data={
+                CONF_REPOSITORY: "home-assistant/core",
+            },
+            subentry_type=SUBENTRY_TYPE_REPOSITORY,
+            title="Core",
+            subentry_id="home-subentry-id",
+            unique_id="home-assistant/core",
+        )
+    ]
+
+
+@pytest.fixture
+def mock_config_entry(
+    mock_subentries: list[ConfigSubentryDataWithId],
+) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         title="",
         domain=DOMAIN,
         data={CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN},
-        options={CONF_REPOSITORIES: [TEST_REPOSITORY]},
+        subentries_data=[*mock_subentries],
+        minor_version=2,
     )
 
 
@@ -131,5 +156,10 @@ def github_client(hass: HomeAssistant) -> Generator[AsyncMock]:
         graphql_mock = AsyncMock()
         graphql_mock.data = load_json_object_fixture("graphql.json", DOMAIN)
         client.graphql.return_value = graphql_mock
+        user_response_mock = MagicMock()
+        user_response_mock.data = GitHubAuthenticatedUserModel(
+            load_json_object_fixture("user.json", DOMAIN)
+        )
+        client.user.get = AsyncMock(return_value=user_response_mock)
         client.repos.events.subscribe = AsyncMock()
         yield client

@@ -1,19 +1,25 @@
 """Support for Tuya buttons."""
 
-from __future__ import annotations
+from typing import override
 
-from tuya_device_handlers.device_wrapper.base import DeviceWrapper
-from tuya_device_handlers.device_wrapper.common import DPCodeBooleanWrapper
+from tuya_device_handlers.definition.button import (
+    ButtonDefinition,
+    get_default_definition,
+)
 from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 
 BUTTONS: dict[DeviceCategory, tuple[ButtonEntityDescription, ...]] = {
@@ -63,6 +69,13 @@ BUTTONS: dict[DeviceCategory, tuple[ButtonEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.SP: (
+        ButtonEntityDescription(
+            key=DPCode.DEVICE_RESTART,
+            device_class=ButtonDeviceClass.RESTART,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 
@@ -82,13 +95,9 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := BUTTONS.get(device.category):
                 entities.extend(
-                    TuyaButtonEntity(device, manager, description, dpcode_wrapper)
+                    TuyaButtonEntity(device, manager, description, definition)
                     for description in descriptions
-                    if (
-                        dpcode_wrapper := DPCodeBooleanWrapper.find_dpcode(
-                            device, description.key, prefer_function=True
-                        )
-                    )
+                    if (definition := get_default_definition(device, description.key))
                 )
 
         async_add_entities(entities)
@@ -108,12 +117,13 @@ class TuyaButtonEntity(TuyaEntity, ButtonEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: ButtonEntityDescription,
-        dpcode_wrapper: DeviceWrapper[bool],
+        definition: ButtonDefinition,
     ) -> None:
         """Init Tuya button."""
         super().__init__(device, device_manager, description)
-        self._dpcode_wrapper = dpcode_wrapper
+        self._dpcode_wrapper = definition.button_wrapper
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, True)

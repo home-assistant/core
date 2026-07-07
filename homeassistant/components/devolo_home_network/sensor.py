@@ -1,12 +1,10 @@
 """Platform for sensor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
-from typing import Any
+from typing import Any, override
 
 from devolo_plc_api.device_api import ConnectedStationInfo, NeighborAPInfo
 from devolo_plc_api.plcnet_api import REMOTE, DataRate, LogicalNetwork
@@ -37,7 +35,11 @@ PARALLEL_UPDATES = 0
 
 
 def _last_restart(runtime: int) -> datetime:
-    """Calculate uptime. As fetching the data might also take some time, let's floor to the nearest 5 seconds."""
+    """Calculate uptime.
+
+    As fetching the data might also take some time,
+    let's floor to the nearest 5 seconds.
+    """
     now = utcnow()
     return (
         now
@@ -117,7 +119,7 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any, Any]] = {
         key=LAST_RESTART,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         value_func=_last_restart,
     ),
 }
@@ -219,6 +221,7 @@ class DevoloSensorEntity[
     entity_description: DevoloSensorEntityDescription[_CoordinatorDataT, _SensorDataT]
 
     @property
+    @override
     def native_value(self) -> int | float | datetime:
         """State of the sensor."""
         return self.entity_description.value_func(self.coordinator.data)
@@ -252,6 +255,7 @@ class DevoloPlcDataRateSensorEntity(
         self._attr_entity_registry_enabled_default = peer_device.attached_to_router
 
     @property
+    @override
     def native_value(self) -> float:
         """State of the sensor."""
         return self.entity_description.value_func(

@@ -1,10 +1,9 @@
 """DataUpdateCoordinator for the israel rail integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import override
 
 from israelrailapi import TrainSchedule
 from israelrailapi.api import TrainRoute
@@ -25,6 +24,7 @@ class DataConnection:
     """A connection data class."""
 
     departure: datetime | None
+    departure_delay: int | None
     platform: str
     start: str
     destination: str
@@ -66,29 +66,42 @@ class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]
         self._start = start
         self._destination = destination
 
+    @override
     async def _async_update_data(self) -> list[DataConnection]:
         try:
             train_routes = await self.hass.async_add_executor_job(
                 self._train_schedule.query,
                 self._start,
                 self._destination,
-                datetime.now().strftime("%Y-%m-%d"),
-                datetime.now().strftime("%H:%M"),
+                datetime.now().strftime("%Y-%m-%d"),  # pylint: disable=home-assistant-enforce-naive-now
+                datetime.now().strftime("%H:%M"),  # pylint: disable=home-assistant-enforce-naive-now
             )
         except Exception as e:
             raise UpdateFailed(
                 "Unable to connect and retrieve data from israelrail api",
             ) from e
 
+        offset = 0
+        now = dt_util.now()
+        while offset < len(train_routes):
+            route = train_routes[offset]
+            if route is None:
+                break
+            route_departure = departure_time(route)
+            if route_departure is None or route_departure >= now:
+                break
+            offset += 1
+
         return [
             DataConnection(
                 departure=departure_time(train_routes[i]),
+                departure_delay=train_routes[i].trains[0].departure_delay,
                 train_number=train_routes[i].trains[0].data["trainNumber"],
                 platform=train_routes[i].trains[0].platform,
                 trains=len(train_routes[i].trains),
                 start=station_name_to_id(train_routes[i].trains[0].src),
                 destination=station_name_to_id(train_routes[i].trains[-1].dst),
             )
-            for i in range(DEPARTURES_COUNT)
+            for i in range(offset, offset + DEPARTURES_COUNT)
             if len(train_routes) > i and train_routes[i] is not None
         ]

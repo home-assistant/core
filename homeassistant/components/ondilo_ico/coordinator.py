@@ -1,12 +1,10 @@
 """Define an object to coordinate fetching Ondilo ICO data."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from ondilo import OndiloError
 
@@ -16,8 +14,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from . import DOMAIN
 from .api import OndiloClient
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,13 +39,16 @@ class OndiloIcoMeasurementData:
     sensors: dict[str, Any]
 
 
+type OndiloIcoConfigEntry = ConfigEntry[OndiloIcoPoolsCoordinator]
+
+
 class OndiloIcoPoolsCoordinator(DataUpdateCoordinator[dict[str, OndiloIcoPoolData]]):
     """Fetch Ondilo ICO pools data from API."""
 
-    config_entry: ConfigEntry
+    config_entry: OndiloIcoConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: OndiloClient
+        self, hass: HomeAssistant, config_entry: OndiloIcoConfigEntry, api: OndiloClient
     ) -> None:
         """Initialize."""
         super().__init__(
@@ -61,6 +62,7 @@ class OndiloIcoPoolsCoordinator(DataUpdateCoordinator[dict[str, OndiloIcoPoolDat
         self.config_entry = config_entry
         self._device_registry = dr.async_get(self.hass)
 
+    @override
     async def _async_update_data(self) -> dict[str, OndiloIcoPoolData]:
         """Fetch pools data from API endpoint and update devices."""
         known_pools: set[str] = set(self.data) if self.data else set()
@@ -162,6 +164,7 @@ class OndiloIcoMeasuresCoordinator(DataUpdateCoordinator[OndiloIcoMeasurementDat
         self._next_refresh: datetime | None = None
         self._pool_id = pool_id
 
+    @override
     async def _async_update_data(self) -> OndiloIcoMeasurementData:
         """Fetch measurement data from API endpoint."""
         async with UPDATE_LOCK:

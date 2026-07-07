@@ -20,7 +20,7 @@ from homeassistant.components.telegram_bot.const import (
     PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
     PLATFORM_WEBHOOKS,
-    SECTION_ADVANCED_SETTINGS,
+    SECTION_ADDITIONAL_SETTINGS,
     SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
@@ -75,11 +75,14 @@ async def test_options_flow(
 
 async def test_reconfigure_flow_broadcast(
     hass: HomeAssistant,
-    mock_webhooks_config_entry: MockConfigEntry,
+    mock_register_webhook: None,
     mock_external_calls: None,
+    mock_webhooks_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow for broadcast bot."""
     mock_webhooks_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_webhooks_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await mock_webhooks_config_entry.start_reconfigure_flow(hass)
     assert result["step_id"] == "reconfigure"
@@ -97,7 +100,7 @@ async def test_reconfigure_flow_broadcast(
             result["flow_id"],
             {
                 CONF_PLATFORM: PLATFORM_BROADCAST,
-                SECTION_ADVANCED_SETTINGS: {
+                SECTION_ADDITIONAL_SETTINGS: {
                     CONF_PROXY_URL: "invalid",
                 },
             },
@@ -114,7 +117,7 @@ async def test_reconfigure_flow_broadcast(
         result["flow_id"],
         {
             CONF_PLATFORM: PLATFORM_BROADCAST,
-            SECTION_ADVANCED_SETTINGS: {
+            SECTION_ADDITIONAL_SETTINGS: {
                 CONF_PROXY_URL: "https://test",
             },
         },
@@ -152,7 +155,7 @@ async def test_reconfigure_flow_webhooks(
         result["flow_id"],
         {
             CONF_PLATFORM: PLATFORM_WEBHOOKS,
-            SECTION_ADVANCED_SETTINGS: {
+            SECTION_ADDITIONAL_SETTINGS: {
                 CONF_API_ENDPOINT: DEFAULT_API_ENDPOINT,
                 CONF_PROXY_URL: "https://test",
             },
@@ -268,7 +271,7 @@ async def test_reconfigure_flow_logout_failed(
             result["flow_id"],
             {
                 CONF_PLATFORM: PLATFORM_BROADCAST,
-                SECTION_ADVANCED_SETTINGS: {
+                SECTION_ADDITIONAL_SETTINGS: {
                     CONF_API_ENDPOINT: "http://mock1",
                 },
             },
@@ -286,7 +289,7 @@ async def test_reconfigure_flow_logout_failed(
             result["flow_id"],
             {
                 CONF_PLATFORM: PLATFORM_BROADCAST,
-                SECTION_ADVANCED_SETTINGS: {
+                SECTION_ADDITIONAL_SETTINGS: {
                     CONF_API_ENDPOINT: "http://mock2",
                 },
             },
@@ -298,7 +301,12 @@ async def test_reconfigure_flow_logout_failed(
     assert mock_broadcast_config_entry.data[CONF_API_ENDPOINT] == "http://mock2"
 
 
-async def test_create_entry(hass: HomeAssistant) -> None:
+async def test_create_entry(
+    hass: HomeAssistant,
+    mock_register_webhook: None,
+    mock_external_calls: None,
+    mock_generate_secret_token: str,
+) -> None:
     """Test user flow."""
 
     # test: no input
@@ -319,7 +327,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         {
             CONF_PLATFORM: PLATFORM_WEBHOOKS,
             CONF_API_KEY: "mock api key",
-            SECTION_ADVANCED_SETTINGS: {
+            SECTION_ADDITIONAL_SETTINGS: {
                 CONF_PROXY_URL: "invalid",
             },
         },
@@ -334,22 +342,22 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     # test: telegram error
 
     with patch(
-        "homeassistant.components.telegram_bot.config_flow.Bot.get_me",
-    ) as mock_bot:
-        mock_bot.side_effect = NetworkError("mock network error")
-
+        "homeassistant.components.telegram_bot.bot.Bot.get_me",
+        side_effect=NetworkError("mock network error"),
+    ) as mock_get_me:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_PLATFORM: PLATFORM_WEBHOOKS,
                 CONF_API_KEY: "mock api key",
-                SECTION_ADVANCED_SETTINGS: {
+                SECTION_ADDITIONAL_SETTINGS: {
                     CONF_PROXY_URL: "https://proxy",
                 },
             },
         )
         await hass.async_block_till_done()
 
+    mock_get_me.assert_called_once()
     assert result["step_id"] == "user"
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "telegram_error"
@@ -366,7 +374,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
             {
                 CONF_PLATFORM: PLATFORM_WEBHOOKS,
                 CONF_API_KEY: "mock api key",
-                SECTION_ADVANCED_SETTINGS: {
+                SECTION_ADDITIONAL_SETTINGS: {
                     CONF_PROXY_URL: "https://proxy",
                 },
             },
@@ -389,7 +397,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Testbot"
+    assert result["title"] == "Testbot mock last name"
     assert result["data"][CONF_PLATFORM] == PLATFORM_WEBHOOKS
     assert result["data"][CONF_API_KEY] == "mock api key"
     assert result["data"][CONF_PROXY_URL] == "https://proxy"
@@ -438,7 +446,7 @@ async def test_create_webhook_entry(
             {
                 CONF_PLATFORM: PLATFORM_WEBHOOKS,
                 CONF_API_KEY: "mock api key",
-                SECTION_ADVANCED_SETTINGS: {
+                SECTION_ADDITIONAL_SETTINGS: {
                     CONF_API_ENDPOINT: api_endpoint,
                 },
             },
@@ -735,7 +743,7 @@ async def test_subentry_flow_broadcast_update_error(
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
 ) -> None:
-    """Test subentry flow where broadcast bot encounter error while receiving messages."""
+    """Test subentry flow where broadcast bot errors receiving messages."""
 
     mock_broadcast_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
@@ -766,7 +774,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     data = {
         CONF_PLATFORM: PLATFORM_BROADCAST,
         CONF_API_KEY: "mock api key",
-        SECTION_ADVANCED_SETTINGS: {
+        SECTION_ADDITIONAL_SETTINGS: {
             CONF_API_ENDPOINT: "http://mock_api_endpoint",
         },
     }
