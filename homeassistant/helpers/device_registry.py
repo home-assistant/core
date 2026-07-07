@@ -705,7 +705,7 @@ class DeletedDeviceEntry:
                     "area_id": self.area_id,
                     # config_entries and config_entries_subentries are deprecated and
                     # kept for backwards compatibility, they can be removed from the
-                    # storage representation in HA Core 2026.12
+                    # storage representation in HA Core 2027.8
                     "config_entries": list(self.config_entries),
                     "config_entries_subentries": {
                         config_entry_id: list(subentries)
@@ -1964,12 +1964,36 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         :param remove_config_subentry_id: Remove the device from a specific subentry of
             remove_config_entry_id.
         """
-        update_args = {
-            name: value
-            for name, value in locals().items()
-            if name not in ("self", "device_id")
-        }
         if (underlying_ids := self._async_composite_device_ids(device_id)) is not None:
+            # Fan the update out to each underlying device; keep in sync with the
+            # update parameters above.
+            update_args = {
+                "add_config_entry_id": add_config_entry_id,
+                "add_config_subentry_id": add_config_subentry_id,
+                "area_id": area_id,
+                "configuration_url": configuration_url,
+                "disabled_by": disabled_by,
+                "entry_type": entry_type,
+                "hw_version": hw_version,
+                "labels": labels,
+                "manufacturer": manufacturer,
+                "merge_connections": merge_connections,
+                "merge_identifiers": merge_identifiers,
+                "model": model,
+                "model_id": model_id,
+                "name_by_user": name_by_user,
+                "name": name,
+                "new_config_entry_id": new_config_entry_id,
+                "new_config_subentry_id": new_config_subentry_id,
+                "new_connections": new_connections,
+                "new_identifiers": new_identifiers,
+                "remove_config_entry_id": remove_config_entry_id,
+                "remove_config_subentry_id": remove_config_subentry_id,
+                "serial_number": serial_number,
+                "suggested_area": suggested_area,
+                "sw_version": sw_version,
+                "via_device_id": via_device_id,
+            }
             return self._async_update_composite_device(
                 device_id, underlying_ids, update_args
             )

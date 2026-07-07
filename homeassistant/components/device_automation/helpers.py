@@ -46,11 +46,11 @@ ENTITY_PLATFORMS = {
 def _resolve_device_id(hass: HomeAssistant, device_id: str, domain: str) -> str:
     """Resolve a device automation device id, following a composite device id.
 
-    A device automation created when device could be connected to more than one
+    A device automation created when a device could be connected to more than one
     config entry stores the id of the (now removed) composite device. When the
     automation's domain owns one of the split devices' config entries, resolve to that
     device - an integration may look the device up in its own registry, which only
-    knows the current deviceid, not the removed composite id.
+    knows the current device id, not the removed composite id.
     """
     device_registry = dr.async_get(hass)
     if device_id in device_registry.devices:
