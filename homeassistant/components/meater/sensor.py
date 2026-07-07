@@ -1,10 +1,9 @@
 """The Meater Temperature Probe integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from meater.MeaterApi import MeaterProbe
 
@@ -131,7 +130,8 @@ SENSOR_TYPES = (
         ),
     ),
     # Remaining time in seconds. When unknown/calculating default is used. Default: -1
-    # Exposed as a TIMESTAMP sensor where the timestamp is current time + remaining time.
+    # Exposed as a TIMESTAMP sensor where the timestamp is
+    # current time + remaining time.
     MeaterSensorEntityDescription(
         key="cook_time_remaining",
         translation_key="cook_time_remaining",
@@ -225,11 +225,13 @@ class MeaterProbeTemperature(SensorEntity, CoordinatorEntity[MeaterCoordinator])
         return self.coordinator.data[self.device_id]
 
     @property
+    @override
     def native_value(self) -> datetime | float | str | None:
         """Return the temperature of the probe."""
         return self.entity_description.value(self.probe)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         # See if the device was returned from the API. If not, it's offline

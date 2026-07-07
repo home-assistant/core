@@ -1,7 +1,5 @@
 """The tests for Select device triggers."""
 
-from __future__ import annotations
-
 import pytest
 from pytest_unordered import unordered
 import voluptuous_serialize
@@ -143,7 +141,8 @@ async def test_if_fires_on_state_change(
                         "data": {
                             "some": (
                                 "to - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
+                                "{{ trigger.entity_id}} - "
+                                "{{ trigger.from_state.state}} - "
                                 "{{ trigger.to_state.state}} - {{ trigger.for }} - "
                                 "{{ trigger.id}}"
                             )
@@ -164,7 +163,8 @@ async def test_if_fires_on_state_change(
                         "data": {
                             "some": (
                                 "from - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
+                                "{{ trigger.entity_id}} - "
+                                "{{ trigger.from_state.state}} - "
                                 "{{ trigger.to_state.state}} - {{ trigger.for }} - "
                                 "{{ trigger.id}}"
                             )
@@ -186,7 +186,8 @@ async def test_if_fires_on_state_change(
                         "data": {
                             "some": (
                                 "from-to - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
+                                "{{ trigger.entity_id}} - "
+                                "{{ trigger.from_state.state}} - "
                                 "{{ trigger.to_state.state}} - {{ trigger.for }} - "
                                 "{{ trigger.id}}"
                             )
@@ -265,7 +266,8 @@ async def test_if_fires_on_state_change_legacy(
                         "data": {
                             "some": (
                                 "to - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
+                                "{{ trigger.entity_id}} - "
+                                "{{ trigger.from_state.state}} - "
                                 "{{ trigger.to_state.state}} - {{ trigger.for }} - "
                                 "{{ trigger.id}}"
                             )

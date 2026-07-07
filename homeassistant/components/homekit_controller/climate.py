@@ -1,9 +1,7 @@
 """Support for Homekit climate devices."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohomekit.model.characteristics import (
     ActivationStateValues,
@@ -138,11 +136,13 @@ class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @callback
+    @override
     def _async_reconfigure(self) -> None:
         """Reconfigure entity."""
         self._async_clear_property_cache(("supported_features", "fan_modes"))
         super()._async_reconfigure()
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -151,11 +151,13 @@ class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
         ]
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.service.value(CharacteristicsTypes.TEMPERATURE_CURRENT)
 
     @cached_property
+    @override
     def fan_modes(self) -> list[str] | None:
         """Return the available fan modes."""
         if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET):
@@ -163,11 +165,13 @@ class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
         fan_mode = self.service.value(CharacteristicsTypes.FAN_STATE_TARGET)
         return FAN_AUTO if fan_mode else FAN_ON
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Turn fan to manual/auto."""
         await self.async_put_characteristics(
@@ -175,6 +179,7 @@ class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
         )
 
     @cached_property
+    @override
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
@@ -189,11 +194,13 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
     """Representation of a Homekit climate device."""
 
     @callback
+    @override
     def _async_reconfigure(self) -> None:
         """Reconfigure entity."""
         self._async_clear_property_cache(("hvac_modes", "swing_modes"))
         super()._async_reconfigure()
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -214,11 +221,13 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         )
 
     @cached_property
+    @override
     def fan_modes(self) -> list[str]:
         """Return the available fan modes."""
         return [FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
         speed_range = self._get_rotation_speed_range()
@@ -234,6 +243,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
             return FAN_LOW
         return FAN_OFF
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         rotation = HASS_FAN_MODE_TO_HOMEKIT_ROTATION.get(fan_mode, 0)
@@ -243,6 +253,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
             {CharacteristicsTypes.ROTATION_SPEED: speed}
         )
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
@@ -267,6 +278,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
                 hvac_mode,
             )
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if hvac_mode == HVACMode.OFF:
@@ -287,13 +299,14 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         await self.async_put_characteristics(
             {
                 CharacteristicsTypes.ACTIVE: ActivationStateValues.ACTIVE,
-                CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TARGET_HEATER_COOLER_STATE_HASS_TO_HOMEKIT[
-                    hvac_mode
-                ],
+                CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: (
+                    TARGET_HEATER_COOLER_STATE_HASS_TO_HOMEKIT[hvac_mode]
+                ),
             }
         )
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
@@ -308,6 +321,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
         state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
@@ -328,6 +342,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         return DEFAULT_MIN_STEP
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum target temp."""
         state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
@@ -352,6 +367,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         return super().min_temp
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum target temp."""
         state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
@@ -376,6 +392,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         return super().max_temp
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation."""
         # This characteristic describes the current mode of a device,
@@ -390,6 +407,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         return CURRENT_HEATER_COOLER_STATE_HOMEKIT_TO_HASS.get(value)
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         # This characteristic describes the target mode
@@ -405,6 +423,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         return TARGET_HEATER_COOLER_STATE_HOMEKIT_TO_HASS[value]
 
     @cached_property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
         valid_values = clamp_enum_to_char(
@@ -418,6 +437,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         return modes
 
     @property
+    @override
     def swing_mode(self) -> str:
         """Return the swing setting.
 
@@ -427,6 +447,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         return SWING_MODE_HOMEKIT_TO_HASS[value]
 
     @cached_property
+    @override
     def swing_modes(self) -> list[str]:
         """Return the list of available swing modes.
 
@@ -438,6 +459,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         )
         return [SWING_MODE_HOMEKIT_TO_HASS[mode] for mode in valid_values]
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
         await self.async_put_characteristics(
@@ -445,6 +467,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         )
 
     @cached_property
+    @override
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = super().supported_features
@@ -468,11 +491,13 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
     """Representation of a Homekit climate device."""
 
     @callback
+    @override
     def _async_reconfigure(self) -> None:
         """Reconfigure entity."""
         self._async_clear_property_cache(("hvac_modes",))
         super()._async_reconfigure()
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -487,6 +512,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
             CharacteristicsTypes.FAN_STATE_CURRENT,
         ]
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         chars: dict[str, Any] = {}
@@ -526,12 +552,14 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
 
         await self.async_put_characteristics(chars)
 
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         await self.async_put_characteristics(
             {CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET: humidity}
         )
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         await self.async_put_characteristics(
@@ -543,6 +571,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         )
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
@@ -555,6 +584,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
@@ -567,6 +597,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
@@ -579,6 +610,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         return None
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum target temp."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
@@ -601,6 +633,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         return super().min_temp
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum target temp."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
@@ -623,16 +656,19 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         return super().max_temp
 
     @property
+    @override
     def current_humidity(self) -> int:
         """Return the current humidity."""
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
 
     @property
+    @override
     def target_humidity(self) -> int:
         """Return the humidity we try to reach."""
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET)
 
     @property
+    @override
     def min_humidity(self) -> float:
         """Return the minimum humidity."""
         min_humidity = self.service[
@@ -643,6 +679,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         return super().min_humidity
 
     @property
+    @override
     def max_humidity(self) -> float:
         """Return the maximum humidity."""
         max_humidity = self.service[
@@ -653,6 +690,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         return super().max_humidity
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation."""
         # This characteristic describes the current mode of a device,
@@ -682,6 +720,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         return current_hass_value
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         # This characteristic describes the target mode
@@ -692,6 +731,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         return MODE_HOMEKIT_TO_HASS[value]
 
     @cached_property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
         valid_values = clamp_enum_to_char(
@@ -701,6 +741,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         return [MODE_HOMEKIT_TO_HASS[mode] for mode in valid_values]
 
     @cached_property
+    @override
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = super().supported_features

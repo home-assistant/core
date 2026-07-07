@@ -1,12 +1,10 @@
 """Provides functionality to interact with image processing services."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 from enum import StrEnum
 import logging
-from typing import Any, Final, TypedDict, final
+from typing import Any, Final, TypedDict, final, override
 
 import voluptuous as vol
 
@@ -25,6 +23,8 @@ from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+
+from .const import ImageProcessingEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -155,6 +155,7 @@ class ImageProcessingEntity(Entity):
         return None
 
     @property
+    @override
     def device_class(self) -> ImageProcessingDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -205,6 +206,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
         self.total_faces = 0
 
     @property
+    @override
     def state(self) -> str | int | None:
         """Return the state of the entity."""
         confidence: float = 0
@@ -230,9 +232,13 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
-        return {ATTR_FACES: self.faces, ATTR_TOTAL_FACES: self.total_faces}
+        return {
+            ImageProcessingEntityStateAttribute.FACES: self.faces,
+            ImageProcessingEntityStateAttribute.TOTAL_FACES: self.total_faces,
+        }
 
     def process_faces(self, faces: list[FaceInformation], total: int) -> None:
         """Send event with detected faces and store data."""

@@ -655,8 +655,8 @@ async def test_browse_media_recent_truncated(
     browse = await source.async_browse_media(media_item)
 
     assert (
-        browse.title
-        == f"UnifiProtect > {doorbell.name} > Motion Events > Last 24 Hours (1 TRUNCATED)"
+        browse.title == f"UnifiProtect > {doorbell.name} > Motion Events"
+        " > Last 24 Hours (1 TRUNCATED)"
     )
     assert browse.identifier == base_id
     assert len(browse.children) == 1
@@ -898,7 +898,10 @@ async def test_browse_media_browse_day(
     event._api = ufp.api
     ufp.api.get_events_raw = AsyncMock(return_value=[event.unifi_dict()])
 
-    base_id = f"test_id:browse:{doorbell.id}:motion:range:{fixed_now.year}:{fixed_now.month}:1"
+    base_id = (
+        f"test_id:browse:{doorbell.id}:motion:range"
+        f":{fixed_now.year}:{fixed_now.month}:1"
+    )
     source = await async_get_media_source(hass)
     media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
 
@@ -906,8 +909,8 @@ async def test_browse_media_browse_day(
 
     start = fixed_now.replace(day=1)
     assert (
-        browse.title
-        == f"UnifiProtect > {doorbell.name} > Motion Events > {fixed_now.strftime('%B %Y')} > {start.strftime('%x')} (1)"
+        browse.title == f"UnifiProtect > {doorbell.name} > Motion Events"
+        f" > {fixed_now.strftime('%B %Y')} > {start.strftime('%x')} (1)"
     )
     assert browse.identifier == base_id
     assert len(browse.children) == 1
@@ -949,8 +952,8 @@ async def test_browse_media_browse_whole_month(
     browse = await source.async_browse_media(media_item)
 
     assert (
-        browse.title
-        == f"UnifiProtect > {doorbell.name} > All Events > {fixed_now.strftime('%B %Y')} > Whole Month (1)"
+        browse.title == f"UnifiProtect > {doorbell.name} > All Events"
+        f" > {fixed_now.strftime('%B %Y')} > Whole Month (1)"
     )
     assert browse.identifier == base_id
     assert len(browse.children) == 1
@@ -1036,8 +1039,8 @@ async def test_browse_media_browse_whole_month_december(
     browse = await source.async_browse_media(media_item)
 
     assert (
-        browse.title
-        == f"UnifiProtect > {doorbell.name} > All Events > {fixed_now.strftime('%B %Y')} > Whole Month (1)"
+        browse.title == f"UnifiProtect > {doorbell.name} > All Events"
+        f" > {fixed_now.strftime('%B %Y')} > Whole Month (1)"
     )
     assert browse.identifier == base_id
     assert len(browse.children) == 1

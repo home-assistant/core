@@ -1,7 +1,5 @@
 """Models for AVM FRITZ!Box."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -172,7 +170,6 @@ class SwitchInfo(TypedDict):
     """FRITZ!Box switch info class."""
 
     description: str
-    friendly_name: str
     icon: str
     type: str
     callback_update: Callable

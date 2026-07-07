@@ -32,6 +32,11 @@
     }
   },
   "entity": {
+    "button": {
+      "resume_schedule": {
+        "name": "Resume schedule"
+      }
+    },
     "lock": {
       "lock": {
         "name": "[%key:component::lock::title%]"

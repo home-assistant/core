@@ -1,14 +1,11 @@
 """Support for Modern Forms Fan lights."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aiomodernforms.const import LIGHT_POWER_OFF, LIGHT_POWER_ON
 import voluptuous as vol
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -21,13 +18,12 @@ from . import modernforms_exception_handler
 from .const import (
     ATTR_SLEEP_TIME,
     CLEAR_TIMER,
-    DOMAIN,
     OPT_BRIGHTNESS,
     OPT_ON,
     SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
     SERVICE_SET_LIGHT_SLEEP_TIMER,
 )
-from .coordinator import ModernFormsDataUpdateCoordinator
+from .coordinator import ModernFormsConfigEntry, ModernFormsDataUpdateCoordinator
 from .entity import ModernFormsDeviceEntity
 
 BRIGHTNESS_RANGE = (1, 255)
@@ -35,14 +31,12 @@ BRIGHTNESS_RANGE = (1, 255)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ModernFormsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Modern Forms platform from config entry."""
 
-    coordinator: ModernFormsDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
 
     # if no light unit installed no light entity
     if not coordinator.data.info.light_type:
@@ -93,6 +87,7 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
         self._attr_unique_id = f"{self.coordinator.data.info.mac_address}"
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 1..255."""
         return round(
@@ -102,16 +97,19 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the light."""
         return bool(self.coordinator.data.state.light_on)
 
     @modernforms_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self.coordinator.modern_forms.light(on=LIGHT_POWER_OFF)
 
     @modernforms_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         data = {OPT_ON: LIGHT_POWER_ON}

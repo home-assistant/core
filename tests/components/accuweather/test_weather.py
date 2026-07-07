@@ -45,7 +45,10 @@ async def test_availability(
     mock_accuweather_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Ensure that we mark the entities unavailable correctly when service is offline."""
+    """Ensure that we mark the entities unavailable correctly.
+
+    Test when service is offline.
+    """
     entity_id = "weather.home"
     await init_integration(hass)
 
@@ -134,6 +137,31 @@ async def test_forecast_service(
         return_response=True,
     )
     assert response == snapshot
+
+
+async def test_forecast_daily_missing_average_humidity(
+    hass: HomeAssistant,
+    mock_accuweather_client: AsyncMock,
+) -> None:
+    """Test daily forecast does not crash when average humidity is missing."""
+    mock_accuweather_client.async_get_daily_forecast.return_value[0][
+        "RelativeHumidityDay"
+    ] = {}
+
+    await init_integration(hass)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {
+            "entity_id": "weather.home",
+            "type": "daily",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response["weather.home"]["forecast"][0].get("humidity") is None
 
 
 async def test_forecast_subscription(

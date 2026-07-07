@@ -4,23 +4,29 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from switchbot.devices.device import SwitchbotOperationError
+from switchbot import LockStatus, SwitchbotOperationError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import (
     LOCK_LITE_SERVICE_INFO,
+    LOCK_PRO_WIFI_SERVICE_INFO,
     LOCK_SERVICE_INFO,
     LOCK_ULTRA_SERVICE_INFO,
+    LOCK_VISION_PRO_SERVICE_INFO,
+    LOCK_VISION_SERVICE_INFO,
     WOLOCKPRO_SERVICE_INFO,
 )
 
@@ -35,6 +41,9 @@ from tests.components.bluetooth import inject_bluetooth_service_info
         ("lock", LOCK_SERVICE_INFO),
         ("lock_lite", LOCK_LITE_SERVICE_INFO),
         ("lock_ultra", LOCK_ULTRA_SERVICE_INFO),
+        ("lock_vision", LOCK_VISION_SERVICE_INFO),
+        ("lock_vision_pro", LOCK_VISION_PRO_SERVICE_INFO),
+        ("lock_pro_wifi", LOCK_PRO_WIFI_SERVICE_INFO),
     ],
 )
 @pytest.mark.parametrize(
@@ -83,6 +92,9 @@ async def test_lock_services(
         ("lock", LOCK_SERVICE_INFO),
         ("lock_lite", LOCK_LITE_SERVICE_INFO),
         ("lock_ultra", LOCK_ULTRA_SERVICE_INFO),
+        ("lock_vision", LOCK_VISION_SERVICE_INFO),
+        ("lock_vision_pro", LOCK_VISION_PRO_SERVICE_INFO),
+        ("lock_pro_wifi", LOCK_PRO_WIFI_SERVICE_INFO),
     ],
 )
 @pytest.mark.parametrize(
@@ -173,3 +185,101 @@ async def test_exception_handling_lock_service(
                 {ATTR_ENTITY_ID: entity_id},
                 blocking=True,
             )
+
+
+async def test_lock_ultra_half_lock_state_shows_locked(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test that Lock Ultra in HALF_LOCKED state shows as locked in HA UI."""
+    inject_bluetooth_service_info(hass, LOCK_ULTRA_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="lock_ultra")
+    entry.add_to_hass(hass)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock",
+        update=AsyncMock(return_value=None),
+        get_lock_status=MagicMock(return_value=LockStatus.HALF_LOCKED),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        lock_state = hass.states.get("lock.test_name")
+        assert lock_state is not None
+        assert lock_state.state == LockState.LOCKED
+
+
+@pytest.mark.parametrize(
+    ("lock_status", "expected_state"),
+    [
+        (LockStatus.HALF_LOCKED, STATE_ON),
+        (LockStatus.LOCKED, STATE_OFF),
+    ],
+)
+async def test_lock_ultra_half_locked_binary_sensor(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    lock_status: LockStatus,
+    expected_state: str,
+) -> None:
+    """Test half_locked binary sensor state reflects Lock Ultra lock status."""
+    inject_bluetooth_service_info(hass, LOCK_ULTRA_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="lock_ultra")
+    entry.add_to_hass(hass)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock",
+        update=AsyncMock(return_value=None),
+        get_lock_status=MagicMock(return_value=lock_status),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        sensor_state = hass.states.get("binary_sensor.test_name_half_locked")
+        assert sensor_state is not None
+        assert sensor_state.state == expected_state
+
+
+async def test_non_lock_ultra_no_half_locked_binary_sensor(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test half_locked binary sensor is absent for non-Lock-Ultra devices."""
+    inject_bluetooth_service_info(hass, LOCK_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="lock")
+    entry.add_to_hass(hass)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock",
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert hass.states.get("binary_sensor.test_name_half_locked") is None
+
+
+async def test_lock_ultra_half_locked_binary_sensor_unknown(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test half_locked binary sensor is unknown when lock status is unavailable."""
+    inject_bluetooth_service_info(hass, LOCK_ULTRA_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="lock_ultra")
+    entry.add_to_hass(hass)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock",
+        update=AsyncMock(return_value=None),
+        get_lock_status=MagicMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        sensor_state = hass.states.get("binary_sensor.test_name_half_locked")
+        assert sensor_state is not None
+        assert sensor_state.state == STATE_UNKNOWN

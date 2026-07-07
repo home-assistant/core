@@ -28,5 +28,20 @@
     "maxdisk": 500000000000,
     "disk": 120000000000,
     "ssl_fingerprint": "7A:E1:DF:...:AC"
+  },
+  {
+    "id": "node/pve3",
+    "node": "pve3",
+    "status": "offline",
+    "level": "",
+    "type": "node",
+    "maxmem": 0,
+    "mem": 0,
+    "maxcpu": 0,
+    "cpu": 0,
+    "uptime": 0,
+    "maxdisk": 0,
+    "disk": 0,
+    "ssl_fingerprint": "3F:B9:CC:...:01"
   }
 ]

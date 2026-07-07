@@ -23,7 +23,7 @@ _PAYLOAD_SWITCH_SET_STATE_OFF = (
 _TOPIC_SWITCH_STATE = "cloudapp/QBUSMQTTGW/UL1/UL10/state"
 _TOPIC_SWITCH_SET_STATE = "cloudapp/QBUSMQTTGW/UL1/UL10/setState"
 
-_SWITCH_ENTITY_ID = "switch.living"
+_SWITCH_ENTITY_ID = "switch.living_living"
 
 
 async def test_switch_turn_on_off(
@@ -43,7 +43,11 @@ async def test_switch_turn_on_off(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        _TOPIC_SWITCH_SET_STATE, _PAYLOAD_SWITCH_SET_STATE_ON, 0, False
+        _TOPIC_SWITCH_SET_STATE,
+        _PAYLOAD_SWITCH_SET_STATE_ON,
+        0,
+        False,
+        message_expiry_interval=None,
     )
 
     # Simulate response
@@ -62,7 +66,11 @@ async def test_switch_turn_on_off(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        _TOPIC_SWITCH_SET_STATE, _PAYLOAD_SWITCH_SET_STATE_OFF, 0, False
+        _TOPIC_SWITCH_SET_STATE,
+        _PAYLOAD_SWITCH_SET_STATE_OFF,
+        0,
+        False,
+        message_expiry_interval=None,
     )
 
     # Simulate response

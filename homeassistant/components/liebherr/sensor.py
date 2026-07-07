@@ -1,9 +1,8 @@
 """Sensor platform for Liebherr integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyliebherrhomeapi import TemperatureControl, TemperatureUnit
 
@@ -14,10 +13,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import DOMAIN
 from .coordinator import LiebherrConfigEntry, LiebherrCoordinator
 from .entity import LiebherrZoneEntity
 
@@ -48,22 +49,41 @@ SENSOR_TYPES: tuple[LiebherrSensorEntityDescription, ...] = (
 )
 
 
+def _create_sensor_entities(
+    coordinators: list[LiebherrCoordinator],
+) -> list[LiebherrSensor]:
+    """Create sensor entities for the given coordinators."""
+    return [
+        LiebherrSensor(
+            coordinator=coordinator,
+            zone_id=temp_control.zone_id,
+            description=description,
+        )
+        for coordinator in coordinators
+        for temp_control in coordinator.data.get_temperature_controls().values()
+        for description in SENSOR_TYPES
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LiebherrConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Liebherr sensor entities."""
-    coordinators = entry.runtime_data
     async_add_entities(
-        LiebherrSensor(
-            coordinator=coordinator,
-            zone_id=temp_control.zone_id,
-            description=description,
+        _create_sensor_entities(list(entry.runtime_data.coordinators.values()))
+    )
+
+    @callback
+    def _async_new_device(coordinators: list[LiebherrCoordinator]) -> None:
+        """Add sensor entities for new devices."""
+        async_add_entities(_create_sensor_entities(coordinators))
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"{DOMAIN}_new_device_{entry.entry_id}", _async_new_device
         )
-        for coordinator in coordinators.values()
-        for temp_control in coordinator.data.get_temperature_controls().values()
-        for description in SENSOR_TYPES
     )
 
 
@@ -92,6 +112,7 @@ class LiebherrSensor(LiebherrZoneEntity, SensorEntity):
             self._attr_translation_key = self._get_zone_translation_key()
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if (temp_control := self.temperature_control) is None:
@@ -99,6 +120,7 @@ class LiebherrSensor(LiebherrZoneEntity, SensorEntity):
         return self.entity_description.unit_fn(temp_control)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the current value."""
         # temperature_control is guaranteed to exist when entity is available
@@ -106,6 +128,7 @@ class LiebherrSensor(LiebherrZoneEntity, SensorEntity):
         return self.entity_description.value_fn(self.temperature_control)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.temperature_control is not None

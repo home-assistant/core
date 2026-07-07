@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from pysyncthru import SyncThruAPINotSupported
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.syncthru.const import DOMAIN
@@ -27,9 +28,8 @@ FIXTURE_USER_INPUT = {
 }
 
 
-async def test_full_flow(
-    hass: HomeAssistant, mock_syncthru: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_syncthru: AsyncMock) -> None:
     """Test the full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -119,9 +119,8 @@ async def test_unknown_state(hass: HomeAssistant, mock_syncthru: AsyncMock) -> N
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_ssdp(
-    hass: HomeAssistant, mock_syncthru: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_ssdp(hass: HomeAssistant, mock_syncthru: AsyncMock) -> None:
     """Test SSDP discovery initiates config properly."""
 
     url = "http://192.168.1.2/"

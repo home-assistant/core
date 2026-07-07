@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_avatars_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_avatars_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Avatars enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Avatars enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_nc_url_local_avatars_enabled',
@@ -50,8 +51,9 @@
 # ---
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_debug_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,7 +89,7 @@
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_debug_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Debug enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Debug enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_nc_url_local_debug_enabled',
@@ -99,8 +101,9 @@
 # ---
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_filelocking_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -136,7 +139,7 @@
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_filelocking_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Filelocking enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Filelocking enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_nc_url_local_filelocking_enabled',
@@ -148,8 +151,9 @@
 # ---
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_jit_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -185,7 +189,7 @@
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_jit_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local JIT active',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local JIT active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_nc_url_local_jit_active',
@@ -197,8 +201,9 @@
 # ---
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_jit_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -234,7 +239,7 @@
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_jit_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local JIT enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local JIT enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_nc_url_local_jit_enabled',
@@ -246,8 +251,9 @@
 # ---
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_previews_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -283,7 +289,7 @@
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_previews_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Previews enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Previews enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_nc_url_local_previews_enabled',

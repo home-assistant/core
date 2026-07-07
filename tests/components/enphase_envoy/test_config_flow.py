@@ -27,11 +27,8 @@ from tests.common import MockConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 
-async def test_form(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form(hass: HomeAssistant, mock_envoy: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -58,10 +55,9 @@ async def test_form(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_no_serial_number(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
+    hass: HomeAssistant, mock_envoy: AsyncMock
 ) -> None:
     """Test user setup without a serial number."""
     mock_envoy.serial_number = None
@@ -99,12 +95,9 @@ async def test_user_no_serial_number(
         (ValueError, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_errors(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
-    exception: Exception,
-    error: str,
+    hass: HomeAssistant, mock_envoy: AsyncMock, exception: Exception, error: str
 ) -> None:
     """Test we handle form errors."""
     mock_envoy.setup.side_effect = exception
@@ -152,12 +145,9 @@ def _get_schema_default(schema, key_name):
         ("3.0.0", "installer"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
-    version: str,
-    schema_username: str,
+    hass: HomeAssistant, mock_envoy: AsyncMock, version: str, schema_username: str
 ) -> None:
     """Test we can setup from zeroconf."""
     result = await hass.config_entries.flow.async_init(
@@ -199,11 +189,9 @@ async def test_zeroconf(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_host_already_exists(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_envoy: AsyncMock
 ) -> None:
     """Test changing credentials for existing host."""
     config_entry.add_to_hass(hass)
@@ -260,10 +248,10 @@ async def test_form_host_already_exists(
     assert config_entry.data[CONF_PASSWORD] == "changed-password"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_serial_already_exists(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
     mock_envoy: AsyncMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -290,11 +278,9 @@ async def test_zeroconf_serial_already_exists(
     assert "Zeroconf ip 4 processing 4.4.4.4, current hosts: {'1.1.1.1'}" in caplog.text
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_serial_already_exists_ignores_ipv6(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_envoy: AsyncMock
 ) -> None:
     """Test serial number already exists from zeroconf but the discovery is ipv6."""
     await setup_integration(hass, config_entry)
@@ -318,11 +304,9 @@ async def test_zeroconf_serial_already_exists_ignores_ipv6(
     assert config_entry.data[CONF_HOST] == "1.1.1.1"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_host_already_exists(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_envoy: AsyncMock
 ) -> None:
     """Test hosts already exists from zeroconf."""
     mock_envoy.serial_number = None
@@ -347,11 +331,9 @@ async def test_zeroconf_host_already_exists(
     assert config_entry.title == "Envoy 1234"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zero_conf_while_form(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_envoy: AsyncMock
 ) -> None:
     """Test zeroconf while form is active."""
     await setup_integration(hass, config_entry)
@@ -380,11 +362,9 @@ async def test_zero_conf_while_form(
     assert config_entry.title == "Envoy 1234"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zero_conf_second_envoy_while_form(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_envoy: AsyncMock
 ) -> None:
     """Test zeroconf while form is active."""
     await setup_integration(hass, config_entry)
@@ -434,10 +414,9 @@ async def test_zero_conf_second_envoy_while_form(
     assert result4["type"] is FlowResultType.ABORT
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zero_conf_old_blank_entry(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
+    hass: HomeAssistant, mock_envoy: AsyncMock
 ) -> None:
     """Test reusing old blank entry."""
     entry = MockConfigEntry(
@@ -473,10 +452,9 @@ async def test_zero_conf_old_blank_entry(
     assert entry.title == "Envoy 1234"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zero_conf_old_blank_entry_standard_title(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
+    hass: HomeAssistant, mock_envoy: AsyncMock
 ) -> None:
     """Test reusing old blank entry was Envoy as title."""
     entry = MockConfigEntry(
@@ -514,10 +492,9 @@ async def test_zero_conf_old_blank_entry_standard_title(
     assert entry.title == "Envoy 1234"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zero_conf_old_blank_entry_user_title(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
+    hass: HomeAssistant, mock_envoy: AsyncMock
 ) -> None:
     """Test reusing old blank entry with user title."""
     entry = MockConfigEntry(
@@ -555,11 +532,9 @@ async def test_zero_conf_old_blank_entry_user_title(
     assert entry.title == "Envoy Backyard"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_envoy: AsyncMock
 ) -> None:
     """Test we reauth auth."""
     await setup_integration(hass, config_entry)
@@ -577,11 +552,9 @@ async def test_reauth(
     assert result2["reason"] == "reauth_successful"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_default(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_envoy: AsyncMock
 ) -> None:
     """Test we can configure options."""
     await setup_integration(hass, config_entry)
@@ -594,16 +567,16 @@ async def test_options_default(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
-        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
+        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: (
+            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE
+        ),
         OPTION_DISABLE_KEEP_ALIVE: OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_set(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_envoy: AsyncMock
 ) -> None:
     """Test we can configure options."""
     await setup_integration(hass, config_entry)
@@ -625,11 +598,9 @@ async def test_options_set(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_envoy: AsyncMock
 ) -> None:
     """Test we can reconfiger the entry."""
     await setup_integration(hass, config_entry)
@@ -661,11 +632,9 @@ async def test_reconfigure(
     assert config_entry.data[CONF_PASSWORD] == "test-password2"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_nochange(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_envoy: AsyncMock
 ) -> None:
     """Test we get the reconfigure form and apply nochange."""
     await setup_integration(hass, config_entry)
@@ -697,11 +666,9 @@ async def test_reconfigure_nochange(
     assert config_entry.data[CONF_PASSWORD] == "test-password"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_otherenvoy(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_envoy: AsyncMock
 ) -> None:
     """Test entering ip of other envoy and prevent changing it based on serial."""
     await setup_integration(hass, config_entry)
@@ -739,10 +706,10 @@ async def test_reconfigure_otherenvoy(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_auth_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
     mock_envoy: AsyncMock,
     exception: Exception,
     error: str,
@@ -792,13 +759,11 @@ async def test_reconfigure_auth_failure(
     assert config_entry.data[CONF_PASSWORD] == "changed-password"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_change_ip_to_existing(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_envoy: AsyncMock
 ) -> None:
-    """Test reconfiguration to existing entry with same ip does not harm existing one."""
+    """Test reconfiguration to existing entry with same ip."""
     await setup_integration(hass, config_entry)
     other_entry = MockConfigEntry(
         domain=DOMAIN,

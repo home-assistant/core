@@ -1,8 +1,6 @@
 """Code to handle a Livisi switches."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant, callback
@@ -59,6 +57,7 @@ class LivisiSwitch(LivisiEntity, SwitchEntity):
         super().__init__(config_entry, coordinator, device)
         self._capability_id = self.capabilities["SwitchActuator"]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         response = await self.aio_livisi.async_pss_set_state(
@@ -68,6 +67,7 @@ class LivisiSwitch(LivisiEntity, SwitchEntity):
             self._attr_available = False
             raise HomeAssistantError(f"Failed to turn on {self._attr_name}")
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         response = await self.aio_livisi.async_pss_set_state(
@@ -77,6 +77,7 @@ class LivisiSwitch(LivisiEntity, SwitchEntity):
             self._attr_available = False
             raise HomeAssistantError(f"Failed to turn off {self._attr_name}")
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()

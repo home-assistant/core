@@ -8,7 +8,7 @@ from unittest.mock import ANY, patch
 import pytest
 
 from homeassistant.components import config
-from homeassistant.components.config import scene
+from homeassistant.components.config import DOMAIN, scene
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -32,7 +32,7 @@ async def test_create_scene(
 ) -> None:
     """Test creating a scene."""
     with patch.object(config, "SECTIONS", [scene]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     assert sorted(hass.states.async_entity_ids("scene")) == []
 
@@ -79,7 +79,7 @@ async def test_update_scene(
 ) -> None:
     """Test updating a scene."""
     with patch.object(config, "SECTIONS", [scene]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     assert sorted(hass.states.async_entity_ids("scene")) == []
 
@@ -127,7 +127,7 @@ async def test_bad_formatted_scene(
 ) -> None:
     """Test that we handle scene without ID."""
     with patch.object(config, "SECTIONS", [scene]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     assert sorted(hass.states.async_entity_ids("scene")) == []
 
@@ -197,7 +197,7 @@ async def test_delete_scene(
     assert len(entity_registry.entities) == 2
 
     with patch.object(config, "SECTIONS", [scene]):
-        assert await async_setup_component(hass, "config", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     assert sorted(hass.states.async_entity_ids("scene")) == [
         "scene.light_off",
@@ -237,7 +237,7 @@ async def test_api_calls_require_admin(
 ) -> None:
     """Test scene APIs endpoints do not work as a normal user."""
     with patch.object(config, "SECTIONS", [scene]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     hass_config_store["scenes.yaml"] = [
         {

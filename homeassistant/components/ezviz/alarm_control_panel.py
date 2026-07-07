@@ -1,10 +1,9 @@
 """Support for Ezviz alarm."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from pyezvizapi import PyEzvizError
 from pyezvizapi.constants import DefenseModeType
@@ -93,10 +92,12 @@ class EzvizAlarm(AlarmControlPanelEntity):
         self.coordinator = coordinator
         self._attr_alarm_state = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
         self.async_schedule_update_ha_state(True)
 
+    @override
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         try:
@@ -108,6 +109,7 @@ class EzvizAlarm(AlarmControlPanelEntity):
         except PyEzvizError as err:
             raise HomeAssistantError("Cannot disarm EZVIZ alarm") from err
 
+    @override
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         try:
@@ -119,6 +121,7 @@ class EzvizAlarm(AlarmControlPanelEntity):
         except PyEzvizError as err:
             raise HomeAssistantError("Cannot arm EZVIZ alarm") from err
 
+    @override
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         try:

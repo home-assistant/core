@@ -1,11 +1,9 @@
 """Support updates for SLZB-06 ESP32 and Zigbee firmwares."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pysmlight.const import Events as SmEvents
 from pysmlight.models import Firmware, Info
@@ -116,12 +114,14 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         self._unload: list[Callable] = []
         self.idx = idx
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle coordinator update callbacks."""
         self._firmware = self.entity_description.latest_version(
@@ -131,6 +131,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
             self.async_write_ha_state()
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Version installed.."""
         data = self.coordinator.data
@@ -138,6 +139,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         return self.entity_description.installed_version(data.info, self.idx)
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
 
@@ -167,6 +169,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
             )
         )
 
+    @override
     def release_notes(self) -> str | None:
         """Return release notes for firmware."""
         if "zigbee" in self.entity_description.key:
@@ -218,6 +221,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
             },
         )
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -243,6 +247,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
                     ):
                         await self.coordinator.async_refresh()
                         await asyncio.sleep(1)
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except TimeoutError:
                 LOGGER.warning(
                     "Timeout waiting for %s to reboot after update",

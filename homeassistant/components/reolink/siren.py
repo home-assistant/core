@@ -1,9 +1,7 @@
 """Component providing support for Reolink siren entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.siren import (
     ATTR_DURATION,
@@ -102,11 +100,13 @@ class ReolinkSirenEntity(ReolinkChannelCoordinatorEntity, SirenEntity):
         super().__init__(reolink_data, channel)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """State of the siren."""
         return self._host.api.baichuan.siren_state(self._channel)
 
     @raise_translated_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the siren."""
         if (volume := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:
@@ -115,6 +115,7 @@ class ReolinkSirenEntity(ReolinkChannelCoordinatorEntity, SirenEntity):
         await self._host.api.set_siren(self._channel, True, duration)
 
     @raise_translated_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the siren."""
         await self._host.api.set_siren(self._channel, False, None)
@@ -138,6 +139,7 @@ class ReolinkHostSirenEntity(ReolinkHostCoordinatorEntity, SirenEntity):
         super().__init__(reolink_data)
 
     @raise_translated_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the siren."""
         if (volume := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:

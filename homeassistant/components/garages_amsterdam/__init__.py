@@ -1,7 +1,5 @@
 """The Garages Amsterdam integration."""
 
-from __future__ import annotations
-
 from odp_amsterdam import ODPAmsterdam
 
 from homeassistant.const import Platform

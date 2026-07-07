@@ -1,9 +1,7 @@
 """Lovelace resources support."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 import uuid
 
 import voluptuous as vol
@@ -62,14 +60,36 @@ class ResourceStorageCollection(collection.DictStorageCollection):
         )
         self.ll_config = ll_config
 
-    async def async_get_info(self) -> dict[str, int]:
-        """Return the resources info for YAML mode."""
+    async def _async_ensure_loaded(self) -> None:
+        """Ensure the collection has been loaded from storage."""
         if not self.loaded:
             await self.async_load()
             self.loaded = True
 
+    async def async_get_info(self) -> dict[str, int]:
+        """Return the resources info for YAML mode."""
+        await self._async_ensure_loaded()
         return {"resources": len(self.async_items() or [])}
 
+    @override
+    async def async_create_item(self, data: dict) -> dict:
+        """Create a new item."""
+        await self._async_ensure_loaded()
+        return await super().async_create_item(data)
+
+    @override
+    async def async_update_item(self, item_id: str, updates: dict) -> dict:
+        """Update item."""
+        await self._async_ensure_loaded()
+        return await super().async_update_item(item_id, updates)
+
+    @override
+    async def async_delete_item(self, item_id: str) -> None:
+        """Delete item."""
+        await self._async_ensure_loaded()
+        await super().async_delete_item(item_id)
+
+    @override
     async def _async_load_data(self) -> collection.SerializedStorageCollection | None:
         """Load the data."""
         if (store_data := await self.store.async_load()) is not None:
@@ -105,6 +125,7 @@ class ResourceStorageCollection(collection.DictStorageCollection):
 
         return data
 
+    @override
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(data)
@@ -112,16 +133,14 @@ class ResourceStorageCollection(collection.DictStorageCollection):
         return data
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict) -> str:
         """Return unique ID."""
         return uuid.uuid4().hex
 
+    @override
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
-        if not self.loaded:
-            await self.async_load()
-            self.loaded = True
-
         update_data = self.UPDATE_SCHEMA(update_data)
         if CONF_RESOURCE_TYPE_WS in update_data:
             update_data[CONF_TYPE] = update_data.pop(CONF_RESOURCE_TYPE_WS)
@@ -133,6 +152,7 @@ class ResourceStorageCollectionWebsocket(collection.DictStorageCollectionWebsock
     """Class to expose storage collection management over websocket."""
 
     @callback
+    @override
     def async_setup(self, hass: HomeAssistant) -> None:
         """Set up the websocket commands."""
         super().async_setup(hass)
@@ -150,6 +170,7 @@ class ResourceStorageCollectionWebsocket(collection.DictStorageCollectionWebsock
 
     @staticmethod
     @websocket_api.async_response
+    @override
     async def ws_list_item(
         hass: HomeAssistant,
         connection: websocket_api.ActiveConnection,

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensor[amax_3000-None][binary_sensor.area1_area_ready_to_arm_away-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.area1_area_ready_to_arm_away-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Area ready to arm away',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Area ready to arm away',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.area1_area_ready_to_arm_away',
@@ -50,8 +51,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.area1_area_ready_to_arm_home-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,7 +89,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.area1_area_ready_to_arm_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Area ready to arm home',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Area ready to arm home',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.area1_area_ready_to_arm_home',
@@ -99,8 +101,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bedroom-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -136,7 +139,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bedroom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bedroom',
@@ -148,8 +151,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_ac_failure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -185,8 +189,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_ac_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch AMAX 3000 AC failure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 AC failure',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_ac_failure',
@@ -198,8 +202,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -235,8 +240,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Bosch AMAX 3000 Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_battery',
@@ -248,8 +253,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_battery_missing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -285,8 +291,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_battery_missing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch AMAX 3000 Battery missing',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 Battery missing',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_battery_missing',
@@ -298,8 +304,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_crc_failure_in_panel_configuration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -335,8 +342,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_crc_failure_in_panel_configuration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch AMAX 3000 CRC failure in panel configuration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 CRC failure in panel configuration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_crc_failure_in_panel_configuration',
@@ -348,8 +355,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_failure_to_call_rps_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -385,7 +393,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_failure_to_call_rps_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch AMAX 3000 Failure to call RPS since last RPS connection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 Failure to call RPS since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_failure_to_call_rps_since_last_rps_connection',
@@ -397,8 +405,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_log_overflow-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -434,8 +443,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_log_overflow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch AMAX 3000 Log overflow',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 Log overflow',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_log_overflow',
@@ -447,8 +456,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_log_threshold_reached-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -484,8 +494,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_log_threshold_reached-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch AMAX 3000 Log threshold reached',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 Log threshold reached',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_log_threshold_reached',
@@ -497,8 +507,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_phone_line_failure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -534,8 +545,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_phone_line_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Bosch AMAX 3000 Phone line failure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 Phone line failure',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_phone_line_failure',
@@ -547,8 +558,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_point_bus_failure_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -584,8 +596,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_point_bus_failure_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch AMAX 3000 Point bus failure since last RPS connection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 Point bus failure since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_point_bus_failure_since_last_rps_connection',
@@ -597,8 +609,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -634,8 +647,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch AMAX 3000 Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_problem',
@@ -647,8 +660,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_sdi_failure_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -684,8 +698,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_sdi_failure_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch AMAX 3000 SDI failure since last RPS connection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 SDI failure since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_sdi_failure_since_last_rps_connection',
@@ -697,8 +711,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_user_code_tamper_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -734,8 +749,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_user_code_tamper_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch AMAX 3000 User code tamper since last RPS connection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 User code tamper since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_user_code_tamper_since_last_rps_connection',
@@ -747,8 +762,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.co_detector-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -784,7 +800,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.co_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CO Detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CO Detector',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.co_detector',
@@ -796,8 +812,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -833,7 +850,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.door',
@@ -845,8 +862,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.glassbreak_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -882,7 +900,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.glassbreak_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Glassbreak Sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Glassbreak Sensor',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.glassbreak_sensor',
@@ -894,8 +912,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.motion_detector-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -931,7 +950,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.motion_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Motion Detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Motion Detector',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.motion_detector',
@@ -943,8 +962,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.smoke_detector-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -980,7 +1000,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.smoke_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Smoke Detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke Detector',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smoke_detector',
@@ -992,8 +1012,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1029,7 +1050,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.window',
@@ -1041,8 +1062,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.area1_area_ready_to_arm_away-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1078,7 +1100,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.area1_area_ready_to_arm_away-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Area ready to arm away',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Area ready to arm away',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.area1_area_ready_to_arm_away',
@@ -1090,8 +1112,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.area1_area_ready_to_arm_home-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1127,7 +1150,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.area1_area_ready_to_arm_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Area ready to arm home',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Area ready to arm home',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.area1_area_ready_to_arm_home',
@@ -1139,8 +1162,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bedroom-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1176,7 +1200,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bedroom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bedroom',
@@ -1188,8 +1212,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_ac_failure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1225,8 +1250,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_ac_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch B5512 (US1B) AC failure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) AC failure',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_ac_failure',
@@ -1238,8 +1263,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1275,8 +1301,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Bosch B5512 (US1B) Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_battery',
@@ -1288,8 +1314,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_battery_missing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1325,8 +1352,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_battery_missing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch B5512 (US1B) Battery missing',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) Battery missing',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_battery_missing',
@@ -1338,8 +1365,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_crc_failure_in_panel_configuration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1375,8 +1403,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_crc_failure_in_panel_configuration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch B5512 (US1B) CRC failure in panel configuration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) CRC failure in panel configuration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_crc_failure_in_panel_configuration',
@@ -1388,8 +1416,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_failure_to_call_rps_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1425,7 +1454,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_failure_to_call_rps_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch B5512 (US1B) Failure to call RPS since last RPS connection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) Failure to call RPS since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_failure_to_call_rps_since_last_rps_connection',
@@ -1437,8 +1466,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_log_overflow-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1474,8 +1504,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_log_overflow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch B5512 (US1B) Log overflow',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) Log overflow',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_log_overflow',
@@ -1487,8 +1517,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_log_threshold_reached-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1524,8 +1555,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_log_threshold_reached-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch B5512 (US1B) Log threshold reached',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) Log threshold reached',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_log_threshold_reached',
@@ -1537,8 +1568,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_phone_line_failure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1574,8 +1606,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_phone_line_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Bosch B5512 (US1B) Phone line failure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) Phone line failure',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_phone_line_failure',
@@ -1587,8 +1619,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_point_bus_failure_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1624,8 +1657,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_point_bus_failure_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch B5512 (US1B) Point bus failure since last RPS connection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) Point bus failure since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_point_bus_failure_since_last_rps_connection',
@@ -1637,8 +1670,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1674,8 +1708,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch B5512 (US1B) Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_problem',
@@ -1687,8 +1721,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_sdi_failure_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1724,8 +1759,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_sdi_failure_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch B5512 (US1B) SDI failure since last RPS connection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) SDI failure since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_sdi_failure_since_last_rps_connection',
@@ -1737,8 +1772,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_user_code_tamper_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1774,8 +1810,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_user_code_tamper_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch B5512 (US1B) User code tamper since last RPS connection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) User code tamper since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_user_code_tamper_since_last_rps_connection',
@@ -1787,8 +1823,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.co_detector-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1824,7 +1861,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.co_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CO Detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CO Detector',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.co_detector',
@@ -1836,8 +1873,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1873,7 +1911,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.door',
@@ -1885,8 +1923,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.glassbreak_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1922,7 +1961,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.glassbreak_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Glassbreak Sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Glassbreak Sensor',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.glassbreak_sensor',
@@ -1934,8 +1973,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.motion_detector-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1971,7 +2011,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.motion_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Motion Detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Motion Detector',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.motion_detector',
@@ -1983,8 +2023,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.smoke_detector-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2020,7 +2061,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.smoke_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Smoke Detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke Detector',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smoke_detector',
@@ -2032,8 +2073,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2069,7 +2111,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.window',
@@ -2081,8 +2123,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.area1_area_ready_to_arm_away-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2118,7 +2161,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.area1_area_ready_to_arm_away-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Area ready to arm away',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Area ready to arm away',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.area1_area_ready_to_arm_away',
@@ -2130,8 +2173,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.area1_area_ready_to_arm_home-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2167,7 +2211,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.area1_area_ready_to_arm_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Area ready to arm home',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Area ready to arm home',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.area1_area_ready_to_arm_home',
@@ -2179,8 +2223,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bedroom-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2216,7 +2261,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bedroom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bedroom',
@@ -2228,8 +2273,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_ac_failure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2265,8 +2311,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_ac_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch Solution 3000 AC failure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 AC failure',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_ac_failure',
@@ -2278,8 +2324,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2315,8 +2362,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Bosch Solution 3000 Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_battery',
@@ -2328,8 +2375,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_battery_missing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2365,8 +2413,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_battery_missing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch Solution 3000 Battery missing',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 Battery missing',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_battery_missing',
@@ -2378,8 +2426,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_crc_failure_in_panel_configuration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2415,8 +2464,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_crc_failure_in_panel_configuration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch Solution 3000 CRC failure in panel configuration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 CRC failure in panel configuration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_crc_failure_in_panel_configuration',
@@ -2428,8 +2477,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_failure_to_call_rps_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2465,7 +2515,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_failure_to_call_rps_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch Solution 3000 Failure to call RPS since last RPS connection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 Failure to call RPS since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_failure_to_call_rps_since_last_rps_connection',
@@ -2477,8 +2527,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_log_overflow-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2514,8 +2565,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_log_overflow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch Solution 3000 Log overflow',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 Log overflow',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_log_overflow',
@@ -2527,8 +2578,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_log_threshold_reached-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2564,8 +2616,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_log_threshold_reached-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch Solution 3000 Log threshold reached',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 Log threshold reached',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_log_threshold_reached',
@@ -2577,8 +2629,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_phone_line_failure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2614,8 +2667,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_phone_line_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Bosch Solution 3000 Phone line failure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 Phone line failure',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_phone_line_failure',
@@ -2627,8 +2680,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_point_bus_failure_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2664,8 +2718,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_point_bus_failure_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch Solution 3000 Point bus failure since last RPS connection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 Point bus failure since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_point_bus_failure_since_last_rps_connection',
@@ -2677,8 +2731,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2714,8 +2769,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch Solution 3000 Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_problem',
@@ -2727,8 +2782,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_sdi_failure_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2764,8 +2820,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_sdi_failure_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch Solution 3000 SDI failure since last RPS connection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 SDI failure since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_sdi_failure_since_last_rps_connection',
@@ -2777,8 +2833,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_user_code_tamper_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2814,8 +2871,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_user_code_tamper_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch Solution 3000 User code tamper since last RPS connection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 User code tamper since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_user_code_tamper_since_last_rps_connection',
@@ -2827,8 +2884,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.co_detector-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2864,7 +2922,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.co_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CO Detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CO Detector',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.co_detector',
@@ -2876,8 +2934,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2913,7 +2972,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.door',
@@ -2925,8 +2984,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.glassbreak_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2962,7 +3022,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.glassbreak_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Glassbreak Sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Glassbreak Sensor',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.glassbreak_sensor',
@@ -2974,8 +3034,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.motion_detector-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3011,7 +3072,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.motion_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Motion Detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Motion Detector',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.motion_detector',
@@ -3023,8 +3084,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.smoke_detector-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3060,7 +3122,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.smoke_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Smoke Detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke Detector',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smoke_detector',
@@ -3072,8 +3134,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3109,7 +3172,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.window',

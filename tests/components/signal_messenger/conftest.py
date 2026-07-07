@@ -1,6 +1,7 @@
 """Signal notification test helpers."""
 
 from http import HTTPStatus
+from unittest.mock import patch
 
 from pysignalclirestapi import SignalCliRestApi
 import pytest
@@ -14,7 +15,8 @@ MESSAGE = "Testing Signal Messenger platform :)"
 CONTENT = b"TestContent"
 NUMBER_FROM = "+43443434343"
 NUMBERS_TO = ["+435565656565"]
-URL_ATTACHMENT = "http://127.0.0.1:8080/image.jpg"
+SIGNAL_BASE_URL = "http://127.0.0.1:8080"
+URL_ATTACHMENT = f"{SIGNAL_BASE_URL}/image.jpg"
 
 
 @pytest.fixture
@@ -23,7 +25,8 @@ def signal_notification_service(hass: HomeAssistant) -> SignalNotificationServic
     hass.config.allowlist_external_urls.add(URL_ATTACHMENT)
     recipients = ["+435565656565"]
     number = "+43443434343"
-    client = SignalCliRestApi("http://127.0.0.1:8080", number)
+    with patch.object(SignalCliRestApi, "mode", return_value="normal"):
+        client = SignalCliRestApi(SIGNAL_BASE_URL, number)
     return SignalNotificationService(hass, recipients, client)
 
 
@@ -36,21 +39,23 @@ def signal_requests_mock_factory(requests_mock: Mocker) -> Mocker:
     ) -> Mocker:
         requests_mock.register_uri(
             "GET",
-            "http://127.0.0.1:8080/v1/about",
+            f"{SIGNAL_BASE_URL}/v1/about",
             status_code=HTTPStatus.OK,
             json={"versions": ["v1", "v2"]},
         )
         if success_send_result:
             requests_mock.register_uri(
                 "POST",
-                "http://127.0.0.1:8080" + SIGNAL_SEND_PATH_SUFIX,
+                SIGNAL_BASE_URL + SIGNAL_SEND_PATH_SUFIX,
                 status_code=HTTPStatus.CREATED,
+                json={"timestamp": "1"},
             )
         else:
             requests_mock.register_uri(
                 "POST",
-                "http://127.0.0.1:8080" + SIGNAL_SEND_PATH_SUFIX,
+                SIGNAL_BASE_URL + SIGNAL_SEND_PATH_SUFIX,
                 status_code=HTTPStatus.BAD_REQUEST,
+                json={"error": "Couldn't send message"},
             )
         if content_length_header is not None:
             requests_mock.register_uri(

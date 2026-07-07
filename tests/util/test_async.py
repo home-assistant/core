@@ -89,7 +89,10 @@ async def test_run_callback_threadsafe(hass: HomeAssistant) -> None:
 
 
 async def test_callback_is_always_scheduled(hass: HomeAssistant) -> None:
-    """Test run_callback_threadsafe always calls call_soon_threadsafe before checking for shutdown."""
+    """Test run_callback_threadsafe always calls call_soon_threadsafe.
+
+    Checks that it is called before checking for shutdown.
+    """
     # We have to check the shutdown state AFTER the callback is scheduled otherwise
     # the function could continue on and the caller call `future.result()` after
     # the point in the main thread where callbacks are no longer run.
@@ -142,7 +145,8 @@ async def test_create_eager_task_from_thread(hass: HomeAssistant) -> None:
     with pytest.raises(
         RuntimeError,
         match=(
-            "Detected code that attempted to create an asyncio task from a thread. Please report this issue"
+            "Detected code that attempted to create an asyncio"
+            " task from a thread. Please report this issue"
         ),
     ):
         await hass.async_add_executor_job(create_task)

@@ -1,10 +1,8 @@
 """Support for Big Ass Fans sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from aiobafi6 import Device
 
@@ -117,6 +115,7 @@ class BAFSensor(BAFDescriptionEntity, SensorEntity):
     entity_description: BAFSensorDescription
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
         self._attr_native_value = self.entity_description.value_fn(self._device)

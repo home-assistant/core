@@ -1,12 +1,10 @@
 """Provide functionality to wake word."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import asyncio
 from collections.abc import AsyncIterable
 import logging
-from typing import final
+from typing import final, override
 
 import voluptuous as vol
 
@@ -86,6 +84,7 @@ class WakeWordDetectionEntity(RestoreEntity):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the state of the entity."""
         return self.__last_detected
@@ -118,6 +117,7 @@ class WakeWordDetectionEntity(RestoreEntity):
 
         return result
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         await super().async_internal_added_to_hass()

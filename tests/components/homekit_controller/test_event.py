@@ -168,7 +168,7 @@ async def test_doorbell(
 
     assert doorbell.original_device_class == EventDeviceClass.DOORBELL
     assert doorbell.capabilities["event_types"] == [
-        "single_press",
+        "ring",
         "double_press",
         "long_press",
     ]
@@ -178,7 +178,7 @@ async def test_doorbell(
     )
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.attributes["event_type"] == "single_press"
+    assert state.attributes["event_type"] == "ring"
 
     helper.pairing.testing.update_named_service(
         "Doorbell", {CharacteristicsTypes.INPUT_EVENT: 1}

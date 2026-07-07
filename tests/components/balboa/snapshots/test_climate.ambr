@@ -1,17 +1,18 @@
 # serializer version: 1
 # name: test_climate[climate.fakespa-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 40.0,
-      'min_temp': 10.0,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 40.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10.0,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'ready',
         'rest',
       ]),
@@ -49,22 +50,22 @@
 # name: test_climate[climate.fakespa-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 10.0,
-      'friendly_name': 'FakeSpa',
-      'hvac_action': <HVACAction.IDLE: 'idle'>,
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 10.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FakeSpa',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 40.0,
-      'min_temp': 10.0,
-      'preset_mode': 'ready',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 40.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10.0,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'ready',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'ready',
         'rest',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
-      'temperature': 40.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 40.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.fakespa',

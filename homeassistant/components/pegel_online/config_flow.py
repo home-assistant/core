@@ -1,8 +1,6 @@
 """Config flow for PEGELONLINE."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aiopegelonline import CONNECT_ERRORS, PegelOnline
 import voluptuous as vol
@@ -40,6 +38,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self._data: dict[str, Any] = {}
         self._stations: dict[str, str] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

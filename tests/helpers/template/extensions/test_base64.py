@@ -1,7 +1,5 @@
 """Test base64 encoding and decoding functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.core import HomeAssistant

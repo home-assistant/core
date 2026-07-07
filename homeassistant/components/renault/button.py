@@ -1,10 +1,8 @@
 """Support for Renault button entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -47,6 +45,7 @@ class RenaultButtonEntity(RenaultEntity, ButtonEntity):
 
     entity_description: RenaultButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Process the button press."""
         await self.entity_description.async_press(self)

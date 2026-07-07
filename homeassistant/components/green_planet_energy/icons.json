@@ -1,0 +1,7 @@
+{
+  "services": {
+    "get_cheapest_duration": {
+      "service": "mdi:clock-check"
+    }
+  }
+}

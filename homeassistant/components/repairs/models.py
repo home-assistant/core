@@ -1,14 +1,17 @@
 """Models for Repairs."""
 
-from __future__ import annotations
-
 from typing import Protocol
 
 from homeassistant import data_entry_flow
 from homeassistant.core import HomeAssistant
 
+# Placeholder TypeAlias for future TypedDict to handle next_flow.
+RepairsFlowResult = data_entry_flow.FlowResult[data_entry_flow.FlowContext, str]
 
-class RepairsFlow(data_entry_flow.FlowHandler):
+
+class RepairsFlow(
+    data_entry_flow.FlowHandler[data_entry_flow.FlowContext, RepairsFlowResult, str]
+):
     """Handle a flow for fixing an issue."""
 
     issue_id: str

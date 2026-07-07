@@ -1,7 +1,5 @@
 """Fixtures for advantage_air."""
 
-from __future__ import annotations
-
 import pytest
 
 from . import patch_get, patch_update

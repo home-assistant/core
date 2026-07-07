@@ -21,5 +21,31 @@
         }
       }
     }
+  },
+  "entity": {
+    "button": {
+      "rotation-reset": {
+        "name": "Reset Rotation"
+      }
+    },
+    "cover": {
+      "valance": {
+        "name": "Valance"
+      }
+    },
+    "number": {
+      "rotation": {
+        "name": "Rotation"
+      },
+      "rotation-max": {
+        "name": "Maximum Rotation"
+      },
+      "rotation-min": {
+        "name": "Minimum Rotation"
+      },
+      "rotation-raw": {
+        "name": "Raw Rotation"
+      }
+    }
   }
 }

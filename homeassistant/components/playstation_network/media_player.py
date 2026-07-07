@@ -1,7 +1,7 @@
 """Media player entity for the PlayStation Network Integration."""
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from psnawp_api.models.trophies import PlatformType
 
@@ -115,6 +115,7 @@ class PsnMediaPlayerEntity(
         self.trophy_titles = trophy_titles
 
     @property
+    @override
     def state(self) -> MediaPlayerState:
         """Media Player state getter."""
         session = self.coordinator.data.active_sessions.get(self.key)
@@ -128,23 +129,27 @@ class PsnMediaPlayerEntity(
         return MediaPlayerState.OFF
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Media title getter."""
         session = self.coordinator.data.active_sessions.get(self.key)
         return session.title_name if session else None
 
     @property
+    @override
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
         session = self.coordinator.data.active_sessions.get(self.key)
         return session.title_id if session else None
 
     @property
+    @override
     def media_image_url(self) -> str | None:
         """Media image url getter."""
         session = self.coordinator.data.active_sessions.get(self.key)
         return session.media_image_url if session else None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 

@@ -158,7 +158,7 @@ class BrData:
 
         _LOGGER.debug("Buienradar parsed data: %s", result)
         if result.get(SUCCESS) is not True:
-            if int(datetime.now().strftime("%H")) > 0:
+            if int(datetime.now().strftime("%H")) > 0:  # pylint: disable=home-assistant-enforce-naive-now
                 _LOGGER.warning(
                     "Unable to parse data from Buienradar. (Msg: %s)",
                     result.get(MESSAGE),

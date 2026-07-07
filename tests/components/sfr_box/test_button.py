@@ -16,16 +16,16 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import snapshot_platform
 
-pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info", "wan_get_info")
+pytestmark = pytest.mark.usefixtures(
+    "system_get_info", "dsl_get_info", "voip_get_info", "wan_get_info"
+)
 
 
 @pytest.fixture(autouse=True)
 def override_platforms() -> Generator[None]:
-    """Override PLATFORMS_WITH_AUTH."""
+    """Override PLATFORMS."""
     with (
-        patch(
-            "homeassistant.components.sfr_box.PLATFORMS_WITH_AUTH", [Platform.BUTTON]
-        ),
+        patch("homeassistant.components.sfr_box.PLATFORMS", [Platform.BUTTON]),
         patch("homeassistant.components.sfr_box.coordinator.SFRBox.authenticate"),
     ):
         yield
@@ -44,6 +44,20 @@ async def test_buttons(
     await snapshot_platform(
         hass, entity_registry, snapshot, config_entry_with_auth.entry_id
     )
+
+
+async def test_buttons_no_auth(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for SFR Box buttons."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Ensure auth-only entities are not registered
+    assert len(entity_registry.entities) == 0
 
 
 async def test_reboot(hass: HomeAssistant, config_entry_with_auth: ConfigEntry) -> None:

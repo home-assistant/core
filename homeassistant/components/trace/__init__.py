@@ -1,7 +1,5 @@
 """Support for script and automation tracing and debugging."""
 
-from __future__ import annotations
-
 import logging
 
 import voluptuous as vol
@@ -60,8 +58,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         try:
             await store.async_save(
                 {
-                    key: list(traces.values())
-                    for key, traces in hass.data[DATA_TRACE].items()
+                    key: list(trace_bucket.all_traces())
+                    for key, trace_bucket in hass.data[DATA_TRACE].items()
                 }
             )
         except HomeAssistantError as exc:

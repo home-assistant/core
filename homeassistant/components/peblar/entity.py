@@ -1,7 +1,5 @@
 """Base entity for the Peblar integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.const import CONF_HOST

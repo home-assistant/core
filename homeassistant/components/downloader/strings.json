@@ -8,11 +8,23 @@
     },
     "step": {
       "user": {
+        "data": {
+          "download_dir": "Download directory"
+        },
+        "data_description": {
+          "download_dir": "The directory where downloaded files will be stored. This can be an absolute path or a path relative to the Home Assistant configuration directory."
+        },
         "description": "Select a location to get to store downloads. The setup will check if the directory exists."
       }
     }
   },
   "exceptions": {
+    "connection_error": {
+      "message": "Connection error occurred while downloading {url}"
+    },
+    "invalid_value": {
+      "message": "Invalid filename derived from {url}"
+    },
     "subdir_invalid": {
       "message": "Invalid subdirectory, got: {subdir}"
     },

@@ -24,9 +24,8 @@ from tests.common import MockConfigEntry
 from tests.conftest import AiohttpClientMocker
 
 
-async def test_full_flow(
-    hass: HomeAssistant, mock_srp_auth: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_srp_auth: AsyncMock) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -55,11 +54,9 @@ async def test_full_flow(
     assert result["title"] == "HomeLink"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_unique_configurations(
-    hass: HomeAssistant,
-    mock_srp_auth: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_srp_auth: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Check full flow."""
     await setup_integration(hass, mock_config_entry)
@@ -89,12 +86,9 @@ async def test_unique_configurations(
         (Exception("Some error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_exceptions(
-    hass: HomeAssistant,
-    mock_srp_auth: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    exception: Exception,
-    error: str,
+    hass: HomeAssistant, mock_srp_auth: AsyncMock, exception: Exception, error: str
 ) -> None:
     """Test exceptions are handled correctly."""
 

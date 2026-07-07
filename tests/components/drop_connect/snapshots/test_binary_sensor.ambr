@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[alert][binary_sensor.alert_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_sensors[alert][binary_sensor.alert_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Alert Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alert Power',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.alert_power',
@@ -51,8 +52,9 @@
 # ---
 # name: test_sensors[alert][binary_sensor.alert_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_sensors[alert][binary_sensor.alert_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Alert Sensor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alert Sensor',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.alert_sensor',
@@ -101,8 +103,9 @@
 # ---
 # name: test_sensors[hub][binary_sensor.hub_drop_1_c0ffee_leak_detected-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -138,8 +141,8 @@
 # name: test_sensors[hub][binary_sensor.hub_drop_1_c0ffee_leak_detected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'Hub DROP-1_C0FFEE Leak detected',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hub DROP-1_C0FFEE Leak detected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hub_drop_1_c0ffee_leak_detected',
@@ -151,8 +154,9 @@
 # ---
 # name: test_sensors[hub][binary_sensor.hub_drop_1_c0ffee_notification_unread-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -188,7 +192,7 @@
 # name: test_sensors[hub][binary_sensor.hub_drop_1_c0ffee_notification_unread-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hub DROP-1_C0FFEE Notification unread',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hub DROP-1_C0FFEE Notification unread',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hub_drop_1_c0ffee_notification_unread',
@@ -200,8 +204,9 @@
 # ---
 # name: test_sensors[leak][binary_sensor.leak_detector_leak_detected-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -237,8 +242,8 @@
 # name: test_sensors[leak][binary_sensor.leak_detector_leak_detected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'Leak Detector Leak detected',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Leak Detector Leak detected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.leak_detector_leak_detected',
@@ -250,8 +255,9 @@
 # ---
 # name: test_sensors[protection_valve][binary_sensor.protection_valve_leak_detected-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -287,8 +293,8 @@
 # name: test_sensors[protection_valve][binary_sensor.protection_valve_leak_detected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'Protection Valve Leak detected',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Protection Valve Leak detected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.protection_valve_leak_detected',
@@ -300,8 +306,9 @@
 # ---
 # name: test_sensors[pump_controller][binary_sensor.pump_controller_leak_detected-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -337,8 +344,8 @@
 # name: test_sensors[pump_controller][binary_sensor.pump_controller_leak_detected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'Pump Controller Leak detected',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pump Controller Leak detected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.pump_controller_leak_detected',
@@ -350,8 +357,9 @@
 # ---
 # name: test_sensors[pump_controller][binary_sensor.pump_controller_pump_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -387,7 +395,7 @@
 # name: test_sensors[pump_controller][binary_sensor.pump_controller_pump_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pump Controller Pump status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pump Controller Pump status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.pump_controller_pump_status',
@@ -399,8 +407,9 @@
 # ---
 # name: test_sensors[ro_filter][binary_sensor.ro_filter_leak_detected-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -436,8 +445,8 @@
 # name: test_sensors[ro_filter][binary_sensor.ro_filter_leak_detected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'RO Filter Leak detected',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RO Filter Leak detected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ro_filter_leak_detected',
@@ -449,8 +458,9 @@
 # ---
 # name: test_sensors[softener][binary_sensor.softener_reserve_capacity_in_use-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -486,7 +496,7 @@
 # name: test_sensors[softener][binary_sensor.softener_reserve_capacity_in_use-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Softener Reserve capacity in use',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Softener Reserve capacity in use',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.softener_reserve_capacity_in_use',

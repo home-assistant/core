@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_platform_setup_and_discovery[valve.balkonbewasserung_valve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,9 +39,10 @@
 # name: test_platform_setup_and_discovery[valve.balkonbewasserung_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'balkonbewässerung Valve',
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'balkonbewässerung Valve',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.balkonbewasserung_valve',
@@ -52,8 +54,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.garden_valve_yard_valve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -89,9 +92,10 @@
 # name: test_platform_setup_and_discovery[valve.garden_valve_yard_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Garden Valve Yard Valve',
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Valve Yard Valve',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.garden_valve_yard_valve',
@@ -103,8 +107,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -140,9 +145,10 @@
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': '接HA水阀 Valve 1',
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '接HA水阀 Valve 1',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.jie_hashui_fa_valve_1',
@@ -154,8 +160,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -191,9 +198,10 @@
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': '接HA水阀 Valve 2',
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '接HA水阀 Valve 2',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.jie_hashui_fa_valve_2',
@@ -205,8 +213,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -242,9 +251,10 @@
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': '接HA水阀 Valve 3',
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '接HA水阀 Valve 3',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.jie_hashui_fa_valve_3',
@@ -256,8 +266,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -293,9 +304,10 @@
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': '接HA水阀 Valve 4',
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '接HA水阀 Valve 4',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.jie_hashui_fa_valve_4',
@@ -307,8 +319,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -344,9 +357,10 @@
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': '接HA水阀 Valve 5',
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '接HA水阀 Valve 5',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.jie_hashui_fa_valve_5',
@@ -358,8 +372,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -395,9 +410,10 @@
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': '接HA水阀 Valve 6',
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '接HA水阀 Valve 6',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.jie_hashui_fa_valve_6',
@@ -409,8 +425,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_7-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -446,9 +463,10 @@
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_7-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': '接HA水阀 Valve 7',
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '接HA水阀 Valve 7',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.jie_hashui_fa_valve_7',
@@ -460,8 +478,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_8-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -497,9 +516,10 @@
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_8-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': '接HA水阀 Valve 8',
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '接HA水阀 Valve 8',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.jie_hashui_fa_valve_8',
@@ -511,8 +531,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.smart_water_timer_valve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -548,9 +569,9 @@
 # name: test_platform_setup_and_discovery[valve.smart_water_timer_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Smart Water Timer Valve',
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Water Timer Valve',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.smart_water_timer_valve',
@@ -562,8 +583,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.sprinkler_cesare_valve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -599,9 +621,10 @@
 # name: test_platform_setup_and_discovery[valve.sprinkler_cesare_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Sprinkler Cesare Valve',
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sprinkler Cesare Valve',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.sprinkler_cesare_valve',
@@ -613,8 +636,9 @@
 # ---
 # name: test_platform_setup_and_discovery[valve.valve_controller_2_valve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -650,9 +674,9 @@
 # name: test_platform_setup_and_discovery[valve.valve_controller_2_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Valve Controller 2 Valve',
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Valve Controller 2 Valve',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.valve_controller_2_valve',

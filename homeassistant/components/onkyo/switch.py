@@ -1,9 +1,7 @@
 """Switch platform."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aioonkyo import command, status
 
@@ -71,26 +69,30 @@ class OnkyoChannelMutingSwitch(
         self._attr_unique_id = f"{identifier}-channel_muting-{channel}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.manager.connected
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Mute the channel."""
         await self.coordinator.async_send_command(
             self._channel, command.ChannelMuting.Param.ON
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Unmute the channel."""
         await self.coordinator.async_send_command(
             self._channel, command.ChannelMuting.Param.OFF
         )
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         value = self.coordinator.data.get(self._channel)
         self._attr_is_on = (
-            None if value is None else value == status.ChannelMuting.Param.ON
+            None if value is None else value is status.ChannelMuting.Param.ON
         )
         super()._handle_coordinator_update()

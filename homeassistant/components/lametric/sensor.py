@@ -1,9 +1,8 @@
 """Support for LaMetric sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from demetriek import Device
 
@@ -72,6 +71,7 @@ class LaMetricSensorEntity(LaMetricEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.serial_number}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data)

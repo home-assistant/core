@@ -1,7 +1,5 @@
 """The history_stats component."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -16,7 +14,14 @@ from homeassistant.helpers.helper_integration import (
 )
 from homeassistant.helpers.template import Template
 
-from .const import CONF_DURATION, CONF_END, CONF_START, PLATFORMS
+from .const import (
+    CONF_DURATION,
+    CONF_END,
+    CONF_MIN_STATE_DURATION,
+    CONF_START,
+    PLATFORMS,
+    SECTION_ADDITIONAL_SETTINGS,
+)
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
 
@@ -36,8 +41,14 @@ async def async_setup_entry(
     end: str | None = entry.options.get(CONF_END)
 
     duration: timedelta | None = None
+    min_state_duration: timedelta
     if duration_dict := entry.options.get(CONF_DURATION):
         duration = timedelta(**duration_dict)
+    additional_settings = entry.options.get(SECTION_ADDITIONAL_SETTINGS, {})
+    if min_state_duration_dict := additional_settings.get(CONF_MIN_STATE_DURATION):
+        min_state_duration = timedelta(**min_state_duration_dict)
+    else:
+        min_state_duration = timedelta(0)
 
     history_stats = HistoryStats(
         hass,
@@ -46,6 +57,7 @@ async def async_setup_entry(
         Template(start, hass) if start else None,
         Template(end, hass) if end else None,
         duration,
+        min_state_duration,
     )
     coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, entry, entry.title)
     await coordinator.async_config_entry_first_refresh()
@@ -88,9 +100,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
     )
 
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
     if config_entry.version == 1:
         options = {**config_entry.options}
         if config_entry.minor_version < 2:
@@ -111,6 +120,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             options[CONF_STATE_CLASS] = SensorStateClass.MEASUREMENT
         hass.config_entries.async_update_entry(
             config_entry, options=options, minor_version=3
+        )
+        # The "advanced_settings" section was renamed to "additional_settings"
+        if (additional := options.pop("advanced_settings", None)) is not None:
+            options[SECTION_ADDITIONAL_SETTINGS] = additional
+        hass.config_entries.async_update_entry(
+            config_entry, options=options, version=2, minor_version=1
         )
 
     _LOGGER.debug(

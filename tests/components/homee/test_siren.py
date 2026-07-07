@@ -1,5 +1,6 @@
 """Test homee sirens."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -18,6 +19,13 @@ from homeassistant.helpers import entity_registry as er
 from . import async_update_attribute_value, build_mock_node, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+async def platforms() -> AsyncGenerator[None]:
+    """Return the platforms to be loaded for this test."""
+    with patch("homeassistant.components.homee.PLATFORMS", [Platform.SIREN]):
+        yield
 
 
 async def setup_siren(
@@ -80,7 +88,6 @@ async def test_siren_snapshot(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test siren snapshot."""
-    with patch("homeassistant.components.homee.PLATFORMS", [Platform.SIREN]):
-        await setup_siren(hass, mock_config_entry, mock_homee)
+    await setup_siren(hass, mock_config_entry, mock_homee)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

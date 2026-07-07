@@ -1,9 +1,7 @@
 """Support for the demo for text-to-speech service."""
 
-from __future__ import annotations
-
 import os
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -43,20 +41,24 @@ class DemoProvider(Provider):
         self.name = "Demo"
 
     @property
+    @override
     def default_language(self) -> str:
         """Return the default language."""
         return self._lang
 
     @property
+    @override
     def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @property
+    @override
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotions."""
         return ["voice", "age"]
 
+    @override
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:

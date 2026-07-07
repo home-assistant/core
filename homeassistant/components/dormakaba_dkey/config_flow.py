@@ -1,10 +1,8 @@
 """Config flow for Dormakaba dKey integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from bleak import BleakError
 from py_dormakaba_dkey import DKEYLock, device_filter, errors as dkey_errors
@@ -42,6 +40,7 @@ class DormkabaConfigFlow(ConfigFlow, domain=DOMAIN):
         # Populated by bluetooth, reauth_confirm and user steps
         self._discovery_info: BluetoothServiceInfoBleak | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -88,6 +87,7 @@ class DormkabaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:

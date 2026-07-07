@@ -7,6 +7,7 @@ from aiohttp import WSMsgType, web
 import pytest
 
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
+from homeassistant.components.websocket_api import DOMAIN
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_INVALID,
@@ -18,10 +19,12 @@ from homeassistant.components.websocket_api.const import (
     SIGNAL_WEBSOCKET_DISCONNECTED,
     URL,
 )
+from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
+from tests.test_util import mock_real_ip
 from tests.typing import ClientSessionGenerator
 
 
@@ -135,7 +138,7 @@ async def test_auth_active_user_inactive(
     """Test authenticating with a token."""
     refresh_token = hass.auth.async_validate_access_token(hass_access_token)
     refresh_token.user.is_active = False
-    assert await async_setup_component(hass, "websocket_api", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client_no_auth()
@@ -150,11 +153,71 @@ async def test_auth_active_user_inactive(
         assert auth_msg["type"] == TYPE_AUTH_INVALID
 
 
+async def test_auth_local_only_user_rejected_remote(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    hass_access_token: str,
+) -> None:
+    """Test that a local-only user cannot authenticate from a remote IP."""
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token.user.local_only = True
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    set_mock_ip = mock_real_ip(hass.http.app)
+    set_mock_ip("198.51.100.1")
+
+    client = await hass_client_no_auth()
+
+    with patch(
+        "homeassistant.components.websocket_api.auth.process_wrong_login",
+    ) as mock_process_wrong_login:
+        async with client.ws_connect(URL) as ws:
+            auth_msg = await ws.receive_json()
+            assert auth_msg["type"] == TYPE_AUTH_REQUIRED
+
+            await ws.send_json({"type": TYPE_AUTH, "access_token": hass_access_token})
+
+            auth_msg = await ws.receive_json()
+            assert auth_msg["type"] == TYPE_AUTH_INVALID
+            assert auth_msg["message"] == "User cannot authenticate remotely"
+
+    assert mock_process_wrong_login.called
+
+
+async def test_auth_local_only_user_allowed_local(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    hass_access_token: str,
+) -> None:
+    """Test that a local-only user can authenticate from a local IP."""
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token.user.local_only = True
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    set_mock_ip = mock_real_ip(hass.http.app)
+    set_mock_ip("192.168.1.100")
+
+    client = await hass_client_no_auth()
+
+    async with client.ws_connect(URL) as ws:
+        auth_msg = await ws.receive_json()
+        assert auth_msg["type"] == TYPE_AUTH_REQUIRED
+
+        await ws.send_json({"type": TYPE_AUTH, "access_token": hass_access_token})
+
+        auth_msg = await ws.receive_json()
+        assert auth_msg["type"] == TYPE_AUTH_OK
+
+
 async def test_auth_active_with_password_not_allow(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Test authenticating with a token."""
-    assert await async_setup_component(hass, "websocket_api", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client_no_auth()
@@ -175,7 +238,7 @@ async def test_auth_legacy_support_with_password(
     local_auth: HassAuthProvider,
 ) -> None:
     """Test authenticating with a token."""
-    assert await async_setup_component(hass, "websocket_api", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client_no_auth()
@@ -194,7 +257,7 @@ async def test_auth_with_invalid_token(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Test authenticating with a token."""
-    assert await async_setup_component(hass, "websocket_api", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client_no_auth()
@@ -227,7 +290,7 @@ async def test_auth_sending_invalid_json_disconnects(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Test sending invalid json during auth."""
-    assert await async_setup_component(hass, "websocket_api", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client_no_auth()
@@ -246,7 +309,7 @@ async def test_auth_sending_binary_disconnects(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Test sending bytes during auth."""
-    assert await async_setup_component(hass, "websocket_api", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client_no_auth()
@@ -265,7 +328,7 @@ async def test_auth_close_disconnects(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Test closing during auth."""
-    assert await async_setup_component(hass, "websocket_api", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client_no_auth()
@@ -286,7 +349,7 @@ async def test_auth_error_disconnects(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error during auth."""
-    assert await async_setup_component(hass, "websocket_api", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client_no_auth()
@@ -317,7 +380,7 @@ async def test_auth_sending_unknown_type_disconnects(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Test sending unknown type during auth."""
-    assert await async_setup_component(hass, "websocket_api", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client_no_auth()
@@ -338,7 +401,7 @@ async def test_error_right_after_auth_disconnects(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error right after auth."""
-    assert await async_setup_component(hass, "websocket_api", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client_no_auth()
@@ -367,3 +430,43 @@ async def test_error_right_after_auth_disconnects(
             assert close_error_msg.type is WSMsgType.CLOSE
 
     assert "Received error message during command phase: explode" in caplog.text
+
+
+async def test_unix_socket_auth_bypass(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test that Unix socket connections skip websocket auth phase."""
+    # Create the Supervisor system user
+    await hass.auth.async_create_system_user(
+        HASSIO_USER_NAME, group_ids=["system-admin"]
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+
+    with (
+        patch(
+            "homeassistant.components.http.ban.is_supervisor_unix_socket_request",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.http.auth.is_supervisor_unix_socket_request",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.websocket_api.http.is_supervisor_unix_socket_request",
+            return_value=True,
+        ),
+    ):
+        async with client.ws_connect(URL) as ws:
+            # Should immediately receive auth_ok without sending a token
+            auth_msg = await ws.receive_json()
+            assert auth_msg["type"] == TYPE_AUTH_OK
+
+            # Verify the connection works by sending a ping
+            await ws.send_json({"id": 1, "type": "ping"})
+            pong_msg = await ws.receive_json()
+            assert pong_msg["type"] == "pong"
+            assert pong_msg["id"] == 1

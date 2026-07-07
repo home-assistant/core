@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import date, datetime
 import logging
+from typing import override
 
 from pysuez import PySuezError, SuezClient, TelemetryMeasure
 
@@ -78,6 +79,7 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
             f"{DOMAIN}:{self._counter_id}_water_consumption_statistics"
         )
 
+    @override
     async def _async_setup(self) -> None:
         self._suez_client = SuezClient(
             username=self.config_entry.data[CONF_USERNAME],
@@ -87,6 +89,7 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
         if not await self._suez_client.check_credentials():
             raise ConfigEntryError("Invalid credentials for suez water")
 
+    @override
     async def _async_update_data(self) -> SuezWaterData:
         """Fetch data from API endpoint."""
 

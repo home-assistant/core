@@ -1,0 +1,53 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'devices': list([
+      dict({
+        'active_from': None,
+        'extras': dict({
+        }),
+        'id': 'SN001',
+        'type': 'unknown',
+      }),
+    ]),
+    'entry': dict({
+      'created_at': '2026-01-01T00:00:00+00:00',
+      'data': dict({
+        'password': '**REDACTED**',
+        'username': 'test-user',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'freshr',
+      'entry_id': '01JKRA6QKPBE00ZZ9BKWDB3CTB',
+      'minor_version': 1,
+      'modified_at': '2026-01-01T00:00:00+00:00',
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': 'test-user',
+      'version': 1,
+    }),
+    'readings': dict({
+      'SN001': dict({
+        'co2': 850,
+        'dp': 10.2,
+        'extras': dict({
+        }),
+        'flow': 0.12,
+        'hum': 45,
+        't1': 21.5,
+        't2': 5.3,
+        't3': None,
+        't4': None,
+        'temp': None,
+      }),
+    }),
+  })
+# ---

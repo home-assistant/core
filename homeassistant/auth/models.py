@@ -1,7 +1,5 @@
 """Auth models."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address, IPv6Address
 import secrets

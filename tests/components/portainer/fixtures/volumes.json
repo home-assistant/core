@@ -1,0 +1,62 @@
+[
+  {
+    "Name": "myvolume",
+    "Driver": "local",
+    "Mountpoint": "/var/lib/docker/volumes/myvolume/_data",
+    "CreatedAt": "2025-02-15T12:34:56.000000000Z",
+    "Status": {
+      "ref": "volume-local"
+    },
+    "Labels": {
+      "com.example.some-label": "some-value",
+      "com.example.some-other-label": "some-other-value"
+    },
+    "Scope": "local",
+    "Options": {
+      "type": "none",
+      "o": "bind",
+      "device": "/data/volumes/myvolume"
+    },
+    "UsageData": {
+      "Size": 104857600,
+      "RefCount": 2
+    }
+  },
+  {
+    "Name": "db_data",
+    "Driver": "local",
+    "Mountpoint": "/var/lib/docker/volumes/db_data/_data",
+    "CreatedAt": "2025-02-10T08:11:22.000000000Z",
+    "Labels": {
+      "com.docker.compose.project": "webstack",
+      "com.docker.compose.volume": "db_data"
+    },
+    "Scope": "local",
+    "Options": {
+      "type": "tmpfs",
+      "o": "size=64m,uid=1000",
+      "device": "tmpfs"
+    },
+    "UsageData": {
+      "Size": 67108864,
+      "RefCount": 1
+    }
+  },
+  {
+    "Name": "dashy_config",
+    "Driver": "local",
+    "Mountpoint": "/var/lib/docker/volumes/dashy_config/_data",
+    "CreatedAt": "2025-02-18T19:45:10.000000000Z",
+    "Status": {
+      "ref": "volume-swarm"
+    },
+    "Labels": {
+      "com.docker.stack.namespace": "dashy"
+    },
+    "Scope": "local",
+    "UsageData": {
+      "Size": 3145728,
+      "RefCount": 1
+    }
+  }
+]

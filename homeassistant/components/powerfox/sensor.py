@@ -1,10 +1,8 @@
 """Sensors for Powerfox integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from powerfox import Device, GasReport, HeatMeter, PowerMeter, WaterMeter
 
@@ -317,6 +315,7 @@ class PowerfoxSensorEntity(BasePowerfoxSensorEntity[PowerfoxDataUpdateCoordinato
     entity_description: PowerfoxSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the state of the entity."""
         return self.entity_description.value_fn(self.coordinator.data)
@@ -331,6 +330,7 @@ class PowerfoxGasSensorEntity(
     entity_description: PowerfoxReportSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the state of the entity."""
         gas_report = self.coordinator.data.gas

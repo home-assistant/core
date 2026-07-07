@@ -57,10 +57,10 @@ async def test_create_user_entry(
         (404, {"base": "cannot_connect"}),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_errors(
     hass: HomeAssistant,
     mock_travel_time: AsyncMock,
-    mock_setup_entry: AsyncMock,
     failed_travel_time_status: int,
     errors: dict[str, str],
 ) -> None:
@@ -211,10 +211,10 @@ async def test_incorrect_import_entry(
     assert result["reason"] == "invalid_travel_time_id"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_integration_already_exists(
     hass: HomeAssistant,
     mock_travel_time: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     init_integration: MockConfigEntry,
 ) -> None:

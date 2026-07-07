@@ -49,10 +49,13 @@ def mock_connector():
     mock_device_1 = MagicMock()
     mock_device_1.definition.name = "Test Device 1"
     mock_device_1.state.params = [
+        MagicMock(code="__wym_cwu", value="off"),  # Force domestic hot water mode
         MagicMock(code="__tr_pracy_pc", value="eco"),
         MagicMock(
             code="__trybpracy", value="de_icing"
         ),  # parameter not relevant for this device, should be ignored
+        MagicMock(code="__t_ext", value=15.5),
+        MagicMock(code="__rr_temp_wyli_bufo", value=22.0),
         MagicMock(code="__temp_zada_prac_cwu", value=55.0),  # DHW Target Temperature
         MagicMock(code="__rr_temp_zmier_cwu", value=50.0),  # DHW Current Temperature
         MagicMock(code="__tryb_cwu", value="on"),  # DHW On/Off
@@ -63,11 +66,17 @@ def mock_connector():
     mock_device_2.state.params = [
         MagicMock(code="_jezyk", value="english"),
         MagicMock(code="__aerokonfbypass", value="off"),
+        MagicMock(code="__rd_alarmwent", value="no_alarm"),
+        MagicMock(code="__rd_co2", value="normal"),
+        MagicMock(code="__rd_pm10", value="warning"),
+        MagicMock(code="__rr_wietrzenie", value="on"),
         MagicMock(code="__tempzadkomf", value=21),  # Target temperature comfort
         MagicMock(code="__tempzadekozima", value=20),  # Target temperature eco winter
         MagicMock(
             code="__tempzadpozadomem", value=18.5
         ),  # Target temperature out of home
+        MagicMock(code="__aerowentylacjaon&off", value="on"),
+        MagicMock(code="__trybaero2", value="gear_2"),
     ]
     mock_device_2.definition.code = 223  # Nano Color 2
 

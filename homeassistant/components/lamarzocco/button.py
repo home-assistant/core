@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pylamarzocco.exceptions import RequestNotSuccessful
 
@@ -70,6 +70,7 @@ class LaMarzoccoButtonEntity(LaMarzoccoEntity, ButtonEntity):
 
     entity_description: LaMarzoccoButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Press button."""
         try:

@@ -101,24 +101,24 @@
   },
   "services": {
     "get_forecast": {
-      "description": "Retrieves the forecast from a selected weather service.",
+      "description": "Retrieves the forecast from a weather service.",
       "fields": {
         "type": {
           "description": "[%key:component::weather::services::get_forecasts::fields::type::description%]",
           "name": "[%key:component::weather::services::get_forecasts::fields::type::name%]"
         }
       },
-      "name": "Get forecast"
+      "name": "Get weather forecast"
     },
     "get_forecasts": {
-      "description": "Retrieves the forecast from selected weather services.",
+      "description": "Retrieves the forecasts from one or more weather services.",
       "fields": {
         "type": {
           "description": "The scope of the weather forecast.",
           "name": "Forecast type"
         }
       },
-      "name": "Get forecasts"
+      "name": "Get weather forecasts"
     }
   },
   "title": "Weather"

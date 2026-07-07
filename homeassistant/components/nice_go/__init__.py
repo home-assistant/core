@@ -1,7 +1,5 @@
 """The Nice G.O. integration."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform

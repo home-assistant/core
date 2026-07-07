@@ -1,10 +1,8 @@
 """The history_stats component config flow."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import timedelta
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -12,6 +10,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -37,6 +36,7 @@ from homeassistant.helpers.template import Template
 from .const import (
     CONF_DURATION,
     CONF_END,
+    CONF_MIN_STATE_DURATION,
     CONF_PERIOD_KEYS,
     CONF_START,
     CONF_TYPE_KEYS,
@@ -44,6 +44,7 @@ from .const import (
     CONF_TYPE_TIME,
     DEFAULT_NAME,
     DOMAIN,
+    SECTION_ADDITIONAL_SETTINGS,
 )
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
@@ -139,7 +140,7 @@ def _get_options_schema_with_entity_id(entity_id: str, type: str) -> vol.Schema:
             vol.Optional(CONF_START): TemplateSelector(),
             vol.Optional(CONF_END): TemplateSelector(),
             vol.Optional(CONF_DURATION): DurationSelector(
-                DurationSelectorConfig(enable_day=True, allow_negative=False)
+                DurationSelectorConfig(enable_day=True, allow_negative=False),
             ),
             vol.Optional(CONF_STATE_CLASS): SelectSelector(
                 SelectSelectorConfig(
@@ -147,6 +148,18 @@ def _get_options_schema_with_entity_id(entity_id: str, type: str) -> vol.Schema:
                     translation_key=CONF_STATE_CLASS,
                     mode=SelectSelectorMode.DROPDOWN,
                 ),
+            ),
+            vol.Optional(SECTION_ADDITIONAL_SETTINGS): section(
+                vol.Schema(
+                    {
+                        vol.Optional(CONF_MIN_STATE_DURATION): DurationSelector(
+                            DurationSelectorConfig(
+                                enable_day=True, allow_negative=False
+                            )
+                        ),
+                    }
+                ),
+                {"collapsed": True},
             ),
         }
     )
@@ -176,17 +189,19 @@ OPTIONS_FLOW = {
 class HistoryStatsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config flow for History stats."""
 
-    MINOR_VERSION = 3
+    VERSION = 2
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
 
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options[CONF_NAME])
 
     @staticmethod
+    @override
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview WS API."""
         websocket_api.async_register_command(hass, ws_start_preview)
@@ -275,6 +290,8 @@ async def ws_start_preview(
     start = validated_data.get(CONF_START)
     end = validated_data.get(CONF_END)
     duration = validated_data.get(CONF_DURATION)
+    additional_settings = validated_data.get(SECTION_ADDITIONAL_SETTINGS, {})
+    min_state_duration = additional_settings.get(CONF_MIN_STATE_DURATION)
     state_class = validated_data.get(CONF_STATE_CLASS)
 
     history_stats = HistoryStats(
@@ -284,6 +301,7 @@ async def ws_start_preview(
         Template(start, hass) if start else None,
         Template(end, hass) if end else None,
         timedelta(**duration) if duration else None,
+        timedelta(**min_state_duration) if min_state_duration else timedelta(0),
         True,
     )
     coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, None, name, True)

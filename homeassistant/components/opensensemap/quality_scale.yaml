@@ -1,0 +1,100 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration does not register any actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not register any actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities do not subscribe to events; they read from a
+      DataUpdateCoordinator.
+  entity-unique-id: done
+  has-entity-name:
+    status: exempt
+    comment: |
+      Sensor entities set has_entity_name. The legacy air_quality entity does
+      not, but it is being deprecated and removed in a follow-up.
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration does not register any actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration has no options to configure.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: todo
+  reauthentication-flow:
+    status: exempt
+    comment: The openSenseMap API requires no authentication.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: openSenseMap is a cloud service and cannot be discovered.
+  discovery:
+    status: exempt
+    comment: openSenseMap stations cannot be discovered on the network.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: Each config entry represents a single, fixed station.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: The integration only provides primary entities that should be enabled.
+  entity-translations: done
+  exception-translations: todo
+  icon-translations:
+    status: exempt
+    comment: Entities use their device class icons; no custom icons are needed.
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      The station ID is the unique identifier of the config entry; a different
+      station is a separate entry, so there is nothing to reconfigure.
+  repair-issues: done
+  stale-devices:
+    status: exempt
+    comment: Each config entry represents a single, fixed station.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo

@@ -1,6 +1,6 @@
 """Support for AtlanticDomesticHotWaterProductionMBLComponent."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -43,35 +43,38 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         super().__init__(device_url, coordinator)
         self._attr_max_temp = cast(
             float,
-            self.executor.select_state(
+            self.device.states.get_value(
                 OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE
             ),
         )
         self._attr_min_temp = cast(
             float,
-            self.executor.select_state(
+            self.device.states.get_value(
                 OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE
             ),
         )
 
     @property
+    @override
     def current_temperature(self) -> float:
         """Return the current temperature."""
         return cast(
             float,
-            self.executor.select_state(
+            self.device.states.get_value(
                 OverkizState.MODBUSLINK_MIDDLE_WATER_TEMPERATURE
             ),
         )
 
     @property
+    @override
     def target_temperature(self) -> float:
         """Return the temperature corresponding to the PRESET."""
         return cast(
             float,
-            self.executor.select_state(OverkizState.CORE_WATER_TARGET_TEMPERATURE),
+            self.device.states.get_value(OverkizState.CORE_WATER_TARGET_TEMPERATURE),
         )
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
@@ -82,7 +85,7 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
     @property
     def is_boost_mode_on(self) -> bool:
         """Return true if boost mode is on."""
-        return self.executor.select_state(OverkizState.MODBUSLINK_DHW_BOOST_MODE) in (
+        return self.device.states.get_value(OverkizState.MODBUSLINK_DHW_BOOST_MODE) in (
             OverkizCommandParam.ON,
             OverkizCommandParam.PROG,
         )
@@ -90,20 +93,24 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
     @property
     def is_eco_mode_on(self) -> bool:
         """Return true if eco mode is on."""
-        return self.executor.select_state(OverkizState.MODBUSLINK_DHW_MODE) in (
+        return self.device.states.get_value(OverkizState.MODBUSLINK_DHW_MODE) in (
             OverkizCommandParam.MANUAL_ECO_ACTIVE,
             OverkizCommandParam.AUTO_MODE,
         )
 
     @property
+    @override
     def is_away_mode_on(self) -> bool:
         """Return true if away mode is on."""
-        return self.executor.select_state(OverkizState.MODBUSLINK_DHW_ABSENCE_MODE) in (
+        return self.device.states.get_value(
+            OverkizState.MODBUSLINK_DHW_ABSENCE_MODE
+        ) in (
             OverkizCommandParam.ON,
             OverkizCommandParam.PROG,
         )
 
     @property
+    @override
     def current_operation(self) -> str:
         """Return current operation."""
         if self.is_away_mode_on:
@@ -116,7 +123,7 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
             return STATE_ECO
 
         if (
-            cast(str, self.executor.select_state(OverkizState.MODBUSLINK_DHW_MODE))
+            cast(str, self.device.states.get_value(OverkizState.MODBUSLINK_DHW_MODE))
             == OverkizCommandParam.MANUAL_ECO_INACTIVE
         ):
             # STATE_ELECTRIC is a substitution for OverkizCommandParam.MANUAL
@@ -126,6 +133,7 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
 
         return STATE_OFF
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         if operation_mode == STATE_PERFORMANCE:
@@ -151,22 +159,37 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         elif operation_mode == STATE_OFF:
             await self.async_turn_away_mode_on()
 
+    @override
     async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on.
 
-        This requires the start date and the end date to be also set, and those dates have to match the device datetime.
-        The API accepts setting dates in the format of the core:DateTimeState state for the DHW
-        {'day': 11, 'hour': 21, 'minute': 12, 'month': 7, 'second': 53, 'weekday': 3, 'year': 2024}
-        The dict is then passed as an actual device date, the away mode start date, and then as an end date,
-        but with the year incremented by 1, so the away mode is getting turned on for the next year.
-        The weekday number seems to have no effect so the calculation of the future date's weekday number is redundant,
-        but possible via homeassistant dt_util to form both start and end dates dictionaries from scratch
-        based on datetime.now() and datetime.timedelta into the future.
-        If you execute `setAbsenceStartDate`, `setAbsenceEndDate` and `setAbsenceMode`,
-        the API answers with "too many requests", as there's a polling update after each command execution,
-        and the device becomes unavailable until the API is available again.
-        With `refresh_afterwards=False` on the first commands, and `refresh_afterwards=True` only the last command,
-        the API is not choking and the transition is smooth without the unavailability state.
+        This requires the start date and the end date to be
+        also set, and those dates have to match the device
+        datetime. The API accepts setting dates in the format
+        of the core:DateTimeState state for the DHW:
+        {"day": 11, "hour": 21, "minute": 12, "month": 7,
+        "second": 53, "weekday": 3, "year": 2024}.
+        The dict is then passed as an actual device date, the
+        away mode start date, and then as an end date, but with
+        the year incremented by 1, so the away mode is getting
+        turned on for the next year.
+
+        The weekday number seems to have no effect so the
+        calculation of the future date's weekday number is
+        redundant, but possible via homeassistant dt_util to
+        form both start and end dates dictionaries from
+        scratch based on datetime.now() and
+        datetime.timedelta into the future.
+
+        If you execute `setAbsenceStartDate`,
+        `setAbsenceEndDate` and `setAbsenceMode`, the API
+        answers with "too many requests", as there's a polling
+        update after each command execution, and the device
+        becomes unavailable until the API is available again.
+        With `refresh_afterwards=False` on the first commands,
+        and `refresh_afterwards=True` only the last command,
+        the API is not choking and the transition is smooth
+        without the unavailability state.
         """
         now = dt_util.now()
         now_date = {
@@ -197,6 +220,7 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         await self.executor.async_execute_command(

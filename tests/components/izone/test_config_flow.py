@@ -2,12 +2,12 @@
 
 from collections.abc import Callable
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.izone.const import DISPATCH_CONTROLLER_DISCOVERED, IZONE
+from homeassistant.components.izone.const import DISPATCH_CONTROLLER_DISCOVERED, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -18,7 +18,7 @@ def mock_disco() -> Mock:
     """Mock discovery service."""
     disco = Mock()
     disco.pi_disco = Mock()
-    disco.pi_disco.controllers = {}
+    disco.pi_disco.fetch_controllers = AsyncMock(return_value={})
     return disco
 
 
@@ -44,7 +44,7 @@ async def test_not_found(hass: HomeAssistant, mock_disco: Mock) -> None:
     ):
         start_disco.side_effect = _mock_start_discovery(hass, mock_disco)
         result = await hass.config_entries.flow.async_init(
-            IZONE, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
         # Confirmation form
@@ -60,7 +60,7 @@ async def test_not_found(hass: HomeAssistant, mock_disco: Mock) -> None:
 
 async def test_found(hass: HomeAssistant, mock_disco: Mock) -> None:
     """Test not finding iZone controller."""
-    mock_disco.pi_disco.controllers["blah"] = object()
+    mock_disco.pi_disco.fetch_controllers = AsyncMock(return_value={"blah": object()})
 
     with (
         patch(
@@ -77,7 +77,7 @@ async def test_found(hass: HomeAssistant, mock_disco: Mock) -> None:
     ):
         start_disco.side_effect = _mock_start_discovery(hass, mock_disco)
         result = await hass.config_entries.flow.async_init(
-            IZONE, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
         # Confirmation form

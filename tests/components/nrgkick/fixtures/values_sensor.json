@@ -41,6 +41,7 @@
     "charging_rate": 11.0,
     "vehicle_connect_time": 100,
     "vehicle_charging_time": 50,
+    "charge_permitted": 1,
     "charge_count": 5,
     "rcd_trigger": 0,
     "warning_code": 0,

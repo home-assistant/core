@@ -1,8 +1,7 @@
 """Support for the ZHA platform."""
 
-from __future__ import annotations
-
 import functools
+from typing import override
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
@@ -49,11 +48,13 @@ class ZHADeviceScannerEntity(ScannerEntity, ZHAEntity):
     _attr_name: str = "Device scanner"
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self.entity_data.entity.is_connected
 
     @property
+    @override
     def battery_level(self) -> int | None:
         """Return the battery level of the device.
 
@@ -62,6 +63,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZHAEntity):
         return self.entity_data.entity.battery_level
 
     @property  # type: ignore[misc]
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         # We opt ZHA device tracker back into overriding this method because
@@ -69,6 +71,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZHAEntity):
         return ZHAEntity.device_info.__get__(self)
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return unique ID."""
         # Call Super because ScannerEntity overrode it.

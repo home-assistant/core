@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensor[envoy_eu_batt][binary_sensor.encharge_123456_communicating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_binary_sensor[envoy_eu_batt][binary_sensor.encharge_123456_communicating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Encharge 123456 Communicating',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Encharge 123456 Communicating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.encharge_123456_communicating',
@@ -51,8 +52,9 @@
 # ---
 # name: test_binary_sensor[envoy_eu_batt][binary_sensor.encharge_123456_dc_switch-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,7 +90,7 @@
 # name: test_binary_sensor[envoy_eu_batt][binary_sensor.encharge_123456_dc_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Encharge 123456 DC switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Encharge 123456 DC switch',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.encharge_123456_dc_switch',
@@ -100,8 +102,9 @@
 # ---
 # name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.c6_combiner_482523040549_communicating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -137,8 +140,8 @@
 # name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.c6_combiner_482523040549_communicating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'C6 Combiner 482523040549 Communicating',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'C6 Combiner 482523040549 Communicating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.c6_combiner_482523040549_communicating',
@@ -150,8 +153,9 @@
 # ---
 # name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.collar_482520020939_communicating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -187,8 +191,8 @@
 # name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.collar_482520020939_communicating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Collar 482520020939 Communicating',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Collar 482520020939 Communicating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.collar_482520020939_communicating',
@@ -200,8 +204,9 @@
 # ---
 # name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.encharge_123456_communicating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -237,8 +242,8 @@
 # name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.encharge_123456_communicating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Encharge 123456 Communicating',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Encharge 123456 Communicating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.encharge_123456_communicating',
@@ -250,8 +255,9 @@
 # ---
 # name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.encharge_123456_dc_switch-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -287,7 +293,7 @@
 # name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.encharge_123456_dc_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Encharge 123456 DC switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Encharge 123456 DC switch',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.encharge_123456_dc_switch',
@@ -299,8 +305,9 @@
 # ---
 # name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.enpower_654321_communicating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -336,8 +343,8 @@
 # name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.enpower_654321_communicating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Enpower 654321 Communicating',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enpower 654321 Communicating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.enpower_654321_communicating',
@@ -349,8 +356,9 @@
 # ---
 # name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.enpower_654321_grid_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -386,7 +394,7 @@
 # name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.enpower_654321_grid_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Enpower 654321 Grid status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enpower 654321 Grid status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.enpower_654321_grid_status',

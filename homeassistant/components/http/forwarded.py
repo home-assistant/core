@@ -1,7 +1,5 @@
 """Middleware to handle forwarded data by a reverse proxy."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from ipaddress import IPv4Network, IPv6Network, ip_address
 import logging
@@ -47,8 +45,9 @@ def async_setup_forwarded(
     e.g., `X-Forwarded-Host: example.com, proxy.example.com, backend.example.com`
     OR `X-Forwarded-Host: example.com` (one entry, even with multiple proxies)
 
-    If the previous headers are processed successfully, and the X-Forwarded-Host is
-    present, the last one in the list will be used (set by the proxy nearest to the backend).
+    If the previous headers are processed successfully, and the
+    X-Forwarded-Host is present, the last one in the list will be used
+    (set by the proxy nearest to the backend).
 
     Multiple headers are valid as stated in https://www.rfc-editor.org/rfc/rfc7239#section-7.1
     If multiple headers are present, they are handled according to
@@ -149,7 +148,8 @@ def async_setup_forwarded(
             X_FORWARDED_PROTO, []
         )
         if forwarded_proto_headers:
-            # Process multiple X-Forwarded-Proto from the right side (by reversing the list)
+            # Process multiple X-Forwarded-Proto from the right side
+            # (by reversing the list)
             forwarded_proto_split = list(
                 reversed(
                     [
@@ -193,7 +193,8 @@ def async_setup_forwarded(
         # Handle X-Forwarded-Host
         forwarded_host_headers: list[str] = request.headers.getall(X_FORWARDED_HOST, [])
         if forwarded_host_headers:
-            # Process multiple X-Forwarded-Host from the right side (by reversing the list)
+            # Process multiple X-Forwarded-Host from the right side
+            # (by reversing the list)
             forwarded_host = list(
                 reversed(
                     [

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from flexit_bacnet import FlexitBACnet
 
@@ -70,6 +71,7 @@ class FlexitBinarySensor(FlexitEntity, BinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return value of binary sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

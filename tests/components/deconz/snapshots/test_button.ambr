@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_button[deconz_payload0-expected0][button.light_group_scene_store_current_scene-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_button[deconz_payload0-expected0][button.light_group_scene_store_current_scene-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Light group Scene Store Current Scene',
-      'icon': 'mdi:inbox-arrow-down',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Light group Scene Store Current Scene',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:inbox-arrow-down',
     }),
     'context': <ANY>,
     'entity_id': 'button.light_group_scene_store_current_scene',
@@ -51,8 +52,9 @@
 # ---
 # name: test_button[deconz_payload1-expected1][button.aqara_fp1_reset_presence-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_button[deconz_payload1-expected1][button.aqara_fp1_reset_presence-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Aqara FP1 Reset Presence',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara FP1 Reset Presence',
     }),
     'context': <ANY>,
     'entity_id': 'button.aqara_fp1_reset_presence',

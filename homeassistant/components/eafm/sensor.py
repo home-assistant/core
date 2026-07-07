@@ -1,6 +1,6 @@
 """Support for gauges from flood monitoring API."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.const import UnitOfLength
@@ -94,17 +94,19 @@ class Measurement(CoordinatorEntity, SensorEntity):
         return self.coordinator.data["measures"][self.key]["parameterName"]
 
     @property
-    def device_info(self):
+    @override
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, "measure-id", self.station_id)},
+            identifiers={(DOMAIN, self.station_id)},
             manufacturer="https://environment.data.gov.uk/",
             model=self.parameter_name,
             name=f"{self.station_name} {self.parameter_name} {self.qualifier}",
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if not self.coordinator.last_update_success:
@@ -114,7 +116,8 @@ class Measurement(CoordinatorEntity, SensorEntity):
         if "latestReading" not in self.coordinator.data["measures"][self.key]:
             return False
 
-        # Sometimes lastestReading key is present but actually a URL rather than a piece of data
+        # Sometimes lastestReading key is present but actually
+        # a URL rather than a piece of data.
         # This is usually because the sensor has been archived
         if not isinstance(
             self.coordinator.data["measures"][self.key]["latestReading"], dict
@@ -124,6 +127,7 @@ class Measurement(CoordinatorEntity, SensorEntity):
         return True
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return units for the sensor."""
         measure = self.coordinator.data["measures"][self.key]
@@ -132,6 +136,7 @@ class Measurement(CoordinatorEntity, SensorEntity):
         return UNIT_MAPPING.get(measure["unit"], measure["unitName"])
 
     @property
+    @override
     def native_value(self):
         """Return the current sensor value."""
         return self.coordinator.data["measures"][self.key]["latestReading"]["value"]

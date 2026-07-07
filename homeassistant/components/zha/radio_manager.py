@@ -1,7 +1,5 @@
 """ZHA radio manager."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator
 import contextlib
@@ -47,13 +45,18 @@ from .helpers import get_zha_data
 RECOMMENDED_RADIOS = (
     RadioType.ezsp,
     RadioType.znp,
+    RadioType.ziggurat,
     RadioType.deconz,
 )
 
 # Only the common radio types will be autoprobed, ordered by new device popularity.
 # XBee takes too long to probe since it scans through all possible bauds and likely has
 # very few users to begin with.
-AUTOPROBE_RADIOS = RECOMMENDED_RADIOS
+AUTOPROBE_RADIOS = (
+    RadioType.ezsp,
+    RadioType.znp,
+    RadioType.deconz,
+)
 
 CONNECT_DELAY_S = 1.0
 RETRY_DELAY_S = 1.0
@@ -409,7 +412,7 @@ class ZhaMultiPANMigrationHelper:
                     create_backup=True
                 )
                 break
-            except OSError as err:
+            except (OSError, HomeAssistantError) as err:
                 if retry >= BACKUP_RETRIES - 1:
                     raise
 
@@ -450,7 +453,7 @@ class ZhaMultiPANMigrationHelper:
             try:
                 await self._radio_mgr.restore_backup(overwrite_ieee=True)
                 break
-            except OSError as err:
+            except (OSError, HomeAssistantError) as err:
                 if retry >= MIGRATION_RETRIES - 1:
                     raise
 

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup_binary_sensors_alt[is_burning][binary_sensor.boiler_burner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_setup_binary_sensors_alt[is_burning][binary_sensor.boiler_burner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Boiler Burner',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Burner',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_burner',
@@ -51,8 +52,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_burning][binary_sensor.boiler_fault-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,9 +90,9 @@
 # name: test_setup_binary_sensors_alt[is_burning][binary_sensor.boiler_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
       'fault_code': 'none',
-      'friendly_name': 'Boiler Fault',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Fault',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_fault',
@@ -102,8 +104,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_burning][binary_sensor.boiler_hot_water_tap-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -139,8 +142,8 @@
 # name: test_setup_binary_sensors_alt[is_burning][binary_sensor.boiler_hot_water_tap-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Boiler Hot water tap',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Hot water tap',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_hot_water_tap',
@@ -152,8 +155,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_burning][binary_sensor.boiler_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -189,8 +193,8 @@
 # name: test_setup_binary_sensors_alt[is_burning][binary_sensor.boiler_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Boiler Pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_pump',
@@ -202,8 +206,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_failed][binary_sensor.boiler_burner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -239,8 +244,8 @@
 # name: test_setup_binary_sensors_alt[is_failed][binary_sensor.boiler_burner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Boiler Burner',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Burner',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_burner',
@@ -252,8 +257,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_failed][binary_sensor.boiler_fault-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -289,9 +295,9 @@
 # name: test_setup_binary_sensors_alt[is_failed][binary_sensor.boiler_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
       'fault_code': <FaultCode.CV_TEMPERATURE_TOO_HIGH_E1: 1>,
-      'friendly_name': 'Boiler Fault',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Fault',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_fault',
@@ -303,8 +309,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_failed][binary_sensor.boiler_hot_water_tap-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -340,8 +347,8 @@
 # name: test_setup_binary_sensors_alt[is_failed][binary_sensor.boiler_hot_water_tap-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Boiler Hot water tap',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Hot water tap',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_hot_water_tap',
@@ -353,8 +360,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_failed][binary_sensor.boiler_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -390,8 +398,8 @@
 # name: test_setup_binary_sensors_alt[is_failed][binary_sensor.boiler_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Boiler Pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_pump',
@@ -403,8 +411,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_pumping][binary_sensor.boiler_burner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -440,8 +449,8 @@
 # name: test_setup_binary_sensors_alt[is_pumping][binary_sensor.boiler_burner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Boiler Burner',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Burner',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_burner',
@@ -453,8 +462,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_pumping][binary_sensor.boiler_fault-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -490,9 +500,9 @@
 # name: test_setup_binary_sensors_alt[is_pumping][binary_sensor.boiler_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
       'fault_code': 'none',
-      'friendly_name': 'Boiler Fault',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Fault',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_fault',
@@ -504,8 +514,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_pumping][binary_sensor.boiler_hot_water_tap-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -541,8 +552,8 @@
 # name: test_setup_binary_sensors_alt[is_pumping][binary_sensor.boiler_hot_water_tap-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Boiler Hot water tap',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Hot water tap',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_hot_water_tap',
@@ -554,8 +565,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_pumping][binary_sensor.boiler_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -591,8 +603,8 @@
 # name: test_setup_binary_sensors_alt[is_pumping][binary_sensor.boiler_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Boiler Pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_pump',
@@ -604,8 +616,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_tapping][binary_sensor.boiler_burner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -641,8 +654,8 @@
 # name: test_setup_binary_sensors_alt[is_tapping][binary_sensor.boiler_burner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Boiler Burner',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Burner',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_burner',
@@ -654,8 +667,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_tapping][binary_sensor.boiler_fault-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -691,9 +705,9 @@
 # name: test_setup_binary_sensors_alt[is_tapping][binary_sensor.boiler_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
       'fault_code': 'none',
-      'friendly_name': 'Boiler Fault',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Fault',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_fault',
@@ -705,8 +719,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_tapping][binary_sensor.boiler_hot_water_tap-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -742,8 +757,8 @@
 # name: test_setup_binary_sensors_alt[is_tapping][binary_sensor.boiler_hot_water_tap-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Boiler Hot water tap',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Hot water tap',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_hot_water_tap',
@@ -755,8 +770,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_tapping][binary_sensor.boiler_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -792,8 +808,8 @@
 # name: test_setup_binary_sensors_alt[is_tapping][binary_sensor.boiler_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Boiler Pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_pump',
@@ -805,8 +821,9 @@
 # ---
 # name: test_setup_platform[binary_sensor.boiler_burner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -842,8 +859,8 @@
 # name: test_setup_platform[binary_sensor.boiler_burner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Boiler Burner',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Burner',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_burner',
@@ -855,8 +872,9 @@
 # ---
 # name: test_setup_platform[binary_sensor.boiler_fault-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -892,9 +910,9 @@
 # name: test_setup_platform[binary_sensor.boiler_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
       'fault_code': 'none',
-      'friendly_name': 'Boiler Fault',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Fault',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_fault',
@@ -906,8 +924,9 @@
 # ---
 # name: test_setup_platform[binary_sensor.boiler_hot_water_tap-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -943,8 +962,8 @@
 # name: test_setup_platform[binary_sensor.boiler_hot_water_tap-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Boiler Hot water tap',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Hot water tap',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_hot_water_tap',
@@ -956,8 +975,9 @@
 # ---
 # name: test_setup_platform[binary_sensor.boiler_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -993,8 +1013,8 @@
 # name: test_setup_platform[binary_sensor.boiler_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Boiler Pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler Pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.boiler_pump',

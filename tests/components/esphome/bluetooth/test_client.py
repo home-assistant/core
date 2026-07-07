@@ -1,7 +1,5 @@
 """Tests for ESPHomeClient."""
 
-from __future__ import annotations
-
 from aioesphomeapi import APIClient, APIVersion, BluetoothProxyFeature, DeviceInfo
 from bleak.exc import BleakError
 from bleak_esphome.backend.client import ESPHomeClient, ESPHomeClientData

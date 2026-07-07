@@ -8,6 +8,7 @@ from eheimdigital.classic_vario import EheimDigitalClassicVario
 from eheimdigital.filter import EheimDigitalFilter
 from eheimdigital.heater import EheimDigitalHeater
 from eheimdigital.hub import EheimDigitalHub
+from eheimdigital.reeflex import EheimDigitalReeflexUV
 from eheimdigital.types import (
     AcclimatePacket,
     CCVPacket,
@@ -16,6 +17,7 @@ from eheimdigital.types import (
     CloudPacket,
     FilterDataPacket,
     MoonPacket,
+    ReeflexDataPacket,
     UsrDtaPacket,
 )
 import pytest
@@ -98,11 +100,25 @@ def filter_mock():
 
 
 @pytest.fixture
+def reeflex_mock():
+    """Mock a reeflex device."""
+    eheim_reeflex = EheimDigitalReeflexUV(
+        MagicMock(spec=EheimDigitalHub),
+        UsrDtaPacket(load_json_object_fixture("reeflex/usrdta.json", DOMAIN)),
+    )
+    eheim_reeflex.reeflex_data = ReeflexDataPacket(
+        load_json_object_fixture("reeflex/reeflex_data.json", DOMAIN)
+    )
+    return eheim_reeflex
+
+
+@pytest.fixture
 def eheimdigital_hub_mock(
     classic_led_ctrl_mock: MagicMock,
     heater_mock: MagicMock,
     classic_vario_mock: MagicMock,
     filter_mock: MagicMock,
+    reeflex_mock: MagicMock,
 ) -> Generator[AsyncMock]:
     """Mock eheimdigital hub."""
     with (
@@ -120,6 +136,7 @@ def eheimdigital_hub_mock(
             "00:00:00:00:00:02": heater_mock,
             "00:00:00:00:00:03": classic_vario_mock,
             "00:00:00:00:00:04": filter_mock,
+            "00:00:00:00:00:05": reeflex_mock,
         }
         eheimdigital_hub_mock.return_value.main = classic_led_ctrl_mock
         yield eheimdigital_hub_mock

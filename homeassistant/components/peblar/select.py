@@ -1,10 +1,8 @@
 """Support for Peblar selects."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from peblar import Peblar, PeblarUserConfiguration, SmartChargingMode
 
@@ -71,11 +69,13 @@ class PeblarSelectEntity(
     entity_description: PeblarSelectEntityDescription
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return self.entity_description.current_fn(self.coordinator.data)
 
     @peblar_exception_handler
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.select_fn(self.coordinator.peblar, option)

@@ -1,7 +1,7 @@
 """Support for Wireless Sensor Tags."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from wirelesstagpy import SensorTag
 
@@ -60,6 +60,7 @@ class WirelessTagBaseSensor(Entity):
         return f"{value:.1f}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._tag.is_alive
@@ -78,6 +79,7 @@ class WirelessTagBaseSensor(Entity):
         self._state = self.updated_state_value()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {

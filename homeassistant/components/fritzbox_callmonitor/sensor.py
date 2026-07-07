@@ -1,7 +1,5 @@
 """Sensor to monitor incoming/outgoing phone calls on a Fritz!Box router."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
@@ -9,7 +7,7 @@ import logging
 import queue
 from threading import Event as ThreadingEvent, Thread
 from time import sleep
-from typing import Any, cast
+from typing import Any, cast, override
 
 from fritzconnection.core.fritzmonitor import FritzMonitor
 
@@ -110,6 +108,7 @@ class FritzBoxCallSensor(SensorEntity):
             sw_version=self._fritzbox_phonebook.fph.fc.system_version,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Connect to FRITZ!Box to monitor its call state."""
         await super().async_added_to_hass()
@@ -120,6 +119,7 @@ class FritzBoxCallSensor(SensorEntity):
             )
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect from FRITZ!Box by stopping monitor."""
         await super().async_will_remove_from_hass()
@@ -157,6 +157,7 @@ class FritzBoxCallSensor(SensorEntity):
         self._attributes = {**attributes}
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str | list[str] | bool]:
         """Return the state attributes."""
         if self._prefixes:

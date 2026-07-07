@@ -1,8 +1,7 @@
 """Support for Epson projector."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from epson_projector import Projector, ProjectorUnavailableError
 from epson_projector.const import (
@@ -29,6 +28,7 @@ from epson_projector.const import (
 )
 
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -64,6 +64,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_device_class = MediaPlayerDeviceClass.PROJECTOR
 
     _attr_supported_features = (
         MediaPlayerEntityFeature.TURN_ON
@@ -146,12 +147,14 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
         else:
             self._attr_state = MediaPlayerState.OFF
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn on epson."""
         if self.state == MediaPlayerState.OFF:
             await self._projector.send_command(TURN_ON)
             self._attr_state = MediaPlayerState.ON
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off epson."""
         if self.state == MediaPlayerState.ON:
@@ -162,40 +165,49 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
         """Set color mode in Epson."""
         await self._projector.send_command(CMODE_LIST_SET[cmode])
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         selected_source = INV_SOURCES[source]
         await self._projector.send_command(selected_source)
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) sound."""
         await self._projector.send_command(MUTE)
 
+    @override
     async def async_volume_up(self) -> None:
         """Increase volume."""
         await self._projector.send_command(VOL_UP)
 
+    @override
     async def async_volume_down(self) -> None:
         """Decrease volume."""
         await self._projector.send_command(VOL_DOWN)
 
+    @override
     async def async_media_play(self) -> None:
         """Play media via Epson."""
         await self._projector.send_command(PLAY)
 
+    @override
     async def async_media_pause(self) -> None:
         """Pause media via Epson."""
         await self._projector.send_command(PAUSE)
 
+    @override
     async def async_media_next_track(self) -> None:
         """Skip to next."""
         await self._projector.send_command(FAST)
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Skip to previous."""
         await self._projector.send_command(BACK)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return device specific state attributes."""
         if self._cmode is None:

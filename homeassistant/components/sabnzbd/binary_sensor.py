@@ -1,10 +1,8 @@
 """Binary sensor platform for SABnzbd."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -56,6 +54,7 @@ class SabnzbdBinarySensor(SabnzbdEntity, BinarySensorEntity):
     entity_description: SabnzbdBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return latest sensor data."""
         return self.entity_description.is_on_fn(self.coordinator.data)

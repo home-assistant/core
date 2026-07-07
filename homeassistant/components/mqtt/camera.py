@@ -1,10 +1,8 @@
 """Camera that loads a picture from an MQTT topic."""
 
-from __future__ import annotations
-
 from base64 import b64decode
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import voluptuous as vol
 
@@ -94,6 +92,7 @@ class MqttCamera(MqttEntity, Camera):
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
+    @override
     def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
@@ -109,6 +108,7 @@ class MqttCamera(MqttEntity, Camera):
             self._last_image = msg.payload
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
@@ -116,10 +116,12 @@ class MqttCamera(MqttEntity, Camera):
             CONF_TOPIC, self._image_received, None, disable_encoding=True
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:

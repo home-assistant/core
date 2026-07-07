@@ -1,7 +1,5 @@
 """Test ZHA WebSocket API."""
 
-from __future__ import annotations
-
 from binascii import unhexlify
 from collections.abc import Callable, Coroutine
 from copy import deepcopy
@@ -22,8 +20,12 @@ from zha.application.const import (
     ATTR_TYPE,
     CLUSTER_TYPE_IN,
 )
-from zha.zigbee.cluster_handlers import ClusterBindEvent, ClusterConfigureReportingEvent
-from zha.zigbee.device import ClusterHandlerConfigurationComplete, Device
+from zha.zigbee.device import (
+    ClusterBindEvent,
+    ClusterConfigureReportingEvent,
+    Device,
+    DeviceConfiguredEvent,
+)
 import zigpy.backups
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 import zigpy.profiles.zha
@@ -1161,7 +1163,7 @@ async def test_websocket_reconfigure(
     zha_client: MockHAClientWebSocket,
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
-    """Test websocket API to reconfigure a device."""
+    """Test websocket API to re-interview a device."""
     gateway = get_zha_gateway(hass)
     zigpy_device = zigpy_device_mock(
         {
@@ -1180,11 +1182,13 @@ async def test_websocket_reconfigure(
 
     zha_device_proxy = get_zha_gateway_proxy(hass).get_device_proxy(zha_device.ieee)
 
-    def mock_reconfigure() -> None:
-        zha_device_proxy.handle_zha_channel_configure_reporting(
+    async def mock_reinterview(ieee: EUI64) -> None:
+        zha_device_proxy.handle_zha_cluster_configure_reporting(
             ClusterConfigureReportingEvent(
-                cluster_name="Window Covering",
+                device_ieee=zha_device_proxy.device.ieee,
+                endpoint_id=1,
                 cluster_id=258,
+                cluster_name="Window Covering",
                 attributes={
                     "current_position_lift_percentage": {
                         "min": 0,
@@ -1203,35 +1207,26 @@ async def test_websocket_reconfigure(
                         "status": "SUCCESS",
                     },
                 },
-                cluster_handler_unique_id="28:2c:02:bf:ff:ea:05:68:1:0x0102",
-                event_type="zha_channel_message",
-                event="zha_channel_configure_reporting",
             )
         )
 
-        zha_device_proxy.handle_zha_channel_bind(
+        zha_device_proxy.handle_zha_cluster_bind(
             ClusterBindEvent(
-                cluster_name="Window Covering",
+                device_ieee=zha_device_proxy.device.ieee,
+                endpoint_id=1,
                 cluster_id=1,
+                cluster_name="Window Covering",
                 success=True,
-                cluster_handler_unique_id="28:2c:02:bf:ff:ea:05:68:1:0x0012",
-                event_type="zha_channel_message",
-                event="zha_channel_bind",
             )
         )
 
-        zha_device_proxy.handle_zha_channel_cfg_done(
-            ClusterHandlerConfigurationComplete(
-                device_ieee="28:2c:02:bf:ff:ea:05:68",
-                unique_id="28:2c:02:bf:ff:ea:05:68",
-                event_type="zha_channel_message",
-                event="zha_channel_cfg_done",
-            )
+        zha_device_proxy.handle_zha_device_configured(
+            DeviceConfiguredEvent(device_ieee=zha_device_proxy.device.ieee)
         )
 
     with patch.object(
-        zha_device_proxy.device, "async_configure", side_effect=mock_reconfigure
-    ):
+        gateway, "async_reinterview_device", side_effect=mock_reinterview
+    ) as reinterview_mock:
         await zha_client.send_json(
             {
                 ID: 6,
@@ -1248,9 +1243,31 @@ async def test_websocket_reconfigure(
             if msg[ID] == 6:
                 messages.append(msg)
 
+    # Ensure the gateway re-interview was triggered with the correct IEEE
+    assert reinterview_mock.mock_calls == [call(zha_device_proxy.device.ieee)]
+
     # Ensure the frontend receives progress events
     assert {m["event"]["type"] for m in messages} == {
         "zha_channel_configure_reporting",
         "zha_channel_bind",
         "zha_channel_cfg_done",
     }
+
+
+async def test_websocket_reconfigure_device_not_found(
+    zha_client: MockHAClientWebSocket,
+) -> None:
+    """Test websocket reconfigure returns ERR_NOT_FOUND for an unknown IEEE."""
+    await zha_client.send_json(
+        {
+            ID: 6,
+            TYPE: "zha/devices/reconfigure",
+            ATTR_IEEE: "28:6d:97:00:01:04:11:8c",
+        }
+    )
+
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 6
+    assert msg["type"] == TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND

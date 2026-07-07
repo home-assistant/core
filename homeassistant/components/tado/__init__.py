@@ -74,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
     )
 
     def create_tado_instance() -> tuple[Tado, str]:
-        """Create a Tado instance, this time with a previously obtained refresh token."""
+        """Create a Tado instance with a previously obtained refresh token."""
         tado = Tado(
             saved_refresh_token=entry.data[CONF_REFRESH_TOKEN],
             user_agent=f"{APPLICATION_NAME}/{HA_VERSION}",
@@ -97,7 +97,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
     coordinator = TadoDataUpdateCoordinator(hass, entry, tado)
     await coordinator.async_config_entry_first_refresh()
 
-    # Pre-register the bridge device to ensure it exists before other devices reference it
+    # Pre-register the bridge device to ensure it exists
+    # before other devices reference it
     device_registry = dr.async_get(hass)
     for device in coordinator.data["device"].values():
         if device["deviceType"] in TADO_BRIDGE_MODELS:

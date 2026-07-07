@@ -1,10 +1,27 @@
 """Tests for Overkiz integration init."""
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
+from aiohttp import ClientError
+from pyoverkiz.exceptions import (
+    MaintenanceError,
+    ServiceUnavailableError,
+    TooManyRequestsError,
+)
+import pytest
+
+from homeassistant import config_entries
 from homeassistant.components.overkiz.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from .conftest import MockOverkizClient
 from .test_config_flow import TEST_EMAIL, TEST_GATEWAY_ID, TEST_PASSWORD, TEST_SERVER
 
 from tests.common import MockConfigEntry, RegistryEntryWithDefaults, mock_registry
@@ -25,6 +42,7 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id=TEST_GATEWAY_ID,
         data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
+        minor_version=1,
     )
 
     mock_entry.add_to_hass(hass)
@@ -53,7 +71,9 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
                 platform=DOMAIN,
                 config_entry_id=mock_entry.entry_id,
             ),
-            # This entity will be removed since "io://1234-5678-1234/3541212-core:TargetClosureState" already exists
+            # This entity will be removed since
+            # "io://1234-5678-1234/3541212-core:TargetClosureState"
+            # already exists
             ENTITY_SENSOR_TARGET_CLOSURE_STATE: RegistryEntryWithDefaults(
                 entity_id=ENTITY_SENSOR_TARGET_CLOSURE_STATE,
                 unique_id="io://1234-5678-1234/3541212-OverkizState.CORE_TARGET_CLOSURE",
@@ -88,3 +108,99 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
     for entity_id, unique_id in unique_id_map.items():
         entry = ent_reg.async_get(entity_id)
         assert entry.unique_id == unique_id
+
+    # Test if the config entry is migrated to the latest minor version
+    assert mock_entry.minor_version == 2
+
+
+async def test_setup_rexel_local_uses_local_client(
+    hass: HomeAssistant,
+    mock_rexel_local_config_entry: MockConfigEntry,
+    mock_client: MockOverkizClient,
+) -> None:
+    """A Rexel gateway configured via the Local API must not use OAuth2."""
+    mock_rexel_local_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.overkiz.create_local_client",
+            return_value=mock_client,
+        ) as mock_create_local_client,
+        patch(
+            "homeassistant.components.overkiz.create_rexel_client"
+        ) as mock_create_rexel_client,
+    ):
+        await hass.config_entries.async_setup(mock_rexel_local_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_create_local_client.assert_called_once_with(
+        hass,
+        host="gateway-1234-5678-9123.local:8443",
+        token="1234123412341234",
+        verify_ssl=True,
+    )
+    mock_create_rexel_client.assert_not_called()
+    assert mock_rexel_local_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_setup_token_reauth_error_starts_reauth(
+    hass: HomeAssistant, mock_rexel_config_entry: MockConfigEntry
+) -> None:
+    """A non-recoverable token refresh failure triggers reauth."""
+    mock_rexel_config_entry.add_to_hass(hass)
+
+    client = AsyncMock()
+    client.login.side_effect = OAuth2TokenRequestReauthError(
+        request_info=MagicMock(), domain=DOMAIN
+    )
+
+    with patch(
+        "homeassistant.components.overkiz.create_rexel_client", return_value=client
+    ):
+        await hass.config_entries.async_setup(mock_rexel_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_rexel_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        OAuth2TokenRequestError(request_info=MagicMock(), domain=DOMAIN),
+        TooManyRequestsError("Too many requests"),
+        MaintenanceError("Server is down for maintenance"),
+        ServiceUnavailableError("Server is unavailable"),
+        TimeoutError("Timed out"),
+        ClientError("Connection error"),
+    ],
+    ids=[
+        "oauth2_token_request",
+        "too_many_requests",
+        "maintenance",
+        "service_unavailable",
+        "timeout",
+        "client_error",
+    ],
+)
+async def test_setup_transient_error_retries(
+    hass: HomeAssistant,
+    mock_rexel_config_entry: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """A recoverable error during setup retries instead of failing."""
+    mock_rexel_config_entry.add_to_hass(hass)
+
+    client = AsyncMock()
+    client.login.side_effect = exception
+
+    with patch(
+        "homeassistant.components.overkiz.create_rexel_client", return_value=client
+    ):
+        await hass.config_entries.async_setup(mock_rexel_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_rexel_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.config_entries.flow.async_progress()

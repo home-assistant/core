@@ -1,0 +1,18 @@
+{
+  "conditions": {
+    "is_detected": {
+      "condition": "mdi:motion-sensor"
+    },
+    "is_not_detected": {
+      "condition": "mdi:motion-sensor-off"
+    }
+  },
+  "triggers": {
+    "cleared": {
+      "trigger": "mdi:motion-sensor-off"
+    },
+    "detected": {
+      "trigger": "mdi:motion-sensor"
+    }
+  }
+}

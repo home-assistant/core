@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_select_states[platforms0][select.gotham_city_comfort_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Smart control',
         'Economy',
         'Normal',
@@ -45,8 +46,8 @@
 # name: test_select_states[platforms0][select.gotham_city_comfort_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gotham City comfort mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City comfort mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Smart control',
         'Economy',
         'Normal',
@@ -63,11 +64,12 @@
 # ---
 # name: test_select_states[platforms0][select.gotham_city_comfort_mode_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Smart control',
         'Economy',
         'Normal',
@@ -107,8 +109,8 @@
 # name: test_select_states[platforms0][select.gotham_city_comfort_mode_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gotham City comfort mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City comfort mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Smart control',
         'Economy',
         'Normal',

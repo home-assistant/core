@@ -1,9 +1,7 @@
 """Config flow for the Paperless-ngx integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from pypaperless import Paperless
 from pypaperless.exceptions import (
@@ -33,6 +31,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Paperless-ngx."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

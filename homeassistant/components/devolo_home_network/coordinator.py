@@ -4,7 +4,7 @@ from asyncio import Semaphore
 from dataclasses import dataclass
 from datetime import timedelta
 from logging import Logger
-from typing import Any
+from typing import Any, override
 
 from devolo_plc_api import Device
 from devolo_plc_api.device_api import (
@@ -63,6 +63,7 @@ class DevoloDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             update_interval=update_interval,
         )
 
+    @override
     async def _async_update_data(self) -> _DataT:
         """Fetch the latest data from the source."""
         self.update_sw_version()
@@ -82,7 +83,7 @@ class DevoloDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
     @callback
     def update_sw_version(self) -> None:
-        """Update device registry with new firmware version, if it changed at runtime."""
+        """Update device registry with new firmware version."""
         device_registry = dr.async_get(self.hass)
         if (
             device_entry := device_registry.async_get_device(

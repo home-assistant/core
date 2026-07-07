@@ -1,10 +1,8 @@
 """Support for X10 lights."""
 
-from __future__ import annotations
-
 import logging
 from subprocess import STDOUT, CalledProcessError, check_output
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -79,11 +77,13 @@ class X10Light(LightEntity):
         """Return calculated brightness values."""
         return int((brightness / 255) * 32)
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         old_brightness = self._attr_brightness
         if old_brightness == 0:
-            # Dim down from max if applicable, also avoids a "dim" command if an "on" is more appropriate
+            # Dim down from max if applicable, also avoids
+            # a "dim" command if an "on" is more appropriate
             old_brightness = 255
         self._attr_brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         brightness_diff = self.normalize_x10_brightness(
@@ -114,6 +114,7 @@ class X10Light(LightEntity):
         x10_command(f"{command_prefix} {self._id}{command_suffix}")
         self._attr_is_on = True
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         if self._is_cm11a:

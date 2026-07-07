@@ -1,7 +1,5 @@
 """Test fixtures for voice assistant."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterable, Generator
 from pathlib import Path
 from typing import Any
@@ -311,7 +309,7 @@ async def init_supporting_components(
 async def init_components(hass: HomeAssistant, init_supporting_components):
     """Initialize relevant components with empty configs."""
 
-    assert await async_setup_component(hass, "assist_pipeline", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
 
 @pytest.fixture

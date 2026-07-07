@@ -1,13 +1,11 @@
 """Binary sensors for System Monitor."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import lru_cache
 import logging
 import sys
-from typing import Literal
+from typing import Literal, override
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -161,6 +159,7 @@ class SystemMonitorSensor(
         )
         self.argument = argument
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When added to hass."""
         self.coordinator.update_subscribers[
@@ -168,6 +167,7 @@ class SystemMonitorSensor(
         ].add(self.entity_id)
         return await super().async_added_to_hass()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """When removed from hass."""
         self.coordinator.update_subscribers[
@@ -176,6 +176,7 @@ class SystemMonitorSensor(
         return await super().async_will_remove_from_hass()
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_fn(self)

@@ -1,15 +1,14 @@
 """Component to allow selecting an option from a list as platforms."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any, final
+from typing import Any, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_OPTION, SERVICE_SELECT_OPTION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -20,14 +19,13 @@ from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_CYCLE,
-    ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN,
     SERVICE_SELECT_FIRST,
     SERVICE_SELECT_LAST,
     SERVICE_SELECT_NEXT,
-    SERVICE_SELECT_OPTION,
     SERVICE_SELECT_PREVIOUS,
+    SelectEntityCapabilityAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,6 +51,7 @@ __all__ = [
     "SERVICE_SELECT_OPTION",
     "SERVICE_SELECT_PREVIOUS",
     "SelectEntity",
+    "SelectEntityCapabilityAttribute",
     "SelectEntityDescription",
 ]
 
@@ -124,7 +123,9 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
 class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Select entity."""
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_OPTIONS})
+    _entity_component_unrecorded_attributes = frozenset(
+        {SelectEntityCapabilityAttribute.OPTIONS}
+    )
 
     entity_description: SelectEntityDescription
     _attr_current_option: str | None = None
@@ -132,14 +133,16 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_state: None = None
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         return {
-            ATTR_OPTIONS: self.options,
+            SelectEntityCapabilityAttribute.OPTIONS: self.options,
         }
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the entity state."""
         current_option = self.current_option

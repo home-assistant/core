@@ -1,7 +1,5 @@
 """The test for the sensibo entity."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 import pytest
@@ -28,13 +26,14 @@ async def test_device(
 ) -> None:
     """Test the Sensibo device."""
 
-    state1 = hass.states.get("climate.hallway")
+    state1 = hass.states.get("climate.hallway_hallway")
     assert state1
 
-    assert (
-        dr.async_entries_for_config_entry(device_registry, load_int.entry_id)
-        == snapshot
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, load_int.entry_id
     )
+    device_entries.sort(key=lambda d: d.name)
+    assert device_entries == snapshot
 
 
 @pytest.mark.parametrize("p_error", SENSIBO_ERRORS)
@@ -46,7 +45,7 @@ async def test_entity_failed_service_calls(
 ) -> None:
     """Test the Sensibo send command with error."""
 
-    state = hass.states.get("climate.hallway")
+    state = hass.states.get("climate.hallway_hallway")
     assert state
 
     mock_client.async_set_ac_state_property.return_value = {
@@ -60,7 +59,7 @@ async def test_entity_failed_service_calls(
         blocking=True,
     )
 
-    state = hass.states.get("climate.hallway")
+    state = hass.states.get("climate.hallway_hallway")
     assert state.attributes["fan_mode"] == "low"
 
     mock_client.async_set_ac_state_property.side_effect = p_error
@@ -73,5 +72,5 @@ async def test_entity_failed_service_calls(
             blocking=True,
         )
 
-    state = hass.states.get("climate.hallway")
+    state = hass.states.get("climate.hallway_hallway")
     assert state.attributes["fan_mode"] == "low"

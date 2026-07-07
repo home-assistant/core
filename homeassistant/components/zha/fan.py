@@ -1,9 +1,7 @@
 """Fans on Zigbee Home Automation networks."""
 
-from __future__ import annotations
-
 import functools
-from typing import Any
+from typing import Any, override
 
 from zha.application.platforms.fan.const import FanEntityFeature as ZHAFanEntityFeature
 
@@ -70,11 +68,13 @@ class ZhaFan(FanEntity, ZHAEntity):
         self._attr_supported_features = features
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         return self.entity_data.entity.preset_mode
 
     @property
+    @override
     def preset_modes(self) -> list[str]:
         """Return the available preset modes."""
         return self.entity_data.entity.preset_modes
@@ -90,11 +90,13 @@ class ZhaFan(FanEntity, ZHAEntity):
         return self.entity_data.entity.speed_range
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return self.entity_data.entity.speed_count
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -107,25 +109,29 @@ class ZhaFan(FanEntity, ZHAEntity):
         )
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_data.entity.async_turn_off()
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         await self.entity_data.entity.async_set_percentage(percentage=percentage)
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode for the fan."""
         await self.entity_data.entity.async_set_preset_mode(preset_mode=preset_mode)
         self.async_write_ha_state()
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         return self.entity_data.entity.percentage

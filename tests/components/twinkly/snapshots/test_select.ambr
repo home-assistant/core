@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_select_entities[select.tree_1_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'color',
         'demo',
         'effect',
@@ -48,8 +49,8 @@
 # name: test_select_entities[select.tree_1_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Tree 1 Mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tree 1 Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'color',
         'demo',
         'effect',

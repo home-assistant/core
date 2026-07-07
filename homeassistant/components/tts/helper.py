@@ -1,7 +1,5 @@
 """Provide helper functions for the TTS."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant

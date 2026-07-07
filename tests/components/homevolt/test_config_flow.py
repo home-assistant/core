@@ -1,7 +1,5 @@
 """Tests for the Homevolt config flow."""
 
-from __future__ import annotations
-
 from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, MagicMock
 
@@ -153,9 +151,9 @@ async def test_step_user_errors(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate_entry(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_homevolt_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -237,9 +235,9 @@ async def test_credentials_step_invalid_password(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_success(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_homevolt_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -277,9 +275,9 @@ async def test_reauth_success(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_homevolt_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
@@ -343,9 +341,9 @@ async def test_zeroconf_confirm_flow_success(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_duplicate_aborts(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_homevolt_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -369,7 +367,7 @@ async def test_zeroconf_confirm_with_password_success(
     mock_homevolt_client: MagicMock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test zeroconf confirm collects password and creates entry when auth is required."""
+    """Test zeroconf confirm collects password when auth is required."""
 
     mock_homevolt_client.update_info.side_effect = HomevoltAuthenticationError
 
@@ -453,9 +451,9 @@ async def test_zeroconf_confirm_with_password_invalid_then_success(
     ],
     ids=["connection_error", "unknown_error"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_error_aborts(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_homevolt_client: MagicMock,
     exception: Exception,
     expected_reason: str,

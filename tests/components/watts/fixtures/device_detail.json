@@ -8,6 +8,7 @@
   "currentTemperature": 21.0,
   "setpoint": 23.5,
   "thermostatMode": "Comfort",
+  "hvacAction": "Heating",
   "minAllowedTemperature": 5.0,
   "maxAllowedTemperature": 30.0,
   "temperatureUnit": "C",

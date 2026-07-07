@@ -8,25 +8,23 @@ sensor:
     accept_errors: true
     value_template: "{{ ((value | int) / 1000) | float | round(3) }}"
     scan_interval: 900
-  - platform: template
-    sensors:
-      combined_sensor_energy_usage:
-        friendly_name: Combined Sense Energy Usage
-        unit_of_measurement: kW
-        value_template:
-          "{{ ((states('sensor.energy_usage') | float(default=0)) + (states('sensor.energy_usage_2')
-          | float(default=0))) / 1000 }}"
-      watching_tv_in_master_bedroom:
-        friendly_name: Watching TV in Master Bedroom
-        value_template:
-          '{% if state_attr("remote.alexander_master_bedroom","current_activity")
-          == "Watch TV" or state_attr("remote.alexander_master_bedroom","current_activity")
-          == "Watch Apple TV" %}on{% else %}off{% endif %}'
 
 template:
-  trigger:
-    platform: event
-    event_type: event_2
-  sensor:
-    name: top level 2
-    state: "{{ trigger.event.data.source }}"
+  - trigger:
+      platform: event
+      event_type: event_2
+    sensor:
+      - name: top level 2
+        state: "{{ trigger.event.data.source }}"
+
+  - sensor:
+      - name: Combined Sense Energy Usage
+        default_entity_id: sensor.combined_sensor_energy_usage
+        unit_of_measurement: kW
+        state: >
+          {{ ((states('sensor.energy_usage') | float(default=0)) + (states('sensor.energy_usage_2') | float(default=0))) / 1000 }}
+
+      - name: Watching TV in Master Bedroom
+        default_entity_id: sensor.watching_tv_in_master_bedroom
+        state: >
+          {{ 'on' if state_attr("remote.alexander_master_bedroom","current_activity") in ["Watch TV", "Watch Apple TV"] else 'off' }}

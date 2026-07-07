@@ -1,11 +1,9 @@
 """Config flow for Google integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from gcal_sync.api import GoogleCalendarService
 from gcal_sync.exceptions import ApiException, ApiForbiddenException
@@ -83,11 +81,13 @@ class OAuth2FlowHandler(
         self._web_auth = False
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {
@@ -97,6 +97,7 @@ class OAuth2FlowHandler(
             "prompt": "consent",
         }
 
+    @override
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -168,6 +169,7 @@ class OAuth2FlowHandler(
             progress_task=self._exchange_finished_task,
         )
 
+    @override
     async def async_step_creation(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -176,6 +178,7 @@ class OAuth2FlowHandler(
             return self.async_abort(reason="code_expired")
         return await super().async_step_creation(user_input)
 
+    @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for the flow, or update existing entry."""
         data[CONF_CREDENTIAL_TYPE] = (
@@ -194,7 +197,8 @@ class OAuth2FlowHandler(
             primary_calendar = await calendar_service.async_get_calendar("primary")
         except ApiForbiddenException as err:
             _LOGGER.error(
-                "Error reading primary calendar, make sure Google Calendar API is enabled: %s",
+                "Error reading primary calendar, make sure"
+                " Google Calendar API is enabled: %s",
                 err,
             )
             return self.async_abort(
@@ -239,6 +243,7 @@ class OAuth2FlowHandler(
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: GoogleConfigEntry,
     ) -> OptionsFlowHandler:

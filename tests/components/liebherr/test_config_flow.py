@@ -62,9 +62,9 @@ async def test_form(
         (Exception("Unexpected"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_errors_with_recovery(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_liebherr_client: MagicMock,
     side_effect: Exception,
     expected_error: str,
@@ -132,10 +132,9 @@ async def test_form_already_configured(
     assert result.get("reason") == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_discovery(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_liebherr_client: MagicMock,
+    hass: HomeAssistant, mock_liebherr_client: MagicMock
 ) -> None:
     """Test zeroconf discovery triggers the config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -170,9 +169,9 @@ async def test_zeroconf_already_configured(
     assert result.get("reason") == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_liebherr_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -200,9 +199,9 @@ async def test_reauth_flow(
         (Exception("Unexpected"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_errors_with_recovery(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_liebherr_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,

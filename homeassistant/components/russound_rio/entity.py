@@ -2,11 +2,11 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
-from aiorussound import Controller, RussoundClient
-from aiorussound.models import CallbackType
-from aiorussound.rio import ZoneControlSurface
+from aiorussound.rio import RussoundRIOClient
+from aiorussound.rio.client import Controller, ZoneControlSurface
+from aiorussound.rio.models import CallbackType
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -82,7 +82,7 @@ class RussoundBaseEntity(Entity):
         return self._controller.zones[self._zone_id]
 
     async def _state_update_callback(
-        self, _client: RussoundClient, _callback_type: CallbackType
+        self, _client: RussoundRIOClient, _callback_type: CallbackType
     ) -> None:
         """Call when the device is notified of changes."""
         if _callback_type == CallbackType.CONNECTION:
@@ -90,10 +90,12 @@ class RussoundBaseEntity(Entity):
         self._controller = _client.controllers[self._controller.controller_id]
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback handlers."""
         await self._client.register_state_update_callbacks(self._state_update_callback)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove callbacks."""
         self._client.unregister_state_update_callbacks(self._state_update_callback)

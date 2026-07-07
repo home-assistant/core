@@ -1,7 +1,5 @@
 """Constants for the Vilfo Router integration."""
 
-from __future__ import annotations
-
 DOMAIN = "vilfo"
 
 ATTR_API_DATA_FIELD_LOAD = "load"

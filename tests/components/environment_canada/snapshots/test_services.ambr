@@ -1,0 +1,39 @@
+# serializer version: 1
+# name: test_get_alerts
+  dict({
+    'advisories': list([
+    ]),
+    'endings': list([
+    ]),
+    'statements': list([
+    ]),
+    'warnings': list([
+      dict({
+        'alert_code': 'AQW',
+        'alert_colour_level': 'yellow',
+        'area': 'Yellowknife Region',
+        'confidence': 'High',
+        'date': '2026-06-04T10:35:16.386Z',
+        'expiry_time': '2026-06-04T19:00:16.386Z',
+        'impact': 'Moderate',
+        'status': 'continued',
+        'text': 'Wildfire smoke is causing poor air quality. Conditions are expected to improve later this morning. Air quality and visibility due to wildfire smoke can fluctuate over short distances and can vary considerably from hour to hour. As smoke levels increase, health risks increase. Limit time outdoors. Consider reducing or rescheduling outdoor sports, activities and events.',
+        'title': 'Air Quality Warning',
+      }),
+      dict({
+        'alert_code': 'HOT',
+        'alert_colour_level': 'red',
+        'area': 'Yellowknife Region',
+        'confidence': 'High',
+        'date': '2026-06-04T10:35:16.386Z',
+        'expiry_time': '2026-06-04T19:00:16.386Z',
+        'impact': 'Moderate',
+        'status': 'continued',
+        'text': 'It is so hot you can fry an egg on the pavement!',
+        'title': 'Wow, it is hot out there!',
+      }),
+    ]),
+    'watches': list([
+    ]),
+  })
+# ---

@@ -1,9 +1,7 @@
 """Support for the KIWI.KI lock platform."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from kiwiki import KiwiClient, KiwiException
 import voluptuous as vol
@@ -86,6 +84,7 @@ class KiwiLock(LockEntity):
         }
 
     @property
+    @override
     def name(self) -> str | None:
         """Return the name of the lock."""
         name = self._sensor.get("name")
@@ -93,11 +92,13 @@ class KiwiLock(LockEntity):
         return name or specifier
 
     @property
+    @override
     def is_locked(self) -> bool:
         """Return true if lock is locked."""
         return self._state == LockState.LOCKED
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         return self._device_attrs
@@ -108,11 +109,13 @@ class KiwiLock(LockEntity):
         self._state = LockState.LOCKED
         self.async_write_ha_state()
 
+    @override
     def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
 
         try:
             self._client.open_door(self.lock_id)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except KiwiException:
             _LOGGER.error("Failed to open door")
         else:

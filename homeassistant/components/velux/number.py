@@ -1,6 +1,6 @@
 """Support for Velux exterior heating number entities."""
 
-from __future__ import annotations
+from typing import override
 
 from pyvlx import ExteriorHeating, Intensity
 
@@ -21,7 +21,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up number entities for the Velux platform."""
-    pyvlx = config_entry.runtime_data
+    pyvlx = config_entry.runtime_data.pyvlx
     async_add_entities(
         VeluxExteriorHeatingNumber(node, config_entry.entry_id)
         for node in pyvlx.nodes
@@ -41,6 +41,7 @@ class VeluxExteriorHeatingNumber(VeluxEntity, NumberEntity):
     node: ExteriorHeating
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current heating intensity in percent."""
         return (
@@ -48,6 +49,7 @@ class VeluxExteriorHeatingNumber(VeluxEntity, NumberEntity):
         )
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the heating intensity."""
         await self.node.set_intensity(

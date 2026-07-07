@@ -280,7 +280,7 @@ async def test_discovery_via_usb(hass: HomeAssistant) -> None:
         manufacturer="test",
     )
     result = await hass.config_entries.flow.async_init(
-        "insteon", context={"source": config_entries.SOURCE_USB}, data=discovery_info
+        DOMAIN, context={"source": config_entries.SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
@@ -312,7 +312,7 @@ async def test_discovery_via_usb_already_setup(hass: HomeAssistant) -> None:
         manufacturer="test",
     )
     result = await hass.config_entries.flow.async_init(
-        "insteon", context={"source": config_entries.SOURCE_USB}, data=discovery_info
+        DOMAIN, context={"source": config_entries.SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
 

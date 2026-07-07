@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.device_container import DeviceContainer
@@ -123,20 +124,24 @@ class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
         self._attr_unique_id = f"{super().unique_id}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the value reported by the number."""
         return self.entity_description.value_fn(self.device)
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the value reported by the number."""
         return self.entity_description.native_min_value_fn(self.device)
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the value reported by the number."""
         return self.entity_description.native_max_value_fn(self.device)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         if not await self.entity_description.set_value_fn(self.device, value):

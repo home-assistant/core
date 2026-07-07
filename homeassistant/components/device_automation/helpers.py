@@ -1,7 +1,5 @@
 """Helpers for device oriented automations."""
 
-from __future__ import annotations
-
 from typing import cast
 
 import voluptuous as vol
@@ -82,7 +80,7 @@ async def async_validate_device_automation_config(
     # the checks below which look for a config entry matching the device automation
     # domain
     if (
-        automation_type == DeviceAutomationType.ACTION
+        automation_type is DeviceAutomationType.ACTION
         and validated_config[CONF_DOMAIN] in ENTITY_PLATFORMS
     ):
         # Pass the unvalidated config to avoid mutating the raw config twice

@@ -159,9 +159,10 @@ async def test_full_ssdp_flow_implementation(hass: HomeAssistant) -> None:
         "components": "light",
     }
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
+    with patch("homeassistant.components.wilight.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"WL{WILIGHT_ID}"

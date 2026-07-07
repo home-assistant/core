@@ -1,7 +1,5 @@
 """The Suez Water integration."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import Platform
@@ -42,9 +40,6 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    if config_entry.version > 2:
-        return False
 
     if config_entry.version == 1:
         # Migrate to version 2

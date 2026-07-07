@@ -1,7 +1,5 @@
 """Standard fixtures for the Fjäråskupan integration."""
 
-from __future__ import annotations
-
 import pytest
 
 

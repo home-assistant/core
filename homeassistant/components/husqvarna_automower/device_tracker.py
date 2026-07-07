@@ -1,5 +1,7 @@
 """Creates the device tracker entity for the mower."""
 
+from typing import override
+
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -46,11 +48,13 @@ class AutomowerDeviceTrackerEntity(AutomowerBaseEntity, TrackerEntity):
         self._attr_unique_id = mower_id
 
     @property
+    @override
     def latitude(self) -> float:
         """Return latitude value of the device."""
         return self.mower_attributes.positions[0].latitude
 
     @property
+    @override
     def longitude(self) -> float:
         """Return longitude value of the device."""
         return self.mower_attributes.positions[0].longitude

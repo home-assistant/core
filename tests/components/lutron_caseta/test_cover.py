@@ -45,9 +45,10 @@ async def test_cover_unique_id(
     """Test a cover unique ID."""
     await async_setup_integration(hass, MockBridge)
 
-    cover_entity_id = "cover.basement_bedroom_left_shade"
+    cover_entity_id = "cover.basement_bedroom_basement_bedroom_left_shade"
 
-    # Assert that Caseta covers will have the bridge serial hash and the zone id as the uniqueID
+    # Assert that Caseta covers will have the bridge serial hash
+    # and the zone id as the uniqueID
     assert entity_registry.async_get(cover_entity_id).unique_id == "000004d2_802"
 
 
@@ -56,7 +57,7 @@ async def test_cover_open_close_using_set_value(
 ) -> None:
     """Test that open/close commands use set_value to avoid stuttering."""
     mock_instance = mock_bridge_with_cover_mocks
-    cover_entity_id = "cover.basement_bedroom_left_shade"
+    cover_entity_id = "cover.basement_bedroom_basement_bedroom_left_shade"
 
     # Test opening the cover
     await hass.services.async_call(
@@ -91,7 +92,7 @@ async def test_cover_stop_with_direction_tracking(
 ) -> None:
     """Test that stop command sends appropriate directional command first."""
     mock_instance = mock_bridge_with_cover_mocks
-    cover_entity_id = "cover.basement_bedroom_left_shade"
+    cover_entity_id = "cover.basement_bedroom_basement_bedroom_left_shade"
 
     # Simulate shade moving up (opening)
     mock_instance.devices["802"]["current_state"] = 30
@@ -147,7 +148,7 @@ async def test_cover_stop_at_endpoints(
 ) -> None:
     """Test stop command behavior when shade is at fully open or closed."""
     mock_instance = mock_bridge_with_cover_mocks
-    cover_entity_id = "cover.basement_bedroom_left_shade"
+    cover_entity_id = "cover.basement_bedroom_basement_bedroom_left_shade"
 
     # Test stop at fully open (100) - should infer it was opening
     mock_instance.devices["802"]["current_state"] = 100
@@ -191,7 +192,7 @@ async def test_cover_position_heuristic_fallback(
 ) -> None:
     """Test stop command uses position heuristic when movement direction is unknown."""
     mock_instance = mock_bridge_with_cover_mocks
-    cover_entity_id = "cover.basement_bedroom_left_shade"
+    cover_entity_id = "cover.basement_bedroom_basement_bedroom_left_shade"
 
     # Test stop at position < 50 with no movement
     # Update the device data directly in the bridge's devices dict
@@ -236,7 +237,7 @@ async def test_cover_stopped_movement_detection(
 ) -> None:
     """Test that movement direction is set to STOPPED when position doesn't change."""
     mock_instance = mock_bridge_with_cover_mocks
-    cover_entity_id = "cover.basement_bedroom_left_shade"
+    cover_entity_id = "cover.basement_bedroom_basement_bedroom_left_shade"
 
     # Set initial position
     mock_instance.devices["802"]["current_state"] = 50
@@ -266,7 +267,7 @@ async def test_cover_startup_with_shade_in_motion(
 ) -> None:
     """Test stop command when HA starts with shade already in motion."""
     mock_instance = mock_bridge_with_cover_mocks
-    cover_entity_id = "cover.basement_bedroom_left_shade"
+    cover_entity_id = "cover.basement_bedroom_basement_bedroom_left_shade"
 
     # Shade starts at position 50 (simulating HA startup with shade in motion)
     # First stop without seeing movement should use position heuristic

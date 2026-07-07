@@ -4,6 +4,7 @@ from asyncio import timeout
 from datetime import timedelta
 import logging
 from math import ceil
+from typing import override
 
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
@@ -90,6 +91,7 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | float | i
             update_interval=update_interval,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, str | float | int]:
         """Update data via library."""
         data: dict[str, str | float | int] = {}

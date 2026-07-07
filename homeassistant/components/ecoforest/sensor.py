@@ -1,10 +1,9 @@
 """Support for Ecoforest sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pyecoforest.models.device import Alarm, Device, State
 
@@ -161,6 +160,7 @@ class EcoforestSensor(SensorEntity, EcoforestEntity):
     entity_description: EcoforestSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.data)

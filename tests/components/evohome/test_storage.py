@@ -1,13 +1,17 @@
 """The tests for evohome storage load & save."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from typing import Any, Final, NotRequired, TypedDict
 
+from evohomeasync2.auth import (
+    SZ_ACCESS_TOKEN,
+    SZ_ACCESS_TOKEN_EXPIRES,
+    SZ_REFRESH_TOKEN,
+)
 import pytest
 
 from homeassistant.components.evohome.const import DOMAIN, STORAGE_KEY, STORAGE_VER
+from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -32,10 +36,6 @@ class _EmptyStoreT(TypedDict):
     pass
 
 
-SZ_USERNAME: Final = "username"
-SZ_REFRESH_TOKEN: Final = "refresh_token"
-SZ_ACCESS_TOKEN: Final = "access_token"
-SZ_ACCESS_TOKEN_EXPIRES: Final = "access_token_expires"
 SZ_USER_DATA: Final = "user_data"
 
 
@@ -51,7 +51,7 @@ USERNAME_DIFF: Final = f"not_{USERNAME}"
 USERNAME_SAME: Final = USERNAME
 
 _TEST_STORAGE_BASE: Final[_TokenStoreT] = {
-    SZ_USERNAME: USERNAME_SAME,
+    CONF_USERNAME: USERNAME_SAME,
     SZ_REFRESH_TOKEN: REFRESH_TOKEN,
     SZ_ACCESS_TOKEN: ACCESS_TOKEN,
     SZ_ACCESS_TOKEN_EXPIRES: ACCESS_TOKEN_EXP_STR,
@@ -94,7 +94,7 @@ async def test_auth_tokens_null(
     # Confirm the expected tokens were cached to storage...
     data: _TokenStoreT = hass_storage[DOMAIN]["data"]
 
-    assert data[SZ_USERNAME] == USERNAME_SAME
+    assert data[CONF_USERNAME] == USERNAME_SAME
     assert data[SZ_REFRESH_TOKEN] == f"new_{REFRESH_TOKEN}"
     assert data[SZ_ACCESS_TOKEN] == f"new_{ACCESS_TOKEN}"
     assert (
@@ -122,7 +122,7 @@ async def test_auth_tokens_same(
     # Confirm the expected tokens were cached to storage...
     data: _TokenStoreT = hass_storage[DOMAIN]["data"]
 
-    assert data[SZ_USERNAME] == USERNAME_SAME
+    assert data[CONF_USERNAME] == USERNAME_SAME
     assert data[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
     assert data[SZ_ACCESS_TOKEN] == ACCESS_TOKEN
     assert dt_util.parse_datetime(data[SZ_ACCESS_TOKEN_EXPIRES]) == ACCESS_TOKEN_EXP_DTM
@@ -153,7 +153,7 @@ async def test_auth_tokens_past(
     # Confirm the expected tokens were cached to storage...
     data: _TokenStoreT = hass_storage[DOMAIN]["data"]
 
-    assert data[SZ_USERNAME] == USERNAME_SAME
+    assert data[CONF_USERNAME] == USERNAME_SAME
     assert data[SZ_REFRESH_TOKEN] == f"new_{REFRESH_TOKEN}"
     assert data[SZ_ACCESS_TOKEN] == f"new_{ACCESS_TOKEN}"
     assert (
@@ -182,7 +182,7 @@ async def test_auth_tokens_diff(
     # Confirm the expected tokens were cached to storage...
     data: _TokenStoreT = hass_storage[DOMAIN]["data"]
 
-    assert data[SZ_USERNAME] == USERNAME_DIFF
+    assert data[CONF_USERNAME] == USERNAME_DIFF
     assert data[SZ_REFRESH_TOKEN] == f"new_{REFRESH_TOKEN}"
     assert data[SZ_ACCESS_TOKEN] == f"new_{ACCESS_TOKEN}"
     assert (

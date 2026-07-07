@@ -1,0 +1,158 @@
+[
+  {
+    "id": 2,
+    "name": "Test HG 1",
+    "image": "homeegramicon_dimmablebulb_value_0",
+    "state": 1,
+    "visible": 1,
+    "favorite": 0,
+    "order": 1,
+    "active": 1,
+    "play": 0,
+    "added": 1772311311,
+    "phonetic_name": "",
+    "note": "",
+    "services": 0,
+    "last_triggered": 1775894540,
+    "owner": 2,
+    "triggers": {
+      "switch_triggers": [],
+      "time_triggers": [],
+      "attribute_triggers": [
+        {
+          "id": 2,
+          "homeegram_id": 2,
+          "node_id": 40,
+          "attribute_id": 73,
+          "operator": 3,
+          "operand": 1,
+          "value": 1.0
+        }
+      ],
+      "webhook_triggers": [],
+      "homeegram_triggers": [],
+      "celestial_triggers": [],
+      "plan_triggers": [],
+      "group_triggers": [],
+      "user_triggers": []
+    },
+    "conditions": {
+      "time_conditions": [],
+      "attribute_conditions": [
+        {
+          "id": 1,
+          "homeegram_id": 2,
+          "node_id": 39,
+          "attribute_id": 65,
+          "operator": 1,
+          "check_moment": 1,
+          "operand": 1,
+          "value": 1.0
+        }
+      ],
+      "homeegram_conditions": [],
+      "celestial_conditions": [],
+      "plan_conditions": [],
+      "group_conditions": [],
+      "user_conditions": []
+    },
+    "actions": {
+      "attribute_actions": [],
+      "group_actions": [],
+      "tts_actions": [],
+      "notification_actions": [
+        {
+          "id": 1,
+          "homeegram_id": 2,
+          "style": 1,
+          "delay": 0,
+          "critical": false,
+          "user_ids": [2],
+          "message": "Computer%20an%21"
+        }
+      ],
+      "webhook_actions": [],
+      "homeegram_actions": [],
+      "plan_actions": [],
+      "user_actions": []
+    }
+  },
+  {
+    "id": 3,
+    "name": "Test HG 2",
+    "image": "homeegramicon_dimmablebulb_value_0",
+    "state": 1,
+    "visible": 1,
+    "favorite": 0,
+    "order": 2,
+    "active": 1,
+    "play": 0,
+    "added": 1775757779,
+    "phonetic_name": "",
+    "note": "",
+    "services": 0,
+    "last_triggered": 1775907320,
+    "owner": 2,
+    "triggers": {
+      "switch_triggers": [],
+      "time_triggers": [],
+      "attribute_triggers": [
+        {
+          "id": 3,
+          "homeegram_id": 3,
+          "node_id": 40,
+          "attribute_id": 73,
+          "operator": 3,
+          "operand": 1,
+          "value": 1.0
+        }
+      ],
+      "webhook_triggers": [],
+      "homeegram_triggers": [],
+      "celestial_triggers": [],
+      "plan_triggers": [],
+      "group_triggers": [],
+      "user_triggers": []
+    },
+    "conditions": {
+      "time_conditions": [],
+      "attribute_conditions": [],
+      "homeegram_conditions": [],
+      "celestial_conditions": [],
+      "plan_conditions": [],
+      "group_conditions": [],
+      "user_conditions": []
+    },
+    "actions": {
+      "attribute_actions": [
+        {
+          "id": 3,
+          "homeegram_id": 3,
+          "delay": 0,
+          "node_id": 39,
+          "attribute_id": 65,
+          "source_attribute_id": 0,
+          "value": 0.0,
+          "command": 3
+        }
+      ],
+      "group_actions": [],
+      "tts_actions": [],
+      "notification_actions": [
+        {
+          "id": 2,
+          "homeegram_id": 3,
+          "style": 1,
+          "delay": 0,
+          "critical": false,
+          "user_ids": [2],
+          "message": "Computer%20an%21"
+        }
+      ],
+      "webhook_actions": [],
+      "homeegram_actions": [],
+      "plan_actions": [],
+      "user_actions": []
+    }
+  }
+]

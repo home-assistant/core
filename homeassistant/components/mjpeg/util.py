@@ -1,11 +1,13 @@
 """Utilities for MJPEG IP Camera."""
 
 import logging
+from typing import override
 
 
 class NoHeaderErrorFilter(logging.Filter):
     """Filter out urllib3 Header Parsing Errors due to a urllib3 bug."""
 
+    @override
     def filter(self, record: logging.LogRecord) -> bool:
         """Filter out Header Parsing Errors."""
         return "Failed to parse headers" not in record.getMessage()

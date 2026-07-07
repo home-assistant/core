@@ -1,9 +1,7 @@
 """Config flow to configure the LCN integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import pypck
 import voluptuous as vol
@@ -97,6 +95,7 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 3
     MINOR_VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:

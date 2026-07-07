@@ -1,9 +1,7 @@
 """Update entities for Reolink devices."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from reolink_aio.exceptions import ReolinkError
 from reolink_aio.software_version import NewSoftwareVersion, SoftwareVersion
@@ -18,13 +16,14 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DEVICE_UPDATE_INTERVAL_MIN, DEVICE_UPDATE_INTERVAL_PER_CAM
 from .const import DOMAIN
+from .coordinator import (
+    DEVICE_UPDATE_INTERVAL_MIN,
+    DEVICE_UPDATE_INTERVAL_PER_CAM,
+    ReolinkCoordinator,
+)
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
@@ -94,9 +93,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ReolinkUpdateBaseEntity(
-    CoordinatorEntity[DataUpdateCoordinator[None]], UpdateEntity
-):
+class ReolinkUpdateBaseEntity(CoordinatorEntity[ReolinkCoordinator], UpdateEntity):
     """Base update entity class for Reolink."""
 
     _attr_release_url = "https://reolink.com/download-center/"
@@ -105,7 +102,7 @@ class ReolinkUpdateBaseEntity(
         self,
         reolink_data: ReolinkData,
         channel: int | None,
-        coordinator: DataUpdateCoordinator[None],
+        coordinator: ReolinkCoordinator,
     ) -> None:
         """Initialize Reolink update entity."""
         CoordinatorEntity.__init__(self, coordinator)
@@ -118,11 +115,13 @@ class ReolinkUpdateBaseEntity(
         self._reolink_data = reolink_data
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Version currently in use."""
         return self._host.api.camera_sw_version(self._channel)
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         new_firmware = self._host.api.firmware_update_available(self._channel)
@@ -135,16 +134,19 @@ class ReolinkUpdateBaseEntity(
         return new_firmware.version_string
 
     @property
+    @override
     def in_progress(self) -> bool:
         """Update installation progress."""
         return self._host.api.sw_upload_progress(self._channel) < 100
 
     @property
+    @override
     def update_percentage(self) -> int:
         """Update installation progress."""
         return self._host.api.sw_upload_progress(self._channel)
 
     @property
+    @override
     def supported_features(self) -> UpdateEntityFeature:
         """Flag supported features."""
         supported_features = UpdateEntityFeature.INSTALL
@@ -155,12 +157,14 @@ class ReolinkUpdateBaseEntity(
         return supported_features
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if self._installing or self._cancel_update is not None:
             return True
         return super().available
 
+    @override
     def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
         """Return True if latest_version is newer than installed_version."""
         try:
@@ -172,6 +176,7 @@ class ReolinkUpdateBaseEntity(
 
         return latest > installed
 
+    @override
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
         new_firmware = self._host.api.firmware_update_available(self._channel)
@@ -185,6 +190,7 @@ class ReolinkUpdateBaseEntity(
         )
 
     @raise_translated_error
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -215,12 +221,12 @@ class ReolinkUpdateBaseEntity(
             self._installing = False
 
     async def _pause_update_coordinator(self) -> None:
-        """Pause updating the states using the data update coordinator (during reboots)."""
+        """Pause updating states using the data update coordinator."""
         self._reolink_data.device_coordinator.update_interval = None
         self._reolink_data.device_coordinator.async_set_updated_data(None)
 
     async def _resume_update_coordinator(self, *args: Any) -> None:
-        """Resume updating the states using the data update coordinator (after reboots)."""
+        """Resume updating states using the data update coordinator."""
         self._reolink_data.device_coordinator.update_interval = max(
             DEVICE_UPDATE_INTERVAL_MIN,
             DEVICE_UPDATE_INTERVAL_PER_CAM * self._host.api.num_cameras,
@@ -245,11 +251,13 @@ class ReolinkUpdateBaseEntity(
         finally:
             self._cancel_update = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
         self._host.firmware_ch_list.append(self._channel)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
         await super().async_will_remove_from_hass()

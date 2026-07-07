@@ -1,7 +1,5 @@
 """Test the Webmin config flow."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 from xmlrpc.client import Fault
@@ -109,11 +107,7 @@ async def test_form_user_errors(
     assert result["options"] == TEST_USER_INPUT
 
 
-async def test_duplicate_entry(
-    hass: HomeAssistant,
-    user_flow: str,
-    mock_setup_entry: AsyncMock,
-) -> None:
+async def test_duplicate_entry(hass: HomeAssistant, user_flow: str) -> None:
     """Test a successful user initiated flow."""
     with patch(
         "homeassistant.components.webmin.helpers.WebminInstance.update",

@@ -1,5 +1,7 @@
 """Support to interact with Remember The Milk."""
 
+from typing import override
+
 from rtmapi import Rtm, RtmRequestFailedException
 
 from homeassistant.const import CONF_ID, CONF_NAME, STATE_OK
@@ -135,11 +137,13 @@ class RememberTheMilkEntity(Entity):
             )
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device."""
         return self._name
 
     @property
+    @override
     def state(self) -> str:
         """Return the state of the device."""
         if not self._token_valid:

@@ -1,7 +1,5 @@
 """Base AndroidTV Entity."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
@@ -96,10 +94,9 @@ def adb_decorator[_ADBDeviceT: AndroidTVEntity, **_P, _R](
                 # it doesn't happen over and over again.
                 if self.available:
                     _LOGGER.error(
-                        (
-                            "Unexpected exception executing an ADB command. ADB connection"
-                            " re-establishing attempt in the next update. Error: %s"
-                        ),
+                        "Unexpected exception executing an ADB"
+                        " command. ADB connection re-establishing"
+                        " attempt in the next update. Error: %s",
                         err,
                     )
 

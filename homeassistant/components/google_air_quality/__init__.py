@@ -7,18 +7,29 @@ from google_air_quality_api.auth import Auth
 
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_REFERRER
+from .const import CONF_REFERRER, DOMAIN
 from .coordinator import (
     GoogleAirQualityConfigEntry,
     GoogleAirQualityRuntimeData,
     GoogleAirQualityUpdateCoordinator,
 )
+from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Google Air Quality integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(

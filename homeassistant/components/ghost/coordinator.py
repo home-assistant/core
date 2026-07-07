@@ -1,12 +1,10 @@
 """DataUpdateCoordinator for Ghost."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aioghost import GhostAdminAPI
 from aioghost.exceptions import GhostAuthError, GhostError
@@ -61,6 +59,7 @@ class GhostDataUpdateCoordinator(DataUpdateCoordinator[GhostData]):
             config_entry=config_entry,
         )
 
+    @override
     async def _async_update_data(self) -> GhostData:
         """Fetch data from Ghost API."""
         try:

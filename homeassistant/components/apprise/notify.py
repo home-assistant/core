@@ -1,9 +1,7 @@
 """Apprise platform for notify component."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import apprise
 import voluptuous as vol
@@ -69,6 +67,7 @@ class AppriseNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.apprise = a_obj
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a specified target.
 

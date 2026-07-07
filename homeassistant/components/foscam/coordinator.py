@@ -3,6 +3,7 @@
 import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from libpyfoscamcgi import FoscamCamera
 
@@ -17,7 +18,7 @@ type FoscamConfigEntry = ConfigEntry[FoscamCoordinator]
 
 @dataclass
 class FoscamDeviceInfo:
-    """A data class representing the current state and configuration of a Foscam camera device."""
+    """Represent the current state and config of a Foscam camera."""
 
     dev_info: dict
     product_info: dict
@@ -206,6 +207,7 @@ class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
             is_human_detection_on=is_human_detection_on_val,
         )
 
+    @override
     async def _async_update_data(self) -> FoscamDeviceInfo:
         """Fetch data from API endpoint."""
         async with asyncio.timeout(10):

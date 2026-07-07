@@ -1,10 +1,8 @@
 """Support for Osram Lightify."""
 
-from __future__ import annotations
-
 import logging
 import random
-from typing import Any
+from typing import Any, override
 
 from lightify import Lightify
 import voluptuous as vol
@@ -239,12 +237,14 @@ class Luminary(LightEntity):
         return effects
 
     @property
+    @override
     def name(self):
         """Return the name of the luminary."""
         return self._luminary.name()
 
     @property
-    def hs_color(self):
+    @override
+    def hs_color(self) -> tuple[float, float]:
         """Return last hs color value set."""
         return color_util.color_RGB_to_hs(*self._rgb_color)
 
@@ -262,6 +262,7 @@ class Luminary(LightEntity):
 
         return False
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         transition = int(kwargs.get(ATTR_TRANSITION, 0) * 10)
@@ -285,6 +286,7 @@ class Luminary(LightEntity):
         else:
             self._luminary.set_onoff(True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._attr_is_on = False
@@ -350,10 +352,12 @@ class Luminary(LightEntity):
 class OsramLightifyLight(Luminary):
     """Representation of an Osram Lightify Light."""
 
+    @override
     def _get_unique_id(self):
         """Get a unique ID."""
         return self._luminary.addr()
 
+    @override
     def update_static_attributes(self):
         """Update static attributes of the luminary."""
         super().update_static_attributes()
@@ -372,6 +376,7 @@ class OsramLightifyLight(Luminary):
 class OsramLightifyGroup(Luminary):
     """Representation of an Osram Lightify Group."""
 
+    @override
     def _get_unique_id(self):
         """Get a unique ID for the group."""
         #       Actually, it's a wrong choice for a unique ID, because a combination of
@@ -383,6 +388,7 @@ class OsramLightifyGroup(Luminary):
         #       users.
         return f"{self._luminary.lights()}"
 
+    @override
     def _get_supported_features(self) -> LightEntityFeature:
         """Get list of supported features."""
         features = super()._get_supported_features()
@@ -391,12 +397,14 @@ class OsramLightifyGroup(Luminary):
 
         return features
 
+    @override
     def _get_effect_list(self):
         """Get list of supported effects."""
         effects = super()._get_effect_list()
         effects.extend(self._luminary.scenes())
         return sorted(effects)
 
+    @override
     def play_effect(self, effect, transition):
         """Play selected effect."""
         if super().play_effect(effect, transition):
@@ -408,6 +416,7 @@ class OsramLightifyGroup(Luminary):
 
         return False
 
+    @override
     def update_static_attributes(self):
         """Update static attributes of the luminary."""
         super().update_static_attributes()

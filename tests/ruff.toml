@@ -5,8 +5,11 @@ extend = "../pyproject.toml"
 
 extend-ignore = [
     "B904", # Use raise from to specify exception cause
+    "N806",   # Variable {name} in function should be snake_case
     "N815", # Variable {name} in class scope should not be mixedCase
     "RUF018", # Avoid assignment expressions in assert statements
+    "DTZ011", # date.today() used: tests commonly use naive dates
+    "S107", # Possible hardcoded password assigned to function default
     "SLF001", # Private member accessed: Tests do often test internals a lot
 ]
 

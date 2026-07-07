@@ -1,7 +1,5 @@
 """Repairs for KNX integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from functools import partial
 from typing import TYPE_CHECKING, Any, Final
@@ -10,23 +8,24 @@ import voluptuous as vol
 from xknx.exceptions.exception import InvalidSecureConfiguration
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import RepairsFlow
+from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir, selector
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
+    from .telegrams import TelegramDict
 
 from .const import (
     CONF_KNX_KNXKEY_PASSWORD,
     DOMAIN,
     REPAIR_ISSUE_DATA_SECURE_GROUP_KEY,
+    REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
+    SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
     KNXConfigEntryData,
 )
 from .storage.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
-from .telegrams import SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM, TelegramDict
 
 CONF_KEYRING_FILE: Final = "knxkeys_file"
 
@@ -112,13 +111,13 @@ class DataSecureGroupIssueRepairFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         return await self.async_step_secure_knxkeys()
 
     async def async_step_secure_knxkeys(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Manage upload of new KNX Keyring file."""
         errors: dict[str, str] = {}
 
@@ -154,9 +153,7 @@ class DataSecureGroupIssueRepairFlow(RepairsFlow):
         )
 
     @callback
-    def finish_flow(
-        self, new_entry_data: KNXConfigEntryData
-    ) -> data_entry_flow.FlowResult:
+    def finish_flow(self, new_entry_data: KNXConfigEntryData) -> RepairsFlowResult:
         """Finish the repair flow. Reload the config entry."""
         knx_config_entries = self.hass.config_entries.async_entries(DOMAIN)
         if knx_config_entries:
@@ -165,3 +162,26 @@ class DataSecureGroupIssueRepairFlow(RepairsFlow):
             self.hass.config_entries.async_update_entry(config_entry, data=new_data)
             self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
         return self.async_create_entry(data={})
+
+
+@callback
+def async_create_telegram_storage_issue(hass: HomeAssistant) -> None:
+    """Create a repair issue for storage initialization failure."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="telegram_storage_error",
+    )
+
+
+@callback
+def async_delete_telegram_storage_issue(hass: HomeAssistant) -> None:
+    """Delete the repair issue for storage initialization failure."""
+    ir.async_delete_issue(
+        hass,
+        DOMAIN,
+        REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
+    )

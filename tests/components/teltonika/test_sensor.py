@@ -4,9 +4,12 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
-from teltasync import TeltonikaConnectionError
+from teltasync import TeltonikaAuthenticationError, TeltonikaConnectionError
 
+from homeassistant.components.teltonika.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -23,10 +26,10 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_sensor_modem_removed(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
     mock_modems: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -57,10 +60,10 @@ async def test_sensor_modem_removed(
     assert state.state == "unavailable"
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_sensor_update_failure_and_recovery(
     hass: HomeAssistant,
     mock_modems: AsyncMock,
-    init_integration: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensor becomes unavailable on update failure and recovers."""
@@ -91,3 +94,66 @@ async def test_sensor_update_failure_and_recovery(
     state = hass.states.get("sensor.rutx50_test_internal_modem_rssi")
     assert state is not None
     assert state.state == "-63"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expect_reauth"),
+    [
+        (TeltonikaAuthenticationError("Invalid credentials"), True),
+        (TeltonikaConnectionError("Connection lost"), False),
+    ],
+    ids=["auth_error", "connection_error"],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_sensor_update_exception_paths(
+    hass: HomeAssistant,
+    mock_modems: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    side_effect: Exception,
+    expect_reauth: bool,
+) -> None:
+    """Test an auth error triggers reauth while a connection error stays working."""
+    mock_modems.get_status.side_effect = side_effect
+
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.rutx50_test_internal_modem_rssi")
+    assert state is not None
+    assert state.state == "unavailable"
+
+    has_reauth = any(
+        flow["handler"] == DOMAIN and flow["context"]["source"] == SOURCE_REAUTH
+        for flow in hass.config_entries.flow.async_progress()
+    )
+    assert has_reauth is expect_reauth
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_sensor_update_unsuccessful_response(
+    hass: HomeAssistant,
+    mock_modems: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an unsuccessful API response marks entities unavailable without reauth."""
+    mock_modems.get_status.side_effect = None
+    mock_modems.get_status.return_value = MagicMock(
+        success=False,
+        data=None,
+        errors=[MagicMock(code=999, error="API error")],
+    )
+
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.rutx50_test_internal_modem_rssi")
+    assert state is not None
+    assert state.state == "unavailable"
+
+    has_reauth = any(
+        flow["handler"] == DOMAIN and flow["context"]["source"] == SOURCE_REAUTH
+        for flow in hass.config_entries.flow.async_progress()
+    )
+    assert has_reauth is False

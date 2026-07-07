@@ -2,7 +2,7 @@
 # name: test_setup
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'OTP Sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OTP Sensor',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.otp_sensor',

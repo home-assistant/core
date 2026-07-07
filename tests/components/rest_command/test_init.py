@@ -5,6 +5,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 import aiohttp
+from multidict import CIMultiDict
 import pytest
 from yarl import URL
 
@@ -143,7 +144,8 @@ async def test_rest_command_digest_auth(
 
     await setup_component(config)
 
-    # Mock the digest auth behavior - the request will be called with DigestAuthMiddleware
+    # Mock the digest auth behavior - the request will be called
+    # with DigestAuthMiddleware
     with patch("aiohttp.ClientSession.get") as mock_get:
 
         async def async_iter_chunks(self, chunk_size):
@@ -367,6 +369,39 @@ async def test_rest_command_get_response_json(
     assert response["content"]["number"] == 42
     assert response["status"] == 200
     assert response["headers"] == {"content-type": "application/json"}
+
+
+async def test_rest_command_get_response_multiple_headers(
+    hass: HomeAssistant,
+    setup_component: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Get rest_command response with multiple headers of the same name."""
+    await setup_component()
+
+    aioclient_mock.get(
+        TEST_URL,
+        content=b"success",
+        headers=CIMultiDict(
+            [
+                ("content-type", "text/plain"),
+                ("set-cookie", "foo=bar; Path=/"),
+                ("set-cookie", "baz=qux; Path=/"),
+            ]
+        ),
+    )
+
+    response = await hass.services.async_call(
+        DOMAIN, "get_test", {}, blocking=True, return_response=True
+    )
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert response["content"] == "success"
+    assert response["status"] == 200
+    assert response["headers"] == {
+        "content-type": "text/plain",
+        "set-cookie": ["foo=bar; Path=/", "baz=qux; Path=/"],
+    }
 
 
 async def test_rest_command_get_response_malformed_json(

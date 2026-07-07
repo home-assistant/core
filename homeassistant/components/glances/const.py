@@ -1,4 +1,4 @@
-"""Constants for Glances component."""
+"""Constants for Glances integration."""
 
 from datetime import timedelta
 import sys

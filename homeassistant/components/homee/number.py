@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyHomee.const import AttributeType
 from pyHomee.model import HomeeAttribute, HomeeNode
@@ -185,15 +186,18 @@ class HomeeNumber(HomeeEntity, NumberEntity):
         self._attr_native_step = description.native_step or attribute.step_value
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the entity."""
         return super().available and self._attribute.editable
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the native value of the number."""
         return self.entity_description.native_value_fn(self._attribute.current_value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the selected value."""
         await self.async_set_homee_value(

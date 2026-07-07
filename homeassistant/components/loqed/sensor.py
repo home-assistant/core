@@ -1,6 +1,6 @@
 """Creates LOQED sensors."""
 
-from typing import Final
+from typing import Final, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -67,6 +67,7 @@ class LoqedSensor(LoqedEntity, SensorEntity):
         return self.coordinator.lock
 
     @property
+    @override
     def native_value(self) -> int:
         """Return state of sensor."""
         return getattr(self.data, self.entity_description.key)

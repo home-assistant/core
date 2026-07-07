@@ -8,6 +8,17 @@
         "default": "mdi:chevron-left-box"
       }
     },
+    "climate": {
+      "smart_radiator_thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "schedule": "mdi:clock-outline"
+            }
+          }
+        }
+      }
+    },
     "fan": {
       "air_purifier": {
         "default": "mdi:air-purifier",
@@ -58,6 +69,11 @@
           "10": "mdi:brightness-7"
         }
       }
+    }
+  },
+  "services": {
+    "upload_art_frame_image": {
+      "service": "mdi:cloud-upload-outline"
     }
   }
 }

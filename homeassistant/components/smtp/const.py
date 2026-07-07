@@ -9,7 +9,6 @@ ATTR_HTML: Final = "html"
 ATTR_SENDER_NAME: Final = "sender_name"
 
 CONF_ENCRYPTION: Final = "encryption"
-CONF_DEBUG: Final = "debug"
 CONF_SERVER: Final = "server"
 CONF_SENDER_NAME: Final = "sender_name"
 
@@ -20,3 +19,5 @@ DEFAULT_DEBUG: Final = False
 DEFAULT_ENCRYPTION: Final = "starttls"
 
 ENCRYPTION_OPTIONS: Final = ["tls", "starttls", "none"]
+
+SUBENTRY_TYPE_RECIPIENT: Final = "recipient"

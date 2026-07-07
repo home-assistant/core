@@ -271,8 +271,8 @@ async def test_details_get_backup_returns_none(
         )
         assert await client.receive_json() == snapshot
     assert (
-        "Detected that integration 'test' returns None from BackupAgent.async_get_backup."
-        in caplog.text
+        "Detected that integration 'test' returns None from"
+        " BackupAgent.async_get_backup." in caplog.text
     )
 
 
@@ -798,8 +798,8 @@ async def test_restore_remote_agent_get_backup_returns_none(
     assert await client.receive_json() == snapshot
     assert len(restart_calls) == 0
     assert (
-        "Detected that integration 'test' returns None from BackupAgent.async_get_backup."
-        in caplog.text
+        "Detected that integration 'test' returns None from"
+        " BackupAgent.async_get_backup." in caplog.text
     )
 
 
@@ -4048,8 +4048,10 @@ async def test_subscribe_event(
         # Legacy backup, which can't be streamed
         ("backup.local", "2bcb3113", "hunter2"),
         # New backup, which can be streamed, try with correct and wrong password
-        ("backup.local", "c0cb53bd", "hunter2"),
-        ("backup.local", "c0cb53bd", "wrong_password"),
+        ("backup.local", "backup_compressed_protected_v2", "hunter2"),
+        ("backup.local", "backup_compressed_protected_v2", "wrong_password"),
+        ("backup.local", "backup_compressed_protected_v3", "hunter2"),
+        ("backup.local", "backup_compressed_protected_v3", "wrong_password"),
     ],
 )
 @pytest.mark.usefixtures("mock_backups")
@@ -4137,6 +4139,6 @@ async def test_can_decrypt_on_download_get_backup_returns_none(
     )
     assert await client.receive_json() == snapshot
     assert (
-        "Detected that integration 'test' returns None from BackupAgent.async_get_backup."
-        in caplog.text
+        "Detected that integration 'test' returns None from"
+        " BackupAgent.async_get_backup." in caplog.text
     )

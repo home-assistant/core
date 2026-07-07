@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tesla_fleet_api.exceptions import InvalidCommand
 from teslemetry_stream import Signal
 
 from homeassistant.components.switch import (
@@ -13,10 +14,11 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, assert_entities_alt, reload_platform, setup_platform
-from .const import COMMAND_OK, VEHICLE_DATA_ALT
+from .const import COMMAND_ERRORS, COMMAND_OK, VEHICLE_DATA_ALT
 
 
 async def test_switch(
@@ -122,6 +124,49 @@ async def test_switch_services(
         state = hass.states.get(entity_id)
         assert state.state == STATE_OFF
         call.assert_called_once()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("response", COMMAND_ERRORS)
+async def test_switch_command_errors(hass: HomeAssistant, response: dict) -> None:
+    """Tests that vehicle command failures raise HomeAssistantError."""
+
+    await setup_platform(hass, [Platform.SWITCH])
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.charge_start",
+            return_value=response,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test_charge"},
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_switch_command_exception(hass: HomeAssistant) -> None:
+    """Tests that an energy command SDK exception raises HomeAssistantError."""
+
+    await setup_platform(hass, [Platform.SWITCH])
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.EnergySite.storm_mode",
+            side_effect=InvalidCommand,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.energy_site_storm_watch"},
+            blocking=True,
+        )
 
 
 async def test_switch_streaming(

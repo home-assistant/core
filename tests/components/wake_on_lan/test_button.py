@@ -1,13 +1,19 @@
 """The tests for the wake on lan button platform."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.components.wake_on_lan.const import CONF_SECUREON_PASSWORD
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_BROADCAST_ADDRESS,
+    CONF_BROADCAST_PORT,
+    CONF_MAC,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -31,8 +37,31 @@ async def test_state(
     assert entry.unique_id == "00:01:02:03:04:05"
 
 
+@pytest.mark.parametrize(
+    ("get_config", "expected_mac_called"),
+    [
+        (
+            {
+                CONF_MAC: "00:01:02:03:04:05",
+                CONF_BROADCAST_ADDRESS: "255.255.255.255",
+                CONF_BROADCAST_PORT: 9,
+            },
+            "00:01:02:03:04:05",
+        ),
+        (
+            {
+                CONF_MAC: "00:01:02:03:04:05",
+                CONF_SECUREON_PASSWORD: "00:aa:22:bb:33:cc",
+                CONF_BROADCAST_ADDRESS: "255.255.255.255",
+                CONF_BROADCAST_PORT: 9,
+            },
+            "00:01:02:03:04:05/00:aa:22:bb:33:cc",
+        ),
+    ],
+)
 async def test_service_calls(
     hass: HomeAssistant,
+    expected_mac_called: str,
     freezer: FrozenDateTimeFactory,
     loaded_entry: MockConfigEntry,
     mock_send_magic_packet: AsyncMock,
@@ -47,6 +76,12 @@ async def test_service_calls(
         SERVICE_PRESS,
         {ATTR_ENTITY_ID: "button.wake_on_lan_00_01_02_03_04_05"},
         blocking=True,
+    )
+
+    mock_send_magic_packet.assert_called_once_with(
+        expected_mac_called,
+        ip_address="255.255.255.255",
+        port=9,
     )
 
     assert (

@@ -246,6 +246,13 @@ def test_type_covers(type_name, entity_id, state, attrs) -> None:
             {ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.RECEIVER},
             {},
         ),
+        (
+            "TelevisionMediaPlayer",
+            "media_player.projector",
+            "on",
+            {ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.PROJECTOR},
+            {},
+        ),
     ],
 )
 def test_type_media_player(type_name, entity_id, state, attrs, config) -> None:

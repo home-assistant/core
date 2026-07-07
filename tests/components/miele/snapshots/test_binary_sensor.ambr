@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensor_states[platforms0][binary_sensor.freezer_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.freezer_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Freezer Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.freezer_door',
@@ -51,8 +52,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.freezer_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,7 +90,7 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.freezer_mobile_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Freezer Mobile start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Mobile start',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.freezer_mobile_start',
@@ -100,8 +102,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.freezer_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -137,8 +140,8 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.freezer_notification_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Freezer Notification active',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Notification active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.freezer_notification_active',
@@ -150,8 +153,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.freezer_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -187,8 +191,8 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.freezer_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Freezer Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.freezer_problem',
@@ -200,8 +204,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.freezer_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -237,7 +242,7 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.freezer_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Freezer Remote control',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Remote control',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.freezer_remote_control',
@@ -249,8 +254,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.freezer_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -286,7 +292,7 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.freezer_smart_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Freezer Smart grid',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Smart grid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.freezer_smart_grid',
@@ -298,8 +304,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.hood_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -335,7 +342,7 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.hood_mobile_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hood Mobile start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Mobile start',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hood_mobile_start',
@@ -347,8 +354,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.hood_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -384,8 +392,8 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.hood_notification_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Hood Notification active',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Notification active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hood_notification_active',
@@ -397,8 +405,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.hood_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -434,8 +443,8 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.hood_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Hood Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hood_problem',
@@ -447,8 +456,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.hood_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -484,7 +494,7 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.hood_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hood Remote control',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Remote control',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hood_remote_control',
@@ -496,8 +506,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.hood_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -533,7 +544,7 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.hood_smart_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hood Smart grid',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Smart grid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hood_smart_grid',
@@ -545,8 +556,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.oven_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -582,8 +594,8 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.oven_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Oven Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.oven_door',
@@ -595,8 +607,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.oven_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -632,7 +645,7 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.oven_mobile_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Oven Mobile start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Mobile start',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.oven_mobile_start',
@@ -644,8 +657,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.oven_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -681,8 +695,8 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.oven_notification_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Oven Notification active',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Notification active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.oven_notification_active',
@@ -694,8 +708,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.oven_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -731,8 +746,8 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.oven_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Oven Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.oven_problem',
@@ -744,8 +759,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.oven_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -781,7 +797,7 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.oven_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Oven Remote control',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Remote control',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.oven_remote_control',
@@ -793,8 +809,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.oven_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -830,7 +847,7 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.oven_smart_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Oven Smart grid',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Smart grid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.oven_smart_grid',
@@ -842,8 +859,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -879,8 +897,8 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Refrigerator Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.refrigerator_door',
@@ -892,8 +910,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -929,7 +948,7 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_mobile_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Mobile start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Mobile start',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.refrigerator_mobile_start',
@@ -941,8 +960,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -978,8 +998,8 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_notification_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Refrigerator Notification active',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Notification active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.refrigerator_notification_active',
@@ -991,8 +1011,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1028,8 +1049,8 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Refrigerator Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.refrigerator_problem',
@@ -1041,8 +1062,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1078,7 +1100,7 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Remote control',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Remote control',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.refrigerator_remote_control',
@@ -1090,8 +1112,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1127,7 +1150,7 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_smart_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Smart grid',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Smart grid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.refrigerator_smart_grid',
@@ -1139,8 +1162,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1176,8 +1200,8 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Washing machine Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.washing_machine_door',
@@ -1189,8 +1213,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1226,7 +1251,7 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_mobile_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing machine Mobile start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Mobile start',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.washing_machine_mobile_start',
@@ -1238,8 +1263,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1275,8 +1301,8 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_notification_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Washing machine Notification active',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Notification active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.washing_machine_notification_active',
@@ -1288,8 +1314,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1325,8 +1352,8 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Washing machine Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.washing_machine_problem',
@@ -1338,8 +1365,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1375,7 +1403,7 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing machine Remote control',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Remote control',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.washing_machine_remote_control',
@@ -1387,8 +1415,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1424,7 +1453,7 @@
 # name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_smart_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing machine Smart grid',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Smart grid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.washing_machine_smart_grid',
@@ -1436,8 +1465,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.freezer_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1473,8 +1503,8 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.freezer_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Freezer Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.freezer_door',
@@ -1486,8 +1516,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.freezer_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1523,7 +1554,7 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.freezer_mobile_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Freezer Mobile start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Mobile start',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.freezer_mobile_start',
@@ -1535,8 +1566,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.freezer_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1572,8 +1604,8 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.freezer_notification_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Freezer Notification active',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Notification active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.freezer_notification_active',
@@ -1585,8 +1617,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.freezer_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1622,8 +1655,8 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.freezer_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Freezer Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.freezer_problem',
@@ -1635,8 +1668,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.freezer_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1672,7 +1706,7 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.freezer_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Freezer Remote control',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Remote control',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.freezer_remote_control',
@@ -1684,8 +1718,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.freezer_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1721,7 +1756,7 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.freezer_smart_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Freezer Smart grid',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Smart grid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.freezer_smart_grid',
@@ -1733,8 +1768,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.hood_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1770,7 +1806,7 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.hood_mobile_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hood Mobile start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Mobile start',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hood_mobile_start',
@@ -1782,8 +1818,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.hood_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1819,8 +1856,8 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.hood_notification_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Hood Notification active',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Notification active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hood_notification_active',
@@ -1832,8 +1869,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.hood_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1869,8 +1907,8 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.hood_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Hood Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hood_problem',
@@ -1882,8 +1920,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.hood_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1919,7 +1958,7 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.hood_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hood Remote control',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Remote control',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hood_remote_control',
@@ -1931,8 +1970,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.hood_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1968,7 +2008,7 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.hood_smart_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hood Smart grid',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Smart grid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hood_smart_grid',
@@ -1980,8 +2020,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.oven_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2017,8 +2058,8 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.oven_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Oven Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.oven_door',
@@ -2030,8 +2071,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.oven_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2067,7 +2109,7 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.oven_mobile_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Oven Mobile start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Mobile start',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.oven_mobile_start',
@@ -2079,8 +2121,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.oven_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2116,8 +2159,8 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.oven_notification_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Oven Notification active',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Notification active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.oven_notification_active',
@@ -2129,8 +2172,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.oven_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2166,8 +2210,8 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.oven_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Oven Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.oven_problem',
@@ -2179,8 +2223,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.oven_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2216,7 +2261,7 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.oven_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Oven Remote control',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Remote control',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.oven_remote_control',
@@ -2228,8 +2273,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.oven_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2265,7 +2311,7 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.oven_smart_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Oven Smart grid',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Smart grid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.oven_smart_grid',
@@ -2277,8 +2323,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.refrigerator_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2314,8 +2361,8 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.refrigerator_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Refrigerator Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.refrigerator_door',
@@ -2327,8 +2374,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.refrigerator_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2364,7 +2412,7 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.refrigerator_mobile_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Mobile start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Mobile start',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.refrigerator_mobile_start',
@@ -2376,8 +2424,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.refrigerator_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2413,8 +2462,8 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.refrigerator_notification_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Refrigerator Notification active',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Notification active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.refrigerator_notification_active',
@@ -2426,8 +2475,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.refrigerator_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2463,8 +2513,8 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.refrigerator_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Refrigerator Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.refrigerator_problem',
@@ -2476,8 +2526,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.refrigerator_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2513,7 +2564,7 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.refrigerator_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Remote control',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Remote control',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.refrigerator_remote_control',
@@ -2525,8 +2576,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.refrigerator_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2562,7 +2614,7 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.refrigerator_smart_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Smart grid',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Smart grid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.refrigerator_smart_grid',
@@ -2574,8 +2626,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.washing_machine_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2611,8 +2664,8 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.washing_machine_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Washing machine Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.washing_machine_door',
@@ -2624,8 +2677,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.washing_machine_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2661,7 +2715,7 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.washing_machine_mobile_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing machine Mobile start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Mobile start',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.washing_machine_mobile_start',
@@ -2673,8 +2727,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.washing_machine_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2710,8 +2765,8 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.washing_machine_notification_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Washing machine Notification active',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Notification active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.washing_machine_notification_active',
@@ -2723,8 +2778,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.washing_machine_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2760,8 +2816,8 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.washing_machine_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Washing machine Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.washing_machine_problem',
@@ -2773,8 +2829,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.washing_machine_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2810,7 +2867,7 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.washing_machine_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing machine Remote control',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Remote control',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.washing_machine_remote_control',
@@ -2822,8 +2879,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.washing_machine_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2859,7 +2917,7 @@
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.washing_machine_smart_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing machine Smart grid',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing machine Smart grid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.washing_machine_smart_grid',

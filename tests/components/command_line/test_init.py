@@ -1,7 +1,5 @@
 """Test Command line component setup process."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -11,9 +9,40 @@ from homeassistant import config as hass_config
 from homeassistant.components.command_line.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, STATE_ON, STATE_OPEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed, get_fixture_path
+from tests.common import (
+    assert_platform_setup_creates_issue,
+    async_fire_time_changed,
+    get_fixture_path,
+)
+
+
+@pytest.mark.parametrize(
+    "platform_domain",
+    [
+        "binary_sensor",
+        "cover",
+        "notify",
+        "sensor",
+        "switch",
+    ],
+)
+async def test_platform_config_creates_issue(
+    hass: HomeAssistant,
+    platform_domain: str,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid platform config creates issue and logs a warning."""
+    await assert_platform_setup_creates_issue(
+        hass,
+        platform_domain,
+        DOMAIN,
+        issue_registry,
+        caplog,
+    )
 
 
 async def test_setup_config(hass: HomeAssistant, load_yaml_integration: None) -> None:

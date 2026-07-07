@@ -14,8 +14,7 @@
       "init": {
         "data": {
           "device": "Path or URL",
-          "id": "ID",
-          "name": "[%key:common::config_flow::data::name%]"
+          "id": "ID"
         }
       }
     }

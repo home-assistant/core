@@ -1,24 +1,29 @@
 """Support for Ecovacs Ecovacs Vacuums."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from deebot_client.capabilities import Capabilities, DeviceType
 from deebot_client.device import Device
-from deebot_client.events import FanSpeedEvent, RoomsEvent, StateEvent
-from deebot_client.models import CleanAction, CleanMode, Room, State
+from deebot_client.events import (
+    CachedMapInfoEvent,
+    FanSpeedEvent,
+    RoomsEvent,
+    StateEvent,
+)
+from deebot_client.events.map import Map
+from deebot_client.models import CleanAction, CleanMode, State
 import sucks
 
 from homeassistant.components.vacuum import (
+    Segment,
     StateVacuumEntity,
     StateVacuumEntityDescription,
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
@@ -29,6 +34,7 @@ from .entity import EcovacsEntity, EcovacsLegacyEntity
 from .util import get_name_key
 
 _LOGGER = logging.getLogger(__name__)
+_SEGMENTS_SEPARATOR = "_"
 
 ATTR_ERROR = "error"
 
@@ -68,6 +74,7 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
         | VacuumEntityFeature.FAN_SPEED
     )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         self._event_listeners.append(
@@ -99,6 +106,7 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
         self.schedule_update_ha_state()
 
     @property
+    @override
     def activity(self) -> VacuumActivity | None:
         """Return the state of the vacuum cleaner."""
         if self.error is not None:
@@ -119,11 +127,13 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
         return None
 
     @property
+    @override
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
         return self.device.fan_speed  # type: ignore[no-any-return]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device-specific state attributes of this vacuum."""
         data: dict[str, Any] = {}
@@ -131,36 +141,43 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
 
         return data
 
+    @override
     def return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
 
         self.device.run(sucks.Charge())
 
+    @override
     def start(self, **kwargs: Any) -> None:
         """Turn the vacuum on and start cleaning."""
 
         self.device.run(sucks.Clean())
 
+    @override
     def stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
 
         self.device.run(sucks.Stop())
 
+    @override
     def clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
 
         self.device.run(sucks.Spot())
 
+    @override
     def locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
 
         self.device.run(sucks.PlaySound())
 
+    @override
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         if self.state == VacuumActivity.CLEANING:
             self.device.run(sucks.Clean(mode=self.device.clean_status, speed=fan_speed))
 
+    @override
     def send_command(
         self,
         command: str,
@@ -218,7 +235,8 @@ class EcovacsVacuum(
         """Initialize the vacuum."""
         super().__init__(device, device.capabilities)
 
-        self._rooms: list[Room] = []
+        self._room_event: RoomsEvent | None = None
+        self._maps: dict[str, Map] = {}
 
         if fan_speed := self._capability.fan_speed:
             self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
@@ -226,13 +244,13 @@ class EcovacsVacuum(
                 get_name_key(level) for level in fan_speed.types
             ]
 
+        if self._capability.map and self._capability.clean.action.area:
+            self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA
+
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
-
-        async def on_rooms(event: RoomsEvent) -> None:
-            self._rooms = event.rooms
-            self.async_write_ha_state()
 
         async def on_status(event: StateEvent) -> None:
             self._attr_activity = _STATE_TO_VACUUM_STATE[event.state]
@@ -249,9 +267,22 @@ class EcovacsVacuum(
             self._subscribe(self._capability.fan_speed.event, on_fan_speed)
 
         if map_caps := self._capability.map:
+
+            async def on_rooms(event: RoomsEvent) -> None:
+                self._room_event = event
+                self._check_segments_changed()
+                self.async_write_ha_state()
+
             self._subscribe(map_caps.rooms.event, on_rooms)
 
+            async def on_map_info(event: CachedMapInfoEvent) -> None:
+                self._maps = {map_obj.id: map_obj for map_obj in event.maps}
+                self._check_segments_changed()
+
+            self._subscribe(map_caps.cached_info.event, on_map_info)
+
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes.
 
@@ -259,7 +290,10 @@ class EcovacsVacuum(
         is lowercase snake_case.
         """
         rooms: dict[str, Any] = {}
-        for room in self._rooms:
+        if self._room_event is None:
+            return rooms
+
+        for room in self._room_event.rooms:
             # convert room name to snake_case to meet the convention
             room_name = slugify(room.name)
             room_values = rooms.get(room_name)
@@ -275,24 +309,29 @@ class EcovacsVacuum(
             _ATTR_ROOMS: rooms,
         }
 
+    @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         if TYPE_CHECKING:
             assert self._capability.fan_speed
         await self._device.execute_command(self._capability.fan_speed.set(fan_speed))
 
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         await self._device.execute_command(self._capability.charge.execute())
 
+    @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
         await self._clean_command(CleanAction.STOP)
 
+    @override
     async def async_pause(self) -> None:
         """Pause the vacuum cleaner."""
         await self._clean_command(CleanAction.PAUSE)
 
+    @override
     async def async_start(self) -> None:
         """Start the vacuum cleaner."""
         await self._clean_command(CleanAction.START)
@@ -302,10 +341,12 @@ class EcovacsVacuum(
             self._capability.clean.action.command(action)
         )
 
+    @override
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
         await self._device.execute_command(self._capability.play_sound.execute())
 
+    @override
     async def async_send_command(
         self,
         command: str,
@@ -334,15 +375,15 @@ class EcovacsVacuum(
                 name = info.get("nick", info["name"])
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key="vacuum_send_command_area_not_supported",
-                    translation_placeholders={"name": name},
+                    translation_key="vacuum_send_command_not_supported",
+                    translation_placeholders={"command": command, "name": name},
                 )
 
-            if command in "spot_area":
+            if command == "spot_area":
                 await self._device.execute_command(
                     self._capability.clean.action.area(
                         CleanMode.SPOT_AREA,
-                        str(params["rooms"]),
+                        params["rooms"],
                         params.get("cleanings", 1),
                     )
                 )
@@ -350,7 +391,7 @@ class EcovacsVacuum(
                 await self._device.execute_command(
                     self._capability.clean.action.area(
                         CleanMode.CUSTOM_AREA,
-                        str(params["coordinates"]),
+                        params["coordinates"],
                         params.get("cleanings", 1),
                     )
                 )
@@ -374,3 +415,122 @@ class EcovacsVacuum(
             )
 
         return await self._device.execute_command(position_commands[0])
+
+    @callback
+    def _check_segments_changed(self) -> None:
+        """Check if segments have changed and create repair issue."""
+        last_seen = self.last_seen_segments
+        if last_seen is None:
+            return
+
+        last_seen_ids = {seg.id for seg in last_seen}
+        current_ids = {seg.id for seg in self._get_segments()}
+
+        if current_ids != last_seen_ids:
+            self.async_create_segments_issue()
+
+    def _get_segments(self) -> list[Segment]:
+        """Get the segments that can be cleaned."""
+        last_seen = self.last_seen_segments or []
+        if self._room_event is None or not self._maps:
+            # If we don't have the necessary information to
+            # determine segments, return the last seen segments to
+            # avoid temporarily losing all segments until we get
+            # the necessary information, which could cause
+            # unnecessary issues to be created
+            return last_seen
+
+        map_id = self._room_event.map_id
+        if (map_obj := self._maps.get(map_id)) is None:
+            _LOGGER.warning("Map ID %s not found in available maps", map_id)
+            return []
+
+        id_prefix = f"{map_id}{_SEGMENTS_SEPARATOR}"
+        other_map_ids = {
+            map_obj.id
+            for map_obj in self._maps.values()
+            if map_obj.id != self._room_event.map_id
+        }
+        # Include segments from the current map and any segments
+        # from other maps that were previously seen, as we want
+        # to continue showing segments from other maps for
+        # mapping purposes
+        segments = [
+            seg for seg in last_seen if _split_composite_id(seg.id)[0] in other_map_ids
+        ]
+        segments.extend(
+            Segment(
+                id=f"{id_prefix}{room.id}",
+                name=room.name,
+                group=map_obj.name,
+            )
+            for room in self._room_event.rooms
+        )
+        return segments
+
+    @override
+    async def async_get_segments(self) -> list[Segment]:
+        """Get the segments that can be cleaned."""
+        return self._get_segments()
+
+    @override
+    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+        """Perform an area clean.
+
+        Only cleans segments from the currently selected map.
+        """
+        if not self._maps:
+            _LOGGER.warning("No map information available, cannot clean segments")
+            return
+
+        valid_room_ids: list[int | float] = []
+        for composite_id in segment_ids:
+            map_id, segment_id = _split_composite_id(composite_id)
+            if (map_obj := self._maps.get(map_id)) is None:
+                _LOGGER.warning("Map ID %s not found in available maps", map_id)
+                continue
+
+            if not map_obj.using:
+                room_name = next(
+                    (
+                        segment.name
+                        for segment in self.last_seen_segments or []
+                        if segment.id == composite_id
+                    ),
+                    "",
+                )
+                _LOGGER.warning(
+                    'Map "%s" is not currently selected, skipping segment "%s" (%s)',
+                    map_obj.name,
+                    room_name,
+                    segment_id,
+                )
+                continue
+
+            valid_room_ids.append(int(segment_id))
+
+        if not valid_room_ids:
+            _LOGGER.warning(
+                "No valid segments to clean after validation,"
+                " skipping clean segments command"
+            )
+            return
+
+        if TYPE_CHECKING:
+            # Supported feature is only added if clean.action.area is not None
+            assert self._capability.clean.action.area is not None
+
+        await self._device.execute_command(
+            self._capability.clean.action.area(
+                CleanMode.SPOT_AREA,
+                valid_room_ids,
+                1,
+            )
+        )
+
+
+@callback
+def _split_composite_id(composite_id: str) -> tuple[str, str]:
+    """Split a composite ID into its components."""
+    map_id, _, segment_id = composite_id.partition(_SEGMENTS_SEPARATOR)
+    return map_id, segment_id

@@ -1,18 +1,19 @@
 # serializer version: 1
-# name: test_entities[climate.thermostat-entry]
+# name: test_entities[climate.room_thermostat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.AUTO: 'auto'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'day',
         'night',
         'eco',
@@ -28,7 +29,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.thermostat',
+    'entity_id': 'climate.room_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -51,20 +52,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[climate.thermostat-state]
+# name: test_entities[climate.room_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 180,
-      'friendly_name': 'thermostat',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 180,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'thermostat',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.AUTO: 'auto'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'preset_mode': 'day',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'day',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'day',
         'night',
         'eco',
@@ -72,11 +73,11 @@
         'prog2',
         'prog3',
       ]),
-      'supported_features': <ClimateEntityFeature: 145>,
-      'temperature': 200,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 145>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 200,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.thermostat',
+    'entity_id': 'climate.room_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

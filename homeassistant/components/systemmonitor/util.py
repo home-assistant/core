@@ -5,7 +5,7 @@ import os
 import re
 from typing import Any
 
-from psutil._common import sfan, shwtemp
+from psutil._ntuples import sfan, shwtemp
 import psutil_home_assistant as ha_psutil
 
 from homeassistant.core import HomeAssistant

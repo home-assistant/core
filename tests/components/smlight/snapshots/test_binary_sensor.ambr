@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_binary_sensors[binary_sensor.mock_title_ethernet-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_all_binary_sensors[binary_sensor.mock_title_ethernet-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Mock Title Ethernet',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Ethernet',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_ethernet',
@@ -51,8 +52,9 @@
 # ---
 # name: test_all_binary_sensors[binary_sensor.mock_title_internet-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_all_binary_sensors[binary_sensor.mock_title_internet-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Mock Title Internet',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Internet',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_internet',
@@ -101,8 +103,9 @@
 # ---
 # name: test_all_binary_sensors[binary_sensor.mock_title_vpn-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -138,8 +141,8 @@
 # name: test_all_binary_sensors[binary_sensor.mock_title_vpn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Mock Title VPN',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title VPN',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_vpn',
@@ -151,8 +154,9 @@
 # ---
 # name: test_all_binary_sensors[binary_sensor.mock_title_wi_fi-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -188,8 +192,8 @@
 # name: test_all_binary_sensors[binary_sensor.mock_title_wi_fi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Mock Title Wi-Fi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_wi_fi',

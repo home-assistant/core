@@ -1,6 +1,6 @@
 """Media Player platform for Tessie integration."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -52,6 +52,7 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
         super().__init__(vehicle, "media")
 
     @property
+    @override
     def state(self) -> MediaPlayerState:
         """State of the player."""
         return STATES.get(
@@ -60,11 +61,13 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
         )
 
     @property
+    @override
     def volume_level(self) -> float:
         """Volume level of the media player (0..1)."""
         return self.get("vehicle_state_media_info_audio_volume", 0) / VOLUME_FACTOR
 
     @property
+    @override
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         if duration := self.get("vehicle_state_media_info_now_playing_duration"):
@@ -72,6 +75,7 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         # Return media position only when a media duration is > 0
@@ -80,6 +84,7 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Title of current playing media."""
         if title := self.get("vehicle_state_media_info_now_playing_title"):
@@ -87,6 +92,7 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         if artist := self.get("vehicle_state_media_info_now_playing_artist"):
@@ -94,6 +100,7 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
         if album := self.get("vehicle_state_media_info_now_playing_album"):
@@ -101,6 +108,7 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_playlist(self) -> str | None:
         """Title of Playlist currently playing."""
         if playlist := self.get("vehicle_state_media_info_now_playing_station"):
@@ -108,6 +116,7 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def source(self) -> str | None:
         """Name of the current input source."""
         if source := self.get("vehicle_state_media_info_now_playing_source"):

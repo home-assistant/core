@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, patch
 
 from switchbot_api import Device
 
-from homeassistant.components.switchbot_cloud import DOMAIN
 from homeassistant.components.switchbot_cloud.image import SwitchBotCloudImage
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN
@@ -63,7 +62,7 @@ async def test_async_image(
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    cloud_data = hass.data[DOMAIN][entry.entry_id]
+    cloud_data = entry.runtime_data
     device, coordinator = cloud_data.devices.images[0]
     image_entity = SwitchBotCloudImage(cloud_data.api, device, coordinator)
 

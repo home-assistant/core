@@ -1,31 +1,32 @@
 # serializer version: 1
 # name: test_entities[climate.testserial123-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'low',
         'medium',
         'high',
         'auto',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.DRY: 'dry'>,
       ]),
-      'max_temp': 26.0,
-      'min_temp': 18.0,
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 26.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18.0,
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'off',
         'horizontal',
         'vertical',
         'both',
       ]),
-      'target_temp_step': 0.5,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -60,33 +61,33 @@
 # name: test_entities[climate.testserial123-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 22.0,
-      'fan_mode': 'auto',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 22.0,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'low',
         'medium',
         'high',
         'auto',
       ]),
-      'friendly_name': 'testserial123',
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testserial123',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.DRY: 'dry'>,
       ]),
-      'max_temp': 26.0,
-      'min_temp': 18.0,
-      'supported_features': <ClimateEntityFeature: 425>,
-      'swing_mode': 'both',
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 26.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 425>,
+      <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'both',
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'off',
         'horizontal',
         'vertical',
         'both',
       ]),
-      'target_temp_step': 0.5,
-      'temperature': 21.0,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.testserial123',
@@ -98,31 +99,32 @@
 # ---
 # name: test_entities[climate.testserial345-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'low',
         'medium',
         'high',
         'auto',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.DRY: 'dry'>,
       ]),
-      'max_temp': 26.0,
-      'min_temp': 18.0,
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 26.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18.0,
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'off',
         'horizontal',
         'vertical',
         'both',
       ]),
-      'target_temp_step': 0.5,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -157,33 +159,33 @@
 # name: test_entities[climate.testserial345-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 22.0,
-      'fan_mode': 'auto',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 22.0,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'low',
         'medium',
         'high',
         'auto',
       ]),
-      'friendly_name': 'testserial345',
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testserial345',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.DRY: 'dry'>,
       ]),
-      'max_temp': 26.0,
-      'min_temp': 18.0,
-      'supported_features': <ClimateEntityFeature: 425>,
-      'swing_mode': 'both',
-      'swing_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 26.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 425>,
+      <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'both',
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'off',
         'horizontal',
         'vertical',
         'both',
       ]),
-      'target_temp_step': 0.5,
-      'temperature': 21.0,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.testserial345',

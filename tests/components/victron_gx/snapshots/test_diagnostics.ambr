@@ -1,0 +1,49 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'devices': dict({
+      'battery_0': dict({
+        'device_type': 'Battery',
+        'firmware_version': None,
+        'manufacturer': None,
+        'metrics': dict({
+          'battery_current': dict({
+            'kind': 'SENSOR',
+            'name': 'DC bus current',
+            'type': 'CURRENT',
+            'unit': 'A',
+            'value': 10.5,
+          }),
+        }),
+        'model': None,
+        'name': 'Battery',
+      }),
+      'system_0': dict({
+        'device_type': 'Victron Venus',
+        'firmware_version': None,
+        'manufacturer': None,
+        'metrics': dict({
+          'system_state': dict({
+            'kind': 'SENSOR',
+            'name': 'System state',
+            'type': 'ENUM',
+            'unit': None,
+            'value': 'bulk',
+          }),
+        }),
+        'model': None,
+        'name': 'Victron Venus',
+      }),
+    }),
+    'entry_data': dict({
+      'host': '**REDACTED**',
+      'installation_id': '**REDACTED**',
+      'model': 'Cerbo GX',
+      'password': '**REDACTED**',
+      'port': 1883,
+      'serial': '**REDACTED**',
+      'ssl': False,
+      'username': '**REDACTED**',
+    }),
+  })
+# ---

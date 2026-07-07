@@ -1,9 +1,7 @@
 """Config flow for the Vallox integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from vallox_websocket_api import Vallox, ValloxApiException
 import voluptuous as vol
@@ -40,6 +38,7 @@ class ValloxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

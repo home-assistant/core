@@ -1,10 +1,9 @@
 """The Tesla Powerwall integration base entity."""
 
+from tesla_powerwall import BatteryResponse
+
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DOMAIN,
@@ -14,10 +13,10 @@ from .const import (
     POWERWALL_BASE_INFO,
     POWERWALL_COORDINATOR,
 )
-from .models import BatteryResponse, PowerwallData, PowerwallRuntimeData
+from .coordinator import PowerwallData, PowerwallRuntimeData, PowerwallUpdateCoordinator
 
 
-class PowerWallEntity(CoordinatorEntity[DataUpdateCoordinator[PowerwallData]]):
+class PowerWallEntity(CoordinatorEntity[PowerwallUpdateCoordinator]):
     """Base class for powerwall entities."""
 
     _attr_has_entity_name = True
@@ -30,12 +29,17 @@ class PowerWallEntity(CoordinatorEntity[DataUpdateCoordinator[PowerwallData]]):
         super().__init__(coordinator)
         self.power_wall = powerwall_data[POWERWALL_API]
         self.base_unique_id = base_info.gateway_din
+        model = (
+            f"{MODEL} ({base_info.device_type.name})"
+            if base_info.device_type is not None
+            else MODEL
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.base_unique_id)},
             manufacturer=MANUFACTURER,
-            model=f"{MODEL} ({base_info.device_type.name})",
-            name=base_info.site_info.site_name,
-            sw_version=base_info.status.version,
+            model=model,
+            name=base_info.site_name,
+            sw_version=base_info.status.version if base_info.status else None,
             configuration_url=base_info.url,
         )
 
@@ -45,7 +49,7 @@ class PowerWallEntity(CoordinatorEntity[DataUpdateCoordinator[PowerwallData]]):
         return self.coordinator.data
 
 
-class BatteryEntity(CoordinatorEntity[DataUpdateCoordinator[PowerwallData]]):
+class BatteryEntity(CoordinatorEntity[PowerwallUpdateCoordinator]):
     """Base class for battery entities."""
 
     _attr_has_entity_name = True
@@ -66,8 +70,8 @@ class BatteryEntity(CoordinatorEntity[DataUpdateCoordinator[PowerwallData]]):
             identifiers={(DOMAIN, self.base_unique_id)},
             manufacturer=MANUFACTURER,
             model=f"{MODEL} ({battery.part_number})",
-            name=f"{base_info.site_info.site_name} {battery.serial_number}",
-            sw_version=base_info.status.version,
+            name=f"{base_info.site_name} {battery.serial_number}",
+            sw_version=base_info.status.version if base_info.status else None,
             configuration_url=base_info.url,
             via_device=(DOMAIN, base_info.gateway_din),
         )

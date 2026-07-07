@@ -207,7 +207,7 @@ async def test_update_modem_config_bad(
 async def test_update_modem_config_bad_reconnect(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test updating the Insteon modem configuration with bad connection information so reconnect to old."""
+    """Test bad connection info on modem update reconnects to old."""
 
     ws_client, mock_devices, _, _ = await async_mock_setup(
         hass,

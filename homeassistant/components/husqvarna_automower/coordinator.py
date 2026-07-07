@@ -1,7 +1,5 @@
 """Data UpdateCoordinator for the Husqvarna Automower integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
@@ -70,6 +68,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self._on_data_update()
         super().async_update_listeners()
 
+    @override
     async def _async_setup(self) -> None:
         """Initialize websocket connection and callbacks."""
         await self.api.connect()
@@ -87,6 +86,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
 
         self.api.register_ws_ready_callback(start_watchdog)
 
+    @override
     async def _async_update_data(self) -> MowerDictionary:
         """Poll data from the API."""
         try:
@@ -145,6 +145,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self.async_set_updated_data(ws_data)
 
     @callback
+    @override
     def async_set_updated_data(self, data: MowerDictionary) -> None:
         """Override DataUpdateCoordinator to preserve fixed polling interval.
 
@@ -184,10 +185,8 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             )
 
     def _should_poll(self) -> bool:
-        """Return True if at least one mower is connected and at least one is not OFF."""
-        return any(mower.metadata.connected for mower in self.data.values()) and any(
-            mower.mower.state != MowerStates.OFF for mower in self.data.values()
-        )
+        """Return True if at least one mower is not OFF."""
+        return any(mower.mower.state != MowerStates.OFF for mower in self.data.values())
 
     async def _pong_watchdog(self) -> None:
         """Watchdog to check for pong messages."""

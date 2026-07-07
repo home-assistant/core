@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, Generic, cast
+from typing import Any, Generic, cast, override
 
 from ring_doorbell import RingChime, RingDoorBell, RingGeneric, RingOther
 import ring_doorbell.const
@@ -43,7 +43,7 @@ async def async_setup_entry(
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingNumberEntityDescription(NumberEntityDescription, Generic[RingDeviceT]):
+class RingNumberEntityDescription(NumberEntityDescription, Generic[RingDeviceT]):  # noqa: UP046
     """Describes Ring number entity."""
 
     value_fn: Callable[[RingDeviceT], StateType]
@@ -133,6 +133,7 @@ class RingNumber(RingEntity[RingDeviceT], NumberEntity):
             self._attr_native_value = float(native_value)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
 
@@ -146,6 +147,7 @@ class RingNumber(RingEntity[RingDeviceT], NumberEntity):
         super()._handle_coordinator_update()
 
     @refresh_after
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Call setter on Ring device."""
         await self.entity_description.setter_fn(self._device, value)

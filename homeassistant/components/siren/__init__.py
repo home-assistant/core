@@ -1,10 +1,8 @@
 """Component to interface with various sirens/chimes."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any, TypedDict, cast, final
+from typing import Any, TypedDict, cast, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -18,12 +16,13 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_AVAILABLE_TONES,
     ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
     DOMAIN,
+    SirenEntityCapabilityAttribute,
     SirenEntityFeature,
 )
 
@@ -156,7 +155,9 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
 class SirenEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a siren device."""
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_AVAILABLE_TONES})
+    _entity_component_unrecorded_attributes = frozenset(
+        {SirenEntityCapabilityAttribute.AVAILABLE_TONES}
+    )
 
     entity_description: SirenEntityDescription
     _attr_available_tones: list[int | str] | dict[int, str] | None
@@ -164,13 +165,16 @@ class SirenEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
         if (
             self.supported_features & SirenEntityFeature.TONES
             and self.available_tones is not None
         ):
-            return {ATTR_AVAILABLE_TONES: self.available_tones}
+            return {
+                SirenEntityCapabilityAttribute.AVAILABLE_TONES: self.available_tones
+            }
 
         return None
 
@@ -187,6 +191,7 @@ class SirenEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return None
 
     @cached_property
+    @override
     def supported_features(self) -> SirenEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features

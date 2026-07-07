@@ -1,7 +1,5 @@
 """All methods needed to bootstrap a Home Assistant instance."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import Awaitable, Callable, Generator, Mapping
@@ -386,7 +384,9 @@ async def _async_setup_component(
             translation_key="config_entry_only",
             translation_placeholders={
                 "domain": domain,
-                "add_integration": f"/config/integrations/dashboard/add?domain={domain}",
+                "add_integration": (
+                    f"/config/integrations/dashboard/add?domain={domain}"
+                ),
             },
         )
 

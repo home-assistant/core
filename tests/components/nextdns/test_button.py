@@ -81,7 +81,8 @@ async def test_button_failure(
 
     with pytest.raises(
         HomeAssistantError,
-        match="An error occurred while calling the NextDNS API method for button.fake_profile_clear_logs",
+        match="An error occurred while calling the NextDNS API"
+        " method for button.fake_profile_clear_logs",
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,

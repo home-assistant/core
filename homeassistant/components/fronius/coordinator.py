@@ -1,10 +1,8 @@
 """DataUpdateCoordinators for the Fronius integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pyfronius import BadStatusError, FroniusError
 
@@ -59,6 +57,7 @@ class FroniusCoordinatorBase(
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
 
+    @override
     async def _async_update_data(self) -> dict[SolarNetId, Any]:
         """Fetch the latest data from the source."""
         async with self.solar_net.coordinator_lock:
@@ -145,6 +144,7 @@ class FroniusInverterUpdateCoordinator(FroniusCoordinatorBase):
         super().__init__(*args, **kwargs)
         self.inverter_info = inverter_info
 
+    @override
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
         # almost 1% of `current_inverter_data` requests on Symo devices result in
@@ -172,6 +172,7 @@ class FroniusLoggerUpdateCoordinator(FroniusCoordinatorBase):
     error_interval = timedelta(hours=1)
     valid_descriptions = LOGGER_ENTITY_DESCRIPTIONS
 
+    @override
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
         data = await self.solar_net.fronius.current_logger_info()
@@ -185,6 +186,7 @@ class FroniusMeterUpdateCoordinator(FroniusCoordinatorBase):
     error_interval = timedelta(minutes=10)
     valid_descriptions = METER_ENTITY_DESCRIPTIONS
 
+    @override
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
         data = await self.solar_net.fronius.current_system_meter_data()
@@ -198,6 +200,7 @@ class FroniusOhmpilotUpdateCoordinator(FroniusCoordinatorBase):
     error_interval = timedelta(minutes=10)
     valid_descriptions = OHMPILOT_ENTITY_DESCRIPTIONS
 
+    @override
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
         data = await self.solar_net.fronius.current_system_ohmpilot_data()
@@ -211,6 +214,7 @@ class FroniusPowerFlowUpdateCoordinator(FroniusCoordinatorBase):
     error_interval = timedelta(minutes=3)
     valid_descriptions = POWER_FLOW_ENTITY_DESCRIPTIONS
 
+    @override
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
         data = await self.solar_net.fronius.current_power_flow()
@@ -224,6 +228,7 @@ class FroniusStorageUpdateCoordinator(FroniusCoordinatorBase):
     error_interval = timedelta(minutes=10)
     valid_descriptions = STORAGE_ENTITY_DESCRIPTIONS
 
+    @override
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
         data = await self.solar_net.fronius.current_system_storage_data()

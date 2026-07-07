@@ -1,16 +1,17 @@
 """Config flow for the Altruist integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from altruistclient import AltruistClient, AltruistDeviceModel, AltruistError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_HOST, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,6 +21,7 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
 
     device: AltruistDeviceModel
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -61,6 +63,7 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

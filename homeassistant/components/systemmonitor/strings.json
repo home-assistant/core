@@ -73,9 +73,6 @@
       "ipv6_address": {
         "name": "IPv6 address {ip_address}"
       },
-      "last_boot": {
-        "name": "Last boot"
-      },
       "load_15m": {
         "name": "Load (15 min)"
       },

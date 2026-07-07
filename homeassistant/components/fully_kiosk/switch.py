@@ -1,10 +1,8 @@
 """Fully Kiosk Browser switch."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from fullykiosk import FullyKiosk
 
@@ -111,6 +109,7 @@ class FullySwitchEntity(FullyKioskEntity, SwitchEntity):
         self._turned_on_subscription: CALLBACK_TYPE | None = None
         self._turned_off_subscription: CALLBACK_TYPE | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -122,6 +121,7 @@ class FullySwitchEntity(FullyKioskEntity, SwitchEntity):
             description.mqtt_on_event, self._turn_on
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Close MQTT subscriptions when removed."""
         await super().async_will_remove_from_hass()
@@ -130,11 +130,13 @@ class FullySwitchEntity(FullyKioskEntity, SwitchEntity):
         if self._turned_on_subscription is not None:
             self._turned_on_subscription()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.on_action(self.coordinator.fully)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.off_action(self.coordinator.fully)
@@ -151,6 +153,7 @@ class FullySwitchEntity(FullyKioskEntity, SwitchEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_is_on = bool(self.entity_description.is_on_fn(self.coordinator.data))

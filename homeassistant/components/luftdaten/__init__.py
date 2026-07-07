@@ -4,8 +4,6 @@ Sensor.Community was previously called Luftdaten, hence the domain differs from
 the integration name.
 """
 
-from __future__ import annotations
-
 from luftdaten import Luftdaten
 
 from homeassistant.const import Platform

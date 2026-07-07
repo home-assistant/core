@@ -1,8 +1,6 @@
 """Support for Z-Wave controls using the siren platform."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from zwave_js_server.const.command_class.sound_switch import ToneID
 from zwave_js_server.model.driver import Driver
@@ -76,12 +74,14 @@ class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
         self._attr_name = self.generate_name(include_value_name=True)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return whether device is on."""
         if self.info.primary_value.value is None:
             return None
         return bool(self.info.primary_value.value)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         tone_id: int | None = kwargs.get(ATTR_TONE)
@@ -97,6 +97,7 @@ class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
 
         await self._async_set_value(self.info.primary_value, tone_id, options)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._async_set_value(self.info.primary_value, ToneID.OFF)

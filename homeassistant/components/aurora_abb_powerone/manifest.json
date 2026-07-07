@@ -3,6 +3,7 @@
   "name": "Aurora ABB PowerOne Solar PV",
   "codeowners": ["@davet2001"],
   "config_flow": true,
+  "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/aurora_abb_powerone",
   "integration_type": "device",
   "iot_class": "local_polling",

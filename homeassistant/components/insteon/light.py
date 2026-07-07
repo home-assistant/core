@@ -1,6 +1,6 @@
 """Support for Insteon lights via PowerLinc Modem."""
 
-from typing import Any
+from typing import Any, override
 
 from pyinsteon.config import ON_LEVEL
 from pyinsteon.device_types.device_base import Device as InsteonDevice
@@ -61,15 +61,18 @@ class InsteonDimmerEntity(InsteonEntity, LightEntity):
             self._attr_supported_color_modes = {ColorMode.ONOFF}
 
     @property
-    def brightness(self):
+    @override
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return self._insteon_device_group.value
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the boolean response if the node is on."""
         return bool(self.brightness)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         brightness: int | None = None
@@ -84,6 +87,7 @@ class InsteonDimmerEntity(InsteonEntity, LightEntity):
         else:
             await self._insteon_device.async_on(group=self._insteon_device_group.group)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
         await self._insteon_device.async_off(self._insteon_device_group.group)

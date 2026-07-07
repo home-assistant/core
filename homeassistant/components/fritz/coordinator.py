@@ -1,7 +1,5 @@
 """Support for AVM FRITZ!Box classes."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
@@ -9,14 +7,11 @@ from datetime import datetime, timedelta
 from functools import partial
 import logging
 import re
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict, cast, override
+from xml.etree.ElementTree import ParseError
 
 from fritzconnection import FritzConnection
-from fritzconnection.core.exceptions import (
-    FritzActionError,
-    FritzConnectionException,
-    FritzSecurityError,
-)
+from fritzconnection.core.exceptions import FritzActionError, FritzConnectionException
 from fritzconnection.lib.fritzcall import FritzCall
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
@@ -30,7 +25,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -47,6 +42,7 @@ from .const import (
     DEFAULT_SSL,
     DEFAULT_USERNAME,
     DOMAIN,
+    FRITZ_AUTH_EXCEPTIONS,
     FRITZ_EXCEPTIONS,
     SCAN_INTERVAL,
     MeshRoles,
@@ -191,6 +187,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self._options = options
         await self.hass.async_add_executor_job(self.setup)
 
+        self.hass.data[FRITZ_DATA_KEY].tracked[self.unique_id] = set()
+        self.hass.data[FRITZ_DATA_KEY].profile_switches[self.unique_id] = set()
+        self.hass.data[FRITZ_DATA_KEY].wol_buttons[self.unique_id] = set()
+
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
@@ -215,6 +215,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             use_tls=self.use_tls,
             timeout=60.0,
             pool_maxsize=30,
+            redact_debug_log=True,
         )
 
         if not self.connection:
@@ -231,7 +232,13 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.fritz_guest_wifi = FritzGuestWLAN(fc=self.connection)
         self.fritz_status = FritzStatus(fc=self.connection)
         self.fritz_call = FritzCall(fc=self.connection)
-        info = self.fritz_status.get_device_info()
+        try:
+            info = self.fritz_status.get_device_info()
+        except ParseError as ex:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="error_parse_device_info",
+            ) from ex
 
         _LOGGER.debug(
             "gathered device info of %s %s",
@@ -239,7 +246,9 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             {
                 **vars(info),
                 "NewDeviceLog": "***omitted***",
+                "device_log": "***omitted***",
                 "NewSerialNumber": "***omitted***",
+                "serial_number": "***omitted***",
             },
         )
 
@@ -261,9 +270,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         ) = self._update_device_info()
 
         if self.fritz_status.has_wan_support:
-            self.device_conn_type = (
-                self.fritz_status.get_default_connection_service().connection_service
-            )
+            self.device_conn_type = self.fritz_status.connection_service
             self.device_is_router = self.fritz_status.has_wan_enabled
 
         self.has_call_deflections = "X_AVM-DE_OnTel1" in self.connection.services
@@ -301,6 +308,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 )
         return entity_states
 
+    @override
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
         """Update FritzboxTools data."""
         entity_data: UpdateCoordinatorDataType = {
@@ -335,7 +343,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 translation_placeholders={"error": str(ex)},
             ) from ex
 
-        _LOGGER.debug("enity_data: %s", entity_data)
+        _LOGGER.debug("entity_data: %s", entity_data)
+
+        await self.async_trigger_cleanup()
+
         return entity_data
 
     @property
@@ -379,6 +390,8 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """Return device Mac address."""
         if not self._unique_id:
             raise ClassSetupMissing
+        # Unique ID is the serial number of the device
+        # which is the MAC of the device without the colons
         return dr.format_mac(self._unique_id)
 
     @property
@@ -425,12 +438,18 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         hosts_info: list[HostInfo] = []
         try:
             try:
-                hosts_attributes = await self.hass.async_add_executor_job(
-                    self.fritz_hosts.get_hosts_attributes
+                hosts_attributes = cast(
+                    list[HostAttributes],
+                    await self.hass.async_add_executor_job(
+                        self.fritz_hosts.get_hosts_attributes
+                    ),
                 )
             except FritzActionError:
-                hosts_info = await self.hass.async_add_executor_job(
-                    self.fritz_hosts.get_hosts_info
+                hosts_info = cast(
+                    list[HostInfo],
+                    await self.hass.async_add_executor_job(
+                        self.fritz_hosts.get_hosts_info
+                    ),
                 )
         except Exception as ex:
             if not self.hass.is_stopping:
@@ -445,10 +464,13 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 if not attributes.get("MACAddress"):
                     continue
 
+                wan_access_result = None
                 if (wan_access := attributes.get("X_AVM-DE_WANAccess")) is not None:
-                    wan_access_result = "granted" in wan_access
-                else:
-                    wan_access_result = None
+                    # wan_access can be "granted", "denied", "unknown" or "error"
+                    if "granted" in wan_access:
+                        wan_access_result = True
+                    elif "denied" in wan_access:
+                        wan_access_result = False
 
                 hosts[attributes["MACAddress"]] = Device(
                     name=attributes["HostName"],
@@ -586,7 +608,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 topology := await self.hass.async_add_executor_job(
                     self.fritz_hosts.get_mesh_topology
                 )
-            ):
+            ) or not isinstance(topology, dict):
                 raise Exception("Mesh supported but empty topology reported")  # noqa: TRY002
         except FritzActionError:
             self.mesh_role = MeshRoles.SLAVE
@@ -661,7 +683,18 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
     async def async_trigger_reconnect(self) -> None:
         """Trigger device reconnect."""
-        await self.hass.async_add_executor_job(self.connection.reconnect)
+        try:
+            await self.hass.async_add_executor_job(
+                self.connection.call_action,
+                f"{self.device_conn_type}1",
+                "ForceTermination",
+            )
+        except FritzConnectionException as ex:
+            # ignore UPnPError:
+            # errorCode: 707
+            # errorDescription: DisconnectInProgress
+            if "disconnectinprogress" not in str(ex).lower():
+                raise
 
     async def async_trigger_set_guest_password(
         self, password: str | None, length: int
@@ -684,7 +717,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         _LOGGER.debug("Device tracker cleanup triggered")
         device_hosts = {self.mac: Device(True, "", "", "", "", None)}
         if self.device_discovery_enabled:
-            device_hosts = await self._async_update_hosts_info()
+            device_hosts.update(await self._async_update_hosts_info())
         entity_reg: er.EntityRegistry = er.async_get(self.hass)
         config_entry = self.config_entry
 
@@ -699,6 +732,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             ) and entry_mac not in device_hosts:
                 _LOGGER.debug("Removing orphan entity entry %s", entity.entity_id)
                 entity_reg.async_remove(entity.entity_id)
+                self._devices.pop(entry_mac, None)
 
         device_reg = dr.async_get(self.hass)
         valid_connections = {
@@ -712,6 +746,29 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 device_reg.async_update_device(
                     device.id, remove_config_entry_id=config_entry.entry_id
                 )
+
+        fritz_data = self.hass.data[FRITZ_DATA_KEY]
+
+        tracked = fritz_data.tracked.get(self.unique_id, set())
+        for mac in tracked.copy():
+            if mac in device_hosts:
+                continue
+            _LOGGER.debug("Removing orphan mac address %s from device trackers", mac)
+            tracked.remove(mac)
+
+        profile_switches = fritz_data.profile_switches.get(self.unique_id, set())
+        for mac in profile_switches.copy():
+            if mac in device_hosts:
+                continue
+            _LOGGER.debug("Removing orphan mac address %s from profile switches", mac)
+            profile_switches.remove(mac)
+
+        wol_buttons = fritz_data.wol_buttons.get(self.unique_id, set())
+        for mac in wol_buttons.copy():
+            if mac in device_hosts:
+                continue
+            _LOGGER.debug("Removing orphan mac address %s from WOL buttons", mac)
+            wol_buttons.remove(mac)
 
 
 class AvmWrapper(FritzBoxTools):
@@ -742,7 +799,7 @@ class AvmWrapper(FritzBoxTools):
                     **kwargs,
                 )
             )
-        except FritzSecurityError:
+        except FRITZ_AUTH_EXCEPTIONS:
             _LOGGER.exception(
                 "Authorization Error: Please check the provided credentials and"
                 " verify that you can log into the web interface"
@@ -753,12 +810,6 @@ class AvmWrapper(FritzBoxTools):
                 "Service/Action Error: cannot execute service %s with action %s",
                 service_name,
                 action_name,
-            )
-            return {}
-        except FritzConnectionException:
-            _LOGGER.exception(
-                "Connection Error: Please check the device is properly configured"
-                " for remote login"
             )
             return {}
         return result
@@ -900,3 +951,15 @@ class AvmWrapper(FritzBoxTools):
             "X_AVM-DE_WakeOnLANByMACAddress",
             NewMACAddress=mac_address,
         )
+
+    async def async_get_firmware_extra_infos(self) -> dict[str, Any]:
+        """Return extra infos for firmware."""
+        return await self._async_service_call("UserInterface", "1", "X_AVM-DE_GetInfo")
+
+    async def async_get_device_uptime_hours(self) -> int:
+        """Get device uptime in hours."""
+
+        def _get_uptime_hours() -> int:
+            return int(self.fritz_status.device_uptime // 3600)
+
+        return await self.hass.async_add_executor_job(_get_uptime_hours)

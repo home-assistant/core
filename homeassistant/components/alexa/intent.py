@@ -224,7 +224,8 @@ def resolve_slot_data(key: str, request: dict[str, Any]) -> dict[str, str]:
                 resolved_data["id"] = possible_values[0]["id"]
 
         # If there is only one match use the resolved value, otherwise the
-        # resolution cannot be determined, so use the spoken slot value and empty string as id
+        # resolution cannot be determined, so use the spoken slot
+        # value and empty string as id
         if len(possible_values) == 1:
             resolved_data["value"] = possible_values[0]["name"]
         else:

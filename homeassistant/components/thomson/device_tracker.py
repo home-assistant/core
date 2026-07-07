@@ -1,9 +1,8 @@
 """Support for THOMSON routers."""
 
-from __future__ import annotations
-
 import logging
 import re
+from typing import override
 
 import telnetlib  # pylint: disable=deprecated-module
 import voluptuous as vol
@@ -60,11 +59,13 @@ class ThomsonDeviceScanner(DeviceScanner):
         data = self.get_thomson_data()
         self.success_init = data is not None
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
         return [client["mac"] for client in self.last_results]
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         if not self.last_results:

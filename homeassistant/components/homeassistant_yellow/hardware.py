@@ -1,7 +1,5 @@
 """The Home Assistant Yellow hardware platform."""
 
-from __future__ import annotations
-
 from homeassistant.components.hardware import BoardInfo, HardwareInfo
 from homeassistant.components.hassio import get_os_info
 from homeassistant.core import HomeAssistant, callback
@@ -18,8 +16,7 @@ MODEL = "yellow"
 @callback
 def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
     """Return board info."""
-    if (os_info := get_os_info(hass)) is None:
-        raise HomeAssistantError
+    os_info = get_os_info(hass)
     board: str | None
     if (board := os_info.get("board")) is None:
         raise HomeAssistantError

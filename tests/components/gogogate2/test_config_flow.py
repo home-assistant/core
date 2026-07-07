@@ -50,7 +50,7 @@ async def test_auth_fail(
         GogoGate2ApiErrorCode.CREDENTIALS_INCORRECT, "blah"
     )
     result = await hass.config_entries.flow.async_init(
-        "gogogate2", context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -70,7 +70,7 @@ async def test_auth_fail(
     api.reset_mock()
     api.async_info.side_effect = Exception("Generic connection error.")
     result = await hass.config_entries.flow.async_init(
-        "gogogate2", context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -88,7 +88,7 @@ async def test_auth_fail(
     api.reset_mock()
     api.async_info.side_effect = ApiError(0, "blah")
     result = await hass.config_entries.flow.async_init(
-        "gogogate2", context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

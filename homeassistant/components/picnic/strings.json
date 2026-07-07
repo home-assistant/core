@@ -7,10 +7,25 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "different_account": "Account should be the same as used for setting up the integration",
+      "invalid_2fa_code": "The verification code is incorrect or has expired.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "2fa": {
+        "data": {
+          "two_fa_code": "Verification code"
+        },
+        "description": "A verification code has been sent to you via your selected channel.",
+        "title": "Two-factor authentication"
+      },
+      "2fa_channel": {
+        "data": {
+          "two_fa_channel": "Channel"
+        },
+        "description": "A second factor is required to complete the login. Select the channel through which you want to receive your second factor.",
+        "title": "Two-factor authentication"
+      },
       "user": {
         "data": {
           "country_code": "Country code",
@@ -74,6 +89,14 @@
     "todo": {
       "shopping_cart": {
         "name": "Shopping cart"
+      }
+    }
+  },
+  "selector": {
+    "two_fa_channel": {
+      "options": {
+        "email": "Email",
+        "sms": "Text message (SMS)"
       }
     }
   },

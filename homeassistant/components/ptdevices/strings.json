@@ -1,0 +1,69 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "no_devices_found": "No devices are registered to your PTDevices account.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "The API token for your PTDevices account."
+        },
+        "description": "Enter the API token for your PTDevices account"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "depth_level": {
+        "name": "Level depth"
+      },
+      "percent_level": {
+        "name": "Level percent"
+      },
+      "probe_temperature": {
+        "name": "Probe temperature"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "not_connected": "Not connected",
+          "not_connected_yet": "Not connected yet",
+          "power_internet_out_or_receiver_not_working": "Power or internet out or receiver not working",
+          "press_transmitter_connect_button": "Press transmitter connect button",
+          "transmitter_not_reporting": "Transmitter not reporting",
+          "working": "Working"
+        }
+      },
+      "tx_signal": {
+        "name": "LoRa signal strength"
+      },
+      "volume_level": {
+        "name": "Level volume"
+      },
+      "wifi_signal": {
+        "name": "Wi-Fi signal strength"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to connect: {error}"
+    },
+    "invalid_access_token": {
+      "message": "Invalid access token: {error}"
+    }
+  }
+}

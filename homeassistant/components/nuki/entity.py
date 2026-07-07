@@ -1,6 +1,6 @@
 """The nuki component."""
 
-from __future__ import annotations
+from typing import override
 
 from pynuki.device import NukiDevice
 
@@ -29,6 +29,7 @@ class NukiEntity[_NukiDeviceT: NukiDevice](CoordinatorEntity[NukiCoordinator]):
         self._nuki_device = nuki_device
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Device info for Nuki entities."""
         return DeviceInfo(

@@ -65,21 +65,21 @@ async def test_sensors(
     state = hass.states.get("sensor.octoprint_actual_tool1_temp")
     assert state is not None
     assert state.state == "18.83"
-    assert state.name == "OctoPrint actual tool1 temp"
+    assert state.name == "OctoPrint Actual tool1 temp"
     entry = entity_registry.async_get("sensor.octoprint_actual_tool1_temp")
     assert entry.unique_id == "actual tool1 temp-uuid"
 
     state = hass.states.get("sensor.octoprint_target_tool1_temp")
     assert state is not None
     assert state.state == "37.83"
-    assert state.name == "OctoPrint target tool1 temp"
+    assert state.name == "OctoPrint Target tool1 temp"
     entry = entity_registry.async_get("sensor.octoprint_target_tool1_temp")
     assert entry.unique_id == "target tool1 temp-uuid"
 
     state = hass.states.get("sensor.octoprint_target_tool1_temp")
     assert state is not None
     assert state.state == "37.83"
-    assert state.name == "OctoPrint target tool1 temp"
+    assert state.name == "OctoPrint Target tool1 temp"
     entry = entity_registry.async_get("sensor.octoprint_target_tool1_temp")
     assert entry.unique_id == "target tool1 temp-uuid"
 
@@ -136,14 +136,14 @@ async def test_sensors_no_target_temp(
     state = hass.states.get("sensor.octoprint_actual_tool1_temp")
     assert state is not None
     assert state.state == "18.83"
-    assert state.name == "OctoPrint actual tool1 temp"
+    assert state.name == "OctoPrint Actual tool1 temp"
     entry = entity_registry.async_get("sensor.octoprint_actual_tool1_temp")
     assert entry.unique_id == "actual tool1 temp-uuid"
 
     state = hass.states.get("sensor.octoprint_target_tool1_temp")
     assert state is not None
     assert state.state == STATE_UNKNOWN
-    assert state.name == "OctoPrint target tool1 temp"
+    assert state.name == "OctoPrint Target tool1 temp"
     entry = entity_registry.async_get("sensor.octoprint_target_tool1_temp")
     assert entry.unique_id == "target tool1 temp-uuid"
 

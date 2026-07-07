@@ -1,7 +1,5 @@
 """Onkyo receiver."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable
 import contextlib
@@ -76,6 +74,8 @@ class ReceiverManager:
         if manager_task in done:
             # Something went wrong, so let's return the manager task,
             # so that it can be awaited to error out
+            wait_for_started_task.cancel()
+            await asyncio.wait((wait_for_started_task,))
             return manager_task
 
         return None

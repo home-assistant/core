@@ -1,11 +1,9 @@
 """Platform to control a Salda Smarty XP/XV ventilation unit."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from pysmarty2 import Smarty
 
@@ -66,6 +64,7 @@ class SmartyButton(SmartyEntity, ButtonEntity):
             f"{coordinator.config_entry.entry_id}_{entity_description.key}"
         )
 
+    @override
     async def async_press(self, **kwargs: Any) -> None:
         """Press the button."""
         await self.hass.async_add_executor_job(

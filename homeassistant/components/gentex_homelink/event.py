@@ -1,6 +1,6 @@
 """Platform for Event integration."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.core import HomeAssistant, callback
@@ -57,6 +57,7 @@ class HomeLinkEventEntity(EventEntity):
         self.coordinator = coordinator
         self.last_request_id: str | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()

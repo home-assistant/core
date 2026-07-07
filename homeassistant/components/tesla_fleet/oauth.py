@@ -1,6 +1,6 @@
 """Provide oauth implementations for the Tesla Fleet integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.application_credentials import (
     AuthImplementation,
@@ -28,6 +28,11 @@ class TeslaUserImplementation(AuthImplementation):
         )
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
-        return {"prompt": "login", "scope": " ".join(SCOPES)}
+        return {
+            "prompt": "login",
+            "prompt_missing_scopes": "true",
+            "scope": " ".join(SCOPES),
+        }

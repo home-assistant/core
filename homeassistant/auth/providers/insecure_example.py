@@ -1,9 +1,8 @@
 """Example auth provider."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import hmac
+from typing import override
 
 import voluptuous as vol
 
@@ -35,6 +34,7 @@ class InvalidAuthError(HomeAssistantError):
 class ExampleAuthProvider(AuthProvider):
     """Example auth provider based on hardcoded usernames and passwords."""
 
+    @override
     async def async_login_flow(
         self, context: AuthFlowContext | None
     ) -> ExampleLoginFlow:
@@ -63,6 +63,7 @@ class ExampleAuthProvider(AuthProvider):
         ):
             raise InvalidAuthError
 
+    @override
     async def async_get_or_create_credentials(
         self, flow_result: Mapping[str, str]
     ) -> Credentials:
@@ -76,6 +77,7 @@ class ExampleAuthProvider(AuthProvider):
         # Create new credentials.
         return self.async_create_credentials({"username": username})
 
+    @override
     async def async_user_meta_for_credentials(
         self, credentials: Credentials
     ) -> UserMeta:
@@ -97,6 +99,7 @@ class ExampleAuthProvider(AuthProvider):
 class ExampleLoginFlow(LoginFlow[ExampleAuthProvider]):
     """Handler for the login flow."""
 
+    @override
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
     ) -> AuthFlowResult:

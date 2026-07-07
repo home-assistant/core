@@ -35,7 +35,8 @@ def user_identifier() -> str:
 def setup_userinfo(user_identifier: str) -> Generator[Mock]:
     """Set up userinfo."""
     with patch("homeassistant.components.google_tasks.config_flow.build") as mock:
-        mock.return_value.userinfo.return_value.get.return_value.execute.return_value = {
+        userinfo = mock.return_value.userinfo.return_value.get
+        userinfo.return_value.execute.return_value = {
             "id": user_identifier,
             "name": "Test Name",
         }
@@ -52,7 +53,7 @@ async def test_full_flow(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        "google_tasks", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -107,7 +108,7 @@ async def test_api_not_enabled(
 ) -> None:
     """Check flow aborts if api is not enabled."""
     result = await hass.config_entries.flow.async_init(
-        "google_tasks", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -155,9 +156,13 @@ async def test_api_not_enabled(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "access_not_configured"
-    assert (
-        result["description_placeholders"]["message"]
-        == "Google Tasks API has not been used in project 0 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/tasks.googleapis.com/overview?project=0 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+    assert result["description_placeholders"]["message"] == (
+        "Google Tasks API has not been used in project 0 before or it"
+        " is disabled. Enable it by visiting"
+        " https://console.developers.google.com/apis/api/"
+        "tasks.googleapis.com/overview?project=0 then retry."
+        " If you enabled this API recently, wait a few minutes for"
+        " the action to propagate to our systems and retry."
     )
 
 
@@ -171,7 +176,7 @@ async def test_general_exception(
 ) -> None:
     """Check flow aborts if exception happens."""
     result = await hass.config_entries.flow.async_init(
-        "google_tasks", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,

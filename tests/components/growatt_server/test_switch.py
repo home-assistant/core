@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from growattServer import GrowattV1ApiError
+from growattServer import GrowattV1ApiError, GrowattV1ApiErrorCode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -89,15 +89,22 @@ async def test_switch_service_call_api_error(
 ) -> None:
     """Test handling API error when calling switch services."""
     # Mock API to raise error
-    mock_growatt_v1_api.min_write_parameter.side_effect = GrowattV1ApiError("API Error")
+    mock_growatt_v1_api.min_write_parameter.side_effect = GrowattV1ApiError(
+        message="API Error",
+        error_code=GrowattV1ApiErrorCode.NO_PRIVILEGE,
+        error_msg="API Error",
+    )
 
-    with pytest.raises(HomeAssistantError, match="Error while setting switch state"):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             service,
             {"entity_id": "switch.min123456_charge_from_grid"},
             blocking=True,
         )
+    assert excinfo.value.translation_domain == "growatt_server"
+    assert excinfo.value.translation_key == "api_error"
+    assert "error" in excinfo.value.translation_placeholders
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

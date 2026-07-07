@@ -1,8 +1,7 @@
 """Support for Bosch Alarm Panel binary sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from bosch_alarm_mode2 import Panel
 from bosch_alarm_mode2.const import ALARM_PANEL_FAULTS
@@ -30,21 +29,18 @@ class BoschAlarmFaultEntityDescription(BinarySensorEntityDescription):
 FAULT_TYPES = [
     BoschAlarmFaultEntityDescription(
         key="panel_fault_battery_low",
-        entity_registry_enabled_default=True,
         device_class=BinarySensorDeviceClass.BATTERY,
         fault=ALARM_PANEL_FAULTS.BATTERY_LOW,
     ),
     BoschAlarmFaultEntityDescription(
         key="panel_fault_battery_mising",
         translation_key="panel_fault_battery_mising",
-        entity_registry_enabled_default=True,
         device_class=BinarySensorDeviceClass.PROBLEM,
         fault=ALARM_PANEL_FAULTS.BATTERY_MISING,
     ),
     BoschAlarmFaultEntityDescription(
         key="panel_fault_ac_fail",
         translation_key="panel_fault_ac_fail",
-        entity_registry_enabled_default=True,
         device_class=BinarySensorDeviceClass.PROBLEM,
         fault=ALARM_PANEL_FAULTS.AC_FAIL,
     ),
@@ -174,6 +170,7 @@ class PanelFaultsSensor(BoschAlarmEntity, BinarySensorEntity):
         self._attr_unique_id = f"{unique_id}_fault_{entity_description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if this fault has occurred."""
         return self._fault_type in self.panel.panel_faults_ids
@@ -187,7 +184,7 @@ class AreaReadyToArmSensor(BoschAlarmAreaEntity, BinarySensorEntity):
     def __init__(
         self, panel: Panel, area_id: int, unique_id: str, arm_type: str
     ) -> None:
-        """Set up a binary sensor entity for the arming status in a bosch alarm panel."""
+        """Set up a binary sensor for arming status in a bosch panel."""
         super().__init__(panel, area_id, unique_id, False, False, True)
         self.panel = panel
         self._arm_type = arm_type
@@ -195,6 +192,7 @@ class AreaReadyToArmSensor(BoschAlarmAreaEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self._area_unique_id}_ready_to_arm_{arm_type}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if this panel is ready to arm."""
         if self._arm_type == "away":
@@ -215,6 +213,7 @@ class PointSensor(BoschAlarmPointEntity, BinarySensorEntity):
         self._attr_unique_id = self._point_unique_id
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if this point sensor is on."""
         return self._point.is_open()

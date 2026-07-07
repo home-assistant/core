@@ -1,11 +1,10 @@
 """Coordinator for the ToGrill Bluetooth integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
+from typing import override
 
 from bleak.exc import BleakError
 from togrill_bluetooth.client import Client
@@ -32,7 +31,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_PROBE_COUNT, DOMAIN
+from .const import CONF_HAS_AMBIENT, CONF_PROBE_COUNT, DOMAIN
 
 type ToGrillConfigEntry = ConfigEntry[ToGrillCoordinator]
 
@@ -165,6 +164,7 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
 
         return client
 
+    @override
     async def async_shutdown(self) -> None:
         """Shutdown coordinator and disconnect from device."""
         await super().async_shutdown()
@@ -195,6 +195,7 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         self.async_update_packet_listeners(packet)
         self.async_update_listeners()
 
+    @override
     async def _async_update_data(self) -> dict[tuple[int, int | None], Packet]:
         """Poll the device."""
         if self.client and not self.client.is_connected:
@@ -213,6 +214,8 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
             await client.request(PacketA1Notify)
             for probe in range(1, self.config_entry.data[CONF_PROBE_COUNT] + 1):
                 await client.write(PacketA8Write(probe=probe))
+            if self.config_entry.data.get(CONF_HAS_AMBIENT):
+                await client.write(PacketA8Write(probe=0))
         except BleakError as exc:
             raise DeviceFailed(f"Device failed {exc}") from exc
         return self.data

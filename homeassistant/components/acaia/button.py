@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from aioacaia.acaiascale import AcaiaScale
 
@@ -58,6 +58,7 @@ class AcaiaButton(AcaiaEntity, ButtonEntity):
 
     entity_description: AcaiaButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.entity_description.press_fn(self._scale)

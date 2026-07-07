@@ -6,7 +6,10 @@
     "step": {
       "user": {
         "data": {
-          "serial_port": "[%key:common::config_flow::data::usb_path%]"
+          "serial_port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "serial_port": "Serial port path to connect to"
         },
         "title": "Add your EDL21 smart meter"
       }

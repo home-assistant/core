@@ -24,10 +24,12 @@
       },
       "user": {
         "data": {
+          "oem": "Manufacturer",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
+          "oem": "The brand that sold the equipment",
           "password": "Your Hypontech Cloud account password.",
           "username": "Your Hypontech Cloud account username."
         }
@@ -36,11 +38,29 @@
   },
   "entity": {
     "sensor": {
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "battery_state_of_charge": {
+        "name": "Battery state of charge"
+      },
+      "grid_power": {
+        "name": "Grid power"
+      },
       "lifetime_energy": {
         "name": "Lifetime energy"
       },
+      "load_power": {
+        "name": "Load power"
+      },
+      "pv_power": {
+        "name": "PV power"
+      },
       "today_energy": {
         "name": "Today energy"
+      },
+      "total_power": {
+        "name": "Total power"
       }
     }
   },

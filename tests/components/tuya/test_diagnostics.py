@@ -1,7 +1,5 @@
 """Test Tuya diagnostics platform."""
 
-from __future__ import annotations
-
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
@@ -37,6 +35,12 @@ async def test_entry_diagnostics(
         hass, hass_client, mock_config_entry
     )
 
+    # Sort the lists of entities by entity_id to ensure consistent ordering
+    # for snapshot testing
+    for device in result["devices"]:
+        device["home_assistant"]["entities"] = sorted(
+            device["home_assistant"]["entities"], key=lambda x: x["state"]["entity_id"]
+        )
     assert result == snapshot(
         exclude=props("last_changed", "last_reported", "last_updated")
     )
@@ -67,6 +71,11 @@ async def test_device_diagnostics(
 
     result = await get_diagnostics_for_device(
         hass, hass_client, mock_config_entry, device
+    )
+    # Sort the list of entities by entity_id to ensure consistent ordering
+    # for snapshot testing
+    result["home_assistant"]["entities"] = sorted(
+        result["home_assistant"]["entities"], key=lambda x: x["state"]["entity_id"]
     )
     assert result == snapshot(
         exclude=props("last_changed", "last_reported", "last_updated")

@@ -1,0 +1,58 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Marantz device has already been configured with this transmitter.",
+      "no_emitters": "No infrared transmitter entities found. Please set up an infrared device first."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "infrared_emitter_entity_id": "Infrared transmitter",
+          "model": "Model"
+        },
+        "data_description": {
+          "infrared_emitter_entity_id": "The infrared transmitter entity to use for sending commands.",
+          "model": "The Marantz model to control."
+        },
+        "description": "Select the Marantz model and the infrared transmitter entity to use for controlling your Marantz device.",
+        "title": "Set up Marantz IR Remote"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "loudness": {
+        "name": "Loudness"
+      },
+      "source_direct": {
+        "name": "Source direct"
+      },
+      "speaker_ab": {
+        "name": "Speaker A/B"
+      }
+    },
+    "media_player": {
+      "receiver": {
+        "state_attributes": {
+          "source": {
+            "state": {
+              "cd": "CD",
+              "coax": "Coax",
+              "laserdisc": "LaserDisc",
+              "md": "MD",
+              "network": "Network",
+              "optical": "Optical",
+              "phono": "Phono",
+              "recorder": "Recorder",
+              "satellite": "Satellite",
+              "tape": "Tape",
+              "tuner": "Tuner",
+              "tv": "TV",
+              "vcr": "VCR"
+            }
+          }
+        }
+      }
+    }
+  }
+}

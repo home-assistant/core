@@ -1,7 +1,5 @@
 """The Opower integration."""
 
-from __future__ import annotations
-
 from opower import select_utility
 
 from homeassistant.const import Platform

@@ -1,7 +1,5 @@
 """Fixtures for the History stats integration."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from datetime import timedelta
 from typing import Any

@@ -1,12 +1,10 @@
 """Helper and wrapper classes for Gree module."""
 
-from __future__ import annotations
-
 import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from greeclimate.device import Device, DeviceInfo
 from greeclimate.discovery import Discovery, Listener
@@ -73,6 +71,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._last_response_time = utcnow()
         self.async_set_updated_data(self.device.raw_properties)
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update the state of the device."""
         _LOGGER.debug(
@@ -96,7 +95,8 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     f"Device {self.name} is unavailable, could not send update request"
                 ) from error
         else:
-            # raise update failed if time for more than MAX_ERRORS has passed since last update
+            # raise update failed if time for more than
+            # MAX_ERRORS has passed since last update
             now = utcnow()
             elapsed_success = now - self._last_response_time
             if self.update_interval and elapsed_success >= timedelta(
@@ -117,7 +117,8 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._error_count = 0
             if self.last_update_success and self._error_count >= MAX_ERRORS:
                 raise UpdateFailed(
-                    f"Device {self.name} is unresponsive for too long and now unavailable"
+                    f"Device {self.name} is unresponsive for"
+                    " too long and now unavailable"
                 )
 
         self._last_response_time = utcnow()

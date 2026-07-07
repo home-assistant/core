@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_sensor[sensor.de_jongweg_utrecht_air_quality_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -40,10 +41,10 @@
 # name: test_sensor[sensor.de_jongweg_utrecht_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'device_class': 'aqi',
-      'friendly_name': 'de Jongweg, Utrecht Air quality index',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'aqi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'de Jongweg, Utrecht Air quality index',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.de_jongweg_utrecht_air_quality_index',
@@ -55,11 +56,12 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_carbon_monoxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -94,9 +96,9 @@
 # name: test_sensor[sensor.de_jongweg_utrecht_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'friendly_name': 'de Jongweg, Utrecht Carbon monoxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'de Jongweg, Utrecht Carbon monoxide',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.de_jongweg_utrecht_carbon_monoxide',
@@ -108,11 +110,12 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_dominant_pollutant-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'co',
         'no2',
         'o3',
@@ -155,10 +158,10 @@
 # name: test_sensor[sensor.de_jongweg_utrecht_dominant_pollutant-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'device_class': 'enum',
-      'friendly_name': 'de Jongweg, Utrecht Dominant pollutant',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'de Jongweg, Utrecht Dominant pollutant',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'co',
         'no2',
         'o3',
@@ -178,11 +181,12 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -217,11 +221,11 @@
 # name: test_sensor[sensor.de_jongweg_utrecht_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'device_class': 'humidity',
-      'friendly_name': 'de Jongweg, Utrecht Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'de Jongweg, Utrecht Humidity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.de_jongweg_utrecht_humidity',
@@ -233,11 +237,12 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_nitrogen_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -272,9 +277,9 @@
 # name: test_sensor[sensor.de_jongweg_utrecht_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'friendly_name': 'de Jongweg, Utrecht Nitrogen dioxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'de Jongweg, Utrecht Nitrogen dioxide',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.de_jongweg_utrecht_nitrogen_dioxide',
@@ -286,11 +291,12 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_ozone-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -325,9 +331,9 @@
 # name: test_sensor[sensor.de_jongweg_utrecht_ozone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'friendly_name': 'de Jongweg, Utrecht Ozone',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'de Jongweg, Utrecht Ozone',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.de_jongweg_utrecht_ozone',
@@ -339,11 +345,12 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_pm10-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -378,9 +385,9 @@
 # name: test_sensor[sensor.de_jongweg_utrecht_pm10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'friendly_name': 'de Jongweg, Utrecht PM10',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'de Jongweg, Utrecht PM10',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.de_jongweg_utrecht_pm10',
@@ -392,11 +399,12 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -431,9 +439,9 @@
 # name: test_sensor[sensor.de_jongweg_utrecht_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'friendly_name': 'de Jongweg, Utrecht PM2.5',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'de Jongweg, Utrecht PM2.5',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.de_jongweg_utrecht_pm2_5',
@@ -445,11 +453,12 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -487,11 +496,11 @@
 # name: test_sensor[sensor.de_jongweg_utrecht_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'device_class': 'pressure',
-      'friendly_name': 'de Jongweg, Utrecht Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pressure',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'de Jongweg, Utrecht Pressure',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.de_jongweg_utrecht_pressure',
@@ -503,11 +512,12 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_sulphur_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -542,9 +552,9 @@
 # name: test_sensor[sensor.de_jongweg_utrecht_sulphur_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'friendly_name': 'de Jongweg, Utrecht Sulphur dioxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'de Jongweg, Utrecht Sulphur dioxide',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.de_jongweg_utrecht_sulphur_dioxide',
@@ -556,11 +566,12 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -598,11 +609,11 @@
 # name: test_sensor[sensor.de_jongweg_utrecht_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'device_class': 'temperature',
-      'friendly_name': 'de Jongweg, Utrecht Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'de Jongweg, Utrecht Temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.de_jongweg_utrecht_temperature',
@@ -614,11 +625,12 @@
 # ---
 # name: test_sensor[sensor.de_jongweg_utrecht_visibility_using_nephelometry-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -653,9 +665,9 @@
 # name: test_sensor[sensor.de_jongweg_utrecht_visibility_using_nephelometry-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'friendly_name': 'de Jongweg, Utrecht Visibility using nephelometry',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'de Jongweg, Utrecht Visibility using nephelometry',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.de_jongweg_utrecht_visibility_using_nephelometry',

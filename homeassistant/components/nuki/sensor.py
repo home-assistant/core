@@ -1,6 +1,6 @@
 """Battery sensor for the Nuki Lock."""
 
-from __future__ import annotations
+from typing import override
 
 from pynuki.device import NukiDevice
 
@@ -9,23 +9,21 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NukiEntryData
-from .const import DOMAIN
+from .coordinator import NukiConfigEntry
 from .entity import NukiEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NukiConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Nuki lock sensor."""
-    entry_data: NukiEntryData = hass.data[DOMAIN][entry.entry_id]
+    entry_data = entry.runtime_data
 
     async_add_entities(
         NukiBatterySensor(entry_data.coordinator, lock) for lock in entry_data.locks
@@ -42,11 +40,13 @@ class NukiBatterySensor(NukiEntity[NukiDevice], SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self._nuki_device.nuki_id}_battery_level"
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the sensor."""
         return self._nuki_device.battery_charge

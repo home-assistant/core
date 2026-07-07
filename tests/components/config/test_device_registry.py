@@ -6,7 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_unordered import unordered
 
-from homeassistant.components.config import device_registry
+from homeassistant.components.config import DOMAIN, device_registry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -268,7 +268,7 @@ async def test_remove_config_entry_from_device(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test removing config entry from device."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     can_remove = False
@@ -354,7 +354,7 @@ async def test_remove_config_entry_from_device_fails(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test removing config entry from device failing cases."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     async def async_remove_config_entry_device(
@@ -470,8 +470,11 @@ async def test_remove_config_entry_from_device_if_integration_remove(
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test removing config entry from device doesn't lead to an error when the integration removes the entry."""
-    assert await async_setup_component(hass, "config", {})
+    """Test removing config entry from device.
+
+    Should not error when the integration removes the entry.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     can_remove = False

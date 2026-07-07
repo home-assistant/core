@@ -1,7 +1,5 @@
 """Constants for Camera component."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
@@ -28,6 +26,15 @@ CONF_DURATION: Final = "duration"
 
 CAMERA_STREAM_SOURCE_TIMEOUT: Final = 10
 CAMERA_IMAGE_TIMEOUT: Final = 10
+
+
+class CameraEntityStateAttribute(StrEnum):
+    """State attributes for camera entities."""
+
+    ACCESS_TOKEN = "access_token"
+    MODEL_NAME = "model_name"
+    BRAND = "brand"
+    MOTION_DETECTION = "motion_detection"
 
 
 class CameraState(StrEnum):

@@ -28,6 +28,7 @@ async def sensor_only() -> AsyncGenerator[None]:
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.freeze_time("2026-05-03T18:20:54+00:00")
 async def test_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

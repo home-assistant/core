@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for TechnoVE."""
 
-from __future__ import annotations
+from typing import override
 
 from technove import Station as TechnoVEStation, TechnoVE, TechnoVEError
 
@@ -34,6 +34,7 @@ class TechnoVEDataUpdateCoordinator(DataUpdateCoordinator[TechnoVEStation]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> TechnoVEStation:
         """Fetch data from TechnoVE."""
         try:

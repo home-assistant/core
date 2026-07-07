@@ -1,12 +1,10 @@
 """Config flow to configure the Synology DSM integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from contextlib import suppress
 from ipaddress import ip_address as ip
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 from urllib.parse import urlparse
 
 from synology_dsm import SynologyDSM
@@ -130,6 +128,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: SynologyDSMConfigEntry,
     ) -> SynologyDSMOptionsFlowHandler:
@@ -274,6 +273,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             title=friendly_name or host, data=config_data, options=config_options
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -283,6 +283,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_form(step)
         return await self.async_validate_input_create_entry(user_input, step_id=step)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -298,6 +299,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         friendly_name = discovery_info.name.removesuffix(HTTP_SUFFIX)
         return await self._async_from_discovery(host, friendly_name, discovered_macs)
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -307,7 +309,8 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         friendly_name = upnp_friendly_name.split("(", 1)[0].strip()
         mac_address = discovery_info.upnp[ATTR_UPNP_SERIAL]
         discovered_macs = [format_synology_mac(mac_address)]
-        # Synology NAS can broadcast on multiple IP addresses, since they can be connected to multiple ethernets.
+        # Synology NAS can broadcast on multiple IP addresses,
+        # since they can be connected to multiple Ethernet interfaces.
         # The serial of the NAS is actually its MAC address.
         host = cast(str, parsed_url.hostname)
         return await self._async_from_discovery(host, friendly_name, discovered_macs)

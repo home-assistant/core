@@ -1,10 +1,10 @@
 """Netatmo Media Source Implementation."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import datetime as dt
 import logging
 import re
+from typing import override
 
 from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
 from homeassistant.components.media_source import (
@@ -43,12 +43,14 @@ class NetatmoSource(MediaSource):
         self.hass = hass
         self.events = self.hass.data[DOMAIN][DATA_EVENTS]
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         _, camera_id, event_id = async_parse_identifier(item)
         url = self.events[camera_id][event_id]["media_url"]
         return PlayMedia(url, MIME_TYPE)
 
+    @override
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return media."""
         try:

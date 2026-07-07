@@ -3,6 +3,7 @@
   "name": "Sony Bravia TV",
   "codeowners": ["@bieniu", "@Drafteed"],
   "config_flow": true,
+  "dependencies": ["ssdp"],
   "documentation": "https://www.home-assistant.io/integrations/braviatv",
   "integration_type": "device",
   "iot_class": "local_polling",

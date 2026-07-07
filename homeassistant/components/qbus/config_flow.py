@@ -1,9 +1,7 @@
 """Config flow for Qbus."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from qbusmqttapi.discovery import QbusMqttDevice
 from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
@@ -35,6 +33,7 @@ class QbusFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._device: QbusMqttDevice | None = None
 
+    @override
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
@@ -81,6 +80,7 @@ class QbusFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

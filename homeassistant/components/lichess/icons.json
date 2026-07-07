@@ -1,0 +1,96 @@
+{
+  "entity": {
+    "sensor": {
+      "antichess_games": {
+        "default": "mdi:chess-pawn"
+      },
+      "antichess_rating": {
+        "default": "mdi:chart-line"
+      },
+      "atomic_games": {
+        "default": "mdi:chess-pawn"
+      },
+      "atomic_rating": {
+        "default": "mdi:chart-line"
+      },
+      "blitz_games": {
+        "default": "mdi:chess-pawn"
+      },
+      "blitz_rating": {
+        "default": "mdi:chart-line"
+      },
+      "bullet_games": {
+        "default": "mdi:chess-pawn"
+      },
+      "bullet_rating": {
+        "default": "mdi:chart-line"
+      },
+      "chess960_games": {
+        "default": "mdi:chess-pawn"
+      },
+      "chess960_rating": {
+        "default": "mdi:chart-line"
+      },
+      "classical_games": {
+        "default": "mdi:chess-pawn"
+      },
+      "classical_rating": {
+        "default": "mdi:chart-line"
+      },
+      "correspondence_games": {
+        "default": "mdi:chess-pawn"
+      },
+      "correspondence_rating": {
+        "default": "mdi:chart-line"
+      },
+      "crazyhouse_games": {
+        "default": "mdi:chess-pawn"
+      },
+      "crazyhouse_rating": {
+        "default": "mdi:chart-line"
+      },
+      "horde_games": {
+        "default": "mdi:chess-pawn"
+      },
+      "horde_rating": {
+        "default": "mdi:chart-line"
+      },
+      "king_of_the_hill_games": {
+        "default": "mdi:chess-pawn"
+      },
+      "king_of_the_hill_rating": {
+        "default": "mdi:chart-line"
+      },
+      "puzzle_games": {
+        "default": "mdi:puzzle"
+      },
+      "puzzle_rating": {
+        "default": "mdi:chart-line"
+      },
+      "racing_kings_games": {
+        "default": "mdi:chess-pawn"
+      },
+      "racing_kings_rating": {
+        "default": "mdi:chart-line"
+      },
+      "rapid_games": {
+        "default": "mdi:chess-pawn"
+      },
+      "rapid_rating": {
+        "default": "mdi:chart-line"
+      },
+      "three_check_games": {
+        "default": "mdi:chess-pawn"
+      },
+      "three_check_rating": {
+        "default": "mdi:chart-line"
+      },
+      "ultra_bullet_games": {
+        "default": "mdi:chess-pawn"
+      },
+      "ultra_bullet_rating": {
+        "default": "mdi:chart-line"
+      }
+    }
+  }
+}

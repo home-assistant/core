@@ -55,6 +55,7 @@ def run(args: Sequence[str] | None) -> None:
 async def run_command(args: argparse.Namespace) -> None:
     """Run the command."""
     hass = HomeAssistant(os.path.join(os.getcwd(), args.config))
+    dr.async_setup(hass)
     await asyncio.gather(dr.async_load(hass), er.async_load(hass))
     hass.auth = await auth_manager_from_config(hass, [{"type": "homeassistant"}], [])
     provider = hass.auth.auth_providers[0]

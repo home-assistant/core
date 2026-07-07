@@ -1,7 +1,5 @@
 """Helpers for the Music Assistant integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 import functools
 from typing import TYPE_CHECKING, Any

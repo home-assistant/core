@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "notify": {
+      "notify": {
+        "default": "mdi:cellphone-message"
+      }
+    }
+  }
+}

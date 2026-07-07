@@ -44,6 +44,10 @@ def mock_momonga(exception=None) -> Generator[Mock]:
         }
         client.get_instantaneous_power.return_value = 3
         client.get_measured_cumulative_energy.return_value = 4
+        client.get_serial_number.return_value = "TEST_SERIAL"
+        client.get_manufacturer_code.return_value = b"\x00\x00\x16"
+        client.get_standard_version.return_value = "F.0"
+        client.internal_xmit_interval = 0
         yield mock_momonga
 
 

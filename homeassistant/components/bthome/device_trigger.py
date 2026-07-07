@@ -1,7 +1,5 @@
 """Provides device triggers for BTHome BLE."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -30,6 +28,7 @@ from .const import (
     DOMAIN,
     EVENT_CLASS,
     EVENT_CLASS_BUTTON,
+    EVENT_CLASS_COMMAND,
     EVENT_CLASS_DIMMER,
     EVENT_TYPE,
 )
@@ -45,6 +44,7 @@ EVENT_TYPES_BY_EVENT_CLASS = {
         "hold_press",
     },
     EVENT_CLASS_DIMMER: {"rotate_left", "rotate_right"},
+    EVENT_CLASS_COMMAND: {"off", "on", "toggle", "step_up", "step_down"},
 }
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(

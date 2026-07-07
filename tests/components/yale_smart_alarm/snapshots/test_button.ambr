@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_button[load_platforms0][button.test_username_panic_button-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -31,14 +32,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'panic',
-    'unique_id': 'yale_smart_alarm-panic',
+    'unique_id': '1-panic',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_button[load_platforms0][button.test_username_panic_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test-username Panic button',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-username Panic button',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_username_panic_button',

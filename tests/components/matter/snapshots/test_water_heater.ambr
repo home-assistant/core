@@ -1,13 +1,14 @@
 # serializer version: 1
 # name: test_water_heaters[silabs_water_heater][water_heater.water_heater-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max_temp': 65,
-      'min_temp': 40,
-      'operation_list': list([
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 65,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 40,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
         'eco',
         'high_demand',
         'off',
@@ -46,20 +47,20 @@
 # name: test_water_heaters[silabs_water_heater][water_heater.water_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 50,
-      'friendly_name': 'Water Heater',
-      'max_temp': 65,
-      'min_temp': 40,
-      'operation_list': list([
+      <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 50,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Heater',
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 65,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 40,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
         'eco',
         'high_demand',
         'off',
       ]),
-      'operation_mode': 'eco',
-      'supported_features': <WaterHeaterEntityFeature: 11>,
-      'target_temp_high': None,
-      'target_temp_low': None,
-      'temperature': 65,
+      <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'eco',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 11>,
+      <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 65,
     }),
     'context': <ANY>,
     'entity_id': 'water_heater.water_heater',

@@ -1,21 +1,26 @@
 """Support for MQTT vacuums."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
 from homeassistant.components import vacuum
 from homeassistant.components.vacuum import (
     ENTITY_ID_FORMAT,
+    Segment,
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    STATE_IDLE,
+    STATE_PAUSED,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -27,19 +32,18 @@ from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import CONF_COMMAND_TOPIC, CONF_RETAIN, CONF_STATE_TOPIC
 from .entity import MqttEntity, async_setup_entity_entry_helper
-from .models import ReceiveMessage
+from .models import MqttCommandTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic
 
 PARALLEL_UPDATES = 0
 
 FAN_SPEED = "fan_speed"
+SEGMENTS = "segments"
 STATE = "state"
 
-STATE_IDLE = "idle"
 STATE_DOCKED = "docked"
 STATE_ERROR = "error"
-STATE_PAUSED = "paused"
 STATE_RETURNING = "returning"
 STATE_CLEANING = "cleaning"
 
@@ -52,6 +56,8 @@ POSSIBLE_STATES: dict[str, VacuumActivity] = {
     STATE_CLEANING: VacuumActivity.CLEANING,
 }
 
+CONF_CLEAN_SEGMENTS_COMMAND_TOPIC = "clean_segments_command_topic"
+CONF_CLEAN_SEGMENTS_COMMAND_TEMPLATE = "clean_segments_command_template"
 CONF_SUPPORTED_FEATURES = ATTR_SUPPORTED_FEATURES
 CONF_PAYLOAD_TURN_ON = "payload_turn_on"
 CONF_PAYLOAD_TURN_OFF = "payload_turn_off"
@@ -137,8 +143,23 @@ MQTT_VACUUM_ATTRIBUTES_BLOCKED = frozenset(
 MQTT_VACUUM_DOCS_URL = "https://www.home-assistant.io/integrations/vacuum.mqtt/"
 
 
-PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
+def validate_clean_area_config(config: ConfigType) -> ConfigType:
+    """Validate clean area configuration."""
+    if CONF_CLEAN_SEGMENTS_COMMAND_TOPIC not in config:
+        return config
+    if not config.get(CONF_UNIQUE_ID):
+        raise vol.Invalid(
+            f"Option `{CONF_CLEAN_SEGMENTS_COMMAND_TOPIC}`"
+            f" requires `{CONF_UNIQUE_ID}` to be configured"
+        )
+
+    return config
+
+
+_BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
+        vol.Optional(CONF_CLEAN_SEGMENTS_COMMAND_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_CLEAN_SEGMENTS_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
             cv.ensure_list, [cv.string]
         ),
@@ -164,7 +185,10 @@ PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.ALLOW_EXTRA)
+PLATFORM_SCHEMA_MODERN = vol.All(_BASE_SCHEMA, validate_clean_area_config)
+DISCOVERY_SCHEMA = vol.All(
+    _BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA), validate_clean_area_config
+)
 
 
 async def async_setup_entry(
@@ -191,9 +215,11 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_VACUUM_ATTRIBUTES_BLOCKED
 
+    _segments: list[Segment]
     _command_topic: str | None
     _set_fan_speed_topic: str | None
     _send_command_topic: str | None
+    _clean_segments_command_topic: str | None = None
     _payloads: dict[str, str | None]
 
     def __init__(
@@ -209,10 +235,12 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
 
@@ -228,7 +256,19 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         supported_feature_strings: list[str] = config[CONF_SUPPORTED_FEATURES]
         self._attr_supported_features = _strings_to_services(
             supported_feature_strings, STRING_TO_SERVICE
+        ) | (
+            self.supported_features & VacuumEntityFeature.CLEAN_AREA
+            if CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config
+            else 0
         )
+        self._clean_segments_command_topic = config.get(
+            CONF_CLEAN_SEGMENTS_COMMAND_TOPIC
+        )
+        self._clean_segments_command_template = MqttCommandTemplate(
+            config.get(CONF_CLEAN_SEGMENTS_COMMAND_TEMPLATE),
+            entity=self,
+        ).async_render
+
         self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
         self._command_topic = config.get(CONF_COMMAND_TOPIC)
         self._set_fan_speed_topic = config.get(CONF_SET_FAN_SPEED_TOPIC)
@@ -262,20 +302,56 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                 POSSIBLE_STATES[cast(str, state)] if payload[STATE] else None
             )
             del payload[STATE]
+        if (
+            (segments_payload := payload.pop(SEGMENTS, None))
+            and self._clean_segments_command_topic is not None
+            and isinstance(segments_payload, dict)
+            and (
+                segments := [
+                    Segment(id=segment_id, name=str(segment_name))
+                    for segment_id, segment_name in segments_payload.items()
+                ]
+            )
+        ):
+            self._segments = segments
+            self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA
+            if (last_seen := self.last_seen_segments) is not None and {
+                s.id: s for s in last_seen
+            } != {s.id: s for s in self._segments}:
+                self.async_create_segments_issue()
+
         self._update_state_attributes(payload)
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
             CONF_STATE_TOPIC,
             self._state_message_received,
-            {"_attr_battery_level", "_attr_fan_speed", "_attr_activity"},
+            {"_attr_fan_speed", "_attr_activity"},
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
+
+    @override
+    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+        """Perform an area clean."""
+        assert self._clean_segments_command_topic is not None
+        await self.async_publish_with_config(
+            self._clean_segments_command_topic,
+            self._clean_segments_command_template(
+                json_dumps(segment_ids), {"value": segment_ids}
+            ),
+        )
+
+    @override
+    async def async_get_segments(self) -> list[Segment]:
+        """Return the available segments."""
+        return self._segments
 
     async def _async_publish_command(self, feature: VacuumEntityFeature) -> None:
         """Publish a command."""
@@ -286,30 +362,37 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         )
         self.async_write_ha_state()
 
+    @override
     async def async_start(self) -> None:
         """Start the vacuum."""
         await self._async_publish_command(VacuumEntityFeature.START)
 
+    @override
     async def async_pause(self) -> None:
         """Pause the vacuum."""
         await self._async_publish_command(VacuumEntityFeature.PAUSE)
 
+    @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum."""
         await self._async_publish_command(VacuumEntityFeature.STOP)
 
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Tell the vacuum to return to its dock."""
         await self._async_publish_command(VacuumEntityFeature.RETURN_HOME)
 
+    @override
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
         await self._async_publish_command(VacuumEntityFeature.CLEAN_SPOT)
 
+    @override
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum (usually by playing a song)."""
         await self._async_publish_command(VacuumEntityFeature.LOCATE)
 
+    @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         if (
@@ -320,6 +403,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             return
         await self.async_publish_with_config(self._set_fan_speed_topic, fan_speed)
 
+    @override
     async def async_send_command(
         self,
         command: str,

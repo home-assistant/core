@@ -1,8 +1,6 @@
 """Support for HomeMatic switches."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -35,6 +33,7 @@ class HMSwitch(HMDevice, SwitchEntity):
     """Representation of a HomeMatic switch."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if switch is on."""
         try:
@@ -53,14 +52,17 @@ class HMSwitch(HMDevice, SwitchEntity):
 
         return None
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._hmdevice.on(self._channel)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._hmdevice.off(self._channel)
 
+    @override
     def _init_data_struct(self) -> None:
         """Generate the data dictionary (self._data) from metadata."""
         self._state = "STATE"

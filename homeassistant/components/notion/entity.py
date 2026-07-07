@@ -1,8 +1,7 @@
 """Support for Notion."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from aionotion.bridge.models import Bridge
 from aionotion.listener.models import Listener, ListenerKind
@@ -61,6 +60,7 @@ class NotionEntity(CoordinatorEntity[NotionDataUpdateCoordinator]):
         self.entity_description = description
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -116,6 +116,7 @@ class NotionEntity(CoordinatorEntity[NotionDataUpdateCoordinator]):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Respond to a DataUpdateCoordinator update."""
         if self._listener_id in self.coordinator.data.listeners:

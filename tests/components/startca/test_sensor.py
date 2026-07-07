@@ -209,7 +209,7 @@ async def test_bad_return_code(
         status=HTTPStatus.NOT_FOUND,
     )
 
-    scd = StartcaData(hass.loop, async_get_clientsession(hass), "NOTAKEY", 400)
+    scd = StartcaData(async_get_clientsession(hass), "NOTAKEY", 400)
 
     result = await scd.async_update()
     assert result is False
@@ -223,7 +223,7 @@ async def test_bad_json_decode(
         "https://www.start.ca/support/usage/api?key=NOTAKEY", text="this is not xml"
     )
 
-    scd = StartcaData(hass.loop, async_get_clientsession(hass), "NOTAKEY", 400)
+    scd = StartcaData(async_get_clientsession(hass), "NOTAKEY", 400)
 
     result = await scd.async_update()
     assert result is False

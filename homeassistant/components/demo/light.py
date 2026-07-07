@@ -1,9 +1,7 @@
 """Demo light platform that implements lights."""
 
-from __future__ import annotations
-
 import random
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -149,12 +147,14 @@ class DemoLight(LightEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return availability."""
         # This demo light is always available, but well-behaving components
         # should implement this to inform Home Assistant accordingly.
         return True
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         self._attr_is_on = True
@@ -189,6 +189,7 @@ class DemoLight(LightEntity):
         # Home Assistant about updates in our state ourselves.
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         self._attr_is_on = False

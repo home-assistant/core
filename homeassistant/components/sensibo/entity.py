@@ -1,10 +1,8 @@
 """Base entity for Sensibo integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
-from typing import TYPE_CHECKING, Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate, override
 
 from pysensibo.model import MotionSensor, SensiboDevice
 
@@ -76,6 +74,7 @@ class SensiboBaseEntity(CoordinatorEntity[SensiboDataUpdateCoordinator]):
         return self.coordinator.data.parsed[self._device_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.device_data.available and super().available
@@ -137,6 +136,7 @@ class SensiboMotionBaseEntity(SensiboBaseEntity):
         return self.device_data.motion_sensors[self._sensor_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return bool(self.sensor_data.alive) and super().available

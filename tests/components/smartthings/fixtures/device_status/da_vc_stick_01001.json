@@ -1,0 +1,426 @@
+{
+  "components": {
+    "station": {
+      "samsungce.cleanStationStickStatus": {
+        "status": {
+          "value": "attached",
+          "timestamp": "2026-03-21T15:25:21.619Z"
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": ["samsungce.cleanStationUvCleaning"],
+          "timestamp": "2026-03-21T14:44:08.042Z"
+        }
+      },
+      "samsungce.cleanStationUvCleaning": {
+        "operatingState": {
+          "value": "ready",
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "lastFinishedTime": {
+          "value": null
+        },
+        "uvcIntensive": {
+          "value": null
+        },
+        "operationTime": {
+          "value": null
+        },
+        "remainingTime": {
+          "value": null
+        }
+      },
+      "samsungce.stickCleanerDustBag": {
+        "supportedStatus": {
+          "value": ["full", "normal"],
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "usage": {
+          "value": 343,
+          "timestamp": "2026-03-21T15:25:35.951Z"
+        },
+        "status": {
+          "value": "normal",
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        }
+      }
+    },
+    "main": {
+      "custom.disabledComponents": {
+        "disabledComponents": {
+          "value": [],
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        }
+      },
+      "powerConsumptionReport": {
+        "powerConsumption": {
+          "value": {
+            "energy": 4,
+            "deltaEnergy": 3,
+            "power": 0,
+            "powerEnergy": 0.0,
+            "persistedEnergy": 0,
+            "energySaved": 0,
+            "start": "2026-03-21T15:35:31Z",
+            "end": "2026-03-21T15:41:41Z"
+          },
+          "timestamp": "2026-03-21T15:41:41.889Z"
+        }
+      },
+      "samsungce.stickCleanerStatus": {
+        "operatingState": {
+          "value": "ready",
+          "timestamp": "2026-03-21T15:25:35.978Z"
+        }
+      },
+      "refresh": {},
+      "samsungce.notification": {
+        "supportedActionSettings": {
+          "value": [
+            {
+              "action": "stop",
+              "supportedSettings": ["on", "off"]
+            }
+          ],
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "actionSetting": {
+          "value": {
+            "stop": {
+              "setting": "on"
+            }
+          },
+          "timestamp": "2026-03-21T14:50:31.556Z"
+        },
+        "supportedContexts": {
+          "value": ["incomingCall", "messageReceived"],
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "supportCustomContent": {
+          "value": false,
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        }
+      },
+      "samsungce.stickCleanerDustbinStatus": {
+        "operatingState": {
+          "value": "ready",
+          "timestamp": "2026-03-21T15:25:35.978Z"
+        },
+        "lastEmptiedTime": {
+          "value": "2026-03-21T15:25:00Z",
+          "timestamp": "2026-03-21T15:25:35.978Z"
+        }
+      },
+      "battery": {
+        "quantity": {
+          "value": null
+        },
+        "battery": {
+          "value": 80,
+          "unit": "%",
+          "timestamp": "2026-03-21T15:41:41.889Z"
+        },
+        "type": {
+          "value": null
+        }
+      },
+      "execute": {
+        "data": {
+          "value": null
+        }
+      },
+      "samsungce.deviceIdentification": {
+        "micomAssayCode": {
+          "value": "50025842",
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "modelName": {
+          "value": null
+        },
+        "serialNumber": {
+          "value": null
+        },
+        "serialNumberExtra": {
+          "value": null
+        },
+        "releaseCountry": {
+          "value": null
+        },
+        "modelClassificationCode": {
+          "value": "80030200001711000802000000000000",
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "description": {
+          "value": "A-VSWW-TP1-23-VS9700",
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "releaseYear": {
+          "value": null
+        },
+        "binaryId": {
+          "value": "A-VSWW-TP1-23-VS9700",
+          "timestamp": "2026-03-21T15:41:41.888Z"
+        }
+      },
+      "sec.wifiConfiguration": {
+        "autoReconnection": {
+          "value": true,
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "minVersion": {
+          "value": "1.0",
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "supportedWiFiFreq": {
+          "value": ["2.4G"],
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "supportedAuthType": {
+          "value": ["OPEN", "WEP", "WPA-PSK", "WPA2-PSK", "SAE"],
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "protocolType": {
+          "value": ["helper_hotspot", "ble_ocf"],
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        }
+      },
+      "samsungce.selfCheck": {
+        "result": {
+          "value": "failed",
+          "timestamp": "2026-03-21T15:25:48.370Z"
+        },
+        "supportedActions": {
+          "value": ["start", "cancel"],
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "progress": {
+          "value": 100,
+          "unit": "%",
+          "timestamp": "2026-03-21T15:25:48.370Z"
+        },
+        "errors": {
+          "value": [
+            {
+              "code": "DA_VCS_E_001"
+            }
+          ],
+          "timestamp": "2026-03-21T15:25:48.370Z"
+        },
+        "status": {
+          "value": "ready",
+          "timestamp": "2026-03-21T15:25:48.370Z"
+        }
+      },
+      "samsungce.softwareVersion": {
+        "versions": {
+          "value": [
+            {
+              "id": "0",
+              "swType": "Software",
+              "versionNumber": "25051400",
+              "description": "Version"
+            },
+            {
+              "id": "1",
+              "swType": "Firmware",
+              "versionNumber": "00258B23110300",
+              "description": "Version"
+            },
+            {
+              "id": "2",
+              "swType": "Firmware",
+              "versionNumber": "00253B23070700",
+              "description": "Version"
+            }
+          ],
+          "timestamp": "2026-03-21T14:50:31.808Z"
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": null
+        },
+        "mndt": {
+          "value": null
+        },
+        "mnfv": {
+          "value": "A-VSWW-TP1-23-VS9700_51250514",
+          "timestamp": "2026-03-21T14:50:07.585Z"
+        },
+        "mnhw": {
+          "value": "Realtek",
+          "timestamp": "2026-03-21T14:50:07.585Z"
+        },
+        "di": {
+          "value": "e1f93c0c-6fe0-c65a-a314-c8f7b163c86b",
+          "timestamp": "2026-03-21T14:50:07.585Z"
+        },
+        "mnsl": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2026-03-21T14:50:07.585Z"
+        },
+        "dmv": {
+          "value": "1.2.1",
+          "timestamp": "2026-03-21T14:50:07.585Z"
+        },
+        "n": {
+          "value": "[vacuum] Samsung",
+          "timestamp": "2026-03-21T14:50:07.585Z"
+        },
+        "mnmo": {
+          "value": "A-VSWW-TP1-23-VS9700|50025842|80030200001711000802000000000000",
+          "timestamp": "2026-03-21T14:50:07.585Z"
+        },
+        "vid": {
+          "value": "DA-VC-STICK-01001",
+          "timestamp": "2026-03-21T14:50:07.585Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2026-03-21T14:50:07.585Z"
+        },
+        "mnml": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2026-03-21T14:50:07.585Z"
+        },
+        "mnpv": {
+          "value": "SYSTEM 2.0",
+          "timestamp": "2026-03-21T14:50:07.585Z"
+        },
+        "mnos": {
+          "value": "TizenRT 4.0",
+          "timestamp": "2026-03-21T14:50:07.585Z"
+        },
+        "pi": {
+          "value": "e1f93c0c-6fe0-c65a-a314-c8f7b163c86b",
+          "timestamp": "2026-03-21T14:50:07.585Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2026-03-21T14:50:07.585Z"
+        }
+      },
+      "samsungce.stickCleanerStickStatus": {
+        "mode": {
+          "value": "none",
+          "timestamp": "2026-03-21T15:25:06.593Z"
+        },
+        "status": {
+          "value": "charging",
+          "timestamp": "2026-03-21T15:25:22.052Z"
+        },
+        "bleConnectionState": {
+          "value": "connected",
+          "timestamp": "2026-03-21T14:50:29.775Z"
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": ["sec.wifiConfiguration"],
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        }
+      },
+      "samsungce.driverVersion": {
+        "versionNumber": {
+          "value": 25040101,
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        }
+      },
+      "samsungce.softwareUpdate": {
+        "targetModule": {
+          "value": {},
+          "timestamp": "2026-03-21T14:44:08.245Z"
+        },
+        "otnDUID": {
+          "value": "BDCPH4AI7GMCS",
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "lastUpdatedDate": {
+          "value": null
+        },
+        "availableModules": {
+          "value": [],
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "newVersionAvailable": {
+          "value": false,
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "operatingState": {
+          "value": "none",
+          "timestamp": "2026-03-21T14:44:08.245Z"
+        },
+        "progress": {
+          "value": 0,
+          "unit": "%",
+          "timestamp": "2026-03-21T14:50:09.045Z"
+        }
+      },
+      "sec.diagnosticsInformation": {
+        "logType": {
+          "value": ["errCode", "dump"],
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "endpoint": {
+          "value": "SSM",
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "minVersion": {
+          "value": "3.0",
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "signinPermission": {
+          "value": null
+        },
+        "setupId": {
+          "value": "VS2",
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "protocolType": {
+          "value": "ble_ocf",
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "tsId": {
+          "value": "DA01",
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "mnId": {
+          "value": "0AJT",
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "dumpType": {
+          "value": "file",
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        }
+      },
+      "custom.deviceReportStateConfiguration": {
+        "reportStateRealtimePeriod": {
+          "value": null
+        },
+        "reportStateRealtime": {
+          "value": {
+            "state": "enabled",
+            "duration": 10,
+            "unit": "minute"
+          },
+          "timestamp": "2026-03-21T14:44:42.985Z"
+        },
+        "reportStatePeriod": {
+          "value": "enabled",
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        }
+      },
+      "samsungce.lamp": {
+        "brightnessLevel": {
+          "value": "on",
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        },
+        "supportedBrightnessLevel": {
+          "value": ["on", "off"],
+          "timestamp": "2026-03-21T14:44:06.339Z"
+        }
+      }
+    }
+  }
+}

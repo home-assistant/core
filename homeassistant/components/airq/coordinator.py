@@ -1,9 +1,8 @@
 """The air-Q integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from aioairq.core import AirQ, identify_warming_up_sensors
 
@@ -52,11 +51,13 @@ class AirQCoordinator(DataUpdateCoordinator):
         self.clip_negative = clip_negative
         self.return_average = return_average
 
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch the data from the device."""
         if "name" not in self.device_info:
             _LOGGER.debug(
-                "'name' not found in AirQCoordinator.device_info, fetching from the device"
+                "'name' not found in AirQCoordinator.device_info,"
+                " fetching from the device"
             )
             info = await self.airq.fetch_device_info()
             self.device_info.update(

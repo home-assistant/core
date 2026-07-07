@@ -1,9 +1,7 @@
 """Config flow for the Hydrawise integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from pydrawise import auth as pydrawise_auth, hybrid
@@ -33,6 +31,7 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

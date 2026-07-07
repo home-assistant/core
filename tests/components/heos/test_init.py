@@ -52,7 +52,7 @@ async def test_async_setup_entry_with_options_loads_platforms(
     controller: MockHeos,
     new_mock: Mock,
 ) -> None:
-    """Test load connects to heos with options, retrieves players, and loads platforms."""
+    """Test load connects to heos with options, retrieves players, and loads."""
     config_entry_options.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry_options.entry_id)
 
@@ -115,8 +115,9 @@ async def test_async_setup_entry_not_signed_in_loads_platforms(
     assert controller.get_input_sources.call_count == 1
     controller.disconnect.assert_not_called()
     assert (
-        "The HEOS System is not logged in: Enter credentials in the integration options to access favorites and streaming services"
-        in caplog.text
+        "The HEOS System is not logged in: Enter credentials in"
+        " the integration options to access favorites and"
+        " streaming services" in caplog.text
     )
 
 

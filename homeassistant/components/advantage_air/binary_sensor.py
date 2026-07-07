@@ -1,6 +1,6 @@
 """Binary Sensor platform for Advantage Air integration."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -57,6 +57,7 @@ class AdvantageAirFilter(AdvantageAirAcEntity, BinarySensorEntity):
         self._attr_unique_id += "-filter"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if filter needs cleaning."""
         return self._ac["filterCleanStatus"]
@@ -76,6 +77,7 @@ class AdvantageAirZoneMotion(AdvantageAirZoneEntity, BinarySensorEntity):
         self._attr_unique_id += "-motion"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if motion is detect."""
         return self._zone["motion"] == 20
@@ -96,6 +98,7 @@ class AdvantageAirZoneMyZone(AdvantageAirZoneEntity, BinarySensorEntity):
         self._attr_unique_id += "-myzone"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if this zone is the myZone."""
         return self._zone["number"] == self._ac["myZone"]

@@ -1,10 +1,8 @@
 """Config flow for Airthings BlE integration."""
 
-from __future__ import annotations
-
 import dataclasses
 import logging
-from typing import Any
+from typing import Any, override
 
 from airthings_ble import (
     AirthingsBluetoothDeviceData,
@@ -98,6 +96,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             raise
         return device
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
     ) -> ConfigFlowResult:
@@ -145,6 +144,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=self.context["title_placeholders"],
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

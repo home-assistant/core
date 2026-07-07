@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_entities[sensor.essent_average_electricity_price_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -43,10 +44,10 @@
 # name: test_entities[sensor.essent_average_electricity_price_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Essent',
-      'friendly_name': 'Essent Average electricity price today',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/kWh',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Essent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Essent Average electricity price today',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.essent_average_electricity_price_today',
@@ -58,11 +59,12 @@
 # ---
 # name: test_entities[sensor.essent_current_electricity_market_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -100,10 +102,10 @@
 # name: test_entities[sensor.essent_current_electricity_market_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Essent',
-      'friendly_name': 'Essent Current electricity market price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/kWh',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Essent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Essent Current electricity market price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.essent_current_electricity_market_price',
@@ -115,11 +117,12 @@
 # ---
 # name: test_entities[sensor.essent_current_electricity_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -157,10 +160,10 @@
 # name: test_entities[sensor.essent_current_electricity_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Essent',
-      'friendly_name': 'Essent Current electricity price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/kWh',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Essent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Essent Current electricity price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.essent_current_electricity_price',
@@ -172,11 +175,12 @@
 # ---
 # name: test_entities[sensor.essent_current_electricity_price_excl_vat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -214,10 +218,10 @@
 # name: test_entities[sensor.essent_current_electricity_price_excl_vat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Essent',
-      'friendly_name': 'Essent Current electricity price excl. VAT',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/kWh',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Essent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Essent Current electricity price excl. VAT',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.essent_current_electricity_price_excl_vat',
@@ -229,11 +233,12 @@
 # ---
 # name: test_entities[sensor.essent_current_electricity_purchasing_fee-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -271,10 +276,10 @@
 # name: test_entities[sensor.essent_current_electricity_purchasing_fee-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Essent',
-      'friendly_name': 'Essent Current electricity purchasing fee',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/kWh',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Essent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Essent Current electricity purchasing fee',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.essent_current_electricity_purchasing_fee',
@@ -286,11 +291,12 @@
 # ---
 # name: test_entities[sensor.essent_current_electricity_tax-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -328,10 +334,10 @@
 # name: test_entities[sensor.essent_current_electricity_tax-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Essent',
-      'friendly_name': 'Essent Current electricity tax',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/kWh',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Essent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Essent Current electricity tax',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.essent_current_electricity_tax',
@@ -343,11 +349,12 @@
 # ---
 # name: test_entities[sensor.essent_current_electricity_vat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -385,10 +392,10 @@
 # name: test_entities[sensor.essent_current_electricity_vat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Essent',
-      'friendly_name': 'Essent Current electricity VAT',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/kWh',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Essent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Essent Current electricity VAT',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.essent_current_electricity_vat',
@@ -400,11 +407,12 @@
 # ---
 # name: test_entities[sensor.essent_current_gas_market_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -442,10 +450,10 @@
 # name: test_entities[sensor.essent_current_gas_market_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Essent',
-      'friendly_name': 'Essent Current gas market price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/m³',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Essent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Essent Current gas market price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.essent_current_gas_market_price',
@@ -457,11 +465,12 @@
 # ---
 # name: test_entities[sensor.essent_current_gas_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -499,10 +508,10 @@
 # name: test_entities[sensor.essent_current_gas_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Essent',
-      'friendly_name': 'Essent Current gas price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/m³',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Essent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Essent Current gas price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.essent_current_gas_price',
@@ -514,11 +523,12 @@
 # ---
 # name: test_entities[sensor.essent_current_gas_price_excl_vat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -556,10 +566,10 @@
 # name: test_entities[sensor.essent_current_gas_price_excl_vat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Essent',
-      'friendly_name': 'Essent Current gas price excl. VAT',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/m³',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Essent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Essent Current gas price excl. VAT',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.essent_current_gas_price_excl_vat',
@@ -571,11 +581,12 @@
 # ---
 # name: test_entities[sensor.essent_current_gas_purchasing_fee-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -613,10 +624,10 @@
 # name: test_entities[sensor.essent_current_gas_purchasing_fee-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Essent',
-      'friendly_name': 'Essent Current gas purchasing fee',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/m³',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Essent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Essent Current gas purchasing fee',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.essent_current_gas_purchasing_fee',
@@ -628,11 +639,12 @@
 # ---
 # name: test_entities[sensor.essent_current_gas_tax-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -670,10 +682,10 @@
 # name: test_entities[sensor.essent_current_gas_tax-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Essent',
-      'friendly_name': 'Essent Current gas tax',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/m³',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Essent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Essent Current gas tax',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.essent_current_gas_tax',
@@ -685,11 +697,12 @@
 # ---
 # name: test_entities[sensor.essent_current_gas_vat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -727,10 +740,10 @@
 # name: test_entities[sensor.essent_current_gas_vat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Essent',
-      'friendly_name': 'Essent Current gas VAT',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/m³',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Essent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Essent Current gas VAT',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.essent_current_gas_vat',
@@ -742,11 +755,12 @@
 # ---
 # name: test_entities[sensor.essent_highest_electricity_price_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -784,10 +798,10 @@
 # name: test_entities[sensor.essent_highest_electricity_price_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Essent',
-      'friendly_name': 'Essent Highest electricity price today',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/kWh',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Essent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Essent Highest electricity price today',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.essent_highest_electricity_price_today',
@@ -799,11 +813,12 @@
 # ---
 # name: test_entities[sensor.essent_lowest_electricity_price_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -841,10 +856,10 @@
 # name: test_entities[sensor.essent_lowest_electricity_price_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Essent',
-      'friendly_name': 'Essent Lowest electricity price today',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/kWh',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Essent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Essent Lowest electricity price today',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.essent_lowest_electricity_price_today',
@@ -856,11 +871,12 @@
 # ---
 # name: test_entities[sensor.essent_next_electricity_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -898,10 +914,10 @@
 # name: test_entities[sensor.essent_next_electricity_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Essent',
-      'friendly_name': 'Essent Next electricity price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/kWh',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Essent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Essent Next electricity price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.essent_next_electricity_price',
@@ -913,11 +929,12 @@
 # ---
 # name: test_entities[sensor.essent_next_gas_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -955,10 +972,10 @@
 # name: test_entities[sensor.essent_next_gas_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Essent',
-      'friendly_name': 'Essent Next gas price',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/m³',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Essent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Essent Next gas price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.essent_next_gas_price',

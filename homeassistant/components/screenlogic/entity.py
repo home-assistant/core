@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from screenlogicpy import ScreenLogicGateway
 from screenlogicpy.const.common import (
@@ -125,6 +125,7 @@ class ScreenLogicPushEntity(ScreenLogicEntity):
         self._last_update_success = self.coordinator.last_update_success
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -136,9 +137,11 @@ class ScreenLogicPushEntity(ScreenLogicEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        # For push entities, only take updates from the coordinator if availability changes.
+        # For push entities, only take updates from the
+        # coordinator if availability changes.
         if self.coordinator.last_update_success != self._last_update_success:
             self._async_data_updated()
 
@@ -166,6 +169,7 @@ class ScreenLogicSwitchingEntity(ScreenLogicEntity):
 class ScreenLogicCircuitEntity(ScreenLogicSwitchingEntity, ScreenLogicPushEntity):
     """Base class for all ScreenLogic circuit switch and light entities."""
 
+    @override
     async def _async_set_state(self, state: ON_OFF) -> None:
         try:
             await self.gateway.async_set_circuit(self._data_key, state.value)

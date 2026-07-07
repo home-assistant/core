@@ -113,9 +113,6 @@
       "sys_reboot_cause": {
         "name": "Reboot cause"
       },
-      "sys_uptime": {
-        "name": "Uptime"
-      },
       "up_stream": {
         "name": "WAN upload rate"
       }

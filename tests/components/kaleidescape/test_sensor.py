@@ -11,7 +11,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import MOCK_SERIAL
 
-ENTITY_ID = f"sensor.kaleidescape_device_{MOCK_SERIAL}"
+ENTITY_ID = f"sensor.theater_kaleidescape_device_{MOCK_SERIAL}"
 FRIENDLY_NAME = f"Kaleidescape Device {MOCK_SERIAL}"
 
 

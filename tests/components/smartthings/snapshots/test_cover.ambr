@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[c2c_shade][cover.curtain_1a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,10 +39,11 @@
 # name: test_all_entities[c2c_shade][cover.curtain_1a-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'shade',
-      'friendly_name': 'Curtain 1A',
-      'supported_features': <CoverEntityFeature: 7>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shade',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Curtain 1A',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.curtain_1a',
@@ -53,8 +55,9 @@
 # ---
 # name: test_all_entities[ikea_kadrilj][cover.kitchen_ikea_kadrilj_window_blind-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -91,10 +94,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'battery_level': 37,
-      'current_position': 32,
-      'device_class': 'shade',
-      'friendly_name': 'Kitchen IKEA KADRILJ Window blind',
-      'supported_features': <CoverEntityFeature: 7>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 32,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shade',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen IKEA KADRILJ Window blind',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.kitchen_ikea_kadrilj_window_blind',

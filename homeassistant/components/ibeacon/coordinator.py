@@ -1,7 +1,5 @@
 """Tracking for iBeacon devices."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 import time
@@ -69,7 +67,11 @@ def async_name(
         service_info.name,
         service_info.name.replace("-", ":"),
     ):
-        base_name = f"{ibeacon_advertisement.uuid}_{ibeacon_advertisement.major}_{ibeacon_advertisement.minor}"
+        base_name = (
+            f"{ibeacon_advertisement.uuid}"
+            f"_{ibeacon_advertisement.major}"
+            f"_{ibeacon_advertisement.minor}"
+        )
     else:
         base_name = service_info.name
     if unique_address:
@@ -182,7 +184,10 @@ class IBeaconCoordinator:
 
     @callback
     def _async_ignore_uuid(self, uuid: str) -> None:
-        """Ignore an UUID that does not follow the spec and any entities created by it."""
+        """Ignore a UUID that doesn't follow the spec.
+
+        Also removes any entities created by it.
+        """
         self._ignore_uuids.add(uuid)
         major_minor_by_uuid = self._major_minor_by_uuid.pop(uuid)
         unique_ids_to_purge = set()
@@ -201,7 +206,10 @@ class IBeaconCoordinator:
 
     @callback
     def _async_ignore_address(self, address: str) -> None:
-        """Ignore an address that does not follow the spec and any entities created by it."""
+        """Ignore an address that doesn't follow the spec.
+
+        Also removes any entities created by it.
+        """
         self._ignore_addresses.add(address)
         self._async_cancel_unavailable_tracker(address)
         entry_data = self._entry.data
@@ -228,7 +236,10 @@ class IBeaconCoordinator:
         service_info: bluetooth.BluetoothServiceInfoBleak,
         ibeacon_advertisement: iBeaconAdvertisement,
     ) -> None:
-        """Switch to random mac tracking method when a group is using rotating mac addresses."""
+        """Switch to random mac tracking method.
+
+        Used when a group is using rotating mac addresses.
+        """
         self._group_ids_random_macs.add(group_id)
         self._async_purge_untrackable_entities(self._unique_ids_by_group_id[group_id])
         self._unique_ids_by_group_id.pop(group_id)
@@ -315,7 +326,8 @@ class IBeaconCoordinator:
         new = unique_id not in self._last_ibeacon_advertisement_by_unique_id
         uuid = str(ibeacon_advertisement.uuid)
 
-        # Reject creating new trackers if the name is not set (unless the uuid is allowlisted).
+        # Reject creating new trackers if the name is not set
+        # (unless the uuid is allowlisted).
         if (
             new
             and uuid not in self._allow_nameless_uuids
@@ -378,7 +390,10 @@ class IBeaconCoordinator:
 
     @callback
     def _async_check_unavailable_groups_with_random_macs(self) -> None:
-        """Check for random mac groups that have not been seen in a while and mark them as unavailable."""
+        """Check for unseen random mac groups.
+
+        Marks them as unavailable if not seen in a while.
+        """
         now = MONOTONIC_TIME()
         gone_unavailable = [
             group_id

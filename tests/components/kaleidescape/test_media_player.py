@@ -26,7 +26,7 @@ from homeassistant.helpers import device_registry as dr
 
 from . import MOCK_SERIAL
 
-ENTITY_ID = f"media_player.kaleidescape_device_{MOCK_SERIAL}"
+ENTITY_ID = f"media_player.theater_kaleidescape_device_{MOCK_SERIAL}"
 FRIENDLY_NAME = f"Kaleidescape Device {MOCK_SERIAL}"
 
 

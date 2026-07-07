@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[binary_sensor.mock_title_dc_1_short_circuit_error_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_all_entities[binary_sensor.mock_title_dc_1_short_circuit_error_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock Title DC 1 short circuit error status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title DC 1 short circuit error status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_dc_1_short_circuit_error_status',
@@ -51,8 +52,9 @@
 # ---
 # name: test_all_entities[binary_sensor.mock_title_dc_2_short_circuit_error_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_all_entities[binary_sensor.mock_title_dc_2_short_circuit_error_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock Title DC 2 short circuit error status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title DC 2 short circuit error status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_dc_2_short_circuit_error_status',
@@ -101,8 +103,9 @@
 # ---
 # name: test_all_entities[binary_sensor.mock_title_off_grid_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -138,8 +141,8 @@
 # name: test_all_entities[binary_sensor.mock_title_off_grid_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock Title Off-grid status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Off-grid status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_off_grid_status',
@@ -151,8 +154,9 @@
 # ---
 # name: test_all_entities[binary_sensor.mock_title_output_fault_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -188,8 +192,8 @@
 # name: test_all_entities[binary_sensor.mock_title_output_fault_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock Title Output fault status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Output fault status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_output_fault_status',

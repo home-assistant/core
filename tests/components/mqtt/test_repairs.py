@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import mqtt
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
@@ -18,11 +18,7 @@ from homeassistant.util.yaml import parse_yaml
 from .common import MOCK_NOTIFY_SUBENTRY_DATA_MULTI, async_fire_mqtt_message
 
 from tests.common import MockConfigEntry, async_capture_events
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.conftest import ClientSessionGenerator
 from tests.typing import MqttMockHAClientGenerator
 
@@ -34,7 +30,7 @@ async def help_setup_yaml(hass: HomeAssistant, config: dict[str, str]) -> None:
         return_value=parse_yaml(config["yaml"]),
     ):
         await hass.services.async_call(
-            mqtt.DOMAIN,
+            DOMAIN,
             SERVICE_RELOAD,
             {},
             blocking=True,
@@ -80,7 +76,7 @@ async def test_subentry_reconfigure_export_settings(
 ) -> None:
     """Test the subentry ConfigFlow YAML export with migration to YAML."""
     await mqtt_mock_entry()
-    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
@@ -89,7 +85,7 @@ async def test_subentry_reconfigure_export_settings(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
     assert device.config_entries_subentries[config_entry.entry_id] == {subentry_id}
     assert device is not None
 
@@ -135,7 +131,7 @@ async def test_subentry_reconfigure_export_settings(
     await setup_helper(hass, suggested_values_from_schema)
 
     # Assert the subentry device was not effected by the exported configs
-    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
     assert device.config_entries_subentries[config_entry.entry_id] == {subentry_id}
     assert device is not None
 
@@ -145,13 +141,12 @@ async def test_subentry_reconfigure_export_settings(
     assert len(events) == 1
     issue_id = events[0].data["issue_id"]
     issue_registry = ir.async_get(hass)
-    repair_issue = issue_registry.async_get_issue(mqtt.DOMAIN, issue_id)
+    repair_issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert repair_issue.translation_key == translation_key
 
-    await async_process_repairs_platforms(hass)
     client = await hass_client()
 
-    data = await start_repair_fix_flow(client, mqtt.DOMAIN, issue_id)
+    data = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {"name": "Milk notifier"}
@@ -161,7 +156,7 @@ async def test_subentry_reconfigure_export_settings(
     assert data["type"] == "create_entry"
 
     # Assert the subentry is removed and no other entity has linked the device
-    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
     assert device is None
 
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -174,6 +169,6 @@ async def test_subentry_reconfigure_export_settings(
 
     # The MQTT device was now set up from the new source
     await hass.async_block_till_done(wait_background_tasks=True)
-    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
     assert device.config_entries_subentries[config_entry.entry_id] == {None}
     assert device is not None

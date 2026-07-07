@@ -15,13 +15,12 @@ from homeassistant.components.sftp_storage.config_flow import (
     SFTPStorageMissingPasswordOrPkey,
 )
 from homeassistant.components.sftp_storage.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
+    CONF_BACKUP_LOCATION,
     CONF_PRIVATE_KEY_FILE,
-    CONF_USERNAME,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.storage import STORAGE_DIR
@@ -194,3 +193,35 @@ async def test_config_entry_error(hass: HomeAssistant) -> None:
         result["flow_id"], user_input
     )
     assert "errors" in result and result["errors"]["base"] == "key_or_password_needed"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("mock_process_uploaded_file")
+@pytest.mark.usefixtures("mock_ssh_connection")
+async def test_relative_backup_location_rejected(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a relative backup location path is rejected."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["step_id"] == "user"
+
+    user_input = USER_INPUT.copy()
+    user_input[CONF_BACKUP_LOCATION] = "backups"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_BACKUP_LOCATION: "backup_location_relative"}
+
+    # Fix the path and verify the flow succeeds
+    user_input[CONF_BACKUP_LOCATION] = "/backups"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY

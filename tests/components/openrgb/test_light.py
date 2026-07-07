@@ -459,7 +459,8 @@ async def test_previous_values_updated_on_refresh(
     assert state
     assert state.state == STATE_OFF
 
-    # Turn on without parameters - should restore most recent state (green, 50%, Breathing)
+    # Turn on without parameters - should restore most recent
+    # state (green, 50%, Breathing)
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -825,7 +826,8 @@ async def test_duplicate_device_names(
     device1.id = 3  # Should get suffix "1"
     device1.metadata.location = "I2C: PIIX4, address 0x71"
 
-    # Create a true copy of the first device for device2 to ensure they are separate instances
+    # Create a true copy of the first device for device2 to
+    # ensure they are separate instances
     device2 = copy.deepcopy(mock_openrgb_device)
     device2.id = 4  # Should get suffix "2"
     device2.metadata.location = "I2C: PIIX4, address 0x72"
@@ -838,9 +840,16 @@ async def test_duplicate_device_names(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    # The device key format is: entry_id||type||vendor||description||serial||location
-    device1_key = f"{mock_config_entry.entry_id}||DRAM||ENE||ENE SMBus Device||none||I2C: PIIX4, address 0x71"
-    device2_key = f"{mock_config_entry.entry_id}||DRAM||ENE||ENE SMBus Device||none||I2C: PIIX4, address 0x72"
+    # The device key format is:
+    # entry_id||type||vendor||description||serial||location
+    device1_key = (
+        f"{mock_config_entry.entry_id}||DRAM||ENE||"
+        "ENE SMBus Device||none||I2C: PIIX4, address 0x71"
+    )
+    device2_key = (
+        f"{mock_config_entry.entry_id}||DRAM||ENE||"
+        "ENE SMBus Device||none||I2C: PIIX4, address 0x72"
+    )
 
     # Verify devices exist with correct names (suffix based on device.id position)
     device1_entry = device_registry.async_get_device(

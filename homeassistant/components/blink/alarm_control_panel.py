@@ -1,8 +1,7 @@
 """Support for Blink Alarm Control Panel."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from blinkpy.auth import UnauthorizedError
 from blinkpy.blinkpy import Blink, BlinkSyncModule
@@ -12,7 +11,6 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -44,6 +42,7 @@ class BlinkSyncModuleHA(
 ):
     """Representation of a Blink Alarm Control Panel."""
 
+    _attr_attribution = DEFAULT_ATTRIBUTION
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
     _attr_code_arm_required = False
     _attr_has_entity_name = True
@@ -67,6 +66,7 @@ class BlinkSyncModuleHA(
         self._update_attr()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle coordinator update."""
         self._update_attr()
@@ -77,7 +77,6 @@ class BlinkSyncModuleHA(
         """Update attributes for alarm control panel."""
         self.sync.attributes["network_info"] = self.api.networks
         self.sync.attributes["associated_cameras"] = list(self.sync.cameras)
-        self.sync.attributes[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
         self._attr_extra_state_attributes = self.sync.attributes
         self._attr_alarm_state = (
             AlarmControlPanelState.ARMED_AWAY
@@ -85,6 +84,7 @@ class BlinkSyncModuleHA(
             else AlarmControlPanelState.DISARMED
         )
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         try:
@@ -98,6 +98,7 @@ class BlinkSyncModuleHA(
 
         await self.coordinator.async_refresh()
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm command."""
         try:

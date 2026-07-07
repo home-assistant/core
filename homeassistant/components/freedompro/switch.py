@@ -1,7 +1,7 @@
 """Support for Freedompro switch."""
 
 import json
-from typing import Any
+from typing import Any, override
 
 from pyfreedompro import put_state
 
@@ -61,6 +61,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], SwitchEntity):
         self._attr_is_on = False
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         device = next(
@@ -77,11 +78,13 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], SwitchEntity):
                 self._attr_is_on = state["on"]
         super()._handle_coordinator_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Async function to set on to switch."""
         payload = {"on": True}
@@ -93,6 +96,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], SwitchEntity):
         )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Async function to set off to switch."""
         payload = {"on": False}

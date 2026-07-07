@@ -1,7 +1,5 @@
 """Tests for vacuum websocket API."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 
 import pytest

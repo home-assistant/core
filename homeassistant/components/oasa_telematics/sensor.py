@@ -1,11 +1,9 @@
 """Support for OASA Telematics from telematics.oasa.gr."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
 from operator import itemgetter
-from typing import Any
+from typing import Any, override
 
 import oasatelematics
 import voluptuous as vol
@@ -84,6 +82,7 @@ class OASATelematicsSensor(SensorEntity):
         self._times: list[dict[str, Any]] | None = None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         params = {}

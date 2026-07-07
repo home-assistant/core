@@ -1,7 +1,5 @@
 """Diagnostics support for Home Connect Diagnostics."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiohomeconnect.model import GetSetting, Status

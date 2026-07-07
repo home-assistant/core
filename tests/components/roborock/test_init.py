@@ -1,5 +1,6 @@
 """Test for Roborock init."""
 
+import asyncio
 import datetime
 import pathlib
 from typing import Any
@@ -23,11 +24,16 @@ from homeassistant.components.roborock.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 
-from .conftest import FakeDevice
+from .conftest import FakeDevice, MockDeviceManagerContext
 from .mock_data import ROBOROCK_RRUID, USER_EMAIL
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -43,7 +49,6 @@ async def test_unload_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert setup_entry.state is ConfigEntryState.LOADED
 
-    assert device_manager.get_devices.called
     assert not device_manager.close.called
 
     # Unload the config entry and verify that the device manager is closed
@@ -52,6 +57,100 @@ async def test_unload_entry(
     assert setup_entry.state is ConfigEntryState.NOT_LOADED
 
     assert device_manager.close.called
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_stale_device(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    device_registry: DeviceRegistry,
+    device_manager: AsyncMock,
+    device_manager_context: MockDeviceManagerContext,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test that we remove a device if it no longer is given by home_data."""
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+    if mock_roborock_entry._background_tasks:
+        await asyncio.gather(*mock_roborock_entry._background_tasks)
+    existing_devices = device_registry.devices.get_devices_for_config_entry_id(
+        mock_roborock_entry.entry_id
+    )
+    assert {device.name for device in existing_devices} == {
+        "Roborock S7 MaxV",
+        "Roborock S7 MaxV Dock",
+        "Roborock S7 2",
+        "Roborock S7 2 Dock",
+        "Dyad Pro",
+        "Zeo One",
+        "Roborock Q7",
+        "Roborock Q10 S5+",
+    }
+    fake_devices_copy = fake_devices.copy()
+    fake_devices_copy.pop(0)  # Remove one robot
+    device_manager.get_devices = AsyncMock(return_value=fake_devices_copy)
+    device_manager_context.initial_devices = fake_devices_copy
+
+    await hass.config_entries.async_reload(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+    if mock_roborock_entry._background_tasks:
+        await asyncio.gather(*mock_roborock_entry._background_tasks)
+    new_devices = device_registry.devices.get_devices_for_config_entry_id(
+        mock_roborock_entry.entry_id
+    )
+    assert {device.name for device in new_devices} == {
+        "Roborock S7 2",
+        "Roborock S7 2 Dock",
+        "Dyad Pro",
+        "Zeo One",
+        "Roborock Q7",
+        "Roborock Q10 S5+",
+    }
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_no_stale_device(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    device_registry: DeviceRegistry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test that we don't remove a device if fails to setup."""
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+    if mock_roborock_entry._background_tasks:
+        await asyncio.gather(*mock_roborock_entry._background_tasks)
+    existing_devices = device_registry.devices.get_devices_for_config_entry_id(
+        mock_roborock_entry.entry_id
+    )
+    assert {device.name for device in existing_devices} == {
+        "Roborock S7 MaxV",
+        "Roborock S7 MaxV Dock",
+        "Roborock S7 2",
+        "Roborock S7 2 Dock",
+        "Dyad Pro",
+        "Zeo One",
+        "Roborock Q7",
+        "Roborock Q10 S5+",
+    }
+
+    await hass.config_entries.async_reload(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+    if mock_roborock_entry._background_tasks:
+        await asyncio.gather(*mock_roborock_entry._background_tasks)
+    new_devices = device_registry.devices.get_devices_for_config_entry_id(
+        mock_roborock_entry.entry_id
+    )
+    assert {device.name for device in new_devices} == {
+        "Roborock S7 MaxV",
+        "Roborock S7 MaxV Dock",
+        "Roborock S7 2",
+        "Roborock S7 2 Dock",
+        "Dyad Pro",
+        "Zeo One",
+        "Roborock Q7",
+        "Roborock Q10 S5+",
+    }
 
 
 async def test_home_assistant_stop(
@@ -252,82 +351,6 @@ async def test_no_user_agreement(
 
 
 @pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
-async def test_stale_device(
-    hass: HomeAssistant,
-    mock_roborock_entry: MockConfigEntry,
-    device_registry: DeviceRegistry,
-    fake_devices: list[FakeDevice],
-) -> None:
-    """Test that we remove a device if it no longer is given by home_data."""
-    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
-    assert mock_roborock_entry.state is ConfigEntryState.LOADED
-    existing_devices = device_registry.devices.get_devices_for_config_entry_id(
-        mock_roborock_entry.entry_id
-    )
-    assert {device.name for device in existing_devices} == {
-        "Roborock S7 MaxV",
-        "Roborock S7 MaxV Dock",
-        "Roborock S7 2",
-        "Roborock S7 2 Dock",
-        "Dyad Pro",
-        "Zeo One",
-        "Roborock Q7",
-    }
-    fake_devices.pop(0)  # Remove one robot
-
-    await hass.config_entries.async_reload(mock_roborock_entry.entry_id)
-    await hass.async_block_till_done()
-    new_devices = device_registry.devices.get_devices_for_config_entry_id(
-        mock_roborock_entry.entry_id
-    )
-    assert {device.name for device in new_devices} == {
-        "Roborock S7 2",
-        "Roborock S7 2 Dock",
-        "Dyad Pro",
-        "Zeo One",
-        "Roborock Q7",
-    }
-
-
-@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
-async def test_no_stale_device(
-    hass: HomeAssistant,
-    mock_roborock_entry: MockConfigEntry,
-    device_registry: DeviceRegistry,
-    fake_devices: list[FakeDevice],
-) -> None:
-    """Test that we don't remove a device if fails to setup."""
-    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
-    assert mock_roborock_entry.state is ConfigEntryState.LOADED
-    existing_devices = device_registry.devices.get_devices_for_config_entry_id(
-        mock_roborock_entry.entry_id
-    )
-    assert {device.name for device in existing_devices} == {
-        "Roborock S7 MaxV",
-        "Roborock S7 MaxV Dock",
-        "Roborock S7 2",
-        "Roborock S7 2 Dock",
-        "Dyad Pro",
-        "Zeo One",
-        "Roborock Q7",
-    }
-
-    await hass.config_entries.async_reload(mock_roborock_entry.entry_id)
-    await hass.async_block_till_done()
-    new_devices = device_registry.devices.get_devices_for_config_entry_id(
-        mock_roborock_entry.entry_id
-    )
-    assert {device.name for device in new_devices} == {
-        "Roborock S7 MaxV",
-        "Roborock S7 MaxV Dock",
-        "Roborock S7 2",
-        "Roborock S7 2 Dock",
-        "Dyad Pro",
-        "Zeo One",
-        "Roborock Q7",
-    }
-
-
 async def test_migrate_config_entry_unique_id(
     hass: HomeAssistant,
     config_entry_data: dict[str, Any],
@@ -356,7 +379,7 @@ async def test_update_unavailability_threshold(
     setup_entry: MockConfigEntry,
     fake_vacuum: FakeDevice,
 ) -> None:
-    """Test that a small number of update failures are suppressed before marking a device unavailable."""
+    """Test update failures are suppressed before marking unavailable."""
     await async_setup_component(hass, HA_DOMAIN, {})
     assert setup_entry.state is ConfigEntryState.LOADED
 
@@ -460,7 +483,7 @@ async def test_cloud_api_repair_cleared_on_update(
     fake_vacuum: FakeDevice,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a repair is created then cleared if the device is reachable locally again."""
+    """Test repair is created then cleared when device is local again."""
 
     # Fake that the device is only reachable via cloud
     fake_vacuum.is_connected = True
@@ -515,6 +538,7 @@ async def test_zeo_device_fails_setup(
     hass: HomeAssistant,
     mock_roborock_entry: MockConfigEntry,
     device_registry: DeviceRegistry,
+    entity_registry: EntityRegistry,
     fake_devices: list[FakeDevice],
 ) -> None:
     """Simulate an error while setting up a zeo device."""
@@ -527,20 +551,43 @@ async def test_zeo_device_fails_setup(
     zeo_device.zeo.query_values.side_effect = RoborockException("Simulated Zeo failure")
 
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+    if mock_roborock_entry._background_tasks:
+        await asyncio.gather(*mock_roborock_entry._background_tasks)
     assert mock_roborock_entry.state is ConfigEntryState.LOADED
 
-    # The current behavior is that we do not add the Zeo device if it fails to setup
-    found_devices = device_registry.devices.get_devices_for_config_entry_id(
-        mock_roborock_entry.entry_id
+    # The Zeo device should be in the registry and have entities
+    # because entities are registered immediately without blocking on coordinator refresh.
+    zeo_device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, zeo_device.duid)}
     )
-    assert {device.name for device in found_devices} == {
+    assert zeo_device_entry is not None
+    zeo_entities = er.async_entries_for_device(
+        entity_registry, zeo_device_entry.id, include_disabled_entities=True
+    )
+    assert len(zeo_entities) > 0
+    state = hass.states.get(zeo_entities[0].entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
+
+    # Other devices should have entities.
+    all_entities = er.async_entries_for_config_entry(
+        entity_registry, mock_roborock_entry.entry_id
+    )
+    devices_with_entities = {
+        device_registry.async_get(entity.device_id).name
+        for entity in all_entities
+        if entity.device_id is not None
+    }
+    assert devices_with_entities == {
         "Roborock S7 MaxV",
         "Roborock S7 MaxV Dock",
         "Roborock S7 2",
         "Roborock S7 2 Dock",
         "Dyad Pro",
         "Roborock Q7",
-        # Zeo device is missing
+        "Roborock Q10 S5+",
+        "Zeo One",
     }
 
 
@@ -549,6 +596,7 @@ async def test_dyad_device_fails_setup(
     hass: HomeAssistant,
     mock_roborock_entry: MockConfigEntry,
     device_registry: DeviceRegistry,
+    entity_registry: EntityRegistry,
     fake_devices: list[FakeDevice],
 ) -> None:
     """Simulate an error while setting up a dyad device."""
@@ -563,18 +611,241 @@ async def test_dyad_device_fails_setup(
     )
 
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+    if mock_roborock_entry._background_tasks:
+        await asyncio.gather(*mock_roborock_entry._background_tasks)
     assert mock_roborock_entry.state is ConfigEntryState.LOADED
 
-    # The current behavior is that we do not add the Dyad device if it fails to setup
-    found_devices = device_registry.devices.get_devices_for_config_entry_id(
-        mock_roborock_entry.entry_id
+    # The Dyad device should be in the registry and have entities
+    # because entities are registered immediately without blocking on coordinator refresh.
+    dyad_device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, dyad_device.duid)}
     )
-    assert {device.name for device in found_devices} == {
+    assert dyad_device_entry is not None
+    dyad_entities = er.async_entries_for_device(
+        entity_registry, dyad_device_entry.id, include_disabled_entities=True
+    )
+    assert len(dyad_entities) > 0
+    state = hass.states.get(dyad_entities[0].entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
+
+    # Other devices should have entities.
+    all_entities = er.async_entries_for_config_entry(
+        entity_registry, mock_roborock_entry.entry_id
+    )
+    devices_with_entities = {
+        device_registry.async_get(entity.device_id).name
+        for entity in all_entities
+        if entity.device_id is not None
+    }
+    assert devices_with_entities == {
         "Roborock S7 MaxV",
         "Roborock S7 MaxV Dock",
         "Roborock S7 2",
         "Roborock S7 2 Dock",
-        # Dyad device is missing
+        "Dyad Pro",
         "Zeo One",
         "Roborock Q7",
+        "Roborock Q10 S5+",
     }
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_disabled_device_no_coordinator(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    device_registry: DeviceRegistry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test that a disabled device has close() called and no coordinator is created."""
+    # Pre-create the first device as disabled so that async_get_or_create
+    # finds it already disabled when async_setup_entry runs.
+    first_device = fake_devices[0]
+    device_registry.async_get_or_create(
+        config_entry_id=mock_roborock_entry.entry_id,
+        identifiers={(DOMAIN, first_device.duid)},
+        name=first_device.device_info.name,
+        manufacturer="Roborock",
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    first_device.close = AsyncMock()
+    # Track close() calls on enabled devices to verify they are NOT closed.
+    for device in fake_devices[1:]:
+        device.close = AsyncMock()
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_roborock_entry.state is ConfigEntryState.LOADED
+
+    # The disabled device should still be registered in the device registry
+    disabled_device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, first_device.duid)}
+    )
+    assert disabled_device_entry is not None
+    assert disabled_device_entry.disabled
+
+    # close() should have been called on the disabled device to stop its
+    # background reconnect loop from disrupting the MQTT session.
+    first_device.close.assert_awaited_once()
+
+    # close() should NOT have been called on enabled devices.
+    for device in fake_devices[1:]:
+        device.close.assert_not_called()
+
+    # No coordinator should have been created for the disabled device,
+    # so no entities should exist for it.
+    coordinators = mock_roborock_entry.runtime_data
+    assert all(coord.duid != first_device.duid for coord in coordinators.v1)
+
+    # Other devices should still be set up
+    found_devices = device_registry.devices.get_devices_for_config_entry_id(
+        mock_roborock_entry.entry_id
+    )
+    enabled_device_names = {
+        device.name for device in found_devices if not device.disabled
+    }
+    assert "Roborock S7 MaxV" not in enabled_device_names
+    assert "Roborock S7 2" in enabled_device_names
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_disabled_device_close_raises(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    device_registry: DeviceRegistry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test that the integration loads even if close() raises on a disabled device."""
+    first_device = fake_devices[0]
+    device_registry.async_get_or_create(
+        config_entry_id=mock_roborock_entry.entry_id,
+        identifiers={(DOMAIN, first_device.duid)},
+        name=first_device.device_info.name,
+        manufacturer="Roborock",
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    first_device.close = AsyncMock(side_effect=RoborockException("connection error"))
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_roborock_entry.state is ConfigEntryState.LOADED
+    first_device.close.assert_awaited_once()
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_all_devices_disabled(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    device_registry: DeviceRegistry,
+    entity_registry: EntityRegistry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test that the integration loads successfully when all devices are disabled."""
+    # Pre-create all devices as disabled
+    for fake_device in fake_devices:
+        device_registry.async_get_or_create(
+            config_entry_id=mock_roborock_entry.entry_id,
+            identifiers={(DOMAIN, fake_device.duid)},
+            name=fake_device.device_info.name,
+            manufacturer="Roborock",
+            disabled_by=dr.DeviceEntryDisabler.USER,
+        )
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The integration should still load successfully
+    assert mock_roborock_entry.state is ConfigEntryState.LOADED
+
+    # No entities should exist since all devices are disabled
+    all_entities = er.async_entries_for_config_entry(
+        entity_registry, mock_roborock_entry.entry_id
+    )
+    assert len(all_entities) == 0
+
+    # All devices should still exist in the registry but be disabled
+    for fake_device in fake_devices:
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, fake_device.duid)}
+        )
+        assert device_entry is not None
+        assert device_entry.disabled
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_v1_streaming_updates(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test that V1 push updates update entity states immediately."""
+    assert setup_entry.state is ConfigEntryState.LOADED
+    if setup_entry._background_tasks:
+        await asyncio.gather(*setup_entry._background_tasks)
+    sensor_entity_id = "sensor.roborock_s7_maxv_battery"
+    state = hass.states.get(sensor_entity_id)
+    assert state is not None
+    assert state.state == "100"
+
+    # Verify that add_update_listener was called on the mock status trait
+    status_trait = fake_vacuum.v1_properties.status
+    assert status_trait.add_update_listener.called
+
+    # Get the registered callback
+    callback_func = status_trait.add_update_listener.call_args[0][0]  # type: ignore[union-attr]
+
+    # Update a status attribute and trigger the callback
+    status_trait.battery = 85
+    callback_func()
+    await hass.async_block_till_done()
+
+    # Check if the state was updated in Home Assistant immediately
+    state = hass.states.get(sensor_entity_id)
+    assert state is not None
+    assert state.state == "85"
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_dynamic_device_discovery(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    device_manager: AsyncMock,
+    device_manager_context: MockDeviceManagerContext,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test dynamic device discovery and coordinator/entity setup."""
+    # Start with only the first device in the list
+    initial_device = fake_devices[0]
+    device_manager_context.initial_devices = [initial_device]
+
+    # Set up the integration with the initial device
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_roborock_entry.state is ConfigEntryState.LOADED
+
+    # Verify that the sensor for the first device is created
+    sensor_entity_id_1 = "sensor.roborock_s7_maxv_battery"
+    state_1 = hass.states.get(sensor_entity_id_1)
+    assert state_1 is not None
+    assert state_1.state == "100"
+
+    # Verify that the sensor for the second device is NOT created
+    sensor_entity_id_2 = "sensor.roborock_s7_2_battery"
+    state_2 = hass.states.get(sensor_entity_id_2)
+    assert state_2 is None
+
+    # Now simulate the second device becoming ready via ready_callback
+    second_device = fake_devices[1]
+    assert device_manager_context.ready_callback is not None
+    device_manager_context.ready_callback(second_device)
+    await hass.async_block_till_done()
+
+    # Verify that the sensor for the second device has now been dynamically registered and created
+    state_2 = hass.states.get(sensor_entity_id_2)
+    assert state_2 is not None
+    assert state_2.state == "100"

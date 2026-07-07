@@ -138,7 +138,9 @@ async def test_full_flow(
             {
                 "webhook_id": "1234567890",
                 "name": "Test",
-                "auth": "f2156edca7fc6871e13845314a6fc68622e5ad7c58f17663a487ed28cac247f7",
+                "auth": (
+                    "f2156edca7fc6871e13845314a6fc68622e5ad7c58f17663a487ed28cac247f7"
+                ),
                 "ekey_id": "946DA01F-9ABD-4D9D-80C7-02AF85C822A8",
             }
         ]

@@ -1,22 +1,15 @@
 """Config flow to configure roomba component."""
 
-from __future__ import annotations
-
 import asyncio
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from roombapy import RoombaFactory, RoombaInfo
 from roombapy.discovery import RoombaDiscovery
 from roombapy.getpassword import RoombaPassword
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -31,6 +24,7 @@ from .const import (
     DOMAIN,
     ROOMBA_SESSION,
 )
+from .models import RoombaConfigEntry
 
 ROOMBA_DISCOVERY_LOCK = "roomba_discovery_lock"
 ALL_ATTEMPTS = 2
@@ -89,12 +83,14 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: RoombaConfigEntry,
     ) -> RoombaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return RoombaOptionsFlowHandler()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -103,6 +99,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info.host, discovery_info.hostname.lower().removesuffix(".local.")
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -117,11 +114,21 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle any discovery."""
         self._async_abort_entries_match({CONF_HOST: ip_address})
 
-        if not hostname.startswith(("irobot-", "roomba-")):
+        self.host = ip_address
+
+        # Actively probe the device at this IP for its real blid. This is
+        # authoritative and handles two cases where the hostname can't be
+        # trusted: some routers substitute a user-assigned friendly name
+        # for the DHCP/mDNS hostname instead of irobot-<blid>/roomba-<blid>,
+        # and even a well-formed hostname's blid may be truncated if the
+        # hostname exceeds length limits somewhere in the chain.
+        if devices := await _async_discover_roombas(self.hass, self.host):
+            self.blid = devices[0].blid
+        elif hostname.startswith(("irobot-", "roomba-")):
+            self.blid = _async_blid_from_hostname(hostname)
+        else:
             return self.async_abort(reason="not_irobot_device")
 
-        self.host = ip_address
-        self.blid = _async_blid_from_hostname(hostname)
         await self.async_set_unique_id(self.blid)
         self._abort_if_unique_id_configured(updates={CONF_HOST: ip_address})
 
@@ -152,6 +159,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         return await self.async_step_link()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -340,7 +348,7 @@ def _async_get_roomba_discovery() -> RoombaDiscovery:
 @callback
 def _async_blid_from_hostname(hostname: str) -> str:
     """Extract the blid from the hostname."""
-    return hostname.split("-")[1].split(".")[0].upper()
+    return hostname.split("-")[1].split(".", maxsplit=1)[0].upper()
 
 
 async def _async_discover_roombas(

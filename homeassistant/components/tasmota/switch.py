@@ -1,6 +1,6 @@
 """Support for Tasmota switches."""
 
-from typing import Any
+from typing import Any, override
 
 from hatasmota import relay as tasmota_relay
 from hatasmota.entity import TasmotaEntity as HATasmotaEntity
@@ -57,10 +57,12 @@ class TasmotaSwitch(
 
     _tasmota_entity: tasmota_relay.TasmotaRelay
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._tasmota_entity.set_state(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._tasmota_entity.set_state(False)

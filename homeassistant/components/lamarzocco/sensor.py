@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import cast
+from typing import cast, override
 
 from pylamarzocco.const import BackFlushStatus, MachineState, ModelName, WidgetType
 from pylamarzocco.models import (
@@ -223,6 +223,7 @@ class LaMarzoccoSensorEntity(LaMarzoccoEntity, SensorEntity):
     entity_description: LaMarzoccoSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime | None:
         """Return  value of the sensor."""
         return self.entity_description.value_fn(
@@ -236,6 +237,7 @@ class LaMarzoccoStatisticSensorEntity(LaMarzoccoSensorEntity):
     _unavailable_when_machine_off = False
 
     @property
+    @override
     def native_value(self) -> StateType | datetime | None:
         """Return the value of the sensor."""
         return self.entity_description.value_fn(

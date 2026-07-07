@@ -1,16 +1,15 @@
 """Coordinator for the surepetcare integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from surepy import Surepy, SurepyEntity
 from surepy.enums import EntityType, Location, LockState
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import ATTR_LOCATION, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -18,7 +17,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     ATTR_FLAP_ID,
-    ATTR_LOCATION,
     ATTR_LOCK_STATE,
     ATTR_PET_NAME,
     DOMAIN,
@@ -29,13 +27,15 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=3)
 
+type SurePetcareConfigEntry = ConfigEntry[SurePetcareDataCoordinator]
+
 
 class SurePetcareDataCoordinator(DataUpdateCoordinator[dict[int, SurepyEntity]]):
     """Handle Surepetcare data."""
 
-    config_entry: ConfigEntry
+    config_entry: SurePetcareConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: SurePetcareConfigEntry) -> None:
         """Initialize the data handler."""
         self.surepy = Surepy(
             entry.data[CONF_USERNAME],
@@ -58,6 +58,7 @@ class SurePetcareDataCoordinator(DataUpdateCoordinator[dict[int, SurepyEntity]])
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[int, SurepyEntity]:
         """Get the latest data from Sure Petcare."""
         try:

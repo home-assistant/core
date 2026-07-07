@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -82,6 +83,7 @@ class IOmeterBinarySensor(IOmeterEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.identifier}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the binary sensor state."""
         return self.entity_description.value_fn(self.coordinator.data)

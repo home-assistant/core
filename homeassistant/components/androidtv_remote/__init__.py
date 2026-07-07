@@ -1,7 +1,5 @@
 """The Android TV Remote integration."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 import logging
 
@@ -43,8 +41,9 @@ async def async_setup_entry(
         # The Android TV is hard reset or the certificate and key files were deleted.
         raise ConfigEntryAuthFailed from exc
     except (CannotConnect, ConnectionClosed, TimeoutError) as exc:
-        # The Android TV is network unreachable. Raise exception and let Home Assistant retry
-        # later. If device gets a new IP address the zeroconf flow will update the config.
+        # The Android TV is network unreachable. Raise exception and
+        # let Home Assistant retry later. If device gets a new IP
+        # address the zeroconf flow will update the config.
         raise ConfigEntryNotReady from exc
 
     def reauth_needed() -> None:

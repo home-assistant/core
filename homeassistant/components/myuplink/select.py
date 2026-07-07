@@ -1,6 +1,6 @@
 """Select entity for myUplink."""
 
-from typing import cast
+from typing import cast, override
 
 from aiohttp import ClientError
 from myuplink import DevicePoint
@@ -73,12 +73,14 @@ class MyUplinkSelect(MyUplinkEntity, SelectEntity):
         self.options_rev = {value: key for key, value in self.options_map.items()}
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Retrieve currently selected option."""
         device_point = self.coordinator.data.points[self.device_id][self.point_id]
         value = int(cast(int, device_point.value_t))
         return self.options_map.get(str(value))
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the current option."""
         try:

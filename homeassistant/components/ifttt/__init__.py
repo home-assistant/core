@@ -1,7 +1,5 @@
 """Support to trigger Maker IFTTT recipes."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import json
 import logging
@@ -84,6 +82,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 res = pyfttt.send_event(key, event, value1, value2, value3)
                 if res.status_code != HTTPStatus.OK:
                     _LOGGER.error("IFTTT reported error sending event to %s", target)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except requests.exceptions.RequestException:
             _LOGGER.exception("Error communicating with IFTTT")
 

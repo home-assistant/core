@@ -1,7 +1,7 @@
 """Config flow for Overseerr."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from python_overseerr import (
     OverseerrAuthenticationError,
@@ -48,6 +48,7 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
             return "cannot_connect"
         return None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -69,7 +70,7 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     if self.source == SOURCE_USER:
                         return self.async_create_entry(
-                            title="Overseerr",
+                            title="Seerr",
                             data={
                                 CONF_HOST: host,
                                 CONF_PORT: port,

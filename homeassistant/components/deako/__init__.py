@@ -1,7 +1,5 @@
 """The deako integration."""
 
-from __future__ import annotations
-
 import logging
 
 from pydeako import Deako, DeakoDiscoverer, FindDevicesError
@@ -34,7 +32,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DeakoConfigEntry) -> boo
         await connection.disconnect()
         raise ConfigEntryNotReady(exc) from exc
 
-    # If deako devices are advertising on mdns, we should be able to get at least one device
+    # If deako devices are advertising on mdns, we should be
+    # able to get at least one device
     devices = connection.get_devices()
     if len(devices) == 0:
         await connection.disconnect()

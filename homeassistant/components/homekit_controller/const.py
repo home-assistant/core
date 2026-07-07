@@ -103,6 +103,7 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.THREAD_NODE_CAPABILITIES: "sensor",
     CharacteristicsTypes.THREAD_CONTROL_POINT: "button",
     CharacteristicsTypes.MUTE: "switch",
+    CharacteristicsTypes.AIRPLAY_ENABLE: "switch",
     CharacteristicsTypes.FILTER_LIFE_LEVEL: "sensor",
     CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE: "switch",
     CharacteristicsTypes.TEMPERATURE_UNITS: "select",

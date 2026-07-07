@@ -1,9 +1,7 @@
 """Support for Vera sensors."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import cast
+from typing import cast, override
 
 import pyvera as veraApi
 
@@ -13,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
@@ -25,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import ControllerData, get_controller_data
+from .common import ControllerData, VeraConfigEntry
 from .entity import VeraEntity
 
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -33,11 +30,11 @@ SCAN_INTERVAL = timedelta(seconds=5)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VeraConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    controller_data = get_controller_data(hass, entry)
+    controller_data = entry.runtime_data
 
     entities: list[SensorEntity] = [
         VeraSensor(device, controller_data)
@@ -81,6 +78,7 @@ class VeraSensor(VeraEntity[veraApi.VeraSensor], SensorEntity):
         elif self.vera_device.category == veraApi.CATEGORY_POWER_METER:
             self._attr_native_unit_of_measurement = UnitOfPower.WATT
 
+    @override
     def update(self) -> None:
         """Update the state."""
         super().update()
@@ -134,6 +132,7 @@ class VeraPowerSensor(VeraEntity[veraApi.VeraSwitch], SensorEntity):
         VeraEntity.__init__(self, vera_device, controller_data)
         self._unique_id = f"{self._unique_id}_power"
 
+    @override
     def update(self) -> None:
         """Update the sensor state."""
         super().update()
@@ -155,6 +154,7 @@ class VeraEnergySensor(VeraEntity[veraApi.VeraSwitch], SensorEntity):
         VeraEntity.__init__(self, vera_device, controller_data)
         self._unique_id = f"{self._unique_id}_energy"
 
+    @override
     def update(self) -> None:
         """Update the sensor state."""
         super().update()

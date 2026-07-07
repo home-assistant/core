@@ -1,7 +1,5 @@
 """Support for LIFX lights."""
 
-from __future__ import annotations
-
 from aiolifx import products
 
 from homeassistant.helpers import device_registry as dr

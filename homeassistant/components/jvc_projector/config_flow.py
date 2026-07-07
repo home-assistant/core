@@ -1,9 +1,7 @@
 """Config flow for the jvc_projector integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from jvcprojector import (
     JvcProjector,
@@ -27,6 +25,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

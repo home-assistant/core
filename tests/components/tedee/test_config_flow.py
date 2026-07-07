@@ -7,7 +7,7 @@ from aiotedee import (
     TedeeDataUpdateException,
     TedeeLocalAuthException,
 )
-from aiotedee.bridge import TedeeBridge
+from aiotedee.models import TedeeBridge
 import pytest
 
 from homeassistant.components.tedee.const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN

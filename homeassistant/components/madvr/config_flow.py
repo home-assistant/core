@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from madvr.madvr import HeartBeatError, Madvr
@@ -36,6 +36,7 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -104,7 +105,8 @@ async def test_connection(hass: HomeAssistant, host: str, port: int) -> str:
     # try to connect
     try:
         await asyncio.wait_for(madvr_client.open_connection(), timeout=15)
-    # connection can raise HeartBeatError if the device is not available or connection does not work
+    # connection can raise HeartBeatError if the device is not
+    # available or connection does not work
     except (TimeoutError, aiohttp.ClientError, OSError, HeartBeatError) as err:
         _LOGGER.error("Error connecting to madVR: %s", err)
         raise CannotConnect from err

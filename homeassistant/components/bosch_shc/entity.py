@@ -1,6 +1,6 @@
 """Bosch Smart Home Controller base entity."""
 
-from __future__ import annotations
+from typing import override
 
 from boschshcpy import SHCDevice, SHCIntrusionSystem
 
@@ -35,6 +35,7 @@ class SHCBaseEntity(Entity):
         self._device = device
         self._entry_id = entry_id
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events."""
         await super().async_added_to_hass()
@@ -47,6 +48,7 @@ class SHCBaseEntity(Entity):
 
         self._device.subscribe_callback(self.entity_id, on_state_changed)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from SHC events."""
         await super().async_will_remove_from_hass()
@@ -73,6 +75,7 @@ class SHCEntity(SHCBaseEntity):
         )
         super().__init__(device=device, parent_id=parent_id, entry_id=entry_id)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events."""
         await super().async_added_to_hass()
@@ -83,6 +86,7 @@ class SHCEntity(SHCBaseEntity):
         for service in self._device.device_services:
             service.subscribe_callback(self.entity_id, on_state_changed)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from SHC events."""
         await super().async_will_remove_from_hass()
@@ -90,6 +94,7 @@ class SHCEntity(SHCBaseEntity):
             service.unsubscribe_callback(self.entity_id)
 
     @property
+    @override
     def available(self) -> bool:
         """Return false if status is unavailable."""
         return self._device.status == "AVAILABLE"
@@ -116,6 +121,7 @@ class SHCDomainEntity(SHCBaseEntity):
         super().__init__(device=domain, parent_id=parent_id, entry_id=entry_id)
 
     @property
+    @override
     def available(self) -> bool:
         """Return false if status is unavailable."""
         return self._device.system_availability

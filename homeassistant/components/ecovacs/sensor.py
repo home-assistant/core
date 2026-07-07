@@ -1,10 +1,8 @@
 """Ecovacs sensor module."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from deebot_client.capabilities import CapabilityEvent, CapabilityLifeSpan, DeviceType
 from deebot_client.device import Device
@@ -289,6 +287,7 @@ class EcovacsSensor(
         ):
             self._attr_native_unit_of_measurement = native_unit_of_measurement
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
@@ -312,6 +311,7 @@ class EcovacsLifespanSensor(
 
     entity_description: EcovacsLifespanSensorEntityDescription
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
@@ -339,6 +339,7 @@ class EcovacsErrorSensor(
         entity_category=EntityCategory.DIAGNOSTIC,
     )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
@@ -367,6 +368,7 @@ class EcovacsLegacyBatterySensor(EcovacsLegacyEntity, SensorEntity):
         super().__init__(device)
         self._attr_unique_id = f"{device.vacuum['did']}_battery_status"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         self._event_listeners.append(
@@ -376,6 +378,7 @@ class EcovacsLegacyBatterySensor(EcovacsLegacyEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         if (status := self.device.battery_status) is not None:
@@ -383,6 +386,7 @@ class EcovacsLegacyBatterySensor(EcovacsLegacyEntity, SensorEntity):
         return None
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
         return icon_for_battery_level(
@@ -409,6 +413,7 @@ class EcovacsLegacyLifespanSensor(EcovacsLegacyEntity, SensorEntity):
             value = int(value * 100)
         self._attr_native_value = value
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
 

@@ -1,7 +1,5 @@
 """Tests for the Tibber binary sensors."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 import pytest

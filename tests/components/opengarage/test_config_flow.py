@@ -108,7 +108,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     """Test user input for config_entry that already exists."""
     first_entry = MockConfigEntry(
-        domain="opengarage",
+        domain=DOMAIN,
         data={
             "host": "http://1.1.1.1",
             "device_key": "AfsasdnfkjDD",

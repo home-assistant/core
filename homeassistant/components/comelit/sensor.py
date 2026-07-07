@@ -1,8 +1,6 @@
 """Support for sensors."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Final, cast
+from typing import TYPE_CHECKING, Final, cast, override
 
 from aiocomelit.api import ComelitSerialBridgeObject, ComelitVedoZoneObject
 from aiocomelit.const import ALARM_ZONE, OTHER, AlarmZoneState
@@ -123,6 +121,7 @@ class ComelitBridgeSensorEntity(ComelitBridgeBaseEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Sensor value."""
         return cast(
@@ -153,7 +152,7 @@ class ComelitVedoSensorEntity(
         super().__init__(coordinator)
         # Use config_entry.entry_id as base for unique_id
         # because no serial number or mac is available
-        self._attr_unique_id = f"{config_entry_entry_id}-{zone.index}"
+        self._attr_unique_id = f"{config_entry_entry_id}-{description.key}-{zone.index}"
         self._attr_device_info = coordinator.platform_device_info(zone, "zone")
 
         self.entity_description = description
@@ -166,14 +165,16 @@ class ComelitVedoSensorEntity(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Sensor availability."""
-        return self._zone_object.human_status != AlarmZoneState.UNAVAILABLE
+        return self._zone_object.human_status is not AlarmZoneState.UNAVAILABLE
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Sensor value."""
-        if (status := self._zone_object.human_status) == AlarmZoneState.UNKNOWN:
+        if (status := self._zone_object.human_status) is AlarmZoneState.UNKNOWN:
             return None
 
         return cast(str, status.value)

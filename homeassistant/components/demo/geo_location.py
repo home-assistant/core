@@ -1,11 +1,10 @@
 """Demo platform for the geolocation component."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from math import cos, pi, radians, sin
 import random
+from typing import override
 
 from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.const import UnitOfLength
@@ -134,26 +133,31 @@ class DemoGeolocationEvent(GeolocationEvent):
         self._unit_of_measurement = unit_of_measurement
 
     @property
+    @override
     def source(self) -> str:
         """Return source value of this external event."""
         return SOURCE
 
     @property
+    @override
     def distance(self) -> float | None:
         """Return distance value of this external event."""
         return self._distance
 
     @property
+    @override
     def latitude(self) -> float | None:
         """Return latitude value of this external event."""
         return self._latitude
 
     @property
+    @override
     def longitude(self) -> float | None:
         """Return longitude value of this external event."""
         return self._longitude
 
     @property
+    @override
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return self._unit_of_measurement

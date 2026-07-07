@@ -1,9 +1,8 @@
 """Support for consuming values for the Volkszaehler API."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from volkszaehler import Volkszaehler
 from volkszaehler.exceptions import VolkszaehlerApiConnectionError
@@ -130,6 +129,7 @@ class VolkszaehlerSensor(SensorEntity):
         self._attr_name = f"{name} {description.name}"
 
     @property
+    @override
     def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self.vz_api.available

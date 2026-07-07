@@ -1,0 +1,21 @@
+{
+  "response": {
+    "game_count": 1,
+    "games": [
+      {
+        "appid": 20900,
+        "name": "The Witcher: Enhanced Edition",
+        "playtime_2weeks": 396,
+        "playtime_forever": 5531,
+        "img_icon_url": "746d1cd48fb2e57d579b05b6e9eccba95859e549",
+        "playtime_windows_forever": 0,
+        "playtime_mac_forever": 0,
+        "playtime_linux_forever": 5531,
+        "playtime_deck_forever": 0,
+        "rtime_last_played": 1782145718,
+        "content_descriptorids": [1, 2, 5],
+        "playtime_disconnected": 0
+      }
+    ]
+  }
+}

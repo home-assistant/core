@@ -1,10 +1,8 @@
 """Config flow for the Namecheap DynamicDNS integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 import voluptuous as vol
@@ -52,6 +50,7 @@ STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema(
 class NamecheapDnsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Namecheap DynamicDNS."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

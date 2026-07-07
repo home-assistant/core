@@ -1,26 +1,24 @@
 """Support for the Switchbot lock."""
 
-from typing import Any
+from typing import Any, override
 
 from switchbot_api import Device, LockCommands, LockV2Commands, Remote, SwitchBotAPI
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData, SwitchBotCoordinator
-from .const import DOMAIN
+from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
-    data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
+    data = config.runtime_data
     async_add_entities(
         SwitchBotCloudLock(data.api, device, coordinator)
         for device, coordinator in data.devices.locks
@@ -42,6 +40,7 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
         super().__init__(api, device, coordinator)
         self.__model = device.device_type
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if coord_data := self.coordinator.data:
@@ -49,18 +48,21 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
         if self.__model != "Smart Lock Lite":
             self._attr_supported_features = LockEntityFeature.OPEN
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self.send_api_command(LockCommands.LOCK)
         self._attr_is_locked = True
         self.async_write_ha_state()
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         await self.send_api_command(LockCommands.UNLOCK)
         self._attr_is_locked = False
         self.async_write_ha_state()
 
+    @override
     async def async_open(self, **kwargs: Any) -> None:
         """Latch open the lock."""
         await self.send_api_command(LockV2Commands.DEADBOLT)

@@ -37,17 +37,19 @@
     }),
     'data': dict({
       'address': '00000000-0000-0000-0000-000000000001',
+      'product_type': 'WATER_COMPUTER',
     }),
     'description': None,
     'description_placeholders': None,
     'flow_id': <ANY>,
     'handler': 'gardena_bluetooth',
-    'minor_version': 1,
+    'minor_version': 2,
     'options': dict({
     }),
     'result': ConfigEntrySnapshot({
       'data': dict({
         'address': '00000000-0000-0000-0000-000000000001',
+        'product_type': 'WATER_COMPUTER',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -61,7 +63,7 @@
       }),
       'domain': 'gardena_bluetooth',
       'entry_id': <ANY>,
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -140,15 +142,6 @@
     'type': <FlowResultType.ABORT: 'abort'>,
   })
 # ---
-# name: test_no_devices
-  FlowResultSnapshot({
-    'description_placeholders': None,
-    'flow_id': <ANY>,
-    'handler': 'gardena_bluetooth',
-    'reason': 'no_devices_found',
-    'type': <FlowResultType.ABORT: 'abort'>,
-  })
-# ---
 # name: test_user_selection
   FlowResultSnapshot({
     'data_schema': list([
@@ -205,24 +198,26 @@
     }),
     'data': dict({
       'address': '00000000-0000-0000-0000-000000000001',
+      'product_type': 'WATER_COMPUTER',
     }),
     'description': None,
     'description_placeholders': None,
     'flow_id': <ANY>,
     'handler': 'gardena_bluetooth',
-    'minor_version': 1,
+    'minor_version': 2,
     'options': dict({
     }),
     'result': ConfigEntrySnapshot({
       'data': dict({
         'address': '00000000-0000-0000-0000-000000000001',
+        'product_type': 'WATER_COMPUTER',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
       }),
       'domain': 'gardena_bluetooth',
       'entry_id': <ANY>,
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,

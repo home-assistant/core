@@ -1,7 +1,5 @@
 """Tests for the Bluetooth integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import time
@@ -508,7 +506,8 @@ async def test_unavailable_after_no_data(hass: HomeAssistant) -> None:
     start_monotonic = time.monotonic()
 
     with patch(
-        "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
+        # Must patch before we setup
+        "bleak.BleakScanner.discovered_devices_and_advertisement_data",
         {"44:44:33:11:23:45": (MagicMock(address="44:44:33:11:23:45"), MagicMock())},
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -704,7 +703,9 @@ async def test_exception_from_update_method(
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(
+        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+    ):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -769,7 +770,9 @@ async def test_bad_data_from_update_method(hass: HomeAssistant) -> None:
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(
+        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+    ):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -806,7 +809,10 @@ GOVEE_B5178_REMOTE_SERVICE_INFO = BluetoothServiceInfo(
     address="749A17CB-F7A9-D466-C29F-AABE601938A0",
     rssi=-95,
     manufacturer_data={
-        1: b"\x01\x01\x01\x04\xb5\xa2d\x00\x06L\x00\x02\x15INTELLI_ROCKS_HWPu\xf2\xff\xc2"
+        1: (
+            b"\x01\x01\x01\x04\xb5\xa2d\x00\x06L\x00"
+            b"\x02\x15INTELLI_ROCKS_HWPu\xf2\xff\xc2"
+        )
     },
     service_data={},
     service_uuids=["0000ec88-0000-1000-8000-00805f9b34fb"],
@@ -1091,7 +1097,7 @@ GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = (
 
 @pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
 async def test_integration_with_entity(hass: HomeAssistant) -> None:
-    """Test integration of PassiveBluetoothProcessorCoordinator with PassiveBluetoothCoordinatorEntity."""
+    """Test PassiveBluetoothProcessorCoordinator with entity."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     update_count = 0
@@ -1164,7 +1170,8 @@ async def test_integration_with_entity(hass: HomeAssistant) -> None:
     assert len(entity_key_events) == 1
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    # Third call with primary and remote sensor entities adds the primary sensor entities
+    # Third call with primary and remote sensor entities
+    # adds the primary sensor entities
     assert len(mock_add_entities.mock_calls) == 2
 
     # should not have triggered the entity key listener since there
@@ -1419,7 +1426,7 @@ DEVICE_ONLY_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 
 @pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
 async def test_integration_multiple_entity_platforms(hass: HomeAssistant) -> None:
-    """Test integration of PassiveBluetoothProcessorCoordinator with multiple platforms."""
+    """Test coordinator with multiple platforms."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     @callback
@@ -1570,7 +1577,7 @@ async def test_exception_from_coordinator_update_method(
 async def test_integration_multiple_entity_platforms_with_reload_and_restart(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """Test integration of PassiveBluetoothProcessorCoordinator with multiple platforms with reload."""
+    """Test coordinator with multiple platforms and reload."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     entry = MockConfigEntry(domain=DOMAIN, data={})
 

@@ -1,7 +1,5 @@
 """Common code for TCP component."""
 
-from __future__ import annotations
-
 from typing import Any, Final
 
 import voluptuous as vol

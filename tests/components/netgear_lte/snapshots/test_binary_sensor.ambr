@@ -2,8 +2,8 @@
 # name: test_binary_sensors[binary_sensor.netgear_lm1200_mobile_connected]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Netgear LM1200 Mobile connected',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Netgear LM1200 Mobile connected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.netgear_lm1200_mobile_connected',
@@ -16,7 +16,7 @@
 # name: test_binary_sensors[binary_sensor.netgear_lm1200_roaming]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Netgear LM1200 Roaming',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Netgear LM1200 Roaming',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.netgear_lm1200_roaming',
@@ -29,8 +29,8 @@
 # name: test_binary_sensors[binary_sensor.netgear_lm1200_wire_connected]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Netgear LM1200 Wire connected',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Netgear LM1200 Wire connected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.netgear_lm1200_wire_connected',

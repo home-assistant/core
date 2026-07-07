@@ -246,7 +246,7 @@ async def test_update_category_with_same_data(
 async def test_update_category_with_same_name_change_case(
     category_registry: cr.CategoryRegistry,
 ) -> None:
-    """Make sure that we can reapply the same name with a different case to a category."""
+    """Make sure that we can reapply the same name with a different case."""
     category = category_registry.async_create(
         scope="automation",
         name="Energy saving",

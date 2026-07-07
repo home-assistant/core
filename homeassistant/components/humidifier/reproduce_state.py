@@ -1,7 +1,5 @@
 """Module that groups code required to handle state restore for component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 import logging
@@ -16,9 +14,21 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, State
 
-from .const import ATTR_HUMIDITY, DOMAIN, SERVICE_SET_HUMIDITY, SERVICE_SET_MODE
+from .const import (
+    ATTR_HUMIDITY,
+    DOMAIN,
+    SERVICE_SET_HUMIDITY,
+    SERVICE_SET_MODE,
+    HumidifierEntityStateAttribute,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+# Maps a state attribute to the service call argument used to restore it.
+_STATE_ATTRIBUTE_TO_SERVICE_ARG: dict[HumidifierEntityStateAttribute, str] = {
+    HumidifierEntityStateAttribute.MODE: ATTR_MODE,
+    HumidifierEntityStateAttribute.HUMIDITY: ATTR_HUMIDITY,
+}
 
 
 async def _async_reproduce_states(
@@ -33,12 +43,16 @@ async def _async_reproduce_states(
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 
-    async def call_service(service: str, keys: Iterable[str]) -> None:
-        """Call service with set of attributes given."""
+    async def call_service(
+        service: str, attributes: Iterable[HumidifierEntityStateAttribute]
+    ) -> None:
+        """Call service with the given state attributes."""
         data = {"entity_id": state.entity_id}
-        for key in keys:
-            if key in state.attributes:
-                data[key] = state.attributes[key]
+        for attribute in attributes:
+            if attribute in state.attributes:
+                data[_STATE_ATTRIBUTE_TO_SERVICE_ARG[attribute]] = state.attributes[
+                    attribute
+                ]
 
         await hass.services.async_call(
             DOMAIN, service, data, blocking=True, context=context
@@ -68,16 +82,18 @@ async def _async_reproduce_states(
 
     # Then set the mode before target humidity, because switching modes
     # may invalidate target humidity
-    if ATTR_MODE in state.attributes and state.attributes[
-        ATTR_MODE
-    ] != cur_state.attributes.get(ATTR_MODE):
-        await call_service(SERVICE_SET_MODE, [ATTR_MODE])
+    if HumidifierEntityStateAttribute.MODE in state.attributes and state.attributes[
+        HumidifierEntityStateAttribute.MODE
+    ] != cur_state.attributes.get(HumidifierEntityStateAttribute.MODE):
+        await call_service(SERVICE_SET_MODE, [HumidifierEntityStateAttribute.MODE])
 
     # Next, restore target humidity for the current mode
-    if ATTR_HUMIDITY in state.attributes and state.attributes[
-        ATTR_HUMIDITY
-    ] != cur_state.attributes.get(ATTR_HUMIDITY):
-        await call_service(SERVICE_SET_HUMIDITY, [ATTR_HUMIDITY])
+    if HumidifierEntityStateAttribute.HUMIDITY in state.attributes and state.attributes[
+        HumidifierEntityStateAttribute.HUMIDITY
+    ] != cur_state.attributes.get(HumidifierEntityStateAttribute.HUMIDITY):
+        await call_service(
+            SERVICE_SET_HUMIDITY, [HumidifierEntityStateAttribute.HUMIDITY]
+        )
 
 
 async def async_reproduce_states(

@@ -1,12 +1,10 @@
 """Config flow for the liebherr integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
-from pyliebherrhomeapi import LiebherrClient
+from pyliebherrhomeapi import Device, LiebherrClient
 from pyliebherrhomeapi.exceptions import (
     LiebherrAuthenticationError,
     LiebherrConnectionError,
@@ -31,10 +29,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class LiebherrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for liebherr."""
 
-    async def _validate_api_key(self, api_key: str) -> tuple[list, dict[str, str]]:
+    async def _validate_api_key(
+        self, api_key: str
+    ) -> tuple[list[Device], dict[str, str]]:
         """Validate the API key and return devices and errors."""
         errors: dict[str, str] = {}
-        devices: list = []
+        devices: list[Device] = []
         client = LiebherrClient(
             api_key=api_key,
             session=async_get_clientsession(self.hass),
@@ -50,6 +50,7 @@ class LiebherrConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         return devices, errors
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,0 +1,81 @@
+# serializer version: 1
+# name: test_cloud_all_water_heaters[water_heater.hot_water-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 80.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 30.0,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
+        'off',
+        'auto',
+        'manual',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.hot_water',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hot Water',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hot Water',
+    'platform': 'geniushub',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_10',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cloud_all_water_heaters[water_heater.hot_water-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 45.5,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hot Water',
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 80.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 30.0,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
+        'off',
+        'auto',
+        'manual',
+      ]),
+      <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'manual',
+      'status': dict({
+        'mode': 'override',
+        'override': dict({
+          'duration': 3600,
+          'setpoint': 80,
+        }),
+        'temperature': 45.5,
+        'type': 'hot water temperature',
+      }),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 3>,
+      <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 60,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.hot_water',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'manual',
+  })
+# ---

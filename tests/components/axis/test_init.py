@@ -19,18 +19,16 @@ async def test_setup_entry(config_entry_setup: MockConfigEntry) -> None:
 async def test_setup_entry_fails(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test successful setup of entry."""
+    """Test failed setup of entry."""
     config_entry.add_to_hass(hass)
 
-    mock_device = Mock()
-    mock_device.async_setup = AsyncMock(return_value=False)
+    with patch(
+        "homeassistant.components.axis.get_axis_api",
+        side_effect=axis.CannotConnect,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
 
-    with patch.object(axis, "AxisHub") as mock_device_class:
-        mock_device_class.return_value = mock_device
-
-        assert not await hass.config_entries.async_setup(config_entry.entry_id)
-
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry(

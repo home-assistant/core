@@ -65,6 +65,6 @@ async def test_unload(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, songpal.DOMAIN, {}) is True
         await hass.async_block_till_done()
     mocked_device.listen_notifications.assert_called_once()
-    assert await songpal.async_unload_entry(hass, entry)
+    assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     mocked_device.stop_listen_notifications.assert_called_once()

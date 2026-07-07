@@ -1,13 +1,11 @@
 """Component providing sensors for UniFi Protect."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, override
 
 from uiprotect.data import (
     NVR,
@@ -66,6 +64,7 @@ class ProtectSensorEntityDescription(
 
     precision: int | None = None
 
+    @override
     def __post_init__(self) -> None:
         """Ensure values are rounded if precision is set."""
         super().__post_init__()
@@ -302,7 +301,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="battery_status.percentage",
+        ufp_public_value="wireless_connection_state.battery_status.percentage",
     ),
     ProtectSensorEntityDescription(
         key="light_level",
@@ -369,24 +368,6 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="mount_type",
         ufp_perm=PermRequired.NO_WRITE,
-    ),
-    ProtectSensorEntityDescription(
-        key="paired_camera",
-        translation_key="paired_camera",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="camera.display_name",
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
-)
-
-DOORLOCK_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
-    ProtectSensorEntityDescription(
-        key="battery_level",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.BATTERY,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="battery_status.percentage",
     ),
     ProtectSensorEntityDescription(
         key="paired_camera",
@@ -583,7 +564,6 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: CAMERA_SENSORS + CAMERA_DISABLED_SENSORS,
     ModelType.SENSOR: SENSE_SENSORS,
     ModelType.LIGHT: LIGHT_SENSORS,
-    ModelType.DOORLOCK: DOORLOCK_SENSORS,
     ModelType.CHIME: CHIME_SENSORS,
     ModelType.VIEWPORT: VIEWER_SENSORS,
 }
@@ -666,9 +646,12 @@ class BaseProtectSensor(BaseProtectEntity, SensorEntity):
     entity_description: ProtectSensorEntityDescription
     _state_attrs = ("_attr_available", "_attr_native_value")
 
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
-        self._attr_native_value = self.entity_description.get_ufp_value(self.device)
+        self._attr_native_value = self.entity_description.get_value(
+            self.device, self._ufp_public_obj
+        )
 
 
 class ProtectDeviceSensor(BaseProtectSensor, ProtectDeviceEntity):

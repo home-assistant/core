@@ -99,7 +99,9 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
 
         except DeviceInitializationError as e:
             _LOGGER.error(
-                "Failed to initialize device with IP/Hostname %s, please verify that the device is powered on and reachable on port 3000",
+                "Failed to initialize device with IP/Hostname"
+                " %s, please verify that the device is powered"
+                " on and reachable on port 3000",
                 self.config_entry.data[CONF_HOST],
             )
             raise ConfigEntryNotReady(
@@ -155,6 +157,12 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
     async def async_toggle(self) -> None:
         """Toggle the device."""
         await self._async_sn2_call_with_error_handling(self.device.toggle())
+
+    async def async_set_brightness(self, value: float) -> None:
+        """Set the brightness of the device (0.0 to 1.0)."""
+        await self._async_sn2_call_with_error_handling(
+            self.device.set_brightness(value)
+        )
 
     async def async_setting_enable(self, setting: OnOffSetting) -> None:
         """Enable a device setting."""

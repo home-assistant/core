@@ -1,7 +1,5 @@
 """Test template context management for Home Assistant."""
 
-from __future__ import annotations
-
 import jinja2
 
 from homeassistant.helpers.template.context import (

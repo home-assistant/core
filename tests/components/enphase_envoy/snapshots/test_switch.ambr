@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switch[envoy_eu_batt][switch.envoy_1234_charge_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_switch[envoy_eu_batt][switch.envoy_1234_charge_from_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Envoy 1234 Charge from grid',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy 1234 Charge from grid',
     }),
     'context': <ANY>,
     'entity_id': 'switch.envoy_1234_charge_from_grid',
@@ -50,8 +51,9 @@
 # ---
 # name: test_switch[envoy_metered_batt_relay][switch.enpower_654321_charge_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,7 +89,7 @@
 # name: test_switch[envoy_metered_batt_relay][switch.enpower_654321_charge_from_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Enpower 654321 Charge from grid',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enpower 654321 Charge from grid',
     }),
     'context': <ANY>,
     'entity_id': 'switch.enpower_654321_charge_from_grid',
@@ -99,8 +101,9 @@
 # ---
 # name: test_switch[envoy_metered_batt_relay][switch.enpower_654321_grid_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -136,7 +139,7 @@
 # name: test_switch[envoy_metered_batt_relay][switch.enpower_654321_grid_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Enpower 654321 Grid enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enpower 654321 Grid enabled',
     }),
     'context': <ANY>,
     'entity_id': 'switch.enpower_654321_grid_enabled',
@@ -148,8 +151,9 @@
 # ---
 # name: test_switch[envoy_metered_batt_relay][switch.nc1_fixture-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -185,7 +189,7 @@
 # name: test_switch[envoy_metered_batt_relay][switch.nc1_fixture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NC1 Fixture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC1 Fixture',
     }),
     'context': <ANY>,
     'entity_id': 'switch.nc1_fixture',
@@ -197,8 +201,9 @@
 # ---
 # name: test_switch[envoy_metered_batt_relay][switch.nc2_fixture-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -234,7 +239,7 @@
 # name: test_switch[envoy_metered_batt_relay][switch.nc2_fixture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NC2 Fixture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC2 Fixture',
     }),
     'context': <ANY>,
     'entity_id': 'switch.nc2_fixture',
@@ -246,8 +251,9 @@
 # ---
 # name: test_switch[envoy_metered_batt_relay][switch.nc3_fixture-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -283,7 +289,7 @@
 # name: test_switch[envoy_metered_batt_relay][switch.nc3_fixture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NC3 Fixture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC3 Fixture',
     }),
     'context': <ANY>,
     'entity_id': 'switch.nc3_fixture',

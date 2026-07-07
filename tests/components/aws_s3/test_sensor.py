@@ -1,12 +1,11 @@
 """Tests for the AWS S3 sensor platform."""
 
-from __future__ import annotations
-
 import json
 from unittest.mock import AsyncMock
 
 from botocore.exceptions import BotoCoreError
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aws_s3.coordinator import SCAN_INTERVAL
@@ -62,10 +61,9 @@ async def test_sensor_availability(
     assert (state := hass.states.get("sensor.bucket_test_total_size_of_backups"))
     assert state.state == STATE_UNAVAILABLE
 
-    mock_client.get_paginator.return_value.paginate.side_effect = None
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
-        {"Contents": []}
-    ]
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.side_effect = None
+    paginate.return_value.__aiter__.return_value = [{"Contents": []}]
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -74,29 +72,41 @@ async def test_sensor_availability(
     assert state.state != STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    ("config_entry_extra_data", "expected_pagination_call"),
+    [
+        ({}, {"Bucket": "test"}),
+        (
+            {"prefix": "backups/home"},
+            {"Bucket": "test", "Prefix": "backups/home/"},
+        ),
+    ],
+)
 async def test_calculate_backups_size(
     hass: HomeAssistant,
     mock_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    test_backup: AgentBackup,
+    mock_agent_backup: AgentBackup,
+    config_entry_extra_data: dict,
+    expected_pagination_call: dict,
 ) -> None:
-    """Test the total size of backups calculation."""
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
-        {"Contents": []}
-    ]
+    """Test the total size of backups calculation with and without prefix."""
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [{"Contents": []}]
     await setup_integration(hass, mock_config_entry)
 
     assert (state := hass.states.get("sensor.bucket_test_total_size_of_backups"))
     assert state.state == "0.0"
 
     # Add a backup
-    metadata_content = json.dumps(test_backup.as_dict())
+    metadata_content = json.dumps(mock_agent_backup.as_dict())
     mock_body = AsyncMock()
     mock_body.read.return_value = metadata_content.encode()
     mock_client.get_object.return_value = {"Body": mock_body}
 
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [
         {
             "Contents": [
                 {"Key": "backup.tar"},
@@ -111,3 +121,8 @@ async def test_calculate_backups_size(
 
     assert (state := hass.states.get("sensor.bucket_test_total_size_of_backups"))
     assert float(state.state) > 0
+
+    # Verify prefix was used in API call if expected
+    mock_client.get_paginator.return_value.paginate.assert_called_with(
+        **expected_pagination_call,
+    )

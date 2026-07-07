@@ -1,6 +1,6 @@
 """Support for Ecobee binary sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -46,6 +46,7 @@ class EcobeeBinarySensor(BinarySensorEntity):
         self.index = sensor_index
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return a unique identifier for this sensor."""
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
@@ -57,6 +58,7 @@ class EcobeeBinarySensor(BinarySensorEntity):
         return None
 
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Return device information for this sensor."""
         identifier = None
@@ -89,6 +91,7 @@ class EcobeeBinarySensor(BinarySensorEntity):
         return None
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if device is available."""
         thermostat = self.data.ecobee.get_thermostat(self.index)

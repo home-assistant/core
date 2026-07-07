@@ -1,0 +1,9 @@
+{
+  "data": {
+    "type": "BatterySocLevels",
+    "id": "guid",
+    "attributes": {
+      "action": "set"
+    }
+  }
+}

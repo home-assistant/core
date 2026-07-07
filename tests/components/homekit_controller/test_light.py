@@ -452,7 +452,7 @@ async def test_only_migrate_once(
     entity_registry: er.EntityRegistry,
     get_next_aid: Callable[[], int],
 ) -> None:
-    """Test a we handle migration happening after an upgrade and than a downgrade and then an upgrade."""
+    """Test handling migration across upgrade/downgrade/upgrade cycle."""
     aid = get_next_aid()
     old_light_entry = entity_registry.async_get_or_create(
         "light",

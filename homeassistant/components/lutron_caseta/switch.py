@@ -1,6 +1,6 @@
 """Support for Lutron Caseta switches."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -51,21 +51,25 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, SwitchEntity):
         keypads = data.keypad_data.keypads
         parent_keypad = keypads[device["parent_device"]]
         parent_device_info = parent_keypad["device_info"]
-        # Append the child device name to the end of the parent keypad name to create the entity name
+        # Append the child device name to the end of the
+        # parent keypad name to create the entity name
         self._attr_name = f"{parent_device_info['name']} {device['device_name']}"
         # Set the device_info to the same as the Parent Keypad
         # The entities will be nested inside the keypad device
         self._attr_device_info = parent_device_info
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._smartbridge.turn_on(self.device_id)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._smartbridge.turn_off(self.device_id)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._device["current_state"] > 0
@@ -91,10 +95,12 @@ class LutronCasetaSmartAwaySwitch(LutronCasetaEntity, SwitchEntity):
         self._smart_away_unique_id = f"{self._bridge_unique_id}_smart_away"
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID of the smart away switch."""
         return self._smart_away_unique_id
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
@@ -104,15 +110,18 @@ class LutronCasetaSmartAwaySwitch(LutronCasetaEntity, SwitchEntity):
         """Handle updated smart away state from the bridge."""
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn Smart Away on."""
         await self._smartbridge.activate_smart_away()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn Smart Away off."""
         await self._smartbridge.deactivate_smart_away()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if Smart Away is on."""
         return self._smartbridge.smart_away_state == "Enabled"

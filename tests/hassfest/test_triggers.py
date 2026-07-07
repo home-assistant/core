@@ -32,16 +32,22 @@ TRIGGER_DESCRIPTIONS = {
                 offset:
                   selector:
                     time: null
+                offset_no_description:
+                  selector:
+                    time: null
         """,
         TRIGGER_ICONS_FILENAME: {"triggers": {"_": {"trigger": "mdi:flash"}}},
         TRIGGER_STRINGS_FILENAME: {
             "triggers": {
                 "_": {
                     "name": "MQTT",
-                    "description": "When a specific message is received on a given MQTT topic.",
+                    "description": (
+                        "When a specific message is received on a given MQTT topic."
+                    ),
                     "fields": {
                         "event": {"name": "Event", "description": "The event."},
                         "offset": {"name": "Offset", "description": "The offset."},
+                        "offset_no_description": {"name": "Offset"},
                     },
                 }
             }
@@ -99,10 +105,8 @@ TRIGGER_DESCRIPTIONS = {
             "has no name",
             "has no description",
             "field event with no name",
-            "field event with no description",
             "field event with a selector with a translation key",
             "field offset with no name",
-            "field offset with no description",
         ],
     },
 }

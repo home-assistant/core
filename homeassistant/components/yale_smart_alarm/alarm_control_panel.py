@@ -1,8 +1,6 @@
 """Support for Yale Alarm."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from yalesmartalarmclient.const import (
     YALE_STATE_ARM_FULL,
@@ -50,14 +48,17 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
         super().__init__(coordinator)
         self._attr_unique_id = coordinator.config_entry.entry_id
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         return await self.async_set_alarm(YALE_STATE_DISARM, code)
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         return await self.async_set_alarm(YALE_STATE_ARM_PARTIAL, code)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         return await self.async_set_alarm(YALE_STATE_ARM_FULL, code)
@@ -100,6 +101,7 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if alarm is available."""
         if STATE_MAP.get(self.coordinator.data["alarm"]) is None:
@@ -107,6 +109,7 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
         return super().available
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the alarm."""
         return STATE_MAP.get(self.coordinator.data["alarm"])

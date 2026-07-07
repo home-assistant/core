@@ -1,9 +1,9 @@
 """Sensor tests for the Google Mail integration."""
 
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
-from google.auth.exceptions import RefreshError
+from aiohttp.client_exceptions import ClientResponseError
 from httplib2 import Response
 import pytest
 
@@ -12,6 +12,11 @@ from homeassistant.components.google_mail.const import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.util import dt as dt_util
 
 from .conftest import SENSOR, TOKEN, ComponentSetup
@@ -56,12 +61,19 @@ async def test_sensors(
 
 
 async def test_sensor_reauth_trigger(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
 ) -> None:
     """Test reauth is triggered after a refresh error."""
     await setup_integration()
 
-    with patch(TOKEN, side_effect=RefreshError):
+    with patch(
+        TOKEN,
+        side_effect=OAuth2TokenRequestReauthError(
+            request_info=Mock(),
+            domain=DOMAIN,
+        ),
+    ):
         next_update = dt_util.utcnow() + timedelta(minutes=15)
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -73,3 +85,34 @@ async def test_sensor_reauth_trigger(
     assert flow["step_id"] == "reauth_confirm"
     assert flow["handler"] == DOMAIN
     assert flow["context"]["source"] == config_entries.SOURCE_REAUTH
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        OAuth2TokenRequestTransientError(request_info=Mock(), domain=DOMAIN),
+        OAuth2TokenRequestError(request_info=Mock(), domain=DOMAIN),
+        ClientResponseError(request_info=Mock(), history=(), status=401),
+        ClientResponseError(request_info=Mock(), history=(), status=429),
+    ],
+    ids=[
+        "oauth_transient_error",
+        "oauth_generic_error",
+        "legacy_client_response_4xx",
+        "legacy_rate_limited",
+    ],
+)
+async def test_sensor_token_error_no_reauth(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    side_effect: Exception | type[Exception],
+) -> None:
+    """Test retryable/runtime token errors do not start reauth."""
+    await setup_integration()
+
+    with patch(TOKEN, side_effect=side_effect):
+        next_update = dt_util.utcnow() + timedelta(minutes=15)
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not hass.config_entries.flow.async_progress()

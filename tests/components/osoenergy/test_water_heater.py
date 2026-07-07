@@ -65,9 +65,14 @@ async def test_get_profile(
     )
 
     # The profile is returned in UTC format from the server
-    # Each index represents an hour from the current day (0-23). For example index 2 - 02:00 UTC
-    # Depending on the time zone and the DST the UTC hour is converted to local time and the value is placed in the correct index
-    # Example: time zone 'US/Pacific' and DST (-7 hours difference) - index 9 (09:00 UTC) will be converted to index 2 (02:00 Local)
+    # Each index represents an hour from the current day (0-23).
+    # For example index 2 - 02:00 UTC.
+    # Depending on the time zone and the DST the UTC hour is
+    # converted to local time and the value is placed in the
+    # correct index.
+    # Example: time zone 'US/Pacific' and DST (-7 hours
+    # difference) - index 9 (09:00 UTC) will be converted to
+    # index 2 (02:00 Local)
     assert profile == {
         "water_heater.test_device": {
             "profile": [
@@ -116,9 +121,14 @@ async def test_set_profile(
     )
 
     # The server expects to receive the profile in UTC format
-    # Each field represents an hour from the current day (0-23). For example field hour_01 - 01:00 Local time
-    # Depending on the time zone and the DST the Local hour is converted to UTC time and the value is placed in the correct index
-    # Example: time zone 'US/Pacific' and DST (-7 hours difference) - index 1 (01:00 Local) will be converted to index 8 (08:00 Utc)
+    # Each field represents an hour from the current day (0-23).
+    # For example field hour_01 - 01:00 Local time.
+    # Depending on the time zone and the DST the Local hour is
+    # converted to UTC time and the value is placed in the
+    # correct index.
+    # Example: time zone 'US/Pacific' and DST (-7 hours
+    # difference) - index 1 (01:00 Local) will be converted to
+    # index 8 (08:00 Utc)
     mock_osoenergy_client().hotwater.set_profile.assert_called_once_with(
         ANY,
         [

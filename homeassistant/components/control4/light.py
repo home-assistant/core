@@ -1,11 +1,9 @@
 """Platform for Control4 Lights."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyControl4.error_handling import C4Exception
 from pyControl4.light import C4Light
@@ -184,11 +182,13 @@ class Control4Light(Control4Entity, LightEntity):
     def _create_api_object(self):
         """Create a pyControl4 device object.
 
-        This exists so the director token used is always the latest one, without needing to re-init the entire entity.
+        This exists so the director token used is always the
+        latest one, without needing to re-init the entire entity.
         """
         return C4Light(self.runtime_data.director, self._idx)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether this light is on or off."""
         if self._is_dimmer:
@@ -199,7 +199,8 @@ class Control4Light(Control4Entity, LightEntity):
         return self.coordinator.data[self._idx][CONTROL4_NON_DIMMER_VAR] > 0
 
     @property
-    def brightness(self):
+    @override
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         if self._is_dimmer:
             for var in CONTROL4_DIMMER_VARS:
@@ -208,12 +209,14 @@ class Control4Light(Control4Entity, LightEntity):
         return None
 
     @property
+    @override
     def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         if self._is_dimmer:
             return LightEntityFeature.TRANSITION
         return LightEntityFeature(0)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         c4_light = self._create_api_object()
@@ -237,6 +240,7 @@ class Control4Light(Control4Entity, LightEntity):
         await asyncio.sleep(delay_time)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         c4_light = self._create_api_object()

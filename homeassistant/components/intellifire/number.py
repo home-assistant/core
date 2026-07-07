@@ -1,8 +1,7 @@
 """Flame height number sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -57,11 +56,13 @@ class IntellifireFlameControlEntity(IntellifireEntity, NumberEntity):
         super().__init__(coordinator, description)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current Flame Height segment number value."""
         # UI uses 1-5 for flame height, backing lib uses 0-4
         return self.coordinator.read_api.data.flameheight + 1
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Slider change."""
         value_to_send: int = int(value) - 1

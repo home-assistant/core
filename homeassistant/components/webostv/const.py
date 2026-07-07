@@ -9,7 +9,6 @@ from homeassistant.const import Platform
 
 DOMAIN = "webostv"
 PLATFORMS = [Platform.MEDIA_PLAYER]
-DATA_HASS_CONFIG = "hass_config"
 DEFAULT_NAME = "LG webOS TV"
 
 ATTR_PAYLOAD = "payload"

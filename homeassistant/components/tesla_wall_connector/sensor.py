@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -9,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EntityCategory,
     UnitOfElectricCurrent,
@@ -22,8 +22,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WallConnectorData
-from .const import DOMAIN, WALLCONNECTOR_DATA_LIFETIME, WALLCONNECTOR_DATA_VITALS
+from .const import WALLCONNECTOR_DATA_LIFETIME, WALLCONNECTOR_DATA_VITALS
+from .coordinator import WallConnectorConfigEntry, WallConnectorData
 from .entity import WallConnectorEntity, WallConnectorLambdaValueGetterMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -196,11 +196,11 @@ WALL_CONNECTOR_SENSORS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WallConnectorConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the Wall Connector sensor devices."""
-    wall_connector_data = hass.data[DOMAIN][config_entry.entry_id]
+    wall_connector_data = config_entry.runtime_data
 
     all_entities = [
         WallConnectorSensorEntity(wall_connector_data, description)
@@ -225,6 +225,7 @@ class WallConnectorSensorEntity(WallConnectorEntity, SensorEntity):
         super().__init__(wall_connector_data)
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
 

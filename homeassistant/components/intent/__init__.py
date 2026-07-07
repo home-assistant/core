@@ -1,10 +1,8 @@
 """The Intent integration."""
 
-from __future__ import annotations
-
 from collections.abc import Collection
 import logging
-from typing import Any, Protocol
+from typing import Any, Protocol, override
 
 from aiohttp import web
 import voluptuous as vol
@@ -112,7 +110,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             intent.INTENT_TURN_ON,
             HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_ON,
-            description="Turns on/opens/presses a device or entity. For locks, this performs a 'lock' action. Use for requests like 'turn on', 'activate', 'enable', or 'lock'.",
+            description=(
+                "Turns on/opens/presses a device or entity."
+                " For locks, this performs a 'lock' action."
+                " Use for requests like 'turn on',"
+                " 'activate', 'enable', or 'lock'."
+            ),
             device_classes=ONOFF_DEVICE_CLASSES,
         ),
     )
@@ -122,7 +125,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             intent.INTENT_TURN_OFF,
             HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_OFF,
-            description="Turns off/closes a device or entity. For locks, this performs an 'unlock' action. Use for requests like 'turn off', 'deactivate', 'disable', or 'unlock'.",
+            description=(
+                "Turns off/closes a device or entity."
+                " For locks, this performs an 'unlock' action."
+                " Use for requests like 'turn off',"
+                " 'deactivate', 'disable', or 'unlock'."
+            ),
             device_classes=ONOFF_DEVICE_CLASSES,
         ),
     )
@@ -172,6 +180,7 @@ class IntentPlatformProtocol(Protocol):
 class OnOffIntentHandler(intent.ServiceIntentHandler):
     """Intent handler for on/off that also supports covers, valves, locks, etc."""
 
+    @override
     async def async_call_service(
         self, domain: str, service: str, intent_obj: intent.Intent, state: State
     ) -> None:
@@ -283,6 +292,7 @@ class GetStateIntentHandler(intent.IntentHandler):
         vol.Optional("preferred_floor_id"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the hass intent."""
         hass = intent_obj.hass
@@ -403,6 +413,7 @@ class NevermindIntentHandler(intent.IntentHandler):
     intent_type = intent.INTENT_NEVERMIND
     description = "Cancels the current request and does nothing"
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Do nothing and produces an empty response."""
         return intent_obj.create_response()
@@ -423,6 +434,7 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
             device_classes={CoverDeviceClass, ValveDeviceClass},
         )
 
+    @override
     def get_domain_and_service(
         self, intent_obj: intent.Intent, state: State
     ) -> tuple[str, str]:
@@ -448,6 +460,7 @@ class StopMovingIntentHandler(intent.DynamicServiceIntentHandler):
             device_classes={CoverDeviceClass, ValveDeviceClass},
         )
 
+    @override
     def get_domain_and_service(
         self, intent_obj: intent.Intent, state: State
     ) -> tuple[str, str]:
@@ -467,6 +480,7 @@ class GetCurrentDateIntentHandler(intent.IntentHandler):
     intent_type = intent.INTENT_GET_CURRENT_DATE
     description = "Gets the current date"
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         response = intent_obj.create_response()
         response.async_set_speech_slots({"date": dt_util.now().date()})
@@ -479,6 +493,7 @@ class GetCurrentTimeIntentHandler(intent.IntentHandler):
     intent_type = intent.INTENT_GET_CURRENT_TIME
     description = "Gets the current time"
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         response = intent_obj.create_response()
         response.async_set_speech_slots({"time": dt_util.now().time()})
@@ -495,6 +510,7 @@ class RespondIntentHandler(intent.IntentHandler):
         vol.Optional("response"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Return the provided response, but take no action."""
         slots = self.async_validate_slots(intent_obj.slots)
@@ -520,6 +536,7 @@ class GetTemperatureIntent(intent.IntentHandler):
     }
     platforms = {CLIMATE_DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -627,13 +644,17 @@ class IntentHandleView(http.HomeAssistantView):
             {
                 vol.Required("name"): cv.string,
                 vol.Optional("data"): vol.Schema({cv.string: object}),
+                vol.Optional("language"): cv.string,
+                vol.Optional("assistant"): vol.Any(cv.string, None),
+                vol.Optional("device_id"): vol.Any(cv.string, None),
+                vol.Optional("satellite_id"): vol.Any(cv.string, None),
             }
         )
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle intent with name/data."""
         hass = request.app[http.KEY_HASS]
-        language = hass.config.language
+        language = data.get("language", hass.config.language)
 
         try:
             intent_name = data["name"]
@@ -641,14 +662,21 @@ class IntentHandleView(http.HomeAssistantView):
                 key: {"value": value} for key, value in data.get("data", {}).items()
             }
             intent_result = await intent.async_handle(
-                hass, DOMAIN, intent_name, slots, "", self.context(request)
+                hass,
+                DOMAIN,
+                intent_name,
+                slots,
+                "",
+                self.context(request),
+                language=language,
+                assistant=data.get("assistant"),
+                device_id=data.get("device_id"),
+                satellite_id=data.get("satellite_id"),
             )
         except (intent.IntentHandleError, intent.MatchFailedError) as err:
             intent_result = intent.IntentResponse(language=language)
-            intent_result.async_set_speech(str(err))
-
-        if intent_result is None:
-            intent_result = intent.IntentResponse(language=language)  # type: ignore[unreachable]
-            intent_result.async_set_speech("Sorry, I couldn't handle that")
+            intent_result.async_set_error(
+                intent.IntentResponseErrorCode.FAILED_TO_HANDLE, str(err)
+            )
 
         return self.json(intent_result)

@@ -1,6 +1,6 @@
 """Test bang_olufsen config entry diagnostics."""
 
-from mozart_api.models import BatteryState
+from mozart_api.models import BatteryState, BeolinkSelf
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -8,7 +8,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .conftest import mock_websocket_connection
-from .const import TEST_BUTTON_EVENT_ENTITY_ID, TEST_REMOTE_KEY_EVENT_ENTITY_ID
+from .const import (
+    TEST_BUTTON_EVENT_ENTITY_ID,
+    TEST_FRIENDLY_NAME_4,
+    TEST_JID_4,
+    TEST_REMOTE_KEY_EVENT_ENTITY_ID,
+)
 
 from tests.common import AsyncMock, MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -64,6 +69,9 @@ async def test_async_get_config_entry_diagnostics_with_battery(
     """Test config entry diagnostics for devices with a battery."""
     mock_mozart_client.get_battery_state.return_value = BatteryState(
         battery_level=1, state="BatteryVeryLow"
+    )
+    mock_mozart_client.get_beolink_self.return_value = BeolinkSelf(
+        friendly_name=TEST_FRIENDLY_NAME_4, jid=TEST_JID_4
     )
 
     # Load entry

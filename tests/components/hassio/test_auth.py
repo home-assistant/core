@@ -1,11 +1,17 @@
 """The tests for the hassio component."""
 
+from contextlib import AbstractContextManager, ExitStack as DefaultContext
 from http import HTTPStatus
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp.test_utils import TestClient
+from aiohttp.web_exceptions import HTTPUnauthorized
+import pytest
 
 from homeassistant.auth.providers.homeassistant import InvalidAuth
+from homeassistant.components.hassio.auth import HassIOBaseAuth
+from homeassistant.components.hassio.const import DATA_HASSIO_SUPERVISOR_USER
+from homeassistant.core import HomeAssistant
 
 
 async def test_auth_success(hassio_client_supervisor: TestClient) -> None:
@@ -160,6 +166,43 @@ async def test_password_fails_no_auth(hassio_noauth_client: TestClient) -> None:
 
     # Check we got right response
     assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.parametrize(
+    ("peername", "unix_socket", "expectation"),
+    [
+        # Unix socket transports report an empty string for peername. Before
+        # the fix this raised IndexError on `peername[0]`.
+        ("", True, DefaultContext()),
+        # Defensive: a TCP transport with no peername at all should be
+        # rejected, not crash.
+        (None, False, pytest.raises(HTTPUnauthorized)),
+    ],
+)
+@pytest.mark.usefixtures("hassio_stubs")
+async def test_check_access_unix_socket_or_missing_peername(
+    hass: HomeAssistant,
+    peername: str | None,
+    unix_socket: bool,
+    expectation: AbstractContextManager,
+) -> None:
+    """Test _check_access handles Unix socket requests and missing peername."""
+    user = hass.data.get(DATA_HASSIO_SUPERVISOR_USER)
+    assert user is not None
+
+    auth_view = HassIOBaseAuth(hass)
+    request = MagicMock()
+    request.transport.get_extra_info.return_value = peername
+    request.__getitem__.return_value = user
+
+    with (
+        patch(
+            "homeassistant.components.hassio.auth.is_supervisor_unix_socket_request",
+            return_value=unix_socket,
+        ),
+        expectation,
+    ):
+        auth_view._check_access(request)
 
 
 async def test_password_no_user(hassio_client_supervisor: TestClient) -> None:

@@ -1,8 +1,7 @@
 """Tankerkoenig binary sensor integration."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from aiotankerkoenig import PriceInfo, Station, Status
 
@@ -62,6 +61,7 @@ class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorE
             }
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the station is open."""
         data: PriceInfo = self.coordinator.data[self._station_id]

@@ -1,1 +1,1 @@
-"""Tests for the fail2ban component."""
+"""Tests for the Fail2Ban integration."""

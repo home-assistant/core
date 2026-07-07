@@ -1,8 +1,7 @@
 """Entity for Surepetcare."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
+from typing import override
 
 from surepy.entities import SurepyEntity
 
@@ -50,6 +49,7 @@ class SurePetcareEntity(CoordinatorEntity[SurePetcareDataCoordinator]):
         """Update the state and attributes."""
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Get the latest data and update the state."""
         self._update_attr(self.coordinator.data[self._id])

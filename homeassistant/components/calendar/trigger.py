@@ -1,13 +1,11 @@
 """Offer calendar automation rules."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import datetime
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 import voluptuous as vol
 
@@ -29,7 +27,12 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
 )
 from homeassistant.helpers.target import TargetEntityChangeTracker, TargetSelection
-from homeassistant.helpers.trigger import Trigger, TriggerActionRunner, TriggerConfig
+from homeassistant.helpers.trigger import (
+    Trigger,
+    TriggerActionRunner,
+    TriggerConfig,
+    TriggerNotTriggeredReporter,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -115,6 +118,7 @@ class Timespan:
         """
         return Timespan(self.end, max(self.end, now) + interval)
 
+    @override
     def __str__(self) -> str:
         """Return a string representing the half open interval time span."""
         return f"[{self.start}, {self.end})"
@@ -328,8 +332,9 @@ class TargetCalendarEventListener(TargetEntityChangeTracker):
         self._calendar_event_listener: CalendarEventListener | None = None
 
     @callback
+    @override
     def _handle_entities_update(self, tracked_entities: set[str]) -> None:
-        """Restart the listeners when the list of entities of the tracked targets is updated."""
+        """Restart listeners when tracked target entities update."""
         if self._pending_listener_task:
             self._pending_listener_task.cancel()
         self._pending_listener_task = self._hass.async_create_task(
@@ -353,6 +358,7 @@ class TargetCalendarEventListener(TargetEntityChangeTracker):
         )
         await self._calendar_event_listener.async_attach()
 
+    @override
     def _unsubscribe(self) -> None:
         """Unsubscribe from all events."""
         super()._unsubscribe()
@@ -370,6 +376,7 @@ class SingleEntityEventTrigger(Trigger):
     _options: dict[str, Any]
 
     @classmethod
+    @override
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
@@ -380,6 +387,7 @@ class SingleEntityEventTrigger(Trigger):
         return await super().async_validate_complete_config(hass, complete_config)
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -394,8 +402,11 @@ class SingleEntityEventTrigger(Trigger):
             assert config.options is not None
         self._options = config.options
 
+    @override
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
 
@@ -429,6 +440,7 @@ class EventTrigger(Trigger):
     _event_type: str
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -445,8 +457,11 @@ class EventTrigger(Trigger):
         self._target = config.target
         self._options = config.options
 
+    @override
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
 
@@ -462,7 +477,7 @@ class EventTrigger(Trigger):
         listener = TargetCalendarEventListener(
             self._hass, target_selection, self._event_type, offset, run_action
         )
-        return listener.async_setup()
+        return await listener.async_setup()
 
 
 class EventStartedTrigger(EventTrigger):

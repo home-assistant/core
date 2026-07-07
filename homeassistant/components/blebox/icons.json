@@ -1,0 +1,32 @@
+{
+  "entity": {
+    "button": {
+      "close": {
+        "default": "mdi:arrow-down-circle"
+      },
+      "down": {
+        "default": "mdi:arrow-down-circle"
+      },
+      "fav": {
+        "default": "mdi:heart-circle"
+      },
+      "open": {
+        "default": "mdi:arrow-up-circle"
+      },
+      "up": {
+        "default": "mdi:arrow-up-circle"
+      }
+    },
+    "sensor": {
+      "co2_level": {
+        "default": "mdi:molecule-co2"
+      },
+      "open_status": {
+        "default": "mdi:window-open"
+      },
+      "power_consumption": {
+        "default": "mdi:lightning-bolt"
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 """Teslemetry parent entity class."""
 
 from abc import abstractmethod
-from typing import Any
+from typing import Any, override
 
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
@@ -28,7 +28,7 @@ class TeslemetryRootEntity(Entity):
     _attr_has_entity_name = True
     scoped: bool
 
-    def raise_for_scope(self, scope: Scope):
+    def raise_for_scope(self, scope: Scope) -> None:
         """Raise an error if a scope is not available."""
         if not self.scoped:
             raise ServiceValidationError(
@@ -64,6 +64,7 @@ class TeslemetryPollingEntity(
         self._async_update_attrs()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if sensor is available."""
         return self.coordinator.last_update_success and self._attr_available
@@ -88,6 +89,7 @@ class TeslemetryPollingEntity(
         """Return if the value is a literal None."""
         return self.get(self.key, False) is None
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
@@ -125,6 +127,7 @@ class TeslemetryVehiclePollingEntity(TeslemetryPollingEntity):
         super().__init__(data.coordinator, key)
 
     @property
+    @override
     def _value(self) -> Any | None:
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(self.key)
@@ -229,13 +232,15 @@ class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
         super().__init__(data.live_coordinator, key)
 
     @property
+    @override
     def _value(self) -> StateType:
         """Return a specific wall connector value from coordinator data."""
-        return (
+        value: StateType = (
             self.coordinator.data.get("wall_connectors", {})
             .get(self.din, {})
             .get(self.key)
         )
+        return value
 
     @property
     def exists(self) -> bool:

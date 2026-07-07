@@ -1,9 +1,7 @@
 """Platform for light integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from PySrDaliGateway import CallbackEventType, Device
 from PySrDaliGateway.helper import is_light_device
@@ -80,6 +78,7 @@ class DaliCenterLight(DaliDeviceEntity, LightEntity):
         supported_modes.add(self._attr_color_mode)
         self._attr_supported_color_modes = supported_modes
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         _LOGGER.debug(
@@ -96,10 +95,12 @@ class DaliCenterLight(DaliDeviceEntity, LightEntity):
             rgbw_color=rgbw_color,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         self._light.turn_off()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to Home Assistant."""
         await super().async_added_to_hass()

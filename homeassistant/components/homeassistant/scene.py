@@ -1,10 +1,8 @@
 """Allow users to set and activate scenes."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping, ValuesView
 import logging
-from typing import Any, NamedTuple, cast
+from typing import Any, NamedTuple, cast, override
 
 import voluptuous as vol
 
@@ -185,9 +183,12 @@ async def async_setup_platform(
         """Reload the scene config."""
         try:
             config = await conf_util.async_hass_config_yaml(hass)
-        except HomeAssistantError as err:
-            _LOGGER.error(err)
-            return
+        except (HomeAssistantError, FileNotFoundError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="scene_config_reload_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         integration = await async_get_integration(hass, SCENE_DOMAIN)
 
@@ -339,21 +340,25 @@ class HomeAssistantScene(Scene):
         self.from_service = from_service
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the scene."""
         return self.scene_config.name
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon of the scene."""
         return self.scene_config.icon
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return unique ID."""
         return self.scene_config.id
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the scene state attributes."""
         attributes: dict[str, Any] = {ATTR_ENTITY_ID: list(self.scene_config.states)}
@@ -361,6 +366,7 @@ class HomeAssistantScene(Scene):
             attributes[CONF_ID] = unique_id
         return attributes
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
         await async_reproduce_state(

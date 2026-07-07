@@ -5,7 +5,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 import logging
 import time
-from typing import cast
+from typing import cast, override
 
 import voluptuous as vol
 
@@ -156,6 +156,7 @@ class MediaPauseHandler(intent.ServiceIntentHandler):
         )
         self.last_paused = last_paused
 
+    @override
     async def async_handle_states(
         self,
         intent_obj: intent.Intent,
@@ -191,6 +192,7 @@ class MediaUnpauseHandler(intent.ServiceIntentHandler):
         )
         self.last_paused = last_paused
 
+    @override
     async def async_handle_states(
         self,
         intent_obj: intent.Intent,
@@ -262,6 +264,7 @@ class MediaPlayerMuteUnmuteHandler(intent.ServiceIntentHandler):
         )
         self.is_volume_muted = is_volume_muted
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
 
@@ -290,6 +293,7 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
     }
     platforms = {DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -424,6 +428,7 @@ class MediaSetVolumeRelativeHandler(intent.IntentHandler):
     }
     platforms = {DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass

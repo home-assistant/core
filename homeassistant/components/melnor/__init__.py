@@ -1,7 +1,5 @@
 """The melnor integration."""
 
-from __future__ import annotations
-
 from melnor_bluetooth.device import Device
 
 from homeassistant.components import bluetooth

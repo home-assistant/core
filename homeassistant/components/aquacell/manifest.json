@@ -8,5 +8,5 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "loggers": ["aioaquacell"],
-  "requirements": ["aioaquacell==0.2.0"]
+  "requirements": ["aioaquacell==1.0.0"]
 }

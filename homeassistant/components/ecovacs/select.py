@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from deebot_client.capabilities import CapabilityMap, CapabilitySet, CapabilitySetTypes
 from deebot_client.command import CommandWithMessageHandling
@@ -113,6 +113,7 @@ class EcovacsSelectEntity[EventT: Event](
         super().__init__(device, capability, entity_description, **kwargs)
         self._attr_options = entity_description.options_fn(capability)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
@@ -124,6 +125,7 @@ class EcovacsSelectEntity[EventT: Event](
 
         self._subscribe(self._capability.event, on_event)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self._device.execute_command(
@@ -174,11 +176,13 @@ class EcovacsActiveMapSelectEntity(
         if self._attr_current_option not in self._option_to_id:
             self._attr_current_option = None
 
-        # Sort named maps first, then numeric IDs (unnamed maps during building) in ascending order.
+        # Sort named maps first, then numeric IDs
+        # (unnamed maps during building) in ascending order.
         self._attr_options = sorted(
             self._option_to_id.keys(), key=lambda x: (x.isdigit(), x.lower())
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
@@ -195,6 +199,7 @@ class EcovacsActiveMapSelectEntity(
 
         self._subscribe(self._capability.major.event, on_major_map)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         if TYPE_CHECKING:

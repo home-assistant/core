@@ -1,9 +1,7 @@
 """Backup platform for the SFTP Storage integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
-from typing import Any
+from typing import Any, override
 
 from asyncssh.sftp import SFTPError
 
@@ -12,6 +10,7 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
 )
 from homeassistant.core import HomeAssistant, callback
 
@@ -61,6 +60,7 @@ class SFTPBackupAgent(BackupAgent):
         self.name: str = entry.title
         self.unique_id: str = entry.entry_id
 
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -68,7 +68,8 @@ class SFTPBackupAgent(BackupAgent):
     ) -> AsyncIterator[bytes]:
         """Download a backup file from SFTP."""
         LOGGER.debug(
-            "Establishing SFTP connection to remote host in order to download backup id: %s",
+            "Establishing SFTP connection to remote host"
+            " in order to download backup id: %s",
             backup_id,
         )
         try:
@@ -80,11 +81,13 @@ class SFTPBackupAgent(BackupAgent):
                 f"Unable to initiate download of backup id: {backup_id}. {e}"
             ) from e
 
+    @override
     async def async_upload_backup(
         self,
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
@@ -101,6 +104,7 @@ class SFTPBackupAgent(BackupAgent):
             await client.async_upload_backup(iterator, backup)
         LOGGER.debug("Successfully uploaded backup id: %s", backup.backup_id)
 
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -125,6 +129,7 @@ class SFTPBackupAgent(BackupAgent):
 
         LOGGER.debug("Successfully removed backup id: %s", backup_id)
 
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups stored on SFTP Storage."""
 
@@ -137,6 +142,7 @@ class SFTPBackupAgent(BackupAgent):
                     f"Remote server error while attempting to list backups: {err}"
                 ) from err
 
+    @override
     async def async_get_backup(
         self,
         backup_id: str,

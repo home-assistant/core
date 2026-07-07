@@ -7,7 +7,7 @@
       "same_station": "[%key:component::nmbs::config::error::same_station%]"
     },
     "error": {
-      "same_station": "Departure and arrival station can not be the same."
+      "same_station": "The departure and arrival station cannot be the same."
     },
     "step": {
       "user": {

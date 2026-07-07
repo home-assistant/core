@@ -24,8 +24,17 @@
       "alarm": {
         "name": "Alarm status"
       },
+      "current_in_1": {
+        "name": "String 1 current"
+      },
+      "current_in_2": {
+        "name": "String 2 current"
+      },
       "grid_current": {
         "name": "Grid current"
+      },
+      "grid_frequency": {
+        "name": "Grid frequency"
       },
       "grid_voltage": {
         "name": "Grid voltage"
@@ -36,6 +45,12 @@
       "i_leak_inverter": {
         "name": "Inverter leak current"
       },
+      "power_in_1": {
+        "name": "String 1 power"
+      },
+      "power_in_2": {
+        "name": "String 2 power"
+      },
       "power_output": {
         "name": "Power output"
       },
@@ -44,6 +59,12 @@
       },
       "total_energy": {
         "name": "Total energy"
+      },
+      "voltage_in_1": {
+        "name": "String 1 voltage"
+      },
+      "voltage_in_2": {
+        "name": "String 2 voltage"
       }
     }
   }

@@ -1,10 +1,8 @@
 """Config flow for Shark IQ integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from sharkiq import SharkIqAuthError, get_ayla_api
@@ -73,7 +71,9 @@ async def _validate_input(
         LOGGER.exception("Unexpected exception")
         LOGGER.error(error)
         raise UnknownAuth(
-            "An unknown error occurred. Check your region settings and open an issue on Github if the issue persists."
+            "An unknown error occurred. Check your region"
+            " settings and open an issue on GitHub"
+            " if the issue persists."
         ) from error
 
     # Return info that you want to store in the config entry.
@@ -103,6 +103,7 @@ class SharkIqConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         return info, errors
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

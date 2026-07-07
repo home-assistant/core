@@ -1,1 +1,1 @@
-"""The flock component."""
+"""The Flock integration."""

@@ -120,7 +120,8 @@ async def async_migrate_entry(
                 Platform.SWITCH
             ):
                 _LOGGER.debug(
-                    "Migrating switch/outlet entity from unique_id: %s to unique_id: %s",
+                    "Migrating switch/outlet entity"
+                    " from unique_id: %s to unique_id: %s",
                     reg_entry.unique_id,
                     reg_entry.unique_id + "-device_status",
                 )

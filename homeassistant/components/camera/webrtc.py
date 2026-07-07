@@ -1,14 +1,12 @@
 """Helper for WebRTC support."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass, field
 from functools import cache, partial, wraps
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from mashumaro import MissingField
 import voluptuous as vol
@@ -75,6 +73,7 @@ class WebRTCCandidate(WebRTCMessage):
 
     candidate: RTCIceCandidate | RTCIceCandidateInit
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the message."""
         return {

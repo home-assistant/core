@@ -33,9 +33,11 @@ async def test_get_hosts_list_if_supported(
     """In router mode, get_hosts_list is supported and list is filled."""
     supports_hosts, fbx_devices = await get_hosts_list_if_supported(router())
     assert supports_hosts is True
-    # List must not be empty; but it's content depends on how many unit tests are executed...
+    # List must not be empty; but its content depends on
+    # how many unit tests are executed...
     assert fbx_devices
-    # We expect 4 devices from lan_get_hosts_list.json and 1 from lan_get_hosts_list_guest.json
+    # We expect 4 devices from lan_get_hosts_list.json
+    # and 1 from lan_get_hosts_list_guest.json
     assert len(fbx_devices) == 5
     assert "d633d0c8-958c-43cc-e807-d881b076924b" in str(fbx_devices)
     assert "d633d0c8-958c-42cc-e807-d881b476924b" in str(fbx_devices)

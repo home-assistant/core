@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .const import MOCK_MESH_MASTER_MAC, MOCK_USER_DATA
+from .const import MOCK_SERIAL_NUMBER, MOCK_USER_DATA
 
 from tests.common import MockConfigEntry
 
@@ -50,7 +50,7 @@ async def test_service_set_guest_wifi_password(
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_MESH_MASTER_MAC)}
+        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
     )
     assert device
     with patch(
@@ -78,7 +78,7 @@ async def test_service_set_guest_wifi_password_unknown_parameter(
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_MESH_MASTER_MAC)}
+        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
     )
     assert device
 
@@ -109,7 +109,7 @@ async def test_service_set_guest_wifi_password_service_not_supported(
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_MESH_MASTER_MAC)}
+        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
     )
     assert device
 
@@ -140,8 +140,9 @@ async def test_service_set_guest_wifi_password_unloaded(
         )
         assert not mock_async_trigger_set_guest_password.called
         assert (
-            'ServiceValidationError: Failed to perform action "set_guest_wifi_password". Config entry for target not found'
-            in caplog.text
+            "ServiceValidationError: Failed to perform action"
+            ' "set_guest_wifi_password".'
+            " Config entry for target not found" in caplog.text
         )
 
 
@@ -161,7 +162,7 @@ async def test_service_dial(
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_MESH_MASTER_MAC)}
+        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
     )
     assert device
     with patch(
@@ -193,7 +194,7 @@ async def test_service_dial_unknown_parameter(
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_MESH_MASTER_MAC)}
+        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
     )
     assert device
 
@@ -226,7 +227,7 @@ async def test_service_dial_wrong_parameter(
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_MESH_MASTER_MAC)}
+        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
     )
     assert device
 
@@ -276,7 +277,7 @@ async def test_service_dial_service_not_supported(
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_MESH_MASTER_MAC)}
+        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
     )
     assert device
 
@@ -309,7 +310,7 @@ async def test_service_dial_failed(
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_MESH_MASTER_MAC)}
+        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
     )
     assert device
 
@@ -324,8 +325,8 @@ async def test_service_dial_failed(
         )
         assert mock_async_trigger_dial.called
         assert (
-            "HomeAssistantError: Failed to dial, check if the click to dial service of the FRITZ!Box is activated"
-            in caplog.text
+            "HomeAssistantError: Failed to dial, check if the"
+            " click to dial service of the FRITZ!Box is activated" in caplog.text
         )
 
 
@@ -348,6 +349,7 @@ async def test_service_dial_unloaded(
         )
         assert not mock_async_trigger_dial.called
         assert (
-            f'ServiceValidationError: Failed to perform action "{SERVICE_DIAL}". Config entry for target not found'
-            in caplog.text
+            "ServiceValidationError: Failed to perform action"
+            f' "{SERVICE_DIAL}".'
+            " Config entry for target not found" in caplog.text
         )

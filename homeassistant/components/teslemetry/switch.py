@@ -1,10 +1,8 @@
 """Switch platform for Teslemetry integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from tesla_fleet_api.const import AutoSeat, Scope
 from tesla_fleet_api.teslemetry import Vehicle
@@ -142,7 +140,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
     TeslemetrySwitchEntityDescription(
         key="guest_mode_enabled",
-        polling=False,
         unique_id="guest_mode_enabled",
         streaming_listener=lambda vehicle, callback: vehicle.listen_GuestModeEnabled(
             callback
@@ -204,6 +201,7 @@ class TeslemetryVehicleSwitchEntity(TeslemetryRootEntity, SwitchEntity):
     _attr_device_class = SwitchDeviceClass.SWITCH
     entity_description: TeslemetrySwitchEntityDescription
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Switch."""
         self.raise_for_scope(self.entity_description.scopes[0])
@@ -211,6 +209,7 @@ class TeslemetryVehicleSwitchEntity(TeslemetryRootEntity, SwitchEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Switch."""
         self.raise_for_scope(self.entity_description.scopes[0])
@@ -237,6 +236,7 @@ class TeslemetryVehiclePollingVehicleSwitchEntity(
         if description.unique_id:
             self._attr_unique_id = f"{data.vin}-{description.unique_id}"
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_is_on = (
@@ -265,6 +265,7 @@ class TeslemetryStreamingVehicleSwitchEntity(
         if description.unique_id:
             self._attr_unique_id = f"{data.vin}-{description.unique_id}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -305,12 +306,14 @@ class TeslemetryChargeFromGridSwitchEntity(TeslemetryEnergyInfoEntity, SwitchEnt
             data, "components_disallow_charge_from_grid_with_solar_installed"
         )
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         # When disallow_charge_from_grid_with_solar_installed is missing, its Off.
         # But this sensor is flipped to match how the Tesla app works.
         self._attr_is_on = not self.get(self.key, False)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Switch."""
         self.raise_for_scope(Scope.ENERGY_CMDS)
@@ -322,6 +325,7 @@ class TeslemetryChargeFromGridSwitchEntity(TeslemetryEnergyInfoEntity, SwitchEnt
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Switch."""
         self.raise_for_scope(Scope.ENERGY_CMDS)
@@ -348,11 +352,13 @@ class TeslemetryStormModeSwitchEntity(TeslemetryEnergyInfoEntity, SwitchEntity):
         super().__init__(data, "user_settings_storm_mode_enabled")
         self.scoped = Scope.ENERGY_CMDS in scopes
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = self._value is not None
         self._attr_is_on = bool(self._value)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Switch."""
         self.raise_for_scope(Scope.ENERGY_CMDS)
@@ -360,6 +366,7 @@ class TeslemetryStormModeSwitchEntity(TeslemetryEnergyInfoEntity, SwitchEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Switch."""
         self.raise_for_scope(Scope.ENERGY_CMDS)

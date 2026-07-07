@@ -4,7 +4,7 @@
     'config_entry': dict({
       'data': dict({
         'api_token': '**REDACTED**',
-        'url': 'https://127.0.0.1:9000/',
+        'url': '**REDACTED**',
         'verify_ssl': True,
       }),
       'disabled_by': None,
@@ -21,8 +21,8 @@
       'subentries': list([
       ]),
       'title': 'Portainer test',
-      'unique_id': 'test_api_token',
-      'version': 4,
+      'unique_id': '299ab403-70a8-4c05-92f7-bf7a994d50df',
+      'version': 5,
     }),
     'coordinator': dict({
       'endpoints': list([
@@ -72,6 +72,15 @@
               ]),
               'state': 'running',
               'status': 'Up 6 hours',
+            }),
+            dict({
+              'id': 'ff31facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
+              'image': 'docker.io/lissy93/dashy:latest',
+              'names': list([
+                '/dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05',
+              ]),
+              'state': 'running',
+              'status': 'Up 3 hours',
             }),
           ]),
           'endpoint': dict({

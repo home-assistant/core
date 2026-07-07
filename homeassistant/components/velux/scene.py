@@ -1,8 +1,6 @@
 """Support for VELUX scenes."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pyvlx import Scene as PyVLXScene
 
@@ -24,7 +22,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the scenes for Velux platform."""
-    pyvlx = config_entry.runtime_data
+    pyvlx = config_entry.runtime_data.pyvlx
     async_add_entities(
         [VeluxScene(config_entry.entry_id, scene) for scene in pyvlx.scenes]
     )
@@ -44,7 +42,7 @@ class VeluxScene(Scene):
         """Init velux scene."""
         self.scene = scene
         # Renaming scenes in gateway keeps scene_id stable, we can use it as unique_id
-        self._attr_unique_id = f"{config_entry_id}_scene_{scene.scene_id}"
+        self._attr_unique_id = f"{config_entry_id}_scene_{scene.scene_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._attr_name = scene.name
 
         # Associate scenes with the gateway device (where they are stored)
@@ -53,6 +51,7 @@ class VeluxScene(Scene):
         )
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         await self.scene.run(wait_for_completion=False)

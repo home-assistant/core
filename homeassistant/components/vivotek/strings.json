@@ -26,16 +26,6 @@
       }
     }
   },
-  "issues": {
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "description": "Configuring Vivotek using camera platform YAML configuration is deprecated.\n\nWhile importing your configuration, Home Assistant could not connect to the device. Please review the configuration and the connection to the camera, then restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
-      "title": "Vivotek YAML configuration deprecated"
-    },
-    "deprecated_yaml_import_issue_unknown": {
-      "description": "Configuring Vivotek using camera platform YAML configuration is deprecated.\n\nWhile importing your configuration, an unknown error occurred. Please restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
-      "title": "[%key:component::vivotek::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
-    }
-  },
   "options": {
     "step": {
       "init": {

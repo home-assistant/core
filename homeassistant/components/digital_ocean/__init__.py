@@ -1,7 +1,5 @@
 """Support for Digital Ocean."""
 
-from __future__ import annotations
-
 import logging
 
 import digitalocean

@@ -1,7 +1,5 @@
 """The Synology DSM component."""
 
-from __future__ import annotations
-
 from itertools import chain
 import logging
 from typing import TYPE_CHECKING

@@ -1,0 +1,53 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Edifier device has already been configured with this transmitter.",
+      "no_emitters": "No infrared transmitter entities found. Please set up an infrared device first."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "infrared_entity_id": "IR transmitter",
+          "model": "Speaker model"
+        },
+        "data_description": {
+          "infrared_entity_id": "Select the infrared transmitter entity to use.",
+          "model": "Choose your Edifier speaker model from the list."
+        },
+        "description": "Configure your Edifier speaker for IR control.",
+        "title": "Set up Edifier IR speaker"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "aux": {
+        "name": "AUX"
+      },
+      "bluetooth": {
+        "name": "Bluetooth"
+      },
+      "coax": {
+        "name": "Coaxial"
+      },
+      "fx_off": {
+        "name": "FX off"
+      },
+      "fx_on": {
+        "name": "FX on"
+      },
+      "line_1": {
+        "name": "Line 1"
+      },
+      "line_2": {
+        "name": "Line 2"
+      },
+      "optical": {
+        "name": "Optical"
+      },
+      "pc": {
+        "name": "PC"
+      }
+    }
+  }
+}

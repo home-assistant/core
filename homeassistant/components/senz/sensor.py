@@ -1,9 +1,8 @@
 """nVent RAYCHEM SENZ sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pysenz import Thermostat
 
@@ -19,8 +18,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SENZConfigEntry, SENZDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import SENZConfigEntry, SENZDataUpdateCoordinator
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -82,17 +81,20 @@ class SENZSensor(CoordinatorEntity[SENZDataUpdateCoordinator], SensorEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._thermostat = self.coordinator.data[self._thermostat.serial_number]
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the thermostat is available."""
         return super().available and self._thermostat.online
 
     @property
+    @override
     def native_value(self) -> str | float | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._thermostat)

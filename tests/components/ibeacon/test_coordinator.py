@@ -45,7 +45,7 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 
 
 async def test_many_groups_same_address_ignored(hass: HomeAssistant) -> None:
-    """Test the different uuid, major, minor from many addresses removes all associated entities."""
+    """Test rotating uuid/major/minor removes all associated entities."""
     entry = MockConfigEntry(
         domain=DOMAIN,
     )
@@ -180,7 +180,7 @@ async def test_default_name_allowlisted(hass: HomeAssistant) -> None:
 
 
 async def test_default_name_allowlisted_restore(hass: HomeAssistant) -> None:
-    """Test that ignored nameless iBeacons are restored when allowlist entry is added."""
+    """Test ignored nameless iBeacons restore on allowlist add."""
     entry = MockConfigEntry(
         domain=DOMAIN,
     )
@@ -211,7 +211,7 @@ async def test_default_name_allowlisted_restore(hass: HomeAssistant) -> None:
 
 
 async def test_default_name_allowlisted_restore_late(hass: HomeAssistant) -> None:
-    """Test that allowlisting an ignored but no longer advertised nameless iBeacon has no effect."""
+    """Test allowlisting a no-longer-advertised nameless iBeacon has no effect."""
     start_monotonic = time.monotonic()
 
     entry = MockConfigEntry(
@@ -260,7 +260,7 @@ async def test_default_name_allowlisted_restore_late(hass: HomeAssistant) -> Non
 
 
 async def test_rotating_major_minor_and_mac_with_name(hass: HomeAssistant) -> None:
-    """Test the different uuid, major, minor from many addresses removes all associated entities."""
+    """Test rotating major/minor/mac with name removes entities."""
     entry = MockConfigEntry(
         domain=DOMAIN,
     )
@@ -295,7 +295,7 @@ async def test_rotating_major_minor_and_mac_with_name(hass: HomeAssistant) -> No
 
 
 async def test_rotating_major_minor_and_mac_no_name(hass: HomeAssistant) -> None:
-    """Test no-name devices with different uuid, major, minor from many addresses removes all associated entities."""
+    """Test no-name devices with rotating major/minor/mac removes entities."""
     entry = MockConfigEntry(
         domain=DOMAIN,
     )

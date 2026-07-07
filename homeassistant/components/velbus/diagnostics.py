@@ -1,7 +1,5 @@
 """Diagnostics support for Velbus."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from velbusaio.channels import Channel as VelbusChannel

@@ -1,9 +1,8 @@
 """Contains buttons exposed by the Starlink integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -42,6 +41,7 @@ class StarlinkButtonEntity(StarlinkEntity, ButtonEntity):
 
     entity_description: StarlinkButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         return await self.entity_description.press_fn(self.coordinator)

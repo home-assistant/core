@@ -26,9 +26,10 @@ def ecobee_time(time_string):
 
 
 def is_indefinite_hold(start_date_string: str, end_date_string: str) -> bool:
-    """Determine if the given start and end dates from the ecobee API represent an indefinite hold.
+    """Determine if the ecobee API dates represent an indefinite hold.
 
-    This is not documented in the API, so a rough heuristic is used where a hold over 1 year is considered indefinite.
+    This is not documented in the API, so a rough heuristic is
+    used where a hold over 1 year is considered indefinite.
     """
     return date.fromisoformat(end_date_string) - date.fromisoformat(
         start_date_string

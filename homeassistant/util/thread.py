@@ -46,6 +46,9 @@ def async_raise(tid: int, exctype: Any) -> None:
     if res == 1:
         return
 
+    if res == 0:
+        raise ValueError("Thread not found")
+
     # "if it returns a number greater than one, you're in trouble,
     # and you should call it again with exc=NULL to revert the effect"
     ctypes.pythonapi.PyThreadState_SetAsyncExc(c_tid, None)

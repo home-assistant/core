@@ -1,7 +1,7 @@
 """Config flow for Airgradient."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from airgradient import (
     AirGradientClient,
@@ -42,6 +42,7 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
         if config.configuration_control is ConfigurationControl.NOT_INITIALIZED:
             await self.client.set_configuration_control(ConfigurationControl.LOCAL)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -83,6 +84,7 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

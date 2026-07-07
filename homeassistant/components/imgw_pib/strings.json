@@ -21,9 +21,16 @@
   },
   "entity": {
     "sensor": {
+      "emergent_vegetation_cover": {
+        "name": "Emergent vegetation cover"
+      },
+      "floating_vegetation_cover": {
+        "name": "Floating vegetation cover"
+      },
       "hydrological_alert": {
         "name": "Hydrological alert",
         "state": {
+          "exceeding_the_alarm_level": "Exceeding the alarm level",
           "exceeding_the_warning_level": "Exceeding the warning level",
           "hydrological_drought": "Hydrological drought",
           "no_alert": "No alert",
@@ -57,6 +64,12 @@
             "name": "Valid to"
           }
         }
+      },
+      "ice_phenomena": {
+        "name": "Ice phenomena"
+      },
+      "submerged_vegetation_cover": {
+        "name": "Submerged vegetation cover"
       },
       "water_flow": {
         "name": "Water flow"

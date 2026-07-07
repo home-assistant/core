@@ -1,10 +1,8 @@
 """Config flow for laundrify integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from laundrify_aio import LaundrifyAPI
 from laundrify_aio.exceptions import (
@@ -31,6 +29,7 @@ class LaundrifyConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

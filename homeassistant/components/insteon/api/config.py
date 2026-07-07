@@ -1,7 +1,5 @@
 """API calls to manage Insteon configuration changes."""
 
-from __future__ import annotations
-
 from typing import Any, TypedDict
 
 from pyinsteon import async_close, async_connect, devices

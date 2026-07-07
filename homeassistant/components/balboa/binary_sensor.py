@@ -1,9 +1,8 @@
 """Support for Balboa Spa binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pybalboa import SpaClient
 
@@ -77,6 +76,7 @@ class BalboaBinarySensorEntity(BalboaEntity, BinarySensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.entity_description.is_on_fn(self._client)

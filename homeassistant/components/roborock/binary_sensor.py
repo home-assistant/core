@@ -1,11 +1,13 @@
 """Support for Roborock sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from roborock.data import CleanFluidStatus, RoborockStateCode
+from roborock.data.v1.v1_containers import StatusField, StatusV2
+from roborock.devices.traits.v1 import PropertiesApi
+from roborock.roborock_message import RoborockZeoProtocol
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -13,11 +15,19 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import ATTR_BATTERY_CHARGING, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
-from .entity import RoborockCoordinatedEntityV1
+from .coordinator import (
+    RoborockConfigEntry,
+    RoborockCoordinatorType,
+    RoborockDataUpdateCoordinator,
+    RoborockDataUpdateCoordinatorA01,
+    RoborockWashingMachineUpdateCoordinator,
+)
+from .entity import RoborockCoordinatedEntityA01, RoborockCoordinatedEntityV1
 from .models import DeviceState
 
 PARALLEL_UPDATES = 0
@@ -33,6 +43,17 @@ class RoborockBinarySensorDescription(BinarySensorEntityDescription):
     is_dock_entity: bool = False
     """Whether this sensor is for the dock."""
 
+    support_fn: Callable[[PropertiesApi], bool] = lambda _: True
+    """Function to determine if binary sensor is supported by the device."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class RoborockBinarySensorDescriptionA01(BinarySensorEntityDescription):
+    """A class that describes Roborock A01 binary sensors."""
+
+    data_protocol: RoborockZeoProtocol
+    value_fn: Callable[[StateType], bool]
+
 
 BINARY_SENSOR_DESCRIPTIONS = [
     RoborockBinarySensorDescription(
@@ -42,6 +63,9 @@ BINARY_SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.dry_status,
         is_dock_entity=True,
+        support_fn=lambda api: api.device_features.is_field_supported(
+            StatusV2, StatusField.DRY_STATUS
+        ),
     ),
     RoborockBinarySensorDescription(
         key="water_box_carriage_status",
@@ -49,6 +73,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.water_box_carriage_status,
+        support_fn=lambda api: api.device_features.is_support_water_mode,
     ),
     RoborockBinarySensorDescription(
         key="water_box_status",
@@ -56,6 +81,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.water_box_status,
+        support_fn=lambda api: api.device_features.is_support_water_mode,
     ),
     RoborockBinarySensorDescription(
         key="water_shortage",
@@ -63,6 +89,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.water_shortage_status,
+        support_fn=lambda api: api.device_features.is_support_water_mode,
     ),
     RoborockBinarySensorDescription(
         key="dirty_box_full",
@@ -71,6 +98,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.dirty_water_box_status,
         is_dock_entity=True,
+        support_fn=lambda api: api.wash_towel_mode is not None,
     ),
     RoborockBinarySensorDescription(
         key="clean_box_empty",
@@ -79,6 +107,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.clear_water_box_status,
         is_dock_entity=True,
+        support_fn=lambda api: api.wash_towel_mode is not None,
     ),
     RoborockBinarySensorDescription(
         key="clean_fluid_empty",
@@ -91,6 +120,10 @@ BINARY_SENSOR_DESCRIPTIONS = [
             else None
         ),
         is_dock_entity=True,
+        support_fn=lambda api: (
+            api.wash_towel_mode is not None
+            and api.device_features.is_clean_fluid_delivery_supported
+        ),
     ),
     RoborockBinarySensorDescription(
         key="in_cleaning",
@@ -111,20 +144,63 @@ BINARY_SENSOR_DESCRIPTIONS = [
 ]
 
 
+ZEO_BINARY_SENSOR_DESCRIPTIONS: list[RoborockBinarySensorDescriptionA01] = [
+    RoborockBinarySensorDescriptionA01(
+        key="detergent_empty",
+        data_protocol=RoborockZeoProtocol.DETERGENT_EMPTY,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="detergent_empty",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=bool,
+    ),
+    RoborockBinarySensorDescriptionA01(
+        key="softener_empty",
+        data_protocol=RoborockZeoProtocol.SOFTENER_EMPTY,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="softener_empty",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=bool,
+    ),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Roborock vacuum binary sensors."""
-    async_add_entities(
-        RoborockBinarySensorEntity(
-            coordinator,
-            description,
+    coordinators = config_entry.runtime_data
+
+    @callback
+    def async_add_coordinator_entities(
+        coordinator: RoborockCoordinatorType,
+    ) -> None:
+        """Add entities for a specific coordinator."""
+        entities: list[BinarySensorEntity] = []
+        if isinstance(coordinator, RoborockDataUpdateCoordinator):
+            entities.extend(
+                RoborockBinarySensorEntity(coordinator, description)
+                for description in BINARY_SENSOR_DESCRIPTIONS
+                if description.support_fn(coordinator.properties_api)
+            )
+        elif isinstance(coordinator, RoborockWashingMachineUpdateCoordinator):
+            entities.extend(
+                RoborockBinarySensorEntityA01(coordinator, description)
+                for description in ZEO_BINARY_SENSOR_DESCRIPTIONS
+                if description.data_protocol in coordinator.request_protocols
+            )
+        async_add_entities(entities)
+
+    for coordinator in coordinators.values():
+        async_add_coordinator_entities(coordinator)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"roborock_coordinator_added_{config_entry.entry_id}",
+            async_add_coordinator_entities,
         )
-        for coordinator in config_entry.runtime_data.v1
-        for description in BINARY_SENSOR_DESCRIPTIONS
-        if description.value_fn(coordinator.data) is not None
     )
 
 
@@ -147,6 +223,31 @@ class RoborockBinarySensorEntity(RoborockCoordinatedEntityV1, BinarySensorEntity
         self.entity_description = description
 
     @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return the value reported by the sensor."""
+        if (data := self.coordinator.data) is not None:
+            return bool(self.entity_description.value_fn(data))
+        return None
+
+
+class RoborockBinarySensorEntityA01(RoborockCoordinatedEntityA01, BinarySensorEntity):
+    """Representation of a A01 Roborock binary sensor."""
+
+    entity_description: RoborockBinarySensorDescriptionA01
+
+    def __init__(
+        self,
+        coordinator: RoborockDataUpdateCoordinatorA01,
+        description: RoborockBinarySensorDescriptionA01,
+    ) -> None:
+        """Initialize the entity."""
+        self.entity_description = description
+        super().__init__(f"{description.key}_{coordinator.duid_slug}", coordinator)
+
+    @property
+    @override
     def is_on(self) -> bool:
         """Return the value reported by the sensor."""
-        return bool(self.entity_description.value_fn(self.coordinator.data))
+        value = self.coordinator.data[self.entity_description.data_protocol]
+        return self.entity_description.value_fn(value)

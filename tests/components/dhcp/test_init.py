@@ -1,7 +1,5 @@
 """Test the DHCP discovery integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 import datetime
 import threading
@@ -975,7 +973,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_not_router(
 async def test_device_tracker_hostname_and_macaddress_after_start_hostname_missing(
     hass: HomeAssistant,
 ) -> None:
-    """Test matching based on hostname and macaddress after start but missing hostname."""
+    """Test matching based on hostname and macaddress after start, missing hostname."""
 
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         device_tracker_watcher = _make_device_tracker_watcher(

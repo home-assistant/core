@@ -1,9 +1,7 @@
 """Config flow for Livisi Home Assistant."""
 
-from __future__ import annotations
-
 from contextlib import suppress
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientConnectorError
 from livisi import errors as livisi_errors
@@ -30,6 +28,7 @@ class LivisiFlowHandler(ConfigFlow, domain=DOMAIN):
             }
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

@@ -1,0 +1,96 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'code': 1,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'novy_cooker_hood',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Novy Cooker Hood',
+      'version': 1,
+    }),
+    'entities': list([
+      dict({
+        'aliases': list([
+          None,
+        ]),
+        'area_id': None,
+        'capabilities': dict({
+          'preset_modes': None,
+        }),
+        'categories': dict({
+        }),
+        'config_subentry_id': None,
+        'device_class': None,
+        'disabled_by': None,
+        'entity_category': None,
+        'entity_id': 'fan.novy_cooker_hood',
+        'has_entity_name': True,
+        'hidden_by': None,
+        'icon': None,
+        'labels': list([
+        ]),
+        'name': None,
+        'options': dict({
+        }),
+        'original_device_class': None,
+        'original_icon': None,
+        'original_name': None,
+        'platform': 'novy_cooker_hood',
+        'translation_key': None,
+      }),
+      dict({
+        'aliases': list([
+          None,
+        ]),
+        'area_id': None,
+        'capabilities': dict({
+          'supported_color_modes': list([
+            'onoff',
+          ]),
+        }),
+        'categories': dict({
+        }),
+        'config_subentry_id': None,
+        'device_class': None,
+        'disabled_by': None,
+        'entity_category': None,
+        'entity_id': 'light.novy_cooker_hood_light',
+        'has_entity_name': True,
+        'hidden_by': None,
+        'icon': None,
+        'labels': list([
+        ]),
+        'name': None,
+        'options': dict({
+        }),
+        'original_device_class': None,
+        'original_icon': None,
+        'original_name': 'Light',
+        'platform': 'novy_cooker_hood',
+        'translation_key': 'light',
+      }),
+    ]),
+    'transmitter': dict({
+      'entity_id': 'radio_frequency.test_rf_transmitter',
+      'state': dict({
+        'attributes': dict({
+          'friendly_name': 'Test RF transmitter',
+        }),
+        'entity_id': 'radio_frequency.test_rf_transmitter',
+        'state': 'unknown',
+      }),
+    }),
+  })
+# ---

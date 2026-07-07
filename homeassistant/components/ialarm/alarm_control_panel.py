@@ -1,6 +1,6 @@
 """Interfaces with iAlarm control panels."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -8,7 +8,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -43,24 +43,29 @@ class IAlarmPanel(
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.mac)},
+            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)},
             manufacturer="Antifurto365 - Meian",
             name="iAlarm",
         )
         self._attr_unique_id = coordinator.mac
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         return self.coordinator.state
 
+    @override
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self.coordinator.ialarm.disarm()
 
+    @override
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self.coordinator.ialarm.arm_stay()
 
+    @override
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self.coordinator.ialarm.arm_away()

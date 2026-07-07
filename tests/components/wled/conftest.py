@@ -60,6 +60,8 @@ def mock_wled_releases() -> Generator[MagicMock]:
         wled_releases = wled_releases_mock.return_value
         wled_releases.releases.return_value = Releases(
             beta="1.0.0b5",
+            nightly=None,
+            repo="wled/WLED",
             stable="0.99.0",
         )
 

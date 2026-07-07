@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensors[binary_sensor.gs012345_backflush_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_binary_sensors[binary_sensor.gs012345_backflush_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'GS012345 Backflush active',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Backflush active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gs012345_backflush_active',
@@ -51,8 +52,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.gs012345_brewing_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_binary_sensors[binary_sensor.gs012345_brewing_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'GS012345 Brewing active',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Brewing active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gs012345_brewing_active',
@@ -101,8 +103,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.gs012345_water_tank_empty-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -138,8 +141,8 @@
 # name: test_binary_sensors[binary_sensor.gs012345_water_tank_empty-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'GS012345 Water tank empty',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Water tank empty',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gs012345_water_tank_empty',
@@ -151,8 +154,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.gs012345_websocket_connected-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -188,8 +192,8 @@
 # name: test_binary_sensors[binary_sensor.gs012345_websocket_connected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'GS012345 WebSocket connected',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 WebSocket connected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gs012345_websocket_connected',

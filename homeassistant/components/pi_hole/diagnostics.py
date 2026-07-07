@@ -1,14 +1,12 @@
 """Diagnostics support for the Pi-hole integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
-from . import PiHoleConfigEntry
+from .coordinator import PiHoleConfigEntry
 
 TO_REDACT = {CONF_API_KEY}
 

@@ -18,12 +18,16 @@ rules:
     comment: |
       The integration does a connection test in the configuration flow, however
       it does not fail if the user has ipv6 misconfigured.
+  docs-triggers: done
   entity-event-setup: done
   unique-config-entry: done
   entity-unique-id: done
   docs-installation-instructions: done
   docs-removal-instructions: todo
   test-before-setup: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   config-flow-test-coverage: done
   docs-actions: done

@@ -1,10 +1,8 @@
 """Support for Peblar button."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from peblar import Peblar
 
@@ -74,6 +72,7 @@ class PeblarButtonEntity(
     entity_description: PeblarButtonEntityDescription
 
     @peblar_exception_handler
+    @override
     async def async_press(self) -> None:
         """Trigger button press on the Peblar device."""
         await self.entity_description.press_fn(self.coordinator.peblar)

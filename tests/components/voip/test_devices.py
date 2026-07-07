@@ -1,7 +1,5 @@
 """Test VoIP devices."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 import pytest
@@ -105,6 +103,7 @@ async def test_device_load_contact(
     call_info: CallInfo,
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    setup_voip: None,
 ) -> None:
     """Test loading contact endpoint from Store."""
     voip_id = call_info.caller_endpoint.uri
@@ -113,7 +112,7 @@ async def test_device_load_contact(
         return_value={voip_id: {"contact": "Test <sip:example.com:5061>"}}
     )
 
-    config_entry.runtime_data = mock_store
+    config_entry.runtime_data.store = mock_store
 
     # Initialize voip device
     device_registry.async_get_or_create(
@@ -126,7 +125,7 @@ async def test_device_load_contact(
         configuration_url=f"http://{call_info.caller_ip}",
     )
 
-    voip = VoIPDevices(hass, config_entry)
+    voip = VoIPDevices(hass, config_entry, mock_store)
 
     await voip.async_setup()
     voip_device = voip.devices.get(voip_id)

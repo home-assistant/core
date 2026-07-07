@@ -15,7 +15,11 @@ from bsblan import (
 )
 import pytest
 
-from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
+from homeassistant.components.bsblan.const import (
+    CONF_HEATING_CIRCUITS,
+    CONF_PASSKEY,
+    DOMAIN,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 
 from tests.common import MockConfigEntry, load_fixture
@@ -33,8 +37,31 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PASSKEY: "1234",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1],
         },
         unique_id="00:80:41:19:69:90",
+        version=1,
+        minor_version=3,
+    )
+
+
+@pytest.fixture
+def mock_config_entry_dual_circuit() -> MockConfigEntry:
+    """Return a mocked config entry with dual heating circuits."""
+    return MockConfigEntry(
+        title="BSBLAN Setup",
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1, 2],
+        },
+        unique_id="00:80:41:19:69:90",
+        version=1,
+        minor_version=3,
     )
 
 
@@ -55,28 +82,37 @@ def mock_bsblan() -> Generator[MagicMock]:
         patch("homeassistant.components.bsblan.config_flow.BSBLAN", new=bsblan_mock),
     ):
         bsblan = bsblan_mock.return_value
-        bsblan.info.return_value = Info.from_json(load_fixture("info.json", DOMAIN))
-        bsblan.device.return_value = Device.from_json(
+        bsblan.info.return_value = Info.model_validate_json(
+            load_fixture("info.json", DOMAIN)
+        )
+        bsblan.device.return_value = Device.model_validate_json(
             load_fixture("device.json", DOMAIN)
         )
-        bsblan.state.return_value = State.from_json(load_fixture("state.json", DOMAIN))
-        bsblan.static_values.return_value = StaticState.from_json(
+        bsblan.state.return_value = State.model_validate_json(
+            load_fixture("state.json", DOMAIN)
+        )
+        bsblan.static_values.return_value = StaticState.model_validate_json(
             load_fixture("static.json", DOMAIN)
         )
-        bsblan.sensor.return_value = Sensor.from_json(
+        bsblan.sensor.return_value = Sensor.model_validate_json(
             load_fixture("sensor.json", DOMAIN)
         )
-        bsblan.hot_water_state.return_value = HotWaterState.from_json(
+        bsblan.hot_water_state.return_value = HotWaterState.model_validate_json(
             load_fixture("dhw_state.json", DOMAIN)
         )
         # Mock new config methods using fixture files
-        bsblan.hot_water_config.return_value = HotWaterConfig.from_json(
+        bsblan.hot_water_config.return_value = HotWaterConfig.model_validate_json(
             load_fixture("dhw_config.json", DOMAIN)
         )
-        bsblan.hot_water_schedule.return_value = HotWaterSchedule.from_json(
+        bsblan.hot_water_schedule.return_value = HotWaterSchedule.model_validate_json(
             load_fixture("dhw_schedule.json", DOMAIN)
         )
         # mock get_temperature_unit property
         bsblan.get_temperature_unit = "°C"
+        # Default to a modern JSON-API version (>= v2) so setup uses the full
+        # feature set and does not raise the outdated-firmware repair issue.
+        bsblan.json_api_version = "3.0"
+        # Default: single circuit (for config flow tests)
+        bsblan.get_available_circuits.return_value = [1]
 
         yield bsblan

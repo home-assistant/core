@@ -6,7 +6,6 @@ set_text_overlay:
   fields:
     left_text:
       required: false
-      advanced: false
       example: "timestamp"
       default: ""
       selector:
@@ -18,7 +17,6 @@ set_text_overlay:
             - "custom-text"
     custom_left_text:
       required: false
-      advanced: false
       example: "Hello on the left!"
       default: ""
       selector:
@@ -26,7 +24,6 @@ set_text_overlay:
           multiline: true
     right_text:
       required: false
-      advanced: false
       example: "timestamp"
       default: ""
       selector:
@@ -38,7 +35,6 @@ set_text_overlay:
             - "custom-text"
     custom_right_text:
       required: false
-      advanced: false
       example: "Hello on the right!"
       default: ""
       selector:
@@ -53,7 +49,6 @@ action:
   fields:
     action:
       required: true
-      advanced: false
       example: "snapshot"
       default: ""
       selector:

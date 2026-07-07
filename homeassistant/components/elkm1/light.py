@@ -1,8 +1,6 @@
 """Support for control of ElkM1 lighting (X10, UPB, etc)."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
@@ -43,23 +41,28 @@ class ElkLight(ElkEntity, LightEntity):
         self._brightness = self._element.status
 
     @property
+    @override
     def brightness(self) -> int:
         """Get the brightness."""
         return self._brightness
 
     @property
+    @override
     def is_on(self) -> bool:
         """Get the current brightness."""
         return self._brightness != 0
 
+    @override
     def _element_changed(self, element: Element, changeset: Any) -> None:
         status = self._element.status if self._element.status != 1 else 100
         self._brightness = round(status * 2.55)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         self._element.level(round(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55))
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         self._element.level(0)

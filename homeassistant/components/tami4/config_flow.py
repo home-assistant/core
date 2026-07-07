@@ -1,10 +1,8 @@
 """Config flow for edge integration."""
 
-from __future__ import annotations
-
 import logging
 import re
-from typing import Any
+from typing import Any, override
 
 from Tami4EdgeAPI import Tami4EdgeAPI, exceptions
 import voluptuous as vol
@@ -30,6 +28,7 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     phone: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -68,11 +67,13 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             otp = user_input["otp"]
             try:
-                refresh_token = await self.hass.async_add_executor_job(
-                    Tami4EdgeAPI.submit_otp, self.phone, otp
-                )
-                api = await self.hass.async_add_executor_job(
-                    Tami4EdgeAPI, refresh_token
+
+                def _submit_otp_and_create_api() -> tuple[str, Tami4EdgeAPI]:
+                    refresh_token = Tami4EdgeAPI.submit_otp(self.phone, otp)
+                    return refresh_token, Tami4EdgeAPI(refresh_token)
+
+                refresh_token, api = await self.hass.async_add_executor_job(
+                    _submit_otp_and_create_api
                 )
             except exceptions.OTPFailedException:
                 errors["base"] = "invalid_auth"

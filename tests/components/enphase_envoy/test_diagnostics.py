@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pyenphase.exceptions import EnvoyError
+from pyenphase.models.meters import CtType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -118,6 +119,68 @@ async def test_entry_diagnostics_with_interface_information(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert await get_diagnostics_for_config_entry(
+    # fix order of entities by device to avoid snapshot assertion
+    # failures due to changed id based order between test runs
+    diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
-    ) == snapshot(exclude=limit_diagnostic_attrs)
+    )
+    diagnostics["envoy_entities_by_device"] = [
+        {
+            "device": device_entities["device"],
+            "entities": sorted(
+                device_entities["entities"], key=lambda e: e["entity"]["entity_id"]
+            ),
+        }
+        for device_entities in sorted(
+            diagnostics["envoy_entities_by_device"],
+            key=lambda e: e["device"]["identifiers"],
+        )
+    ]
+    assert diagnostics == snapshot(exclude=limit_diagnostic_attrs)
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy", "ctpresent"),
+    [
+        ("envoy", ()),
+        ("envoy_1p_metered", (CtType.PRODUCTION, CtType.NET_CONSUMPTION)),
+        ("envoy_acb_batt", (CtType.PRODUCTION, CtType.NET_CONSUMPTION)),
+        ("envoy_eu_batt", (CtType.PRODUCTION, CtType.NET_CONSUMPTION)),
+        (
+            "envoy_metered_batt_relay",
+            (
+                CtType.PRODUCTION,
+                CtType.NET_CONSUMPTION,
+                CtType.STORAGE,
+                CtType.BACKFEED,
+                CtType.LOAD,
+                CtType.EVSE,
+                CtType.PV3P,
+            ),
+        ),
+        ("envoy_nobatt_metered_3p", (CtType.PRODUCTION, CtType.NET_CONSUMPTION)),
+        ("envoy_tot_cons_metered", (CtType.PRODUCTION, CtType.TOTAL_CONSUMPTION)),
+    ],
+    indirect=["mock_envoy"],
+)
+async def test_entry_diagnostics_ct_presence(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    mock_envoy: AsyncMock,
+    ctpresent: tuple[CtType, ...],
+) -> None:
+    """Test config entry diagnostics including interface data."""
+    await setup_integration(hass, config_entry)
+
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
+    )
+    # are expected ct in diagnostic report
+    for ct in ctpresent:
+        assert diagnostics["envoy_model_data"]["ctmeters"][ct]
+
+    # are no more ct in diagnostic report as in ctpresent
+    for ct in diagnostics["envoy_model_data"]["ctmeters"]:
+        assert ct in ctpresent

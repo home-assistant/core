@@ -1,10 +1,9 @@
 """Platform for sensor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from zcc import ControlPoint
 from zcc.device import ControlPointDevice
@@ -97,6 +96,7 @@ class ZimiSensor(ZimiEntity, SensorEntity):
         self._attr_unique_id = device.identifier + "." + self.entity_description.key
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
 

@@ -1,34 +1,20 @@
 """The WattTime integration."""
 
-from __future__ import annotations
-
-from datetime import timedelta
-
 from aiowatttime import Client
-from aiowatttime.emissions import RealTimeEmissionsResponseType
 from aiowatttime.errors import InvalidCredentialsError, WattTimeError
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER
-
-DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
+from .const import LOGGER
+from .coordinator import WattTimeConfigEntry, WattTimeCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WattTimeConfigEntry) -> bool:
     """Set up WattTime from a config entry."""
     session = aiohttp_client.async_get_clientsession(hass)
 
@@ -42,31 +28,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.error("Error while authenticating with WattTime: %s", err)
         return False
 
-    async def async_update_data() -> RealTimeEmissionsResponseType:
-        """Get the latest realtime emissions data."""
-        try:
-            return await client.emissions.async_get_realtime_emissions(
-                entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE]
-            )
-        except InvalidCredentialsError as err:
-            raise ConfigEntryAuthFailed("Invalid username/password") from err
-        except WattTimeError as err:
-            raise UpdateFailed(
-                f"Error while requesting data from WattTime: {err}"
-            ) from err
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        config_entry=entry,
-        name=entry.title,
-        update_interval=DEFAULT_UPDATE_INTERVAL,
-        update_method=async_update_data,
-    )
+    coordinator = WattTimeCoordinator(hass, entry, client)
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -75,15 +40,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WattTimeConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_reload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_reload_entry(
+    hass: HomeAssistant, config_entry: WattTimeConfigEntry
+) -> None:
     """Handle an options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)

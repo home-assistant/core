@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_time[time.ohme_home_pro_target_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_time[time.ohme_home_pro_target_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ohme Home Pro Target time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro Target time',
     }),
     'context': <ANY>,
     'entity_id': 'time.ohme_home_pro_target_time',

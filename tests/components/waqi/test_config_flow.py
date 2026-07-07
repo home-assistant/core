@@ -68,12 +68,9 @@ async def test_full_flow(
         (Exception("Test error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_entry_errors(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_waqi: AsyncMock,
-    exception: Exception,
-    error: str,
+    hass: HomeAssistant, mock_waqi: AsyncMock, exception: Exception, error: str
 ) -> None:
     """Test full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -102,11 +99,9 @@ async def test_entry_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate_entry(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_waqi: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_waqi: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test duplicate entry handling."""
     mock_config_entry.add_to_hass(hass)
@@ -125,11 +120,9 @@ async def test_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_map_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_waqi: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_waqi: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test we get the form."""
     mock_config_entry.add_to_hass(hass)
@@ -169,9 +162,9 @@ async def test_full_map_flow(
         (Exception("Test error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_map_flow_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_waqi: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
@@ -220,9 +213,9 @@ async def test_map_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_map_duplicate(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_waqi: AsyncMock,
     mock_config_entry: MockConfigEntry,
     second_mock_config_entry: MockConfigEntry,
@@ -257,11 +250,9 @@ async def test_map_duplicate(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_station_number_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_waqi: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_waqi: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the station number flow."""
     mock_config_entry.add_to_hass(hass)
@@ -299,9 +290,9 @@ async def test_full_station_number_flow(
         (Exception("Test error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_station_number_flow_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_waqi: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
@@ -346,9 +337,9 @@ async def test_station_number_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_station_number_duplicate(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_waqi: AsyncMock,
     mock_config_entry: MockConfigEntry,
     second_mock_config_entry: MockConfigEntry,

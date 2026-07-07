@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, replace
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -82,6 +82,7 @@ class DoorBirdButton(DoorBirdEntity, ButtonEntity):
         self.entity_description = entity_description
         self._attr_unique_id = f"{self._mac_addr}_{relay or entity_description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Call the press action."""
         await self.entity_description.press_action(self._door_station, self._relay)

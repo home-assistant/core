@@ -1,9 +1,7 @@
 """Switch platform for Watts Vision integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from visionpluspython.models import SwitchDevice
 
@@ -86,10 +84,12 @@ class WattsVisionSwitch(WattsVisionEntity[SwitchDevice], SwitchEntity):
         super().__init__(coordinator, switch.device_id)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the switch is on."""
         return self.device.is_turned_on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         try:
@@ -109,6 +109,7 @@ class WattsVisionSwitch(WattsVisionEntity[SwitchDevice], SwitchEntity):
 
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         try:

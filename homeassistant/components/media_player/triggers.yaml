@@ -1,15 +1,62 @@
-stopped_playing:
-  target:
+.trigger_common: &trigger_common
+  target: &trigger_media_player_target
     entity:
       domain: media_player
   fields:
-    behavior:
+    behavior: &trigger_behavior
       required: true
-      default: any
+      default: each
       selector:
-        select:
-          translation_key: trigger_behavior
-          options:
-            - first
-            - last
-            - any
+        automation_behavior:
+          mode: trigger
+    for: &trigger_for
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+
+.volume_threshold_entity: &volume_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "%"
+  - domain: number
+    unit_of_measurement: "%"
+  - domain: sensor
+    unit_of_measurement: "%"
+
+.volume_threshold_number: &volume_threshold_number
+  min: 0
+  max: 100
+  mode: box
+  unit_of_measurement: "%"
+
+muted: *trigger_common
+unmuted: *trigger_common
+paused_playing: *trigger_common
+started_playing: *trigger_common
+stopped_playing: *trigger_common
+turned_off: *trigger_common
+turned_on: *trigger_common
+
+volume_changed:
+  target: *trigger_media_player_target
+  fields:
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *volume_threshold_entity
+          mode: changed
+          number: *volume_threshold_number
+
+volume_crossed_threshold:
+  target: *trigger_media_player_target
+  fields:
+    behavior: *trigger_behavior
+    for: *trigger_for
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *volume_threshold_entity
+          mode: crossed
+          number: *volume_threshold_number

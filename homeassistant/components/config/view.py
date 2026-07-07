@@ -1,12 +1,10 @@
 """Component to configure Home Assistant via an API."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from http import HTTPStatus
 import os
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohttp import web
 import voluptuous as vol
@@ -171,16 +169,19 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
 class EditKeyBasedConfigView(BaseEditConfigView[dict[str, dict[str, Any]]]):
     """Configure a list of entries."""
 
+    @override
     def _empty_config(self) -> dict[str, Any]:
         """Return an empty config."""
         return {}
 
+    @override
     def _get_value(
         self, hass: HomeAssistant, data: dict[str, dict[str, Any]], config_key: str
     ) -> dict[str, Any] | None:
         """Get value."""
         return data.get(config_key)
 
+    @override
     def _write_value(
         self,
         hass: HomeAssistant,
@@ -191,6 +192,7 @@ class EditKeyBasedConfigView(BaseEditConfigView[dict[str, dict[str, Any]]]):
         """Set value."""
         data.setdefault(config_key, {}).update(new_value)
 
+    @override
     def _delete_value(
         self, hass: HomeAssistant, data: dict[str, dict[str, Any]], config_key: str
     ) -> dict[str, Any]:
@@ -201,16 +203,19 @@ class EditKeyBasedConfigView(BaseEditConfigView[dict[str, dict[str, Any]]]):
 class EditIdBasedConfigView(BaseEditConfigView[list[dict[str, Any]]]):
     """Configure key based config entries."""
 
+    @override
     def _empty_config(self) -> list[Any]:
         """Return an empty config."""
         return []
 
+    @override
     def _get_value(
         self, hass: HomeAssistant, data: list[dict[str, Any]], config_key: str
     ) -> dict[str, Any] | None:
         """Get value."""
         return next((val for val in data if val.get(CONF_ID) == config_key), None)
 
+    @override
     def _write_value(
         self,
         hass: HomeAssistant,
@@ -225,6 +230,7 @@ class EditIdBasedConfigView(BaseEditConfigView[list[dict[str, Any]]]):
 
         value.update(new_value)
 
+    @override
     def _delete_value(
         self, hass: HomeAssistant, data: list[dict[str, Any]], config_key: str
     ) -> None:

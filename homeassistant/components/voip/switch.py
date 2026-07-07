@@ -1,31 +1,25 @@
 """VoIP switch entities."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import restore_state
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import VoipConfigEntry
 from .devices import VoIPDevice
 from .entity import VoIPEntity
-
-if TYPE_CHECKING:
-    from . import DomainData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VoipConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up VoIP switch entities."""
-    domain_data: DomainData = hass.data[DOMAIN]
+    domain_data = config_entry.runtime_data.domain_data
 
     @callback
     def async_add_device(device: VoIPDevice) -> None:
@@ -48,6 +42,7 @@ class VoIPCallAllowedSwitch(VoIPEntity, restore_state.RestoreEntity, SwitchEntit
         entity_category=EntityCategory.CONFIG,
     )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -55,11 +50,13 @@ class VoIPCallAllowedSwitch(VoIPEntity, restore_state.RestoreEntity, SwitchEntit
         state = await self.async_get_last_state()
         self._attr_is_on = state is not None and state.state == STATE_ON
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
         self._attr_is_on = False

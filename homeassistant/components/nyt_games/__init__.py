@@ -1,7 +1,5 @@
 """The NYT Games integration."""
 
-from __future__ import annotations
-
 from nyt_games import NYTGamesClient
 
 from homeassistant.const import CONF_TOKEN, Platform

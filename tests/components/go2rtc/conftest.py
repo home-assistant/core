@@ -186,9 +186,16 @@ def integration_config_entry(hass: HomeAssistant) -> ConfigEntry:
 
 
 @pytest.fixture
+def camera_unique_id() -> str | None:
+    """Camera unique ID."""
+    return "camera_unique_id"
+
+
+@pytest.fixture
 async def init_test_integration(
     hass: HomeAssistant,
     integration_config_entry: ConfigEntry,
+    camera_unique_id: str | None,
 ) -> MockCamera:
     """Initialize components."""
 
@@ -218,7 +225,7 @@ async def init_test_integration(
             async_unload_entry=async_unload_entry_init,
         ),
     )
-    test_camera = MockCamera()
+    test_camera = MockCamera(camera_unique_id)
     setup_test_component_platform(
         hass, CAMERA_DOMAIN, [test_camera], from_config_entry=True
     )

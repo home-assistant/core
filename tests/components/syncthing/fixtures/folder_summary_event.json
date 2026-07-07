@@ -1,0 +1,36 @@
+{
+  "id": 5,
+  "globalID": 5,
+  "type": "FolderSummary",
+  "time": "2024-01-01T00:04:00.000000000Z",
+  "data": {
+    "folder": "test-folder",
+    "summary": {
+      "errors": 0,
+      "globalBytes": 1000000,
+      "globalDeleted": 0,
+      "globalDirectories": 10,
+      "globalFiles": 100,
+      "globalSymlinks": 0,
+      "globalTotalItems": 110,
+      "ignorePatterns": false,
+      "inSyncBytes": 1000000,
+      "inSyncFiles": 100,
+      "invalid": "",
+      "localBytes": 1000000,
+      "localDeleted": 0,
+      "localDirectories": 10,
+      "localFiles": 100,
+      "localSymlinks": 0,
+      "localTotalItems": 110,
+      "needBytes": 0,
+      "needDeletes": 0,
+      "needDirectories": 0,
+      "needFiles": 0,
+      "needSymlinks": 0,
+      "needTotalItems": 0,
+      "pullErrors": 0,
+      "state": "idle"
+    }
+  }
+}

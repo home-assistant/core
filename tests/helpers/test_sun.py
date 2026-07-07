@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 
 from astral import LocationInfo
+from astral.location import Location
 import astral.sun
 from freezegun import freeze_time
 import pytest
@@ -200,3 +201,44 @@ def test_impossible_elevation(hass: HomeAssistant) -> None:
 
     with pytest.raises(ValueError):
         sun.get_astral_event_next(hass, SUN_EVENT_SUNRISE, june)
+
+
+def test_deprecated_get_astral_location(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the deprecated get_astral_location helper."""
+    location, elevation = sun.get_astral_location(hass)
+
+    observer = sun.get_astral_observer(hass)
+    assert location.latitude == observer.latitude
+    assert location.longitude == observer.longitude
+    assert elevation == observer.elevation
+    assert (
+        "The deprecated function get_astral_location was called. It will be removed "
+        "in HA Core 2027.7. Use homeassistant.helpers.sun.get_astral_observer instead"
+    ) in caplog.text
+
+
+def test_deprecated_get_location_astral_event_next(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the deprecated get_location_astral_event_next helper."""
+    utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
+    location = Location(
+        LocationInfo(
+            "",
+            "",
+            str(hass.config.time_zone),
+            hass.config.latitude,
+            hass.config.longitude,
+        )
+    )
+
+    assert sun.get_location_astral_event_next(
+        location, hass.config.elevation, SUN_EVENT_SUNRISE, utc_now
+    ) == sun.get_astral_event_next(hass, SUN_EVENT_SUNRISE, utc_now)
+    assert (
+        "The deprecated function get_location_astral_event_next was called. It will "
+        "be removed in HA Core 2027.7. Use "
+        "homeassistant.helpers.sun.get_observer_astral_event_next instead"
+    ) in caplog.text

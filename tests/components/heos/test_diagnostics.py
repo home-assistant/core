@@ -1,7 +1,6 @@
 """Tests for the HEOS diagnostics module."""
 
 from pyheos import HeosError, HeosSystem
-import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -41,7 +40,6 @@ async def test_config_entry_diagnostics(
     )
 
 
-@pytest.mark.usefixtures("controller")
 async def test_config_entry_diagnostics_error_getting_system(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -64,7 +62,6 @@ async def test_config_entry_diagnostics_error_getting_system(
     )
 
 
-@pytest.mark.usefixtures("controller")
 async def test_device_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

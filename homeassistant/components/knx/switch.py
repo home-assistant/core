@@ -1,8 +1,6 @@
 """Support for KNX switch entities."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from xknx.devices import Switch as XknxSwitch
 
@@ -77,6 +75,7 @@ class _KnxSwitch(SwitchEntity, RestoreEntity):
 
     _device: XknxSwitch
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
@@ -87,14 +86,17 @@ class _KnxSwitch(SwitchEntity, RestoreEntity):
                 self._device.switch.value = last_state.state == STATE_ON
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return bool(self._device.state)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._device.set_on()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._device.set_off()
@@ -107,20 +109,21 @@ class KnxYamlSwitch(_KnxSwitch, KnxYamlEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of KNX switch."""
+        self._device = XknxSwitch(
+            xknx=knx_module.xknx,
+            name=config[CONF_NAME],
+            group_address=config[KNX_ADDRESS],
+            group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
+            respond_to_read=config[CONF_RESPOND_TO_READ],
+            invert=config[SwitchSchema.CONF_INVERT],
+        )
         super().__init__(
             knx_module=knx_module,
-            device=XknxSwitch(
-                xknx=knx_module.xknx,
-                name=config[CONF_NAME],
-                group_address=config[KNX_ADDRESS],
-                group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
-                respond_to_read=config[CONF_RESPOND_TO_READ],
-                invert=config[SwitchSchema.CONF_INVERT],
-            ),
+            unique_id=str(self._device.switch.group_address),
+            name=config[CONF_NAME],
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-        self._attr_unique_id = str(self._device.switch.group_address)
 
 
 class KnxUiSwitch(_KnxSwitch, KnxUiEntity):

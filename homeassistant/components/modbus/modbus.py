@@ -1,7 +1,5 @@
 """Support for Modbus."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import namedtuple
 from typing import Any
@@ -318,10 +316,12 @@ class ModbusHub:
                     break
             except ModbusException as exception_error:
                 self._log_error(
-                    f"{self.name} connect failed, please check your configuration ({exception_error!s})"
+                    f"{self.name} connect failed, please check"
+                    f" your configuration ({exception_error!s})"
                 )
             _LOGGER.info(
-                f"modbus {self.name} connect NOT a success ! retrying in {PRIMARY_RECONNECT_DELAY} seconds"
+                f"modbus {self.name} connect NOT a success !"
+                f" retrying in {PRIMARY_RECONNECT_DELAY} seconds"
             )
             await asyncio.sleep(PRIMARY_RECONNECT_DELAY)
 
@@ -401,7 +401,10 @@ class ModbusHub:
             self._log_error(error)
             return None
         if result.isError():
-            error = f"Error: device: {slave} address: {address} -> pymodbus returned isError True"
+            error = (
+                f"Error: device: {slave} address: {address}"
+                " -> pymodbus returned isError True"
+            )
             self._log_error(error)
             return None
         return result

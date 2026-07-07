@@ -1,7 +1,5 @@
 """Common vera code."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from datetime import datetime
 from typing import NamedTuple
@@ -13,7 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.event import call_later
 
-from .const import DOMAIN
+type VeraConfigEntry = ConfigEntry[ControllerData]
 
 
 class ControllerData(NamedTuple):
@@ -22,7 +20,7 @@ class ControllerData(NamedTuple):
     controller: pv.VeraController
     devices: defaultdict[Platform, list[pv.VeraDevice]]
     scenes: list[pv.VeraScene]
-    config_entry: ConfigEntry
+    config_entry: VeraConfigEntry
 
 
 def get_configured_platforms(controller_data: ControllerData) -> set[Platform]:
@@ -33,20 +31,6 @@ def get_configured_platforms(controller_data: ControllerData) -> set[Platform]:
         platforms.append(Platform.SCENE)
 
     return set(platforms)
-
-
-def get_controller_data(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> ControllerData:
-    """Get controller data from hass data."""
-    return hass.data[DOMAIN][config_entry.entry_id]
-
-
-def set_controller_data(
-    hass: HomeAssistant, config_entry: ConfigEntry, data: ControllerData
-) -> None:
-    """Set controller data in hass data."""
-    hass.data[DOMAIN][config_entry.entry_id] = data
 
 
 class SubscriptionRegistry(pv.AbstractSubscriptionRegistry):
@@ -76,7 +60,8 @@ class SubscriptionRegistry(pv.AbstractSubscriptionRegistry):
         delay = 1
 
         # Long poll for changes. The downstream API instructs the endpoint to wait a
-        # a minimum of 200ms before returning data and a maximum of 9s before timing out.
+        # a minimum of 200ms before returning data and a
+        # maximum of 9s before timing out.
         if not self.poll_server_once():
             # If an error was encountered, wait a bit longer before trying again.
             delay = 60

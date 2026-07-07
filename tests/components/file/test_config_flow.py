@@ -77,7 +77,6 @@ async def test_form(
 )
 async def test_already_configured(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_is_allowed_path: bool,
     platform: str,
     data: dict[str, Any],
@@ -124,7 +123,6 @@ async def test_already_configured(
 )
 async def test_not_allowed(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_is_allowed_path: bool,
     platform: str,
     data: dict[str, Any],

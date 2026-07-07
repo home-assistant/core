@@ -332,7 +332,7 @@ async def test_form_zeroconf_correct_oui_wrong_device(
     doorbird_api: DoorBird,
     doorbell_state_side_effect: Exception | None,
 ) -> None:
-    """Test we can setup from zeroconf with the correct OUI source but not a doorstation."""
+    """Test setup from zeroconf with the correct OUI source but not a doorstation."""
     doorbirdapi = get_mock_doorbird_api(info={"WIFI_MAC_ADDR": "macaddr"})
     type(doorbirdapi).doorbell_state = AsyncMock(side_effect=doorbell_state_side_effect)
 

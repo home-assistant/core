@@ -15,7 +15,7 @@ from homeassistant.components.stream import (
     async_check_stream_client_error,
     create_stream,
 )
-from homeassistant.components.stream.const import ATTR_PREFER_TCP
+from homeassistant.components.stream.const import ATTR_PREFER_TCP, DOMAIN
 from homeassistant.const import EVENT_LOGGING_CHANGED
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -42,7 +42,7 @@ async def test_log_levels(
 ) -> None:
     """Test that the worker logs the url without username and password."""
 
-    await async_setup_component(hass, "stream", {"stream": {}})
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
 
     # These namespaces should only pass log messages when the stream logger
     # is at logging.DEBUG or below
@@ -83,7 +83,7 @@ async def test_log_levels(
 
 async def test_check_open_stream_params(hass: HomeAssistant) -> None:
     """Test check open stream params."""
-    await async_setup_component(hass, "stream", {"stream": {}})
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
 
     container_mock = MagicMock()
     source = "rtsp://foobar"
@@ -134,7 +134,7 @@ async def test_try_open_stream_error(
     hass: HomeAssistant, error: av.HTTPClientError, enum_result: StreamClientError
 ) -> None:
     """Test trying to open a stream."""
-    await async_setup_component(hass, "stream", {"stream": {}})
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
 
     with (
         patch("av.open", side_effect=error),
@@ -175,7 +175,7 @@ async def test_convert_stream_options(
     expected_pyav_options: dict[str, Any],
 ) -> None:
     """Test stream options."""
-    await async_setup_component(hass, "stream", {"stream": {}})
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
 
     container_mock = MagicMock()
     source = "rtsp://foobar"

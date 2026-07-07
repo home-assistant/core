@@ -44,7 +44,7 @@ async def test_hue_bridge_setup(hass: HomeAssistant) -> None:
                         EntityTestInfo(
                             entity_id="sensor.hue_dimmer_switch_battery",
                             capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                            friendly_name="Hue dimmer switch battery",
+                            friendly_name="Hue dimmer switch Battery",
                             entity_category=EntityCategory.DIAGNOSTIC,
                             unique_id="00:00:00:00:00:00_6623462389072572_644245094400",
                             unit_of_measurement=PERCENTAGE,

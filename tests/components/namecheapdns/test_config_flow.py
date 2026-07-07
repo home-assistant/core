@@ -315,7 +315,11 @@ async def test_initiate_reauth_flow(
     aioclient_mock.get(
         UPDATE_URL,
         params=TEST_USER_INPUT,
-        text="<interface-response><ErrCount>1</ErrCount><errors><Err1>Passwords do not match</Err1></errors></interface-response>",
+        text=(
+            "<interface-response><ErrCount>1</ErrCount><errors>"
+            "<Err1>Passwords do not match</Err1>"
+            "</errors></interface-response>"
+        ),
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)

@@ -1,9 +1,7 @@
 """Config flow for UptimeRobot integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pyuptimerobot import (
     UptimeRobot,
@@ -59,6 +57,7 @@ class UptimeRobotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return errors, account
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

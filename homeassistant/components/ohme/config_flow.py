@@ -1,7 +1,7 @@
 """Config flow for ohme integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from ohme import ApiException, AuthException, OhmeApiClient
 import voluptuous as vol
@@ -48,6 +48,7 @@ REAUTH_SCHEMA = vol.Schema(
 class OhmeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

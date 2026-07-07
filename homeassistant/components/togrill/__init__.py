@@ -1,7 +1,5 @@
 """The ToGrill integration."""
 
-from __future__ import annotations
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -10,9 +8,9 @@ from .coordinator import DeviceNotFound, ToGrillConfigEntry, ToGrillCoordinator
 
 _PLATFORMS: list[Platform] = [
     Platform.EVENT,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
-    Platform.NUMBER,
 ]
 
 

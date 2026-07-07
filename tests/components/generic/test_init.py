@@ -49,7 +49,8 @@ async def test_reload_on_title_change(
     await hass.async_block_till_done()
 
     assert (
-        hass.states.get("camera.test_camera").attributes["friendly_name"] == "New Title"
+        hass.states.get("camera.test_camera").attributes["friendly_name"]
+        == "Test Camera New Title"
     )
 
 

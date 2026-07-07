@@ -126,7 +126,7 @@ def selected_platforms(platforms: list[Platform]) -> Iterator[None]:
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ),
     ):
         yield
