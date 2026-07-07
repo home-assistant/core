@@ -171,11 +171,10 @@ _CELL_RUNTIME_ENTITY_IDS: dict[str, str] = {
         ("CELL_RUNTIME_POLB", 1800),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_neopool_client")
 async def test_cell_runtime_duration_sensor_reads_combined_register(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
     key: str,
     expected_seconds: int,
 ) -> None:
@@ -194,11 +193,10 @@ async def test_cell_runtime_duration_sensor_reads_combined_register(
     assert float(state.state) == pytest.approx(expected_seconds / 3600, abs=1e-4)
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_neopool_client")
 async def test_cell_runtime_pol_changes_sensor_reads_combined_register(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
 ) -> None:
     """CELL_RUNTIME_POL_CHANGES reads the combined u32 key as a raw counter.
 
@@ -214,13 +212,12 @@ async def test_cell_runtime_pol_changes_sensor_reads_combined_register(
 
 
 @pytest.mark.freeze_time("2026-07-03T12:00:00Z")
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_neopool_client")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
 ) -> None:
     """Snapshot every entity registered by the sensor platform."""
     with patch("homeassistant.components.neopool.PLATFORMS", [Platform.SENSOR]):

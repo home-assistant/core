@@ -1,6 +1,6 @@
 """Test the NeoPool config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from neopool_modbus.exceptions import (
     NeoPoolConnectionError,
@@ -27,9 +27,9 @@ USER_INPUT = {
 }
 
 
+@pytest.mark.usefixtures("mock_neopool_client")
 async def test_user_flow(
     hass: HomeAssistant,
-    mock_neopool_client: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test a happy-path config flow creates the entry."""
@@ -87,10 +87,10 @@ async def test_user_flow_probe_errors_recover(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_neopool_client")
 async def test_user_flow_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
 ) -> None:
     """Test config flow aborts when the same device is already configured."""
     mock_config_entry.add_to_hass(hass)

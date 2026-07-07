@@ -19,10 +19,10 @@ from .conftest import MOCK_POOL_DATA, MOCK_SERIAL
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.usefixtures("mock_neopool_client")
 async def test_setup_and_unload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
 ) -> None:
     """Set up the integration end-to-end and tear it down again."""
     await setup_integration(hass, mock_config_entry)
@@ -46,11 +46,11 @@ async def test_setup_first_refresh_fails_marks_retry(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("mock_neopool_client")
 async def test_device_registered_with_firmware(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
 ) -> None:
     """The first successful read populates firmware on the device entry."""
     await setup_integration(hass, mock_config_entry)
@@ -98,10 +98,10 @@ async def test_corrupt_gpio_creates_repair_issue(
     assert issue.severity is ir.IssueSeverity.ERROR
 
 
+@pytest.mark.usefixtures("mock_neopool_client")
 async def test_clean_gpio_does_not_create_issue(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
 ) -> None:
     """A clean read does not open a corrupted_gpio issue."""
     await setup_integration(hass, mock_config_entry)
@@ -109,10 +109,10 @@ async def test_clean_gpio_does_not_create_issue(
     assert issue_registry.async_get_issue(DOMAIN, "corrupted_gpio") is None
 
 
+@pytest.mark.usefixtures("mock_neopool_client")
 async def test_corrupt_gpio_clears_stale_issue_from_previous_session(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
 ) -> None:
     """A stale issue from a previous session clears on the first clean poll."""
     issue_registry = ir.async_get(hass)
