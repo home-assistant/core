@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, override
 
+from tesla_fleet_api import firmware_at_least
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
 
 from homeassistant.components.sensor import (
@@ -44,7 +45,6 @@ from .entity import (
     TeslemetryVehicleStreamEntity,
     TeslemetryWallConnectorEntity,
 )
-from .helpers import firmware_at_least
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0

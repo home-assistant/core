@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
 from teslemetry_stream import TeslemetryStreamVehicle
 from teslemetry_stream.const import TeslaLocation
@@ -18,7 +19,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import TeslemetryConfigEntry
 from .entity import TeslemetryVehiclePollingEntity, TeslemetryVehicleStreamEntity
-from .helpers import firmware_at_least
 from .models import TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0

@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import AutoSeat, Scope
 from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
@@ -25,7 +26,7 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
-from .helpers import firmware_at_least, handle_command, handle_vehicle_command
+from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0

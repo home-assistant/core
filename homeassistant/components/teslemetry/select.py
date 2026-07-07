@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode, Scope, Seat
 from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
@@ -21,7 +22,7 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
-from .helpers import firmware_at_least, handle_command, handle_vehicle_command
+from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 OFF = "off"

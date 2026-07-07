@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast, override
 
+from tesla_fleet_api import firmware_at_least
 from teslemetry_stream.vehicle import TeslemetryStreamVehicle
 
 from homeassistant.components.binary_sensor import (
@@ -25,7 +26,6 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
-from .helpers import firmware_at_least
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0

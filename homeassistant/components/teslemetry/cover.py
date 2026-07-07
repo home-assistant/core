@@ -3,6 +3,7 @@
 from itertools import chain
 from typing import Any, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope, SunRoofCommand, Trunk, WindowCommand
 from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import Signal
@@ -23,7 +24,7 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
-from .helpers import firmware_at_least, handle_vehicle_command
+from .helpers import handle_vehicle_command
 from .models import TeslemetryVehicleData
 
 OPEN = 1
