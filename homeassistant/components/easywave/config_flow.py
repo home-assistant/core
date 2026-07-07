@@ -6,10 +6,16 @@ from typing import Any, override
 import serial.tools.list_ports
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+)
+from homeassistant.core import callback
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
-from .config_flow_device import EasywaveDeviceAddFlowMixin
+from .config_flow_subentry import EasywaveDeviceSubentryFlowHandler
 from .const import (
     CONF_DEVICE_PATH,
     CONF_USB_MANUFACTURER,
@@ -18,8 +24,7 @@ from .const import (
     CONF_USB_SERIAL_NUMBER,
     CONF_USB_VID,
     DOMAIN,
-    SUBENTRY_TYPE_NEO_SENSOR,
-    SUBENTRY_TYPE_TRANSMITTER,
+    SUBENTRY_DEVICE,
     SUPPORTED_USB_IDS,
     USB_DEVICE_NAMES,
     get_frequency_for_pid,
@@ -30,7 +35,7 @@ from .transceiver import RX11Transceiver
 _LOGGER = logging.getLogger(__name__)
 
 
-class EasywaveConfigFlow(EasywaveDeviceAddFlowMixin, ConfigFlow, domain=DOMAIN):
+class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Easywave gateway setup."""
 
     VERSION = 1
@@ -38,8 +43,21 @@ class EasywaveConfigFlow(EasywaveDeviceAddFlowMixin, ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self._device: dict[str, Any] = {}
-        self._gateway_entry_id: str | None = None
-        self._init_device_flow()
+
+    @classmethod
+    @callback
+    @override
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this handler."""
+        return {SUBENTRY_DEVICE: EasywaveDeviceSubentryFlowHandler}
+
+    def _abort_if_hub_already_configured(self) -> ConfigFlowResult | None:
+        """Abort when the RX11 hub is already configured."""
+        if self._async_current_entries(include_ignore=False):
+            return self.async_abort(reason="already_configured")
+        return None
 
     def _abort_if_frequency_not_permitted(
         self, pid: int | None
@@ -69,36 +87,29 @@ class EasywaveConfigFlow(EasywaveDeviceAddFlowMixin, ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Entry point for adding the gateway or a child device."""
-        entries = self._async_current_entries(include_ignore=False)
-        if not entries:
-            return await self.async_step_ports()
-        self._gateway_entry_id = entries[0].entry_id
-        return await self.async_step_device_select()
-
-    async def async_step_device_select(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Let the user pick a transmitter or neo sensor when the gateway exists."""
-        return self.async_show_menu(
-            step_id="device_select",
-            menu_options=[SUBENTRY_TYPE_TRANSMITTER, SUBENTRY_TYPE_NEO_SENSOR],
-        )
+        """Entry point for adding the RX11 gateway."""
+        if abort := self._abort_if_hub_already_configured():
+            return abort
+        return await self.async_step_ports()
 
     async def async_step_ports(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show available RX11 serial ports and let the user pick one."""
         errors: dict[str, str] = {}
-        ports = [
-            port
-            for port in await self.hass.async_add_executor_job(
-                serial.tools.list_ports.comports
-            )
-            if port.vid is not None
-            and port.pid is not None
-            and (port.vid, port.pid) in SUPPORTED_USB_IDS
-        ]
+        try:
+            ports = [
+                port
+                for port in await self.hass.async_add_executor_job(
+                    serial.tools.list_ports.comports
+                )
+                if port.vid is not None
+                and port.pid is not None
+                and (port.vid, port.pid) in SUPPORTED_USB_IDS
+            ]
+        except OSError:
+            return self.async_abort(reason="no_devices_found")
+
         port_list = {
             p.device: (
                 f"{p.device}"
@@ -140,6 +151,9 @@ class EasywaveConfigFlow(EasywaveDeviceAddFlowMixin, ConfigFlow, domain=DOMAIN):
     @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB discovery."""
+        if abort := self._abort_if_hub_already_configured():
+            return abort
+
         vid = int(discovery_info.vid, 16)
         pid = int(discovery_info.pid, 16)
         if (vid, pid) not in SUPPORTED_USB_IDS:

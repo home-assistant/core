@@ -136,6 +136,7 @@ CONF_DEVICE_DATA: Final = "data"
 
 CONF_ENTRY_TYPE: Final = "entry_type"
 
+SUBENTRY_DEVICE: Final = "device"
 SUBENTRY_TYPE_TRANSMITTER: Final = "transmitter"
 SUBENTRY_TYPE_NEO_SENSOR: Final = "neo_sensor"
 

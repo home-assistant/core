@@ -66,8 +66,12 @@ async def test_config_flow_translation_keys_exist(hass: HomeAssistant) -> None:
     selector_translations = await async_get_translations(
         hass, LOCALE_EN, "selector", integrations=[DOMAIN]
     )
-    config_translations = await async_get_translations(
-        hass, LOCALE_EN, "config", integrations=[DOMAIN], config_flow=True
+    config_subentries_translations = await async_get_translations(
+        hass,
+        LOCALE_EN,
+        "config_subentries",
+        integrations=[DOMAIN],
+        config_flow=True,
     )
 
     entity_prefix = f"component.{DOMAIN}.entity.sensor."
@@ -84,13 +88,13 @@ async def test_config_flow_translation_keys_exist(hass: HomeAssistant) -> None:
     )
     assert (
         "{sensor_list}"
-        in config_translations[
-            f"component.{DOMAIN}.config.step.sensor_confirm.description"
+        in config_subentries_translations[
+            f"component.{DOMAIN}.config_subentries.device.step.sensor_confirm.description"
         ]
     )
     assert (
-        config_translations[
-            f"component.{DOMAIN}.config.step.transmitter_learn_intro.title"
+        config_subentries_translations[
+            f"component.{DOMAIN}.config_subentries.device.step.transmitter_learn_intro.title"
         ]
         == "Learn Transmitter"
     )

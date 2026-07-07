@@ -1,11 +1,16 @@
 """Shared config flow helpers for Easywave device learning."""
 
 import asyncio
+from collections.abc import Mapping
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
-from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
+)
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.helpers import translation
 
 if TYPE_CHECKING:
@@ -21,6 +26,7 @@ from .const import (
     ENTRY_TYPE_NEO_SENSOR,
     ENTRY_TYPE_TRANSMITTER,
     LEARNING_TIMEOUT,
+    SUBENTRY_DEVICE,
 )
 
 
@@ -30,24 +36,31 @@ class EasywaveDeviceFlowMixin:
     if TYPE_CHECKING:
         hass: HomeAssistant
 
-        def async_abort(self, *, reason: str, **kwargs: Any) -> ConfigFlowResult:
+        def _get_entry(self) -> ConfigEntry:
+            """Return the config entry linked to the current flow."""
+
+        def async_abort(
+            self,
+            *,
+            reason: str,
+            description_placeholders: Mapping[str, str] | None = None,
+        ) -> SubentryFlowResult:
             """Abort the flow."""
 
-        def async_show_form(self, *args: Any, **kwargs: Any) -> ConfigFlowResult:
+        def async_show_form(self, *args: Any, **kwargs: Any) -> SubentryFlowResult:
             """Show a form step."""
 
-        def async_show_menu(self, *args: Any, **kwargs: Any) -> ConfigFlowResult:
+        def async_show_menu(self, *args: Any, **kwargs: Any) -> SubentryFlowResult:
             """Show a menu step."""
 
-        def async_show_progress(self, *args: Any, **kwargs: Any) -> ConfigFlowResult:
+        def async_show_progress(self, *args: Any, **kwargs: Any) -> SubentryFlowResult:
             """Show a progress step."""
 
         def async_show_progress_done(
             self, *args: Any, **kwargs: Any
-        ) -> ConfigFlowResult:
+        ) -> SubentryFlowResult:
             """Finish a progress step."""
 
-    _gateway_entry_id: str | None
     _learn_task: asyncio.Task[dict[str, Any] | None] | None
     _learned_device: dict[str, Any] | None
     _learn_progress_action: str
@@ -68,22 +81,24 @@ class EasywaveDeviceFlowMixin:
         self._learn_back_step = ""
         self._accept_telegram = None
 
-    def _get_gateway_entry(self) -> ConfigEntry:
-        """Return the gateway config entry for the current flow."""
-        if self._gateway_entry_id is None:
-            raise RuntimeError("Gateway entry is not set")
-        return self.hass.config_entries.async_get_known_entry(self._gateway_entry_id)
-
     def _get_coordinator(self) -> Any | None:
         """Return the gateway coordinator or None."""
-        entry = self._get_gateway_entry()
+        entry = self._get_entry()
         if entry.runtime_data is not None:
             return entry.runtime_data.coordinator
         return None
 
     def _configured_devices(self) -> list[dict[str, Any]]:
-        """Return device records stored in the gateway config entry options."""
-        return list(self._get_gateway_entry().options.get(CONF_DEVICES, []))
+        """Return device records stored as hub subentries."""
+        return [
+            {
+                CONF_DEVICE_ID: subentry.unique_id,
+                CONF_DEVICE_TITLE: subentry.title,
+                CONF_DEVICE_DATA: dict(subentry.data),
+            }
+            for subentry in self._get_entry().subentries.values()
+            if subentry.subentry_type == SUBENTRY_DEVICE and subentry.unique_id
+        ]
 
     def _is_duplicate(
         self,
@@ -110,24 +125,12 @@ class EasywaveDeviceFlowMixin:
 
     def _save_device(
         self, title: str, unique_id: str, data: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Persist a new device in the gateway config entry options."""
-        entry = self._get_gateway_entry()
-        devices = self._configured_devices()
-        devices.append(
-            {
-                CONF_DEVICE_ID: unique_id,
-                CONF_DEVICE_TITLE: title,
-                CONF_DEVICE_DATA: data,
-            }
-        )
-        self.hass.config_entries.async_update_entry(
-            entry,
-            options={**entry.options, CONF_DEVICES: devices},
-        )
-        return self.async_abort(
-            reason="device_added",
-            description_placeholders={"device_name": title},
+    ) -> SubentryFlowResult:
+        """Persist a new device as a hub subentry."""
+        return cast(ConfigSubentryFlow, self).async_create_entry(
+            title=title,
+            unique_id=unique_id,
+            data=data,
         )
 
     async def _async_format_neo_sensor_list(
@@ -185,7 +188,7 @@ class EasywaveDeviceFlowMixin:
         progress_action: str,
         confirm_step: str,
         learn_step: str,
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Run or collect a background learning task with progress UI."""
         coordinator = self._get_coordinator()
         if coordinator is None or not coordinator.transceiver.is_connected:
@@ -227,7 +230,7 @@ class EasywaveDeviceFlowMixin:
 
     async def async_step_learn_timeout(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Handle learning timeout - offer retry, back, or abort."""
         menu_options = ["learn", self._learn_back_step, "abort_learn"]
         return self.async_show_menu(
@@ -237,19 +240,19 @@ class EasywaveDeviceFlowMixin:
 
     async def async_step_learn_timeout_transmitter(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Handle transmitter learning timeout."""
         return await self.async_step_learn_timeout(user_input)
 
     async def async_step_learn_timeout_sensor(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Handle neo sensor learning timeout."""
         return await self.async_step_learn_timeout(user_input)
 
     async def async_step_learn(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Retry learning after a timeout."""
         return await self._await_learning_task(
             progress_action=self._learn_progress_action,
@@ -259,19 +262,19 @@ class EasywaveDeviceFlowMixin:
 
     async def async_step_learn_transmitter(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Show transmitter learning progress."""
         return await self.async_step_learn(user_input)
 
     async def async_step_learn_sensor(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Show neo sensor learning progress."""
         return await self.async_step_learn(user_input)
 
     async def async_step_abort_learn(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Abort the learning flow."""
         return self.async_abort(reason="learning_cancelled")
 

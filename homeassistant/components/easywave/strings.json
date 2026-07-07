@@ -2,76 +2,17 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_get_gateway_serial": "Could not retrieve gateway serial from the RX11. Please try again.",
-      "device_added": "The device **{device_name}** is now available and entities have been created.",
-      "device_not_connected": "The RX11 USB Transceiver is not connected.\n\nTo add a new device, the RX11 must be reachable.\nPlease check the USB connection.",
       "frequency_not_permitted": "This device operates on {frequency}, which is not permitted in your configured Home Assistant region ({country}).",
-      "learning_cancelled": "Learning mode was cancelled.",
-      "no_device_learned": "No device was detected.",
       "no_devices_found": "No serial ports found. Make sure the RX11 USB Transceiver is plugged in and recognized by the system."
     },
     "error": {
       "cannot_connect": "Could not connect to the RX11 USB Transceiver. Make sure it is plugged in and no other application is using the port.",
-      "cannot_get_gateway_serial": "Could not retrieve gateway serial from the RX11. Please try again.",
       "device_no_longer_available": "The selected device is no longer available. Please try again."
     },
-    "progress": {
-      "waiting_for_sensor": "Waiting for learn signal... Press the learn button on the Easywave neo sensor NOW!",
-      "waiting_for_transmitter": "Waiting for transmitter signal... Press a button on the Easywave transmitter NOW!"
-    },
     "step": {
-      "button_count_select": {
-        "description": "Please specify the number of available buttons.",
-        "menu_option_descriptions": {
-          "buttons_1": "The transmitter/channel has only 1 button with any button code.",
-          "buttons_2": "The transmitter/channel has 2 buttons with button codes A and B.",
-          "buttons_3": "The transmitter/channel has 3 buttons with button codes A, B and C.",
-          "buttons_4": "The transmitter/channel has 4 buttons with button codes A, B, C and D."
-        },
-        "menu_options": {
-          "buttons_1": "1 Button",
-          "buttons_2": "2 Buttons",
-          "buttons_3": "3 Buttons",
-          "buttons_4": "4 Buttons",
-          "transmitter_learn_intro": "Back"
-        },
-        "title": "Button Count"
-      },
       "confirm": {
         "description": "Detected device:\n**{name} ({serial_number})**\n\nPort: {device}",
         "title": "Set up RX11 USB Transceiver"
-      },
-      "device_select": {
-        "description": "Which device would you like to add?",
-        "menu_options": {
-          "neo_sensor": "Easywave neo Sensor",
-          "transmitter": "Easywave Transmitter"
-        },
-        "title": "Device Selection"
-      },
-      "learn_sensor": {
-        "title": "Press Learn Button!"
-      },
-      "learn_timeout_sensor": {
-        "description": "No radio signal received!\nReduce the distance between sensor and server and try again.",
-        "menu_options": {
-          "abort_learn": "Cancel",
-          "learn": "Learn Sensor",
-          "sensor_learn_intro": "Back"
-        },
-        "title": "Timeout"
-      },
-      "learn_timeout_transmitter": {
-        "description": "No radio signal received!\nReduce the distance between transmitter and server and try again.",
-        "menu_options": {
-          "abort_learn": "Cancel",
-          "learn": "Learn Transmitter",
-          "transmitter_learn_intro": "Back"
-        },
-        "title": "Timeout"
-      },
-      "learn_transmitter": {
-        "title": "Press transmitter button!"
       },
       "ports": {
         "data": {
@@ -82,42 +23,115 @@
         },
         "description": "Select the serial port of the RX11 USB Transceiver.",
         "title": "Select Easywave device"
+      }
+    }
+  },
+  "config_subentries": {
+    "device": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+        "cannot_get_gateway_serial": "Could not retrieve gateway serial from the RX11. Please try again.",
+        "device_not_connected": "The RX11 USB Transceiver is not connected.\n\nTo add a new device, the RX11 must be reachable.\nPlease check the USB connection.",
+        "learning_cancelled": "Learning mode was cancelled.",
+        "no_device_learned": "No device was detected."
       },
-      "sensor_confirm": {
-        "data": {
-          "title": "[%key:common::config_flow::data::name%]"
-        },
-        "data_description": {
-          "title": "The name for this Easywave neo sensor."
-        },
-        "description": "The sensor was successfully learned!\n\nDetected sensors:\n{sensor_list}\n\nEnter a name for the new device:",
-        "title": "Learning Successful"
+      "create_entry": {
+        "default": "The device **{title}** is now available and entities have been created."
       },
-      "sensor_learn_intro": {
-        "description": "Home Assistant automatically detects which measurement data the sensor provides.\n\nPlease press the learn button on the back of the sensor in the next step.",
-        "menu_options": {
-          "device_select": "Back",
-          "learn": "Continue"
-        },
-        "title": "Learn Sensor"
+      "entry_type": "Device",
+      "initiate_flow": {
+        "user": "Add device"
       },
-      "transmitter_confirm": {
-        "data": {
-          "title": "[%key:common::config_flow::data::name%]"
-        },
-        "data_description": {
-          "title": "The name for this transmitter device."
-        },
-        "description": "The transmitter was successfully learned!\n\nEnter a name for the new device:",
-        "title": "Learning Successful"
+      "progress": {
+        "waiting_for_sensor": "Waiting for learn signal... Press the learn button on the Easywave neo sensor NOW!",
+        "waiting_for_transmitter": "Waiting for transmitter signal... Press a button on the Easywave transmitter NOW!"
       },
-      "transmitter_learn_intro": {
-        "description": "Please specify the number of buttons in the next step, then press a button on the Easywave transmitter.",
-        "menu_options": {
-          "button_count_select": "Continue",
-          "device_select": "Back"
+      "step": {
+        "button_count_select": {
+          "description": "Please specify the number of available buttons.",
+          "menu_option_descriptions": {
+            "buttons_1": "The transmitter/channel has only 1 button with any button code.",
+            "buttons_2": "The transmitter/channel has 2 buttons with button codes A and B.",
+            "buttons_3": "The transmitter/channel has 3 buttons with button codes A, B and C.",
+            "buttons_4": "The transmitter/channel has 4 buttons with button codes A, B, C and D."
+          },
+          "menu_options": {
+            "buttons_1": "1 Button",
+            "buttons_2": "2 Buttons",
+            "buttons_3": "3 Buttons",
+            "buttons_4": "4 Buttons",
+            "transmitter_learn_intro": "Back"
+          },
+          "title": "Button Count"
         },
-        "title": "Learn Transmitter"
+        "device_select": {
+          "description": "Which device would you like to add?",
+          "menu_options": {
+            "neo_sensor": "Easywave neo Sensor",
+            "transmitter": "Easywave Transmitter"
+          },
+          "title": "Device Selection"
+        },
+        "learn_sensor": {
+          "title": "Press Learn Button!"
+        },
+        "learn_timeout_sensor": {
+          "description": "No radio signal received!\nReduce the distance between sensor and server and try again.",
+          "menu_options": {
+            "abort_learn": "Cancel",
+            "learn": "Learn Sensor",
+            "sensor_learn_intro": "Back"
+          },
+          "title": "Timeout"
+        },
+        "learn_timeout_transmitter": {
+          "description": "No radio signal received!\nReduce the distance between transmitter and server and try again.",
+          "menu_options": {
+            "abort_learn": "Cancel",
+            "learn": "Learn Transmitter",
+            "transmitter_learn_intro": "Back"
+          },
+          "title": "Timeout"
+        },
+        "learn_transmitter": {
+          "title": "Press transmitter button!"
+        },
+        "sensor_confirm": {
+          "data": {
+            "title": "[%key:common::config_flow::data::name%]"
+          },
+          "data_description": {
+            "title": "The name for this Easywave neo sensor."
+          },
+          "description": "The sensor was successfully learned!\n\nDetected sensors:\n{sensor_list}\n\nEnter a name for the new device:",
+          "title": "Learning Successful"
+        },
+        "sensor_learn_intro": {
+          "description": "Home Assistant automatically detects which measurement data the sensor provides.\n\nPlease press the learn button on the back of the sensor in the next step.",
+          "menu_options": {
+            "device_select": "Back",
+            "learn": "Continue"
+          },
+          "title": "Learn Sensor"
+        },
+        "transmitter_confirm": {
+          "data": {
+            "title": "[%key:common::config_flow::data::name%]"
+          },
+          "data_description": {
+            "title": "The name for this transmitter device."
+          },
+          "description": "The transmitter was successfully learned!\n\nEnter a name for the new device:",
+          "title": "Learning Successful"
+        },
+        "transmitter_learn_intro": {
+          "description": "Please specify the number of buttons in the next step, then press a button on the Easywave transmitter.",
+          "menu_options": {
+            "button_count_select": "Continue",
+            "device_select": "Back"
+          },
+          "title": "Learn Transmitter"
+        }
       }
     }
   },

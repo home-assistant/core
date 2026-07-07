@@ -3,9 +3,11 @@
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.easywave import async_remove_config_entry_device
-from homeassistant.components.easywave.const import DOMAIN
-from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES
+from homeassistant.components.easywave import (
+    async_remove_config_entry_device,
+    get_devices,
+)
+from homeassistant.components.easywave.const import DOMAIN, SUBENTRY_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
@@ -174,7 +176,11 @@ async def test_remove_config_entry_device_rejects_gateway(
 
     result = await async_remove_config_entry_device(hass, entry, gateway_device)
     assert result is False
-    assert entry.options.get(CONF_DEVICES, []) == []
+    assert not [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == SUBENTRY_DEVICE
+    ]
 
 
 async def test_remove_config_entry_device_removes_child(
@@ -186,12 +192,10 @@ async def test_remove_config_entry_device_removes_child(
         domain=DOMAIN,
         data=MOCK_ENTRY_DATA,
         unique_id="easywave_gw",
-        options={
-            CONF_DEVICES: [
-                _neo_sensor_device_record(title="Neo Sensor"),
-                _transmitter_device_record(title="Transmitter"),
-            ]
-        },
+        subentries_data=[
+            _neo_sensor_device_record(title="Neo Sensor"),
+            _transmitter_device_record(title="Transmitter"),
+        ],
     )
     entry.add_to_hass(hass)
 
@@ -204,6 +208,35 @@ async def test_remove_config_entry_device_removes_child(
 
     result = await async_remove_config_entry_device(hass, entry, child_device)
     assert result is True
-    devices = entry.options[CONF_DEVICES]
-    assert len(devices) == 1
-    assert devices[0][CONF_DEVICE_ID] == MOCK_TRANSMITTER_DEVICE_ID
+    subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == SUBENTRY_DEVICE
+    ]
+    assert len(subentries) == 1
+    assert subentries[0].unique_id == MOCK_TRANSMITTER_DEVICE_ID
+
+
+async def test_get_devices_returns_hub_subentries(
+    hass: HomeAssistant,
+) -> None:
+    """Test get_devices returns configured hub subentries."""
+    entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        data=MOCK_ENTRY_DATA,
+        unique_id="easywave_gw",
+        subentries_data=[
+            _neo_sensor_device_record(title="Neo Sensor"),
+            _transmitter_device_record(title="Transmitter"),
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    devices = get_devices(entry)
+    assert len(devices) == 2
+    assert {device.device_id for device in devices} == {
+        MOCK_NEO_SENSOR_DEVICE_ID,
+        MOCK_TRANSMITTER_DEVICE_ID,
+    }
+    assert {device.title for device in devices} == {"Neo Sensor", "Transmitter"}

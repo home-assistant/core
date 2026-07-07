@@ -9,7 +9,7 @@ from easywave_home_control.codec import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import SubentryFlowResult
 
 from .config_flow_learning import EasywaveDeviceFlowMixin
 from .const import (
@@ -77,7 +77,7 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
 
     async def async_step_transmitter(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Start transmitter setup from the add-device menu."""
         self._init_transmitter_flow_state()
         self._learn_progress_action = "waiting_for_transmitter"
@@ -94,7 +94,7 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
 
     async def async_step_transmitter_learn_intro(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Describe transmitter learning before button count and listen steps."""
         menu_options = ["button_count_select", "device_select"]
         return self.async_show_menu(
@@ -104,44 +104,44 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
 
     async def async_step_button_count_select(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Select number of transmitter buttons."""
         return self.async_show_menu(
             step_id="button_count_select",
             menu_options=[*list(_BUTTON_COUNT_MAP), "transmitter_learn_intro"],
         )
 
-    async def _async_set_button_count(self, count_key: str) -> ConfigFlowResult:
+    async def _async_set_button_count(self, count_key: str) -> SubentryFlowResult:
         self._button_count = _BUTTON_COUNT_MAP[count_key]
         return await self.async_step_learn()
 
     async def async_step_buttons_1(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """1 button."""
         return await self._async_set_button_count("buttons_1")
 
     async def async_step_buttons_2(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """2 buttons."""
         return await self._async_set_button_count("buttons_2")
 
     async def async_step_buttons_3(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """3 buttons."""
         return await self._async_set_button_count("buttons_3")
 
     async def async_step_buttons_4(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """4 buttons."""
         return await self._async_set_button_count("buttons_4")
 
     async def async_step_transmitter_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Confirm the learned transmitter and save."""
         if self._learned_device is None:
             return self.async_abort(reason="no_device_learned")
@@ -185,7 +185,7 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
 
     async def async_step_neo_sensor(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Start neo sensor setup from the add-device menu."""
         self._learn_progress_action = "waiting_for_sensor"
         self._learn_confirm_step = "sensor_confirm"
@@ -201,7 +201,7 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
 
     async def async_step_sensor_learn_intro(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Describe neo sensor learning before starting the listen step."""
         menu_options = ["learn", "device_select"]
         return self.async_show_menu(
@@ -211,7 +211,7 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
 
     async def async_step_sensor_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Confirm the learned neo sensor and save."""
         if self._learned_device is None:
             return self.async_abort(reason="no_device_learned")

@@ -22,13 +22,8 @@ from homeassistant.components.easywave.const import (
     TRANSMITTER_SWITCH_PERMANENT,
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_DEVICES,
-    CONF_DOMAIN,
-    CONF_PLATFORM,
-    CONF_TYPE,
-)
+from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -80,11 +75,8 @@ def _patch_integration() -> tuple[Any, Any, MagicMock]:
     return transceiver_patch, coordinator_patch, mock_coordinator
 
 
-def _make_gateway_entry(*device_records: dict[str, Any]) -> MockConfigEntry:
+def _make_gateway_entry(*device_records: ConfigSubentryData) -> MockConfigEntry:
     """Return a gateway config entry with optional configured devices."""
-    options: dict[str, Any] = {}
-    if device_records:
-        options[CONF_DEVICES] = list(device_records)
     return MockConfigEntry(
         version=1,
         domain=DOMAIN,
@@ -92,7 +84,7 @@ def _make_gateway_entry(*device_records: dict[str, Any]) -> MockConfigEntry:
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
-        options=options,
+        subentries_data=list(device_records) if device_records else [],
     )
 
 

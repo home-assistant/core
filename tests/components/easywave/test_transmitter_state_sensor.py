@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.easywave.const import (
     CONF_BUTTON_COUNT,
-    CONF_DEVICE_DATA,
     CONF_GROUPING_MODE,
     CONF_OPERATING_TYPE,
     CONF_SWITCH_MODE,
@@ -13,13 +12,13 @@ from homeassistant.components.easywave.const import (
     TRANSMITTER_GROUPING_GROUP,
     TRANSMITTER_SWITCH_IMPULSE,
 )
-from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
     MOCK_ENTRY_DATA,
     MOCK_TRANSMITTER_SERIAL,
+    _device_subentry_data,
     _transmitter_device_record,
 )
 
@@ -30,7 +29,7 @@ MOCK_DEVICE_ID = f"transmitter_{MOCK_TRANSMITTER_SERIAL}"
 
 def _make_gateway(extra_data: dict[str, object]) -> MockConfigEntry:
     """Return a gateway entry with a transmitter device using given data."""
-    device = _transmitter_device_record(
+    subentry = _transmitter_device_record(
         title="Test Transmitter",
         button_count=int(extra_data.get(CONF_BUTTON_COUNT, 4)),
         switch_mode=str(extra_data.get(CONF_SWITCH_MODE, TRANSMITTER_SWITCH_IMPULSE)),
@@ -38,7 +37,8 @@ def _make_gateway(extra_data: dict[str, object]) -> MockConfigEntry:
             extra_data.get(CONF_GROUPING_MODE, TRANSMITTER_GROUPING_GROUP)
         ),
     )
-    device[CONF_DEVICE_DATA].update(extra_data)
+    data = dict(subentry["data"])
+    data.update(extra_data)
     return MockConfigEntry(
         version=1,
         domain=DOMAIN,
@@ -46,7 +46,9 @@ def _make_gateway(extra_data: dict[str, object]) -> MockConfigEntry:
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
-        options={CONF_DEVICES: [device]},
+        subentries_data=[
+            _device_subentry_data(subentry["unique_id"], subentry["title"], data)
+        ],
     )
 
 

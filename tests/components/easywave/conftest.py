@@ -8,9 +8,7 @@ import pytest
 
 from homeassistant.components.easywave.const import (
     CONF_BUTTON_COUNT,
-    CONF_DEVICE_DATA,
     CONF_DEVICE_PATH,
-    CONF_DEVICE_TITLE,
     CONF_ENTRY_TYPE,
     CONF_GROUPING_MODE,
     CONF_OPERATING_TYPE,
@@ -26,10 +24,11 @@ from homeassistant.components.easywave.const import (
     DOMAIN,
     ENTRY_TYPE_NEO_SENSOR,
     ENTRY_TYPE_TRANSMITTER,
+    SUBENTRY_DEVICE,
     TRANSMITTER_GROUPING_GROUP,
     TRANSMITTER_SWITCH_IMPULSE,
 )
-from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from tests.common import MockConfigEntry
@@ -49,17 +48,18 @@ MOCK_NEO_SENSOR_SERIAL = "bb" * 16
 MOCK_NEO_SENSOR_DEVICE_ID = f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}"
 
 
-def _device_record(
+def _device_subentry_data(
     device_id: str,
     title: str,
     data: dict[str, Any],
-) -> dict[str, Any]:
-    """Return a device record for config entry options."""
-    return {
-        CONF_DEVICE_ID: device_id,
-        CONF_DEVICE_TITLE: title,
-        CONF_DEVICE_DATA: data,
-    }
+) -> ConfigSubentryData:
+    """Return a device subentry for config entry tests."""
+    return ConfigSubentryData(
+        data=data,
+        subentry_type=SUBENTRY_DEVICE,
+        title=title,
+        unique_id=device_id,
+    )
 
 
 def _transmitter_device_record(
@@ -69,9 +69,9 @@ def _transmitter_device_record(
     button_count: int = 4,
     switch_mode: str | None = None,
     grouping_mode: str | None = None,
-) -> dict[str, Any]:
-    """Return a transmitter device record for config entry options."""
-    return _device_record(
+) -> ConfigSubentryData:
+    """Return a transmitter device subentry for config entry tests."""
+    return _device_subentry_data(
         f"transmitter_{serial}",
         title,
         {
@@ -90,9 +90,9 @@ def _neo_sensor_device_record(
     title: str = "Neo Sensor",
     serial: str = MOCK_NEO_SENSOR_SERIAL,
     capabilities: int = 0,
-) -> dict[str, Any]:
-    """Return a neo sensor device record for config entry options."""
-    return _device_record(
+) -> ConfigSubentryData:
+    """Return a neo sensor device subentry for config entry tests."""
+    return _device_subentry_data(
         f"neo_sensor_{serial}",
         title,
         {
@@ -126,7 +126,21 @@ def mock_config_entry_with_transmitter() -> MockConfigEntry:
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
-        options={CONF_DEVICES: [_transmitter_device_record()]},
+        subentries_data=[_transmitter_device_record()],
+    )
+
+
+@pytest.fixture
+def mock_config_entry_with_neo_sensor() -> MockConfigEntry:
+    """Return a gateway ConfigEntry with a neo sensor device."""
+    return MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="Easywave Gateway",
+        data=MOCK_ENTRY_DATA,
+        source="usb",
+        unique_id="easywave_12345",
+        subentries_data=[_neo_sensor_device_record()],
     )
 
 

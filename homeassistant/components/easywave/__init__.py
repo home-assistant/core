@@ -4,20 +4,19 @@ from dataclasses import dataclass
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.loader import async_get_integration
 
 from .const import (
-    CONF_DEVICE_DATA,
     CONF_DEVICE_PATH,
-    CONF_DEVICE_TITLE,
     CONF_USB_MANUFACTURER,
     CONF_USB_PID,
     CONF_USB_PRODUCT,
     CONF_USB_SERIAL_NUMBER,
     DOMAIN,
+    SUBENTRY_DEVICE,
     EasywaveGatewayFeature as EasywaveGatewayFeature,
     EasywaveTransmitterFeature as EasywaveTransmitterFeature,
     get_frequency_for_pid,
@@ -47,14 +46,15 @@ _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 def get_devices(entry: EasywaveConfigEntry) -> list[EasywaveDeviceEntry]:
-    """Return all device configurations stored in config entry options."""
+    """Return all device configurations stored as hub subentries."""
     return [
         EasywaveDeviceEntry(
-            device_id=device[CONF_DEVICE_ID],
-            title=device[CONF_DEVICE_TITLE],
-            data=dict(device[CONF_DEVICE_DATA]),
+            device_id=subentry.unique_id,
+            title=subentry.title,
+            data=dict(subentry.data),
         )
-        for device in entry.options.get(CONF_DEVICES, [])
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == SUBENTRY_DEVICE and subentry.unique_id
     ]
 
 
@@ -129,7 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> 
     )
 
     _register_gateway_device(hass, entry, transceiver)
-    # Reload when devices are added or removed via the config flow.
+    # Reload when devices are added or removed via subentries.
     entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
     integration = await async_get_integration(hass, DOMAIN)
     await integration.async_get_platform("device_trigger")
@@ -139,7 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> 
 
 
 async def _async_reload_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> None:
-    """Reload the entry when options (device list) change."""
+    """Reload the entry when subentries change."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
@@ -160,7 +160,7 @@ async def async_remove_config_entry_device(
 
     The RX11 gateway device (identifier == entry_id) cannot be removed here;
     the user must remove the whole config entry instead. Child devices are
-    stored in config entry options and can be removed freely.
+    stored as hub subentries and can be removed freely.
     """
     # The gateway device uses entry_id as its identifier.
     if (DOMAIN, config_entry.entry_id) in device_entry.identifiers:
@@ -177,17 +177,12 @@ async def async_remove_config_entry_device(
     if device_id is None:
         return False
 
-    devices = config_entry.options.get(CONF_DEVICES, [])
-    if not any(device[CONF_DEVICE_ID] == device_id for device in devices):
-        return False
+    for subentry_id, subentry in config_entry.subentries.items():
+        if (
+            subentry.subentry_type == SUBENTRY_DEVICE
+            and subentry.unique_id == device_id
+        ):
+            hass.config_entries.async_remove_subentry(config_entry, subentry_id)
+            return True
 
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={
-            **config_entry.options,
-            CONF_DEVICES: [
-                device for device in devices if device[CONF_DEVICE_ID] != device_id
-            ],
-        },
-    )
-    return True
+    return False

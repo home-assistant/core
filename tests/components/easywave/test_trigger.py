@@ -10,7 +10,6 @@ from homeassistant.components.easywave.const import (
     EVENT_TYPE_GATEWAY_CONNECTED,
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
-from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -73,7 +72,7 @@ async def _async_setup_entry(
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
-        options={CONF_DEVICES: [device]},
+        subentries_data=[device],
     )
     entry.add_to_hass(hass)
     hass.config.country = "DE"

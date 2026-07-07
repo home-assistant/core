@@ -4,14 +4,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components.easywave.config_flow import EasywaveConfigFlow
+from homeassistant.components.easywave.config_flow_subentry import (
+    EasywaveDeviceSubentryFlowHandler,
+)
 from homeassistant.components.easywave.const import (
     CONF_DEVICE_PATH,
     CONF_USB_PID,
     CONF_USB_SERIAL_NUMBER,
     CONF_USB_VID,
     DOMAIN,
-    SUBENTRY_TYPE_NEO_SENSOR,
-    SUBENTRY_TYPE_TRANSMITTER,
+    SUBENTRY_DEVICE,
 )
 from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -210,45 +213,36 @@ async def test_user_flow_multiple_ports(hass: HomeAssistant) -> None:
     assert result["step_id"] == "ports"
 
 
-async def test_user_flow_existing_gateway_shows_device_select(
+async def test_user_flow_port_scan_oserror(hass: HomeAssistant) -> None:
+    """Test user flow aborts when serial port enumeration fails."""
+    with patch(COMPORTS_PATH, side_effect=OSError):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+
+
+async def test_user_flow_existing_gateway_aborts(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test user flow shows device selection when a gateway is already configured."""
+    """Test user flow aborts when the hub is already configured."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "device_select"
-    assert set(result["menu_options"]) == {
-        SUBENTRY_TYPE_TRANSMITTER,
-        SUBENTRY_TYPE_NEO_SENSOR,
-    }
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
 
 
-async def test_user_flow_device_select_starts_transmitter_setup(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test device selection continues with transmitter setup in the same flow."""
-    mock_config_entry.add_to_hass(hass)
-    mock_coordinator = MagicMock()
-    mock_coordinator.transceiver.is_connected = True
-    runtime_data = MagicMock()
-    runtime_data.coordinator = mock_coordinator
-    mock_config_entry.runtime_data = runtime_data
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["step_id"] == "device_select"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": SUBENTRY_TYPE_TRANSMITTER}
-    )
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "transmitter_learn_intro"
+def test_supported_subentry_types() -> None:
+    """Test the hub exposes the device subentry flow handler."""
+    assert EasywaveConfigFlow.async_get_supported_subentry_types(
+        MockConfigEntry(domain=DOMAIN)
+    ) == {SUBENTRY_DEVICE: EasywaveDeviceSubentryFlowHandler}
 
 
 async def test_user_flow_device_disappeared(hass: HomeAssistant) -> None:
@@ -349,7 +343,7 @@ async def test_usb_discovery_already_configured(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_confirm_unique_id_from_vid_pid(hass: HomeAssistant) -> None:
