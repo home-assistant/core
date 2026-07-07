@@ -1,7 +1,7 @@
 """Platform for sensor integration."""
 
 import dataclasses
-from typing import Any
+from typing import Any, override
 
 from aioccl import CCLSensor, CCLSensorTypes
 
@@ -12,16 +12,15 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     PERCENTAGE,
+    UnitOfDensity,
     UnitOfElectricPotential,
     UnitOfIrradiance,
     UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -99,19 +98,19 @@ CCL_SENSOR_DESCRIPTIONS: dict[CCLSensorTypes, SensorEntityDescription] = {
         key="CO",
         device_class=SensorDeviceClass.CO,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
     CCLSensorTypes.CO2: SensorEntityDescription(
         key="CO2",
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
     CCLSensorTypes.VOLATILE: SensorEntityDescription(
         key="VOLATILE",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_BILLION,
     ),
     CCLSensorTypes.VOC_LEVEL: SensorEntityDescription(
         key="VOC_LEVEL",
@@ -121,13 +120,13 @@ CCL_SENSOR_DESCRIPTIONS: dict[CCLSensorTypes, SensorEntityDescription] = {
         key="PM10",
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     CCLSensorTypes.PM25: SensorEntityDescription(
         key="PM25",
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     CCLSensorTypes.AQI: SensorEntityDescription(
         key="AQI",
@@ -226,6 +225,7 @@ class CCLSensorEntity(CCLEntity, SensorEntity):
 
         self.entity_description = entity_description
 
+    @override
     @property
     def native_value(self) -> int | float | str | None:
         """Return the state of the sensor."""

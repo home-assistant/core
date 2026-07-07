@@ -3,6 +3,7 @@
 from datetime import timedelta
 import logging
 import time
+from typing import override
 
 from aioccl import CCLDevice, CCLSensor
 from aioccl.exception import CCLDataUpdateException
@@ -41,6 +42,7 @@ class CCLCoordinator(DataUpdateCoordinator[dict[str, CCLSensor]]):
 
         self.device = device
 
+    @override
     async def _async_update_data(self) -> dict[str, CCLSensor]:
         _LOGGER.debug(
             "Checking for device(%s) availability at %s",

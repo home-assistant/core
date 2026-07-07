@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlsplit
 
 from aioccl import CCLDevice
@@ -32,6 +32,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
         self.update_timeout: float = 300
         self.webhook_id: str = ""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -165,6 +166,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     def async_remove(self) -> None:
         """Clean up when config flow is cancelled or removed."""
         # Cancel the task if it's still running
