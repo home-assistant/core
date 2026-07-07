@@ -15,6 +15,7 @@ APPLICATION_CREDENTIALS = [
     "google",
     "google_assistant_sdk",
     "google_drive",
+    "google_health",
     "google_mail",
     "google_photos",
     "google_sheets",
