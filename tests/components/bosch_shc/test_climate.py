@@ -35,6 +35,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -338,9 +339,7 @@ async def test_heating_circuit_current_temperature_is_none(
 ) -> None:
     """Heating circuits have no measured temperature."""
     state = await _setup_single_heating_circuit(hass, mock_config_entry, mock_session)
-    assert ATTR_CURRENT_TEMPERATURE not in state.attributes or (
-        state.attributes[ATTR_CURRENT_TEMPERATURE] is None
-    )
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
 
 
 async def test_heating_circuit_target_temperature(
@@ -483,10 +482,36 @@ async def test_climate_control_set_temperature_drops_automatic_to_manual(
     assert device.setpoint_temperature == 22.0
 
 
-async def test_climate_control_set_temperature_skips_when_off(
+async def test_climate_control_set_temperature_drops_automatic_to_manual_with_hvac_mode(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
 ) -> None:
-    """Setting a temperature is a no-op while hvac_mode is OFF."""
+    """A temperature write with an explicit hvac_mode still drops AUTOMATIC to MANUAL."""
+    device = _make_climate_device(
+        supports_cooling=True, summer_mode=False, operation_mode=OM_CC.AUTOMATIC
+    )
+    mock_session.device_helper.climate_controls = [device]
+    await _setup_climate_platform(hass, mock_config_entry, mock_session)
+    (entity_id,) = hass.states.async_entity_ids(CLIMATE_DOMAIN)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_TEMPERATURE: 22.0,
+            ATTR_HVAC_MODE: HVACMode.HEAT,
+        },
+        blocking=True,
+    )
+
+    assert device.operation_mode == OM_CC.MANUAL
+    assert device.setpoint_temperature == 22.0
+
+
+async def test_climate_control_set_temperature_fails_when_off(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+) -> None:
+    """Setting a temperature while hvac_mode is OFF is rejected."""
     device = _make_climate_device(
         supports_cooling=True, summer_mode=True, operation_mode=OM_CC.MANUAL
     )
@@ -495,12 +520,39 @@ async def test_climate_control_set_temperature_skips_when_off(
     (entity_id,) = hass.states.async_entity_ids(CLIMATE_DOMAIN)
     original_setpoint = device.setpoint_temperature
 
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 22.0},
-        blocking=True,
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 22.0},
+            blocking=True,
+        )
+
+    assert device.setpoint_temperature == original_setpoint
+
+
+async def test_climate_control_set_temperature_fails_when_boost(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+) -> None:
+    """Setting a temperature while in BOOST mode is rejected."""
+    device = _make_climate_device(
+        supports_cooling=True,
+        summer_mode=False,
+        operation_mode=OM_CC.MANUAL,
+        boost_mode=True,
     )
+    mock_session.device_helper.climate_controls = [device]
+    await _setup_climate_platform(hass, mock_config_entry, mock_session)
+    (entity_id,) = hass.states.async_entity_ids(CLIMATE_DOMAIN)
+    original_setpoint = device.setpoint_temperature
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 22.0},
+            blocking=True,
+        )
 
     assert device.setpoint_temperature == original_setpoint
 

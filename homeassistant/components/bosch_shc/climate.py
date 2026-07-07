@@ -1,6 +1,5 @@
 """Platform for climate integration."""
 
-import logging
 from typing import Any, override
 
 from boschshcpy import SHCClimateControl, SHCHeatingCircuit
@@ -16,12 +15,12 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BoschConfigEntry
+from .const import DOMAIN
 from .entity import SHCEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -189,25 +188,24 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
             self.set_hvac_mode(hvac_mode)
 
         if self.hvac_mode == HVACMode.OFF:
-            _LOGGER.debug(
-                "Skipping setting temperature as device %s is off",
-                self.name,
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="set_temperature_while_off",
+                translation_placeholders={"name": self._device.name},
             )
-            return
 
         if self.preset_mode == PRESET_BOOST:
-            _LOGGER.warning(
-                "Cannot set temperature on device %s while in BOOST mode",
-                self.name,
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="set_temperature_while_boost",
+                translation_placeholders={"name": self._device.name},
             )
-            return
 
-        # SHC rejects a setpoint write while operationMode=AUTOMATIC. For a
-        # bare set_temperature (no hvac_mode given) drop to MANUAL first —
-        # matching the Bosch app.
+        # SHC rejects a setpoint write while operationMode=AUTOMATIC. Drop to
+        # MANUAL first — matching the Bosch app — regardless of whether an
+        # hvac_mode was also supplied, since that axis is independent.
         if (
-            kwargs.get(ATTR_HVAC_MODE) is None
-            and self._device.operation_mode
+            self._device.operation_mode
             == SHCClimateControl.RoomClimateControlService.OperationMode.AUTOMATIC
         ):
             self._device.operation_mode = (
