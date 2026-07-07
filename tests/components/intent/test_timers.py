@@ -48,6 +48,17 @@ async def init_components(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, {})
 
 
+def _make_timer_device_id(hass: HomeAssistant) -> str:
+    """Create a real device to host a timer_list entity and return its id."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("test", entry.entry_id)},
+    )
+    return device.id
+
+
 async def _register_timer_device(
     hass: HomeAssistant, device_id: str, handler: TimerHandler
 ) -> Callable[[], None]:
@@ -60,6 +71,13 @@ async def _register_timer_device(
     await component.async_add_entities(
         [LocalTimerListEntity(name=f"{device_id} Timers", unique_id=device_id)]
     )
+    # The list is resolved by device association, so link it to the device.
+    entity_registry = er.async_get(hass)
+    entity_id = entity_registry.async_get_entity_id(
+        TIMER_LIST_DOMAIN, TIMER_LIST_DOMAIN, device_id
+    )
+    assert entity_id is not None
+    entity_registry.async_update_entity(entity_id, device_id=device_id)
     return async_register_timer_handler(hass, device_id, handler)
 
 
@@ -77,7 +95,7 @@ def _get_timer_entity(hass: HomeAssistant, device_id: str) -> TimerListEntity:
 
 async def test_start_finish_timer(hass: HomeAssistant, init_components) -> None:
     """Test starting a timer and having it finish."""
-    device_id = "test_device"
+    device_id = _make_timer_device_id(hass)
     timer_name = "test timer"
     started_event = asyncio.Event()
     finished_event = asyncio.Event()
@@ -125,7 +143,7 @@ async def test_start_finish_timer(hass: HomeAssistant, init_components) -> None:
 
 async def test_cancel_timer(hass: HomeAssistant, init_components) -> None:
     """Test cancelling a timer."""
-    device_id = "test_device"
+    device_id = _make_timer_device_id(hass)
     timer_name: str | None = None
     started_event = asyncio.Event()
     cancelled_event = asyncio.Event()
@@ -251,7 +269,7 @@ async def test_cancel_timer(hass: HomeAssistant, init_components) -> None:
 
 async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
     """Test increasing the time of a running timer."""
-    device_id = "test_device"
+    device_id = _make_timer_device_id(hass)
     started_event = asyncio.Event()
     updated_event = asyncio.Event()
     cancelled_event = asyncio.Event()
@@ -368,7 +386,7 @@ async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
 
 async def test_decrease_timer(hass: HomeAssistant, init_components) -> None:
     """Test decreasing the time of a running timer."""
-    device_id = "test_device"
+    device_id = _make_timer_device_id(hass)
     started_event = asyncio.Event()
     updated_event = asyncio.Event()
     cancelled_event = asyncio.Event()
@@ -471,7 +489,7 @@ async def test_decrease_timer_below_zero(hass: HomeAssistant, init_components) -
     started_event = asyncio.Event()
     finished_event = asyncio.Event()
 
-    device_id = "test_device"
+    device_id = _make_timer_device_id(hass)
     timer_id: str | None = None
     original_total_seconds = 0
 
@@ -538,7 +556,7 @@ async def test_decrease_timer_below_zero(hass: HomeAssistant, init_components) -
 
 async def test_find_timer_failed(hass: HomeAssistant, init_components) -> None:
     """Test finding a timer with the wrong info."""
-    device_id = "test_device"
+    device_id = _make_timer_device_id(hass)
 
     # No device id
     with pytest.raises(TimersNotSupportedError):
@@ -908,7 +926,7 @@ async def test_disambiguation(
 
 async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None:
     """Test pausing and unpausing a running timer."""
-    device_id = "test_device"
+    device_id = _make_timer_device_id(hass)
 
     started_event = asyncio.Event()
     updated_event = asyncio.Event()
@@ -992,7 +1010,7 @@ async def test_timer_manager_pause_unpause(
     # Start a timer
     handle_timer = MagicMock()
 
-    device_id = "test_device"
+    device_id = _make_timer_device_id(hass)
     await _register_timer_device(hass, device_id, handle_timer)
 
     timer_id = await timer_manager.start_timer(
@@ -1046,7 +1064,7 @@ async def test_timers_not_supported(hass: HomeAssistant, init_components) -> Non
     def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         pass
 
-    device_id = "test_device"
+    device_id = _make_timer_device_id(hass)
     unregister = await _register_timer_device(hass, device_id, handle_timer)
 
     timer_id = await timer_manager.start_timer(
@@ -1070,7 +1088,7 @@ async def test_timers_not_supported(hass: HomeAssistant, init_components) -> Non
 
 async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> None:
     """Test getting the status of named timers."""
-    device_id = "test_device"
+    device_id = _make_timer_device_id(hass)
 
     started_event = asyncio.Event()
     num_started = 0
@@ -1454,7 +1472,7 @@ async def test_pause_unpause_timer_disambiguate(
     hass: HomeAssistant, init_components
 ) -> None:
     """Test disamgibuating timers by their paused state."""
-    device_id = "test_device"
+    device_id = _make_timer_device_id(hass)
     started_timer_ids: list[str] = []
     paused_timer_ids: list[str] = []
     unpaused_timer_ids: list[str] = []
@@ -1557,7 +1575,7 @@ async def test_pause_unpause_timer_disambiguate(
 
 async def test_async_device_supports_timers(hass: HomeAssistant) -> None:
     """Test async_device_supports_timers function."""
-    device_id = "test_device"
+    device_id = _make_timer_device_id(hass)
 
     # Before intent initialization
     assert not async_device_supports_timers(hass, device_id)
@@ -1578,7 +1596,7 @@ async def test_async_device_supports_timers(hass: HomeAssistant) -> None:
 
 async def test_cancel_all_timers(hass: HomeAssistant, init_components) -> None:
     """Test cancelling all timers."""
-    device_id = "test_device"
+    device_id = _make_timer_device_id(hass)
 
     started_event = asyncio.Event()
     num_started = 0

@@ -4,7 +4,14 @@
   "after_dependencies": ["hassio", "tag", "usb", "zeroconf"],
   "codeowners": ["@jesserockz", "@kbx81", "@bdraco"],
   "config_flow": true,
-  "dependencies": ["assist_pipeline", "bluetooth", "intent", "ffmpeg", "http"],
+  "dependencies": [
+    "assist_pipeline",
+    "bluetooth",
+    "intent",
+    "ffmpeg",
+    "http",
+    "timer_list"
+  ],
   "dhcp": [
     {
       "registered_devices": true

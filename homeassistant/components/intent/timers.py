@@ -195,10 +195,22 @@ class TimerManager:
 
     @callback
     def _get_entity(self, device_id: str) -> TimerListEntity | None:
-        """Return the timer_list entity for a device, if it has one."""
+        """Return the timer_list entity for a device, if it has one.
+
+        The list is provided by the device's own integration, so it may live on
+        any platform; resolve it by device association rather than assuming the
+        ``timer_list`` platform owns it.
+        """
         entity_registry = er.async_get(self.hass)
-        entity_id = entity_registry.async_get_entity_id(
-            TIMER_LIST_DOMAIN, TIMER_LIST_DOMAIN, device_id
+        entity_id = next(
+            (
+                entry.entity_id
+                for entry in er.async_entries_for_device(
+                    entity_registry, device_id, include_disabled_entities=True
+                )
+                if entry.domain == TIMER_LIST_DOMAIN
+            ),
+            None,
         )
         if entity_id is None:
             return None
@@ -400,17 +412,17 @@ def _timer_info_from_item(
 def _all_timer_infos(hass: HomeAssistant) -> list[TimerInfo]:
     """Return snapshots of all active/paused timers across satellite devices.
 
-    Only considers timer_list entities auto-created for a satellite device
-    (registry platform == "timer_list"), not a user's manually-created
-    local_timer_list helper (registry platform == "local_timer_list").
+    Only device-linked timer lists (each provided by a satellite's own
+    integration) are considered, not a user's standalone local_timer_list
+    helper, which has no associated device.
     """
     component = hass.data[TIMER_LIST_DATA_COMPONENT]
     infos: list[TimerInfo] = []
     for timer_entity in component.entities:
         registry_entry = timer_entity.registry_entry
-        if registry_entry is None or registry_entry.platform != TIMER_LIST_DOMAIN:
+        if registry_entry is None or registry_entry.device_id is None:
             continue
-        device_id = registry_entry.unique_id
+        device_id = registry_entry.device_id
         for item in timer_entity.timers:
             if item.status not in (TimerStatus.ACTIVE, TimerStatus.PAUSED):
                 continue

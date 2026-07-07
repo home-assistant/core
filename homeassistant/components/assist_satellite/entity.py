@@ -26,19 +26,10 @@ from homeassistant.components.assist_pipeline import (
     async_pipeline_from_audio_stream,
     vad,
 )
-from homeassistant.components.local_timer_list import LocalTimerListEntity
 from homeassistant.components.media_player import async_process_play_media_url
-from homeassistant.components.timer_list import (
-    DATA_COMPONENT as TIMER_LIST_DATA_COMPONENT,
-)
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.core import Context, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    chat_session,
-    device_registry as dr,
-    entity,
-    entity_registry as er,
-)
+from homeassistant.helpers import chat_session, entity
 from homeassistant.helpers.entity import EntityDescription
 
 from .const import PREANNOUNCE_URL, AssistSatelliteEntityFeature
@@ -159,12 +150,6 @@ class AssistSatelliteEntity(entity.Entity):
     def state(self) -> str | None:
         """Return state of the entity."""
         return self.__assist_satellite_state
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        await _async_ensure_timer_list_entity(self.hass, self.registry_entry)
 
     @property
     def pipeline_entity_id(self) -> str | None:
@@ -742,35 +727,6 @@ class AssistSatelliteEntity(entity.Entity):
             media_id_source=media_id_source,
             preannounce_media_id=preannounce_media_id,
         )
-
-
-async def _async_ensure_timer_list_entity(
-    hass: HomeAssistant, registry_entry: er.RegistryEntry | None
-) -> None:
-    """Create a timer_list entity for this satellite's device, if it lacks one.
-
-    Always attempts to add the entity: the entity registry reconciles by
-    ``unique_id`` (the device id), so this safely re-attaches to the existing
-    registry entry on restart rather than creating a duplicate. Checking for
-    an existing *registry* entry first would be wrong, since registry entries
-    persist across restarts even though the live entity does not.
-    """
-    if registry_entry is None or registry_entry.device_id is None:
-        return
-
-    device_id = registry_entry.device_id
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get(device_id)
-    device_name = device.name_by_user or device.name if device else None
-
-    await hass.data[TIMER_LIST_DATA_COMPONENT].async_add_entities(
-        [
-            LocalTimerListEntity(
-                name=f"{device_name} Timers" if device_name else "Timers",
-                unique_id=device_id,
-            )
-        ]
-    )
 
 
 def _collect_list_references(expression: Expression, list_names: set[str]) -> None:
