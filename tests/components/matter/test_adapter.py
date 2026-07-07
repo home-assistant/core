@@ -82,6 +82,31 @@ async def test_device_registry_mac_address(
         assert entry.connections == {(dr.CONNECTION_NETWORK_MAC, expected_mac)}
 
 
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["atios_knx_bridge"])
+async def test_device_registry_bridge_mac_address(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the bridge's MAC is not also reported for its bridged devices."""
+    bridge_entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-000000000000003E-MatterNodeDevice")
+        }
+    )
+    assert bridge_entry is not None
+    assert bridge_entry.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "d0:cf:13:25:b6:70")
+    }
+
+    bridged_device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "deviceid_00000000000004D2-000000000000003E-29")}
+    )
+    assert bridged_device_entry is not None
+    assert bridged_device_entry.via_device_id == bridge_entry.id
+    assert bridged_device_entry.connections == set()
+
+
 async def test_device_registry_multiple_mac_addresses(
     hass: HomeAssistant,
     matter_client: MagicMock,
