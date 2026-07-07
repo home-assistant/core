@@ -141,7 +141,7 @@ class OverkizConfigFlow(
 
             # Rexel authenticates via OAuth2 (Azure AD B2C with PKCE).
             if self._server == Server.REXEL:
-                return await self._async_step_rexel_oauth()
+                return await self.async_step_pick_implementation()
 
             return await self.async_step_cloud()
 
@@ -168,7 +168,7 @@ class OverkizConfigFlow(
 
             # Rexel authenticates via OAuth2 (Azure AD B2C with PKCE).
             if self._server == Server.REXEL:
-                return await self._async_step_rexel_oauth()
+                return await self.async_step_pick_implementation()
 
             return await self.async_step_cloud()
 
@@ -187,7 +187,10 @@ class OverkizConfigFlow(
             description_placeholders={"local_api_docs": LOCAL_API_DOCS_URL},
         )
 
-    async def _async_step_rexel_oauth(self) -> ConfigFlowResult:
+    @override
+    async def async_step_pick_implementation(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Start the Rexel OAuth2 flow, ensuring its client credential exists.
 
         Rexel's public OAuth2 client is auto-imported at startup, but a user can
@@ -199,7 +202,7 @@ class OverkizConfigFlow(
             DOMAIN,
             ClientCredential(REXEL_OAUTH_CLIENT_ID, "", name="Rexel"),
         )
-        return await self.async_step_pick_implementation()
+        return await super().async_step_pick_implementation(user_input)
 
     async def async_step_cloud(
         self, user_input: dict[str, Any] | None = None
