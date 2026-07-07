@@ -148,7 +148,10 @@ DISCOVERY_SCHEMAS = [
             clusters.Switch.Attributes.CurrentPosition,
             clusters.Switch.Attributes.FeatureMap,
         ),
-        device_type=(device_types.GenericSwitch,),
+        device_type=(
+            device_types.Doorbell,
+            device_types.GenericSwitch,
+        ),
         optional_attributes=(
             clusters.Switch.Attributes.NumberOfPositions,
             clusters.FixedLabel.Attributes.LabelList,
