@@ -1,9 +1,8 @@
 """The Netatmo integration."""
 
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
-
 import logging
 import secrets
+from typing import Any
 
 from aiohttp.web import Request
 import pyatmo
@@ -31,8 +30,6 @@ from .const import (
     ATTR_HOME_ID,
     ATTR_IS_KNOWN,
     CONF_CLOUDHOOK_URL,
-    DATA_DEVICE_IDS,
-    DATA_PERSONS,
     DEFAULT_PERSON,
     DOMAIN,
     EVENT_ID_MAP,
@@ -40,7 +37,7 @@ from .const import (
     WEBHOOK_DEACTIVATION,
     WEBHOOK_PUSH_TYPE,
 )
-from .data_handler import NetatmoConfigEntry
+from .data_handler import NetatmoConfigEntry, NetatmoDataHandler
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,19 +59,31 @@ async def async_handle_webhook(
 
     _LOGGER.debug("Got webhook data: %s", data)
 
+    entry = next(
+        (
+            entry
+            for entry in hass.config_entries.async_loaded_entries(DOMAIN)
+            if entry.data.get(CONF_WEBHOOK_ID) == webhook_id
+        ),
+        None,
+    )
+    if entry is None:
+        return
+    data_handler = entry.runtime_data
+
     event_type = data.get(ATTR_EVENT_TYPE)
 
     if event_type in SUBEVENT_TYPE_MAP:
-        async_send_event(hass, event_type, data)
+        async_send_event(data_handler, event_type, data)
 
         for event_data in data.get(SUBEVENT_TYPE_MAP[event_type], []):
-            async_evaluate_event(hass, event_data)
+            async_evaluate_event(data_handler, event_data)
 
     else:
-        async_evaluate_event(hass, data)
+        async_evaluate_event(data_handler, data)
 
 
-def async_evaluate_event(hass: HomeAssistant, event_data: dict) -> None:
+def async_evaluate_event(data_handler: NetatmoDataHandler, event_data: dict) -> None:
     """Evaluate events from webhook."""
     event_type = event_data.get(ATTR_EVENT_TYPE, "None")
 
@@ -82,20 +91,23 @@ def async_evaluate_event(hass: HomeAssistant, event_data: dict) -> None:
         for person in event_data.get(ATTR_PERSONS, {}):
             person_event_data = dict(event_data)
             person_event_data[ATTR_ID] = person.get(ATTR_ID)
-            person_event_data[ATTR_NAME] = hass.data[DOMAIN][DATA_PERSONS][
+            person_event_data[ATTR_NAME] = data_handler.persons[
                 event_data[ATTR_HOME_ID]
             ].get(person_event_data[ATTR_ID], DEFAULT_PERSON)
             person_event_data[ATTR_IS_KNOWN] = person.get(ATTR_IS_KNOWN)
             person_event_data[ATTR_FACE_URL] = person.get(ATTR_FACE_URL)
 
-            async_send_event(hass, event_type, person_event_data)
+            async_send_event(data_handler, event_type, person_event_data)
 
     else:
-        async_send_event(hass, event_type, event_data)
+        async_send_event(data_handler, event_type, event_data)
 
 
-def async_send_event(hass: HomeAssistant, event_type: str, data: dict) -> None:
+def async_send_event(
+    data_handler: NetatmoDataHandler, event_type: str, data: dict
+) -> None:
     """Send events."""
+    hass = data_handler.hass
     _LOGGER.debug("%s: %s", event_type, data)
     async_dispatcher_send(
         hass,
@@ -103,16 +115,14 @@ def async_send_event(hass: HomeAssistant, event_type: str, data: dict) -> None:
         {"type": event_type, "data": data},
     )
 
-    event_data = {
+    event_data: dict[str, Any] = {
         "type": event_type,
         "data": data,
     }
 
     if event_type in EVENT_ID_MAP:
         data_device_id = data[EVENT_ID_MAP[event_type]]
-        event_data[ATTR_DEVICE_ID] = hass.data[DOMAIN][DATA_DEVICE_IDS].get(
-            data_device_id
-        )
+        event_data[ATTR_DEVICE_ID] = data_handler.device_ids.get(data_device_id)
 
     hass.bus.async_fire(
         event_type=NETATMO_EVENT,
