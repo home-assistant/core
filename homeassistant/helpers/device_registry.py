@@ -1,7 +1,7 @@
 """Provide a way to connect entities belonging to one device."""
 
 import asyncio
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 from collections.abc import Iterable, Mapping
 import copy
 from datetime import datetime
@@ -581,6 +581,24 @@ _INTERNAL_DEVICE_ENTRY_ATTRIBUTES = (
     "split_at",
 )
 
+# async_update_device arguments that rewrite a device's functional identity or move it.
+# They are ambiguous on a synthesized composite (they would corrupt or collide across
+# the underlying devices), so the composite shim drops them with a warning instead of
+# fanning them out. Can be removed in HA Core 2027.8.
+_COMPOSITE_IGNORED_UPDATE_ARGS = (
+    "merge_connections",
+    "merge_identifiers",
+    "new_config_entry_id",
+    "new_config_subentry_id",
+    "new_connections",
+    "new_identifiers",
+    "serial_number",
+)
+
+# Safety-valve bound on the number of remembered ambiguous-match lookups (see
+# DeviceRegistry._composite_device_queries). Can be removed in HA Core 2027.8.
+_COMPOSITE_QUERY_CACHE_SIZE = 2048
+
 
 def device_entry_as_dict(
     entry: DeviceEntry, *, retain_collection_types: bool = False
@@ -823,11 +841,13 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 split_devices: list[dict[str, Any]] = []
                 for device in old_data["devices"]:
                     pairs = [
-                        (config_entry_id, subentry_id)
+                        (
+                            config_entry_id,
+                            next((s for s in subentry_ids if s is not None), None),
+                        )
                         for config_entry_id, subentry_ids in device[
                             "config_entries_subentries"
                         ].items()
-                        for subentry_id in subentry_ids
                     ]
                     if not pairs:
                         # Drop devices that have no config entry / subentry pairs
@@ -865,11 +885,13 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 split_deleted_devices: list[dict[str, Any]] = []
                 for device in old_data["deleted_devices"]:
                     pairs = [
-                        (config_entry_id, subentry_id)
+                        (
+                            config_entry_id,
+                            next((s for s in subentry_ids if s is not None), None),
+                        )
                         for config_entry_id, subentry_ids in device[
                             "config_entries_subentries"
                         ].items()
-                        for subentry_id in subentry_ids
                     ]
                     if len(pairs) <= 1:
                         # Unlike active devices, config_entry_id=None is a valid
@@ -1089,6 +1111,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Initialize the device registry."""
         self.hass = hass
         self._loaded_event = asyncio.Event()
+        # The (identifiers, connections) lookup that produced each ambiguous-match
+        # composite async_get_device returned, keyed by the composite's transient id.
+        # Can be removed in HA Core 2027.8.
+        self._composite_device_queries: OrderedDict[
+            str, tuple[set[tuple[str, str]], set[tuple[str, str]]]
+        ] = OrderedDict()
         self._store = DeviceRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -1115,6 +1143,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             return device
         if split_devices := self.devices.get_devices_for_composite_device_id(device_id):
             return self._restore_composite_device(device_id, split_devices)
+        if (query := self._composite_device_queries.get(device_id)) is not None:
+            self._composite_device_queries.move_to_end(device_id)
+            matches = self._async_matching_devices(query[0] or None, query[1] or None)
+            if not matches:
+                return None
+            if len(matches) == 1:
+                return matches[0]
+            return self._restore_composite_device(device_id, matches)
         return None
 
     @callback
@@ -1163,14 +1199,70 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Check if a device is registered.
 
         Identifiers and connections are unique per config entry. If config_entry_id is
-        passed, only the device owned by that config entry is returned. If it is not
-        passed, the first matching device from any config entry is returned; since this
-        is ambiguous when several config entries share an identifier or connection,
-        callers are encouraged to always pass config_entry_id.
+        passed, only the device owned by that config entry is returned.
+
+        If config_entry_id is not passed and several config entries share the looked-up
+        identifier or connection, the match is resolved to a single device when possible
+        - preferring the device whose config entry domain matches the looked-up
+        identifier - otherwise a read-only composite spanning the matching devices is
+        returned, so callers that have not been migrated to pass config_entry_id still
+        reach all of them. async_update_device and async_remove_device fan such a
+        composite out to its underlying devices.
         """
-        return self.devices.get_entry(
-            identifiers, connections, config_entry_id=config_entry_id
+        if config_entry_id is not UNDEFINED:
+            return self.devices.get_entry(
+                identifiers, connections, config_entry_id=config_entry_id
+            )
+        matches = self._async_matching_devices(identifiers, connections)
+        if len(matches) <= 1:
+            return matches[0] if matches else None
+        # Ambiguous: return a read-only composite over the matching devices and remember
+        # the lookup so async_get and the shims can rebuild it against the current state.
+        composite_id = uuid_util.random_uuid_hex()
+        self._composite_device_queries[composite_id] = (
+            set(identifiers or ()),
+            set(connections or ()),
         )
+        if len(self._composite_device_queries) > _COMPOSITE_QUERY_CACHE_SIZE:
+            self._composite_device_queries.popitem(last=False)
+        return self._restore_composite_device(composite_id, matches)
+
+    @callback
+    def _async_matching_devices(
+        self,
+        identifiers: set[tuple[str, str]] | None,
+        connections: set[tuple[str, str]] | None,
+    ) -> list[DeviceEntry]:
+        """Return devices matching the lookup, narrowed by identifier-domain priority."""
+        matches = self.devices.get_entries(identifiers, connections)
+        if len(matches) > 1 and identifiers:
+            domains = {identifier[0] for identifier in identifiers}
+            preferred = [
+                device
+                for device in matches
+                if (
+                    entry := self.hass.config_entries.async_get_entry(
+                        device.config_entry_id
+                    )
+                )
+                and entry.domain in domains
+            ]
+            if preferred:
+                matches = preferred
+        return matches
+
+    @callback
+    def _async_composite_device_ids(self, device_id: str) -> list[str] | None:
+        """Return the underlying real device ids if device_id is a composite."""
+        if device_id in self.devices:
+            return None
+        if (query := self._composite_device_queries.get(device_id)) is not None:
+            self._composite_device_queries.move_to_end(device_id)
+            matches = self._async_matching_devices(query[0] or None, query[1] or None)
+            return [device.id for device in matches]
+        if split_devices := self.devices.get_devices_for_composite_device_id(device_id):
+            return [split_device.id for split_device in split_devices]
+        return None
 
     @callback
     def async_get_devices(
@@ -1816,6 +1908,15 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         :param remove_config_subentry_id: Remove the device from a specific subentry of
             remove_config_entry_id.
         """
+        update_args = {
+            name: value
+            for name, value in locals().items()
+            if name not in ("self", "device_id")
+        }
+        if (underlying_ids := self._async_composite_device_ids(device_id)) is not None:
+            return self._async_update_composite_device(
+                device_id, underlying_ids, update_args
+            )
         if suggested_area is not UNDEFINED:
             report_usage(
                 "passes a suggested_area to device_registry.async_update device",
@@ -1918,8 +2019,48 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return identifiers
 
     @callback
+    def _async_update_composite_device(
+        self,
+        composite_id: str,
+        underlying_ids: list[str],
+        update_args: dict[str, Any],
+    ) -> DeviceEntry | None:
+        """Fan an async_update_device call on a composite out to its real devices."""
+        forward = {
+            name: value for name, value in update_args.items() if value is not UNDEFINED
+        }
+        if ignored := [
+            name for name in _COMPOSITE_IGNORED_UPDATE_ARGS if name in forward
+        ]:
+            # These rewrite a device's functional identity or move it, which is ambiguous
+            # across the composite's underlying devices; drop them rather than corrupt or
+            # collide, and warn so the caller scopes the lookup with config_entry_id.
+            _LOGGER.warning(
+                "Ignoring %s in update of composite device %s; pass config_entry_id to "
+                "device_registry.async_get_device to target a single device",
+                ", ".join(ignored),
+                composite_id,
+            )
+            for name in ignored:
+                del forward[name]
+        for underlying_id in underlying_ids:
+            self.async_update_device(underlying_id, **forward)
+        remaining = [
+            self.devices[underlying_id]
+            for underlying_id in underlying_ids
+            if underlying_id in self.devices
+        ]
+        if not remaining:
+            return None
+        return self._restore_composite_device(composite_id, remaining)
+
+    @callback
     def async_remove_device(self, device_id: str) -> None:
         """Remove a device from the device registry."""
+        if (underlying_ids := self._async_composite_device_ids(device_id)) is not None:
+            for underlying_id in underlying_ids:
+                self.async_remove_device(underlying_id)
+            return
         self.hass.verify_event_loop_thread("device_registry.async_remove_device")
         device = self.devices.pop(device_id)
         self.deleted_devices[device_id] = DeletedDeviceEntry(
