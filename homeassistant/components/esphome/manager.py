@@ -917,8 +917,8 @@ class ESPHomeManager:
         # Remove this after 2026.4
         if not (
             stale_entry_entity_id := ent_reg.async_get_entity_id(
-                DOMAIN,
                 Platform.BINARY_SENSOR,
+                DOMAIN,
                 f"{self.entry_data.device_info.mac_address}-assist_in_progress",
             )
         ):

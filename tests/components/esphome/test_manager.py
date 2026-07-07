@@ -1933,8 +1933,8 @@ async def test_assist_in_progress_issue_deleted(
     Remove this cleanup after 2026.4
     """
     entry = entity_registry.async_get_or_create(
-        domain=DOMAIN,
-        platform="binary_sensor",
+        domain="binary_sensor",
+        platform=DOMAIN,
         unique_id="11:22:33:44:55:AA-assist_in_progress",
     )
     ir.async_create_issue(
@@ -1956,7 +1956,7 @@ async def test_assist_in_progress_issue_deleted(
     )
     assert (
         entity_registry.async_get_entity_id(
-            DOMAIN, "binary_sensor", "11:22:33:44:55:AA-assist_in_progress"
+            "binary_sensor", DOMAIN, "11:22:33:44:55:AA-assist_in_progress"
         )
         is None
     )
