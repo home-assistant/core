@@ -3,6 +3,8 @@
 from collections.abc import Awaitable, Callable
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -135,24 +137,15 @@ async def test_setup_auth_error(
     assert len(flows) == 0
 
 
+@pytest.mark.parametrize(
+    "scopes", ["https://www.googleapis.com/auth/health.activity_and_fitness.readonly"]
+)
 async def test_setup_missing_scopes(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test setup fails if token has missing profile scope."""
-    # Modify token to exclude profile scope
-    hass.config_entries.async_update_entry(
-        config_entry,
-        data={
-            **config_entry.data,
-            "token": {
-                **config_entry.data["token"],
-                "scope": "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly",
-            },
-        },
-    )
-
     assert not await integration_setup()
     assert config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
@@ -160,6 +153,15 @@ async def test_setup_missing_scopes(
     assert len(flows) == 0
 
 
+@pytest.mark.parametrize(
+    "scopes",
+    [
+        [
+            "https://www.googleapis.com/auth/googlehealth.profile.readonly",
+            "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly",
+        ]
+    ],
+)
 async def test_setup_missing_activity_scope(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -188,21 +190,6 @@ async def test_setup_missing_activity_scope(
         json={"dataPoints": []},
     )
 
-    # Modify token to exclude activity scope
-    hass.config_entries.async_update_entry(
-        config_entry,
-        data={
-            **config_entry.data,
-            "token": {
-                **config_entry.data["token"],
-                "scope": (
-                    "https://www.googleapis.com/auth/googlehealth.profile.readonly "
-                    "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
-                ),
-            },
-        },
-    )
-
     # Setup should succeed
     assert await integration_setup()
     assert config_entry.state is config_entries.ConfigEntryState.LOADED
@@ -216,6 +203,15 @@ async def test_setup_missing_activity_scope(
     assert hass.states.get("sensor.google_health_resting_heart_rate") is not None
 
 
+@pytest.mark.parametrize(
+    "scopes",
+    [
+        [
+            "https://www.googleapis.com/auth/googlehealth.profile.readonly",
+            "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly",
+        ]
+    ],
+)
 async def test_setup_missing_measurements_scope(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -241,21 +237,6 @@ async def test_setup_missing_measurements_scope(
     aioclient_mock.post(
         DISTANCE_ROLLUP_URL,
         json={"rollupDataPoints": []},
-    )
-
-    # Modify token to exclude measurements scope
-    hass.config_entries.async_update_entry(
-        config_entry,
-        data={
-            **config_entry.data,
-            "token": {
-                **config_entry.data["token"],
-                "scope": (
-                    "https://www.googleapis.com/auth/googlehealth.profile.readonly "
-                    "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
-                ),
-            },
-        },
     )
 
     # Setup should succeed

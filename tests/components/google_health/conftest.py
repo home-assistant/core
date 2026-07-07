@@ -1,8 +1,9 @@
 """Test fixtures for Google Health."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable
 import time
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
@@ -37,13 +38,19 @@ def mock_expires_at() -> int:
     return int(time.time() + 86400)
 
 
+@pytest.fixture
+def scopes() -> list[str]:
+    """Fixture with scopes to set up."""
+    return OAUTH_SCOPES
+
+
 @pytest.fixture(name="token_entry")
-def mock_token_entry(expires_at: int) -> dict[str, Any]:
+def mock_token_entry(expires_at: int, scopes: list[str]) -> dict[str, Any]:
     """Fixture for OAuth 'token' data for a ConfigEntry."""
     return {
         "access_token": FAKE_ACCESS_TOKEN,
         "refresh_token": FAKE_REFRESH_TOKEN,
-        "scope": " ".join(OAUTH_SCOPES),
+        "scope": " ".join(scopes),
         "token_type": "Bearer",
         "expires_at": expires_at,
     }
@@ -61,6 +68,15 @@ def mock_config_entry(token_entry: dict[str, Any]) -> MockConfigEntry:
             "token": token_entry,
         },
     )
+
+
+@pytest.fixture
+async def mock_setup_entry() -> AsyncGenerator[None]:
+    """Fixture to set up the config entry."""
+    with patch(
+        "homeassistant.components.google_health.async_setup_entry", return_value=True
+    ):
+        yield
 
 
 @pytest.fixture
