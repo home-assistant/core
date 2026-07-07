@@ -201,7 +201,11 @@ async def test_migration_from_v1(
                     "sensor_entity_id": (
                         "sensor.not_de_jongweg_utrecht_air_quality_index"
                     ),
-                    "device_disabled_by": DeviceEntryDisabler.CONFIG_ENTRY,
+                    # Device 2 was created enabled; moving it to the (disabled) merged
+                    # config entry no longer auto-disables it, as the device registry
+                    # only disables devices on a config entry disabled-state change, not
+                    # on a move
+                    "device_disabled_by": None,
                     "entity_disabled_by": None,
                     "device": 1,
                 },

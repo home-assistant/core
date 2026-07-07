@@ -208,12 +208,6 @@ async def test_device_registry_config_entry_1(
         device_id=device_entry.id,
         original_name="ABC",
     )
-    # Add another config entry to the same device
-    other_config_entry = MockConfigEntry()
-    other_config_entry.add_to_hass(hass)
-    device_registry.async_update_device(
-        device_entry.id, add_config_entry_id=other_config_entry.entry_id
-    )
 
     switch_as_x_config_entry = MockConfigEntry(
         data={},
@@ -246,15 +240,12 @@ async def test_device_registry_config_entry_1(
 
     async_track_entity_registry_updated_event(hass, entity_entry.entity_id, add_event)
 
-    # Remove the wrapped switch's config entry from the device, this removes the
-    # wrapped switch
+    # Remove the wrapped switch, this removes the switch_as_x config entry
     with patch(
         "homeassistant.components.switch_as_x.async_unload_entry",
         wraps=switch_as_x.async_unload_entry,
     ) as mock_setup_entry:
-        device_registry.async_update_device(
-            device_entry.id, remove_config_entry_id=switch_config_entry.entry_id
-        )
+        entity_registry.async_remove(switch_entity_entry.entity_id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
     mock_setup_entry.assert_called_once()
@@ -1134,9 +1125,6 @@ async def test_migrate(
         minor_version=1,
     )
     config_entry.add_to_hass(hass)
-    device_registry.async_update_device(
-        device_entry.id, add_config_entry_id=config_entry.entry_id
-    )
     switch_as_x_entity_entry = entity_registry.async_get_or_create(
         target_domain,
         "switch_as_x",
@@ -1179,19 +1167,9 @@ async def test_migrate(
     assert hass.states.get(f"{target_domain}.abc") is not None
     assert entity_registry.async_get(f"{target_domain}.abc") is not None
 
-    # Entity removed from device to prevent deletion, then added back to device
-    assert events == [
-        {
-            "action": "update",
-            "changes": {"device_id": device_entry.id},
-            "entity_id": switch_as_x_entity_entry.entity_id,
-        },
-        {
-            "action": "update",
-            "changes": {"device_id": None},
-            "entity_id": switch_as_x_entity_entry.entity_id,
-        },
-    ]
+    # The switch_as_x config entry was never added to the device, so migration does
+    # not change the switch_as_x entity's device link
+    assert events == []
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)

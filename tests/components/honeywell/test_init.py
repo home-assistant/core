@@ -196,7 +196,10 @@ async def test_remove_stale_device(
     assert len(device_entries) == 2
     assert any((DOMAIN, 1234567) in device.identifiers for device in device_entries)
     assert any((DOMAIN, 7654321) in device.identifiers for device in device_entries)
-    assert any(
+    # Identifiers are unique per config entry, so Honeywell and OtherDomain have
+    # separate devices for 7654321; Honeywell's devices do not carry the OtherDomain
+    # identifier
+    assert not any(
         ("OtherDomain", 7654321) in device.identifiers for device in device_entries
     )
     assert len(device_entries_other) == 1

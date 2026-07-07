@@ -247,13 +247,6 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     """Test config entry is removed when the source entity is removed."""
     source_entity_entry = entity_registry.async_get(source_entity_id)
 
-    # Add another config entry to the source device
-    other_config_entry = MockConfigEntry()
-    other_config_entry.add_to_hass(hass)
-    device_registry.async_update_device(
-        source_entity_entry.device_id, add_config_entry_id=other_config_entry.entry_id
-    )
-
     assert await hass.config_entries.async_setup(
         generic_thermostat_config_entry.entry_id
     )
@@ -271,28 +264,26 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
         hass, generic_thermostat_entity_entry.entity_id
     )
 
-    # Remove the source entity's config entry from the device, this removes the
-    # source entity
+    # Remove the source entity
     with patch(
         "homeassistant.components.generic_thermostat.async_unload_entry",
         wraps=generic_thermostat.async_unload_entry,
     ) as mock_unload_entry:
-        device_registry.async_update_device(
-            source_device.id, remove_config_entry_id=source_entity_entry.config_entry_id
-        )
+        entity_registry.async_remove(source_entity_entry.entity_id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
     mock_unload_entry.assert_not_called()
 
     # Check that the helper entity is linked to the expected source device
-    switch_entity_entry = entity_registry.async_get("switch.test_unique")
     generic_thermostat_entity_entry = entity_registry.async_get(
         "climate.my_generic_thermostat"
     )
     assert generic_thermostat_entity_entry.device_id == expected_helper_device_id
 
-    # Check if the generic_thermostat config entry is not in the device
+    # Check that the source device is not removed and the generic_thermostat config
+    # entry is not in the device
     source_device = device_registry.async_get(source_device.id)
+    assert source_device is not None
     assert generic_thermostat_config_entry.entry_id not in source_device.config_entries
 
     # Check that the generic_thermostat config entry is not removed
@@ -554,7 +545,7 @@ async def test_migration_1_1(
     switch_device: dr.DeviceEntry,
     switch_entity_entry: er.RegistryEntry,
 ) -> None:
-    """Test migration from v1.1 removes generic_thermostat config entry from device."""
+    """Test migration from v1.1 keeps the helper entity linked to the source device."""
 
     generic_thermostat_config_entry = MockConfigEntry(
         data={},
@@ -573,21 +564,12 @@ async def test_migration_1_1(
     )
     generic_thermostat_config_entry.add_to_hass(hass)
 
-    # Add the helper config entry to the device
-    device_registry.async_update_device(
-        switch_device.id, add_config_entry_id=generic_thermostat_config_entry.entry_id
-    )
-
-    # Check preconditions
-    switch_device = device_registry.async_get(switch_device.id)
-    assert generic_thermostat_config_entry.entry_id in switch_device.config_entries
-
     await hass.config_entries.async_setup(generic_thermostat_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert generic_thermostat_config_entry.state is ConfigEntryState.LOADED
 
-    # Check that the helper config entry is removed from the device and the helper
+    # Check that the helper config entry is not on the source device and the helper
     # entity is linked to the source device
     switch_device = device_registry.async_get(switch_device.id)
     assert generic_thermostat_config_entry.entry_id not in switch_device.config_entries
