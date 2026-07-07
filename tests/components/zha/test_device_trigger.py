@@ -1,12 +1,10 @@
 """ZHA device automation trigger tests."""
 
 from collections.abc import Callable, Coroutine
-from contextlib import AbstractAsyncContextManager
-from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from zha.application.const import ATTR_ENDPOINT_ID
+from zha.application.const import ATTR_ENDPOINT_ID, RadioType
 from zha.quirks import DEVICE_REGISTRY
 from zigpy.application import ControllerApplication
 from zigpy.device import Device as ZigpyDevice
@@ -19,7 +17,6 @@ from homeassistant.components.device_automation import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.zha.helpers import get_zha_gateway
-from homeassistant.components.zha.radio_manager import ZhaRadioManager
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
@@ -566,6 +563,7 @@ async def test_validate_trigger_config_unloaded_bad_info(
 
 async def test_device_trigger_cache_built_with_quirk_resolver(
     hass: HomeAssistant,
+    zigpy_app_controller: ControllerApplication,
     setup_zha: Callable[..., Coroutine[None]],
 ) -> None:
     """Test the early device trigger cache is built with quirk resolution.
@@ -574,21 +572,16 @@ async def test_device_trigger_cache_built_with_quirk_resolver(
     remote button presses) are missing whenever the cache is used as a
     fallback (i.e. before ZHA has finished loading).
     """
-    resolvers: list[Callable | None] = []
-    real_create_zigpy_app = ZhaRadioManager.create_zigpy_app
-
-    def spy_create_zigpy_app(
-        self: ZhaRadioManager, **kwargs: Any
-    ) -> AbstractAsyncContextManager[ControllerApplication]:
-        resolvers.append(kwargs.get("device_resolver"))
-        return real_create_zigpy_app(self, **kwargs)
-
     with patch.object(
-        ZhaRadioManager,
-        "create_zigpy_app",
-        autospec=True,
-        side_effect=spy_create_zigpy_app,
-    ):
+        RadioType.ezsp.controller,
+        "new",
+        AsyncMock(return_value=zigpy_app_controller),
+    ) as mock_new:
         await setup_zha()
 
-    assert DEVICE_REGISTRY.resolve in resolvers
+    # Both the trigger cache app and the gateway app must quirk-resolve devices
+    assert len(mock_new.await_args_list) == 2
+    assert all(
+        call.kwargs.get("device_resolver") == DEVICE_REGISTRY.resolve
+        for call in mock_new.await_args_list
+    )
