@@ -1,9 +1,7 @@
-"""Platform-agnostic push subscriptions for mobile_app.
+"""Push subscriptions for mobile_app.
 
-An app registers a push token against a set of entity_ids; the integration sends
-a silent push to that token whenever any of those entities change state. The
-contract is deliberately platform-neutral: an app says "here is my token, push
-to it when these entities change".
+An app registers a push token against a set of entity_ids; the integration posts
+to the app's push URL whenever any of those entities change state.
 """
 
 # Imported so the webhook command registrations in the submodule run on import.
