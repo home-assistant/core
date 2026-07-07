@@ -198,6 +198,7 @@ async def test_reconfigure_flow_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
+
 async def test_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:

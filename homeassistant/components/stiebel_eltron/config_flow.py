@@ -13,6 +13,13 @@ from .const import DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+    }
+)
+
 
 async def check_controller_model(host: str, port: int) -> str | None:
     """Check if the controller model is valid."""
@@ -52,12 +59,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-                }
-            ),
+            data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
 
@@ -80,7 +82,6 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_update_reload_and_abort(
                     config_entry,
-                    reason="reconfigure_successful",
                     data_updates={
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_PORT: user_input[CONF_PORT],
@@ -89,14 +90,8 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=config_entry.data[CONF_HOST]): str,
-                    vol.Required(
-                        CONF_PORT,
-                        default=config_entry.data.get(CONF_PORT, DEFAULT_PORT),
-                    ): int,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, config_entry.data
             ),
             errors=errors,
         )
