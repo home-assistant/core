@@ -58,7 +58,6 @@ async def test_inprocess_plugin_wires_manager_and_bridge(
     """The plugin installs a bridge for the group and parks a fake process."""
     data = hass.data[DATA_SANDBOX]
     assert in_process_sandbox.group == DEFAULT_GROUP
-    assert DEFAULT_GROUP in data.channels
     assert DEFAULT_GROUP in data.bridges
     manager = data.manager
     assert manager is not None
@@ -78,7 +77,7 @@ async def test_inprocess_plugin_round_trips_ping(
     runtime's handler and returns the same payload a subprocess would.
     """
     data = hass.data[DATA_SANDBOX]
-    channel = data.channels[DEFAULT_GROUP]
+    channel = data.bridges[DEFAULT_GROUP].channel
     result = await asyncio.wait_for(channel.call("sandbox/ping", None), timeout=2.0)
     assert result.pong == "sandbox"
 

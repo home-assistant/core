@@ -76,8 +76,7 @@ from homeassistant.util.file import write_utf8_file_atomic
 from ._proto import sandbox_pb2 as pb
 from .channel import Channel, ChannelClosedError, ChannelRemoteError
 from .const import UNIQUE_ID_SEPARATOR
-from .messages import decode_json, decode_json_dict, encode_json
-from .protocol import (
+from .messages import (
     MSG_CALL_SERVICE,
     MSG_ENTITY_QUERY,
     MSG_FIRE_EVENT,
@@ -89,6 +88,9 @@ from .protocol import (
     MSG_STORE_SAVE,
     MSG_UNREGISTER_ENTITY,
     MSG_UNREGISTER_SERVICE,
+    decode_json,
+    decode_json_dict,
+    encode_json,
 )
 from .schema_bridge import reconstruct_schema
 
@@ -156,7 +158,6 @@ class SandboxEntityDescription:
     initial_state: str | None = None
     initial_attributes: dict[str, Any] = field(default_factory=dict)
     device_info: dict[str, Any] | None = None
-    device_id: str | None = None
 
     @classmethod
     def from_proto(cls, msg: pb.EntityDescription) -> SandboxEntityDescription:
@@ -478,7 +479,7 @@ class SandboxBridge:
             # scoped to the (now-verified-owned) entry.
             self._reject_foreign_device_merge(device_registry, description)
             try:
-                device = device_registry.async_get_or_create(
+                device_registry.async_get_or_create(
                     config_entry_id=description.entry_id,
                     **description.device_info,
                 )
@@ -487,7 +488,6 @@ class SandboxBridge:
                     f"register_entity: invalid device_info for "
                     f"{description.sandbox_entity_id!r}: {err}"
                 ) from err
-            description.device_id = device.id
         # MSG_REGISTER_ENTITY is an upsert: a re-send for an already-tracked
         # entity (the client re-describes on registry/device updates) refreshes
         # the existing proxy in place rather than adding a duplicate. The
@@ -820,9 +820,7 @@ class SandboxBridge:
         """
         entry_ids = {eid for (eid, _domain) in list(self._platforms)}
         entry_ids.update(
-            entry_id
-            for proxy in list(self._entities.values())
-            if (entry_id := getattr(proxy.description, "entry_id", None)) is not None
+            proxy.description.entry_id for proxy in list(self._entities.values())
         )
         for entry_id in entry_ids:
             await self._async_teardown_entry(entry_id)
@@ -860,7 +858,7 @@ class SandboxBridge:
         self._entities = {
             sid: proxy
             for sid, proxy in self._entities.items()
-            if getattr(proxy.description, "entry_id", None) != entry_id
+            if proxy.description.entry_id != entry_id
         }
 
 
@@ -1060,14 +1058,10 @@ def _deserialise_device_info(info: pb.DeviceInfo) -> dict[str, Any] | None:
     return out or None
 
 
-def _parse_supports_response(value: Any) -> SupportsResponse:
+def _parse_supports_response(value: str) -> SupportsResponse:
     """Coerce the wire ``supports_response`` field into the enum."""
-    if isinstance(value, SupportsResponse):
-        return value
-    if value is None:
-        return SupportsResponse.NONE
     try:
-        return SupportsResponse(str(value).lower())
+        return SupportsResponse(value.lower())
     except ValueError:
         return SupportsResponse.NONE
 
@@ -1152,9 +1146,7 @@ def _translate_remote_error(err: ChannelRemoteError) -> Exception:
     msg = err.error
     if name in {"Invalid", "MultipleInvalid"}:
         return TypeError(msg)
-    if name in {"ServiceNotFound", "ServiceValidationError"}:
-        return HomeAssistantError(msg)
-    if name == "HomeAssistantError":
+    if name in {"ServiceNotFound", "ServiceValidationError", "HomeAssistantError"}:
         return HomeAssistantError(msg)
     return HomeAssistantError(f"sandbox error ({name or 'unknown'}): {msg}")
 

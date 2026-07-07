@@ -38,8 +38,13 @@ from hass_client.entity_bridge import EntityBridge
 from hass_client.entry_runner import EntryRunner
 from hass_client.event_mirror import EventMirror
 from hass_client.flow_runner import FlowRunner
-from hass_client.messages import encode_json
-from hass_client.protocol import MSG_GET_TRANSLATIONS, MSG_READY, MSG_SHUTDOWN
+from hass_client.messages import (
+    MSG_GET_TRANSLATIONS,
+    MSG_PING,
+    MSG_READY,
+    MSG_SHUTDOWN,
+    encode_json,
+)
 from hass_client.sandbox_bridge import ChannelSandboxBridge
 from hass_client.service_mirror import ServiceMirror
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
@@ -192,7 +197,7 @@ class SandboxRuntime:
             # Ready, so an `entry_setup` arriving in the gap between Ready and
             # handler registration used to hit `ChannelUnknownType` ->
             # SETUP_ERROR. Registering first removes that race entirely.
-            self._channel.register("sandbox/ping", _handle_ping)
+            self._channel.register(MSG_PING, _handle_ping)
             self._channel.register(MSG_SHUTDOWN, self._handle_shutdown)
             self._channel.register(
                 MSG_GET_TRANSLATIONS, self._handle_get_translations

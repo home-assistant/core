@@ -40,7 +40,7 @@ from homeassistant.core import HomeAssistant
 
 from .channel import Channel, ChannelClosedError, ChannelRemoteError
 from .codec_protobuf import ProtobufCodec
-from .protocol import MSG_READY, MSG_SHUTDOWN
+from .messages import MSG_READY, MSG_SHUTDOWN
 
 _LOGGER = logging.getLogger(__name__)
 

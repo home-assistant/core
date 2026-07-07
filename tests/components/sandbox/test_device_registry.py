@@ -103,10 +103,10 @@ async def test_register_entity_creates_device_entry(
     assert er_entry.device_id == device.id
 
 
-async def test_register_entity_propagates_device_id_to_proxy(
+async def test_register_entity_wires_proxy_device_entry(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
-    """The proxy entity reports the freshly-created device_id."""
+    """The proxy entity is linked to the freshly-created DeviceEntry."""
     bridge, main_channel, sandbox_channel = await _wire(hass)
     payload = _register_payload(
         entry,
@@ -123,16 +123,16 @@ async def test_register_entity_propagates_device_id_to_proxy(
         await sandbox_channel.close()
 
     proxy = bridge._entities["light.kitchen"]
-    assert proxy.description.device_id is not None
-    device = dr.async_get(hass).async_get(proxy.description.device_id)
+    device = dr.async_get(hass).async_get_device(
+        identifiers={("sandboxed_hue", "bulb-002")}
+    )
     assert device is not None
-    assert ("sandboxed_hue", "bulb-002") in device.identifiers
-    # The framework also wired entity.device_entry through async_add_entities.
+    # The framework wired entity.device_entry through async_add_entities.
     assert proxy.device_entry is not None
-    assert proxy.device_entry.id == proxy.description.device_id
+    assert proxy.device_entry.id == device.id
 
 
-async def test_register_entity_without_device_info_leaves_device_id_unset(
+async def test_register_entity_without_device_info_creates_no_device(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
     """Backwards compatibility: no device_info in payload → no device registered."""
@@ -147,7 +147,6 @@ async def test_register_entity_without_device_info_leaves_device_id_unset(
 
     proxy = bridge._entities["light.kitchen"]
     assert proxy.description.device_info is None
-    assert proxy.description.device_id is None
     # No device created against this entry.
     assert not any(
         entry.entry_id in d.config_entries for d in dr.async_get(hass).devices.values()

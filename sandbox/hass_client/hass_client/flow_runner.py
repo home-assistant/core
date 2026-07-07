@@ -53,7 +53,13 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from ._proto import sandbox_pb2 as pb
 from .channel import Channel
-from .messages import decode_json_dict, encode_json
+from .messages import (
+    MSG_FLOW_ABORT,
+    MSG_FLOW_INIT,
+    MSG_FLOW_STEP,
+    decode_json_dict,
+    encode_json,
+)
 from .schema_bridge import serialize_schema
 
 _LOGGER = logging.getLogger(__name__)
@@ -147,9 +153,9 @@ class FlowRunner:
 
     def register(self, channel: Channel) -> None:
         """Register the ``sandbox/flow_*`` handlers on ``channel``."""
-        channel.register("sandbox/flow_init", self._handle_flow_init)
-        channel.register("sandbox/flow_step", self._handle_flow_step)
-        channel.register("sandbox/flow_abort", self._handle_flow_abort)
+        channel.register(MSG_FLOW_INIT, self._handle_flow_init)
+        channel.register(MSG_FLOW_STEP, self._handle_flow_step)
+        channel.register(MSG_FLOW_ABORT, self._handle_flow_abort)
 
     async def async_stop(self) -> None:
         """Tear down in-progress flows and stop the private hass.

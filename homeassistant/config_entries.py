@@ -284,7 +284,7 @@ STATE_KEYS = {
     "error_reason_translation_key",
     "error_reason_translation_placeholders",
 }
-FROZEN_CONFIG_ENTRY_ATTRS = {"entry_id", "domain", *STATE_KEYS}
+FROZEN_CONFIG_ENTRY_ATTRS = {"entry_id", "domain", "sandbox", *STATE_KEYS}
 UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {
     "unique_id",
     "title",
@@ -294,7 +294,6 @@ UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {
     "pref_disable_polling",
     "minor_version",
     "version",
-    "sandbox",
 }
 
 
@@ -2880,7 +2879,6 @@ class ConfigEntries:
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
         pref_disable_polling: bool | UndefinedType = UNDEFINED,
-        sandbox: str | None | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         unique_id: str | UndefinedType | None = UNDEFINED,
         version: int | UndefinedType = UNDEFINED,
@@ -2901,7 +2899,6 @@ class ConfigEntries:
             options=options,
             pref_disable_new_entities=pref_disable_new_entities,
             pref_disable_polling=pref_disable_polling,
-            sandbox=sandbox,
             title=title,
             unique_id=unique_id,
             version=version,
@@ -2920,7 +2917,6 @@ class ConfigEntries:
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
         pref_disable_polling: bool | UndefinedType = UNDEFINED,
-        sandbox: str | None | UndefinedType = UNDEFINED,
         subentries: dict[str, ConfigSubentry] | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         unique_id: str | UndefinedType | None = UNDEFINED,
@@ -2972,7 +2968,6 @@ class ConfigEntries:
             ("minor_version", minor_version),
             ("pref_disable_new_entities", pref_disable_new_entities),
             ("pref_disable_polling", pref_disable_polling),
-            ("sandbox", sandbox),
             ("title", title),
             ("version", version),
         ):

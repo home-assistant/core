@@ -11,7 +11,7 @@ import asyncio
 from hass_client._proto import sandbox_pb2 as pb
 from hass_client.channel import Channel, ChannelRemoteError
 from hass_client.codec_protobuf import ProtobufCodec
-from hass_client.protocol import MSG_READY
+from hass_client.messages import MSG_READY
 from hass_client.sandbox import SandboxRuntime
 from hass_client.sandbox.__main__ import _build_parser
 import pytest

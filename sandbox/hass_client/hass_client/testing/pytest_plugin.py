@@ -115,7 +115,7 @@ class InProcessSandbox:
         the private hass's timers onto the shared test loop.
         """
         if self.channel is not None and not self.channel.closed:
-            from hass_client.protocol import MSG_SHUTDOWN  # noqa: PLC0415
+            from hass_client.messages import MSG_SHUTDOWN  # noqa: PLC0415
 
             with contextlib.suppress(Exception):
                 await asyncio.wait_for(
@@ -164,7 +164,7 @@ class _InProcessSandboxProcess:
         """Best-effort: issue a shutdown call so the runtime exits cleanly."""
         # Lazy import: testing package must not pull the HA integration
         # tree at import time.
-        from homeassistant.components.sandbox.protocol import (  # noqa: PLC0415
+        from homeassistant.components.sandbox.messages import (  # noqa: PLC0415
             MSG_SHUTDOWN,
         )
 
@@ -242,7 +242,6 @@ async def async_setup_inprocess_sandbox(
 
     # Mirror what the integration's ``_on_channel_ready`` does when the
     # real ``SandboxProcess`` opens its channel — register the bridge.
-    data.channels[group] = mgr_channel
     data.bridges[group] = async_create_bridge(hass, group=group, channel=mgr_channel)
     mgr_channel.start()
 

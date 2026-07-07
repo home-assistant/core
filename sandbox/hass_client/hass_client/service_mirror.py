@@ -24,13 +24,12 @@ from homeassistant.const import (
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, Service, callback
 
 from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
-from .messages import encode_json
-from .protocol import MSG_REGISTER_SERVICE, MSG_UNREGISTER_SERVICE
+from .messages import MSG_REGISTER_SERVICE, MSG_UNREGISTER_SERVICE, encode_json
 from .schema_bridge import serialize_schema
 
 _LOGGER = logging.getLogger(__name__)
@@ -124,13 +123,19 @@ class ServiceMirror:
         key = (domain.lower(), service.lower())
         if key in self._mirrored:
             return
-        supports_response = _supports_response(self.hass, domain, service)
+        # One registry lookup feeds both metadata fields. Best-effort: the
+        # service may not be visible yet (a race with the
+        # EVENT_SERVICE_REGISTERED listener) — main treats the metadata as
+        # authoritative and the sandbox's own handler still validates.
+        service_obj = self.hass.services.async_services_for_domain(domain).get(
+            service.lower()
+        )
         msg = pb.RegisterService(
             domain=domain,
             service=service,
-            supports_response=supports_response,
+            supports_response=_supports_response(service_obj),
         )
-        schema = _service_schema(self.hass, domain, service)
+        schema = serialize_schema(service_obj.schema) if service_obj else None
         if schema:
             msg.schema = encode_json(schema)
         self._mirrored.add(key)
@@ -182,36 +187,14 @@ class ServiceMirror:
             )
 
 
-def _service_schema(
-    hass: HomeAssistant, domain: str, service: str
-) -> list[dict[str, Any]] | None:
-    """Serialise the registered service's voluptuous schema for the wire.
-
-    Returns ``None`` when the service registers with no schema (very
-    common), when the schema doesn't survive voluptuous_serialize, or
-    when the lookup races and the service isn't visible yet — in every
-    case main falls back to ``schema=None`` and the sandbox's own
-    handler still validates.
-    """
-    services = hass.services.async_services_for_domain(domain)
-    service_obj = services.get(service.lower())
-    if service_obj is None:
-        return None
-    return serialize_schema(service_obj.schema)
-
-
-def _supports_response(hass: HomeAssistant, domain: str, service: str) -> str:
-    """Best-effort lookup of the service's ``supports_response`` value.
+def _supports_response(service_obj: Service | None) -> str:
+    """Extract the service's ``supports_response`` value for the wire.
 
     Returns the lowercase string value (``"none"`` / ``"only"`` /
     ``"optional"``) since that's what main needs to pass back to
-    :meth:`hass.services.async_register`. Falls back to ``"none"`` if
-    the service isn't actually registered yet (a race with the
-    ``EVENT_SERVICE_REGISTERED`` listener) — the lookup is best-effort
-    and main treats the metadata as authoritative.
+    :meth:`hass.services.async_register`. Falls back to ``"none"`` for a
+    service that isn't actually registered yet.
     """
-    services = hass.services.async_services_for_domain(domain)
-    service_obj = services.get(service.lower())
     if service_obj is None:
         return "none"
     value = getattr(service_obj.supports_response, "value", None)

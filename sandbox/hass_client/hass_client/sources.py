@@ -8,8 +8,11 @@ descriptor on ``entry_setup`` that the sandbox fetches into
 :meth:`hass_client.entry_runner.EntryRunner._handle_entry_setup`).
 
 The fetch uses GitHub's codeload tarball for the exact commit sha (no ``git``
-binary dependency, matching HACS). A process-lifetime cache keyed by
-``(url, ref)`` means multiple entries sourced from the same repo download once.
+binary dependency, matching HACS). Concurrent fetches of the same ``(url,
+ref)`` share one in-flight download (single-flight); different repos download
+in parallel. Nothing pins tarball bytes past the extract — the extracted tree
+under ``custom_components`` is the artifact, so a later same-repo fetch for a
+different subdir simply re-downloads.
 
 The download primitive is injectable so tests substitute a local fixture for
 the real network fetch — no test ever hits GitHub.
@@ -17,6 +20,7 @@ the real network fetch — no test ever hits GitHub.
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from functools import partial
 import io
 import logging
 from pathlib import Path
@@ -26,11 +30,20 @@ from ._proto import sandbox_pb2 as pb
 
 _LOGGER = logging.getLogger(__name__)
 
-# url, ref -> downloaded tarball bytes. Process-lifetime only (honours
-# "stateless": nothing survives a process restart). Guarded by _CACHE_LOCK so
-# concurrent entries from the same repo download exactly once.
-_TARBALL_CACHE: dict[tuple[str, str], bytes] = {}
-_CACHE_LOCK = asyncio.Lock()
+# Single-flight downloads keyed by (url, ref): concurrent fetches of the same
+# repo await one shared task; entries are dropped when the download finishes,
+# so tarball bytes are never pinned for the process lifetime. _COMPLETED
+# remembers which keys already downloaded once (log signal only — the extract
+# for a new subdir must re-download regardless).
+_INFLIGHT: dict[tuple[str, str], asyncio.Task[bytes]] = {}
+_COMPLETED: set[tuple[str, str]] = set()
+
+
+def _on_fetch_done(key: tuple[str, str], task: asyncio.Task[bytes]) -> None:
+    """Drop a finished download from the single-flight map."""
+    _INFLIGHT.pop(key, None)
+    if not task.cancelled() and task.exception() is None:
+        _COMPLETED.add(key)
 
 # (repo url, exact sha) -> tarball bytes.
 FetchPrimitive = Callable[[str, str], Awaitable[bytes]]
@@ -82,18 +95,20 @@ async def async_ensure_integration_source(
     fetcher = fetch if fetch is not None else _default_fetch
     key = (source.url, source.ref)
 
-    async with _CACHE_LOCK:
-        tarball = _TARBALL_CACHE.get(key)
-        if tarball is None:
-            _LOGGER.info(
-                "sandbox: fetching %s from %s@%s (%s)",
-                domain,
-                source.url,
-                source.ref,
-                source.tag or "no tag",
-            )
-            tarball = await fetcher(source.url, source.ref)
-            _TARBALL_CACHE[key] = tarball
+    task = _INFLIGHT.get(key)
+    if task is None:
+        _LOGGER.info(
+            "sandbox: fetching %s from %s@%s (%s)%s",
+            domain,
+            source.url,
+            source.ref,
+            source.tag or "no tag",
+            " — re-download for a new subdir" if key in _COMPLETED else "",
+        )
+        task = asyncio.get_running_loop().create_task(fetcher(source.url, source.ref))
+        _INFLIGHT[key] = task
+        task.add_done_callback(partial(_on_fetch_done, key))
+    tarball = await task
 
     await asyncio.get_running_loop().run_in_executor(
         None, _extract_subdir, tarball, subdir, dest

@@ -74,9 +74,13 @@ class ProtobufCodec:
 
 
 def _serialize_body(body: Any, cls: type[Message] | None) -> bytes:
-    """Serialise a proto-message body; ``None`` becomes an empty message."""
+    """Serialise a proto-message body; ``None`` becomes an empty message.
+
+    An empty proto message serialises to zero bytes, so ``None`` maps to
+    ``b""`` whether or not the type has a registered class.
+    """
     if body is None:
-        return cls().SerializeToString() if cls is not None else b""
+        return b""
     if isinstance(body, Message):
         return body.SerializeToString()
     raise TypeError(

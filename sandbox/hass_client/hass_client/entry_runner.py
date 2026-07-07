@@ -1,7 +1,7 @@
 """Sandbox-side entry runner — loads integrations + drives ``async_setup_entry``.
 
 The manager pushes a serialised :class:`ConfigEntry` via
-``sandbox/entry_setup`` (see :mod:`hass_client.protocol`). The runner
+``sandbox/entry_setup`` (see :mod:`hass_client.messages`). The runner
 rebuilds the entry on the sandbox's private :class:`HomeAssistant`,
 calls ``hass.config_entries.async_setup`` to load the owning integration,
 and reports back. Main holds the canonical entry; the sandbox copy is
@@ -20,12 +20,13 @@ from homeassistant.helpers.entity_component import DATA_INSTANCES
 from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
-from .messages import decode_json_dict, encode_json
-from .protocol import (
+from .messages import (
     MSG_CALL_SERVICE,
     MSG_ENTITY_QUERY,
     MSG_ENTRY_SETUP,
     MSG_ENTRY_UNLOAD,
+    decode_json_dict,
+    encode_json,
 )
 from .sources import FetchPrimitive, SandboxSourceError, async_ensure_integration_source
 
