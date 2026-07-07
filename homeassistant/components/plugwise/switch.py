@@ -30,11 +30,6 @@ class PlugwiseSwitchEntityDescription(SwitchEntityDescription):
 
 SWITCHES: tuple[PlugwiseSwitchEntityDescription, ...] = (
     PlugwiseSwitchEntityDescription(
-        key="dhw_cm_switch",
-        translation_key="dhw_cm_switch",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    PlugwiseSwitchEntityDescription(
         key="lock",
         translation_key="lock",
         entity_category=EntityCategory.CONFIG,
