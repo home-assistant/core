@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING
 
-from tplink_omada_client import OmadaSiteClient
+from tplink_omada_client import OmadaClient, OmadaSiteClient
 from tplink_omada_client.devices import OmadaListDevice, OmadaSwitch
 
 from homeassistant.core import HomeAssistant, callback
@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 from .coordinator import (
     OmadaClientsCoordinator,
+    OmadaControllerCoordinator,
     OmadaDevicesCoordinator,
     OmadaGatewayCoordinator,
     OmadaSwitchPortCoordinator,
@@ -28,23 +29,32 @@ class OmadaSiteController:
         self,
         hass: HomeAssistant,
         config_entry: OmadaConfigEntry,
-        omada_client: OmadaSiteClient,
+        omada_client: OmadaClient,
+        site_client: OmadaSiteClient,
+        controller_id: str,
+        controller_name: str,
     ) -> None:
         """Create the controller."""
         self._hass = hass
         self._config_entry = config_entry
-        self._omada_client = omada_client
+        self._omada_client = site_client
+        self._controller_id = controller_id
+        self._controller_name = controller_name
 
         self._switch_port_coordinators: dict[str, OmadaSwitchPortCoordinator] = {}
-        self._devices_coordinator = OmadaDevicesCoordinator(
+        self._controller_coordinator = OmadaControllerCoordinator(
             hass, config_entry, omada_client
         )
+        self._devices_coordinator = OmadaDevicesCoordinator(
+            hass, config_entry, site_client
+        )
         self._clients_coordinator = OmadaClientsCoordinator(
-            hass, config_entry, omada_client
+            hass, config_entry, site_client
         )
 
     async def initialize_first_refresh(self) -> None:
         """Initialize the all coordinators, and perform first refresh."""
+        await self._controller_coordinator.async_config_entry_first_refresh()
         await self._devices_coordinator.async_config_entry_first_refresh()
 
         devices = self._devices_coordinator.data.values()
@@ -105,6 +115,21 @@ class OmadaSiteController:
     def omada_client(self) -> OmadaSiteClient:
         """Get the connected client API for the site to manage."""
         return self._omada_client
+
+    @property
+    def controller_id(self) -> str:
+        """Get the Omada controller device identifier."""
+        return self._controller_id
+
+    @property
+    def controller_name(self) -> str:
+        """Get the Omada controller name."""
+        return self._controller_name
+
+    @property
+    def controller_coordinator(self) -> OmadaControllerCoordinator:
+        """Get the coordinator for Omada controller data."""
+        return self._controller_coordinator
 
     def get_switch_port_coordinator(
         self, switch: OmadaSwitch

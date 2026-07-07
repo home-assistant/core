@@ -91,6 +91,46 @@ async def test_missing_devices_removed_at_startup(
     assert device_registry.async_get(device_entry.id) is None
 
 
+async def test_controller_device_registered_at_startup(
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test the controller is registered as a device."""
+    controller_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "12345")}
+    )
+
+    assert controller_device is not None
+    assert controller_device.config_entries == {init_integration.entry_id}
+    assert controller_device.manufacturer == "TP-Link"
+    assert controller_device.model == "OC200"
+    assert controller_device.name == "OC200"
+    assert controller_device.sw_version == "6.2.10.17"
+
+
+async def test_omada_devices_link_to_controller_device(
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test Omada devices are linked to the controller device."""
+    controller_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "12345")}
+    )
+    gateway_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "AA-BB-CC-DD-EE-FF")}
+    )
+    switch_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "54-AF-97-00-00-01")}
+    )
+
+    assert controller_device is not None
+    assert gateway_device is not None
+    assert switch_device is not None
+    assert controller_device.config_entries == {init_integration.entry_id}
+    assert gateway_device.via_device_id == controller_device.id
+    assert switch_device.via_device_id == controller_device.id
+
+
 async def test_migrate_entry_v1_to_v2(
     hass: HomeAssistant,
     mock_omada_client: MagicMock,
