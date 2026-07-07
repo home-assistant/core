@@ -10,6 +10,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import (
     Forbidden,
+    InsufficientCredits,
     InvalidResponse,
     InvalidToken,
     RateLimited,
@@ -24,6 +25,7 @@ from homeassistant.components.teslemetry.coordinator import (
     ENERGY_HISTORY_INTERVAL,
     ENERGY_INFO_INTERVAL,
     ENERGY_LIVE_INTERVAL,
+    INSUFFICIENT_CREDITS_RETRY_AFTER,
     METADATA_INTERVAL,
     VEHICLE_INTERVAL,
 )
@@ -38,6 +40,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import setup_platform
 from .const import (
@@ -59,6 +62,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
     (SubscriptionRequired, ConfigEntryState.SETUP_ERROR),
+    (InsufficientCredits, ConfigEntryState.SETUP_RETRY),
     (TeslaFleetError, ConfigEntryState.SETUP_RETRY),
 ]
 
@@ -139,6 +143,20 @@ async def test_energy_site_refresh_error(
 ) -> None:
     """Test coordinator refresh with an error."""
     mock_site_info.side_effect = side_effect
+    entry = await setup_platform(hass)
+    assert entry.state is state
+
+
+# Test Metadata Coordinator
+@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
+async def test_metadata_refresh_error(
+    hass: HomeAssistant,
+    mock_metadata: AsyncMock,
+    side_effect: TeslaFleetError,
+    state: ConfigEntryState,
+) -> None:
+    """Test coordinator refresh with an error."""
+    mock_metadata.side_effect = side_effect
     entry = await setup_platform(hass)
     assert entry.state is state
 
@@ -895,6 +913,7 @@ async def test_live_status_coordinator_refresh_error(
     "side_effect",
     [
         [InvalidToken],
+        [InsufficientCredits],
         [TeslaFleetError],
         [ENERGY_HISTORY, {"response": {}}],
     ],
@@ -996,3 +1015,38 @@ async def test_dynamic_device_discovery_no_reload_without_changes(
 
     # Verify reload was NOT triggered since no subscription changes
     mock_reload.assert_not_called()
+
+
+async def test_insufficient_credits_backs_off_polling(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_live_status: AsyncMock,
+) -> None:
+    """Running out of credits should back off, not hammer the API every poll."""
+    call_count = 0
+
+    def live_status_side_effect():
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return deepcopy(LIVE_STATUS)
+        raise InsufficientCredits
+
+    mock_live_status.side_effect = live_status_side_effect
+
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    assert call_count == 1
+
+    freezer.tick(ENERGY_LIVE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert call_count == 2
+    assert entry.state is ConfigEntryState.LOADED
+
+    live_coordinator = entry.runtime_data.energysites[0].live_coordinator
+    assert isinstance(live_coordinator.last_exception, UpdateFailed)
+    assert (
+        live_coordinator.last_exception.retry_after == INSUFFICIENT_CREDITS_RETRY_AFTER
+    )
