@@ -27,12 +27,18 @@ from .helpers import (
 
 from tests.common import snapshot_platform
 
+# io:HeatingValveIOComponent
 VALVE = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "io://1234-5678-1698/15702199#1",
     "climate.maple_residence_garden_radiator",
 )
-
+# modbuslink:AtlanticElectricalHeaterWithAdjustableTemperatureSetpointMBLComponent
+COZYTOUCH = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch.json",
+    "modbuslink://1234-5678-5643/1#1",
+    "climate.living_room_heater",
+)
 # Atlantic Calissia (io:AtlanticElectricalHeaterWithAdjustableTemperatureSetpointIOComponent)
 ELECTRICAL_HEATER_ADJUSTABLE = FixtureDevice(
     "setup/cloud_atlantic_cozytouch.json",
@@ -42,7 +48,7 @@ ELECTRICAL_HEATER_ADJUSTABLE = FixtureDevice(
 
 SNAPSHOT_FIXTURES = [
     VALVE,
-    ELECTRICAL_HEATER_ADJUSTABLE,
+    COZYTOUCH,
 ]
 
 

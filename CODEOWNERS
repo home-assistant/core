@@ -1026,6 +1026,10 @@ CLAUDE.md @home-assistant/core
 /tests/components/litterrobot/ @natekspencer @tkdrob
 /homeassistant/components/livisi/ @StefanIacobLivisi @planbnet
 /tests/components/livisi/ @StefanIacobLivisi @planbnet
+/homeassistant/components/llama_cpp/ @allenporter
+/tests/components/llama_cpp/ @allenporter
+/homeassistant/components/llm/ @home-assistant/core
+/tests/components/llm/ @home-assistant/core
 /homeassistant/components/local_calendar/ @allenporter
 /tests/components/local_calendar/ @allenporter
 /homeassistant/components/local_ip/ @issacg
@@ -1113,8 +1117,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/microbees/ @microBeesTech
 /homeassistant/components/miele/ @astrandb
 /tests/components/miele/ @astrandb
-/homeassistant/components/mikrotik/ @engrbm87
-/tests/components/mikrotik/ @engrbm87
+/homeassistant/components/mikrotik/ @engrbm87 @chemelli74
+/tests/components/mikrotik/ @engrbm87 @chemelli74
 /homeassistant/components/mill/ @danielhiversen
 /tests/components/mill/ @danielhiversen
 /homeassistant/components/min_max/ @gjohansson-ST
@@ -1129,6 +1133,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/moat/ @bdraco
 /homeassistant/components/mobile_app/ @home-assistant/core
 /tests/components/mobile_app/ @home-assistant/core
+/homeassistant/components/modbus_connection/ @home-assistant/core
+/tests/components/modbus_connection/ @home-assistant/core
 /homeassistant/components/modem_callerid/ @tkdrob
 /tests/components/modem_callerid/ @tkdrob
 /homeassistant/components/modern_forms/ @wonderslug
