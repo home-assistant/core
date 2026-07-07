@@ -83,7 +83,6 @@ async def _setup_button_platform(
             "homeassistant.components.bosch_shc.SHCSession",
             return_value=mock_session,
         ),
-        patch("homeassistant.components.bosch_shc.async_get_instance"),
         patch("homeassistant.components.bosch_shc.PLATFORMS", platforms),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
