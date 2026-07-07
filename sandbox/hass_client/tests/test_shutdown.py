@@ -19,8 +19,12 @@ from typing import Any
 from hass_client._proto import sandbox_pb2 as pb
 from hass_client.channel import Channel
 from hass_client.codec_protobuf import ProtobufCodec
-from hass_client.messages import decode_json_dict
-from hass_client.protocol import MSG_SHUTDOWN, MSG_STORE_LOAD, MSG_STORE_SAVE
+from hass_client.messages import (
+    MSG_SHUTDOWN,
+    MSG_STORE_LOAD,
+    MSG_STORE_SAVE,
+    decode_json_dict,
+)
 from hass_client.sandbox import SandboxRuntime
 import pytest
 

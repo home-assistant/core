@@ -5,11 +5,13 @@ up to main via ``sandbox/fire_event``. Canonical examples: ``zha_event``,
 ``mqtt_message_received``, ``hue_event``, ``device_tracker_see``.
 
 The bus listener is installed via ``MATCH_ALL`` so we don't need to know
-the integration's event names ahead of time, with a callback-decorated
-event filter so the bus can short-circuit on a fast path before queuing
-the listener. Untrusted (non-approved) event types are silently dropped
-— they would never have been forwarded anyway and don't deserve a log
-line per event.
+the integration's event names ahead of time; the handler itself does the
+cheap event-type checks and returns early for foreign events. (The bus's
+``event_filter`` fast path can't host that check: a filter receives only
+``event.data`` — never the event type — and the bus skips filtered
+listeners entirely for events fired without data.) Untrusted
+(non-approved) event types are silently dropped — they would never have
+been forwarded anyway and don't deserve a log line per event.
 
 System events that already cross the bridge through dedicated channels
 (``EVENT_STATE_CHANGED``, ``EVENT_SERVICE_REGISTERED``, …) are
@@ -43,8 +45,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
-from .messages import encode_json
-from .protocol import MSG_FIRE_EVENT
+from .messages import MSG_FIRE_EVENT, encode_json
 
 _LOGGER = logging.getLogger(__name__)
 

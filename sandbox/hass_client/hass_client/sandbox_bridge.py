@@ -21,8 +21,7 @@ from homeassistant.util.json import SerializationError
 
 from ._proto import sandbox_pb2 as pb
 from .channel import Channel, ChannelClosedError, ChannelRemoteError
-from .messages import decode_json_dict
-from .protocol import MSG_STORE_LOAD, MSG_STORE_REMOVE, MSG_STORE_SAVE
+from .messages import MSG_STORE_LOAD, MSG_STORE_REMOVE, MSG_STORE_SAVE, decode_json_dict
 
 _LOGGER = logging.getLogger(__name__)
 

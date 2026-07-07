@@ -18,5 +18,4 @@ async def test_setup_installs_manager_router_and_hook(
     assert isinstance(data.manager, SandboxManager)
     assert isinstance(data.router, SandboxFlowRouter)
     assert hass.config_entries.router is data.router
-    assert data.channels == {}
     assert data.bridges == {}

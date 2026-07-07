@@ -35,7 +35,14 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from ._proto import sandbox_pb2 as pb
 from .channel import ChannelClosedError, ChannelRemoteError
-from .messages import decode_json, decode_json_dict, encode_json
+from .messages import (
+    MSG_FLOW_ABORT,
+    MSG_FLOW_INIT,
+    MSG_FLOW_STEP,
+    decode_json,
+    decode_json_dict,
+    encode_json,
+)
 from .schema_bridge import reconstruct_schema
 
 if TYPE_CHECKING:
@@ -167,7 +174,7 @@ class SandboxFlowProxy(ConfigFlow):
                 )
                 if user_input is not None:
                     request.data = encode_json(_to_jsonable(user_input))
-                result = await channel.call("sandbox/flow_init", request)
+                result = await channel.call(MSG_FLOW_INIT, request)
                 self._sandbox_flow_id = (
                     result.flow_id if result.HasField("flow_id") else None
                 )
@@ -182,7 +189,7 @@ class SandboxFlowProxy(ConfigFlow):
                     step.user_input = encode_json({"next_step_id": step_id})
                 elif user_input is not None:
                     step.user_input = encode_json(user_input)
-                result = await channel.call("sandbox/flow_step", step)
+                result = await channel.call(MSG_FLOW_STEP, step)
         except ChannelClosedError:
             self._terminated = True
             _LOGGER.warning(
@@ -395,7 +402,7 @@ def _reconstruct_menu_options(items: list[Any]) -> list[str] | dict[str, str]:
 async def _safe_abort(channel: Any, flow_id: str, group: str, handler: str) -> None:
     """Fire ``flow_abort`` on the sandbox and swallow errors."""
     try:
-        await channel.call("sandbox/flow_abort", pb.FlowAbort(flow_id=flow_id))
+        await channel.call(MSG_FLOW_ABORT, pb.FlowAbort(flow_id=flow_id))
     except (ChannelClosedError, ChannelRemoteError) as err:
         _LOGGER.debug("Sandbox %r flow_abort for %s failed: %s", group, handler, err)
 

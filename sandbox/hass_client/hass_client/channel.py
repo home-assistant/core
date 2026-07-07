@@ -16,7 +16,7 @@ dispatch core:
   :class:`StreamTransport` length-prefixes each frame (4-byte big-endian
   length + body) over an :class:`asyncio.StreamReader` /
   :class:`asyncio.StreamWriter` pair (stdio, unix socket). A future
-  ``WebSocketTransport`` drops in via :meth:`Channel.from_transport` using
+  ``WebSocketTransport`` drops in via ``Channel(transport=...)`` using
   aiohttp's native binary framing.
 
 The :class:`Frame` shape mirrors the three message kinds that cross the
@@ -309,8 +309,7 @@ class Channel:
 
         The common case passes a ``reader``/``writer`` pair, framed with
         :class:`StreamTransport` (length-prefixed). To run over a non-stream
-        transport (e.g. websockets), pass ``transport=`` instead — see
-        :meth:`from_transport`.
+        transport (e.g. websockets), pass ``transport=`` instead.
 
         ``codec`` is required — production passes
         :class:`~.codec_protobuf.ProtobufCodec`; a forgotten codec is a
@@ -339,24 +338,6 @@ class Channel:
         self._inflight: set[asyncio.Task[None]] = set()
         self._inflight_sem = asyncio.Semaphore(max_inflight)
         self._max_queued = max_queued
-
-    @classmethod
-    def from_transport(
-        cls,
-        transport: Transport,
-        *,
-        codec: Codec,
-        name: str = "channel",
-        max_inflight: int = DEFAULT_MAX_INFLIGHT,
-    ) -> Channel:
-        """Build a channel over an arbitrary :class:`Transport`.
-
-        This is the seam a future ``WebSocketTransport`` drops into — the
-        dispatch core is identical regardless of how frames reach the wire.
-        """
-        return cls(
-            transport=transport, codec=codec, name=name, max_inflight=max_inflight
-        )
 
     @property
     def closed(self) -> bool:
@@ -400,7 +381,8 @@ class Channel:
         if self._closed:
             raise ChannelClosedError(f"channel {self._name!r} is closed")
         call_id = self._next_id
-        self._next_id += 1
+        # Wrap within the uint32 wire field, skipping 0 (id 0 marks a push).
+        self._next_id = self._next_id % 0xFFFFFFFF + 1
         future: asyncio.Future[Any] = asyncio.get_running_loop().create_future()
         self._pending[call_id] = future
         try:
@@ -463,8 +445,7 @@ class Channel:
         ``timeout`` — any handler still running afterwards is left for
         ``close()`` to cancel. Does not itself cancel anything.
         """
-        inflight = [task for task in self._inflight if task is not self._reader_task]
-        if inflight:
+        if inflight := list(self._inflight):
             await asyncio.wait(inflight, timeout=timeout)
 
     async def _write(self, frame: Frame) -> None:

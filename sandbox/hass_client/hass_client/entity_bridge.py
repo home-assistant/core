@@ -38,8 +38,13 @@ from ._json import json_safe
 from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
-from .messages import encode_json, make_entity_description
-from .protocol import MSG_REGISTER_ENTITY, MSG_STATE_CHANGED, MSG_UNREGISTER_ENTITY
+from .messages import (
+    MSG_REGISTER_ENTITY,
+    MSG_STATE_CHANGED,
+    MSG_UNREGISTER_ENTITY,
+    encode_json,
+    make_entity_description,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

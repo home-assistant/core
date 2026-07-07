@@ -9699,34 +9699,8 @@ async def test_sandbox_absent_from_storage_loads_as_none(
     assert entries[0].sandbox is None
 
 
-async def test_async_update_entry_sets_sandbox(hass: HomeAssistant) -> None:
-    """``async_update_entry(entry, sandbox=...)`` mutates and persists the field."""
-    entry = MockConfigEntry(domain="test")
-    entry.add_to_hass(hass)
-    assert entry.sandbox is None
-
-    changed = hass.config_entries.async_update_entry(entry, sandbox="built-in")
-    assert changed is True
-    assert entry.sandbox == "built-in"
-
-    # Idempotent update returns False.
-    changed = hass.config_entries.async_update_entry(entry, sandbox="built-in")
-    assert changed is False
-
-    # Storage cache is refreshed so the new value lands on disk.
-    stored = json_loads(json_dumps(entry.as_storage_fragment))
-    assert stored["sandbox"] == "built-in"
-
-    # And it can be cleared back to None.
-    changed = hass.config_entries.async_update_entry(entry, sandbox=None)
-    assert changed is True
-    assert entry.sandbox is None
-    stored = json_loads(json_dumps(entry.as_storage_fragment))
-    assert "sandbox" not in stored
-
-
 def test_sandbox_cannot_be_set_directly() -> None:
-    """``entry.sandbox = ...`` is rejected — must go through update_entry."""
+    """``entry.sandbox = ...`` is rejected — the field is frozen after init."""
     entry = MockConfigEntry(domain="test")
     with pytest.raises(AttributeError):
         entry.sandbox = "built-in"

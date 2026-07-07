@@ -46,7 +46,6 @@ class SandboxData:
 
     manager: SandboxManager | None = None
     router: SandboxFlowRouter | None = None
-    channels: dict[str, Channel] = field(default_factory=dict)
     bridges: dict[str, SandboxBridge] = field(default_factory=dict)
     # A bridge displaced by a restart, held until the fresh process goes
     # ready so its proxies + platform slots can be torn down right before
@@ -68,7 +67,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # re-registers, so the entities stay visible (Phase 2 marks them
         # unavailable) across the restart gap instead of vanishing.
         old_bridge = data.bridges.get(group)
-        data.channels[group] = channel
         data.bridges[group] = async_create_bridge(hass, group=group, channel=channel)
         if old_bridge is None:
             return
@@ -177,7 +175,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         unregister_translation_provider()
         await manager.async_graceful_shutdown_all(timeout=manager.shutdown_grace)
         await manager.async_stop_all()
-        data.channels.clear()
         data.bridges.clear()
         data.pending_teardown.clear()
 

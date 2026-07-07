@@ -29,8 +29,7 @@ from ._proto import sandbox_pb2 as pb
 from .channel import ChannelClosedError, ChannelRemoteError
 from .classifier import SandboxAssignment, classify
 from .manager import SandboxManager
-from .messages import encode_json
-from .protocol import MSG_ENTRY_SETUP, MSG_ENTRY_UNLOAD
+from .messages import MSG_ENTRY_SETUP, MSG_ENTRY_UNLOAD, encode_json
 from .proxy_flow import SandboxFlowProxy
 from .sources import SandboxSourceError, async_resolve_integration_source
 

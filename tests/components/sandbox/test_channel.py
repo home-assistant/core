@@ -21,7 +21,7 @@ class _QueueTransport:
     """In-memory :class:`Transport` backed by a pair of queues.
 
     Stands in for a non-stream transport (the seam a future
-    ``WebSocketTransport`` uses) so :meth:`Channel.from_transport` is
+    ``WebSocketTransport`` uses) so ``Channel(transport=...)`` is
     exercised without any reader/writer pipe.
     """
 
@@ -47,16 +47,12 @@ class _QueueTransport:
         return None
 
 
-async def test_from_transport_round_trips() -> None:
+async def test_transport_channel_round_trips() -> None:
     """A channel built over an arbitrary Transport dispatches normally."""
     q1: asyncio.Queue[bytes | None] = asyncio.Queue()
     q2: asyncio.Queue[bytes | None] = asyncio.Queue()
-    channel_a = Channel.from_transport(
-        _QueueTransport(q1, q2), name="a", codec=JsonCodec()
-    )
-    channel_b = Channel.from_transport(
-        _QueueTransport(q2, q1), name="b", codec=JsonCodec()
-    )
+    channel_a = Channel(transport=_QueueTransport(q1, q2), name="a", codec=JsonCodec())
+    channel_b = Channel(transport=_QueueTransport(q2, q1), name="b", codec=JsonCodec())
     channel_a.start()
     channel_b.start()
 
@@ -396,7 +392,7 @@ async def test_close_after_eof_still_closes_transport() -> None:
     inflight exactly once — otherwise the byte channel leaks every restart.
     """
     transport = _ObservableTransport()
-    channel = Channel.from_transport(transport, name="eof", codec=JsonCodec())
+    channel = Channel(transport=transport, name="eof", codec=JsonCodec())
 
     started = asyncio.Event()
     cancelled = asyncio.Event()

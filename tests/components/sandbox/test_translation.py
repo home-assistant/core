@@ -16,8 +16,7 @@ import pytest
 from homeassistant.components.sandbox import SandboxData
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
 from homeassistant.components.sandbox.channel import Channel
-from homeassistant.components.sandbox.messages import encode_json
-from homeassistant.components.sandbox.protocol import MSG_GET_TRANSLATIONS
+from homeassistant.components.sandbox.messages import MSG_GET_TRANSLATIONS, encode_json
 from homeassistant.components.sandbox.proxy_flow import SandboxFlowProxy
 from homeassistant.components.sandbox.router import SandboxFlowRouter
 from homeassistant.components.sandbox.translation import SandboxTranslationProvider

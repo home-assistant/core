@@ -461,10 +461,11 @@ actually built, deferred, and flagged forward. For a quick map:
 | Shutdown | `__init__.py` (`_on_stop`), `manager.py` | `sandbox/__init__.py` (`_run_graceful_shutdown`) |
 | Test infra | — | `testing/`, `run_compat.py` |
 
-The wire-protocol constants live in two files that mirror each other verbatim:
-`homeassistant/components/sandbox/protocol.py` and
-`hass_client/hass_client/protocol.py` (along with the mirrored `channel.py` /
-`codec_protobuf.py` / `messages.py`).
+The wire-protocol `MSG_*` constants live in `messages.py` (alongside the proto
+registry and the dynamic-payload JSON codec), one of the files mirrored
+verbatim between `homeassistant/components/sandbox/` and
+`hass_client/hass_client/` (with `channel.py` / `codec_protobuf.py` and the
+checked-in `_proto/sandbox_pb2.py`/`.pyi` gencode).
 
 ---
 

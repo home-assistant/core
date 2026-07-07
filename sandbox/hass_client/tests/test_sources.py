@@ -3,6 +3,7 @@
 All fetches use a local in-memory tarball fixture — no test hits the network.
 """
 
+import asyncio
 from collections.abc import Iterator
 import io
 from pathlib import Path
@@ -15,11 +16,13 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-def _clear_tarball_cache() -> Iterator[None]:
-    """Reset the process-lifetime tarball cache between tests for isolation."""
-    sources_module._TARBALL_CACHE.clear()  # noqa: SLF001
+def _clear_fetch_state() -> Iterator[None]:
+    """Reset the single-flight download state between tests for isolation."""
+    sources_module._INFLIGHT.clear()  # noqa: SLF001
+    sources_module._COMPLETED.clear()  # noqa: SLF001
     yield
-    sources_module._TARBALL_CACHE.clear()  # noqa: SLF001
+    sources_module._INFLIGHT.clear()  # noqa: SLF001
+    sources_module._COMPLETED.clear()  # noqa: SLF001
 
 
 def _make_tarball(
@@ -108,8 +111,50 @@ async def test_git_source_extracts_into_config_dir(tmp_path: Path) -> None:
     assert not (tmp_path / "README.md").exists()
 
 
-async def test_second_call_same_ref_hits_cache(tmp_path: Path) -> None:
-    """Two entries from the same (url, ref) download once."""
+async def test_concurrent_same_ref_shares_one_download(tmp_path: Path) -> None:
+    """Concurrent entries from the same (url, ref) share one in-flight fetch."""
+    tarball = _make_tarball(
+        top="my_custom-aaaa",
+        files={
+            "custom_components/foo/manifest.json": "{}",
+            "custom_components/bar/manifest.json": "{}",
+        },
+    )
+    calls = 0
+
+    async def _fetch(url: str, ref: str) -> bytes:
+        nonlocal calls
+        calls += 1
+        await asyncio.sleep(0)
+        return tarball
+
+    source_foo = pb.IntegrationSource(
+        kind="git",
+        url="https://github.com/owner/repo",
+        ref="z" * 40,
+        domain="foo",
+        subdir="custom_components/foo",
+    )
+    source_bar = pb.IntegrationSource(
+        kind="git",
+        url="https://github.com/owner/repo",
+        ref="z" * 40,
+        domain="bar",
+        subdir="custom_components/bar",
+    )
+
+    await asyncio.gather(
+        async_ensure_integration_source(str(tmp_path), source_foo, fetch=_fetch),
+        async_ensure_integration_source(str(tmp_path), source_bar, fetch=_fetch),
+    )
+
+    assert calls == 1
+    assert (tmp_path / "custom_components" / "foo" / "manifest.json").exists()
+    assert (tmp_path / "custom_components" / "bar" / "manifest.json").exists()
+
+
+async def test_sequential_new_subdir_redownloads(tmp_path: Path) -> None:
+    """A finished download is not pinned — a later new-subdir fetch re-downloads."""
     tarball = _make_tarball(
         top="my_custom-aaaa",
         files={
@@ -142,7 +187,7 @@ async def test_second_call_same_ref_hits_cache(tmp_path: Path) -> None:
     await async_ensure_integration_source(str(tmp_path), source_foo, fetch=_fetch)
     await async_ensure_integration_source(str(tmp_path), source_bar, fetch=_fetch)
 
-    assert calls == 1
+    assert calls == 2
     assert (tmp_path / "custom_components" / "foo" / "manifest.json").exists()
     assert (tmp_path / "custom_components" / "bar" / "manifest.json").exists()
 
