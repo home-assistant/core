@@ -1,7 +1,7 @@
 """ZHA radio manager."""
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
 import contextlib
 from contextlib import suppress
 import copy
@@ -22,6 +22,7 @@ from zigpy.config import (
     CONF_NWK_BACKUP_ENABLED,
     SCHEMA_DEVICE,
 )
+import zigpy.device
 from zigpy.exceptions import NetworkNotFormed
 
 from homeassistant import config_entries
@@ -174,9 +175,18 @@ class ZhaRadioManager:
 
     @contextlib.asynccontextmanager
     async def create_zigpy_app(
-        self, *, connect: bool = True
+        self,
+        *,
+        connect: bool = True,
+        device_resolver: Callable[[zigpy.device.Device], zigpy.device.Device]
+        | None = None,
     ) -> AsyncGenerator[ControllerApplication]:
-        """Connect to the radio with the current config and then clean up."""
+        """Connect to the radio with the current config and then clean up.
+
+        `device_resolver` is forwarded to zigpy so devices loaded from the
+        database are quirk-resolved; without it they are bare, un-quirked
+        devices (quirk resolution now lives in the ZHA gateway, not zigpy).
+        """
         assert self.radio_type is not None
 
         config = get_zha_data(self.hass).yaml_config
@@ -201,7 +211,10 @@ class ZhaRadioManager:
         app_config[CONF_USE_THREAD] = False
 
         app = await self.radio_type.controller.new(
-            app_config, auto_form=False, start_radio=False
+            app_config,
+            auto_form=False,
+            start_radio=False,
+            device_resolver=device_resolver,
         )
 
         try:
