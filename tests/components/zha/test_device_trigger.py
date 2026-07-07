@@ -562,7 +562,6 @@ async def test_validate_trigger_config_unloaded_bad_info(
 
 
 async def test_device_trigger_cache_built_with_quirk_resolver(
-    hass: HomeAssistant,
     zigpy_app_controller: ControllerApplication,
     setup_zha: Callable[..., Coroutine[None]],
 ) -> None:
