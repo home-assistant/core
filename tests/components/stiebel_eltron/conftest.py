@@ -44,9 +44,14 @@ def mock_lwz_api() -> Generator[MagicMock]:
         api_client.get_current_temp = MagicMock(return_value=21.0)
         api_client.get_current_humidity = MagicMock(return_value=45.0)
         api_client.get_operation = MagicMock(return_value=OperatingMode.AUTOMATIC)
+        api_client.get_heating_status = MagicMock(return_value=True)
+        api_client.get_cooling_status = MagicMock(return_value=False)
         api_client.get_filter_alarm_status = MagicMock(return_value=False)
 
-        api_client.connect = AsyncMock()
+        def _connect() -> None:
+            api_client.is_connected = True
+
+        api_client.connect = AsyncMock(side_effect=_connect)
         api_client.close = AsyncMock()
         api_client.async_update = AsyncMock()
         api_client.set_operation = AsyncMock()
