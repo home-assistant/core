@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from tplink_omada_client import OmadaClient, OmadaSiteClient
 from tplink_omada_client.devices import OmadaListDevice, OmadaSwitch
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
 if TYPE_CHECKING:
@@ -45,21 +45,10 @@ def config_entry_owns_controller_entities(
         if config_entry_controller_unique_id(entry) == controller_unique_id
     ]
 
-    active_controller_entries = [
-        entry
-        for entry in controller_entries
-        if entry.state
-        in (
-            ConfigEntryState.SETUP_IN_PROGRESS,
-            ConfigEntryState.LOADED,
-        )
-    ]
-    owner_entries = active_controller_entries or controller_entries
-
     return (
         config_entry.entry_id
         == min(
-            owner_entries, key=lambda entry: (entry.created_at, entry.entry_id)
+            controller_entries, key=lambda entry: (entry.created_at, entry.entry_id)
         ).entry_id
     )
 

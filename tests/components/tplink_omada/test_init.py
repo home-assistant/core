@@ -1,5 +1,6 @@
 """Tests for TP-Link Omada integration init."""
 
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -10,6 +11,9 @@ from tplink_omada_client.exceptions import (
 )
 
 from homeassistant.components.tplink_omada.const import DOMAIN
+from homeassistant.components.tplink_omada.controller import (
+    config_entry_owns_controller_entities,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -151,6 +155,37 @@ async def test_controller_entities_only_created_once_for_multiple_sites(
             "2b8ebfe7af51afa2f58844e1f9ba0c04_controller_firmware",
         }
     )
+
+
+async def test_controller_entity_owner_ignores_entry_state(
+    hass: HomeAssistant,
+) -> None:
+    """Test controller entity owner is selected independently of entry state."""
+    earlier_entry = MockConfigEntry(
+        title="Test Omada Controller",
+        domain=DOMAIN,
+        data=dict(MOCK_ENTRY_DATA),
+        entry_id="earlier-entry",
+        unique_id="12345_SiteId",
+        version=2,
+        state=ConfigEntryState.NOT_LOADED,
+    )
+    later_entry = MockConfigEntry(
+        title="Test Omada Controller",
+        domain=DOMAIN,
+        data={**MOCK_ENTRY_DATA, "site": "SecondSite"},
+        entry_id="later-entry",
+        unique_id="12345_SecondSite",
+        version=2,
+        state=ConfigEntryState.LOADED,
+    )
+    object.__setattr__(earlier_entry, "created_at", datetime(2026, 1, 1, tzinfo=UTC))
+    object.__setattr__(later_entry, "created_at", datetime(2026, 1, 2, tzinfo=UTC))
+    earlier_entry.add_to_hass(hass)
+    later_entry.add_to_hass(hass)
+
+    assert config_entry_owns_controller_entities(hass, earlier_entry)
+    assert not config_entry_owns_controller_entities(hass, later_entry)
 
 
 async def test_migrate_entry_v1_to_v2(
