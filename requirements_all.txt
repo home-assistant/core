@@ -3284,7 +3284,7 @@ vehicle==3.0.0
 velbus-aio==2026.4.1
 
 # homeassistant.components.venstar
-venstarcolortouch==0.21
+venstarcolortouch==0.22
 
 # homeassistant.components.viaggiatreno
 viaggiatreno_ha==0.2.4
