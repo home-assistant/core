@@ -1,23 +1,7 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Connect EvolvIOT",
-        "description": "Home Assistant could not start EvolvIOT pairing. Check the EvolvIOT backend connection and retry.",
-        "data": {
-          "retry": "Retry pairing"
-        },
-        "data_description": {
-          "retry": "Start EvolvIOT pairing again."
-        }
-      },
-      "pair": {
-        "title": "Scan the code from EvolvIOT app",
-        "description": "| ![EvolvIOT pairing QR]({qr_image_url}) |\n|:--:|\n\nPairing code: `{user_code}`\n\nProfile > Third party services > Home Assistant > Scan QR to connect Home Assistant.\n\nAfter the app shows success, select Submit."
-      }
-    },
-    "progress": {
-      "pair": "Waiting for approval in the EvolvIOT app. Pairing code: {user_code}"
+    "abort": {
+      "already_configured": "This EvolvIOT account is already configured."
     },
     "error": {
       "authorization_denied": "Pairing was denied in the EvolvIOT app.",
@@ -27,18 +11,23 @@
       "invalid_auth": "Invalid EvolvIOT credentials.",
       "unknown": "Unexpected error."
     },
-    "abort": {
-      "already_configured": "This EvolvIOT account is already configured."
-    }
-  },
-  "options": {
+    "progress": {
+      "pair": "Waiting for approval in the EvolvIOT app. Pairing code: {user_code}"
+    },
     "step": {
-      "init": {
-        "title": "EvolvIOT options",
+      "pair": {
+        "description": "| ![EvolvIOT pairing QR]({qr_image_url}) |\n|:--:|\n\nPairing code: `{user_code}`\n\nProfile > Third party services > Home Assistant > Scan QR to connect Home Assistant.\n\nAfter the app shows success, select Submit.",
+        "title": "Scan the code from EvolvIOT app"
+      },
+      "user": {
         "data": {
-          "api_base_url": "API base URL",
-          "verify_ssl": "Verify SSL certificate"
-        }
+          "retry": "Retry pairing"
+        },
+        "data_description": {
+          "retry": "Start EvolvIOT pairing again."
+        },
+        "description": "Home Assistant could not start EvolvIOT pairing. Check the EvolvIOT backend connection and retry.",
+        "title": "Connect EvolvIOT"
       }
     }
   },
@@ -46,6 +35,17 @@
     "sensor": {
       "connection_mode": {
         "name": "Connection Mode"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "api_base_url": "API base URL",
+          "verify_ssl": "Verify SSL certificate"
+        },
+        "title": "EvolvIOT options"
       }
     }
   }
