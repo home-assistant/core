@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -96,8 +95,6 @@ class WibeeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 title, unique_id, data = await validate_input(self.hass, user_input)
             except NoDeviceInfo:
                 errors[CONF_HOST] = "no_device_info"
-            except AbortFlow:
-                raise
             except Exception:
                 _LOGGER.exception("Unexpected exception during setup")
                 errors["base"] = "unknown"
@@ -127,8 +124,6 @@ class WibeeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 _, unique_id, data = await validate_input(self.hass, user_input)
             except NoDeviceInfo:
                 errors[CONF_HOST] = "no_device_info"
-            except AbortFlow:
-                raise
             except Exception:
                 _LOGGER.exception("Unexpected exception during reconfigure")
                 errors["base"] = "unknown"
