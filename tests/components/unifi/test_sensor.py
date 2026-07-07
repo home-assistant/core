@@ -23,6 +23,7 @@ from homeassistant.components.unifi.const import (
     CONF_DETECTION_TIME,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
+    CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_DETECTION_TIME,
     DEVICE_STATES,
 )
@@ -35,7 +36,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.util import dt as dt_util
 
@@ -577,6 +578,41 @@ async def test_wired_client_speed_sensor(
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.wired_client_link_speed").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [
+        {
+            CONF_TRACK_CLIENTS: False,
+            CONF_TRACK_WIRED_CLIENTS: False,
+            CONF_TRACK_DEVICES: False,
+        }
+    ],
+)
+@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT]])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_wired_client_speed_sensor_not_created_when_untracked(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client_payload: list[dict[str, Any]],
+) -> None:
+    """Verify untracked wired clients do not create a link speed sensor or device.
+
+    With client tracking disabled the link speed sensor must not be created for
+    wired clients. The sensor is disabled by default, but the device registry
+    entry is created before that check, so an untracked wired client would
+    otherwise still spawn a client device. This is the root cause of UniFi
+    installs ending up with thousands of phantom client devices.
+    """
+    assert entity_registry.async_get("sensor.wired_client_link_speed") is None
+    assert (
+        device_registry.async_get_device(
+            connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])}
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize(

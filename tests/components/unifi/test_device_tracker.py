@@ -25,7 +25,7 @@ from homeassistant.components.unifi.const import (
 )
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
@@ -608,6 +608,76 @@ async def test_restoring_client(
     assert hass.states.get("device_tracker.wd_client_1")
     assert hass.states.get("device_tracker.restored")
     assert not hass.states.get("device_tracker.not_restored")
+
+
+@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT_1]])
+@pytest.mark.parametrize(
+    "clients_all_payload",
+    [
+        [
+            {
+                "hostname": "recent",
+                "is_wired": True,
+                "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+                "mac": "00:00:00:00:00:05",
+            },
+            {
+                "hostname": "stale",
+                "is_wired": True,
+                "last_seen": 1562600145,  # 2019, well beyond the retention window
+                "mac": "00:00:00:00:00:06",
+            },
+        ]
+    ],
+)
+async def test_pruning_stale_restored_clients(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+    clients_all_payload: list[dict[str, Any]],
+) -> None:
+    """Restore recently seen inactive clients but prune stale ones and their device.
+
+    The controller keeps every client it has ever seen. Restoring all of them on
+    every startup is what made installations pile up thousands of stale client
+    devices, so clients seen outside the retention window are removed together
+    with their device instead of being resurrected again.
+    """
+    recent, stale = clients_all_payload
+    entries: dict[str, er.RegistryEntry] = {}
+    for client in clients_all_payload:
+        entries[client["mac"]] = entity_registry.async_get_or_create(
+            TRACKER_DOMAIN,
+            DOMAIN,
+            f"site_id-{client['mac']}",
+            suggested_object_id=client["hostname"],
+            config_entry=config_entry,
+        )
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, client["mac"])},
+        )
+
+    await config_entry_factory()
+
+    # Recently seen client is restored with its tracker and device intact
+    assert hass.states.get("device_tracker.recent")
+    assert entity_registry.async_get(entries[recent["mac"]].entity_id)
+    assert device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, recent["mac"])}
+    )
+
+    # Stale client is pruned together with its device
+    assert not hass.states.get("device_tracker.stale")
+    assert entity_registry.async_get(entries[stale["mac"]].entity_id) is None
+    assert (
+        device_registry.async_get_device(
+            connections={(dr.CONNECTION_NETWORK_MAC, stale["mac"])}
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize(
