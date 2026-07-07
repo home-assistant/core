@@ -57,6 +57,16 @@
           "monophasic": "Monophasic",
           "threephasic": "Three-phase"
         }
+      },
+      "dynamic_power_mode": {
+        "name": "Dynamic power mode",
+        "state": {
+          "profile": "Profile",
+          "pv_exclusive": "PV exclusive",
+          "pv_grid": "PV + grid",
+          "pv_minimum": "PV + minimum power",
+          "stop": "Stop"
+        }
       }
     },
     "sensor": {
@@ -147,6 +157,20 @@
       "timer": {
         "name": "Charge point timer"
       }
+    }
+  },
+  "exceptions": {
+    "dynamic_power_mode_update_failed": {
+      "message": "Failed to apply the contracted power after changing the dynamic power mode."
+    },
+    "no_data": {
+      "message": "No data has been retrieved from the EVSE yet. Please try again in a few seconds."
+    },
+    "no_dynamic_power_mode_helper": {
+      "message": "No entities have been configured for contracted power and power deviation. Please check the integration options."
+    },
+    "no_state": {
+      "message": "Unknown {entity_id} state."
     }
   },
   "issues": {
