@@ -241,10 +241,13 @@ class SandboxBridge:
 
         channel.register(MSG_REGISTER_ENTITY, self._handle_register_entity)
         channel.register(MSG_UNREGISTER_ENTITY, self._handle_unregister_entity)
-        channel.register(MSG_STATE_CHANGED, self._handle_state_changed)
+        # State pushes + event re-fires are pure sync work (dict updates +
+        # a bus fire) — dispatch them inline in the read loop so per-entity
+        # ordering is guaranteed and no task is spawned per frame.
+        channel.register_push_inline(MSG_STATE_CHANGED, self._handle_state_changed)
         channel.register(MSG_REGISTER_SERVICE, self._handle_register_service)
         channel.register(MSG_UNREGISTER_SERVICE, self._handle_unregister_service)
-        channel.register(MSG_FIRE_EVENT, self._handle_fire_event)
+        channel.register_push_inline(MSG_FIRE_EVENT, self._handle_fire_event)
         channel.register(MSG_STORE_LOAD, self._handle_store_load)
         channel.register(MSG_STORE_SAVE, self._handle_store_save)
         channel.register(MSG_STORE_REMOVE, self._handle_store_remove)
@@ -569,7 +572,8 @@ class SandboxBridge:
             await component.async_remove_entity(entity_id)
         return pb.UnregisterEntityResult(ok=True)
 
-    async def _handle_state_changed(self, msg: pb.StateChanged) -> None:
+    @callback
+    def _handle_state_changed(self, msg: pb.StateChanged) -> None:
         proxy = self._entities.get(msg.sandbox_entity_id)
         if proxy is None:
             return
@@ -714,7 +718,8 @@ class SandboxBridge:
             event_type.startswith(f"{domain}_") for domain in self._owned_domains()
         )
 
-    async def _handle_fire_event(self, msg: pb.FireEvent) -> None:
+    @callback
+    def _handle_fire_event(self, msg: pb.FireEvent) -> None:
         """Re-fire a sandbox-side event on main's bus.
 
         The sandbox tags every push with ``event_type`` + ``event_data`` and,

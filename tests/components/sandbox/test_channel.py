@@ -197,6 +197,66 @@ async def test_push_message_is_one_way(channels: tuple) -> None:
     assert received == [{"hello": "world"}]
 
 
+async def test_inline_push_handler_runs_in_wire_order(channels: tuple) -> None:
+    """Inline push handlers run in the read loop, preserving wire order."""
+    channel_a, channel_b = channels
+    received: list[int] = []
+
+    def receive(payload: dict) -> None:
+        received.append(payload["idx"])
+
+    channel_b.register_push_inline("test/inline", receive)
+    for idx in range(100):
+        await channel_a.push("test/inline", {"idx": idx})
+
+    for _ in range(100):
+        if len(received) == 100:
+            break
+        await asyncio.sleep(0.01)
+    assert received == list(range(100))
+
+
+async def test_inline_push_handler_exception_keeps_reader_alive(
+    channels: tuple, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A raising inline handler is logged; the read loop keeps dispatching."""
+    channel_a, channel_b = channels
+    received: list[int] = []
+
+    def receive(payload: dict) -> None:
+        if payload["idx"] == 0:
+            raise ValueError("boom")
+        received.append(payload["idx"])
+
+    channel_b.register_push_inline("test/inline", receive)
+    await channel_a.push("test/inline", {"idx": 0})
+    await channel_a.push("test/inline", {"idx": 1})
+
+    for _ in range(100):
+        if received:
+            break
+        await asyncio.sleep(0.01)
+    assert received == [1]
+    assert "push handler for test/inline raised" in caplog.text
+
+    # Calls still round-trip on the surviving read loop.
+    async def echo(payload: dict) -> dict:
+        return {"echoed": payload["value"]}
+
+    channel_b.register("test/echo", echo)
+    assert await channel_a.call("test/echo", {"value": 5}) == {"echoed": 5}
+
+
+async def test_call_to_inline_only_type_is_unknown(channels: tuple) -> None:
+    """A CALL frame never dispatches inline — only async handlers serve calls."""
+    channel_a, channel_b = channels
+
+    channel_b.register_push_inline("test/inline", lambda payload: None)
+    with pytest.raises(ChannelRemoteError) as err:
+        await asyncio.wait_for(channel_a.call("test/inline", {}), timeout=2.0)
+    assert err.value.error_type == "ChannelUnknownType"
+
+
 async def test_handler_can_call_back_without_deadlock(channels: tuple) -> None:
     """A handler that issues channel.call mid-execution doesn't deadlock.
 
@@ -377,13 +437,16 @@ async def test_close_after_eof_still_closes_transport() -> None:
     assert transport.close_calls == 1
 
 
-async def test_read_backpressure_sheds_over_queued_cap() -> None:
+async def test_read_backpressure_sheds_over_queued_cap(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """A frame-flood is bounded: over the cap, calls are shed not queued.
 
     With a tiny ``max_queued`` and handlers that never return, the reader keeps
     draining the wire but stops growing handler tasks — once the cap is hit,
-    further calls come back as ``ChannelOverloaded`` instead of piling up
-    unbounded decoded payloads.
+    further calls come back as ``ChannelOverloaded``, task-dispatched pushes
+    are dropped with a warning, and inline pushes (which queue nothing) still
+    go through.
     """
     channel_a, channel_b = make_channel_pair(
         max_inflight_b=2, max_queued_b=3, use_json=True
@@ -419,6 +482,20 @@ async def test_read_backpressure_sheds_over_queued_cap() -> None:
         assert err.value.error_type == "ChannelOverloaded"
 
         # The reader threw the excess away rather than growing the inflight set.
+        assert len(channel_b._inflight) == 3
+
+        # A task-dispatched push is shed too — with a warning, not silently.
+        inline_received: list[dict] = []
+        channel_b.register_push_inline("test/inline", inline_received.append)
+        await channel_a.push("test/never", {"idx": 100})
+        # Inline pushes bypass the shed entirely (they queue nothing).
+        await channel_a.push("test/inline", {"idx": 101})
+        for _ in range(100):
+            if inline_received:
+                break
+            await asyncio.sleep(0.01)
+        assert inline_received == [{"idx": 101}]
+        assert "overloaded, dropping push frame test/never" in caplog.text
         assert len(channel_b._inflight) == 3
     finally:
         release.set()

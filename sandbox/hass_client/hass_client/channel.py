@@ -33,12 +33,24 @@ class runs in the HA Core integration and inside the sandbox subprocess
 sync by the protocol shape rather than a shared import — the integration
 must not depend on ``hass_client``).
 
-Inbound calls and pushes are dispatched in their own tasks so a handler
-that itself issues :meth:`Channel.call` does not block the reader — the
-reply for the nested call has to come back through the same reader. A
-bounded semaphore caps how many handlers can run concurrently; the N+1th
-inbound message queues at the semaphore (not at the reader) until a slot
-frees up.
+Inbound dispatch has two modes:
+
+* **Task dispatch** (:meth:`Channel.register`, async handlers) — calls and
+  pushes run in their own tasks so a handler that itself issues
+  :meth:`Channel.call` does not block the reader — the reply for the
+  nested call has to come back through the same reader. A bounded
+  semaphore caps how many handlers can run concurrently; the N+1th
+  inbound message queues at the semaphore (not at the reader) until a
+  slot frees up.
+* **Inline push dispatch** (:meth:`Channel.register_push_inline`, sync
+  handlers) — the handler runs directly in the read loop, no task, no
+  semaphore. For pure-synchronous work (state pushes are dict updates)
+  this removes a task spawn per frame and makes in-order delivery a
+  *guarantee* instead of an accident of FIFO task scheduling. Inline
+  handlers queue nothing, so they also bypass the ``max_queued`` shed.
+  Calls can never be inline (they must write replies): the call branch
+  consults only the async handlers, so a call to an inline-only type is
+  rejected with ``ChannelUnknownType``.
 """
 
 # This module is hand-mirrored: a byte-identical copy lives at both
@@ -63,6 +75,7 @@ import voluptuous as vol
 _LOGGER = logging.getLogger(__name__)
 
 Handler = Callable[[Any], Awaitable[Any]]
+SyncHandler = Callable[[Any], None]
 
 DEFAULT_MAX_INFLIGHT = 16
 
@@ -318,6 +331,7 @@ class Channel:
         self._next_id = 1
         self._pending: dict[int, asyncio.Future[Any]] = {}
         self._handlers: dict[str, Handler] = {}
+        self._inline_push_handlers: dict[str, SyncHandler] = {}
         self._reader_task: asyncio.Task[None] | None = None
         self._closed: bool = False
         self._close_done: bool = False
@@ -352,6 +366,19 @@ class Channel:
     def register(self, msg_type: str, handler: Handler) -> None:
         """Register an async handler for inbound calls of this type."""
         self._handlers[msg_type] = handler
+
+    def register_push_inline(self, msg_type: str, handler: SyncHandler) -> None:
+        """Register a sync handler run inline in the read loop for pushes.
+
+        The handler executes directly in ``_dispatch`` — no task, no
+        semaphore — so it must be purely synchronous (no awaits, no
+        blocking I/O). Frames of this type are delivered strictly in wire
+        order and never shed under the ``max_queued`` cap (they queue
+        nothing). Only PUSH frames dispatch here: the call branch consults
+        only :meth:`register` handlers, so a CALL of this type errors back
+        with ``ChannelUnknownType``.
+        """
+        self._inline_push_handlers[msg_type] = handler
 
     def start(self) -> None:
         """Begin reading messages off the wire."""
@@ -490,7 +517,11 @@ class Channel:
                     task.cancel()
 
     def _dispatch(self, frame: Frame) -> None:
-        """Route an inbound frame; non-blocking — handlers run in tasks."""
+        """Route an inbound frame.
+
+        Non-blocking: async handlers run in tasks; inline push handlers are
+        pure-sync and run right here.
+        """
         if frame.kind is FrameKind.RESPONSE:
             # Response to a call we sent out — set the future inline; no I/O.
             future = self._pending.get(frame.id)
@@ -508,10 +539,27 @@ class Channel:
                 )
             return
 
-        # Backpressure: responses are handled inline above and never shed.
-        # Bound the inbound handler tasks (each pins a decoded payload) so a
-        # frame-flood throttles here instead of growing memory without bound —
-        # reject calls with an error frame, silently drop pushes.
+        if (
+            frame.kind is FrameKind.PUSH
+            and (inline := self._inline_push_handlers.get(frame.type)) is not None
+        ):
+            # Inline push: run synchronously in the read loop — no task, no
+            # semaphore, nothing queued, so the max_queued shed below does
+            # not apply. Guarantees in-order delivery per frame type.
+            try:
+                inline(frame.payload)
+            except Exception:
+                _LOGGER.exception(
+                    "Channel %s: push handler for %s raised",
+                    self._name,
+                    frame.type,
+                )
+            return
+
+        # Backpressure: responses and inline pushes are handled above and
+        # never shed. Bound the inbound handler tasks (each pins a decoded
+        # payload) so a frame-flood throttles here instead of growing memory
+        # without bound — reject calls with an error frame, drop pushes.
         if len(self._inflight) >= self._max_queued:
             if frame.kind is FrameKind.CALL:
                 self._spawn_handler(
@@ -524,6 +572,12 @@ class Channel:
                         )
                     )
                 )
+                return
+            _LOGGER.warning(
+                "Channel %s: overloaded, dropping push frame %s",
+                self._name,
+                frame.type,
+            )
             return
 
         handler = self._handlers.get(frame.type)
@@ -632,6 +686,7 @@ __all__ = [
     "FrameTooLargeError",
     "Handler",
     "StreamTransport",
+    "SyncHandler",
     "Transport",
     "error_data_for",
 ]
