@@ -5,6 +5,14 @@ The bridge listens for ``EVENT_STATE_CHANGED`` on the sandbox-private
 trigger a ``sandbox/register_entity`` call up to main; subsequent
 changes become ``sandbox/state_changed`` pushes.
 
+State flow is a per-entity latest-state slot drained by one writer task:
+the event listener only classifies and writes ``_pending[entity_id]``
+(latest write wins, so a burst for one entity coalesces to a single
+push), and the writer drains slots in insertion order, one RPC at a
+time. That makes per-entity ordering a structural guarantee (no
+task-per-event racing) and means overload coalesces instead of dropping
+the last update in a burst.
+
 We deliberately tag every event with the sandbox-side ``entry_id`` of
 the owning :class:`EntityPlatform` so main can route each proxy entity
 to the right :class:`ConfigEntry`. Entities that aren't owned by a
@@ -13,6 +21,7 @@ integration creates outside its own entry) are skipped with a debug log.
 """
 
 import asyncio
+import contextlib
 import json
 import logging
 from typing import Any
@@ -33,6 +42,9 @@ from .messages import encode_json, make_entity_description
 from .protocol import MSG_REGISTER_ENTITY, MSG_STATE_CHANGED, MSG_UNREGISTER_ENTITY
 
 _LOGGER = logging.getLogger(__name__)
+
+# Slot value marking a pending removal for an entity.
+_REMOVED = object()
 
 
 class EntityBridge:
@@ -59,12 +71,21 @@ class EntityBridge:
         self.approved = approved if approved is not None else ApprovedDomains()
         self._channel: Channel | None = None
         self._registered: set[str] = set()
-        self._pending: set[str] = set()
-        # Entities whose removal arrived while their register RPC was still
-        # in flight. The register task flushes (unregisters) them once it
-        # completes — relying on `_registered` membership would miss the
-        # removal because the entity isn't registered yet at removal time.
-        self._removed_while_pending: set[str] = set()
+        # Per-entity latest-state slot, drained in insertion order by the
+        # writer task. Values are a State (latest write wins — a burst for
+        # one entity coalesces to a single push) or ``_REMOVED``.
+        self._pending: dict[str, Any] = {}
+        # Entity the writer is currently awaiting an RPC for. Its slot has
+        # been popped, so ``_pending``/``_registered`` membership alone would
+        # misclassify a removal arriving mid-RPC as never-seen.
+        self._writing: str | None = None
+        self._wake = asyncio.Event()
+        self._writer_task: asyncio.Task[None] | None = None
+        # Entities whose ``_describe`` failed (no live entity object / no
+        # owning entry). Ignored on every state write instead of re-attempting
+        # a full register each time; cleared on an entity-registry update for
+        # that entity_id.
+        self._skipped: set[str] = set()
         # Domain each registered entity contributed to ApprovedDomains, so its
         # approval refcount can be released symmetrically on unregister.
         self._approved_domain: dict[str, str] = {}
@@ -79,6 +100,9 @@ class EntityBridge:
     def register(self, channel: Channel) -> None:
         """Subscribe to state + registry events and capture the channel."""
         self._channel = channel
+        self._writer_task = asyncio.create_task(
+            self._writer_loop(), name="sandbox:entity-bridge-writer"
+        )
         self._unsub_state = self.hass.bus.async_listen(
             EVENT_STATE_CHANGED, self._on_state_changed
         )
@@ -93,7 +117,7 @@ class EntityBridge:
         )
 
     async def async_stop(self) -> None:
-        """Detach the state + registry listeners."""
+        """Detach the listeners and stop the writer task."""
         for attr in (
             "_unsub_state",
             "_unsub_entity_registry",
@@ -103,50 +127,94 @@ class EntityBridge:
             if unsub is not None:
                 unsub()
                 setattr(self, attr, None)
+        if self._writer_task is not None:
+            self._writer_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._writer_task
+            self._writer_task = None
 
     @callback
     def _on_state_changed(self, event: Event[EventStateChangedData]) -> None:
+        """Classify the event into the entity's slot and wake the writer.
+
+        Pure sync bookkeeping — all RPC work happens in the writer task.
+        """
         if self._channel is None or self._channel.closed:
             return
         entity_id: str = event.data["entity_id"]
+        if entity_id in self._skipped:
+            return
         new_state = event.data.get("new_state")
 
         if new_state is None:
+            # Only meaningful for entities we track or are about to: a
+            # removal for a never-seen entity has nothing to unregister.
+            if (
+                entity_id not in self._registered
+                and entity_id not in self._pending
+                and entity_id != self._writing
+            ):
+                return
+            self._pending[entity_id] = _REMOVED
+        else:
+            # Latest write wins. This may also overwrite a pending _REMOVED:
+            # main's register is an upsert, so skipping the removal blip and
+            # jumping straight to the newer state is safe.
+            self._pending[entity_id] = new_state
+        self._wake.set()
+
+    async def _writer_loop(self) -> None:
+        """Drain ``_pending`` slots in insertion order, one RPC at a time.
+
+        The slot is popped *before* awaiting, so updates arriving during the
+        RPC land in a fresh slot and get a later round — including a state
+        change or removal racing an in-flight register. One failing RPC is
+        logged and must not kill the loop.
+        """
+        while True:
+            await self._wake.wait()
+            self._wake.clear()
+            while self._pending:
+                entity_id = next(iter(self._pending))
+                slot = self._pending.pop(entity_id)
+                self._writing = entity_id
+                try:
+                    await self._process_slot(entity_id, slot)
+                except asyncio.CancelledError:
+                    raise
+                except Exception:
+                    _LOGGER.exception(
+                        "EntityBridge: writer failed for %s", entity_id
+                    )
+                finally:
+                    self._writing = None
+
+    async def _process_slot(self, entity_id: str, slot: Any) -> None:
+        """Ship one drained slot to main."""
+        if slot is _REMOVED:
             if entity_id in self._registered:
                 self._registered.discard(entity_id)
+                self._last_hash.pop(entity_id, None)
                 self._release_approval(entity_id)
-                asyncio.create_task(  # noqa: RUF006
-                    self._push_unregister(entity_id),
-                    name=f"sandbox:unregister:{entity_id}",
-                )
-            elif entity_id in self._pending:
-                # Removed mid-register: the register task hasn't added it to
-                # _registered yet, so flag it and let that task unregister.
-                self._removed_while_pending.add(entity_id)
+                await self._push_unregister(entity_id)
             return
-
         if entity_id in self._registered:
-            asyncio.create_task(  # noqa: RUF006
-                self._push_state(entity_id, new_state),
-                name=f"sandbox:state:{entity_id}",
-            )
+            await self._push_state(entity_id, slot)
             return
-
-        if entity_id in self._pending:
-            return
-        self._pending.add(entity_id)
-        asyncio.create_task(  # noqa: RUF006
-            self._register_and_push(entity_id, new_state),
-            name=f"sandbox:register:{entity_id}",
-        )
+        await self._register(entity_id, slot)
+        # No post-register flush needed: any state change during the register
+        # RPC landed in a fresh _pending slot and gets its own round.
 
     @callback
     def _on_entity_registry_updated(self, event: Event[Any]) -> None:
         if self._channel is None or self._channel.closed:
             return
+        entity_id: str = event.data["entity_id"]
+        # A registry entry appearing/changing may make a previously
+        # undescribable entity describable — let its next state write retry.
+        self._skipped.discard(entity_id)
         if event.data.get("action") != "update":
             return
-        entity_id: str = event.data["entity_id"]
         if entity_id not in self._registered:
             return
         asyncio.create_task(  # noqa: RUF006
@@ -172,41 +240,6 @@ class EntityBridge:
                 self._resend(entity_id),
                 name=f"sandbox:resend:{entity_id}",
             )
-
-    async def _register_and_push(self, entity_id: str, new_state: Any) -> None:
-        try:
-            await self._register(entity_id, new_state)
-        finally:
-            self._pending.discard(entity_id)
-
-        # While the register RPC was in flight, _on_state_changed dropped any
-        # further state_changed for this entity (it was neither registered nor
-        # re-queued). Reconcile that coalesced gap now.
-        #
-        # NOTE: this is the *correctness* fix. Plan 5 (simplification) builds a
-        # single-writer queue on top of the entity push path; when it lands it
-        # should subsume this flush into the queue's ordering guarantees.
-        if entity_id in self._removed_while_pending:
-            # A removal raced the register. Now that register has completed
-            # (and added the entity to _registered), unregister it so main
-            # doesn't keep a ghost proxy.
-            self._removed_while_pending.discard(entity_id)
-            if entity_id in self._registered:
-                self._registered.discard(entity_id)
-                self._last_hash.pop(entity_id, None)
-                self._release_approval(entity_id)
-                await self._push_unregister(entity_id)
-            return
-
-        if entity_id not in self._registered:
-            # Register failed (or was skipped); nothing to flush.
-            return
-
-        current = self.hass.states.get(entity_id)
-        if current is None:
-            return
-        if _state_differs(current, new_state):
-            await self._push_state(entity_id, current)
 
     def _describe(self, entity_id: str) -> dict[str, Any] | None:
         """Build the registry-shaped description for a live entity, or None."""
@@ -235,6 +268,10 @@ class EntityBridge:
             return
         payload = self._describe(entity_id)
         if payload is None:
+            # Sticky skip: without it every subsequent state write for this
+            # entity re-attempts the full describe + register. An
+            # entity-registry update for the entity clears the skip.
+            self._skipped.add(entity_id)
             return
         new_hash = _payload_hash(payload)
         initial_state = None
@@ -355,19 +392,6 @@ def _to_entity_description(
         initial_attributes=initial_attributes,
         device_info=payload.get("device_info"),
     )
-
-
-def _state_differs(current: Any, snapshot: Any) -> bool:
-    """Whether ``current`` state/attributes differ from the registered snapshot.
-
-    ``snapshot`` is the ``new_state`` captured when the register task was
-    created; ``current`` is the live state re-read after the register RPC
-    resolved. A difference means a state change was coalesced away during the
-    in-flight window and must be flushed.
-    """
-    snap_state = getattr(snapshot, "state", None)
-    snap_attrs = dict(snapshot.attributes) if hasattr(snapshot, "attributes") else {}
-    return current.state != snap_state or dict(current.attributes) != snap_attrs
 
 
 def _payload_hash(payload: dict[str, Any]) -> str:
