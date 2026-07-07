@@ -57,12 +57,7 @@ async def test_config_not_ready_on_connection_error(
     mock_config_entry: MockConfigEntry,
     exception: Exception,
 ) -> None:
-    """Test setup retries on a transient network/DNS error fetching bridges.
-
-    A connection or DNS failure while fetching the bridge list (e.g. Home
-    Assistant starting before the network is ready) must be treated as
-    "not ready" so setup is retried, not left in a permanent error state.
-    """
+    """Test setup retries on a transient connection error fetching bridges."""
     with patch(
         "homeassistant.components.lg_thinq.async_get_ha_bridge_list",
         side_effect=exception,
