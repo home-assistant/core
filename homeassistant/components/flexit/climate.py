@@ -97,7 +97,7 @@ class Flexit(ClimateEntity):
             CALL_TYPE_REGISTER_INPUT, 9
         )
         res = await self._async_read_int16_from_register(CALL_TYPE_REGISTER_HOLDING, 17)
-        if self.fan_modes and res is not None and res < len(self.fan_modes):
+        if self.fan_modes and res is not None and 0 <= res < len(self.fan_modes):
             self._attr_fan_mode = self.fan_modes[res]
         self._filter_hours = await self._async_read_uint16_from_register(
             CALL_TYPE_REGISTER_INPUT, 8

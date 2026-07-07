@@ -121,6 +121,15 @@ async def test_setup_reads_temperatures_and_fan_mode(hass: HomeAssistant) -> Non
     assert state.attributes[ATTR_FAN_MODE] == "Medium"
 
 
+async def test_setup_ignores_negative_fan_mode_index(hass: HomeAssistant) -> None:
+    """Test negative fan mode index values are ignored."""
+    registers = DEFAULT_REGISTERS.copy()
+    registers[(CALL_TYPE_REGISTER_HOLDING, 17)] = 65535  # -1 after int16 conversion
+    await _setup_flexit(hass, registers)
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_FAN_MODE] is None
+
+
 async def test_filter_alarm_and_heater_enabled_are_bool(hass: HomeAssistant) -> None:
     """Test filter_alarm and heater_enabled are surfaced as bool, not int."""
     registers = DEFAULT_REGISTERS.copy()
