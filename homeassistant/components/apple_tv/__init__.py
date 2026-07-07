@@ -143,11 +143,6 @@ async def _async_register_airplay_status_listener(
 
     @callback
     def _async_service_updated(service: AsyncServiceInfo) -> None:
-        _LOGGER.warning(
-            "Zeroconf update received: %s %s",
-            service.type,
-            service.name,
-        )
         if service.type != "_airplay._tcp.local.":
             return
 
