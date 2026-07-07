@@ -24,7 +24,8 @@ from homeassistant.helpers.entity import Entity
 from ..messages import decode_json_dict
 
 if TYPE_CHECKING:
-    from ..bridge import SandboxBridge, SandboxEntityDescription
+    from ..bridge import SandboxBridge
+    from ..description import SandboxEntityDescription
 
 
 class SandboxProxyEntity(Entity):
@@ -137,13 +138,17 @@ class SandboxProxyEntity(Entity):
     ) -> None:
         """Update the cache from a sandbox push, and notify HA.
 
+        Ownership contract: the caller hands over ``attributes`` — the bridge
+        builds a fresh dict per push, so it becomes the new ``_state_cache``
+        without a defensive copy. Callers must not reuse the dict afterwards.
+
         ``context`` is the main-side authoritative Context the bridge resolved
         from the sandbox's ``context_id`` — the original Context for an id main
         handed down, or a fresh ``user_id=None`` one otherwise, never carrying
         a sandbox-supplied parent_id / user_id. When absent the entity writes
         with its own context as before.
         """
-        self._state_cache = dict(attributes)
+        self._state_cache = attributes
         if state is not None:
             self._state_cache["state"] = state
         if self.hass is not None:

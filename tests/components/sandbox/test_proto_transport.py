@@ -162,7 +162,7 @@ async def test_resolve_context_restores_known_and_mints_fresh_unknown(
         # Main remembers a Context it handed down (e.g. the user who pressed a
         # button that triggered a sandboxed automation).
         known = Context(user_id="user-1", parent_id="parent-1")
-        bridge._remember_context(known)
+        bridge.remember_context(known)
 
         # Echoing that id back restores the *original* Context verbatim.
         restored = bridge._resolve_context(known.id)
@@ -199,7 +199,7 @@ async def test_resolve_context_entry_expires_after_ttl(
 
     try:
         known = Context(user_id="user-1", parent_id="parent-1")
-        bridge._remember_context(known)
+        bridge.remember_context(known)
         assert bridge._resolve_context(known.id) is known
 
         # Past the TTL the entry is pruned; the same id now resolves to a

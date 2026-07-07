@@ -239,7 +239,9 @@ async def _entry_setup_payload(
     Surfaces the small subset of entry fields the integration's
     ``async_setup_entry`` reads, plus the ``integration_source`` descriptor
     telling a stateless sandbox where to fetch the code (built-in → no-op;
-    custom → a git source pinned to an exact sha). May raise
+    custom → a git source pinned to an exact sha), plus a ``core_config``
+    snapshot of main's core configuration so the sandbox's private hass
+    computes sun times / distances / unit conversions like main. May raise
     :class:`SandboxSourceError` if a custom integration has no source resolver.
     """
     msg = pb.EntrySetup(
@@ -257,6 +259,20 @@ async def _entry_setup_payload(
     msg.integration_source.CopyFrom(
         await async_resolve_integration_source(hass, entry.domain)
     )
+    config = hass.config
+    core_config = msg.core_config
+    core_config.latitude = config.latitude
+    core_config.longitude = config.longitude
+    core_config.elevation = config.elevation
+    core_config.time_zone = config.time_zone
+    # The unit system carries no public name accessor; core itself reads
+    # ``units._name`` when persisting (core_config.py).
+    core_config.unit_system = config.units._name  # noqa: SLF001
+    core_config.language = config.language
+    if config.country is not None:
+        core_config.country = config.country
+    core_config.currency = config.currency
+    core_config.location_name = config.location_name
     return msg
 
 

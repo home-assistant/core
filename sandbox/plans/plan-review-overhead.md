@@ -350,6 +350,20 @@ pops it).
 - `service_mirror`: two `async_services_for_domain` lookups per registration
   — merge (cosmetic).
 
+## Discovered during execution (open, not in the original findings)
+
+- **Timestamp sensor proxies break on state fidelity**: a sandboxed sensor
+  with `device_class: timestamp` pushes its state as a string, but
+  `SensorEntity.state` requires a `datetime` (`AttributeError: 'str' object
+  has no attribute 'tzinfo'` kills the proxy's entity add). Blocks several
+  sun compat tests even after core-config mirroring (E3). Fix shape: the
+  sensor proxy should rebuild `native_value` typed from the pushed state
+  for timestamp/date device classes.
+- The compat lane (now real, E2) reports 8 failing sun tests — the honest
+  baseline replacing the no-op 99.97%. Failure notes: listener-count
+  assertions see the proxy architecture; unload/remove semantics; recorder
+  attribute exclusion; the timestamp issue above.
+
 ## Suggested execution order
 
 1. **E1 + E2 as one plan** — the sandbox currently cannot bridge a real

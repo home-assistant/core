@@ -255,7 +255,10 @@ class StreamTransport:
 
     async def write_frame(self, data: bytes) -> None:
         """Write one length-prefixed frame and flush it."""
-        self._writer.write(_LENGTH_PREFIX.pack(len(data)) + data)
+        # Two writes, one drain: concatenating would copy the whole frame
+        # (MB-scale for store/translation payloads) just to prepend 4 bytes.
+        self._writer.write(_LENGTH_PREFIX.pack(len(data)))
+        self._writer.write(data)
         await self._writer.drain()
 
     def close(self) -> None:
