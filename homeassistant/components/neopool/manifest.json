@@ -1,0 +1,12 @@
+{
+  "domain": "neopool",
+  "name": "NeoPool",
+  "codeowners": ["@svasek"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/neopool",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["neopool_modbus"],
+  "quality_scale": "silver",
+  "requirements": ["neopool-modbus==3.6.0"]
+}

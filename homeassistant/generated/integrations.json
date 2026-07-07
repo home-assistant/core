@@ -4630,6 +4630,12 @@
       "integration_type": "virtual",
       "supported_by": "shelly"
     },
+    "neopool": {
+      "name": "NeoPool",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "ness_alarm": {
       "name": "Ness Alarm",
       "integration_type": "hub",
