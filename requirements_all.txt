@@ -648,7 +648,7 @@ beautifulsoup4==4.13.3
 bizkaibus==0.1.1
 
 # homeassistant.components.esphome
-bleak-esphome==3.9.4
+bleak-esphome==3.9.7
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.6.1
@@ -1263,7 +1263,7 @@ hole==0.9.2
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.99
+holidays==0.100
 
 # homeassistant.components.frontend
 home-assistant-frontend==20260624.4
@@ -1743,7 +1743,7 @@ ondilo==0.5.0
 onedrive-personal-sdk==0.1.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==4.2.0
+onvif-zeep-async==4.2.1
 
 # homeassistant.components.onvif
 onvif_parsers==2.3.0
@@ -2436,7 +2436,7 @@ pyotgw==2.2.3
 pyotp==2.9.0
 
 # homeassistant.components.overkiz
-pyoverkiz[nexity]==2.0.3
+pyoverkiz[nexity]==2.0.4
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
@@ -3147,7 +3147,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.5.2
+tesla-fleet-api==1.5.4
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
@@ -3195,7 +3195,7 @@ tololib==1.2.2
 toonapi==0.3.0
 
 # homeassistant.components.totalconnect
-total-connect-client==2025.12.2
+total-connect-client==2026.7
 
 # homeassistant.components.tplink_omada
 tplink-omada-client==1.5.8
