@@ -13,6 +13,9 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+USER_INPUT = {CONF_HOST: "1.1.1.1", CONF_PORT: 502}
+RECONFIGURE_INPUT = {CONF_HOST: "2.2.2.2", CONF_PORT: 502}
+
 
 async def test_full_flow(hass: HomeAssistant) -> None:
     """Test the full flow."""
@@ -24,18 +27,12 @@ async def test_full_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 502,
-        },
+        USER_INPUT,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Stiebel Eltron"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_PORT: 502,
-    }
+    assert result["data"] == USER_INPUT
 
 
 async def test_form_cannot_connect(
@@ -51,10 +48,7 @@ async def test_form_cannot_connect(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 502,
-        },
+        USER_INPUT,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -64,10 +58,7 @@ async def test_form_cannot_connect(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 502,
-        },
+        USER_INPUT,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -86,10 +77,7 @@ async def test_form_unknown_exception(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 502,
-        },
+        USER_INPUT,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -100,10 +88,7 @@ async def test_form_unknown_exception(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 502,
-        },
+        USER_INPUT,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -124,7 +109,7 @@ async def test_reconfigure_flow(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "2.2.2.2", CONF_PORT: 502},
+        RECONFIGURE_INPUT,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -156,7 +141,7 @@ async def test_reconfigure_flow_errors(
     mock_get_controller_model.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "2.2.2.2", CONF_PORT: 502},
+        RECONFIGURE_INPUT,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
@@ -164,7 +149,7 @@ async def test_reconfigure_flow_errors(
     mock_get_controller_model.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "2.2.2.2", CONF_PORT: 502},
+        RECONFIGURE_INPUT,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -178,7 +163,7 @@ async def test_reconfigure_flow_already_configured(
     other_entry = MockConfigEntry(
         domain=DOMAIN,
         title="Stiebel Eltron",
-        data={CONF_HOST: "2.2.2.2", CONF_PORT: 502},
+        data=RECONFIGURE_INPUT,
         entry_id="stiebel_eltron_002",
     )
 
@@ -192,7 +177,7 @@ async def test_reconfigure_flow_already_configured(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "2.2.2.2", CONF_PORT: 502},
+        RECONFIGURE_INPUT,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -210,10 +195,7 @@ async def test_already_configured(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 502,
-        },
+        USER_INPUT,
     )
 
     assert result["type"] is FlowResultType.ABORT
