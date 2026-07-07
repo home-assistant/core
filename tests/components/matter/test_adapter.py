@@ -1,6 +1,7 @@
 """Test the adapter."""
 
 import base64
+from typing import Any
 from unittest.mock import MagicMock
 
 from matter_server.common.models import EventType
@@ -105,6 +106,57 @@ async def test_device_registry_bridge_mac_address(
     assert bridged_device_entry is not None
     assert bridged_device_entry.via_device_id == bridge_entry.id
     assert bridged_device_entry.connections == set()
+
+
+@pytest.mark.parametrize(
+    "interface_overrides",
+    [
+        # operational WiFi interface reporting an all-zero address
+        {"1": True, "7": 1, "4": base64.b64encode(bytes(6)).decode()},
+        # non-operational Ethernet interface with an otherwise-valid address
+        {
+            "1": False,
+            "7": 2,
+            "4": base64.b64encode(bytes([0x02, 0x00, 0x00, 0x00, 0x00, 0x03])).decode(),
+        },
+    ],
+    ids=["all_zero_address", "non_operational_interface"],
+)
+async def test_device_registry_mac_address_invalid_entries(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    interface_overrides: dict[str, Any],
+) -> None:
+    """Test invalid or non-operational interfaces don't produce a MAC connection."""
+    interface = {
+        "0": "wlan0",
+        "1": True,
+        "2": None,
+        "3": None,
+        "4": "",
+        "5": [],
+        "6": [],
+        "7": 1,
+    }
+    interface.update(interface_overrides)
+    node = create_node_from_fixture("mock_onoff_light", {"0/51/0": [interface]})
+    matter_client.get_nodes.return_value = [node]
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "http://mock-matter-server-url"}
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+    assert entry.connections == set()
 
 
 async def test_device_registry_multiple_mac_addresses(
