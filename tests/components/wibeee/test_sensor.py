@@ -50,6 +50,20 @@ async def test_sensor_no_data(
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_sensor_unavailable_on_coordinator_failure(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry, mock_wibeee_api: MagicMock
+) -> None:
+    """Sensors go unavailable when a coordinator refresh fails."""
+    mock_wibeee_api.async_fetch_sensors_data.side_effect = TimeoutError
+
+    coordinator = loaded_entry.runtime_data.coordinator
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.wibeee_2233_active_power")
+    assert state.state == STATE_UNAVAILABLE
+
+
 async def test_sensor_invalid_value(
     hass: HomeAssistant, loaded_entry: MockConfigEntry
 ) -> None:
