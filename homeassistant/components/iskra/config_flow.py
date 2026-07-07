@@ -152,6 +152,7 @@ class IskraConfigFlowFlow(ConfigFlow, domain=DOMAIN):
                 # Proceed to modbus step.
                 return await self.async_step_modbus_tcp()
 
+        # pylint: disable-next=home-assistant-config-flow-field-not-translated
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,

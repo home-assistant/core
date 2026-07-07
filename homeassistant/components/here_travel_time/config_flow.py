@@ -211,6 +211,7 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             {CONF_ORIGIN_ENTITY_ID: self._config.get(CONF_ORIGIN_ENTITY_ID)},
         )
+        # pylint: disable-next=home-assistant-config-flow-field-not-translated
         return self.async_show_form(step_id="origin_entity", data_schema=schema)
 
     async def async_step_destination_menu(self, _: None = None) -> ConfigFlowResult:
@@ -297,6 +298,7 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             {CONF_DESTINATION_ENTITY_ID: self._config.get(CONF_DESTINATION_ENTITY_ID)},
         )
+        # pylint: disable-next=home-assistant-config-flow-field-not-translated
         return self.async_show_form(step_id="destination_entity", data_schema=schema)
 
 

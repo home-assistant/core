@@ -99,6 +99,7 @@ class PhoneModemFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
         user_input = user_input or {}
         schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(list(port_map))})
+        # pylint: disable-next=home-assistant-config-flow-field-not-translated
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def validate_device_errors(

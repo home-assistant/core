@@ -86,6 +86,7 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 errors["base"] = "invalid_auth"
 
+        # pylint: disable-next=home-assistant-config-flow-field-not-translated
         return self.async_show_form(
             step_id="user",
             data_schema=_USER_SCHEMA,

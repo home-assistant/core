@@ -53,4 +53,5 @@ class EGPSConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             return self.async_abort(reason="no_device")
 
+        # pylint: disable-next=home-assistant-config-flow-field-not-translated
         return self.async_show_form(step_id="user", data_schema=vol.Schema(data_schema))

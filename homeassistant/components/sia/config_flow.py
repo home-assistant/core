@@ -126,6 +126,7 @@ class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             errors = validate_input(user_input)
         if user_input is None or errors is not None:
+            # pylint: disable-next=home-assistant-config-flow-field-not-translated
             return self.async_show_form(
                 step_id="add_account", data_schema=ACCOUNT_SCHEMA, errors=errors
             )

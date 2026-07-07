@@ -131,7 +131,10 @@ Every check has a code following the
 | `W7413` | [`home-assistant-missing-config-entry-unloading`](#w7413-home-assistant-missing-config-entry-unloading) | Integration should implement `async_unload_entry` |
 | `W7415` | [`home-assistant-sequential-executor-jobs`](#w7415-home-assistant-sequential-executor-jobs) | Sequential `async_add_executor_job` calls should be grouped |
 | `W7416` | [`home-assistant-missing-has-entity-name`](#w7416-home-assistant-missing-has-entity-name) | Entity class should set `_attr_has_entity_name = True` |
+| `W7425` | [`home-assistant-config-flow-field-not-translated`](#w7425-home-assistant-config-flow-field-not-translated) | Config flow form field missing translation in `strings.json` |
+| `W7427` | [`home-assistant-options-flow-field-not-translated`](#w7427-home-assistant-options-flow-field-not-translated) | Options flow form field missing translation in `strings.json` |
 | `W7429` | [`home-assistant-unnecessary-format-mac`](#w7429-home-assistant-unnecessary-format-mac) | `format_mac()` is unnecessary with `CONNECTION_NETWORK_MAC` |
+| `W7430` | [`home-assistant-subentry-flow-field-not-translated`](#w7430-home-assistant-subentry-flow-field-not-translated) | Subentry flow form field missing translation in `strings.json` |
 
 
 ## `home_assistant_logger` checker
@@ -828,6 +831,38 @@ Entity class should statically guarantee `_attr_has_entity_name = True`:
 either set at class level, set unconditionally at the top of a method, or
 supplied by an `entity_description` whose class sets `has_entity_name = True`.
 Conditional patterns are rejected.
+
+
+## `home_assistant_config_flow_translations` checker
+
+Ensures that every field in a config flow, options flow, or subentry flow
+form schema has a corresponding translation entry in `strings.json`. When
+`async_show_form` is called with a `data_schema`, each key in the schema
+dict should have a translation at the expected path. The checker also
+handles section fields (nested under `sections.<key>.data` in translations).
+
+### `W7425`: `home-assistant-config-flow-field-not-translated`
+
+A config flow form field is missing its translation in `strings.json`.
+The expected path is `config.step.<step_id>.data.<field_name>` (or
+`config.step.<step_id>.sections.<key>.data.<field_name>` for section
+fields).
+
+### `W7427`: `home-assistant-options-flow-field-not-translated`
+
+An options flow form field is missing its translation in `strings.json`.
+The expected path is `options.step.<step_id>.data.<field_name>` (or
+`options.step.<step_id>.sections.<key>.data.<field_name>` for section
+fields).
+
+### `W7430`: `home-assistant-subentry-flow-field-not-translated`
+
+A subentry flow form field is missing its translation in `strings.json`.
+The expected path is
+`config_subentries.<type>.step.<step_id>.data.<field_name>`. The checker
+resolves the subentry type by finding the `ConfigFlow` class's
+`async_get_supported_subentry_types` method and mapping subentry handler
+class names to their type keys.
 
 
 ## `home_assistant_unnecessary_format_mac` checker

@@ -303,6 +303,7 @@ class ScrapeSubentryFlowHandler(ConfigSubentryFlow):
             title = user_input.pop("name")
             return self.async_create_entry(data=user_input, title=title)
 
+        # pylint: disable-next=home-assistant-subentry-flow-field-not-translated
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
@@ -319,6 +320,7 @@ class ScrapeSubentryFlowHandler(ConfigSubentryFlow):
                 self._get_entry(), self._get_reconfigure_subentry(), data=user_input
             )
 
+        # pylint: disable-next=home-assistant-subentry-flow-field-not-translated
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
