@@ -56,10 +56,10 @@ async def _start_transmitter_flow(
     )
 
 
-async def _start_neo_sensor_flow(
+async def _start_neo_sensor_flow_until_intro(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> dict:
-    """Start the subentry flow for adding a neo sensor."""
+    """Start the neo sensor subentry flow up to the learn intro step."""
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_DEVICE),
         context={"source": SOURCE_USER},
@@ -69,6 +69,14 @@ async def _start_neo_sensor_flow(
         result["flow_id"], {"next_step_id": SUBENTRY_TYPE_NEO_SENSOR}
     )
     assert result["step_id"] == "sensor_learn_intro"
+    return result
+
+
+async def _start_neo_sensor_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> dict:
+    """Start the subentry flow for adding a neo sensor."""
+    result = await _start_neo_sensor_flow_until_intro(hass, mock_config_entry)
     return await hass.config_entries.subentries.async_configure(
         result["flow_id"], {"next_step_id": "learn"}
     )
@@ -398,11 +406,13 @@ async def test_neo_sensor_flow_abort_learning(
     mock_config_entry.add_to_hass(hass)
     mock_config_entry.runtime_data = _make_connected_runtime(coordinator)
 
-    result = await _start_neo_sensor_flow(hass, mock_config_entry)
+    result = await _start_neo_sensor_flow_until_intro(hass, mock_config_entry)
     with patch(
         "homeassistant.components.easywave.config_flow_learning.LEARNING_TIMEOUT", -1
     ):
-        result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {"next_step_id": "learn"}
+        )
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "learn_timeout_sensor"
 
