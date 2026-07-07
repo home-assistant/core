@@ -60,6 +60,7 @@ rules:
   docs-supported-functions: done
   docs-use-cases: done
   dynamic-devices: done
+  entity-device-class: todo
   entity-translations: done
   exception-translations: done
   icon-translations: done
