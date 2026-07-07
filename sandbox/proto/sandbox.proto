@@ -106,6 +106,21 @@ message IntegrationSource {
   string subdir = 6;  // path within the repo, e.g. custom_components/<domain>
 }
 
+// Snapshot of main's core configuration, applied to the sandbox's private
+// HomeAssistant before setup so sun times, distances and unit conversions
+// match main instead of the bare-hass defaults (lat/long 0, UTC, metric).
+message CoreConfig {
+  optional double latitude = 1;
+  optional double longitude = 2;
+  optional double elevation = 3;
+  optional string time_zone = 4;      // IANA name, e.g. "Europe/Amsterdam"
+  optional string unit_system = 5;    // system NAME: "metric" | "us_customary"
+  optional string language = 6;
+  optional string country = 7;
+  optional string currency = 8;
+  optional string location_name = 9;
+}
+
 message EntrySetup {
   string entry_id = 1;
   string domain = 2;
@@ -117,6 +132,9 @@ message EntrySetup {
   int32 version = 8;
   int32 minor_version = 9;
   IntegrationSource integration_source = 10;
+  // Re-applied on every entry_setup (cheap, idempotent) so a reload also
+  // refreshes a changed core config.
+  CoreConfig core_config = 11;
 }
 
 message EntrySetupResult {

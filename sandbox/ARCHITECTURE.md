@@ -142,6 +142,12 @@ subprocess only when the first flow or entry routes to it:
 python -m hass_client.sandbox --name <group> --url stdio://
 ```
 
+**Per-group cost** (measured, empty process): ~0.9 s spawn→Ready and ~117 MB
+RSS — almost all of it importing the `homeassistant` package, including the
+HTTP stack pulled in via `HomeAssistant()`'s `core_config` import (a lazy
+`zone` import upstream would trim ~180 ms / 31 MB; tracked upstream, not
+here). Lazy spawn means unused groups cost nothing.
+
 **Crash recovery** is bounded: `SandboxProcess` restarts on unexpected exit up
 to 3 times in a 60s sliding window with backoff; exceeding the budget marks the
 sandbox `failed`, `ensure_started` raises `SandboxFailedError`, and the router
@@ -202,10 +208,13 @@ duplicate-detection fires.
 
 ## 7. Statelessness — integration source fetched at startup
 
-A sandbox holds no persistent state. Config arrives on `entry_setup`,
-storage/restore-state routes to main (§8), and the last stateful bit — the
-**integration code itself** — is fetched at startup. `EntrySetup` carries a
-typed `IntegrationSource`:
+A sandbox holds no persistent state. Config arrives on `entry_setup` —
+including a `CoreConfig` snapshot of main's core configuration (location,
+elevation, time zone, unit system, language, country, currency) that the
+runner applies to the private hass before setup, so sun times / distances /
+unit conversions match main. Storage/restore-state routes to main (§8), and
+the last stateful bit — the **integration code itself** — is fetched at
+startup. `EntrySetup` carries a typed `IntegrationSource`:
 
 - `{kind: "builtin"}` — the bundled `homeassistant` package provides it; no-op.
 - `{kind: "git", url, ref, tag, domain, subdir}` — `ref` is an **exact commit

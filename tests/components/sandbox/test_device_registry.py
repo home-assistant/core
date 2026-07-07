@@ -5,11 +5,9 @@ from typing import Any
 import pytest
 
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
-from homeassistant.components.sandbox.bridge import (
-    SandboxBridge,
-    SandboxEntityDescription,
-)
+from homeassistant.components.sandbox.bridge import SandboxBridge
 from homeassistant.components.sandbox.channel import Channel, ChannelRemoteError
+from homeassistant.components.sandbox.description import SandboxEntityDescription
 from homeassistant.components.sandbox.messages import make_entity_description
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

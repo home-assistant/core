@@ -22,6 +22,8 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import DATA_INSTANCES
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 
 class _LoopbackWriter:
@@ -425,3 +427,57 @@ async def test_entry_setup_real_platform_adds_entities(
     assert hass.states.get("sun.sun") is not None
     ent_reg = er.async_get(hass)
     assert ent_reg.async_get_entity_id("sensor", "sun", "sun_entry-next_dawn")
+
+
+async def test_entry_setup_applies_core_config(
+    channels: tuple[Channel, Channel], runner: EntryRunner
+) -> None:
+    """An ``entry_setup`` carrying ``core_config`` configures the private hass.
+
+    Main's location / time zone / unit system must be mirrored before the
+    integration's setup runs, or a sandboxed integration computes sun times,
+    distances and unit conversions against the bare-hass defaults
+    (lat/long 0, UTC, metric).
+    """
+    main, sandbox = channels
+    runner.register(sandbox)
+    main.start()
+    sandbox.start()
+
+    original_tz = dt_util.get_default_time_zone()
+    payload = pb.EntrySetup(
+        entry_id="sun_entry_cfg",
+        domain="sun",
+        title="Sun",
+        source="user",
+        version=1,
+        minor_version=1,
+    )
+    payload.core_config.latitude = 52.3731
+    payload.core_config.longitude = 4.8926
+    payload.core_config.elevation = 13
+    payload.core_config.time_zone = "Europe/Amsterdam"
+    payload.core_config.unit_system = "us_customary"
+    payload.core_config.language = "nl"
+    payload.core_config.country = "NL"
+    payload.core_config.currency = "EUR"
+    payload.core_config.location_name = "Amsterdam Home"
+    try:
+        result = await main.call("sandbox/entry_setup", payload)
+        assert result.ok, result.reason
+
+        config = runner.hass.config
+        assert config.latitude == 52.3731
+        assert config.longitude == 4.8926
+        assert config.elevation == 13
+        assert config.time_zone == "Europe/Amsterdam"
+        assert str(dt_util.get_default_time_zone()) == "Europe/Amsterdam"
+        assert config.units is US_CUSTOMARY_SYSTEM
+        assert config.language == "nl"
+        assert config.country == "NL"
+        assert config.currency == "EUR"
+        assert config.location_name == "Amsterdam Home"
+    finally:
+        # The time-zone setter updates dt_util's process-global default —
+        # restore it so the rest of the suite is unaffected.
+        dt_util.set_default_time_zone(original_tz)

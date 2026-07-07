@@ -29,6 +29,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.const import UnitOfTemperature
 
 from . import SandboxProxyEntity
 
@@ -43,8 +44,6 @@ class SandboxClimateEntity(SandboxProxyEntity, ClimateEntity):
     @override
     def temperature_unit(self) -> str:
         """Return the unit declared by the sandbox-side entity."""
-        from homeassistant.const import UnitOfTemperature  # noqa: PLC0415
-
         return str(
             self.description.capabilities.get(
                 "temperature_unit", UnitOfTemperature.CELSIUS

@@ -7,18 +7,15 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
-from homeassistant.components.sandbox.bridge import (
-    _CONTEXT_CACHE_MAX,
-    SandboxBridge,
-    SandboxEntityDescription,
-    _translate_remote_error,
-)
+from homeassistant.components.sandbox.bridge import _CONTEXT_CACHE_MAX, SandboxBridge
 from homeassistant.components.sandbox.channel import Channel, ChannelRemoteError
+from homeassistant.components.sandbox.description import SandboxEntityDescription
 from homeassistant.components.sandbox.messages import (
     decode_json_dict,
     encode_json,
     make_entity_description,
 )
+from homeassistant.components.sandbox.service_forwarder import translate_remote_error
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import Context, HomeAssistant, callback
@@ -448,7 +445,7 @@ def test_translate_remote_error_rebuilds_vol_invalid() -> None:
         },
     )
 
-    result = _translate_remote_error(err)
+    result = translate_remote_error(err)
 
     assert isinstance(result, vol.Invalid)
     assert not isinstance(result, vol.MultipleInvalid)
@@ -470,7 +467,7 @@ def test_translate_remote_error_rebuilds_multiple_invalid() -> None:
         },
     )
 
-    result = _translate_remote_error(err)
+    result = translate_remote_error(err)
 
     assert isinstance(result, vol.MultipleInvalid)
     assert [(child.error_message, child.path) for child in result.errors] == [
@@ -483,7 +480,7 @@ def test_translate_remote_error_falls_back_without_error_data() -> None:
     """Frames without ``error_data`` keep the legacy class-name mapping."""
     err = ChannelRemoteError("bad kwarg", error_type="Invalid")
 
-    result = _translate_remote_error(err)
+    result = translate_remote_error(err)
 
     assert isinstance(result, TypeError)
     assert str(result) == "bad kwarg"

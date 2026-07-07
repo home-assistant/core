@@ -110,8 +110,30 @@ class IntegrationSource(_message.Message):
     subdir: str
     def __init__(self, kind: _Optional[str] = ..., url: _Optional[str] = ..., ref: _Optional[str] = ..., tag: _Optional[str] = ..., domain: _Optional[str] = ..., subdir: _Optional[str] = ...) -> None: ...
 
+class CoreConfig(_message.Message):
+    __slots__ = ("latitude", "longitude", "elevation", "time_zone", "unit_system", "language", "country", "currency", "location_name")
+    LATITUDE_FIELD_NUMBER: _ClassVar[int]
+    LONGITUDE_FIELD_NUMBER: _ClassVar[int]
+    ELEVATION_FIELD_NUMBER: _ClassVar[int]
+    TIME_ZONE_FIELD_NUMBER: _ClassVar[int]
+    UNIT_SYSTEM_FIELD_NUMBER: _ClassVar[int]
+    LANGUAGE_FIELD_NUMBER: _ClassVar[int]
+    COUNTRY_FIELD_NUMBER: _ClassVar[int]
+    CURRENCY_FIELD_NUMBER: _ClassVar[int]
+    LOCATION_NAME_FIELD_NUMBER: _ClassVar[int]
+    latitude: float
+    longitude: float
+    elevation: float
+    time_zone: str
+    unit_system: str
+    language: str
+    country: str
+    currency: str
+    location_name: str
+    def __init__(self, latitude: _Optional[float] = ..., longitude: _Optional[float] = ..., elevation: _Optional[float] = ..., time_zone: _Optional[str] = ..., unit_system: _Optional[str] = ..., language: _Optional[str] = ..., country: _Optional[str] = ..., currency: _Optional[str] = ..., location_name: _Optional[str] = ...) -> None: ...
+
 class EntrySetup(_message.Message):
-    __slots__ = ("entry_id", "domain", "title", "data", "options", "source", "unique_id", "version", "minor_version", "integration_source")
+    __slots__ = ("entry_id", "domain", "title", "data", "options", "source", "unique_id", "version", "minor_version", "integration_source", "core_config")
     ENTRY_ID_FIELD_NUMBER: _ClassVar[int]
     DOMAIN_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
@@ -122,6 +144,7 @@ class EntrySetup(_message.Message):
     VERSION_FIELD_NUMBER: _ClassVar[int]
     MINOR_VERSION_FIELD_NUMBER: _ClassVar[int]
     INTEGRATION_SOURCE_FIELD_NUMBER: _ClassVar[int]
+    CORE_CONFIG_FIELD_NUMBER: _ClassVar[int]
     entry_id: str
     domain: str
     title: str
@@ -132,7 +155,8 @@ class EntrySetup(_message.Message):
     version: int
     minor_version: int
     integration_source: IntegrationSource
-    def __init__(self, entry_id: _Optional[str] = ..., domain: _Optional[str] = ..., title: _Optional[str] = ..., data: _Optional[bytes] = ..., options: _Optional[bytes] = ..., source: _Optional[str] = ..., unique_id: _Optional[str] = ..., version: _Optional[int] = ..., minor_version: _Optional[int] = ..., integration_source: _Optional[_Union[IntegrationSource, _Mapping]] = ...) -> None: ...
+    core_config: CoreConfig
+    def __init__(self, entry_id: _Optional[str] = ..., domain: _Optional[str] = ..., title: _Optional[str] = ..., data: _Optional[bytes] = ..., options: _Optional[bytes] = ..., source: _Optional[str] = ..., unique_id: _Optional[str] = ..., version: _Optional[int] = ..., minor_version: _Optional[int] = ..., integration_source: _Optional[_Union[IntegrationSource, _Mapping]] = ..., core_config: _Optional[_Union[CoreConfig, _Mapping]] = ...) -> None: ...
 
 class EntrySetupResult(_message.Message):
     __slots__ = ("ok", "reason")

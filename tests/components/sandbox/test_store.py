@@ -23,13 +23,13 @@ from typing import Any
 import pytest
 
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
-from homeassistant.components.sandbox.bridge import (
-    _STORE_MAX_KEY_LENGTH,
-    _STORE_MAX_VALUE_BYTES,
-    SandboxBridge,
-)
+from homeassistant.components.sandbox.bridge import SandboxBridge
 from homeassistant.components.sandbox.channel import Channel, ChannelRemoteError
 from homeassistant.components.sandbox.messages import decode_json_dict, encode_json
+from homeassistant.components.sandbox.store import (
+    STORE_MAX_KEY_LENGTH,
+    STORE_MAX_VALUE_BYTES,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 
@@ -194,7 +194,7 @@ async def test_store_rejects_overlong_key(hass: HomeAssistant) -> None:
         with pytest.raises(ChannelRemoteError, match="too long"):
             await sandbox_channel.call(
                 "sandbox/store_save",
-                pb.StoreSave(key="k" * (_STORE_MAX_KEY_LENGTH + 1)),
+                pb.StoreSave(key="k" * (STORE_MAX_KEY_LENGTH + 1)),
             )
     finally:
         await main_channel.close()
@@ -204,7 +204,7 @@ async def test_store_rejects_overlong_key(hass: HomeAssistant) -> None:
 async def test_store_rejects_oversized_value(hass: HomeAssistant) -> None:
     """A value past the per-key byte cap is rejected, nothing hits disk."""
     _bridge, main_channel, sandbox_channel = await _wire(hass)
-    oversized = "x" * (_STORE_MAX_VALUE_BYTES + 1)
+    oversized = "x" * (STORE_MAX_VALUE_BYTES + 1)
     save = pb.StoreSave(key="too_big")
     save.data = encode_json(
         {

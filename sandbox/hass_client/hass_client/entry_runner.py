@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import DATA_INSTANCES
+from homeassistant.util.unit_system import get_unit_system
 
 from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
@@ -67,6 +68,12 @@ class EntryRunner:
             entry = _entry_from_proto(msg)
         except (KeyError, TypeError) as err:
             return pb.EntrySetupResult(ok=False, reason=f"bad payload: {err}")
+
+        # Mirror main's core config before setup so the integration computes
+        # sun times / distances / unit conversions against main's location
+        # and units, not the bare-hass defaults. Idempotent, cheap.
+        if msg.HasField("core_config"):
+            await _apply_core_config(self.hass, msg.core_config)
 
         # Fetch the integration code before setup so a stateless sandbox can
         # load custom (HACS) integrations whose code isn't bundled. Built-in
@@ -196,6 +203,38 @@ class EntryRunner:
         result = pb.EntityQueryResult()
         result.result = encode_json({"value": value})
         return result
+
+
+async def _apply_core_config(hass: HomeAssistant, cfg: pb.CoreConfig) -> None:
+    """Apply main's core-config snapshot to the sandbox's private hass.
+
+    Direct attribute writes, deliberately not ``Config.async_update``: the
+    private hass has no Store backing and must not persist the values or fire
+    ``EVENT_CORE_CONFIG_UPDATE`` on its bus. The time zone goes through the
+    async setter so ``dt_util``'s default timezone follows. Every value comes
+    from main's own (validated) config, so a bad unit-system/time-zone name is
+    a contract violation and surfaces as a failed entry_setup rather than
+    being masked.
+    """
+    config = hass.config
+    if cfg.HasField("latitude"):
+        config.latitude = cfg.latitude
+    if cfg.HasField("longitude"):
+        config.longitude = cfg.longitude
+    if cfg.HasField("elevation"):
+        config.elevation = int(cfg.elevation)
+    if cfg.HasField("location_name"):
+        config.location_name = cfg.location_name
+    if cfg.HasField("country"):
+        config.country = cfg.country
+    if cfg.HasField("currency"):
+        config.currency = cfg.currency
+    if cfg.HasField("language"):
+        config.language = cfg.language
+    if cfg.HasField("unit_system"):
+        config.units = get_unit_system(cfg.unit_system)
+    if cfg.HasField("time_zone"):
+        await config.async_set_time_zone(cfg.time_zone)
 
 
 def _resolve_entity(hass: HomeAssistant, entity_id: str) -> Entity:

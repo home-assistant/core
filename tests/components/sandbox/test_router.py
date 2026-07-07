@@ -219,6 +219,39 @@ async def test_entry_setup_payload_sets_git_source(hass: HomeAssistant) -> None:
     assert payload.integration_source.subdir == "custom_components/payload_custom"
 
 
+async def test_entry_setup_payload_carries_core_config(hass: HomeAssistant) -> None:
+    """The payload snapshots main's core config for the private hass."""
+    mock_integration(hass, MockModule("payload_config"))
+    entry = MockConfigEntry(domain="payload_config", title="Payload")
+    hass.config.country = "NL"
+    hass.config.currency = "USD"
+
+    payload = await _entry_setup_payload(hass, cast(ConfigEntry, entry))
+
+    core_config = payload.core_config
+    # The test hass fixture pins these values (tests/common.py).
+    assert core_config.latitude == hass.config.latitude
+    assert core_config.longitude == hass.config.longitude
+    assert core_config.elevation == hass.config.elevation
+    assert core_config.time_zone == "US/Pacific"
+    assert core_config.unit_system == "metric"
+    assert core_config.language == hass.config.language
+    assert core_config.country == "NL"
+    assert core_config.currency == "USD"
+    assert core_config.location_name == "test home"
+
+
+async def test_entry_setup_payload_omits_unset_country(hass: HomeAssistant) -> None:
+    """An unset (None) country stays absent on the wire instead of empty."""
+    mock_integration(hass, MockModule("payload_config"))
+    entry = MockConfigEntry(domain="payload_config", title="Payload")
+    hass.config.country = None
+
+    payload = await _entry_setup_payload(hass, cast(ConfigEntry, entry))
+
+    assert not payload.core_config.HasField("country")
+
+
 async def test_async_setup_entry_returns_none_when_not_sandboxed(
     hass: HomeAssistant, manager: FakeSandboxManager
 ) -> None:

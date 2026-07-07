@@ -23,26 +23,28 @@ Responsibilities:
   callers would have raised locally (``vol.Invalid`` → ``TypeError``,
   unknown service / entity → ``HomeAssistantError``).
 
-The Store routing handlers (``sandbox/store_load`` /
-``store_save`` / ``store_remove``) are backed by a per-group
-:class:`_SandboxStoreServer`, writing each key to
-``<config>/.storage/sandbox/<group>/<key>``.
-Scope isolation is by construction — each bridge owns one channel for
-one group, so a sandbox can't reach another sandbox's files.
+Split-out companions (mechanical seams, no logic of their own):
+
+* :mod:`.store` — the per-group :class:`SandboxStoreServer` backing the
+  ``sandbox/store_load`` / ``store_save`` / ``store_remove`` handlers
+  (each key lands at ``<config>/.storage/sandbox/<group>/<key>``) plus
+  ``validate_key``.
+* :mod:`.service_forwarder` — the mirrored-service forwarder factory and
+  the sandbox→main exception translation.
+* :mod:`.description` — :class:`SandboxEntityDescription` (the
+  ``register_entity`` snapshot) and its ``DeviceInfo`` deserialiser.
 """
 
 from collections import OrderedDict
-from collections.abc import Mapping
-from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
-import os
-from pathlib import Path
 from typing import Any, NamedTuple
 
-import voluptuous as vol
-
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import (
+    SIGNAL_CONFIG_ENTRY_CHANGED,
+    ConfigEntry,
+    ConfigEntryChange,
+)
 from homeassistant.const import (
     EVENT_CALL_SERVICE,
     EVENT_COMPONENT_LOADED,
@@ -57,25 +59,19 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     EVENT_STATE_REPORTED,
 )
-from homeassistant.core import (
-    Context,
-    HomeAssistant,
-    ServiceCall,
-    SupportsResponse,
-    callback,
-)
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, json as json_helper
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_component import DATA_INSTANCES, EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util, json as json_util
-from homeassistant.util.file import write_utf8_file_atomic
+from homeassistant.util import dt as dt_util
 
 from ._proto import sandbox_pb2 as pb
 from .channel import Channel, ChannelClosedError, ChannelRemoteError
 from .const import UNIQUE_ID_SEPARATOR
+from .description import SandboxEntityDescription
 from .messages import (
     MSG_CALL_SERVICE,
     MSG_ENTITY_QUERY,
@@ -93,6 +89,12 @@ from .messages import (
     encode_json,
 )
 from .schema_bridge import reconstruct_schema
+from .service_forwarder import (
+    build_service_forwarder,
+    parse_supports_response,
+    translate_remote_error,
+)
+from .store import SandboxStoreServer, validate_key
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,65 +142,6 @@ class _CachedContext(NamedTuple):
     expires_at: datetime
 
 
-@dataclass
-class SandboxEntityDescription:
-    """Snapshot of a sandbox-side entity, sent at registration time."""
-
-    entry_id: str
-    domain: str
-    sandbox_entity_id: str
-    unique_id: str | None = None
-    name: str | None = None
-    icon: str | None = None
-    has_entity_name: bool = False
-    entity_category: str | None = None
-    device_class: str | None = None
-    supported_features: int = 0
-    capabilities: dict[str, Any] = field(default_factory=dict)
-    initial_state: str | None = None
-    initial_attributes: dict[str, Any] = field(default_factory=dict)
-    device_info: dict[str, Any] | None = None
-
-    @classmethod
-    def from_proto(cls, msg: pb.EntityDescription) -> SandboxEntityDescription:
-        """Build a description from the typed ``EntityDescription`` message.
-
-        Flattens the nested ``EntityInfo`` / ``InitialState`` sub-messages back
-        into the flat shape the proxy entities consume.
-        """
-        description = msg.info.description
-        initial = msg.initial
-        device_info = (
-            _deserialise_device_info(msg.info.device_info)
-            if msg.info.HasField("device_info")
-            else None
-        )
-        return cls(
-            entry_id=msg.entry_id,
-            domain=msg.domain,
-            sandbox_entity_id=msg.sandbox_entity_id,
-            unique_id=msg.unique_id if msg.HasField("unique_id") else None,
-            name=description.name if description.HasField("name") else None,
-            icon=description.icon if description.HasField("icon") else None,
-            has_entity_name=msg.has_entity_name,
-            entity_category=(
-                description.entity_category
-                if description.HasField("entity_category")
-                else None
-            ),
-            device_class=(
-                description.device_class
-                if description.HasField("device_class")
-                else None
-            ),
-            supported_features=description.supported_features,
-            capabilities=decode_json_dict(initial.capabilities),
-            initial_state=initial.state if initial.HasField("state") else None,
-            initial_attributes=decode_json_dict(initial.attributes),
-            device_info=device_info,
-        )
-
-
 class SandboxBridge:
     """Per-sandbox-group bridge owning entities + outbound RPC dispatch."""
 
@@ -224,7 +167,16 @@ class SandboxBridge:
         # Used to clean up on shutdown / unregister.
         self._mirrored_services: set[tuple[str, str]] = set()
 
-        self._store_server = _SandboxStoreServer(hass, group)
+        self._store_server = SandboxStoreServer(hass, group)
+
+        # Cached _owned_domains() result; None = dirty, recomputed lazily on
+        # the next access. Invalidated on proxy register/unregister, platform
+        # creation, entry teardown, and any config-entry change (the dispatcher
+        # subscription below) — the inputs the derivation reads.
+        self._owned_domains_cache: set[str] | None = None
+        self._unsub_entry_changed = async_dispatcher_connect(
+            hass, SIGNAL_CONFIG_ENTRY_CHANGED, self._on_config_entry_changed
+        )
 
         # Context security + restoration: the sandbox only ever sends a
         # context_id (a string) — it can never set parent_id / user_id on the
@@ -276,8 +228,8 @@ class SandboxBridge:
         area call pays one round-trip instead of 200) is a possible future
         optimisation — see ``docs/FOLLOWUPS.md``.
         """
-        self._remember_context(context)
-        return await self._raw_call_service(
+        self.remember_context(context)
+        return await self.async_raw_call_service(
             domain=domain,
             service=service,
             target={"entity_id": [sandbox_entity_id]},
@@ -302,10 +254,11 @@ class SandboxBridge:
         edits). ``method`` names the real entity method; ``args`` are its
         kwargs. Like a service call the ``context`` is remembered before its id
         is reduced to a bare wire value, errors translate through the same
-        :func:`_translate_remote_error` / ``ChannelClosedError`` paths, and the
-        wrapped ``{"value": …}`` return is unwrapped.
+        :func:`.service_forwarder.translate_remote_error` /
+        ``ChannelClosedError`` paths, and the wrapped ``{"value": …}`` return
+        is unwrapped.
         """
-        self._remember_context(context)
+        self.remember_context(context)
         request = pb.EntityQuery(
             sandbox_entity_id=sandbox_entity_id,
             method=method,
@@ -316,14 +269,14 @@ class SandboxBridge:
         try:
             result = await self.channel.call(MSG_ENTITY_QUERY, request)
         except ChannelRemoteError as err:
-            raise _translate_remote_error(err) from err
+            raise translate_remote_error(err) from err
         except ChannelClosedError as err:
             raise HomeAssistantError(
                 f"Sandbox {self.group!r} channel closed mid-query"
             ) from err
         return decode_json_dict(result.result).get("value")
 
-    async def _raw_call_service(
+    async def async_raw_call_service(
         self,
         *,
         domain: str,
@@ -346,7 +299,7 @@ class SandboxBridge:
         try:
             return await self.channel.call(MSG_CALL_SERVICE, request)
         except ChannelRemoteError as err:
-            raise _translate_remote_error(err) from err
+            raise translate_remote_error(err) from err
         except ChannelClosedError as err:
             raise HomeAssistantError(
                 f"Sandbox {self.group!r} channel closed mid-call"
@@ -371,7 +324,7 @@ class SandboxBridge:
     def _store_context(self, key: str, context: Context, now: datetime) -> None:
         """Insert/refresh a cache entry and enforce the size backstop.
 
-        Shared by :meth:`_remember_context` (real main-issued contexts) and the
+        Shared by :meth:`remember_context` (real main-issued contexts) and the
         miss path of :meth:`_resolve_context` (fresh contexts minted for an
         unknown id). Keeps the cache ordered by expiry (move-to-end) and caps
         its size so neither path can grow it without bound — a sandbox flooding
@@ -386,7 +339,7 @@ class SandboxBridge:
             contexts.popitem(last=False)
 
     @callback
-    def _remember_context(self, context: Context | None) -> None:
+    def remember_context(self, context: Context | None) -> None:
         """Record a Context main is handing down to the sandbox.
 
         Keyed by its (trusted, main-issued) id so an echoed id resolves back
@@ -501,6 +454,7 @@ class SandboxBridge:
         platform = self._ensure_platform(entry, description.domain)
         await platform.async_add_entities([proxy])
         self._entities[description.sandbox_entity_id] = proxy
+        self._owned_domains_cache = None
         return pb.RegisterEntityResult(entity_id=proxy.entity_id or "")
 
     @callback
@@ -561,6 +515,7 @@ class SandboxBridge:
         proxy = self._entities.pop(sandbox_entity_id, None)
         if proxy is None:
             return pb.UnregisterEntityResult(ok=True)
+        self._owned_domains_cache = None
         entity_id = getattr(proxy, "entity_id", None)
         if not entity_id:
             return pb.UnregisterEntityResult(ok=True)
@@ -584,6 +539,8 @@ class SandboxBridge:
             if msg.HasField("context_id")
             else None
         )
+        # ``attributes`` is a fresh decode built for this push; the proxy
+        # takes ownership of it (no defensive copy on either side).
         proxy.sandbox_apply_state(state_str, attributes, context)
 
     async def _handle_register_service(
@@ -595,7 +552,7 @@ class SandboxBridge:
         the shared ``sandbox/call_service`` channel, so the
         integration's real handler (and its real schema) runs on the
         sandbox side. Exception translation reuses
-        :func:`_translate_remote_error`.
+        :func:`.service_forwarder.translate_remote_error`.
 
         The service ``domain`` must be one this group owns (same main-side
         :meth:`_owned_domains` derivation the fire_event gate uses): a
@@ -624,7 +581,7 @@ class SandboxBridge:
             raise HomeAssistantError(
                 f"register_service: domain {domain!r} not owned by group {self.group!r}"
             )
-        supports_response = _parse_supports_response(msg.supports_response)
+        supports_response = parse_supports_response(msg.supports_response)
         if self.hass.services.has_service(domain, service):
             _LOGGER.debug(
                 "SandboxBridge[%s]: %s.%s already on main, not replacing",
@@ -634,7 +591,7 @@ class SandboxBridge:
             )
             return pb.RegisterServiceResult(ok=True, installed=False)
 
-        forwarder = _build_service_forwarder(self, domain, service, supports_response)
+        forwarder = build_service_forwarder(self, domain, service, supports_response)
         schema = reconstruct_schema(decode_json(msg.schema))
         self.hass.services.async_register(
             domain,
@@ -661,7 +618,7 @@ class SandboxBridge:
 
     async def _handle_store_load(self, msg: pb.StoreLoad) -> pb.StoreLoadResult:
         """Serve a sandbox-side ``Store.async_load``."""
-        data = await self._store_server.async_load(_validate_key(msg.key))
+        data = await self._store_server.async_load(validate_key(msg.key))
         result = pb.StoreLoadResult()
         if data is not None:
             result.data = encode_json(data)
@@ -670,13 +627,13 @@ class SandboxBridge:
     async def _handle_store_save(self, msg: pb.StoreSave) -> pb.StoreSaveResult:
         """Persist a sandbox-side ``Store.async_save`` flush."""
         await self._store_server.async_save(
-            _validate_key(msg.key), decode_json_dict(msg.data)
+            validate_key(msg.key), decode_json_dict(msg.data)
         )
         return pb.StoreSaveResult(ok=True)
 
     async def _handle_store_remove(self, msg: pb.StoreRemove) -> pb.StoreRemoveResult:
         """Drop the on-disk file for a sandbox-side ``Store.async_remove``."""
-        await self._store_server.async_remove(_validate_key(msg.key))
+        await self._store_server.async_remove(validate_key(msg.key))
         return pb.StoreRemoveResult(ok=True)
 
     @callback
@@ -693,9 +650,14 @@ class SandboxBridge:
           named for a platform they provide rather than their manifest domain).
 
         Reused by the ``fire_event`` and ``register_service`` gates so the two
-        cannot disagree on what the group is allowed to touch. Cheap and
-        synchronous — ``async_entries`` is an in-memory read, no registry race.
+        cannot disagree on what the group is allowed to touch. Called on every
+        inbound ``fire_event`` / ``register_service``, so the result is cached
+        and only recomputed after one of its inputs changed (proxy
+        register/unregister, platform creation, entry teardown, any
+        config-entry change).
         """
+        if (cached := self._owned_domains_cache) is not None:
+            return cached
         domains = {
             entry.domain
             for entry in self.hass.config_entries.async_entries()
@@ -703,7 +665,20 @@ class SandboxBridge:
         }
         domains.update(domain for (_entry_id, domain) in self._platforms)
         domains.update(proxy.description.domain for proxy in self._entities.values())
+        self._owned_domains_cache = domains
         return domains
+
+    @callback
+    def _on_config_entry_changed(
+        self, _change: ConfigEntryChange, _entry: ConfigEntry
+    ) -> None:
+        """Invalidate the owned-domains cache on any config-entry change.
+
+        Add/remove/update can all move an entry in or out of this group
+        (``entry.sandbox``), so any change marks the cache dirty — the next
+        :meth:`_owned_domains` access recomputes.
+        """
+        self._owned_domains_cache = None
 
     @callback
     def _is_event_allowed(self, event_type: str) -> bool:
@@ -777,10 +752,11 @@ class SandboxBridge:
         platform.async_prepare()
         component.async_register_remote_platform(entry, platform)
         self._platforms[key] = platform
+        self._owned_domains_cache = None
         return platform
 
     async def _async_build_proxy(self, description: SandboxEntityDescription) -> Any:
-        from .entity import (  # noqa: PLC0415 — break import cycle
+        from .entity import (  # noqa: PLC0415 — deliberate lazy import, see below
             build_proxy,
             proxy_class_for,
         )
@@ -832,6 +808,7 @@ class SandboxBridge:
             if self.hass.services.has_service(domain, service):
                 self.hass.services.async_remove(domain, service)
         self._mirrored_services.clear()
+        self._unsub_entry_changed()
 
     async def _async_teardown_entry(self, entry_id: str) -> None:
         """Remove every platform + proxy this bridge added for one entry.
@@ -860,295 +837,7 @@ class SandboxBridge:
             for sid, proxy in self._entities.items()
             if proxy.description.entry_id != entry_id
         }
-
-
-_STORE_KEY_FORBIDDEN = ("/", "\\", "\x00")
-
-# Store quota constants. A real integration's ``.storage`` payload is KBs to a
-# low-MB; these are generous-but-finite so a compromised sandbox cannot exhaust
-# the host disk through the store-routing channel (the only other bound is the
-# 16 MB per-frame cap). Overridable here if a legitimate integration needs more.
-#
-# * key length: well under ``NAME_MAX`` (255) so the on-disk filename is always
-#   valid even after any future suffixing.
-# * per-key value: one ``Store`` payload; 4 MB covers large registries.
-# * per-group total + key count: bound the whole ``sandbox/<group>/`` dir.
-_STORE_MAX_KEY_LENGTH = 128
-_STORE_MAX_VALUE_BYTES = 4 * 1024 * 1024
-_STORE_MAX_TOTAL_BYTES = 32 * 1024 * 1024
-_STORE_MAX_KEYS = 256
-
-
-def _validate_key(key: str) -> str:
-    """Validate a store ``key`` from the wire.
-
-    Defends the host filesystem from a compromised sandbox: a key must
-    be a non-empty string within the length cap, with no path separators,
-    no null bytes, and no parent-directory hop. Anything else trips a
-    :class:`HomeAssistantError`, which the channel framework turns into
-    a remote-error frame for the sandbox.
-    """
-    if not key:
-        raise HomeAssistantError("store request: missing 'key'")
-    if len(key) > _STORE_MAX_KEY_LENGTH:
-        raise HomeAssistantError(
-            f"store request: key too long ({len(key)} > {_STORE_MAX_KEY_LENGTH})"
-        )
-    if any(ch in key for ch in _STORE_KEY_FORBIDDEN):
-        raise HomeAssistantError(f"store request: invalid key {key!r}")
-    if key in {".", ".."} or key.startswith(".."):
-        raise HomeAssistantError(f"store request: invalid key {key!r}")
-    return key
-
-
-class _SandboxStoreServer:
-    """Per-group store backend on main.
-
-    Each :class:`SandboxBridge` owns one of these. The bridge's channel
-    is dedicated to one sandbox group, so scope isolation is enforced by
-    construction: sandbox "built-in" only ever talks to its own bridge,
-    which only ever reads/writes ``<config>/.storage/sandbox/built-in/``.
-    Cross-group access requires forging a channel, which the sandbox
-    cannot do.
-    """
-
-    def __init__(self, hass: HomeAssistant, group: str) -> None:
-        """Pin the storage directory to ``<config>/.storage/sandbox/<group>``."""
-        self.hass = hass
-        self.group = group
-        self._dir = Path(hass.config.path(STORAGE_DIR, "sandbox", group))
-
-    def _path_for(self, key: str) -> Path:
-        # ``_require_key`` has already rejected slashes / ``..`` / NUL.
-        return self._dir / key
-
-    async def async_load(self, key: str) -> dict[str, Any] | None:
-        """Return the wrapped Store payload or ``None`` if missing."""
-        path = self._path_for(key)
-        try:
-            data = await self.hass.async_add_executor_job(
-                json_util.load_json, str(path), None
-            )
-        except HomeAssistantError as err:
-            _LOGGER.warning(
-                "Sandbox %s store_load(%s) failed: %s", self.group, key, err
-            )
-            return None
-        if data is None or data == {}:
-            return None
-        if not isinstance(data, dict):
-            _LOGGER.warning(
-                "Sandbox %s store_load(%s): non-dict on disk (%s)",
-                self.group,
-                key,
-                type(data).__name__,
-            )
-            return None
-        return data
-
-    async def async_save(self, key: str, data: dict[str, Any]) -> None:
-        """Write the wrapped Store payload atomically, within quota.
-
-        Rejects (with a :class:`HomeAssistantError` → remote-error frame) a
-        value over the per-key cap or a write that would push the group's
-        ``.storage/sandbox/<group>/`` dir past its byte / key-count quota, so a
-        compromised sandbox cannot exhaust the host disk. The sandbox-side
-        ``Store.async_save`` tolerates a failed write (it logs and keeps the
-        in-memory data), so a rejected flush degrades rather than crashing.
-        """
-        path = self._path_for(key)
-        await self.hass.async_add_executor_job(self._write_sync, path, data)
-
-    def _write_sync(self, path: Path, data: dict[str, Any]) -> None:
-        mode, json_data = json_helper.prepare_save_json(data, encoder=None)
-        value_bytes = len(
-            json_data if isinstance(json_data, bytes) else json_data.encode("utf-8")
-        )
-        if value_bytes > _STORE_MAX_VALUE_BYTES:
-            raise HomeAssistantError(
-                f"store_save: value too large ({value_bytes} > "
-                f"{_STORE_MAX_VALUE_BYTES} bytes) for group {self.group!r}"
-            )
-        os.makedirs(path.parent, exist_ok=True)
-        self._enforce_group_quota(path, value_bytes)
-        write_utf8_file_atomic(str(path), json_data, False, mode=mode)
-
-    def _enforce_group_quota(self, path: Path, value_bytes: int) -> None:
-        """Reject a write that would exceed the per-group disk quota.
-
-        Sums the existing files in the group dir (the one being overwritten
-        counts as its new size, not its old), so a steady rewrite of the same
-        key never trips the cap while unbounded *growth* — new keys or ballooning
-        values — is bounded.
-        """
-        total = value_bytes
-        keys = 1
-        with os.scandir(path.parent) as entries:
-            for entry in entries:
-                if not entry.is_file() or entry.name == path.name:
-                    continue
-                keys += 1
-                total += entry.stat().st_size
-        if keys > _STORE_MAX_KEYS:
-            raise HomeAssistantError(
-                f"store_save: too many keys ({keys} > {_STORE_MAX_KEYS}) for "
-                f"group {self.group!r}"
-            )
-        if total > _STORE_MAX_TOTAL_BYTES:
-            raise HomeAssistantError(
-                f"store_save: group {self.group!r} over quota ({total} > "
-                f"{_STORE_MAX_TOTAL_BYTES} bytes)"
-            )
-
-    async def async_remove(self, key: str) -> None:
-        """Unlink the file backing ``key`` if it exists."""
-        path = self._path_for(key)
-        await self.hass.async_add_executor_job(self._remove_sync, path)
-
-    def _remove_sync(self, path: Path) -> None:
-        try:
-            os.unlink(path)
-        except FileNotFoundError:
-            return
-
-
-_DEVICE_INFO_STR_FIELDS = (
-    "name",
-    "manufacturer",
-    "model",
-    "model_id",
-    "sw_version",
-    "hw_version",
-    "serial_number",
-    "suggested_area",
-    "configuration_url",
-    "default_name",
-    "default_manufacturer",
-    "default_model",
-    "translation_key",
-)
-
-
-def _deserialise_device_info(info: pb.DeviceInfo) -> dict[str, Any] | None:
-    """Rebuild a ``DeviceInfo`` TypedDict from the typed proto.
-
-    ``identifiers`` / ``connections`` come back as sets of tuples and
-    ``via_device`` as a tuple — the shapes
-    :func:`device_registry.async_get_or_create` validates. ``entry_type`` is
-    rebuilt as a :class:`DeviceEntryType` enum value.
-    """
-    out: dict[str, Any] = {}
-    if info.identifiers:
-        out["identifiers"] = {(pair.key, pair.value) for pair in info.identifiers}
-    if info.connections:
-        out["connections"] = {(pair.key, pair.value) for pair in info.connections}
-    if info.HasField("via_device"):
-        out["via_device"] = (info.via_device.key, info.via_device.value)
-    if info.entry_type:
-        try:
-            out["entry_type"] = dr.DeviceEntryType(info.entry_type)
-        except ValueError:
-            _LOGGER.debug(
-                "register_entity: unknown entry_type %r — dropping", info.entry_type
-            )
-    for field_name in _DEVICE_INFO_STR_FIELDS:
-        value = getattr(info, field_name)
-        if value:
-            out[field_name] = value
-    return out or None
-
-
-def _parse_supports_response(value: str) -> SupportsResponse:
-    """Coerce the wire ``supports_response`` field into the enum."""
-    try:
-        return SupportsResponse(value.lower())
-    except ValueError:
-        return SupportsResponse.NONE
-
-
-def _build_service_forwarder(
-    bridge: SandboxBridge,
-    domain: str,
-    service: str,
-    supports_response: SupportsResponse,
-):
-    """Return a callable suitable for :meth:`ServiceRegistry.async_register`.
-
-    The forwarder rebuilds the original service-call payload and ships it
-    back over the sandbox's shared ``sandbox/call_service`` channel.
-    Schema validation already ran on the way in (main's registry runs
-    ``schema=None`` because the sandbox owns the schema); the sandbox
-    runs the real handler against its own entities and registry.
-    """
-
-    async def _forward(call: ServiceCall) -> Any:
-        # Remember the real (main-issued) Context so the sandbox echoing this
-        # id back on a derived state/event restores it verbatim.
-        bridge._remember_context(call.context)  # noqa: SLF001
-        response = await bridge._raw_call_service(  # noqa: SLF001
-            domain=domain,
-            service=service,
-            target=_target_from_call(call),
-            service_data=dict(call.data),
-            context_id=call.context.id if call.context is not None else None,
-            return_response=call.return_response,
-        )
-        if supports_response is SupportsResponse.NONE:
-            return None
-        if response.HasField("response"):
-            return decode_json_dict(response.response.data)
-        return None
-
-    return _forward
-
-
-def _target_from_call(call: ServiceCall) -> dict[str, Any]:
-    """Extract a ``target`` dict from the (already-validated) service call."""
-    target: dict[str, Any] = {}
-    if not call.data:
-        return target
-    for key in ("entity_id", "area_id", "device_id", "floor_id", "label_id"):
-        value = call.data.get(key)
-        if value is None:
-            continue
-        target[key] = list(value) if isinstance(value, (list, tuple, set)) else value
-    return target
-
-
-def _rebuild_invalid(data: Mapping[str, Any]) -> vol.Invalid:
-    """Rebuild a single :class:`vol.Invalid` from its serialized payload."""
-    path = data.get("path") or None
-    return vol.Invalid(data.get("msg", ""), path=path)
-
-
-def _translate_remote_error(err: ChannelRemoteError) -> Exception:
-    """Map a sandbox-side exception class name to a sensible main-side one.
-
-    Service-handler errors come back from the sandbox as whatever
-    ``services.async_call`` raised — most often :class:`vol.Invalid`. When
-    the error frame carries structured ``error_data`` (set for voluptuous
-    errors), the original :class:`vol.Invalid` / :class:`vol.MultipleInvalid`
-    is rebuilt with its ``path`` intact — callers on main (service/flow
-    framework) handle real voluptuous errors correctly. Older/edge frames
-    without ``error_data`` fall back to the class-name mapping. Anything we
-    don't have a mapping for surfaces as a plain :class:`HomeAssistantError`
-    with the remote message preserved.
-    """
-    if (error_data := err.error_data) is not None:
-        kind = error_data.get("kind")
-        if kind == "invalid":
-            return _rebuild_invalid(error_data)
-        if kind == "multiple":
-            return vol.MultipleInvalid(
-                [_rebuild_invalid(child) for child in error_data.get("errors", [])]
-            )
-    name = err.error_type or ""
-    msg = err.error
-    if name in {"Invalid", "MultipleInvalid"}:
-        return TypeError(msg)
-    if name in {"ServiceNotFound", "ServiceValidationError", "HomeAssistantError"}:
-        return HomeAssistantError(msg)
-    return HomeAssistantError(f"sandbox error ({name or 'unknown'}): {msg}")
+        self._owned_domains_cache = None
 
 
 @callback
@@ -1161,6 +850,5 @@ def async_create_bridge(
 
 __all__ = [
     "SandboxBridge",
-    "SandboxEntityDescription",
     "async_create_bridge",
 ]
