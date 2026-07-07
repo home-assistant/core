@@ -142,6 +142,11 @@ class LuciScannerEntity(CoordinatorEntity[LuciCoordinator], ScannerEntity):
         self._attr_name = device.hostname or mac
 
     @property
+    def unique_id(self) -> str | None:
+        """Return the unique ID of the entity."""
+        return self._attr_unique_id
+
+    @property
     def is_connected(self) -> bool:
         """Return true if the device is connected to the router."""
         return self._mac in self.coordinator.data

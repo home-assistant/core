@@ -59,6 +59,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
+        entry_id="01JBVVVJ87F6G5V0QJX6HBC94T",
         data={
             CONF_HOST: "192.168.1.1",
             CONF_USERNAME: "root",

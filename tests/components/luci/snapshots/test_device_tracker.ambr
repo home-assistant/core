@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'AA:BB:CC:DD:EE:FF',
+    'unique_id': '01JBVVVJ87F6G5V0QJX6HBC94T_AA:BB:CC:DD:EE:FF',
     'unit_of_measurement': None,
   })
 # ---
@@ -86,7 +86,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '11:22:33:44:55:66',
+    'unique_id': '01JBVVVJ87F6G5V0QJX6HBC94T_11:22:33:44:55:66',
     'unit_of_measurement': None,
   })
 # ---
