@@ -38,6 +38,7 @@ PLATFORMS: Final[list[str]] = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.WATER_HEATER,
 ]
 ZEROCONF_MAP: Final[dict[str, str]] = {
     "smile": "Smile P1",
