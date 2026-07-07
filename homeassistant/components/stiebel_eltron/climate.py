@@ -46,7 +46,6 @@ HA_TO_LWZ_HVAC = {
 }
 
 # Custom presets
-PRESET_PROGRAM = "program"
 PRESET_WATER_HEATING = "water_heating"
 PRESET_EMERGENCY = "emergency"
 PRESET_READY = "ready"
