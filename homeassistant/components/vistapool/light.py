@@ -5,12 +5,13 @@ from typing import Any, override
 from aioaquarite import AquariteError
 
 from homeassistant.components.light import ColorMode, LightEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VistapoolConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, SIGNAL_NEW_POOL
 from .coordinator import VistapoolDataUpdateCoordinator
 from .entity import VistapoolEntity
 
@@ -28,6 +29,16 @@ async def async_setup_entry(
     async_add_entities(
         VistapoolLight(coordinator)
         for coordinator in entry.runtime_data.coordinators.values()
+    )
+
+    @callback
+    def _async_add_pool(coordinator: VistapoolDataUpdateCoordinator) -> None:
+        async_add_entities([VistapoolLight(coordinator)])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"{SIGNAL_NEW_POOL}_{entry.entry_id}", _async_add_pool
+        )
     )
 
 
