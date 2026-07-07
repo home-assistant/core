@@ -1,6 +1,5 @@
 """bosch_shc session fixtures."""
 
-from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, create_autospec, patch
 
 from boschshcpy.device_helper import SHCDeviceHelper
@@ -43,12 +42,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_session() -> MagicMock:
-    """Return an autospecced SHCSession with all device lists empty.
-
-    Autospeccing the session, information and device_helper catches typos in
-    attribute/method names used by the integration; individual tests set the
-    device_helper lists they need.
-    """
+    """Return an autospecced SHCSession with all device lists empty."""
     session = create_autospec(SHCSession, instance=True)
     session.information = create_autospec(SHCInformation, instance=True)
     session.information.unique_id = "shc-test-uid"
@@ -69,14 +63,18 @@ def platforms() -> list[Platform]:
     return []
 
 
-@pytest.fixture
-async def init_integration(
+async def setup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_session: MagicMock,
     platforms: list[Platform],
-) -> AsyncGenerator[MockConfigEntry]:
-    """Set up the bosch_shc integration with only the given platforms loaded."""
+) -> None:
+    """Patch the session and platforms, then set up the config entry.
+
+    Call this directly (instead of using the init_integration fixture) when a
+    test needs to configure mock_session's device_helper lists before the
+    entities are created.
+    """
     mock_config_entry.add_to_hass(hass)
     with (
         patch(
@@ -87,4 +85,15 @@ async def init_integration(
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        yield mock_config_entry
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    platforms: list[Platform],
+) -> MockConfigEntry:
+    """Set up the bosch_shc integration with only the given platforms loaded."""
+    await setup_integration(hass, mock_config_entry, mock_session, platforms)
+    return mock_config_entry

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 from typing import override
 
 from boschshcpy.device import SHCDevice
@@ -20,6 +21,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import BoschConfigEntry
 from .const import DOMAIN
 from .entity import SHCEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -99,20 +102,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SHC button platform."""
     session = config_entry.runtime_data
-    shc_uid = session.information.unique_id
 
     def _make(device: SHCDevice, button_type: str) -> SHCButton:
         return SHCButton(
             device=device,
             entity_description=BUTTON_DESCRIPTIONS[button_type],
-            parent_id=shc_uid,
+            parent_id=session.information.unique_id,
             entry_id=config_entry.entry_id,
         )
 
     entities: list[ButtonEntity] = [
         SHCScenarioButton(
             scenario=scenario,
-            shc_uid=shc_uid,
+            shc_uid=session.information.unique_id,
         )
         for scenario in session.scenarios
     ]
@@ -143,17 +145,10 @@ async def async_setup_entry(
 
 
 class SHCScenarioButton(ButtonEntity):
-    """Button entity that triggers a Bosch SHC scenario.
-
-    A "scenario" is a routine stored on the SHC controller itself (defined
-    via the Bosch SmartHome app) that the controller runs when triggered —
-    not an SHCDevice, so no SHCEntity, and not the same as a Home Assistant
-    `scene` (which applies a saved state snapshot from HA's side); this is
-    closer to firing a remote, Bosch-defined automation on a single API call.
-    """
+    """Button that triggers a Bosch SHC scenario (a controller-side routine, not an HA scene)."""
 
     _attr_has_entity_name = True
-    _attr_icon = "mdi:script-text-play"
+    _attr_translation_key = "scenario"
 
     def __init__(
         self,
@@ -162,7 +157,7 @@ class SHCScenarioButton(ButtonEntity):
     ) -> None:
         """Initialize a scenario button."""
         self._scenario = scenario
-        self._attr_unique_id = f"{shc_uid}_scenario_{scenario.id}"
+        self._attr_unique_id = f"{shc_uid}_{scenario.id}"
         self._attr_name = scenario.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, shc_uid)},
@@ -174,13 +169,11 @@ class SHCScenarioButton(ButtonEntity):
         try:
             self._scenario.trigger()
         except (SHCException, RequestException) as err:
+            _LOGGER.error("Failed to trigger scenario %s: %s", self._scenario.name, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="scenario_trigger_failed",
-                translation_placeholders={
-                    "name": self._scenario.name,
-                    "error": str(err),
-                },
+                translation_placeholders={"name": self._scenario.name},
             ) from err
 
 
@@ -207,11 +200,9 @@ class SHCButton(SHCEntity, ButtonEntity):
         try:
             self.entity_description.press_fn(self._device)
         except (SHCException, RequestException) as err:
+            _LOGGER.error("Failed to press %s: %s", self._device.name, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="button_press_failed",
-                translation_placeholders={
-                    "name": self._device.name,
-                    "error": str(err),
-                },
+                translation_placeholders={"name": self._device.name},
             ) from err

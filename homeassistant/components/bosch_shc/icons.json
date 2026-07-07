@@ -10,6 +10,9 @@
       "reset_tamper": {
         "default": "mdi:notification-clear-all"
       },
+      "scenario": {
+        "default": "mdi:script-text-play"
+      },
       "smoke_test": {
         "default": "mdi:smoke-detector-alert"
       },

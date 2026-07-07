@@ -1,7 +1,7 @@
 """Tests for the Bosch SHC button platform."""
 
 from typing import Any
-from unittest.mock import MagicMock, create_autospec, patch
+from unittest.mock import MagicMock, create_autospec
 
 from boschshcpy import SHCSmokeDetector, SHCTwinguard
 from boschshcpy.device import SHCDevice
@@ -17,6 +17,8 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+
+from .conftest import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -60,25 +62,6 @@ def mock_motion_detector2() -> MagicMock:
     return device
 
 
-async def _setup_button_platform(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_session: MagicMock,
-    platforms: list[Platform],
-) -> None:
-    """Like init_integration, but callable after the mock session is configured."""
-    mock_config_entry.add_to_hass(hass)
-    with (
-        patch(
-            "homeassistant.components.bosch_shc.SHCSession",
-            return_value=mock_session,
-        ),
-        patch("homeassistant.components.bosch_shc.PLATFORMS", platforms),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-
 async def test_buttons(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -101,7 +84,7 @@ async def test_buttons(
     ]
     mock_session.device_helper.motion_detectors2 = [mock_motion_detector2]
 
-    await _setup_button_platform(hass, mock_config_entry, mock_session, platforms)
+    await setup_integration(hass, mock_config_entry, mock_session, platforms)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -194,7 +177,7 @@ async def test_button_press(
     mock_session.device_helper.smoke_detectors = [smoke_detector]
     mock_session.device_helper.motion_detectors2 = [mock_motion_detector2]
 
-    await _setup_button_platform(hass, mock_config_entry, mock_session, platforms)
+    await setup_integration(hass, mock_config_entry, mock_session, platforms)
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -236,7 +219,7 @@ async def test_motion_detector2_optional_buttons_skipped(
     device.supports_detection_test = supports_detection_test
     mock_session.device_helper.motion_detectors2 = [device]
 
-    await _setup_button_platform(hass, mock_config_entry, mock_session, platforms)
+    await setup_integration(hass, mock_config_entry, mock_session, platforms)
 
     entity_ids = {
         entry.entity_id
@@ -282,7 +265,7 @@ async def test_button_press_error(
         "Test error"
     )
 
-    await _setup_button_platform(hass, mock_config_entry, mock_session, platforms)
+    await setup_integration(hass, mock_config_entry, mock_session, platforms)
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(

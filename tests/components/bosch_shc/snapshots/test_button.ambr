@@ -425,14 +425,14 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:script-text-play',
+    'original_icon': None,
     'original_name': 'Good Night',
     'platform': 'bosch_shc',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'shc-test-uid_scenario_sc-1',
+    'translation_key': 'scenario',
+    'unique_id': 'shc-test-uid_sc-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -440,7 +440,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test SHC Good Night',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:script-text-play',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_shc_good_night',
