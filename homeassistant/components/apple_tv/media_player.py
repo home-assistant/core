@@ -109,7 +109,6 @@ async def async_setup_entry(
     assert config_entry.unique_id is not None
     manager = config_entry.runtime_data
     async_add_entities([AppleTvMediaPlayer(name, config_entry.unique_id, manager)])
-    _LOGGER.debug("APPLE TV media player entry unique id: %s", config_entry.unique_id)
 
 
 class AppleTvMediaPlayer(
@@ -367,10 +366,6 @@ class AppleTvMediaPlayer(
         attrs = dict(super().extra_state_attributes or {})
         if self.manager.status_flags is not None:
             attrs["status_flags"] = self.manager.status_flags
-            _LOGGER.debug(
-                self.manager.status_flags,
-            )
-
         return attrs
 
     @override

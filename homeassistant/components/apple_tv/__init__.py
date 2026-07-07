@@ -91,7 +91,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: AppleTvConfigEntry) -> bool:
     """Set up a config entry for Apple TV."""
-    _LOGGER.debug("setting up apple tv config entry")
     manager = AppleTVManager(hass, entry)
 
     if manager.is_on:
@@ -124,8 +123,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AppleTvConfigEntry) -> b
     entry.async_on_unload(
         await _async_register_airplay_status_listener(hass, entry, manager)
     )
-    _LOGGER.debug("Apple TV entry unique id: %s", entry.unique_id)
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await manager.init()
 
@@ -206,27 +203,26 @@ class AppleTVManager(DeviceListener):
     @callback
     def async_add_status_flag_listener(
         self,
-        cllback: Callable[[], None],
+        listener: Callable[[], None],
     ) -> Callable[[], None]:
         """Add a listener for status flag updates."""
-        self._status_flag_callbacks.append(cllback)
+        self._status_flag_callbacks.append(listener)
 
         def remove_listener() -> None:
-            self._status_flag_callbacks.remove(cllback)
+            self._status_flag_callbacks.remove(listener)
 
         return remove_listener
 
     @callback
     def async_set_status_flags(self, status_flags: str | None) -> None:
         """Update status flags."""
-        _LOGGER.debug("status flags changed to %s", status_flags)
         if self.status_flags == status_flags:
             return
 
         self.status_flags = status_flags
 
-        for cllback in self._status_flag_callbacks:
-            cllback()
+        for listener in self._status_flag_callbacks:
+            listener()
 
     @override
     def connection_lost(self, exception: Exception) -> None:
