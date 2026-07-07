@@ -88,6 +88,7 @@ class StiebelEltron(StiebelEltronEntity, ClimateEntity):
     """Representation of a STIEBEL ELTRON heat pump."""
 
     _attr_name = None
+    _attr_translation_key = "climate"
     _attr_hvac_modes = list(HA_TO_LWZ_HVAC)
     _attr_preset_modes = list(HA_TO_LWZ_PRESET)
     _attr_supported_features = (
