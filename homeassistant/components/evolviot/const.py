@@ -30,6 +30,7 @@ DATA_KNOWN_ENTITIES = "known_entities"
 PLATFORMS = (
     Platform.SWITCH,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.FAN,
     Platform.SENSOR,
