@@ -352,17 +352,25 @@ pops it).
 
 ## Discovered during execution (open, not in the original findings)
 
-- **Timestamp sensor proxies break on state fidelity**: a sandboxed sensor
-  with `device_class: timestamp` pushes its state as a string, but
-  `SensorEntity.state` requires a `datetime` (`AttributeError: 'str' object
-  has no attribute 'tzinfo'` kills the proxy's entity add). Blocks several
-  sun compat tests even after core-config mirroring (E3). Fix shape: the
-  sensor proxy should rebuild `native_value` typed from the pushed state
-  for timestamp/date device classes.
-- The compat lane (now real, E2) reports 8 failing sun tests — the honest
-  baseline replacing the no-op 99.97%. Failure notes: listener-count
-  assertions see the proxy architecture; unload/remove semantics; recorder
-  attribute exclusion; the timestamp issue above.
+- ~~**Timestamp sensor proxies break on state fidelity**~~ FIXED: the
+  sensor proxy rebuilds `native_value` as `datetime`/`date` for
+  timestamp/date device classes.
+- Fixed alongside it (same follow-up batch): own-domain entities
+  (`sun.sun`) bridge via a bare main-side `EntityComponent` (restricted to
+  the entry's own domain) + a `GenericSandboxEntity` passing state and
+  attributes through verbatim + single-entry domain attribution in
+  `_describe`; live core-config propagation (`sandbox/core_config` push —
+  main's location/unit changes reach a running sandbox and re-fire
+  `EVENT_CORE_CONFIG_UPDATE` there); the in-proc lane settles the full
+  bridge round-trip inside `async_block_till_done` (bounded, so clock-jump
+  entity storms cost ≤ ~2 s per call, not minutes).
+- Sun compat: 8 failed → **4 failed / 97 passed**. The residual four are
+  inherent white-box divergences, not bugs: two tests assert the raw
+  registry `unique_id` (proxies namespace as `<domain>:<unique_id>` for
+  collision safety), one pre-seeds a registry row and expects the
+  integration's setup-time cleanup to touch main's registry (it runs on the
+  private one), and recorder `exclude_attributes` needs the integration's
+  recorder module on main (real gap, tracked).
 
 ## Suggested execution order
 

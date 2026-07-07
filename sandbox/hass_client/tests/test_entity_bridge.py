@@ -350,6 +350,66 @@ async def test_state_push_serialises_datetime_attributes(
     await bridge.async_stop()
 
 
+async def test_register_attributes_sole_domain_entry_without_linkage(
+    channels: tuple[Channel, Channel], hass_with_demo_component
+) -> None:
+    """An entity with no registry/platform linkage falls back to the domain's entry.
+
+    ``registry_entry`` is None and ``platform.config_entry`` is None (an
+    own-domain entity on a bare EntityComponent) — when exactly one loaded
+    config entry owns the entity's domain, the registration is attributed
+    to it instead of being skipped.
+    """
+    main, sandbox = channels
+    hass, component = hass_with_demo_component
+
+    register_calls: list[pb.EntityDescription] = []
+
+    async def _on_register(msg: pb.EntityDescription) -> pb.RegisterEntityResult:
+        register_calls.append(msg)
+        return pb.RegisterEntityResult(entity_id="demo.lamp_main")
+
+    main.register("sandbox/register_entity", _on_register)
+    main.start()
+    sandbox.start()
+
+    config_entry = ConfigEntry(
+        version=1,
+        minor_version=1,
+        domain="demo",
+        title="Demo",
+        data={},
+        options={},
+        source="user",
+        unique_id=None,
+        discovery_keys={},
+        subentries_data=(),
+    )
+    hass.config_entries._entries[config_entry.entry_id] = config_entry  # noqa: SLF001
+
+    class _UnlinkedEntity(_FakeEntity):
+        @property
+        def platform(self) -> Any:
+            # No config-entry linkage anywhere: registry_entry is None
+            # (inherited) and the platform carries no config_entry either.
+            mock = MagicMock()
+            mock.config_entry = None
+            mock.domain = "demo"
+            return mock
+
+    entity = _UnlinkedEntity()
+    component._entities[entity.entity_id] = entity  # noqa: SLF001
+
+    bridge = EntityBridge(hass)
+    bridge.register(sandbox)
+    await _register_initial(bridge, hass, entity)
+
+    assert len(register_calls) == 1
+    assert register_calls[0].entry_id == config_entry.entry_id
+
+    await bridge.async_stop()
+
+
 async def _register_initial(bridge: EntityBridge, hass: Any, entity: Entity) -> None:
     """Drive the first state-change so ``entity`` is tracked + registered."""
     now = datetime.now(tz=datetime.now().astimezone().tzinfo)

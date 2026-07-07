@@ -143,6 +143,10 @@ MSG_STATE_CHANGED: Final = "sandbox/state_changed"
 MSG_REGISTER_SERVICE: Final = "sandbox/register_service"
 MSG_UNREGISTER_SERVICE: Final = "sandbox/unregister_service"
 MSG_FIRE_EVENT: Final = "sandbox/fire_event"
+# main -> sandbox one-way push: live core-config update (entry_setup carries
+# the initial snapshot; this keeps a running sandbox in step when the user
+# changes the home location / units / language on main).
+MSG_CORE_CONFIG = "sandbox/core_config"
 MSG_STORE_LOAD: Final = "sandbox/store_load"
 MSG_STORE_SAVE: Final = "sandbox/store_save"
 MSG_STORE_REMOVE: Final = "sandbox/store_remove"
@@ -174,6 +178,7 @@ REGISTRY: dict[str, tuple[type[Message], type[Message] | None]] = {
         pb.UnregisterServiceResult,
     ),
     MSG_FIRE_EVENT: (pb.FireEvent, None),
+    MSG_CORE_CONFIG: (pb.CoreConfig, None),
     MSG_STORE_LOAD: (pb.StoreLoad, pb.StoreLoadResult),
     MSG_STORE_SAVE: (pb.StoreSave, pb.StoreSaveResult),
     MSG_STORE_REMOVE: (pb.StoreRemove, pb.StoreRemoveResult),
@@ -323,6 +328,29 @@ def make_entity_description(
     return msg
 
 
+def core_config_to_proto(config: Any) -> pb.CoreConfig:
+    """Snapshot a hass ``Config`` into the wire ``CoreConfig`` message.
+
+    Shared by the ``entry_setup`` payload and the live
+    ``sandbox/core_config`` push so the two can't drift.
+    """
+    msg = pb.CoreConfig(
+        latitude=config.latitude,
+        longitude=config.longitude,
+        elevation=config.elevation,
+        time_zone=config.time_zone,
+        # The unit system carries no public name accessor; core itself reads
+        # ``units._name`` when persisting (core_config.py).
+        unit_system=config.units._name,  # noqa: SLF001
+        language=config.language,
+        currency=config.currency,
+        location_name=config.location_name,
+    )
+    if config.country is not None:
+        msg.country = config.country
+    return msg
+
+
 __all__ = [
     "MSG_CALL_SERVICE",
     "MSG_ENTITY_QUERY",
@@ -345,6 +373,7 @@ __all__ = [
     "MSG_UNREGISTER_ENTITY",
     "MSG_UNREGISTER_SERVICE",
     "REGISTRY",
+    "core_config_to_proto",
     "decode_json",
     "decode_json_dict",
     "device_info_to_proto",

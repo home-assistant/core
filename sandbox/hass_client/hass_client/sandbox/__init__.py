@@ -35,10 +35,11 @@ from hass_client.approved_domains import ApprovedDomains
 from hass_client.channel import Channel
 from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.entity_bridge import EntityBridge
-from hass_client.entry_runner import EntryRunner
+from hass_client.entry_runner import EntryRunner, apply_core_config
 from hass_client.event_mirror import EventMirror
 from hass_client.flow_runner import FlowRunner
 from hass_client.messages import (
+    MSG_CORE_CONFIG,
     MSG_GET_TRANSLATIONS,
     MSG_PING,
     MSG_READY,
@@ -47,7 +48,10 @@ from hass_client.messages import (
 )
 from hass_client.sandbox_bridge import ChannelSandboxBridge
 from hass_client.service_mirror import ServiceMirror
-from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
+from homeassistant.const import (
+    EVENT_CORE_CONFIG_UPDATE,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+)
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import json as json_helper, restore_state
 from homeassistant.helpers.sandbox_context import current_sandbox
@@ -120,6 +124,16 @@ class SandboxRuntime:
     def channel(self) -> Channel | None:
         """The runtime's control channel, once ``run()`` has started it."""
         return self._channel
+
+    @property
+    def hass(self) -> HomeAssistant | None:
+        """The sandbox-private hass, once ``run()`` has created it."""
+        return self._flow_runner.hass if self._flow_runner is not None else None
+
+    @property
+    def entity_bridge(self) -> EntityBridge | None:
+        """The runtime's entity bridge, once ``run()`` has created it."""
+        return self._entity_bridge
 
     def request_shutdown(self) -> None:
         """Request a graceful shutdown of the runtime."""
@@ -202,6 +216,7 @@ class SandboxRuntime:
             self._channel.register(
                 MSG_GET_TRANSLATIONS, self._handle_get_translations
             )
+            self._channel.register(MSG_CORE_CONFIG, self._handle_core_config)
             self._flow_runner.register(self._channel)
             self._entry_runner.register(self._channel)
             self._entity_bridge.register(self._channel)
@@ -303,6 +318,22 @@ class SandboxRuntime:
         if strings:
             result.strings = encode_json(strings)
         return result
+
+    async def _handle_core_config(self, msg: pb.CoreConfig) -> None:
+        """Apply a live core-config update pushed from main.
+
+        ``entry_setup`` carries the initial snapshot; this keeps a running
+        sandbox in step when the user changes the home location / units /
+        language on main. Fires ``EVENT_CORE_CONFIG_UPDATE`` on the private
+        bus so integrations recompute exactly as they would locally (sun
+        re-derives its observer, coordinators re-localize).
+        """
+        flow_runner = self._flow_runner
+        if flow_runner is None:
+            return
+        hass = flow_runner.hass
+        await apply_core_config(hass, msg)
+        hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
 
     async def _run_graceful_shutdown(self) -> pb.ShutdownResult:
         """Unload every loaded entry and snapshot RestoreEntity state.

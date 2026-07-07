@@ -59,7 +59,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     EVENT_STATE_REPORTED,
 )
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -74,6 +74,7 @@ from .const import UNIQUE_ID_SEPARATOR
 from .description import SandboxEntityDescription
 from .messages import (
     MSG_CALL_SERVICE,
+    MSG_CORE_CONFIG,
     MSG_ENTITY_QUERY,
     MSG_FIRE_EVENT,
     MSG_REGISTER_ENTITY,
@@ -84,6 +85,7 @@ from .messages import (
     MSG_STORE_SAVE,
     MSG_UNREGISTER_ENTITY,
     MSG_UNREGISTER_SERVICE,
+    core_config_to_proto,
     decode_json,
     decode_json_dict,
     encode_json,
@@ -176,6 +178,12 @@ class SandboxBridge:
         self._owned_domains_cache: set[str] | None = None
         self._unsub_entry_changed = async_dispatcher_connect(
             hass, SIGNAL_CONFIG_ENTRY_CHANGED, self._on_config_entry_changed
+        )
+        # Keep a running sandbox's core config in step with main — the
+        # entry_setup snapshot goes stale when the user changes the home
+        # location / units / language.
+        self._unsub_core_config: CALLBACK_TYPE | None = self.hass.bus.async_listen(
+            EVENT_CORE_CONFIG_UPDATE, self._on_core_config_update
         )
 
         # Context security + restoration: the sandbox only ever sends a
@@ -417,7 +425,14 @@ class SandboxBridge:
         # The proxy entity subclasses the domain's *EntityBase* (LightEntity,
         # SwitchEntity, …); for the framework to host it the domain
         # component itself has to be set up so its EntityComponent exists.
-        await self._ensure_domain_loaded(description.domain)
+        await self._ensure_domain_loaded(
+            description.domain,
+            # Only the entry's own integration domain may fall back to a
+            # bare EntityComponent — anything else must be a real,
+            # loadable platform domain, or a compromised sandbox could
+            # mint entities in arbitrary made-up domains.
+            allow_bare=description.domain == entry.domain,
+        )
         # Pre-create the device entry so its id is known before the proxy
         # registers; the framework's own async_get_or_create call inside
         # EntityPlatform.async_add_entities is idempotent on (identifiers,
@@ -499,7 +514,7 @@ class SandboxBridge:
                 f"entry outside group {self.group!r}; refusing to merge"
             )
 
-    async def _ensure_domain_loaded(self, domain: str) -> None:
+    async def _ensure_domain_loaded(self, domain: str, *, allow_bare: bool) -> None:
         """Make sure the domain's :class:`EntityComponent` is loaded on main."""
         components = self.hass.data.get(DATA_INSTANCES, {})
         if domain in components:
@@ -507,6 +522,14 @@ class SandboxBridge:
         # Empty config — we never own the domain ourselves; we just want
         # the EntityComponent so we can attach a proxy platform to it.
         await async_setup_component(self.hass, domain, {})
+        if domain in self.hass.data.get(DATA_INSTANCES, {}) or not allow_bare:
+            return
+        # An integration's *own* domain (sun.sun, …): its EntityComponent is
+        # only built inside its own async_setup_entry, which runs sandboxed —
+        # a bare component gives the proxies a home without running any
+        # integration code on main. EntityComponent self-registers into
+        # DATA_INSTANCES.
+        EntityComponent(_LOGGER, domain, self.hass)
 
     async def _handle_unregister_entity(
         self, msg: pb.UnregisterEntity
@@ -635,6 +658,20 @@ class SandboxBridge:
         """Drop the on-disk file for a sandbox-side ``Store.async_remove``."""
         await self._store_server.async_remove(validate_key(msg.key))
         return pb.StoreRemoveResult(ok=True)
+
+    async def _on_core_config_update(self, _event: Any) -> None:
+        """Push main's updated core config down to the sandbox."""
+        try:
+            await self.channel.push(
+                MSG_CORE_CONFIG, core_config_to_proto(self.hass.config)
+            )
+        except Exception:  # noqa: BLE001
+            # A dead channel just means the respawned sandbox will get the
+            # fresh snapshot on its next entry_setup.
+            _LOGGER.debug(
+                "SandboxBridge[%s]: core-config push failed (channel down?)",
+                self.group,
+            )
 
     @callback
     def _owned_domains(self) -> set[str]:
@@ -804,6 +841,9 @@ class SandboxBridge:
         # bridge's (now dead) channel, and a respawned sandbox's
         # re-registration is skipped by the has_service() guard, so a stale
         # forwarder would fail every call until HA restarts.
+        if self._unsub_core_config is not None:
+            self._unsub_core_config()
+            self._unsub_core_config = None
         for domain, service in self._mirrored_services:
             if self.hass.services.has_service(domain, service):
                 self.hass.services.async_remove(domain, service)

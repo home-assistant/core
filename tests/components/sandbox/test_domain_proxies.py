@@ -20,6 +20,8 @@ still ships a proxy for symmetry).
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
+from datetime import date, datetime
 from typing import Any
 
 import pytest
@@ -34,6 +36,7 @@ from homeassistant.components.sandbox.messages import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from ._helpers import make_channel_pair
 
@@ -421,6 +424,54 @@ async def test_phase13_proxy_smoke(
         assert calls[0].domain == domain
         assert calls[0].service == expected_service
         assert decode_json_dict(calls[0].target) == {"entity_id": [sandbox_entity_id]}
+
+
+@pytest.mark.parametrize(
+    ("device_class", "pushed_state", "parse"),
+    [
+        pytest.param(
+            "timestamp",
+            "2026-05-23T10:30:00+00:00",
+            dt_util.parse_datetime,
+            id="timestamp",
+        ),
+        pytest.param("date", "2026-05-23", dt_util.parse_date, id="date"),
+    ],
+)
+async def test_sensor_timestamp_and_date_states_surface(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    device_class: str,
+    pushed_state: str,
+    parse: Callable[[str], datetime | date | None],
+) -> None:
+    """A timestamp/date sensor's pushed ISO string surfaces a working state.
+
+    ``SensorEntity.state`` needs a real ``datetime`` / ``date`` back from
+    ``native_value`` — handing it the raw pushed string used to die on
+    ``'str' object has no attribute 'tzinfo'``.
+    """
+    _bridge, main_channel, sandbox_channel = await _wire(hass)
+
+    payload = make_entity_description(
+        entry_id=entry.entry_id,
+        domain="sensor",
+        sandbox_entity_id=f"sensor.synthetic_{device_class}",
+        unique_id=f"sandbox-sensor-{device_class}",
+        device_class=device_class,
+        initial_state=pushed_state,
+    )
+
+    try:
+        result = await sandbox_channel.call("sandbox/register_entity", payload)
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+    state = hass.states.get(result.entity_id)
+    assert state is not None
+    assert parse(state.state) is not None
+    assert parse(state.state) == parse(pushed_state)
 
 
 async def test_upsert_clears_dropped_device_class(

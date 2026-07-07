@@ -20,6 +20,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import Context
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import StateType
 
 from ..messages import decode_json_dict
 
@@ -79,12 +80,13 @@ class SandboxProxyEntity(Entity):
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Sandbox proxies expose attributes through typed properties.
+        """Typed domain proxies expose attributes through typed properties.
 
         Anything domain-specific (``brightness``, ``hvac_mode``, …) is
         surfaced by the domain proxy's own ``@property`` declarations
-        reading from ``_state_cache``. Returning extras here would
-        duplicate those values in the state-machine attributes dict.
+        reading from ``_state_cache``. The generic fallback
+        (:class:`GenericSandboxEntity`) overrides this to pass the pushed
+        attributes through instead.
         """
         return None
 
@@ -216,6 +218,31 @@ class SandboxProxyEntity(Entity):
         )
 
 
+class GenericSandboxEntity(SandboxProxyEntity):
+    """Fallback proxy for domains without a typed module.
+
+    Hosts an integration's own-domain entities (``sun.sun``, …): no typed
+    contract exists, so the pushed state string and attribute dict pass
+    through verbatim.
+    """
+
+    @property
+    @override
+    def state(self) -> StateType:
+        """Return the pushed state verbatim."""
+        state: StateType = self._state_cache.get("state")
+        return state
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the pushed attributes verbatim."""
+        attrs = {
+            key: value for key, value in self._state_cache.items() if key != "state"
+        }
+        return attrs or None
+
+
 def build_proxy(
     bridge: SandboxBridge, description: SandboxEntityDescription
 ) -> SandboxProxyEntity:
@@ -243,7 +270,7 @@ def proxy_class_for(domain: str) -> type[SandboxProxyEntity]:
     try:
         module = importlib.import_module(f".{domain}", __package__)
     except ImportError:
-        cls = SandboxProxyEntity
+        cls = GenericSandboxEntity
     else:
         # Each proxy module defines exactly one SandboxProxyEntity subclass.
         cls = next(
@@ -254,7 +281,7 @@ def proxy_class_for(domain: str) -> type[SandboxProxyEntity]:
                 and issubclass(obj, SandboxProxyEntity)
                 and obj.__module__ == module.__name__
             ),
-            SandboxProxyEntity,
+            GenericSandboxEntity,
         )
     return _DOMAIN_PROXIES.setdefault(domain, cls)
 

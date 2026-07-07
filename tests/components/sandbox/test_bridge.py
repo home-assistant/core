@@ -17,7 +17,7 @@ from homeassistant.components.sandbox.messages import (
 )
 from homeassistant.components.sandbox.service_forwarder import translate_remote_error
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON
+from homeassistant.const import EVENT_CORE_CONFIG_UPDATE, STATE_ON
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -539,6 +539,101 @@ async def test_register_entity_auto_loads_domain_component(
 
     assert result.entity_id.startswith("switch.")
     assert "switch" in hass.config.components
+
+
+async def test_register_entity_own_domain_gets_bare_component_passthrough(
+    hass: HomeAssistant,
+) -> None:
+    """An own-domain entity works even when the domain can't load on main.
+
+    ``mysun.sun`` for an entry owning domain ``mysun``: no integration of
+    that name exists on main, so ``async_setup_component`` fails — the
+    bridge falls back to a bare EntityComponent and the generic proxy
+    surfaces the pushed state and attributes verbatim.
+    """
+    entry = MockConfigEntry(domain="mysun", title="My Sun", sandbox="built-in")
+    entry.add_to_hass(hass)
+    _bridge, main_channel, sandbox_channel = await _wire(hass)
+
+    try:
+        result = await sandbox_channel.call(
+            "sandbox/register_entity",
+            make_entity_description(
+                entry_id=entry.entry_id,
+                domain="mysun",
+                sandbox_entity_id="mysun.sun",
+                unique_id="sandbox-sun",
+                initial_state="above_horizon",
+                initial_attributes={"elevation": 12.5, "azimuth": 180.25},
+            ),
+        )
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+    assert result.entity_id.startswith("mysun.")
+    state = hass.states.get(result.entity_id)
+    assert state is not None
+    assert state.state == "above_horizon"
+    assert state.attributes["elevation"] == 12.5
+    assert state.attributes["azimuth"] == 180.25
+
+
+async def test_register_entity_bare_component_foreign_domain_rejected(
+    hass: HomeAssistant,
+) -> None:
+    """The bare-EntityComponent fallback is own-domain only.
+
+    A made-up entity domain that differs from the entry's domain must not
+    get a minted component — the registration errors and no proxy lands.
+    """
+    entry = MockConfigEntry(domain="generic", title="Generic", sandbox="built-in")
+    entry.add_to_hass(hass)
+    bridge, main_channel, sandbox_channel = await _wire(hass)
+
+    try:
+        with pytest.raises(ChannelRemoteError, match="no EntityComponent"):
+            await sandbox_channel.call(
+                "sandbox/register_entity",
+                make_entity_description(
+                    entry_id=entry.entry_id,
+                    domain="madeup",
+                    sandbox_entity_id="madeup.widget",
+                    unique_id="sandbox-widget",
+                    initial_state="on",
+                ),
+            )
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+    assert "madeup.widget" not in bridge._entities
+    assert hass.states.async_entity_ids("madeup") == []
+
+
+async def test_core_config_update_pushed_to_sandbox(hass: HomeAssistant) -> None:
+    """A main-side core-config change pushes ``sandbox/core_config`` live."""
+    _bridge, main_channel, sandbox_channel = await _wire(hass)
+    pushes: list[pb.CoreConfig] = []
+
+    async def _on_core_config(msg: pb.CoreConfig) -> None:
+        pushes.append(msg)
+
+    sandbox_channel.register("sandbox/core_config", _on_core_config)
+
+    try:
+        hass.config.latitude = 52.3731
+        hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
+        for _ in range(50):
+            if pushes:
+                break
+            await asyncio.sleep(0)
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+    assert len(pushes) == 1
+    assert pushes[0].latitude == 52.3731
 
 
 async def test_register_service_installs_forwarder(hass: HomeAssistant) -> None:

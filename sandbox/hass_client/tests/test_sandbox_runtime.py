@@ -11,10 +11,14 @@ import asyncio
 from hass_client._proto import sandbox_pb2 as pb
 from hass_client.channel import Channel, ChannelRemoteError
 from hass_client.codec_protobuf import ProtobufCodec
-from hass_client.messages import MSG_READY
+from hass_client.messages import MSG_CORE_CONFIG, MSG_READY
 from hass_client.sandbox import SandboxRuntime
 from hass_client.sandbox.__main__ import _build_parser
 import pytest
+
+from homeassistant.const import EVENT_CORE_CONFIG_UPDATE
+from homeassistant.core import Event, callback
+from homeassistant.util import dt as dt_util
 
 
 async def _noop_channel_factory() -> Channel | None:
@@ -118,6 +122,78 @@ async def test_handlers_registered_before_ready(
         assert isinstance(probe_result[0], pb.PingResult)
         assert probe_result[0].pong == "sandbox"
     finally:
+        runtime.request_shutdown()
+        await asyncio.wait_for(task, timeout=5.0)
+        await main_channel.close()
+        await sandbox_channel.close()
+    capsys.readouterr()
+
+
+async def test_core_config_push_updates_private_hass(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A live ``sandbox/core_config`` push lands on the private hass.
+
+    The config values must be applied AND ``EVENT_CORE_CONFIG_UPDATE`` must
+    fire on the private bus, so sandboxed integrations recompute exactly as
+    they would locally.
+    """
+    main_channel, sandbox_channel = _make_channel_pair()
+    ready_seen = asyncio.Event()
+
+    async def _on_ready(_payload: object) -> None:
+        ready_seen.set()
+
+    main_channel.register(MSG_READY, _on_ready)
+    main_channel.start()
+
+    async def _channel_factory() -> Channel:
+        return sandbox_channel
+
+    runtime = SandboxRuntime(
+        url="ws://x",
+        group="custom",
+        channel_factory=_channel_factory,
+    )
+
+    task = asyncio.create_task(runtime.run())
+    original_tz = dt_util.get_default_time_zone()
+    try:
+        await asyncio.wait_for(ready_seen.wait(), timeout=5.0)
+        flow_runner = runtime._flow_runner  # noqa: SLF001
+        assert flow_runner is not None
+        hass = flow_runner.hass
+
+        events: list[Event] = []
+
+        @callback
+        def _on_core_config_update(event: Event) -> None:
+            events.append(event)
+
+        # Subscribe BEFORE pushing so the fired event cannot be missed.
+        hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, _on_core_config_update)
+
+        await main_channel.push(
+            MSG_CORE_CONFIG,
+            pb.CoreConfig(
+                latitude=52.3731,
+                longitude=4.8926,
+                time_zone="Europe/Amsterdam",
+            ),
+        )
+        for _ in range(100):
+            if events:
+                break
+            await asyncio.sleep(0.01)
+
+        assert hass.config.latitude == 52.3731
+        assert hass.config.longitude == 4.8926
+        assert hass.config.time_zone == "Europe/Amsterdam"
+        assert len(events) == 1
+    finally:
+        # The time-zone setter updates dt_util's process-global default —
+        # restore it so the rest of the suite is unaffected.
+        dt_util.set_default_time_zone(original_tz)
         runtime.request_shutdown()
         await asyncio.wait_for(task, timeout=5.0)
         await main_channel.close()

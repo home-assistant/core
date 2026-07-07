@@ -24,6 +24,7 @@ Usage::
 # ruff: noqa: INP001, T201, S108, PERF401
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import csv
 from dataclasses import dataclass
 import os
@@ -237,6 +238,15 @@ def main(argv: list[str] | None = None) -> int:
         help="Which sandbox plugin to drive (default: inprocess).",
     )
     parser.add_argument(
+        "--jobs",
+        type=int,
+        default=1,
+        help=(
+            "Concurrent pytest subprocesses (default: 1). Each runs one"
+            " integration's suite; 4-8 is reasonable on a workstation."
+        ),
+    )
+    parser.add_argument(
         "--timeout",
         type=float,
         default=300.0,
@@ -265,18 +275,26 @@ def main(argv: list[str] | None = None) -> int:
 
     start = time.monotonic()
     results: list[Result] = []
-    for idx, integration in enumerate(integrations, 1):
-        result = run_one(integration, plugin, timeout=args.timeout)
-        results.append(result)
-        elapsed = time.monotonic() - start
-        rate = idx / elapsed if elapsed > 0 else 0
-        eta_minutes = (total - idx) / rate / 60 if rate else 0
-        print(
-            f"[{idx}/{total}] {integration} -> {result.status}"
-            f" ({result.passed}p/{result.failed}f/{result.errors}e/{result.skipped}s)"
-            f" | ETA: {eta_minutes:.0f}m",
-            flush=True,
-        )
+    # Results in input order regardless of completion order; progress prints
+    # as each integration finishes.
+    with ThreadPoolExecutor(max_workers=max(1, args.jobs)) as pool:
+        futures = [
+            pool.submit(run_one, integration, plugin, timeout=args.timeout)
+            for integration in integrations
+        ]
+        by_future = dict(zip(futures, integrations, strict=True))
+        for done, future in enumerate(futures, 1):
+            result = future.result()
+            results.append(result)
+            elapsed = time.monotonic() - start
+            rate = done / elapsed if elapsed > 0 else 0
+            eta_minutes = (total - done) / rate / 60 if rate else 0
+            print(
+                f"[{done}/{total}] {by_future[future]} -> {result.status}"
+                f" ({result.passed}p/{result.failed}f/{result.errors}e/{result.skipped}s)"
+                f" | ETA: {eta_minutes:.0f}m",
+                flush=True,
+            )
 
     write_csv(results, args.csv)
     write_report(results, plugin, args.report)

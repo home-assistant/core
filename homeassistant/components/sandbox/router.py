@@ -29,7 +29,12 @@ from ._proto import sandbox_pb2 as pb
 from .channel import ChannelClosedError, ChannelRemoteError
 from .classifier import SandboxAssignment, classify
 from .manager import SandboxManager
-from .messages import MSG_ENTRY_SETUP, MSG_ENTRY_UNLOAD, encode_json
+from .messages import (
+    MSG_ENTRY_SETUP,
+    MSG_ENTRY_UNLOAD,
+    core_config_to_proto,
+    encode_json,
+)
 from .proxy_flow import SandboxFlowProxy
 from .sources import SandboxSourceError, async_resolve_integration_source
 
@@ -259,20 +264,7 @@ async def _entry_setup_payload(
     msg.integration_source.CopyFrom(
         await async_resolve_integration_source(hass, entry.domain)
     )
-    config = hass.config
-    core_config = msg.core_config
-    core_config.latitude = config.latitude
-    core_config.longitude = config.longitude
-    core_config.elevation = config.elevation
-    core_config.time_zone = config.time_zone
-    # The unit system carries no public name accessor; core itself reads
-    # ``units._name`` when persisting (core_config.py).
-    core_config.unit_system = config.units._name  # noqa: SLF001
-    core_config.language = config.language
-    if config.country is not None:
-        core_config.country = config.country
-    core_config.currency = config.currency
-    core_config.location_name = config.location_name
+    msg.core_config.CopyFrom(core_config_to_proto(hass.config))
     return msg
 
 
