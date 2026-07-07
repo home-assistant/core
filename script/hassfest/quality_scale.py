@@ -861,7 +861,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "statsd",
     "steam_online",
     "steamist",
-    "stiebel_eltron",
     "stream",
     "streamlabswater",
     "subaru",
@@ -1825,7 +1824,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "statsd",
     "steam_online",
     "steamist",
-    "stiebel_eltron",
     "stream",
     "streamlabswater",
     "stookwijzer",
@@ -2054,6 +2052,7 @@ NO_QUALITY_SCALE = [
     "intent_script",
     "intent",
     "labs",
+    "llm",
     "logbook",
     "logger",
     "lovelace",
@@ -2092,7 +2091,7 @@ SCHEMA = vol.Schema(
     {
         vol.Required("rules"): vol.Schema(
             {
-                vol.Optional(rule.name): vol.Any(
+                vol.Required(rule.name): vol.Any(
                     vol.In(["todo", "done"]),
                     vol.Schema(
                         {

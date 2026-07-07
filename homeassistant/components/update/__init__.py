@@ -12,7 +12,12 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_PICTURE, STATE_OFF, STATE_ON, EntityCategory
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    EntityCategory,
+    EntityStateAttribute,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -75,6 +80,7 @@ __all__ = [
     "UpdateEntity",
     "UpdateEntityDescription",
     "UpdateEntityFeature",
+    "UpdateEntityStateAttribute",
 ]
 
 # mypy: disallow-any-generics
@@ -213,7 +219,7 @@ class UpdateEntity(
     _entity_component_unrecorded_attributes = frozenset(
         {
             UpdateEntityStateAttribute.DISPLAY_PRECISION,
-            ATTR_ENTITY_PICTURE,
+            EntityStateAttribute.ENTITY_PICTURE,
             UpdateEntityStateAttribute.IN_PROGRESS,
             UpdateEntityStateAttribute.RELEASE_SUMMARY,
             UpdateEntityStateAttribute.UPDATE_PERCENTAGE,
@@ -505,8 +511,14 @@ class UpdateEntity(
         """
         await super().async_internal_added_to_hass()
         state = await self.async_get_last_state()
-        if state is not None and state.attributes.get(ATTR_SKIPPED_VERSION) is not None:
-            self.__skipped_version = state.attributes[ATTR_SKIPPED_VERSION]
+        if (
+            state is not None
+            and state.attributes.get(UpdateEntityStateAttribute.SKIPPED_VERSION)
+            is not None
+        ):
+            self.__skipped_version = state.attributes[
+                UpdateEntityStateAttribute.SKIPPED_VERSION
+            ]
 
 
 @websocket_api.require_admin
