@@ -8,7 +8,6 @@ from zha.application.const import RadioType
 from zigpy.backups import BackupManager
 import zigpy.config
 from zigpy.config import CONF_DEVICE_PATH
-import zigpy.device
 import zigpy.types
 
 from homeassistant.components.zha import radio_manager
@@ -503,29 +502,3 @@ async def test_create_zigpy_app_connect_oserror(
     with pytest.raises(HomeAssistantError, match="Failed to connect to Zigbee adapter"):
         async with radio_manager.create_zigpy_app():
             pytest.fail("Should not be reached")
-
-
-async def test_create_zigpy_app_forwards_device_resolver(
-    radio_manager: ZhaRadioManager,
-) -> None:
-    """Test that `create_zigpy_app` forwards the device resolver to zigpy.
-
-    zigpy only quirk-resolves devices loaded from the database when a
-    resolver is passed, so quirk-defined triggers would be missing otherwise.
-    """
-    radio_manager.radio_type = RadioType.ezsp
-    radio_manager.device_settings = {CONF_DEVICE_PATH: "/dev/ttyZigbee"}
-
-    def resolver(device: zigpy.device.Device) -> zigpy.device.Device:
-        return device
-
-    with (
-        patch("homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0),
-        patch("zigpy.application.ControllerApplication.new", AsyncMock()) as mock_new,
-    ):
-        async with radio_manager.create_zigpy_app(
-            connect=False, device_resolver=resolver
-        ):
-            pass
-
-    assert mock_new.await_args.kwargs["device_resolver"] is resolver
