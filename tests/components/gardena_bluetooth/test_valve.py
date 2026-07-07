@@ -180,3 +180,68 @@ async def test_valvex_switching(
         call(service.start_watering, {0: "18", 1: "1800"}),
         call(service.stop_watering, {0: "18"}),
     ]
+
+
+@pytest.mark.parametrize(
+    ("mock_valvex_chars", "service"),
+    [pytest.param(Valve1, Valve1, id="wc_single_G-19033")],
+    indirect=["mock_valvex_chars"],
+)
+async def test_valvex_open_survives_stale_readback(
+    hass: HomeAssistant,
+    mock_client: Mock,
+    mock_valvex_chars: dict[str, bytes],
+    service: type[ValveX],
+    scan_step: Callable[[], Awaitable[None]],
+) -> None:
+    """A readback before the device applied the command must not flip the state."""
+
+    mock_entry = get_config_entry(SMART_WATER_CONTROL_SERVICE_INFO)
+    await setup_entry(
+        hass,
+        mock_entry,
+        [Platform.VALVE],
+        service_info=SMART_WATER_CONTROL_SERVICE_INFO,
+    )
+    entity_id = next(
+        s for s in hass.states.async_all() if s.domain == "valve"
+    ).entity_id
+
+    # The device applies watering commands asynchronously: the state
+    # characteristic stays closed for the next two readbacks.
+    stale_reads = 2
+
+    def _converge(uuid: str) -> None:
+        nonlocal stale_reads
+        if uuid != service.state.uuid:
+            return
+        if stale_reads > 0:
+            stale_reads -= 1
+        else:
+            mock_valvex_chars[service.state.uuid] = b"\x01"
+
+    orig_read_char = mock_client.read_char.side_effect
+    orig_read_char_raw = mock_client.read_char_raw.side_effect
+
+    def _read_char(char, *args, **kwargs):
+        _converge(char.uuid)
+        return orig_read_char(char, *args, **kwargs)
+
+    def _read_char_raw(uuid, *args, **kwargs):
+        _converge(uuid)
+        return orig_read_char_raw(uuid, *args, **kwargs)
+
+    mock_client.read_char.side_effect = _read_char
+    mock_client.read_char_raw.side_effect = _read_char_raw
+
+    await hass.services.async_call(
+        VALVE_DOMAIN,
+        SERVICE_OPEN_VALVE,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    # The stale readbacks must not end the transition.
+    assert hass.states.get(entity_id).state == "opening"
+
+    await scan_step()
+    assert hass.states.get(entity_id).state == "open"

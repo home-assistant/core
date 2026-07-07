@@ -1,5 +1,6 @@
 """Provides the DataUpdateCoordinator."""
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import override
@@ -163,3 +164,30 @@ class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
 
         self.data[char.uuid] = char.encode(value)
         await self.async_refresh()
+
+    async def read_char_until(
+        self,
+        char: Characteristic[CharacteristicType],
+        expected: CharacteristicType,
+        attempts: int = 10,
+        interval: float = 1.0,
+    ) -> CharacteristicType | None:
+        """Poll a characteristic until it reports the expected value.
+
+        Used for commands the device applies asynchronously, where an
+        immediate readback reports stale data. Returns the last read value,
+        which is also cached for listeners.
+        """
+        value: CharacteristicType | None = None
+        for attempt in range(attempts):
+            if attempt:
+                await asyncio.sleep(interval)
+            try:
+                value = await self.client.read_char(char)
+            except GardenaBluetoothException, DeviceUnavailable:
+                break
+            if value == expected:
+                break
+        if value is not None:
+            self.data[char.uuid] = char.encode(value)
+        return value

@@ -1,5 +1,6 @@
 """Support for switch entities."""
 
+import asyncio
 from typing import Any, override
 
 from gardena_bluetooth.const import Valve, Valve1, Valve2
@@ -96,6 +97,8 @@ class GardenaBluetoothValveXSwitch(GardenaBluetoothEntity, SwitchEntity):
 
     _attr_is_on: bool | None = None
     _attr_entity_registry_enabled_default = False
+    _converging = False
+    _convergence_task: asyncio.Task[None] | None = None
 
     @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
@@ -126,29 +129,71 @@ class GardenaBluetoothValveXSwitch(GardenaBluetoothEntity, SwitchEntity):
 
     @override
     def _handle_coordinator_update(self) -> None:
-        self._attr_is_on = self.coordinator.get_cached(self._service.state)
+        # While a command is converging, readbacks may predate the command
+        # being applied by the device; the command handler sets the state.
+        if not self._converging:
+            self._attr_is_on = self.coordinator.get_cached(self._service.state)
         super()._handle_coordinator_update()
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel a running convergence tracker."""
+        if self._convergence_task:
+            self._convergence_task.cancel()
+        await super().async_will_remove_from_hass()
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on for the configured manual watering duration."""
         cached = self.coordinator.get_cached(self._service.manual_watering_duration)
         duration = cached if cached is not None else FALLBACK_WATERING_TIME_IN_SECONDS
-        await self.coordinator.write(
-            self._service.start_watering,
-            {0: WATERING_COMMAND_SOURCE, 1: str(duration)},
-        )
+        self._converging = True
+        try:
+            await self.coordinator.write(
+                self._service.start_watering,
+                {0: WATERING_COMMAND_SOURCE, 1: str(duration)},
+            )
+        except HomeAssistantError:
+            self._converging = False
+            raise
         self._attr_is_on = True
         self.async_write_ha_state()
+        self._track_convergence(True)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.coordinator.write(
-            self._service.stop_watering,
-            {0: WATERING_COMMAND_SOURCE},
-        )
+        self._converging = True
+        try:
+            await self.coordinator.write(
+                self._service.stop_watering,
+                {0: WATERING_COMMAND_SOURCE},
+            )
+        except HomeAssistantError:
+            self._converging = False
+            raise
         self._attr_is_on = False
+        self.async_write_ha_state()
+        self._track_convergence(False)
+
+    def _track_convergence(self, target: bool) -> None:
+        """Track the asynchronously applied watering command in the background."""
+        if self._convergence_task:
+            self._convergence_task.cancel()
+        self._converging = True
+        self._convergence_task = self.hass.async_create_task(
+            self._async_converge(target)
+        )
+
+    async def _async_converge(self, target: bool) -> None:
+        try:
+            state = await self.coordinator.read_char_until(
+                self._service.state, target, attempts=24, interval=5.0
+            )
+        finally:
+            self._converging = False
+        if state is not None:
+            self._attr_is_on = state
         self.async_write_ha_state()
 
 

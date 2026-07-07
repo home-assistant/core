@@ -1,5 +1,6 @@
 """Support for valve entities."""
 
+import asyncio
 from typing import Any, override
 
 from gardena_bluetooth.const import Valve, Valve1, Valve2
@@ -10,6 +11,7 @@ from homeassistant.components.valve import (
     ValveEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import WATERING_COMMAND_SOURCE
@@ -102,6 +104,7 @@ class GardenaBluetoothValveX(GardenaBluetoothEntity, ValveEntity):
     _attr_reports_position = False
     _attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
     _attr_device_class = ValveDeviceClass.WATER
+    _convergence_task: asyncio.Task[None] | None = None
 
     @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
@@ -136,28 +139,78 @@ class GardenaBluetoothValveX(GardenaBluetoothEntity, ValveEntity):
     def _handle_coordinator_update(self) -> None:
         state = self.coordinator.get_cached(self._service.state)
         self._attr_is_closed = None if state is None else not state
+        # Transitions end only once the device reports the target state, so
+        # a readback from before the command was applied cannot end them.
+        if state:
+            self._attr_is_opening = False
+        elif state is not None:
+            self._attr_is_closing = False
         super()._handle_coordinator_update()
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel a running convergence tracker."""
+        if self._convergence_task:
+            self._convergence_task.cancel()
+        await super().async_will_remove_from_hass()
 
     @override
     async def async_open_valve(self, **kwargs: Any) -> None:
         """Open the valve for the configured manual watering duration."""
         cached = self.coordinator.get_cached(self._service.manual_watering_duration)
         duration = cached if cached is not None else FALLBACK_WATERING_TIME_IN_SECONDS
-        await self.coordinator.write(
-            self._service.start_watering,
-            {0: WATERING_COMMAND_SOURCE, 1: str(duration)},
-        )
-        self._attr_is_closed = False
+        self._attr_is_opening = True
+        self._attr_is_closing = False
         self.async_write_ha_state()
+        try:
+            await self.coordinator.write(
+                self._service.start_watering,
+                {0: WATERING_COMMAND_SOURCE, 1: str(duration)},
+            )
+        except HomeAssistantError:
+            self._attr_is_opening = False
+            self.async_write_ha_state()
+            raise
+        self._track_convergence(True)
 
     @override
     async def async_close_valve(self, **kwargs: Any) -> None:
         """Close the valve."""
-        await self.coordinator.write(
-            self._service.stop_watering,
-            {0: WATERING_COMMAND_SOURCE},
+        self._attr_is_closing = True
+        self._attr_is_opening = False
+        self.async_write_ha_state()
+        try:
+            await self.coordinator.write(
+                self._service.stop_watering,
+                {0: WATERING_COMMAND_SOURCE},
+            )
+        except HomeAssistantError:
+            self._attr_is_closing = False
+            self.async_write_ha_state()
+            raise
+        self._track_convergence(False)
+
+    def _track_convergence(self, target: bool) -> None:
+        """Track the asynchronously applied watering command in the background.
+
+        Opening takes a few seconds, physically closing the hydraulic valve
+        up to two minutes; the transition state is shown until the device
+        reports the target state.
+        """
+        if self._convergence_task:
+            self._convergence_task.cancel()
+        self._convergence_task = self.hass.async_create_task(
+            self._async_converge(target)
         )
-        self._attr_is_closed = True
+
+    async def _async_converge(self, target: bool) -> None:
+        state = await self.coordinator.read_char_until(
+            self._service.state, target, attempts=24, interval=5.0
+        )
+        if state is not None:
+            self._attr_is_closed = not state
+        self._attr_is_opening = False
+        self._attr_is_closing = False
         self.async_write_ha_state()
 
 
