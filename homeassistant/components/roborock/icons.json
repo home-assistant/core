@@ -40,6 +40,11 @@
         "default": "mdi:brush"
       }
     },
+    "image": {
+      "map": {
+        "default": "mdi:floor-plan"
+      }
+    },
     "number": {
       "volume": {
         "default": "mdi:volume-source"
