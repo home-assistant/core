@@ -83,6 +83,7 @@ OSI_APPROVED_LICENSES_SPDX = {
     "LGPL-3.0-only",
     "LGPL-3.0-or-later",
     "MIT",
+    "MIT-0",
     "MIT-CMU",
     "MPL-1.1",
     "MPL-2.0",
