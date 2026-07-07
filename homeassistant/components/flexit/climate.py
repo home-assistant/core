@@ -123,13 +123,13 @@ class Flexit(ClimateEntity):
         else:
             self._filter_alarm = filter_alarm_value == 1
         # # Heater enabled or not. Does not mean it's necessarily heating
-        heater_enabled = await self._async_read_int16_from_register(
+        heater_enabled_value = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_INPUT, 28
         )
-        if heater_enabled is None:
+        if heater_enabled_value is None:
             self._heater_enabled = None
         else:
-            self._heater_enabled = heater_enabled == 1
+            self._heater_enabled = heater_enabled_value == 1
 
         self._outdoor_air_temp = await self._async_read_temp_from_register(
             CALL_TYPE_REGISTER_INPUT, 11
@@ -218,7 +218,6 @@ class Flexit(ClimateEntity):
         """Read register using the Modbus hub slave."""
         result = await self._async_read_int16_from_register(register_type, register)
         if result is None:
-            _LOGGER.error("Error reading value from Flexit modbus adapter")
             return None
         return float(result) / 10.0
 
