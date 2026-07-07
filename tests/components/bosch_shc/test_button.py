@@ -66,17 +66,7 @@ async def _setup_button_platform(
     mock_session: MagicMock,
     platforms: list[Platform],
 ) -> None:
-    """Set up the bosch_shc config entry with only the button platform loaded.
-
-    Mirrors conftest.py's `init_integration` fixture exactly (same patch
-    targets), but as a plain coroutine instead of a fixture: tests here need
-    to finish configuring `mock_session.device_helper`/`.scenarios` *before*
-    `async_setup` runs, which a fixture can't do — fixtures resolve (and so
-    would call setup) before the test body executes. `platforms` is the
-    fixture already defined in this file (`[Platform.BUTTON]`), injected the
-    same way `init_integration` receives it, so there is only one place that
-    decides which platform this test module loads.
-    """
+    """Like init_integration, but callable after the mock session is configured."""
     mock_config_entry.add_to_hass(hass)
     with (
         patch(
