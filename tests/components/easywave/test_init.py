@@ -4,17 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.easywave import async_remove_config_entry_device
-from homeassistant.components.easywave.const import (
-    CONF_DEVICE_DATA,
-    CONF_DEVICE_TITLE,
-    CONF_ENTRY_TYPE,
-    CONF_SENSOR_CAPABILITIES,
-    CONF_SENSOR_SERIAL,
-    DOMAIN,
-    ENTRY_TYPE_NEO_SENSOR,
-    ENTRY_TYPE_TRANSMITTER,
-)
-from homeassistant.config_entries import ConfigSubentryDataWithId
+from homeassistant.components.easywave.const import DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -22,9 +12,9 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from .conftest import (
     MOCK_ENTRY_DATA,
     MOCK_NEO_SENSOR_DEVICE_ID,
-    MOCK_NEO_SENSOR_SERIAL,
     MOCK_TRANSMITTER_DEVICE_ID,
-    _device_record,
+    _neo_sensor_device_record,
+    _transmitter_device_record,
 )
 
 from tests.common import MockConfigEntry
@@ -187,68 +177,19 @@ async def test_remove_config_entry_device_rejects_gateway(
     assert entry.options.get(CONF_DEVICES, []) == []
 
 
-async def test_migrate_entry_moves_subentries_to_options(
-    hass: HomeAssistant,
-) -> None:
-    """Migrating v1 subentries should move devices into config entry options."""
-    entry = MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        data=MOCK_ENTRY_DATA,
-        unique_id="easywave_gw",
-        subentries_data=[
-            ConfigSubentryDataWithId(
-                subentry_type=ENTRY_TYPE_TRANSMITTER,
-                subentry_id=MOCK_TRANSMITTER_DEVICE_ID,
-                title="Transmitter",
-                unique_id="transmitter_test",
-                data={CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER},
-            )
-        ],
-    )
-    entry.add_to_hass(hass)
-
-    t_patch, c_patch, f_patch, _ = _patch_transceiver_and_coordinator()
-    with t_patch, c_patch, f_patch:
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    entry = hass.config_entries.async_get_entry(entry.entry_id)
-    assert entry is not None
-    assert entry.version == 2
-    assert len(entry.subentries) == 0
-    devices = entry.options[CONF_DEVICES]
-    assert len(devices) == 1
-    assert devices[0][CONF_DEVICE_ID] == MOCK_TRANSMITTER_DEVICE_ID
-    assert devices[0][CONF_DEVICE_TITLE] == "Transmitter"
-    assert devices[0][CONF_DEVICE_DATA][CONF_ENTRY_TYPE] == ENTRY_TYPE_TRANSMITTER
-
-
 async def test_remove_config_entry_device_removes_child(
     hass: HomeAssistant,
 ) -> None:
     """Removing a child device via the three-dot menu should succeed."""
     entry = MockConfigEntry(
-        version=2,
+        version=1,
         domain=DOMAIN,
         data=MOCK_ENTRY_DATA,
         unique_id="easywave_gw",
         options={
             CONF_DEVICES: [
-                _device_record(
-                    MOCK_NEO_SENSOR_DEVICE_ID,
-                    "Neo Sensor",
-                    {
-                        CONF_ENTRY_TYPE: ENTRY_TYPE_NEO_SENSOR,
-                        CONF_SENSOR_SERIAL: MOCK_NEO_SENSOR_SERIAL,
-                        CONF_SENSOR_CAPABILITIES: 0,
-                    },
-                ),
-                _device_record(
-                    MOCK_TRANSMITTER_DEVICE_ID,
-                    "Transmitter",
-                    {CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER},
-                ),
+                _neo_sensor_device_record(title="Neo Sensor"),
+                _transmitter_device_record(title="Transmitter"),
             ]
         },
     )

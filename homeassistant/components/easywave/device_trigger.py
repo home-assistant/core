@@ -105,7 +105,7 @@ def _find_easywave_config_entry(
         if easywave_id == entry.entry_id:
             return entry
         if any(
-            stored.get(CONF_DEVICE_ID) == easywave_id
+            stored[CONF_DEVICE_ID] == easywave_id
             for stored in entry.options.get(CONF_DEVICES, [])
         ):
             return entry
@@ -133,8 +133,8 @@ def _get_device_data(
         return _GATEWAY_MARKER
 
     for stored in entry.options.get(CONF_DEVICES, []):
-        if stored.get(CONF_DEVICE_ID) == easywave_id:
-            return stored[CONF_DEVICE_DATA]
+        if stored[CONF_DEVICE_ID] == easywave_id:
+            return dict(stored[CONF_DEVICE_DATA])
     return None
 
 

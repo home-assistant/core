@@ -4,19 +4,10 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.easywave.const import (
-    CONF_BUTTON_COUNT,
-    CONF_ENTRY_TYPE,
-    CONF_GROUPING_MODE,
-    CONF_OPERATING_TYPE,
-    CONF_SWITCH_MODE,
-    CONF_TRANSMITTER_SERIAL,
     DOMAIN,
-    ENTRY_TYPE_TRANSMITTER,
     EVENT_EASYWAVE,
     EVENT_TYPE_BUTTON_PRESS,
     EVENT_TYPE_GATEWAY_CONNECTED,
-    TRANSMITTER_GROUPING_GROUP,
-    TRANSMITTER_SWITCH_IMPULSE,
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import CONF_DEVICES
@@ -27,8 +18,7 @@ from homeassistant.setup import async_setup_component
 from .conftest import (
     MOCK_ENTRY_DATA,
     MOCK_TRANSMITTER_DEVICE_ID,
-    MOCK_TRANSMITTER_SERIAL,
-    _device_record,
+    _transmitter_device_record,
 )
 
 from tests.common import MockConfigEntry
@@ -72,29 +62,18 @@ async def _async_setup_entry(
     button_count: int = 2,
 ) -> MockConfigEntry:
     """Set up an Easywave config entry with a group transmitter."""
+    device = _transmitter_device_record(
+        button_count=button_count,
+        title="Test Transmitter",
+    )
     entry = MockConfigEntry(
-        version=2,
+        version=1,
         domain=DOMAIN,
         title="Easywave Gateway",
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
-        options={
-            CONF_DEVICES: [
-                _device_record(
-                    MOCK_TRANSMITTER_DEVICE_ID,
-                    "Test Transmitter",
-                    {
-                        CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
-                        CONF_TRANSMITTER_SERIAL: MOCK_TRANSMITTER_SERIAL,
-                        CONF_OPERATING_TYPE: "1",
-                        CONF_BUTTON_COUNT: button_count,
-                        CONF_GROUPING_MODE: TRANSMITTER_GROUPING_GROUP,
-                        CONF_SWITCH_MODE: TRANSMITTER_SWITCH_IMPULSE,
-                    },
-                )
-            ]
-        },
+        options={CONF_DEVICES: [device]},
     )
     entry.add_to_hass(hass)
     hass.config.country = "DE"

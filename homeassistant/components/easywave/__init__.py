@@ -58,30 +58,6 @@ def get_devices(entry: EasywaveConfigEntry) -> list[EasywaveDeviceEntry]:
     ]
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> bool:
-    """Migrate config entry from subentries to options-based device storage."""
-    if entry.version > 1:
-        return True
-
-    devices = [
-        {
-            CONF_DEVICE_ID: subentry.subentry_id,
-            CONF_DEVICE_TITLE: subentry.title,
-            CONF_DEVICE_DATA: dict(subentry.data),
-        }
-        for subentry in entry.subentries.values()
-    ]
-    subentry_ids = list(entry.subentries)
-    hass.config_entries.async_update_entry(
-        entry,
-        version=2,
-        options={**entry.options, CONF_DEVICES: devices},
-    )
-    for subentry_id in subentry_ids:
-        hass.config_entries.async_remove_subentry(entry, subentry_id)
-    return True
-
-
 def _register_gateway_device(
     hass: HomeAssistant,
     entry: EasywaveConfigEntry,
@@ -183,8 +159,8 @@ async def async_remove_config_entry_device(
     """Handle removal of a device via the three-dot menu.
 
     The RX11 gateway device (identifier == entry_id) cannot be removed here;
-    the user must remove the whole config entry instead. All other devices
-    are stored in config entry options and can be removed freely.
+    the user must remove the whole config entry instead. Child devices are
+    stored in config entry options and can be removed freely.
     """
     # The gateway device uses entry_id as its identifier.
     if (DOMAIN, config_entry.entry_id) in device_entry.identifiers:

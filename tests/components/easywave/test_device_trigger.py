@@ -8,18 +8,9 @@ from pytest_unordered import unordered
 
 from homeassistant.components import automation, device_automation
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.easywave import device_trigger
 from homeassistant.components.easywave.const import (
-    CONF_BUTTON_COUNT,
-    CONF_ENTRY_TYPE,
-    CONF_GROUPING_MODE,
-    CONF_OPERATING_TYPE,
-    CONF_SENSOR_CAPABILITIES,
-    CONF_SENSOR_SERIAL,
-    CONF_SWITCH_MODE,
-    CONF_TRANSMITTER_SERIAL,
     DOMAIN,
-    ENTRY_TYPE_NEO_SENSOR,
-    ENTRY_TYPE_TRANSMITTER,
     EVENT_EASYWAVE,
     EVENT_TYPE_BATTERY_LOW,
     EVENT_TYPE_BATTERY_NORMAL,
@@ -27,7 +18,6 @@ from homeassistant.components.easywave.const import (
     EVENT_TYPE_BUTTON_RELEASE,
     EVENT_TYPE_GATEWAY_CONNECTED,
     EVENT_TYPE_GATEWAY_DISCONNECTED,
-    TRANSMITTER_GROUPING_GROUP,
     TRANSMITTER_SWITCH_IMPULSE,
     TRANSMITTER_SWITCH_PERMANENT,
 )
@@ -46,10 +36,9 @@ from homeassistant.setup import async_setup_component
 from .conftest import (
     MOCK_ENTRY_DATA,
     MOCK_NEO_SENSOR_DEVICE_ID,
-    MOCK_NEO_SENSOR_SERIAL,
     MOCK_TRANSMITTER_DEVICE_ID,
-    MOCK_TRANSMITTER_SERIAL,
-    _device_record,
+    _neo_sensor_device_record,
+    _transmitter_device_record,
 )
 
 from tests.common import MockConfigEntry, async_get_device_automations
@@ -91,18 +80,19 @@ def _patch_integration() -> tuple[Any, Any, MagicMock]:
     return transceiver_patch, coordinator_patch, mock_coordinator
 
 
-def _make_gateway_entry(
-    devices: list[dict[str, Any]] | None = None,
-) -> MockConfigEntry:
+def _make_gateway_entry(*device_records: dict[str, Any]) -> MockConfigEntry:
     """Return a gateway config entry with optional configured devices."""
+    options: dict[str, Any] = {}
+    if device_records:
+        options[CONF_DEVICES] = list(device_records)
     return MockConfigEntry(
-        version=2,
+        version=1,
         domain=DOMAIN,
         title="Easywave Gateway",
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
-        options={CONF_DEVICES: devices or []},
+        options=options,
     )
 
 
@@ -168,20 +158,11 @@ async def test_get_transmitter_triggers(
     await _async_setup_entry(
         hass,
         _make_gateway_entry(
-            [
-                _device_record(
-                    MOCK_TRANSMITTER_DEVICE_ID,
-                    "Test Transmitter",
-                    {
-                        CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
-                        CONF_TRANSMITTER_SERIAL: MOCK_TRANSMITTER_SERIAL,
-                        CONF_OPERATING_TYPE: "1",
-                        CONF_BUTTON_COUNT: 2,
-                        CONF_GROUPING_MODE: TRANSMITTER_GROUPING_GROUP,
-                        CONF_SWITCH_MODE: switch_mode,
-                    },
-                )
-            ]
+            _transmitter_device_record(
+                button_count=2,
+                title="Test Transmitter",
+                switch_mode=switch_mode,
+            )
         ),
     )
     device = device_registry.async_get_device(
@@ -239,17 +220,10 @@ async def test_get_neo_sensor_triggers_empty(
     await _async_setup_entry(
         hass,
         _make_gateway_entry(
-            [
-                _device_record(
-                    MOCK_NEO_SENSOR_DEVICE_ID,
-                    "Test Sensor",
-                    {
-                        CONF_ENTRY_TYPE: ENTRY_TYPE_NEO_SENSOR,
-                        CONF_SENSOR_SERIAL: MOCK_NEO_SENSOR_SERIAL,
-                        CONF_SENSOR_CAPABILITIES: NEO_SENSOR_CAPABILITIES,
-                    },
-                )
-            ]
+            _neo_sensor_device_record(
+                title="Test Sensor",
+                capabilities=NEO_SENSOR_CAPABILITIES,
+            )
         ),
     )
     device = device_registry.async_get_device(
@@ -273,20 +247,10 @@ async def test_if_fires_on_button_press(
     entry = await _async_setup_entry(
         hass,
         _make_gateway_entry(
-            [
-                _device_record(
-                    MOCK_TRANSMITTER_DEVICE_ID,
-                    "Test Transmitter",
-                    {
-                        CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
-                        CONF_TRANSMITTER_SERIAL: MOCK_TRANSMITTER_SERIAL,
-                        CONF_OPERATING_TYPE: "1",
-                        CONF_BUTTON_COUNT: 1,
-                        CONF_GROUPING_MODE: TRANSMITTER_GROUPING_GROUP,
-                        CONF_SWITCH_MODE: TRANSMITTER_SWITCH_IMPULSE,
-                    },
-                )
-            ]
+            _transmitter_device_record(
+                button_count=1,
+                title="Test Transmitter",
+            )
         ),
     )
     device = device_registry.async_get_device(
@@ -339,20 +303,10 @@ async def test_websocket_list_transmitter_triggers(
     await _async_setup_entry(
         hass,
         _make_gateway_entry(
-            [
-                _device_record(
-                    MOCK_TRANSMITTER_DEVICE_ID,
-                    "Test Transmitter",
-                    {
-                        CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
-                        CONF_TRANSMITTER_SERIAL: MOCK_TRANSMITTER_SERIAL,
-                        CONF_OPERATING_TYPE: "1",
-                        CONF_BUTTON_COUNT: 2,
-                        CONF_GROUPING_MODE: TRANSMITTER_GROUPING_GROUP,
-                        CONF_SWITCH_MODE: TRANSMITTER_SWITCH_IMPULSE,
-                    },
-                )
-            ]
+            _transmitter_device_record(
+                button_count=2,
+                title="Test Transmitter",
+            )
         ),
     )
     device = device_registry.async_get_device(
@@ -376,3 +330,173 @@ async def test_websocket_list_transmitter_triggers(
     assert msg["success"]
     easywave_triggers = [t for t in msg["result"] if t["domain"] == DOMAIN]
     assert len(easywave_triggers) == 5
+
+
+async def test_get_triggers_returns_empty_for_unknown_device(
+    hass: HomeAssistant,
+) -> None:
+    """Unknown device IDs return no triggers."""
+    assert await device_trigger.async_get_triggers(hass, "does-not-exist") == []
+
+
+async def test_get_triggers_returns_empty_for_non_easywave_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Devices without an Easywave identifier return no triggers."""
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={("other", "device")},
+    )
+    triggers = await device_trigger.async_get_triggers(hass, device.id)
+    assert triggers == []
+
+
+async def test_get_triggers_returns_empty_for_unconfigured_easywave_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Easywave identifiers without stored device data return no triggers."""
+    entry = await _async_setup_entry(hass, _make_gateway_entry())
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "transmitter_not_configured")},
+    )
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
+    assert [trigger for trigger in triggers if trigger["domain"] == DOMAIN] == []
+
+
+async def test_find_easywave_config_entry_via_parent_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Child devices linked only via via_device still resolve the gateway entry."""
+    entry = await _async_setup_entry(hass, _make_gateway_entry())
+    gateway = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    assert gateway is not None
+
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    child = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={(DOMAIN, "child_via_gateway")},
+        via_device=(DOMAIN, entry.entry_id),
+    )
+
+    found_entry = device_trigger._find_easywave_config_entry(hass, child)
+    assert found_entry is not None
+    assert found_entry.entry_id == entry.entry_id
+
+
+async def test_find_easywave_config_entry_by_stored_device_id(
+    hass: HomeAssistant,
+) -> None:
+    """Orphan Easywave devices resolve the gateway entry from stored options."""
+    entry = await _async_setup_entry(
+        hass,
+        _make_gateway_entry(
+            _transmitter_device_record(
+                button_count=1,
+                title="Stored Device Transmitter",
+            )
+        ),
+    )
+    device = MagicMock(spec=dr.DeviceEntry)
+    device.config_entries = set()
+    device.via_device_id = None
+    device.identifiers = {(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)}
+
+    found_entry = device_trigger._find_easywave_config_entry(hass, device)
+    assert found_entry is not None
+    assert found_entry.entry_id == entry.entry_id
+
+
+async def test_device_trigger_helpers_handle_missing_lookup_data(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Helper lookups return None when devices or entries cannot be resolved."""
+    assert device_trigger._get_device_data(hass, "missing-device") is None
+
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={("other", "device")},
+    )
+    assert device_trigger._device_identifier(device) is None
+    assert device_trigger._find_easywave_config_entry(hass, device) is None
+    assert device_trigger._get_device_data(hass, device.id) is None
+
+    unknown_easywave = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={(DOMAIN, "unknown_easywave_device")},
+    )
+    assert device_trigger._find_easywave_config_entry(hass, unknown_easywave) is None
+    assert device_trigger._get_device_data(hass, unknown_easywave.id) is None
+
+
+async def test_find_easywave_config_entry_by_gateway_identifier(
+    hass: HomeAssistant,
+) -> None:
+    """Gateway identifiers resolve even without a direct config entry link."""
+    entry = await _async_setup_entry(hass, _make_gateway_entry())
+    device = MagicMock(spec=dr.DeviceEntry)
+    device.config_entries = set()
+    device.via_device_id = None
+    device.identifiers = {(DOMAIN, entry.entry_id)}
+
+    found_entry = device_trigger._find_easywave_config_entry(hass, device)
+    assert found_entry is not None
+    assert found_entry.entry_id == entry.entry_id
+
+
+async def test_find_easywave_config_entry_returns_none_for_unknown_identifier(
+    hass: HomeAssistant,
+) -> None:
+    """Unknown Easywave identifiers do not resolve a config entry."""
+    await _async_setup_entry(hass, _make_gateway_entry())
+    device = MagicMock(spec=dr.DeviceEntry)
+    device.config_entries = set()
+    device.via_device_id = None
+    device.identifiers = {(DOMAIN, "unknown_easywave_device")}
+
+    assert device_trigger._find_easywave_config_entry(hass, device) is None
+
+
+async def test_get_trigger_capabilities(hass: HomeAssistant) -> None:
+    """Device trigger capabilities are empty for Easywave."""
+    assert await device_trigger.async_get_trigger_capabilities(hass, {}) == {}
+
+
+async def test_get_triggers_ignores_non_dict_device_data(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Non-dict device data does not produce transmitter triggers."""
+    await _async_setup_entry(
+        hass,
+        _make_gateway_entry(
+            _transmitter_device_record(
+                button_count=1,
+                title="Test Transmitter",
+            )
+        ),
+    )
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)}
+    )
+    assert device is not None
+
+    with patch.object(
+        device_trigger,
+        "_get_device_data",
+        return_value=object(),
+    ):
+        triggers = await device_trigger.async_get_triggers(hass, device.id)
+
+    assert triggers == []

@@ -16,8 +16,8 @@
       "device_no_longer_available": "The selected device is no longer available. Please try again."
     },
     "progress": {
-      "waiting_for_sensor": "🔄 Waiting for learn signal... Press the learn button on the Easywave neo sensor NOW!",
-      "waiting_for_transmitter": "🔄 Waiting for transmitter signal... Press a button on the Easywave transmitter NOW!"
+      "waiting_for_sensor": "Waiting for learn signal... Press the learn button on the Easywave neo sensor NOW!",
+      "waiting_for_transmitter": "Waiting for transmitter signal... Press a button on the Easywave transmitter NOW!"
     },
     "step": {
       "button_count_select": {
@@ -44,8 +44,8 @@
       "device_select": {
         "description": "Which device would you like to add?",
         "menu_options": {
-          "neo_sensor": "⚪ Easywave neo Sensor",
-          "transmitter": "⚪ Easywave Transmitter"
+          "neo_sensor": "Easywave neo Sensor",
+          "transmitter": "Easywave Transmitter"
         },
         "title": "Device Selection"
       },
@@ -55,18 +55,18 @@
       "learn_timeout_sensor": {
         "description": "No radio signal received!\nReduce the distance between sensor and server and try again.",
         "menu_options": {
-          "abort_learn": "❌ Cancel",
-          "learn": "🔄 Learn Sensor",
-          "sensor_learn_intro": "⬅️ Back"
+          "abort_learn": "Cancel",
+          "learn": "Learn Sensor",
+          "sensor_learn_intro": "Back"
         },
         "title": "Timeout"
       },
       "learn_timeout_transmitter": {
         "description": "No radio signal received!\nReduce the distance between transmitter and server and try again.",
         "menu_options": {
-          "abort_learn": "❌ Cancel",
-          "learn": "🔄 Learn Transmitter",
-          "transmitter_learn_intro": "⬅️ Back"
+          "abort_learn": "Cancel",
+          "learn": "Learn Transmitter",
+          "transmitter_learn_intro": "Back"
         },
         "title": "Timeout"
       },
@@ -96,8 +96,8 @@
       "sensor_learn_intro": {
         "description": "Home Assistant automatically detects which measurement data the sensor provides.\n\nPlease press the learn button on the back of the sensor in the next step.",
         "menu_options": {
-          "device_select": "⬅️ Back",
-          "learn": "▶️ Learn Sensor"
+          "device_select": "Back",
+          "learn": "Continue"
         },
         "title": "Learn Sensor"
       },
@@ -114,8 +114,8 @@
       "transmitter_learn_intro": {
         "description": "Please specify the number of buttons in the next step, then press a button on the Easywave transmitter.",
         "menu_options": {
-          "button_count_select": "▶️ Continue",
-          "device_select": "⬅️ Back"
+          "button_count_select": "Continue",
+          "device_select": "Back"
         },
         "title": "Learn Transmitter"
       }

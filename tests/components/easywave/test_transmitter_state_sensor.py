@@ -5,19 +5,23 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.easywave.const import (
     CONF_BUTTON_COUNT,
-    CONF_ENTRY_TYPE,
+    CONF_DEVICE_DATA,
     CONF_GROUPING_MODE,
     CONF_OPERATING_TYPE,
-    CONF_TRANSMITTER_SERIAL,
+    CONF_SWITCH_MODE,
     DOMAIN,
-    ENTRY_TYPE_TRANSMITTER,
     TRANSMITTER_GROUPING_GROUP,
+    TRANSMITTER_SWITCH_IMPULSE,
 )
 from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_ENTRY_DATA, MOCK_TRANSMITTER_SERIAL, _device_record
+from .conftest import (
+    MOCK_ENTRY_DATA,
+    MOCK_TRANSMITTER_SERIAL,
+    _transmitter_device_record,
+)
 
 from tests.common import MockConfigEntry
 
@@ -26,26 +30,23 @@ MOCK_DEVICE_ID = f"transmitter_{MOCK_TRANSMITTER_SERIAL}"
 
 def _make_gateway(extra_data: dict[str, object]) -> MockConfigEntry:
     """Return a gateway entry with a transmitter device using given data."""
+    device = _transmitter_device_record(
+        title="Test Transmitter",
+        button_count=int(extra_data.get(CONF_BUTTON_COUNT, 4)),
+        switch_mode=str(extra_data.get(CONF_SWITCH_MODE, TRANSMITTER_SWITCH_IMPULSE)),
+        grouping_mode=str(
+            extra_data.get(CONF_GROUPING_MODE, TRANSMITTER_GROUPING_GROUP)
+        ),
+    )
+    device[CONF_DEVICE_DATA].update(extra_data)
     return MockConfigEntry(
-        version=2,
+        version=1,
         domain=DOMAIN,
         title="Easywave Gateway",
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
-        options={
-            CONF_DEVICES: [
-                _device_record(
-                    MOCK_DEVICE_ID,
-                    "Test Transmitter",
-                    {
-                        CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
-                        CONF_TRANSMITTER_SERIAL: MOCK_TRANSMITTER_SERIAL,
-                        **extra_data,
-                    },
-                )
-            ]
-        },
+        options={CONF_DEVICES: [device]},
     )
 
 

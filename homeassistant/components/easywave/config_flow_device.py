@@ -96,9 +96,10 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Describe transmitter learning before button count and listen steps."""
+        menu_options = ["button_count_select", "device_select"]
         return self.async_show_menu(
             step_id="transmitter_learn_intro",
-            menu_options=["button_count_select", "device_select"],
+            menu_options=menu_options,
         )
 
     async def async_step_button_count_select(
@@ -202,9 +203,10 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Describe neo sensor learning before starting the listen step."""
+        menu_options = ["learn", "device_select"]
         return self.async_show_menu(
             step_id="sensor_learn_intro",
-            menu_options=["learn", "device_select"],
+            menu_options=menu_options,
         )
 
     async def async_step_sensor_confirm(

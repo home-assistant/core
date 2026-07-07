@@ -12,7 +12,11 @@ from homeassistant.components.easywave.const import (
     CONF_DEVICE_PATH,
     CONF_DEVICE_TITLE,
     CONF_ENTRY_TYPE,
+    CONF_GROUPING_MODE,
     CONF_OPERATING_TYPE,
+    CONF_SENSOR_CAPABILITIES,
+    CONF_SENSOR_SERIAL,
+    CONF_SWITCH_MODE,
     CONF_TRANSMITTER_SERIAL,
     CONF_USB_MANUFACTURER,
     CONF_USB_PID,
@@ -20,7 +24,10 @@ from homeassistant.components.easywave.const import (
     CONF_USB_SERIAL_NUMBER,
     CONF_USB_VID,
     DOMAIN,
+    ENTRY_TYPE_NEO_SENSOR,
     ENTRY_TYPE_TRANSMITTER,
+    TRANSMITTER_GROUPING_GROUP,
+    TRANSMITTER_SWITCH_IMPULSE,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
@@ -55,11 +62,52 @@ def _device_record(
     }
 
 
+def _transmitter_device_record(
+    *,
+    title: str = "Test Transmitter",
+    serial: str = MOCK_TRANSMITTER_SERIAL,
+    button_count: int = 4,
+    switch_mode: str | None = None,
+    grouping_mode: str | None = None,
+) -> dict[str, Any]:
+    """Return a transmitter device record for config entry options."""
+    return _device_record(
+        f"transmitter_{serial}",
+        title,
+        {
+            CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
+            CONF_TRANSMITTER_SERIAL: serial,
+            CONF_OPERATING_TYPE: "1",
+            CONF_BUTTON_COUNT: button_count,
+            CONF_GROUPING_MODE: grouping_mode or TRANSMITTER_GROUPING_GROUP,
+            CONF_SWITCH_MODE: switch_mode or TRANSMITTER_SWITCH_IMPULSE,
+        },
+    )
+
+
+def _neo_sensor_device_record(
+    *,
+    title: str = "Neo Sensor",
+    serial: str = MOCK_NEO_SENSOR_SERIAL,
+    capabilities: int = 0,
+) -> dict[str, Any]:
+    """Return a neo sensor device record for config entry options."""
+    return _device_record(
+        f"neo_sensor_{serial}",
+        title,
+        {
+            CONF_ENTRY_TYPE: ENTRY_TYPE_NEO_SENSOR,
+            CONF_SENSOR_SERIAL: serial,
+            CONF_SENSOR_CAPABILITIES: capabilities,
+        },
+    )
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock gateway ConfigEntry."""
     return MockConfigEntry(
-        version=2,
+        version=1,
         domain=DOMAIN,
         title="Easywave Gateway",
         data=MOCK_ENTRY_DATA,
@@ -72,26 +120,13 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_config_entry_with_transmitter() -> MockConfigEntry:
     """Return a gateway ConfigEntry with a transmitter device."""
     return MockConfigEntry(
-        version=2,
+        version=1,
         domain=DOMAIN,
         title="Easywave Gateway",
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
-        options={
-            CONF_DEVICES: [
-                _device_record(
-                    MOCK_TRANSMITTER_DEVICE_ID,
-                    "Test Transmitter",
-                    {
-                        CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
-                        CONF_TRANSMITTER_SERIAL: MOCK_TRANSMITTER_SERIAL,
-                        CONF_OPERATING_TYPE: "1",
-                        CONF_BUTTON_COUNT: 4,
-                    },
-                )
-            ]
-        },
+        options={CONF_DEVICES: [_transmitter_device_record()]},
     )
 
 

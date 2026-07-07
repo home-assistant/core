@@ -33,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 class EasywaveConfigFlow(EasywaveDeviceAddFlowMixin, ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Easywave gateway setup."""
 
-    VERSION = 2
+    VERSION = 1
 
     def __init__(self) -> None:
         """Initialize."""

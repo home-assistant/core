@@ -291,6 +291,25 @@ async def test_usb_discovery_flow(
     assert result["step_id"] == "confirm"
 
 
+async def test_usb_discovery_unsupported_device(hass: HomeAssistant) -> None:
+    """Test USB discovery aborts for unsupported VID/PID."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USB},
+        data=UsbServiceInfo(
+            device="/dev/ttyUSB0",
+            vid="1234",
+            pid="5678",
+            serial_number="99999",
+            manufacturer="Other",
+            description="Other Device",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+
+
 async def test_usb_discovery_flow_creates_entry(
     hass: HomeAssistant, mock_usb_discovery_info: UsbServiceInfo
 ) -> None:
@@ -355,3 +374,30 @@ async def test_confirm_unique_id_from_vid_pid(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "easywave_155A_1014"
+
+
+async def test_confirm_unique_id_from_device_path(hass: HomeAssistant) -> None:
+    """Test unique_id falls back to device path when serial and VID/PID are missing."""
+    port = _make_port(serial_number="unknown")
+
+    with patch(COMPORTS_PATH, return_value=[port]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_DEVICE_PATH: "/dev/ttyACM0"},
+        )
+
+    assert result["step_id"] == "confirm"
+    flow = hass.config_entries.flow._progress[result["flow_id"]]
+    flow._device = {
+        "device": "/dev/ttyACM0",
+        "serial_number": "unknown",
+        "product": "RX11 USB Transceiver",
+    }
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    assert flow.unique_id == "easywave__dev_ttyACM0"

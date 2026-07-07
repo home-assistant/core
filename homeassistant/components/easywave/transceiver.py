@@ -599,8 +599,6 @@ class RX11Transceiver:
         # is in flight (that would cancel the ping and cause a false failure).
         async with self._io_cancel_lock:
             with contextlib.suppress(*_SERIAL_OR_OS_ERRORS):
-                if hasattr(self._device, "_startup_tolerance_until"):
-                    self._device._startup_tolerance_until = time.time() + 3.0  # noqa: SLF001
                 await self._device.cancel_all_io_requests()
         return None
 
