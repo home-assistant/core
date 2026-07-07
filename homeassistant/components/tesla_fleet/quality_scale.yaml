@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: Integration does not register custom service actions in async_setup.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -14,8 +12,10 @@ rules:
     comment: Review feedback questioned whether the custom OAuth flow implementation can be simplified, including whether `CONFIG_SCHEMA` and the custom `OAuth2FlowHandler` are both needed.
   dependency-transparency: done
   docs-actions:
-    status: exempt
-    comment: Integration does not provide custom service actions beyond standard entity services.
+    status: todo
+    comment: >-
+      The time_of_use action needs documentation in the home-assistant.io
+      repository.
   docs-conditions:
     status: exempt
     comment: This integration does not have any conditions.
