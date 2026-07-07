@@ -1,8 +1,12 @@
 """Tests for Google Health integration lifecycle (init/unloading)."""
 
 from collections.abc import Awaitable, Callable
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from google_health_api.exceptions import (
+    GoogleHealthApiError,
+    HealthApiForbiddenException,
+)
 import pytest
 
 from homeassistant import config_entries
@@ -11,92 +15,24 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 
-from .conftest import (
-    DISTANCE_ROLLUP_URL,
-    RESTING_HEART_RATE_URL,
-    STEPS_ROLLUP_URL,
-    WEIGHT_URL,
-)
-
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.usefixtures("mock_google_health_client")
 async def test_setup_and_unload(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test standard setup and unloading of the config entry."""
-    aioclient_mock.post(
-        STEPS_ROLLUP_URL,
-        json={
-            "rollupDataPoints": [
-                {
-                    "steps": {
-                        "countSum": 10500,
-                    },
-                    "civilStartTime": {"date": {"year": 2026, "month": 6, "day": 28}},
-                    "civilEndTime": {"date": {"year": 2026, "month": 6, "day": 29}},
-                }
-            ]
-        },
-    )
-    aioclient_mock.post(
-        DISTANCE_ROLLUP_URL,
-        json={
-            "rollupDataPoints": [
-                {
-                    "distance": {
-                        "millimetersSum": 5000000,
-                    },
-                    "civilStartTime": {"date": {"year": 2026, "month": 6, "day": 28}},
-                    "civilEndTime": {"date": {"year": 2026, "month": 6, "day": 29}},
-                }
-            ]
-        },
-    )
-    aioclient_mock.get(
-        WEIGHT_URL,
-        json={
-            "dataPoints": [
-                {
-                    "weight": {
-                        "weightGrams": 80000.0,
-                        "sampleTime": {
-                            "physicalTime": "2026-06-29T00:00:00Z",
-                        },
-                    }
-                }
-            ]
-        },
-    )
-    aioclient_mock.get(
-        RESTING_HEART_RATE_URL,
-        json={
-            "dataPoints": [
-                {
-                    "dailyRestingHeartRate": {
-                        "beatsPerMinute": 65,
-                        "date": {"year": 2026, "month": 6, "day": 29},
-                    }
-                }
-            ]
-        },
-    )
-
-    # Setup the integration
     assert await integration_setup()
     assert config_entry.state is config_entries.ConfigEntryState.LOADED
 
-    # Verify entities exist
     assert hass.states.get("sensor.google_health_steps") is not None
     assert hass.states.get("sensor.google_health_distance") is not None
     assert hass.states.get("sensor.google_health_weight") is not None
     assert hass.states.get("sensor.google_health_resting_heart_rate") is not None
 
-    # Unload integration
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is config_entries.ConfigEntryState.NOT_LOADED
@@ -104,15 +40,12 @@ async def test_setup_and_unload(
 
 async def test_setup_api_error(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
+    mock_google_health_client: AsyncMock,
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test setup error retry handling when API fails."""
-    aioclient_mock.post(
-        STEPS_ROLLUP_URL,
-        status=500,
-    )
+    mock_google_health_client.steps.today.side_effect = GoogleHealthApiError
 
     assert not await integration_setup()
     assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
@@ -120,15 +53,12 @@ async def test_setup_api_error(
 
 async def test_setup_auth_error(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
+    mock_google_health_client: AsyncMock,
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test setup error when API returns auth or forbidden errors."""
-    aioclient_mock.post(
-        STEPS_ROLLUP_URL,
-        status=403,
-    )
+    mock_google_health_client.steps.today.side_effect = HealthApiForbiddenException
 
     assert not await integration_setup()
     assert config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
@@ -137,6 +67,7 @@ async def test_setup_auth_error(
     assert len(flows) == 0
 
 
+@pytest.mark.usefixtures("mock_google_health_client")
 @pytest.mark.parametrize(
     "scopes", ["https://www.googleapis.com/auth/health.activity_and_fitness.readonly"]
 )
@@ -153,6 +84,7 @@ async def test_setup_missing_scopes(
     assert len(flows) == 0
 
 
+@pytest.mark.usefixtures("mock_google_health_client")
 @pytest.mark.parametrize(
     "scopes",
     [
@@ -164,45 +96,21 @@ async def test_setup_missing_scopes(
 )
 async def test_setup_missing_activity_scope(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test setup succeeds but steps sensor is not added if activity scope is missing."""
-    aioclient_mock.get(
-        WEIGHT_URL,
-        json={
-            "dataPoints": [
-                {
-                    "weight": {
-                        "weightGrams": 80000.0,
-                        "sampleTime": {
-                            "physicalTime": "2026-06-29T00:00:00Z",
-                        },
-                    }
-                }
-            ]
-        },
-    )
-
-    aioclient_mock.get(
-        RESTING_HEART_RATE_URL,
-        json={"dataPoints": []},
-    )
-
-    # Setup should succeed
     assert await integration_setup()
     assert config_entry.state is config_entries.ConfigEntryState.LOADED
 
-    # Activity sensor entities should not exist
     assert hass.states.get("sensor.google_health_steps") is None
     assert hass.states.get("sensor.google_health_distance") is None
 
-    # Body sensor entities should exist
     assert hass.states.get("sensor.google_health_weight") is not None
     assert hass.states.get("sensor.google_health_resting_heart_rate") is not None
 
 
+@pytest.mark.usefixtures("mock_google_health_client")
 @pytest.mark.parametrize(
     "scopes",
     [
@@ -214,40 +122,16 @@ async def test_setup_missing_activity_scope(
 )
 async def test_setup_missing_measurements_scope(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test setup succeeds but weight sensor is not added if measurements scope is missing."""
-    aioclient_mock.post(
-        STEPS_ROLLUP_URL,
-        json={
-            "rollupDataPoints": [
-                {
-                    "steps": {
-                        "countSum": 10500,
-                    },
-                    "civilStartTime": {"date": {"year": 2026, "month": 6, "day": 28}},
-                    "civilEndTime": {"date": {"year": 2026, "month": 6, "day": 29}},
-                }
-            ]
-        },
-    )
-
-    aioclient_mock.post(
-        DISTANCE_ROLLUP_URL,
-        json={"rollupDataPoints": []},
-    )
-
-    # Setup should succeed
     assert await integration_setup()
     assert config_entry.state is config_entries.ConfigEntryState.LOADED
 
-    # Body sensor entities should not exist
     assert hass.states.get("sensor.google_health_weight") is None
     assert hass.states.get("sensor.google_health_resting_heart_rate") is None
 
-    # Activity sensor entities should exist
     assert hass.states.get("sensor.google_health_steps") is not None
     assert hass.states.get("sensor.google_health_distance") is not None
 

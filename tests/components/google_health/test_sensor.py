@@ -1,172 +1,41 @@
 """Tests for Google Health sensor platform."""
 
 from collections.abc import Awaitable, Callable
+from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.google_health.const import DOMAIN
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import (
-    DISTANCE_ROLLUP_URL,
-    RESTING_HEART_RATE_URL,
-    STEPS_ROLLUP_URL,
-    WEIGHT_URL,
-)
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_sensor_steps_and_distance(
+@pytest.mark.usefixtures("mock_google_health_client")
+async def test_all_entities(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
-    """Test standard steps and distance sensor flow."""
+    """Test all sensor entities."""
+    with patch("homeassistant.components.google_health._PLATFORMS", [Platform.SENSOR]):
+        assert await integration_setup()
 
-    # Mock daily rollup query returning 10500 steps
-    aioclient_mock.post(
-        STEPS_ROLLUP_URL,
-        json={
-            "rollupDataPoints": [
-                {
-                    "steps": {
-                        "countSum": 10500,
-                    },
-                    "civilStartTime": {"date": {"year": 2026, "month": 6, "day": 28}},
-                    "civilEndTime": {"date": {"year": 2026, "month": 6, "day": 29}},
-                }
-            ]
-        },
-    )
-    aioclient_mock.post(
-        DISTANCE_ROLLUP_URL,
-        json={
-            "rollupDataPoints": [
-                {
-                    "distance": {
-                        "millimetersSum": 5000000,
-                    },
-                    "civilStartTime": {"date": {"year": 2026, "month": 6, "day": 28}},
-                    "civilEndTime": {"date": {"year": 2026, "month": 6, "day": 29}},
-                }
-            ]
-        },
-    )
-    aioclient_mock.get(
-        WEIGHT_URL,
-        json={"dataPoints": []},
-    )
-    aioclient_mock.get(
-        RESTING_HEART_RATE_URL,
-        json={"dataPoints": []},
-    )
-
-    # Setup the integration
-    assert await integration_setup()
-
-    state = hass.states.get("sensor.google_health_steps")
-    assert state is not None
-    assert state.state == "10500"
-    assert state.attributes.get("unit_of_measurement") == "steps"
-
-    distance_state = hass.states.get("sensor.google_health_distance")
-    assert distance_state is not None
-    assert distance_state.state == "5000.0"
-    assert distance_state.attributes.get("unit_of_measurement") == "m"
-    assert distance_state.attributes.get("device_class") == "distance"
-
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, config_entry.entry_id)})
-    assert device is not None
-    assert device.name == config_entry.title
-
-
-async def test_sensor_weight_and_resting_heart_rate(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[], Awaitable[bool]],
-) -> None:
-    """Test weight and resting heart rate sensor flow."""
-
-    aioclient_mock.post(
-        STEPS_ROLLUP_URL,
-        json={"rollupDataPoints": []},
-    )
-    aioclient_mock.post(
-        DISTANCE_ROLLUP_URL,
-        json={"rollupDataPoints": []},
-    )
-    aioclient_mock.get(
-        WEIGHT_URL,
-        json={
-            "dataPoints": [
-                {
-                    "weight": {
-                        "weightGrams": 80000.0,
-                        "sampleTime": {
-                            "physicalTime": "2026-06-29T00:00:00Z",
-                        },
-                    }
-                }
-            ]
-        },
-    )
-    aioclient_mock.get(
-        RESTING_HEART_RATE_URL,
-        json={
-            "dataPoints": [
-                {
-                    "dailyRestingHeartRate": {
-                        "beatsPerMinute": 65,
-                        "date": {"year": 2026, "month": 6, "day": 29},
-                    }
-                }
-            ]
-        },
-    )
-
-    # Setup the integration
-    assert await integration_setup()
-
-    state = hass.states.get("sensor.google_health_weight")
-    assert state is not None
-    assert state.state == "80.0"
-    assert state.attributes.get("unit_of_measurement") == "kg"
-    assert state.attributes.get("device_class") == "weight"
-
-    hr_state = hass.states.get("sensor.google_health_resting_heart_rate")
-    assert hr_state is not None
-    assert hr_state.state == "65"
-    assert hr_state.attributes.get("unit_of_measurement") == "bpm"
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_sensor_empty_rollup(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    config_entry: MockConfigEntry,
+    mock_google_health_client: AsyncMock,
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test steps and distance sensors when the rollup endpoint returns no data."""
-
-    aioclient_mock.post(
-        STEPS_ROLLUP_URL,
-        json={"rollupDataPoints": []},
-    )
-    aioclient_mock.post(
-        DISTANCE_ROLLUP_URL,
-        json={"rollupDataPoints": []},
-    )
-    aioclient_mock.get(
-        WEIGHT_URL,
-        json={"dataPoints": []},
-    )
-    aioclient_mock.get(
-        RESTING_HEART_RATE_URL,
-        json={"dataPoints": []},
-    )
+    mock_google_health_client.steps.today.return_value = None
+    mock_google_health_client.distance.today.return_value = None
 
     assert await integration_setup()
 

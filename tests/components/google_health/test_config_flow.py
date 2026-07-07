@@ -1,5 +1,9 @@
 """Test the Google Health config flow."""
 
+from unittest.mock import AsyncMock
+
+from google_health_api.exceptions import GoogleHealthApiError
+from google_health_api.model import Identity
 import pytest
 
 from homeassistant.components.google_health.const import (
@@ -13,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .conftest import IDENTITY_URL, USERINFO_URL
-
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -23,7 +25,10 @@ CLIENT_SECRET = "5678"
 
 
 @pytest.mark.usefixtures(
-    "current_request_with_host", "mock_setup_entry", "setup_credentials"
+    "current_request_with_host",
+    "mock_setup_entry",
+    "setup_credentials",
+    "mock_google_health_client",
 )
 async def test_full_flow(
     hass: HomeAssistant,
@@ -67,24 +72,6 @@ async def test_full_flow(
             "type": "Bearer",
             "expires_in": 60,
             "scope": " ".join(OAUTH_SCOPES),
-        },
-    )
-
-    aioclient_mock.get(
-        IDENTITY_URL,
-        json={
-            "name": "users/me/identity",
-            "healthUserId": "mock-health-user-id",
-            "legacyUserId": "mock-legacy-user-id",
-        },
-    )
-
-    aioclient_mock.get(
-        USERINFO_URL,
-        json={
-            "sub": "mock-sub",
-            "given_name": "Allen",
-            "name": "Allen Porter",
         },
     )
 
@@ -147,8 +134,11 @@ async def test_config_flow_get_identity_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_google_health_client: AsyncMock,
 ) -> None:
     """Test config flow aborts if get_identity raises an API error."""
+    mock_google_health_client.get_identity.side_effect = GoogleHealthApiError
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -173,9 +163,6 @@ async def test_config_flow_get_identity_error(
             "scope": " ".join(OAUTH_SCOPES),
         },
     )
-
-    # Mock identity call returning an error
-    aioclient_mock.get(IDENTITY_URL, status=500)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.ABORT
@@ -189,8 +176,13 @@ async def test_config_flow_missing_health_user_id(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_google_health_client: AsyncMock,
 ) -> None:
     """Test config flow aborts if identity does not contain healthUserId."""
+    mock_google_health_client.get_identity.return_value = Identity(
+        name="users/me/identity", health_user_id=""
+    )
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -213,15 +205,6 @@ async def test_config_flow_missing_health_user_id(
             "type": "Bearer",
             "expires_in": 60,
             "scope": " ".join(OAUTH_SCOPES),
-        },
-    )
-
-    # Return empty healthUserId
-    aioclient_mock.get(
-        IDENTITY_URL,
-        json={
-            "name": "users/me/identity",
-            "healthUserId": "",
         },
     )
 
@@ -233,12 +216,15 @@ async def test_config_flow_missing_health_user_id(
 @pytest.mark.usefixtures(
     "current_request_with_host", "mock_setup_entry", "setup_credentials"
 )
-async def test_config_flow_profile_name_client_error(
+async def test_config_flow_profile_name_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_google_health_client: AsyncMock,
 ) -> None:
-    """Test flow completes with default title if profile userinfo fails with client error."""
+    """Test flow completes with default title if fetching profile userinfo fails."""
+    mock_google_health_client.get_user_info.side_effect = GoogleHealthApiError
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -263,68 +249,6 @@ async def test_config_flow_profile_name_client_error(
             "scope": " ".join(OAUTH_SCOPES),
         },
     )
-
-    aioclient_mock.get(
-        IDENTITY_URL,
-        json={
-            "name": "users/me/identity",
-            "healthUserId": "mock-health-user-id",
-        },
-    )
-
-    # Mock userinfo returning an error
-    aioclient_mock.get(USERINFO_URL, status=400)
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Google Health"
-
-
-@pytest.mark.usefixtures(
-    "current_request_with_host", "mock_setup_entry", "setup_credentials"
-)
-async def test_config_flow_profile_name_unexpected_error(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test flow completes with default title if profile userinfo raises an unexpected error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
-        },
-    )
-
-    client = await hass_client_no_auth()
-    await client.get(f"/auth/external/callback?code=abcd&state={state}")
-
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
-            "type": "Bearer",
-            "expires_in": 60,
-            "scope": " ".join(OAUTH_SCOPES),
-        },
-    )
-
-    aioclient_mock.get(
-        IDENTITY_URL,
-        json={
-            "name": "users/me/identity",
-            "healthUserId": "mock-health-user-id",
-        },
-    )
-
-    # Return invalid json to trigger JSONDecodeError
-    aioclient_mock.get(USERINFO_URL, text="not-json")
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
