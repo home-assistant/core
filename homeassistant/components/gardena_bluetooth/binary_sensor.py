@@ -1,6 +1,7 @@
 """Support for binary_sensor entities."""
 
 from dataclasses import dataclass, field
+from typing import override
 
 from gardena_bluetooth.const import AquaContour, Sensor, Valve, Valve1, Valve2
 from gardena_bluetooth.parse import CharacteristicBool
@@ -91,6 +92,7 @@ class GardenaBluetoothBinarySensor(
 
     entity_description: GardenaBluetoothBinarySensorEntityDescription
 
+    @override
     def _handle_coordinator_update(self) -> None:
         char = self.entity_description.char
         self._attr_is_on = self.coordinator.get_cached(char)

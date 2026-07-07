@@ -1,6 +1,6 @@
 """Support for valve entities."""
 
-from typing import Any
+from typing import Any, override
 
 from gardena_bluetooth.const import Valve, Valve1, Valve2
 
@@ -65,10 +65,12 @@ class GardenaBluetoothValve(GardenaBluetoothEntity, ValveEntity):
         )
         self._attr_unique_id = f"{coordinator.address}-{Valve.state.unique_id}"
 
+    @override
     def _handle_coordinator_update(self) -> None:
         self._attr_is_closed = not self.coordinator.get_cached(Valve.state)
         super()._handle_coordinator_update()
 
+    @override
     async def async_open_valve(self, **kwargs: Any) -> None:
         """Open the valve for the configured manual watering time."""
         value = (
@@ -79,6 +81,7 @@ class GardenaBluetoothValve(GardenaBluetoothEntity, ValveEntity):
         self._attr_is_closed = False
         self.async_write_ha_state()
 
+    @override
     async def async_close_valve(self, **kwargs: Any) -> None:
         """Close the valve."""
         await self.coordinator.write(Valve.remaining_open_time, 0)

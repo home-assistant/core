@@ -3,6 +3,7 @@
 from pycasperglow import CasperGlow
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -27,7 +28,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: CasperGlowConfigEntry) -
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="device_not_found",
-            translation_placeholders={"address": address},
+            translation_placeholders={
+                "address": address,
+                "reason": bluetooth.async_address_reachability_diagnostics(
+                    hass, address.upper(), BluetoothReachabilityIntent.CONNECTION
+                ),
+            },
         )
 
     glow = CasperGlow(ble_device)

@@ -74,6 +74,7 @@ async def test_humanify_homekit_changed_event(hass: HomeAssistant, hk_driver) ->
 async def test_bridge_with_triggers(
     hass: HomeAssistant,
     hk_driver,
+    demo_cleanup,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:

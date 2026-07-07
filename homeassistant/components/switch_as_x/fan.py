@@ -1,6 +1,6 @@
 """Fan support for switch entities."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
@@ -46,6 +46,7 @@ class FanSwitch(BaseToggleEntity, FanEntity):
     _attr_supported_features = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the entity is on.
 
@@ -55,6 +56,7 @@ class FanSwitch(BaseToggleEntity, FanEntity):
         """
         return self._attr_is_on
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,

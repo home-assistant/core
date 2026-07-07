@@ -11,6 +11,7 @@ from homeassistant.components import calendar, todo
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.script import ScriptConfig
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -37,7 +38,7 @@ def llm_context() -> llm.LLMContext:
         platform="",
         context=None,
         language=None,
-        assistant=None,
+        assistant="conversation",
         device_id=None,
     )
 
@@ -366,8 +367,6 @@ async def test_assist_api_tools(
     assert [tool.name for tool in api.tools] == [
         "HassTurnOn",
         "HassTurnOff",
-        "HassSetPosition",
-        "HassStopMoving",
         "HassStartTimer",
         "HassCancelTimer",
         "HassCancelAllTimers",
@@ -479,7 +478,12 @@ async def test_assist_api_prompt(
     hass.states.async_set(
         entry1.entity_id,
         "on",
-        {"friendly_name": "Kitchen", "temperature": Decimal("0.9"), "humidity": 65},
+        {
+            "friendly_name": "Kitchen",
+            "temperature": Decimal("0.9"),
+            "humidity": 65,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: "°C",
+        },
     )
     hass.states.async_set(entry2.entity_id, "on", {"friendly_name": "Living Room"})
 
@@ -636,6 +640,7 @@ Live Context: An overview of the areas and the devices in this smart home:
   attributes:
     temperature: '0.9'
     humidity: '65'
+    unit_of_measurement: °C
 - names: Living Room
   domain: light
   state: 'on'
@@ -1234,7 +1239,7 @@ async def test_script_tool(
     assert tool.name == "test_script"
     assert (
         tool.description
-        == "This is a test script. Aliases: ['script name', 'script alias']"
+        == "This is a test script. Aliases: ['script alias', 'script name']"
     )
     schema = {
         vol.Required("beer", description="Number of beers"): cv.string,
@@ -1249,7 +1254,7 @@ async def test_script_tool(
 
     assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
         "test_script": (
-            "This is a test script. Aliases: ['script name', 'script alias']",
+            "This is a test script. Aliases: ['script alias', 'script name']",
             vol.Schema(schema),
         ),
         "script_with_no_fields": (
@@ -1358,14 +1363,14 @@ async def test_script_tool(
     assert tool.name == "test_script"
     assert (
         tool.description
-        == "This is a new test script. Aliases: ['script name', 'script alias']"
+        == "This is a new test script. Aliases: ['script alias', 'script name']"
     )
     schema = {vol.Required("beer", description="Number of beers"): cv.string}
     assert tool.parameters.schema == schema
 
     assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
         "test_script": (
-            "This is a new test script. Aliases: ['script name', 'script alias']",
+            "This is a new test script. Aliases: ['script alias', 'script name']",
             vol.Schema(schema),
         ),
         "script_with_no_fields": (

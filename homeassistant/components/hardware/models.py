@@ -7,13 +7,14 @@ import psutil_home_assistant as ha_psutil
 
 from homeassistant.components import websocket_api
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 
 
 @dataclass
 class HardwareData:
     """Hardware data."""
 
-    hardware_platform: dict[str, HardwareProtocol]
+    hardware_platforms: LazyIntegrationPlatforms[HardwareProtocol]
     system_status: SystemStatus
 
 

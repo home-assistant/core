@@ -1,5 +1,7 @@
 """An abstract class common to all Imou entities."""
 
+from typing import override
+
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -45,6 +47,7 @@ class ImouEntity(CoordinatorEntity[ImouDataUpdateCoordinator]):
         return self.coordinator.devices_by_key[self._device_key]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         if (

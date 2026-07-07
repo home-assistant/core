@@ -2,7 +2,7 @@
 
 import asyncio
 import collections
-from collections.abc import Callable, Container, Mapping
+from collections.abc import Callable
 from contextlib import suppress
 import datetime as dt
 from enum import StrEnum
@@ -16,7 +16,7 @@ from typing import Any, Final, Required, TypedDict, final, override
 from urllib.parse import quote, urlparse
 
 import aiohttp
-from aiohttp import web
+from aiohttp import hdrs, web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
 from propcache.api import cached_property
@@ -24,7 +24,7 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.websocket_api import ERR_NOT_SUPPORTED, ERR_UNKNOWN_ERROR
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
@@ -50,7 +50,7 @@ from homeassistant.const import (  # noqa: F401
     STATE_PLAYING,
     STATE_STANDBY,
 )
-from homeassistant.core import HomeAssistant, SupportsResponse, callback
+from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -112,7 +112,9 @@ from .const import (  # noqa: F401
     SERVICE_SELECT_SOURCE,
     SERVICE_UNJOIN,
     MediaClass,
+    MediaPlayerEntityCapabilityAttribute,
     MediaPlayerEntityFeature,
+    MediaPlayerEntityStateAttribute,
     MediaPlayerState,
     MediaType,
     RepeatMode,
@@ -200,31 +202,31 @@ MEDIA_PLAYER_BROWSE_MEDIA_SCHEMA = {
 }
 
 
-ATTR_TO_PROPERTY = [
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_DURATION,
-    ATTR_MEDIA_POSITION,
-    ATTR_MEDIA_POSITION_UPDATED_AT,
-    ATTR_MEDIA_TITLE,
-    ATTR_MEDIA_ARTIST,
-    ATTR_MEDIA_ALBUM_NAME,
-    ATTR_MEDIA_ALBUM_ARTIST,
-    ATTR_MEDIA_TRACK,
-    ATTR_MEDIA_SERIES_TITLE,
-    ATTR_MEDIA_SEASON,
-    ATTR_MEDIA_EPISODE,
-    ATTR_MEDIA_CHANNEL,
-    ATTR_MEDIA_PLAYLIST,
-    ATTR_APP_ID,
-    ATTR_APP_NAME,
-    ATTR_INPUT_SOURCE,
-    ATTR_SOUND_MODE,
-    ATTR_MEDIA_SHUFFLE,
-    ATTR_MEDIA_REPEAT,
-]
+PROP_TO_ATTR = {
+    "volume_level": MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL,
+    "is_volume_muted": MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED,
+    "media_content_id": MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID,
+    "media_content_type": MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE,
+    "media_duration": MediaPlayerEntityStateAttribute.MEDIA_DURATION,
+    "media_position": MediaPlayerEntityStateAttribute.MEDIA_POSITION,
+    "media_position_updated_at": MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT,
+    "media_title": MediaPlayerEntityStateAttribute.MEDIA_TITLE,
+    "media_artist": MediaPlayerEntityStateAttribute.MEDIA_ARTIST,
+    "media_album_name": MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME,
+    "media_album_artist": MediaPlayerEntityStateAttribute.MEDIA_ALBUM_ARTIST,
+    "media_track": MediaPlayerEntityStateAttribute.MEDIA_TRACK,
+    "media_series_title": MediaPlayerEntityStateAttribute.MEDIA_SERIES_TITLE,
+    "media_season": MediaPlayerEntityStateAttribute.MEDIA_SEASON,
+    "media_episode": MediaPlayerEntityStateAttribute.MEDIA_EPISODE,
+    "media_channel": MediaPlayerEntityStateAttribute.MEDIA_CHANNEL,
+    "media_playlist": MediaPlayerEntityStateAttribute.MEDIA_PLAYLIST,
+    "app_id": MediaPlayerEntityStateAttribute.APP_ID,
+    "app_name": MediaPlayerEntityStateAttribute.APP_NAME,
+    "source": MediaPlayerEntityStateAttribute.INPUT_SOURCE,
+    "sound_mode": MediaPlayerEntityStateAttribute.SOUND_MODE,
+    "shuffle": MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE,
+    "repeat": MediaPlayerEntityStateAttribute.MEDIA_REPEAT,
+}
 
 # mypy: disallow-any-generics
 
@@ -540,12 +542,12 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     _entity_component_unrecorded_attributes = frozenset(
         {
-            ATTR_ENTITY_PICTURE_LOCAL,
+            MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL,
             ATTR_ENTITY_PICTURE,
-            ATTR_INPUT_SOURCE_LIST,
-            ATTR_MEDIA_POSITION_UPDATED_AT,
-            ATTR_MEDIA_POSITION,
-            ATTR_SOUND_MODE_LIST,
+            MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST,
+            MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT,
+            MediaPlayerEntityStateAttribute.MEDIA_POSITION,
+            MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST,
         }
     )
 
@@ -588,6 +590,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     # Implement these for your media player
     @cached_property
+    @override
     def device_class(self) -> MediaPlayerDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -597,6 +600,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return None
 
     @cached_property
+    @override
     def state(self) -> MediaPlayerState | None:
         """State of the player."""
         return self._attr_state
@@ -794,6 +798,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_group_members
 
     @cached_property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         return self._attr_supported_features
@@ -1080,6 +1085,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             await self.async_media_play()
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return image of the media playing."""
         if self.state == MediaPlayerState.OFF:
@@ -1102,6 +1108,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         )
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         data: dict[str, Any] = {}
@@ -1110,33 +1117,38 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if (
             source_list := self.source_list
         ) and MediaPlayerEntityFeature.SELECT_SOURCE in supported_features:
-            data[ATTR_INPUT_SOURCE_LIST] = source_list
+            data[MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST] = source_list
 
         if (
             sound_mode_list := self.sound_mode_list
         ) and MediaPlayerEntityFeature.SELECT_SOUND_MODE in supported_features:
-            data[ATTR_SOUND_MODE_LIST] = sound_mode_list
+            data[MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST] = sound_mode_list
 
         return data
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         state_attr: dict[str, Any] = {}
 
         if self.support_grouping:
-            state_attr[ATTR_GROUP_MEMBERS] = self.group_members
+            state_attr[MediaPlayerEntityStateAttribute.GROUP_MEMBERS] = (
+                self.group_members
+            )
 
         if self.state == MediaPlayerState.OFF:
             return state_attr
 
-        for attr in ATTR_TO_PROPERTY:
-            if (value := getattr(self, attr)) is not None:
+        for prop, attr in PROP_TO_ATTR.items():
+            if (value := getattr(self, prop)) is not None:
                 state_attr[attr] = value
 
         if self.media_image_remotely_accessible:
-            state_attr[ATTR_ENTITY_PICTURE_LOCAL] = self.media_image_local
+            state_attr[MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL] = (
+                self.media_image_local
+            )
 
         return state_attr
 
@@ -1249,7 +1261,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 class MediaPlayerImageView(HomeAssistantView):
     """Media player view to serve an image."""
 
-    use_query_token_for_auth = True
+    requires_auth = False
     url = "/api/media_player_proxy/{entity_id}"
     name = "api:media_player:image"
     extra_urls = [
@@ -1262,15 +1274,6 @@ class MediaPlayerImageView(HomeAssistantView):
         """Initialize a media player view."""
         self.component = component
 
-    @callback
-    @override
-    def get_valid_auth_tokens(self, match_info: Mapping[str, str]) -> Container[str]:
-        """Return valid auth tokens, which can be used for query token authentication."""
-        if (player := self.component.get_entity(match_info["entity_id"])) is None:
-            return ()
-
-        return (player.access_token,)
-
     async def get(
         self,
         request: web.Request,
@@ -1280,9 +1283,27 @@ class MediaPlayerImageView(HomeAssistantView):
     ) -> web.Response:
         """Start a get request."""
         if (player := self.component.get_entity(entity_id)) is None:
-            return web.Response(status=HTTPStatus.NOT_FOUND)
+            raise (
+                web.HTTPNotFound if request[KEY_AUTHENTICATED] else web.HTTPUnauthorized
+            )
 
         assert isinstance(player, MediaPlayerEntity)
+        authenticated = (
+            request[KEY_AUTHENTICATED]
+            or request.query.get("token") == player.access_token
+        )
+
+        if not authenticated:
+            if hdrs.AUTHORIZATION in request.headers:
+                # A failed request that carried an Authorization header is a real
+                # Bearer auth attempt — return 401 and let the ban middleware count
+                # it as a wrong login.
+                raise web.HTTPUnauthorized
+            # No Authorization header: most likely a benign signed-URL / query-
+            # token request whose token has expired (e.g. a browser tab left
+            # open that re-fetches resources later). Return 403 so it doesn't
+            # register as a wrong login and ban the user's own IP.
+            raise web.HTTPForbidden
 
         if media_content_type and media_content_id:
             media_image_id = request.query.get("media_image_id")

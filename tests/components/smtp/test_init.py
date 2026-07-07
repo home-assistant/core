@@ -1,5 +1,7 @@
 """Tests for the SMTP integration."""
 
+from smtplib import SMTPAuthenticationError
+from socket import gaierror
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -48,6 +50,32 @@ async def test_entry_setup_unload(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    ("exception", "state"),
+    [
+        (ConnectionRefusedError, ConfigEntryState.SETUP_RETRY),
+        (gaierror, ConfigEntryState.SETUP_RETRY),
+        (SMTPAuthenticationError(0, ""), ConfigEntryState.SETUP_ERROR),
+    ],
+)
+async def test_config_entry_not_ready(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    smtp: MagicMock,
+    exception: Exception,
+    state: ConfigEntryState,
+) -> None:
+    """Test config entry not ready."""
+
+    smtp.login.side_effect = exception
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is state
+
+
 @pytest.mark.usefixtures("smtp")
 async def test_import(
     hass: HomeAssistant,
@@ -73,6 +101,7 @@ async def test_import(
                     CONF_PASSWORD: "test-password",
                     CONF_VERIFY_SSL: True,
                     CONF_RECIPIENT: "recipient@example.com",
+                    CONF_TIMEOUT: 10,
                 }
             ]
         },
@@ -98,9 +127,9 @@ async def test_import(
         CONF_PASSWORD: "test-password",
         CONF_VERIFY_SSL: True,
         CONF_RECIPIENT: ["recipient@example.com"],
-        CONF_TIMEOUT: 5,
         CONF_DEBUG: False,
     }
+    assert entries[0].options == {CONF_TIMEOUT: 10}
 
     assert list(entries[0].subentries.values())[0].unique_id == "recipient@example.com"
 
@@ -133,7 +162,6 @@ async def test_import_already_configured(
             CONF_VERIFY_SSL: True,
             CONF_RECIPIENT: ["recipient@example.com"],
             CONF_DEBUG: False,
-            CONF_TIMEOUT: 5,
         },
         entry_id="123456789",
     )

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 import logging
-from typing import Any
+from typing import Any, override
 
 from thinqconnect import ThinQAPIException
 from thinqconnect.devices.const import Location
@@ -84,11 +84,13 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         """
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_status()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         await super().async_added_to_hass()

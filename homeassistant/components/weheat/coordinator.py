@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from weheat.abstractions.discovery import HeatPumpDiscovery
 from weheat.abstractions.heat_pump import HeatPump
@@ -100,6 +101,7 @@ class WeheatDataUpdateCoordinator(DataUpdateCoordinator[HeatPump]):
 
         self.session = session
 
+    @override
     async def _async_update_data(self) -> HeatPump:
         """Fetch data from the API."""
         await self.session.async_ensure_token_valid()
@@ -142,6 +144,7 @@ class WeheatEnergyUpdateCoordinator(DataUpdateCoordinator[HeatPump]):
 
         self.session = session
 
+    @override
     async def _async_update_data(self) -> HeatPump:
         """Fetch data from the API."""
         await self.session.async_ensure_token_valid()

@@ -1,6 +1,6 @@
 """Support for switch entities."""
 
-from typing import Any
+from typing import Any, override
 
 from gardena_bluetooth.const import Valve, Valve1, Valve2
 
@@ -61,10 +61,12 @@ class GardenaBluetoothValveSwitch(GardenaBluetoothEntity, SwitchEntity):
         self._attr_is_on = None
         self._attr_entity_registry_enabled_default = False
 
+    @override
     def _handle_coordinator_update(self) -> None:
         self._attr_is_on = self.coordinator.get_cached(Valve.state)
         super()._handle_coordinator_update()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if not (data := self.coordinator.data.get(Valve.manual_watering_time.uuid)):
@@ -75,6 +77,7 @@ class GardenaBluetoothValveSwitch(GardenaBluetoothEntity, SwitchEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.write(Valve.remaining_open_time, 0)
