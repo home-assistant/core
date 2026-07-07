@@ -30,20 +30,6 @@ class PlugwiseNumberEntityDescription(NumberEntityDescription):
 
 NUMBER_TYPES = (
     PlugwiseNumberEntityDescription(
-        key="maximum_boiler_temperature",
-        translation_key="maximum_boiler_temperature",
-        device_class=NumberDeviceClass.TEMPERATURE,
-        entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    ),
-    PlugwiseNumberEntityDescription(
-        key="max_dhw_temperature",
-        translation_key="max_dhw_temperature",
-        device_class=NumberDeviceClass.TEMPERATURE,
-        entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    ),
-    PlugwiseNumberEntityDescription(
         key="temperature_offset",
         translation_key="temperature_offset",
         device_class=NumberDeviceClass.TEMPERATURE,
