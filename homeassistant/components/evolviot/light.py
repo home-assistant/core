@@ -2,7 +2,12 @@
 
 from typing import Any
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_RGB_COLOR,
+    ColorMode,
+    LightEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -12,6 +17,7 @@ from .coordinator import EvolvIOTDataUpdateCoordinator
 from .entity import EvolvIOTEntity
 
 PLATFORM_DOMAIN = "light"
+COLOR_DOMAIN = "color"
 
 
 async def async_setup_entry(
@@ -26,12 +32,18 @@ async def async_setup_entry(
 
     def add_new_entities() -> None:
         entities = []
-        for entity in coordinator.entities_for_domain(PLATFORM_DOMAIN):
+        for entity in (
+            *coordinator.entities_for_domain(PLATFORM_DOMAIN),
+            *coordinator.entities_for_domain(COLOR_DOMAIN),
+        ):
             entity_id = entity["entity_id"]
             if entity_id in known:
                 continue
             known.add(entity_id)
-            entities.append(EvolvIOTLight(coordinator, entity))
+            if entity.get("domain") == COLOR_DOMAIN:
+                entities.append(EvolvIOTColorLight(coordinator, entity))
+            else:
+                entities.append(EvolvIOTLight(coordinator, entity))
         if entities:
             async_add_entities(entities)
 
@@ -88,3 +100,81 @@ class EvolvIOTLight(EvolvIOTEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._async_send_command({"command": "turn_off"})
+
+
+class EvolvIOTColorLight(EvolvIOTEntity, LightEntity):
+    """EvolvIOT color control exposed as a color-capable light."""
+
+    @property
+    def supported_color_modes(self) -> set[ColorMode]:
+        """Return supported color modes."""
+        return {ColorMode.RGB}
+
+    @property
+    def color_mode(self) -> ColorMode:
+        """Return current color mode."""
+        return ColorMode.RGB
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true while the color control is available."""
+        if not self.backend_state:
+            return None
+        return self.available
+
+    @property
+    def rgb_color(self) -> tuple[int, int, int] | None:
+        """Return current RGB color."""
+        value = self.backend_state.get("raw_value", self.backend_state.get("state"))
+        return _parse_rgb_color(value)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Set the color."""
+        if ATTR_RGB_COLOR not in kwargs:
+            return
+
+        red, green, blue = kwargs[ATTR_RGB_COLOR]
+        await self._async_send_command({"value": f"{red},{green},{blue}"})
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Color-only controls do not expose power state."""
+
+
+def _parse_rgb_color(value: Any) -> tuple[int, int, int] | None:
+    """Parse an EvolvIOT RGB value."""
+    if isinstance(value, str):
+        value = value.strip()
+        if value.startswith("#") and len(value) == 7:
+            try:
+                return (
+                    int(value[1:3], 16),
+                    int(value[3:5], 16),
+                    int(value[5:7], 16),
+                )
+            except ValueError:
+                return None
+
+        parts = value.split(",")
+        if len(parts) == 3:
+            try:
+                red, green, blue = parts
+                return (
+                    max(0, min(255, int(red))),
+                    max(0, min(255, int(green))),
+                    max(0, min(255, int(blue))),
+                )
+            except ValueError:
+                return None
+
+    if isinstance(value, (list, tuple)) and len(value) == 3:
+        try:
+            red, green, blue = value
+            return (
+                max(0, min(255, int(red))),
+                max(0, min(255, int(green))),
+                max(0, min(255, int(blue))),
+            )
+        except (TypeError, ValueError):
+            return None
+
+    return None

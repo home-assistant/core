@@ -289,7 +289,7 @@ class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ):
                 attributes["brightness"] = max(0, min(100, round(numeric_value)))
         else:
-            state["state"] = value
+            state["state"] = str(value)
 
         if attributes:
             state["attributes"] = attributes
