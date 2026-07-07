@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from gatus_api.client import GatusClientError
+
 from homeassistant.components.gatus.const import DOMAIN
 from homeassistant.components.gatus.coordinator import GatusDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
@@ -31,3 +33,22 @@ async def test_setup_and_unload_entry(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_failure_retry(
+    hass: HomeAssistant, mock_gatus_client: AsyncMock
+) -> None:
+    """Test that an API connection failure during initial setup places the entry in retry state."""
+    mock_gatus_client.get_endpoints_statuses.side_effect = GatusClientError(
+        "Cannot connect to Gatus API during initial setup"
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_URL: "http://gatus.example.com:8080"}
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
