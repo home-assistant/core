@@ -1,5 +1,4 @@
 """Support for Netatmo Smart thermostats."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
 from typing import Any, cast, override
@@ -39,7 +38,6 @@ from .const import (
     ATTR_SELECTED_SCHEDULE_ID,
     ATTR_TARGET_TEMPERATURE,
     ATTR_TIME_PERIOD,
-    DATA_SCHEDULES,
     DOMAIN,
     EVENT_TYPE_CANCEL_SET_POINT,
     EVENT_TYPE_SCHEDULE,
@@ -254,7 +252,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         if data["event_type"] == EVENT_TYPE_SCHEDULE:
             # handle schedule change
             if "schedule_id" in data:
-                selected_schedule = self.hass.data[DOMAIN][DATA_SCHEDULES][
+                selected_schedule = self.data_handler.schedules[
                     self.home.entity_id
                 ].get(data["schedule_id"])
                 self._selected_schedule = getattr(
@@ -461,9 +459,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     async def _async_service_set_schedule(self, **kwargs: Any) -> None:
         schedule_name = kwargs.get(ATTR_SCHEDULE_NAME)
         schedule_id = None
-        for sid, schedule in self.hass.data[DOMAIN][DATA_SCHEDULES][
-            self.home.entity_id
-        ].items():
+        for sid, schedule in self.data_handler.schedules[self.home.entity_id].items():
             if schedule.name == schedule_name:
                 schedule_id = sid
                 break

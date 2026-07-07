@@ -1136,6 +1136,29 @@ async def test_rexel_full_flow_single_gateway(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_rexel_flow_reimports_removed_credential(
+    hass: HomeAssistant,
+) -> None:
+    """The Rexel flow re-imports its client credential if the user removed it."""
+    assert await async_setup_component(hass, "application_credentials", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"hub": "rexel"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud"}
+    )
+
+    # Reaching the OAuth2 external step proves an implementation was available,
+    # i.e. the credential was re-imported despite not being present beforehand.
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert REXEL_OAUTH_AUTHORIZE_URL in result["url"]
+
+
 @pytest.mark.usefixtures("current_request_with_host", "setup_rexel_credentials")
 async def test_rexel_full_flow_multiple_gateways(
     hass: HomeAssistant,

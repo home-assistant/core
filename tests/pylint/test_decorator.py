@@ -5,10 +5,9 @@ from pylint.checkers import BaseChecker
 from pylint.interfaces import UNDEFINED
 from pylint.testutils import MessageTest
 from pylint.testutils.unittest_linter import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 import pytest
 
-from . import assert_adds_messages, assert_no_messages
+from . import assert_adds_messages, assert_no_messages, walk_checker
 
 
 def test_good_callback(linter: UnittestLinter, decorator_checker: BaseChecker) -> None:
@@ -24,11 +23,9 @@ def test_good_callback(linter: UnittestLinter, decorator_checker: BaseChecker) -
     """
 
     root_node = astroid.parse(code)
-    walker = ASTWalker(linter)
-    walker.add_checker(decorator_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, decorator_checker, root_node)
 
 
 def test_bad_callback(linter: UnittestLinter, decorator_checker: BaseChecker) -> None:
@@ -44,8 +41,6 @@ def test_bad_callback(linter: UnittestLinter, decorator_checker: BaseChecker) ->
     """
 
     root_node = astroid.parse(code)
-    walker = ASTWalker(linter)
-    walker.add_checker(decorator_checker)
 
     with assert_adds_messages(
         linter,
@@ -60,7 +55,7 @@ def test_bad_callback(linter: UnittestLinter, decorator_checker: BaseChecker) ->
             end_col_offset=15,
         ),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, decorator_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -110,11 +105,9 @@ def test_good_fixture(
     """
 
     root_node = astroid.parse(code, path)
-    walker = ASTWalker(linter)
-    walker.add_checker(decorator_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, decorator_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -146,8 +139,6 @@ def test_bad_fixture_session_scope(
     """
 
     root_node = astroid.parse(code, path)
-    walker = ASTWalker(linter)
-    walker.add_checker(decorator_checker)
 
     with assert_adds_messages(
         linter,
@@ -162,7 +153,7 @@ def test_bad_fixture_session_scope(
             end_col_offset=32,
         ),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, decorator_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -193,8 +184,6 @@ def test_bad_fixture_package_scope(
     """
 
     root_node = astroid.parse(code, path)
-    walker = ASTWalker(linter)
-    walker.add_checker(decorator_checker)
 
     with assert_adds_messages(
         linter,
@@ -209,7 +198,7 @@ def test_bad_fixture_package_scope(
             end_col_offset=32,
         ),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, decorator_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -247,8 +236,6 @@ def test_bad_fixture_autouse(
     """
 
     root_node = astroid.parse(code, path)
-    walker = ASTWalker(linter)
-    walker.add_checker(decorator_checker)
 
     with assert_adds_messages(
         linter,
@@ -263,4 +250,4 @@ def test_bad_fixture_autouse(
             end_col_offset=17 + len(keywords),
         ),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, decorator_checker, root_node)
