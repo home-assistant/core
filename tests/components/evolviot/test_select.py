@@ -84,6 +84,23 @@ async def test_select_option_sends_value(hass: HomeAssistant) -> None:
     entity._async_send_command.assert_awaited_once_with({"value": "wave"})
 
 
+async def test_selected_option_stays_visible_when_backend_returns_unknown(
+    hass: HomeAssistant,
+) -> None:
+    """Test optimistic selected option is kept when backend state is unknown."""
+    coordinator = _coordinator(hass)
+    entity = EvolvIOTSelect(
+        coordinator,
+        coordinator.entities["select.evolviot_pattern"],
+    )
+    entity._async_send_command = AsyncMock()
+
+    await entity.async_select_option("wave")
+    coordinator.data["states"]["select.evolviot_pattern"]["state"] = "unknown"
+
+    assert entity.current_option == "wave"
+
+
 async def test_stale_switch_pattern_entity_is_classified_as_select(
     hass: HomeAssistant,
 ) -> None:

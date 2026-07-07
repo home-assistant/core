@@ -1,5 +1,7 @@
 """Select platform for EvolvIOT."""
 
+from typing import Any
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -40,12 +42,24 @@ async def async_setup_entry(
 class EvolvIOTSelect(EvolvIOTEntity, SelectEntity):
     """EvolvIOT select entity."""
 
+    def __init__(
+        self,
+        coordinator: EvolvIOTDataUpdateCoordinator,
+        entity: dict[str, Any],
+    ) -> None:
+        """Initialize the select entity."""
+        super().__init__(coordinator, entity)
+        self._optimistic_option: str | None = None
+
     @property
     def current_option(self) -> str | None:
         """Return the current selected option."""
         value = self.backend_state.get("state", self.backend_state.get("raw_value"))
+        options = self.options
         if value in (None, "", "unknown", "unavailable"):
-            return self.options[0] if self.options else None
+            if self._optimistic_option in options:
+                return self._optimistic_option
+            return options[0] if options else None
         return str(value)
 
     @property
@@ -75,3 +89,5 @@ class EvolvIOTSelect(EvolvIOTEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Set EvolvIOT state to the selected option."""
         await self._async_send_command({"value": option})
+        self._optimistic_option = option
+        self.async_write_ha_state()
