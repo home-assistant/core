@@ -1,35 +1,20 @@
 """Tests for the luci device tracker."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.components.luci.config_flow import InvalidAuth
-from homeassistant.components.luci.const import DOMAIN
-from homeassistant.components.luci.device_tracker import async_setup_scanner
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    STATE_HOME,
-    STATE_NOT_HOME,
-)
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_DEVICE_2
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
-SCANNER_CONFIG = {
-    CONF_HOST: "192.168.1.1",
-    CONF_USERNAME: "root",
-    CONF_PASSWORD: "password",
-}
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_luci_client")
@@ -73,35 +58,3 @@ async def test_device_tracker_disconnect(
     state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.device1")
     assert state is not None
     assert state.state == STATE_NOT_HOME
-
-
-async def test_async_setup_scanner_invalid_auth(hass: HomeAssistant) -> None:
-    """Test async_setup_scanner creates an issue on invalid auth."""
-    with patch(
-        "homeassistant.components.luci.config_flow._try_connect",
-        side_effect=InvalidAuth,
-    ):
-        result = await async_setup_scanner(hass, SCANNER_CONFIG, AsyncMock())
-
-    assert result is True
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(DOMAIN, "yaml_import_invalid_auth")
-    assert issue is not None
-    assert issue.severity == ir.IssueSeverity.ERROR
-    assert issue.translation_placeholders == {"host": "192.168.1.1"}
-
-
-async def test_async_setup_scanner_cannot_connect(hass: HomeAssistant) -> None:
-    """Test async_setup_scanner creates an issue on connection failure."""
-    with patch(
-        "homeassistant.components.luci.config_flow._try_connect",
-        side_effect=ConnectionError,
-    ):
-        result = await async_setup_scanner(hass, SCANNER_CONFIG, AsyncMock())
-
-    assert result is True
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(DOMAIN, "yaml_import_cannot_connect")
-    assert issue is not None
-    assert issue.severity == ir.IssueSeverity.ERROR
-    assert issue.translation_placeholders == {"host": "192.168.1.1"}
