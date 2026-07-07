@@ -37,14 +37,14 @@ async def test_get_prices_for_date(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_pyomie: MagicMock,
-    mock_omie_results_jan15: OMIEResults,
+    mock_omie_results_oct15: OMIEResults,
     countries: list[str],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the get_prices_for_date service response."""
     await setup_integration(hass, mock_config_entry)
     mock_pyomie.spot_price.side_effect = spot_price_fetcher(
-        {TEST_DATE: mock_omie_results_jan15}
+        {TEST_DATE: mock_omie_results_oct15}
     )
 
     response = await hass.services.async_call(
@@ -62,12 +62,12 @@ async def test_get_prices_for_date_default_country(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_pyomie: MagicMock,
-    mock_omie_results_jan15: OMIEResults,
+    mock_omie_results_oct15: OMIEResults,
 ) -> None:
     """Test the get_prices_for_date service returns both countries by default."""
     await setup_integration(hass, mock_config_entry)
     mock_pyomie.spot_price.side_effect = spot_price_fetcher(
-        {TEST_DATE: mock_omie_results_jan15}
+        {TEST_DATE: mock_omie_results_oct15}
     )
 
     response = await hass.services.async_call(
