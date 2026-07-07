@@ -97,4 +97,3 @@ async def test_stale_switch_color_entity_is_classified_as_color(
         coordinator.entities["switch.evolviot_color"]
     ]
     assert coordinator.entities_for_domain("switch") == []
-

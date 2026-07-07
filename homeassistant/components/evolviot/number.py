@@ -57,7 +57,7 @@ class EvolvIOTBrightnessNumber(EvolvIOTEntity, NumberEntity):
             return None
         try:
             return max(0, min(100, float(value)))
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return None
 
     async def async_set_native_value(self, value: float) -> None:
