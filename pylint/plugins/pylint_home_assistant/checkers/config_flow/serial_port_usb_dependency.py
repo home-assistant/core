@@ -3,9 +3,9 @@
 ``SerialPortSelector`` populates its port list via the
 ``usb/list_serial_ports`` websocket command, which is only registered when the
 ``usb`` integration is set up. Integrations using the selector must therefore
-declare ``usb`` in ``dependencies`` or ``after_dependencies`` in
-``manifest.json``, otherwise the dropdown may not populate on installations
-that do not load ``usb`` via ``default_config``.
+declare ``usb`` as a hard dependency in ``manifest.json`` so it is guaranteed
+to be set up; ``after_dependencies`` is not sufficient because it does not
+force ``usb`` to be set up.
 """
 
 from astroid import nodes
@@ -25,14 +25,14 @@ class HassEnforceSerialPortSelectorUsbChecker(BaseChecker):
     msgs = {
         "W7430": (
             "Config flow uses SerialPortSelector but the integration does not "
-            "depend on the 'usb' integration -- add 'usb' to 'dependencies' or "
-            "'after_dependencies' in manifest.json",
+            "declare 'usb' in 'dependencies' in manifest.json",
             "home-assistant-serial-port-selector-usb-dependency",
             "SerialPortSelector populates its port list via the "
             "'usb/list_serial_ports' websocket command, which is only "
-            "registered when the 'usb' integration is set up. Without a "
-            "dependency on 'usb', the dropdown may not populate on "
-            "installations that do not load 'usb' via 'default_config'.",
+            "registered when the 'usb' integration is set up. The selector "
+            "therefore requires 'usb' as a hard dependency; "
+            "'after_dependencies' is not sufficient because it does not force "
+            "'usb' to be set up.",
         ),
     }
     options = ()
@@ -66,9 +66,7 @@ class HassEnforceSerialPortSelectorUsbChecker(BaseChecker):
         if manifest is None:
             return
 
-        if "usb" in manifest.get("dependencies", []) or "usb" in manifest.get(
-            "after_dependencies", []
-        ):
+        if "usb" in manifest.get("dependencies", []):
             return
 
         self._reported_modules.add(module_name)

@@ -22,27 +22,15 @@ def _write_integration(tmp_path: Path, domain: str, manifest: dict) -> Path:
     return integration_dir
 
 
-@pytest.mark.parametrize(
-    "manifest",
-    [
-        pytest.param(
-            {"domain": "my_device", "dependencies": ["usb"]},
-            id="dependencies",
-        ),
-        pytest.param(
-            {"domain": "my_device", "after_dependencies": ["usb"]},
-            id="after_dependencies",
-        ),
-    ],
-)
 def test_serial_port_selector_with_usb_dependency(
     linter: UnittestLinter,
     enforce_serial_port_selector_usb_checker: BaseChecker,
     tmp_path: Path,
-    manifest: dict,
 ) -> None:
-    """A config flow declaring the usb dependency is not flagged."""
-    integration_dir = _write_integration(tmp_path, "my_device", manifest)
+    """A config flow declaring usb as a hard dependency is not flagged."""
+    integration_dir = _write_integration(
+        tmp_path, "my_device", {"domain": "my_device", "dependencies": ["usb"]}
+    )
 
     code = """
     vol.Schema({vol.Required(CONF_PORT): SerialPortSelector()})
@@ -90,13 +78,24 @@ def test_serial_port_selector_not_flagged(
         walk_checker(linter, enforce_serial_port_selector_usb_checker, root_node)
 
 
+@pytest.mark.parametrize(
+    "manifest",
+    [
+        pytest.param({"domain": "my_device"}, id="no_dependency"),
+        pytest.param(
+            {"domain": "my_device", "after_dependencies": ["usb"]},
+            id="after_dependencies_only",
+        ),
+    ],
+)
 def test_serial_port_selector_without_usb_dependency(
     linter: UnittestLinter,
     enforce_serial_port_selector_usb_checker: BaseChecker,
     tmp_path: Path,
+    manifest: dict,
 ) -> None:
-    """A config flow missing the usb dependency is flagged once."""
-    integration_dir = _write_integration(tmp_path, "my_device", {"domain": "my_device"})
+    """A config flow without usb as a hard dependency is flagged once."""
+    integration_dir = _write_integration(tmp_path, "my_device", manifest)
 
     code = """
     vol.Schema({
