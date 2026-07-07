@@ -693,7 +693,7 @@ bond-async==0.2.1
 bosch-alarm-mode2==0.4.10
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.3.5
+boschshcpy==0.4.9
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
