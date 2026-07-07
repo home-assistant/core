@@ -26,6 +26,9 @@ async def test_local_media_source(hass: HomeAssistant, init_components: None) ->
     )
     assert source.url_prefix == "/ai_task"
 
+
+async def test_media_source_no_media_dirs(hass: HomeAssistant) -> None:
+    """Test an error is raised when no media directories are configured."""
     hass.config.media_dirs = {}
 
     with pytest.raises(

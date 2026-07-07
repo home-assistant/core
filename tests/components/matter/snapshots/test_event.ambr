@@ -1779,6 +1779,71 @@
     'state': 'unknown',
   })
 # ---
+# name: test_events[mock_doorbell][event.mock_doorbell_button-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'initial_press',
+        'short_release',
+        'long_press',
+        'long_release',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.mock_doorbell_button',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-000000000000003F-MatterNodeDevice-1-GenericSwitch-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[mock_doorbell][event.mock_doorbell_button-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'initial_press',
+        'short_release',
+        'long_press',
+        'long_release',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Doorbell Button',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.mock_doorbell_button',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_events[mock_generic_switch][event.mock_generic_switch_button-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
