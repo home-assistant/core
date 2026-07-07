@@ -46,12 +46,7 @@ ZEROCONF_MAP: Final[dict[str, str]] = {
     "stretch": "Stretch",
 }
 
-type NumberType = Literal[
-    "maximum_boiler_temperature",
-    "max_dhw_temperature",
-    "temperature_offset",
-]
-
+type NumberType = Literal["temperature_offset"]
 type SelectType = Literal[
     "select_dhw_mode",
     "select_gateway_mode",
