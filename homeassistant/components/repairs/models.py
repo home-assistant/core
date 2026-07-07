@@ -14,7 +14,9 @@ from homeassistant.core import HomeAssistant, callback
 from .const import FlowType
 
 
-class RepairsFlowResult(data_entry_flow.FlowResult, total=False):
+class RepairsFlowResult(
+    data_entry_flow.FlowResult[data_entry_flow.FlowContext, str], total=False
+):
     """Typed result dict."""
 
     next_flow: tuple[FlowType, str]
