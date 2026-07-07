@@ -386,7 +386,7 @@ class CloudPreferences:
         return self._prefs.get(PREF_ONBOARDING_POSTPONED_UNTIL)
 
     @property
-    def is_onboarding_postponed(self) -> bool:
+    def onboarding_postponed(self) -> bool:
         """Return if onboarding is currently postponed."""
         if (postponed_until := self.onboarding_postponed_until) is None:
             return False

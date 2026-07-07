@@ -978,7 +978,7 @@ async def _account_data(
         "logged_in": True,
         "prefs": client.prefs.as_dict(),
         "onboarding_completed": client.prefs.onboarding_completed,
-        "is_onboarding_postponed": client.prefs.is_onboarding_postponed,
+        "onboarding_postponed": client.prefs.onboarding_postponed,
         "remote_certificate": certificate,
         "remote_certificate_status": remote.certificate_status,
         "remote_connected": remote.is_connected,

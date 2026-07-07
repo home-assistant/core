@@ -992,7 +992,7 @@ async def test_websocket_status(
         "http_use_ssl": False,
         "active_subscription": True,
         "onboarding_completed": False,
-        "is_onboarding_postponed": False,
+        "onboarding_postponed": False,
     }
 
 
@@ -1249,13 +1249,13 @@ async def test_websocket_cloud_onboarding_postpone(
     """Test postponing onboarding."""
     client = await hass_ws_client(hass)
 
-    assert cloud.client.prefs.is_onboarding_postponed is False
+    assert cloud.client.prefs.onboarding_postponed is False
 
     await client.send_json_auto_id({"type": "cloud/onboarding/postpone"})
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"]["is_onboarding_postponed"] is True
+    assert response["result"]["onboarding_postponed"] is True
     assert cloud.client.prefs.onboarding_postponed_until is not None
 
     freezer.tick(datetime.timedelta(hours=25))
@@ -1263,7 +1263,7 @@ async def test_websocket_cloud_onboarding_postpone(
     await client.send_json_auto_id({"type": "cloud/status"})
     response = await client.receive_json()
 
-    assert response["result"]["is_onboarding_postponed"] is False
+    assert response["result"]["onboarding_postponed"] is False
 
 
 async def test_websocket_cloud_onboarding_complete(
