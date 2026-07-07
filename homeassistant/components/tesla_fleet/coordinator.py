@@ -39,7 +39,13 @@ from homeassistant.util.unit_conversion import EnergyConverter
 if TYPE_CHECKING:
     from . import TeslaFleetConfigEntry
 
-from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER, TeslaFleetState
+from .const import (
+    DOMAIN,
+    ENERGY_HISTORY_FIELDS,
+    LOGGER,
+    TeslaFleetState,
+    build_statistic_id,
+)
 
 VEHICLE_INTERVAL_SECONDS = 600
 VEHICLE_INTERVAL = timedelta(seconds=VEHICLE_INTERVAL_SECONDS)
@@ -80,11 +86,6 @@ ENDPOINTS = [
     VehicleDataEndpoint.VEHICLE_CONFIG,
     VehicleDataEndpoint.LOCATION_DATA,
 ]
-
-
-def _statistic_id(site_id: str | int, key: str) -> str:
-    """Return the external statistic ID for an energy site field."""
-    return f"{DOMAIN}:{site_id}_{key}"
 
 
 def _get_last_statistics_for_statistic_ids(
@@ -343,6 +344,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         hass: HomeAssistant,
         config_entry: TeslaFleetConfigEntry,
         api: EnergySite,
+        site_name: str,
     ) -> None:
         """Initialize Tesla Fleet Energy Site History coordinator."""
         super().__init__(
@@ -353,6 +355,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
             update_interval=ENERGY_HISTORY_INTERVAL,
         )
         self.api = api
+        self.site_name = site_name
         self.data = {}
         self.updated_once = False
 
@@ -371,6 +374,8 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site history data using Tesla Fleet API."""
+        self.update_interval = ENERGY_HISTORY_INTERVAL
+
         try:
             response = await self.api.energy_history(TeslaEnergyPeriod.DAY)
         except RateLimited as e:
@@ -431,7 +436,9 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
 
         site_id = self.api.energy_site_id
         recorder = get_instance(self.hass)
-        statistic_ids = [_statistic_id(site_id, key) for key in ENERGY_HISTORY_FIELDS]
+        statistic_ids = [
+            build_statistic_id(site_id, key) for key in ENERGY_HISTORY_FIELDS
+        ]
 
         # Fetch all existing last statistics in a single executor call.
         last_stats = await recorder.async_add_executor_job(
@@ -444,7 +451,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
             metadata = StatisticMetaData(
                 mean_type=StatisticMeanType.NONE,
                 has_sum=True,
-                name=f"Tesla energy site {site_id} {key.replace('_', ' ')}",
+                name=f"{self.site_name} {key.replace('_', ' ')}",
                 source=DOMAIN,
                 statistic_id=statistic_id,
                 unit_class=EnergyConverter.UNIT_CLASS,

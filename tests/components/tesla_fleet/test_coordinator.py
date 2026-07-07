@@ -30,6 +30,7 @@ STATISTIC_TYPES: set[
     Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]
 ] = {"state", "sum"}
 SITE_ID = "123456"
+SITE_NAME = "Energy Site"
 
 
 async def _get_hourly_stats(
@@ -106,7 +107,7 @@ async def test_coordinator_first_run(
 
     # Create and run coordinator
     coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-        hass, mock_config_entry, mock_energy_site
+        hass, mock_config_entry, mock_energy_site, SITE_NAME
     )
     await coordinator._async_update_data()
 
@@ -140,7 +141,7 @@ async def test_coordinator_handles_empty_data(
     }
 
     coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-        hass, mock_config_entry, mock_energy_site
+        hass, mock_config_entry, mock_energy_site, SITE_NAME
     )
 
     with pytest.raises(UpdateFailed):
@@ -162,7 +163,7 @@ async def test_coordinator_handles_invalid_data(
     }
 
     coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-        hass, mock_config_entry, mock_energy_site
+        hass, mock_config_entry, mock_energy_site, SITE_NAME
     )
 
     with pytest.raises(UpdateFailed):
@@ -200,7 +201,7 @@ async def test_coordinator_normalizes_timestamps_to_hour(
     }
 
     coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-        hass, mock_config_entry, mock_energy_site
+        hass, mock_config_entry, mock_energy_site, SITE_NAME
     )
     await coordinator._async_update_data()
 
@@ -228,7 +229,7 @@ async def test_coordinator_updates_latest_hour_statistic(
     mock_config_entry.add_to_hass(hass)
 
     coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-        hass, mock_config_entry, mock_energy_site
+        hass, mock_config_entry, mock_energy_site, SITE_NAME
     )
 
     mock_energy_site.energy_history.return_value = {
@@ -300,7 +301,7 @@ async def test_coordinator_handles_rate_limiting(
     mock_energy_site.energy_history.side_effect = RateLimited({"after": "120"})
 
     coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-        hass, mock_config_entry, mock_energy_site
+        hass, mock_config_entry, mock_energy_site, SITE_NAME
     )
     await coordinator._async_update_data()
 
@@ -319,7 +320,7 @@ async def test_coordinator_handles_api_error(
     mock_energy_site.energy_history.side_effect = TeslaFleetError
 
     coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-        hass, mock_config_entry, mock_energy_site
+        hass, mock_config_entry, mock_energy_site, SITE_NAME
     )
 
     with pytest.raises(UpdateFailed):
@@ -351,7 +352,7 @@ async def test_coordinator_handles_missing_timestamp(
     }
 
     coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-        hass, mock_config_entry, mock_energy_site
+        hass, mock_config_entry, mock_energy_site, SITE_NAME
     )
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)

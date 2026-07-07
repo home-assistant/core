@@ -34,14 +34,13 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER, MODELS
+from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER, MODELS, build_statistic_id
 from .coordinator import (
     TeslaFleetEnergySiteHistoryCoordinator,
     TeslaFleetEnergySiteInfoCoordinator,
     TeslaFleetEnergySiteLiveCoordinator,
     TeslaFleetVehicleDataCoordinator,
     _stale_site_info_error,
-    _statistic_id,
 )
 from .models import TeslaFleetData, TeslaFleetEnergyData, TeslaFleetVehicleData
 
@@ -232,7 +231,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 hass, entry, api_energy
             )
             history_coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-                hass, entry, api_energy
+                hass, entry, api_energy, product.get("site_name", "Energy Site")
             )
 
             await live_coordinator.async_config_entry_first_refresh()
@@ -291,14 +290,11 @@ async def async_remove_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) 
     device_registry = dr.async_get(hass)
     devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
-    # External statistics are only created for energy sites, whose device
-    # identifier is the numeric energy_site_id used to build the statistic IDs.
-    # Vehicle (VIN) and wall connector (DIN) identifiers are not numeric, so
-    # they are skipped. Note a wall connector's serial_number is derived from
-    # its DIN (e.g. "abd-123" -> "123") and can be numeric, so it must not be
-    # used to identify energy sites.
+    # Only energy sites have all-numeric identifiers (the energy_site_id).
+    # Do not match on serial_number: a wall connector's serial is derived
+    # from its DIN and can also be all-numeric.
     statistic_ids = [
-        _statistic_id(site_id, key)
+        build_statistic_id(site_id, key)
         for device in devices
         for domain, site_id in device.identifiers
         if domain == DOMAIN and site_id.isdigit()

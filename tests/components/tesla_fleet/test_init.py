@@ -94,10 +94,8 @@ async def test_remove_entry_clears_statistics(
     await setup_platform(hass, normal_config_entry)
     assert normal_config_entry.state is ConfigEntryState.LOADED
 
-    # Energy sites are identified by a numeric identifier (the energy_site_id).
-    # Vehicles (VIN) and wall connectors (DIN) are not. A wall connector's
-    # serial_number is derived from its DIN (e.g. "abd-123" -> "123") and can be
-    # numeric, so filtering on serial_number alone would wrongly clear its IDs.
+    # Only energy sites have all-numeric identifiers, but a wall connector's
+    # serial_number can also be all-numeric.
     device_registry = dr.async_get(hass)
     devices = dr.async_entries_for_config_entry(
         device_registry, normal_config_entry.entry_id
@@ -115,8 +113,7 @@ async def test_remove_entry_clears_statistics(
         and device.serial_number.isdigit()
         and (DOMAIN, device.serial_number) not in device.identifiers
     }
-    # Guard the test's premise: the fixtures must include an energy site and a
-    # wall connector with a numeric serial, otherwise the bug can't be detected.
+    # The fixtures must include both, otherwise the bug can't be detected
     assert energy_site_ids
     assert wall_connector_serials
 
@@ -892,6 +889,28 @@ async def test_energy_history_refresh_ratelimited(
     await hass.async_block_till_done()
 
     assert mock_energy_history.call_count == 2
+
+    mock_energy_history.side_effect = None
+
+    # Still in backoff from the second rate limited response
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_energy_history.call_count == 2
+
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_energy_history.call_count == 3
+
+    # A successful refresh resets the backoff to the normal interval
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_energy_history.call_count == 4
 
 
 async def test_init_region_issue(
