@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass, field
 import logging
 
+from aiohttp import ClientError
 from thinqconnect import ThinQApi, ThinQAPIException
 from thinqconnect.integration import async_get_ha_bridge_list
 
@@ -93,6 +94,13 @@ async def async_setup_coordinators(
         bridge_list = await async_get_ha_bridge_list(thinq_api)
     except ThinQAPIException as exc:
         raise ConfigEntryNotReady(exc.message) from exc
+    except (ClientError, TimeoutError) as exc:
+        # A transient network/DNS failure (e.g. Home Assistant starting before
+        # the network is ready after a reboot) surfaces as an aiohttp
+        # ClientError or a timeout rather than a ThinQAPIException. Treat it as
+        # "not ready yet" so Home Assistant retries with backoff instead of
+        # failing setup permanently.
+        raise ConfigEntryNotReady(str(exc)) from exc
 
     if not bridge_list:
         _LOGGER.warning("No devices registered with the correct profile")
