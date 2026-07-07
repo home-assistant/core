@@ -161,6 +161,7 @@ class SupervisorJobsCoordinator(DataUpdateCoordinator[dict[UUID, Job]]):
 
         return cached_jobs
 
+    @override
     async def _async_update_data(self) -> dict[UUID, Job]:
         """Fetch data from Supervisor."""
         job_data = await self._supervisor_client.jobs.info()
@@ -226,6 +227,7 @@ class SupervisorJobsCoordinator(DataUpdateCoordinator[dict[UUID, Job]]):
         return _unsubscribe
 
     @callback
+    @override
     def _async_refresh_finished(self) -> None:
         """Register to receive Supervisor events after the first successful refresh."""
         if self.last_update_success and self._dispatcher_disconnect is None:
@@ -233,6 +235,7 @@ class SupervisorJobsCoordinator(DataUpdateCoordinator[dict[UUID, Job]]):
                 self.hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_jobs
             )
 
+    @override
     async def _async_refresh(
         self,
         log_failures: bool = True,
@@ -248,6 +251,7 @@ class SupervisorJobsCoordinator(DataUpdateCoordinator[dict[UUID, Job]]):
         if self.last_update_success and self.data is not None:
             self._process_job_deltas(previous_jobs, self.data)
 
+    @override
     async def async_shutdown(self) -> None:
         """Shut down the coordinator."""
         await super().async_shutdown()
