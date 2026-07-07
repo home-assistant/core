@@ -1,5 +1,6 @@
 """Support for Apple TV media player."""
 
+from collections.abc import Mapping
 from datetime import datetime
 import logging
 from typing import Any, override
@@ -108,6 +109,7 @@ async def async_setup_entry(
     assert config_entry.unique_id is not None
     manager = config_entry.runtime_data
     async_add_entities([AppleTvMediaPlayer(name, config_entry.unique_id, manager)])
+    _LOGGER.debug("APPLE TV media player entry unique id: %s", config_entry.unique_id)
 
 
 class AppleTvMediaPlayer(
@@ -348,6 +350,28 @@ class AppleTvMediaPlayer(
         if self.state in {MediaPlayerState.PLAYING, MediaPlayerState.PAUSED}:
             return self._playing_last_updated
         return None
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle entity being added to Home Assistant."""
+        await super().async_added_to_hass()
+
+        self.async_on_remove(
+            self.manager.async_add_status_flag_listener(self.async_write_ha_state)
+        )
+
+    @property
+    @override
+    def extra_state_attributes(self) -> Mapping[str, Any]:
+        """Return extra state attributes."""
+        attrs = dict(super().extra_state_attributes or {})
+        if self.manager.status_flags is not None:
+            attrs["status_flags"] = self.manager.status_flags
+            _LOGGER.debug(
+                self.manager.status_flags,
+            )
+
+        return attrs
 
     @override
     async def async_play_media(

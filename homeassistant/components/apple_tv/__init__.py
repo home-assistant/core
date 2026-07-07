@@ -1,6 +1,7 @@
 """The Apple TV integration."""
 
 import asyncio
+from collections.abc import Callable
 import logging
 from random import randrange
 from typing import Any, cast, override
@@ -9,9 +10,12 @@ from pyatv import connect, exceptions, scan
 from pyatv.conf import AppleTV
 from pyatv.const import DeviceModel, Protocol
 from pyatv.convert import model_str
+from pyatv.helpers import get_unique_id
 from pyatv.interface import AppleTV as AppleTVInterface, DeviceListener
+from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant.components import zeroconf
+from homeassistant.components.zeroconf import DATA_DISCOVERY, info_from_service
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONNECTIONS,
@@ -87,6 +91,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: AppleTvConfigEntry) -> bool:
     """Set up a config entry for Apple TV."""
+    _LOGGER.debug("setting up apple tv config entry")
     manager = AppleTVManager(hass, entry)
 
     if manager.is_on:
@@ -116,11 +121,60 @@ async def async_setup_entry(hass: HomeAssistant, entry: AppleTvConfigEntry) -> b
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
     entry.async_on_unload(manager.disconnect)
+    entry.async_on_unload(
+        await _async_register_airplay_status_listener(hass, entry, manager)
+    )
+    _LOGGER.debug("Apple TV entry unique id: %s", entry.unique_id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await manager.init()
 
     return True
+
+
+async def _async_register_airplay_status_listener(
+    hass: HomeAssistant,
+    entry: AppleTvConfigEntry,
+    manager: AppleTVManager,
+) -> Callable[[], None]:
+    """Register listener for AirPlay TXT record updates."""
+
+    discovery = hass.data[DATA_DISCOVERY]
+
+    @callback
+    def _async_service_updated(service: AsyncServiceInfo) -> None:
+        _LOGGER.warning(
+            "Zeroconf update received: %s %s",
+            service.type,
+            service.name,
+        )
+        if service.type != "_airplay._tcp.local.":
+            return
+
+        info = info_from_service(service)
+        if info is None:
+            return
+
+        service_type = info.type[:-1]
+        name = info.name.replace(f".{service_type}.", "")
+
+        unique_id = get_unique_id(
+            service_type,
+            name,
+            info.properties,
+        )
+
+        if unique_id != entry.unique_id:
+            return
+
+        flags = info.properties.get("flags")
+
+        if flags == manager.status_flags:
+            return
+
+        manager.async_set_status_flags(flags)
+
+    return discovery.async_register_service_update_listener(_async_service_updated)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -146,11 +200,38 @@ class AppleTVManager(DeviceListener):
         self.config_entry = config_entry
         self.hass = hass
         self.is_on = not config_entry.options.get(CONF_START_OFF, False)
+        self.status_flags: str | None = None
+        self._status_flag_callbacks: list[Callable[[], None]] = []
 
     async def init(self) -> None:
         """Initialize power management."""
         if self.is_on:
             await self.connect()
+
+    @callback
+    def async_add_status_flag_listener(
+        self,
+        cllback: Callable[[], None],
+    ) -> Callable[[], None]:
+        """Add a listener for status flag updates."""
+        self._status_flag_callbacks.append(cllback)
+
+        def remove_listener() -> None:
+            self._status_flag_callbacks.remove(cllback)
+
+        return remove_listener
+
+    @callback
+    def async_set_status_flags(self, status_flags: str | None) -> None:
+        """Update status flags."""
+        _LOGGER.debug("status flags changed to %s", status_flags)
+        if self.status_flags == status_flags:
+            return
+
+        self.status_flags = status_flags
+
+        for cllback in self._status_flag_callbacks:
+            cllback()
 
     @override
     def connection_lost(self, exception: Exception) -> None:
