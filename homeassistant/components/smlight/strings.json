@@ -208,7 +208,7 @@
         "data_description": {
           "ble_scanner_mode": "Auto is recommended for most setups. It saves battery on your Bluetooth devices while still catching new devices and updates quickly."
         },
-        "description": "Configure SLZB Bluetooth settings. Changing these settings will reboot the device to apply the new configuration."
+        "description": "Configure SLZB Bluetooth settings. Switching between Disabled and another mode will reboot the device to apply the new configuration."
       },
       "no_settings": {
         "description": "This SMLIGHT device ({model}) does not support settings."

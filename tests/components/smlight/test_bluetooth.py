@@ -102,6 +102,7 @@ async def test_bluetooth_not_started_for_classic_device(
     "scanner_mode",
     [
         "auto",
+        "active",
         "passive",
     ],
 )
