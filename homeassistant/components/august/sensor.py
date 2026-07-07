@@ -17,10 +17,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_PICTURE,
     PERCENTAGE,
     STATE_UNAVAILABLE,
     EntityCategory,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -187,8 +187,8 @@ class AugustOperatorSensor(AugustEntity, RestoreSensor):
 
         self._attr_native_value = last_sensor_state.native_value
         last_attrs = last_state.attributes
-        if ATTR_ENTITY_PICTURE in last_attrs:
-            self._attr_entity_picture = last_attrs[ATTR_ENTITY_PICTURE]
+        if EntityStateAttribute.ENTITY_PICTURE in last_attrs:
+            self._attr_entity_picture = last_attrs[EntityStateAttribute.ENTITY_PICTURE]
         if ATTR_OPERATION_REMOTE in last_attrs:
             self._operated_remote = last_attrs[ATTR_OPERATION_REMOTE]
         if ATTR_OPERATION_KEYPAD in last_attrs:
