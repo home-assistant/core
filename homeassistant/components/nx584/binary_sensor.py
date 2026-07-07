@@ -17,7 +17,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -28,7 +27,6 @@ from . import NX584ConfigEntry, async_import_yaml_config
 from .const import (
     CONF_EXCLUDE_ZONES,
     CONF_ZONE_TYPES,
-    DOMAIN,
     EXCLUDE_ZONES_SCHEMA,
     ZONE_TYPES_SCHEMA,
 )
@@ -60,7 +58,6 @@ def _build_zone_sensors(
     client: nx584_client.Client,
     exclude: list[int],
     zone_types: dict[int, BinarySensorDeviceClass],
-    entry_id: str,
 ) -> dict[int, NX584ZoneSensor] | None:
     """Fetch the zones from the panel and build the zone sensor map."""
     try:
@@ -79,19 +76,10 @@ def _build_zone_sensors(
             zone,
             zone_types.get(zone["number"], BinarySensorDeviceClass.OPENING),
             client,
-            entry_id,
         )
         for zone in zones
         if zone["number"] not in exclude
     }
-
-
-def _async_register_services() -> None:
-    """Register the bypass/unbypass entity services for zone sensors."""
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(SERVICE_BYPASS, None, "zone_bypass")
-    platform.async_register_entity_service(SERVICE_UNBYPASS, None, "zone_unbypass")
 
 
 async def async_setup_platform(
@@ -102,6 +90,14 @@ async def async_setup_platform(
 ) -> None:
     """Set up the NX584 binary sensor platform from YAML, importing it as a config entry."""
     await async_import_yaml_config(hass, config)
+
+
+def _async_register_services() -> None:
+    """Register the bypass/unbypass entity services for zone sensors."""
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(SERVICE_BYPASS, None, "zone_bypass")
+    platform.async_register_entity_service(SERVICE_UNBYPASS, None, "zone_unbypass")
 
 
 async def async_setup_entry(
@@ -117,7 +113,7 @@ async def async_setup_entry(
     zone_types = ZONE_TYPES_SCHEMA(entry.options.get(CONF_ZONE_TYPES, {}))
 
     zone_sensors = await hass.async_add_executor_job(
-        _build_zone_sensors, data.client, exclude_zones, zone_types, entry.entry_id
+        _build_zone_sensors, data.client, exclude_zones, zone_types
     )
     if not zone_sensors:
         _LOGGER.warning("No zones found on NX584")
@@ -135,21 +131,17 @@ class NX584ZoneSensor(BinarySensorEntity):
     """Representation of a NX584 zone as a sensor."""
 
     _attr_should_poll = False
-    _attr_has_entity_name = True
 
     def __init__(
         self,
         zone: dict[str, Any],
         zone_type: BinarySensorDeviceClass,
         client: nx584_client.Client,
-        entry_id: str,
     ) -> None:
         """Initialize the nx594 binary sensor."""
         self._zone = zone
         self._attr_device_class = zone_type
         self._client = client
-        self._attr_unique_id = f"{entry_id}_zone_{zone['number']}"
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, entry_id)})
 
     @property
     @override

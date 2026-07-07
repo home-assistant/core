@@ -4,13 +4,14 @@ from dataclasses import dataclass
 
 from nx584 import client
 import requests
+from yarl import URL
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -35,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NX584ConfigEntry) -> boo
     """Set up nx584 from a config entry."""
     host: str = entry.data[CONF_HOST]
     port: int = entry.data[CONF_PORT]
-    url = f"http://{host}:{port}"
+    url = str(URL.build(scheme="http", host=host, port=port))
     alarm_client = client.Client(url)
 
     try:
@@ -44,14 +45,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NX584ConfigEntry) -> boo
         raise ConfigEntryNotReady(f"Unable to connect to {url}") from ex
 
     entry.runtime_data = NX584Data(client=alarm_client, url=url)
-
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.entry_id)},
-        name=entry.title,
-        manufacturer="NX584",
-    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
