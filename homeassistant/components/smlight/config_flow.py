@@ -27,6 +27,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from .bluetooth import get_ble_scanner_mode
 from .const import CONF_BLE_SCANNER_MODE, DOMAIN, BLEScannerMode
 from .coordinator import SmConfigEntry
 
@@ -330,12 +331,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             scanner_mode = user_input.get(CONF_BLE_SCANNER_MODE)
             if scanner_mode is not None:
-                current_mode = self.config_entry.options.get(
-                    CONF_BLE_SCANNER_MODE,
-                    BLEScannerMode.AUTO
-                    if info.ble.proxy_enabled
-                    else BLEScannerMode.DISABLED,
-                )
+                current_mode = get_ble_scanner_mode(self.config_entry, info)
                 if scanner_mode != current_mode:
                     remote_adapter_enabled = scanner_mode != BLEScannerMode.DISABLED
                     try:
@@ -347,12 +343,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                 return self.async_create_entry(title="", data=user_input)
 
         suggested_values = {
-            CONF_BLE_SCANNER_MODE: self.config_entry.options.get(
-                CONF_BLE_SCANNER_MODE,
-                BLEScannerMode.AUTO
-                if info.ble.proxy_enabled
-                else BLEScannerMode.DISABLED,
-            )
+            CONF_BLE_SCANNER_MODE: get_ble_scanner_mode(self.config_entry, info)
         }
 
         return self.async_show_form(

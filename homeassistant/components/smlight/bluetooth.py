@@ -81,10 +81,7 @@ async def async_setup_ble_scanner(
     """Set up the BLE scanner/proxy configuration."""
     assert info.ble is not None
 
-    scanner_mode = entry.options.get(
-        CONF_BLE_SCANNER_MODE,
-        BLEScannerMode.AUTO if info.ble.proxy_enabled else BLEScannerMode.DISABLED,
-    )
+    scanner_mode = get_ble_scanner_mode(entry, info)
 
     remote_adapter_enabled = scanner_mode != BLEScannerMode.DISABLED
 
@@ -110,3 +107,20 @@ async def async_setup_ble_scanner(
         )
 
     return None
+
+
+@callback
+def get_ble_scanner_mode(
+    entry: SmConfigEntry,
+    info: Info,
+) -> BLEScannerMode:
+    """Get the BLE scanner mode config or default."""
+    if info.ble is None:
+        return BLEScannerMode.DISABLED
+
+    return BLEScannerMode(
+        entry.options.get(
+            CONF_BLE_SCANNER_MODE,
+            BLEScannerMode.AUTO if info.ble.proxy_enabled else BLEScannerMode.DISABLED,
+        )
+    )
