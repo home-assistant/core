@@ -102,10 +102,10 @@ async def test_migrate_entry_v1_to_v2(
     hass: HomeAssistant,
     mock_config_entry_v1: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test migration from version 1 to version 2."""
     # Create old device with old-style identifiers before migration
-    device_registry = dr.async_get(hass)
     mock_config_entry_v1.add_to_hass(hass)
     device_registry.async_get_or_create(
         config_entry_id=mock_config_entry_v1.entry_id,
@@ -146,6 +146,8 @@ async def test_migrate_entry_v1_to_v2(
 async def test_migrate_entry_v1_to_v2_merge_same_api_key(
     hass: HomeAssistant,
     mock_nextdns_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migration merges v1 entries with the same API key."""
     entry1 = MockConfigEntry(
@@ -168,7 +170,6 @@ async def test_migrate_entry_v1_to_v2_merge_same_api_key(
     entry2.add_to_hass(hass)
 
     # Create old devices with old-style identifiers
-    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry1.entry_id,
         identifiers={(DOMAIN, "abc11")},
@@ -185,7 +186,6 @@ async def test_migrate_entry_v1_to_v2_merge_same_api_key(
     )
 
     # Create old entities for entry2 to verify they are migrated
-    entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -233,6 +233,8 @@ async def test_migrate_entry_v1_to_v2_merge_same_api_key(
 async def test_migrate_entry_v1_to_v2_disabled_entry(
     hass: HomeAssistant,
     mock_nextdns_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migration updates disabled_by when merging disabled and enabled entries."""
     entry1 = MockConfigEntry(
@@ -256,9 +258,6 @@ async def test_migrate_entry_v1_to_v2_disabled_entry(
     entry2.add_to_hass(hass)
 
     # Create device and entity for disabled entry2 with CONFIG_ENTRY disabled_by
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     device_registry.async_get_or_create(
         config_entry_id=entry1.entry_id,
         identifiers={(DOMAIN, "abc11")},
