@@ -76,7 +76,7 @@ def disable_block_async_io(disable_block_async_io):
 def mock_http_start_stop() -> Generator[None]:
     """Mock HTTP start and stop."""
     with (
-        patch("homeassistant.components.http.start_http_server_and_save_config"),
+        patch("homeassistant.components.http.HomeAssistantHTTP.start"),
         patch("homeassistant.components.http.HomeAssistantHTTP.stop"),
     ):
         yield
