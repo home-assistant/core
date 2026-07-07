@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode, Scope, Seat
 from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
@@ -220,7 +221,7 @@ async def async_setup_entry(
                     vehicle, description, entry.runtime_data.scopes
                 )
                 if vehicle.poll
-                or vehicle.firmware < "2024.26"
+                or not firmware_at_least(vehicle.firmware, "2024.26")
                 or description.streaming_listener is None
                 else TeslemetryStreamingSelectEntity(
                     vehicle, description, entry.runtime_data.scopes
