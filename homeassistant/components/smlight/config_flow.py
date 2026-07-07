@@ -336,7 +336,6 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
         coordinator = self.config_entry.runtime_data.data
         info = coordinator.data.info
-        errors = {}
 
         if info.ble is None:
             return await self.async_step_no_settings()
