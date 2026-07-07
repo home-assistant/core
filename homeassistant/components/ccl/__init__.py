@@ -2,7 +2,6 @@
 
 import contextlib
 import logging
-import time
 from typing import Any
 
 from aioccl import CCLDevice, CCLServer
@@ -44,10 +43,8 @@ def register_webhook(hass: HomeAssistant, webhook_id: str, device: CCLDevice) ->
 async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
     """Set up a config entry for a single CCL device."""
     webhook_id = entry.data[CONF_WEBHOOK_ID]
-    # Create the device and register a webhook after restart, or fetch the existing device if it was already created during the config flow
-    device = entry.data.get("device")
-    if device is None:
-        device = CCLDevice(webhook_id)
+    # Create the device and register a webhook after restart
+    device = CCLDevice(webhook_id)
 
     coordinator = entry.runtime_data = CCLCoordinator(hass, device, entry)
 
@@ -67,10 +64,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
     _LOGGER.debug("Webhook registered at hass: %s", webhook_id)
 
     @callback
-    def push_update_callback(data) -> None:
+    def push_update_callback(data: dict[str, Any]) -> None:
         """Handle data pushed from the device."""
         coordinator.async_set_updated_data(data)
-        coordinator.last_update_time = time.monotonic()
 
     device.set_update_callback(push_update_callback)
 

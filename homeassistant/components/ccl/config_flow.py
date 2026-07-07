@@ -29,6 +29,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
         self.data: dict[str, Any] = {}
         self.device: CCLDevice | None = None
         self.task_one: asyncio.Task | None = None
+        self.update_timeout: float = 300
         self.webhook_id: str = ""
 
     async def async_step_user(
@@ -46,6 +47,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass,
                     self.webhook_id,
                     allow_ip=True,
+                    prefer_external=False,  # Internal URL is more preferred for local push devices
                 )
             except NoURLAvailableError as err:
                 _LOGGER.error("Failed to fetch Home Assistant URL: %s", err)
@@ -57,7 +59,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
             self.data[CONF_PORT] = str(port)
             self.data[CONF_PATH] = webhook.async_generate_path(self.webhook_id)
 
-            self.data["device"] = self.device = CCLDevice(self.webhook_id)
+            self.device = CCLDevice(self.webhook_id)
 
             # Try to register the webhook
             try:
@@ -84,7 +86,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured()
 
                 # Avoid a background task that can run indefinitely.
-                await asyncio.wait_for(_wait_for_update(), timeout=300)
+                await asyncio.wait_for(_wait_for_update(), timeout=self.update_timeout)
 
             self.task_one = self.hass.async_create_task(check_task())
 

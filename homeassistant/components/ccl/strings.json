@@ -21,12 +21,6 @@
   },
   "entity": {
     "sensor": {
-      "aqi": {
-        "name": "Air quality index"
-      },
-      "battery": {
-        "name": "Battery"
-      },
       "ch_sensor_type": {
         "state": {
           "pool": "Pool",

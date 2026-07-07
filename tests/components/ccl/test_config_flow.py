@@ -5,6 +5,7 @@ import contextlib
 from unittest.mock import MagicMock, patch
 from urllib.parse import urlparse
 
+from aioccl import CCLSensorTypes
 from aioccl.exception import CCLDeviceRegistrationException
 from aiohttp import web
 import pytest
@@ -15,12 +16,14 @@ from homeassistant.components.ccl.const import DOMAIN
 from homeassistant.components.webhook import async_generate_url
 from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow, FlowResultType
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.setup import async_setup_component
 
 from .conftest import WEBHOOK_ID
 
+from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 
@@ -72,6 +75,69 @@ async def test_create_entry(
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_WEBHOOK_ID] == WEBHOOK_ID
         assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_create_entry_adds_sensors(
+    hass: HomeAssistant,
+    mock_ccl: MagicMock,
+) -> None:
+    """Test creating an entry also adds sensor entities from device data."""
+    hass.config.external_url = "http://example.com"
+    await async_setup_component(hass, "http", {})
+    await async_setup_component(hass, "webhook", {})
+
+    sensor = MagicMock()
+    sensor.sensor_type = CCLSensorTypes.TEMPERATURE
+    sensor.key = "t1tem"
+    sensor.name = "Temperature"
+    sensor.value = 20.5
+    sensor.compartment = None
+
+    mock_ccl.device_id = "d50659"
+    mock_ccl.name = "Test Station"
+    mock_ccl.fw_ver = "1.0.0"
+    mock_ccl.model = "HA100"
+    mock_ccl.last_update_time = 123
+    mock_ccl.get_sensors.side_effect = None
+    mock_ccl.get_sensors.return_value = {"t1tem": sensor}
+    mock_ccl.set_update_callback.side_effect = lambda callback: callback(
+        {"t1tem": sensor}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.webhook.async_generate_id",
+            return_value=WEBHOOK_ID,
+        ),
+        patch(
+            "homeassistant.components.ccl.config_flow.CCLDevice",
+            return_value=mock_ccl,
+        ),
+        patch(
+            "homeassistant.components.ccl.CCLDevice",
+            return_value=mock_ccl,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["flow_id"]
+
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    entity_registry = er.async_get(hass)
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, "d50659-t1tem")
+
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "20.5"
 
 
 async def test_no_url_available_error_webhook_generation(
@@ -157,51 +223,28 @@ async def test_timeout_error_task_one(
     mock_setup_entry: MagicMock,
     mock_ccl: MagicMock,
 ) -> None:
-    """Test handling of TimeoutError when task_one times out."""
+    """Test handling of a device update timeout during config flow."""
     hass.config.external_url = "http://example.com"
     await async_setup_component(hass, "http", {})
     await async_setup_component(hass, "webhook", {})
 
-    async def mock_wait_for_timeout(coro, timeout):
-        """Mock wait_for that raises TimeoutError."""
-        # Close the coroutine to avoid warning
-        with contextlib.suppress(AttributeError, GeneratorExit):
-            coro.close()
-        raise TimeoutError
+    config_flow = CCLConfigFlow()
+    config_flow.hass = hass
+    config_flow.update_timeout = 0
 
-    with (
-        patch(
-            "homeassistant.components.webhook.async_generate_id",
-            return_value=WEBHOOK_ID,
-        ),
-        patch(
-            "homeassistant.components.ccl.config_flow.asyncio.wait_for",
-            side_effect=mock_wait_for_timeout,
-        ),
-    ):
-        # Create the flow - the asyncio.wait_for will timeout immediately
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        flow_id = result["flow_id"]
+    result = await config_flow.async_step_user()
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "user"
 
-        # Wait for background tasks to process
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-        if result["type"] in (
-            FlowResultType.SHOW_PROGRESS,
-            FlowResultType.SHOW_PROGRESS_DONE,
-        ):
-            flows = hass.config_entries.flow.async_progress()
-            if any(f for f in flows if f["flow_id"] == flow_id):
-                result = await hass.config_entries.flow.async_configure(flow_id, {})
-                await hass.async_block_till_done()
-            else:
-                result = {"type": FlowResultType.ABORT, "reason": "connect_timeout"}
+    result = await config_flow.async_step_user()
+    assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
+    assert config_flow.data["abort_reason"] == "connect_timeout"
 
-        # The flow should abort with connect_timeout due to the timeout
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "connect_timeout"
+    result = await config_flow.async_step_finish()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "connect_timeout"
 
 
 async def test_cancelled_error_task_one(
@@ -267,20 +310,14 @@ async def test_abort_flow_device_none(
             return_value=None,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        flow_id = result["flow_id"]
+        config_flow = CCLConfigFlow()
+        config_flow.hass = hass
 
-        await hass.async_block_till_done()
+        result = await config_flow.async_step_user()
+        assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
+        assert result["step_id"] == "finish"
 
-        if result["type"] in (
-            FlowResultType.SHOW_PROGRESS,
-            FlowResultType.SHOW_PROGRESS_DONE,
-        ):
-            result = await hass.config_entries.flow.async_configure(flow_id, {})
-            await hass.async_block_till_done()
-
+        result = await config_flow.async_step_finish()
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "unknown"
 
@@ -302,20 +339,18 @@ async def test_abort_flow_device_id_none(
     ):
         mock_ccl.device_id = None
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+        config_flow = CCLConfigFlow()
+        config_flow.hass = hass
+
+        result = await config_flow.async_step_user()
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "user"
-        flow_id = result["flow_id"]
 
-        # Simulate webhook request that sets last_update_time but not device_id
         client = await hass_client_no_auth()
-        webhook_url = async_generate_url(hass, WEBHOOK_ID)
+        webhook_url = async_generate_url(hass, config_flow.webhook_id)
         body = {"hello": "world"}
 
         async def handler_side_effect(request, device):
-            # Set last_update_time but leave device_id as None
             device.last_update_time = 123
             return web.Response(status=200)
 
@@ -327,19 +362,12 @@ async def test_abort_flow_device_id_none(
 
         assert resp.status == 200
 
-        # Wait for the background task to complete after webhook is posted
         await hass.async_block_till_done()
 
-        # After device updates, advance the flow
-        if result["type"] is FlowResultType.SHOW_PROGRESS:
-            flows = hass.config_entries.flow.async_progress()
-            if any(f for f in flows if f["flow_id"] == flow_id):
-                result = await hass.config_entries.flow.async_configure(flow_id, {})
-                await hass.async_block_till_done()
-            else:
-                # Flow already finished and aborted in background
-                result = {"type": FlowResultType.ABORT, "reason": "unknown"}
+        result = await config_flow.async_step_user()
+        assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
 
+        result = await config_flow.async_step_finish()
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "unknown"
 
@@ -350,55 +378,56 @@ async def test_abort_flow_already_configured(
     mock_ccl: MagicMock,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
-    """Test handling of AbortFlow when device already configured."""
+    """Test aborting when a device is already registered with the same unique ID."""
     hass.config.external_url = "http://example.com"
     await async_setup_component(hass, "http", {})
     await async_setup_component(hass, "webhook", {})
 
-    with (
-        patch(
-            "homeassistant.components.webhook.async_generate_id",
-            return_value=WEBHOOK_ID,
-        ),
-        patch(
-            "homeassistant.components.ccl.config_flow.CCLConfigFlow._abort_if_unique_id_configured",
-            side_effect=AbortFlow("already_configured"),
-        ),
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Existing CCL",
+        data={
+            CONF_WEBHOOK_ID: WEBHOOK_ID,
+            CONF_HOST: "example.com",
+            CONF_PORT: "80",
+        },
+        unique_id=mock_ccl.device_id,
+    )
+    existing_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.webhook.async_generate_id",
+        return_value=WEBHOOK_ID,
     ):
-        # Should abort with already_configured when device is already set up
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "user"
+        flow_id = result["flow_id"]
 
-        if result["type"] is FlowResultType.SHOW_PROGRESS:
-            flow_id = result["flow_id"]
-            client = await hass_client_no_auth()
-            webhook_url = async_generate_url(hass, WEBHOOK_ID)
+        client = await hass_client_no_auth()
+        webhook_url = async_generate_url(hass, WEBHOOK_ID)
 
-            async def handler_side_effect(request, device):
-                device.last_update_time = 123
-                return web.Response(status=200)
+        async def handler_side_effect(request, device):
+            device.last_update_time = 123
+            return web.Response(status=200)
 
-            with patch(
-                "homeassistant.components.ccl.CCLServer.handler",
-                side_effect=handler_side_effect,
-            ):
-                resp = await client.post(urlparse(webhook_url).path, json={})
+        with patch(
+            "homeassistant.components.ccl.CCLServer.handler",
+            side_effect=handler_side_effect,
+        ):
+            resp = await client.post(urlparse(webhook_url).path, json={})
 
-            assert resp.status == 200
+        assert resp.status == 200
 
-            await hass.async_block_till_done()
-            result = await hass.config_entries.flow.async_configure(flow_id, {})
-            await hass.async_block_till_done()
-        elif result["type"] is FlowResultType.SHOW_PROGRESS_DONE:
-            # If the flow already progressed to the finish step, complete it.
-            flow_id = result["flow_id"]
-            result = await hass.config_entries.flow.async_configure(flow_id, {})
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
-        # Final result must be abort with the expected reason.
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+        result = await hass.config_entries.flow.async_configure(flow_id, {})
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_task_one_cancellation(
