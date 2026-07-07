@@ -1,4 +1,4 @@
-"""Services for Fritz integration."""
+"""Services for FRITZ!Box SmartHome integration."""
 
 import logging
 
@@ -20,7 +20,9 @@ SERVICE_SET_WINDOW_OPEN = "set_window_open"
 SERVICE_SET_WINDOW_OPEN_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_DURATION): vol.Range(min=1, max=24 * 60 * 60),
+        vol.Required(ATTR_DURATION): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=24 * 60 * 60)
+        ),
     }
 )
 SERVICE_SET_WINDOW_CLOSE = "set_window_close"
@@ -39,11 +41,11 @@ async def _service_handler(call: ServiceCall) -> None:
     """Call one of the Fritzbox services."""
 
     device_reg = dr.async_get(call.hass)
+    target_entry_ids = await async_extract_config_entry_ids(call)
     target_entries: list[FritzboxConfigEntry] = [
-        entry
-        for entry_id in await async_extract_config_entry_ids(call)
-        if (entry := call.hass.config_entries.async_get_entry(entry_id))
-        and entry.domain == DOMAIN
+        loaded_entry
+        for loaded_entry in call.hass.config_entries.async_loaded_entries(DOMAIN)
+        if loaded_entry.entry_id in target_entry_ids
     ]
 
     for target_entry in target_entries:
@@ -59,7 +61,7 @@ async def _service_handler(call: ServiceCall) -> None:
                         await call.hass.async_add_executor_job(
                             coordinator.fritz.set_window_open,
                             ain,
-                            call.data.get(ATTR_DURATION) or 0,
+                            call.data.get(ATTR_DURATION, 0),
                             True,
                         )
                         return
