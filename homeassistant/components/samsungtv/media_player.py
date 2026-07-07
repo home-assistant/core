@@ -1,22 +1,8 @@
 """Support for interface with an Samsung TV."""
 
 import asyncio
-from collections.abc import Sequence
 from typing import Any, override
 
-from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
-from async_upnp_client.client import UpnpDevice, UpnpService, UpnpStateVariable
-from async_upnp_client.client_factory import UpnpFactory
-from async_upnp_client.exceptions import (
-    UpnpActionResponseError,
-    UpnpCommunicationError,
-    UpnpConnectionError,
-    UpnpError,
-    UpnpResponseError,
-    UpnpXmlContentError,
-)
-from async_upnp_client.profiles.dlna import DmrDevice
-from async_upnp_client.utils import async_get_local_ip
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -29,13 +15,13 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.async_ import create_eager_task
 
 from .bridge import SamsungTVWSBridge
 from .const import CONF_SSDP_RENDERING_CONTROL_LOCATION, DOMAIN, LOGGER
 from .coordinator import SamsungTVConfigEntry, SamsungTVDataUpdateCoordinator
+from .dmr import SamsungTVDmrDevice
 from .entity import SamsungTVEntity
 
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -101,8 +87,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         if self._ssdp_rendering_control_location:
             self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_SET
 
-        self._dmr_device: DmrDevice | None = None
-        self._upnp_server: AiohttpNotifyServer | None = None
+        self._dmr: SamsungTVDmrDevice | None = None
 
     @property
     @override
@@ -144,7 +129,8 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal."""
         self.coordinator.async_extra_update = None
-        await self._async_shutdown_dmr()
+        if self._dmr:
+            await self._dmr.async_shutdown()
 
     @callback
     @override
@@ -160,8 +146,8 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
     async def _async_extra_update(self) -> None:
         """Update state of device."""
         if not self.coordinator.is_on:
-            if self._dmr_device and self._dmr_device.is_subscribed:
-                await self._dmr_device.async_unsubscribe_services()
+            if self._dmr and self._dmr.is_subscribed:
+                await self._dmr.async_unsubscribe()
             return
 
         startup_tasks: list[asyncio.Task[Any]] = []
@@ -169,10 +155,18 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         if not self._app_list_event.is_set():
             startup_tasks.append(create_eager_task(self._async_startup_app_list()))
 
-        if self._dmr_device and not self._dmr_device.is_subscribed:
-            startup_tasks.append(create_eager_task(self._async_resubscribe_dmr()))
-        if not self._dmr_device and self._ssdp_rendering_control_location:
-            startup_tasks.append(create_eager_task(self._async_startup_dmr()))
+        if not self._dmr and self._ssdp_rendering_control_location:
+            self._dmr = SamsungTVDmrDevice(
+                hass=self.hass,
+                ssdp_rendering_control_location=self._ssdp_rendering_control_location,
+                host=self._host,
+                on_event_callback=self._on_dmr_event_callback,
+            )
+        if self._dmr:
+            if self._dmr.device and not self._dmr.is_subscribed:
+                startup_tasks.append(create_eager_task(self._dmr.async_resubscribe()))
+            elif not self._dmr.device:
+                startup_tasks.append(create_eager_task(self._dmr.async_startup()))
 
         if startup_tasks:
             await asyncio.gather(*startup_tasks)
@@ -182,19 +176,19 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         # Upnp events can affect other attributes that we currently do not track
         # We want to avoid checking every attribute in 'async_write_ha_state' as we
         # currently only care about two attributes
-        if (dmr_device := self._dmr_device) is None:
+        if self._dmr is None:
             return False
 
         has_updates = False
 
         if (
-            volume_level := dmr_device.volume_level
+            volume_level := self._dmr.volume_level
         ) is not None and self._attr_volume_level != volume_level:
             self._attr_volume_level = volume_level
             has_updates = True
 
         if (
-            is_muted := dmr_device.is_volume_muted
+            is_muted := self._dmr.is_volume_muted
         ) is not None and self._attr_is_volume_muted != is_muted:
             self._attr_is_volume_muted = is_muted
             has_updates = True
@@ -215,75 +209,9 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
             self._app_list_event.set()
             LOGGER.debug("Failed to load app list from %s: %r", self._host, err)
 
-    async def _async_startup_dmr(self) -> None:
-        assert self._ssdp_rendering_control_location is not None
-        if self._dmr_device is None:
-            session = async_get_clientsession(self.hass)
-            upnp_requester = AiohttpSessionRequester(session)
-            # Set non_strict to avoid invalid data sent by Samsung TV:
-            # Got invalid value for <UpnpStateVariable(PlaybackStorageMedium, string)>:
-            # NETWORK,NONE
-            upnp_factory = UpnpFactory(upnp_requester, non_strict=True)
-            upnp_device: UpnpDevice | None = None
-            try:
-                upnp_device = await upnp_factory.async_create_device(
-                    self._ssdp_rendering_control_location
-                )
-            except (UpnpConnectionError, UpnpResponseError, UpnpXmlContentError) as err:
-                LOGGER.debug("Unable to create Upnp DMR device: %r", err, exc_info=True)
-                return
-            _, event_ip = await async_get_local_ip(
-                self._ssdp_rendering_control_location, self.hass.loop
-            )
-            source = (event_ip or "0.0.0.0", 0)
-            self._upnp_server = AiohttpNotifyServer(
-                requester=upnp_requester,
-                source=source,
-                callback_url=None,
-                loop=self.hass.loop,
-            )
-            await self._upnp_server.async_start_server()
-            self._dmr_device = DmrDevice(upnp_device, self._upnp_server.event_handler)
-
-            try:
-                self._dmr_device.on_event = self._on_upnp_event
-                await self._dmr_device.async_subscribe_services(auto_resubscribe=True)
-            except UpnpResponseError as err:
-                # Device rejected subscription request. This is OK, variables
-                # will be polled instead.
-                LOGGER.debug("Device rejected subscription: %r", err)
-            except UpnpError as err:
-                # Don't leave the device half-constructed
-                self._dmr_device.on_event = None
-                self._dmr_device = None
-                await self._upnp_server.async_stop_server()
-                self._upnp_server = None
-                LOGGER.debug("Error while subscribing during device connect: %r", err)
-                raise
-
-    async def _async_resubscribe_dmr(self) -> None:
-        assert self._dmr_device
-        try:
-            await self._dmr_device.async_subscribe_services(auto_resubscribe=True)
-        except UpnpCommunicationError as err:
-            LOGGER.debug("Device rejected re-subscription: %r", err, exc_info=True)
-
-    async def _async_shutdown_dmr(self) -> None:
-        """Handle removal."""
-        if (dmr_device := self._dmr_device) is not None:
-            self._dmr_device = None
-            dmr_device.on_event = None
-            await dmr_device.async_unsubscribe_services()
-
-        if (upnp_server := self._upnp_server) is not None:
-            self._upnp_server = None
-            await upnp_server.async_stop_server()
-
-    def _on_upnp_event(
-        self, service: UpnpService, state_variables: Sequence[UpnpStateVariable]
-    ) -> None:
-        """State variable(s) changed, let home-assistant know."""
-        # Ensure the entity has been added to hass to avoid race condition
+    @callback
+    def _on_dmr_event_callback(self) -> None:
+        """Handle UPnP state variable changes from DMR device."""
         if self._update_from_upnp() and self.entity_id:
             self.async_write_ha_state()
 
@@ -306,18 +234,10 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level on the media player."""
-        if (dmr_device := self._dmr_device) is None:
+        if self._dmr is None:
             LOGGER.warning("Upnp services are not available on %s", self._host)
             return
-        try:
-            await dmr_device.async_set_volume_level(volume)
-        except UpnpActionResponseError as err:
-            assert self._host
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="error_set_volume",
-                translation_placeholders={"error": repr(err), "host": self._host},
-            ) from err
+        await self._dmr.async_set_volume_level(volume)
 
     @override
     async def async_volume_up(self) -> None:
