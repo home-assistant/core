@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from functools import partial
 import socket
-from typing import Any, Self
+from typing import Any, Self, override
 from urllib.parse import urlparse
 
 import getmac
@@ -265,6 +265,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self._title = self._host
         return True
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -464,6 +465,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.hass.config_entries.flow.async_has_matching_flow(self):
             raise AbortFlow("already_in_progress")
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return getattr(other_flow, "_host", None) == self._host
@@ -475,6 +477,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         ):
             raise AbortFlow(RESULT_NOT_SUPPORTED)
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -520,6 +523,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -532,11 +536,18 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         LOGGER.debug("Samsung device found via ZEROCONF: %s", discovery_info)
+        if "Soundbar" in discovery_info.name:
+            LOGGER.debug(
+                "Ignoring Samsung Soundbar found via Zeroconf: %s", discovery_info
+            )
+            return self.async_abort(reason="not_supported")
+
         self._mac = format_mac(discovery_info.properties["deviceid"])
         self._host = discovery_info.host
         self._async_start_discovery_with_mac_address()

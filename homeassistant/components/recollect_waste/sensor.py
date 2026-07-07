@@ -1,5 +1,7 @@
 """Support for ReCollect Waste sensors."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -67,6 +69,7 @@ class ReCollectWasteSensor(ReCollectWasteEntity, SensorEntity):
         self.entity_description = description
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         relevant_events = (

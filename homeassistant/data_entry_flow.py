@@ -16,6 +16,7 @@ import voluptuous as vol
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
+from .helpers.deprecation import deprecated_function
 from .helpers.frame import ReportBehavior, report_usage
 from .loader import async_suggest_report_issue
 from .util import uuid as uuid_util
@@ -117,7 +118,6 @@ class AbortFlow(FlowError):
 class FlowContext(TypedDict, total=False):
     """Typed context dict."""
 
-    show_advanced_options: bool
     source: str
 
 
@@ -490,11 +490,11 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             )
 
         if flow.flow_id not in self._progress:
-            # The flow was removed during the step, raise UnknownFlow
-            # unless the result is an abort. Uses `!=` (not `is not`) because
-            # this runs before the legacy-string normalization below, and
-            # out-of-tree flow handlers may still return raw "abort".
-            if result["type"] != FlowResultType.ABORT:  # type: ignore[ha-enum-identity-compare,unused-ignore]
+            # The flow was removed during the step, raise UnknownFlow unless
+            # the result is an abort. Compares against the string value
+            # because this runs before the legacy-string normalization
+            # below, and out-of-tree flow handlers may still return raw "abort".
+            if result["type"] != FlowResultType.ABORT.value:
                 raise UnknownFlow
             return result
 
@@ -643,9 +643,17 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         return self.context.get("source", None)  # type: ignore[return-value]
 
     @property
+    @deprecated_function(
+        "a user friendly way to present additional options in the UI, for example a section",
+        breaks_in_ha_version="2027.6",
+    )
     def show_advanced_options(self) -> bool:
-        """If we should show advanced options."""
-        return self.context.get("show_advanced_options", False)  # type: ignore[return-value]
+        """If we should show advanced options.
+
+        During the deprecation period return True to not break existing flows that use
+        this property to determine whether to show additional options.
+        """
+        return True
 
     def add_suggested_values_to_schema(
         self, data_schema: vol.Schema, suggested_values: Mapping[str, Any] | None
@@ -658,15 +666,6 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         """
         schema = {}
         for key, val in data_schema.schema.items():
-            if isinstance(key, vol.Marker):
-                # Exclude advanced field
-                if (
-                    key.description
-                    and key.description.get("advanced")
-                    and not self.show_advanced_options
-                ):
-                    continue
-
             # Process the section schema options
             if (
                 suggested_values is not None

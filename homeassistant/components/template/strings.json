@@ -136,6 +136,36 @@
         },
         "title": "Template cover"
       },
+      "device_tracker": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "in_zones": "Zones",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "in_zones": "Defines a template that returns a list of zones the device tracker is currently in. The template should return a list of zone entity IDs. If the device tracker is not in any zone, the template should return an empty list.",
+          "latitude": "Defines a template to get the latitude of the device tracker. Valid values are numbers between `-90` and `90`.",
+          "longitude": "Defines a template to get the longitude of the device tracker. Valid values are numbers between `-180` and `180`.",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "data": {
+              "availability": "[%key:component::template::common::availability%]",
+              "location_accuracy": "Location accuracy"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]",
+              "location_accuracy": "Defines a template to get the accuracy of the device tracker's location in meters. Valid values are numbers greater than or equal to `0`."
+            },
+            "name": "[%key:component::template::common::advanced_options%]"
+          }
+        },
+        "title": "Template device tracker"
+      },
       "event": {
         "data": {
           "device_class": "[%key:component::template::common::device_class%]",
@@ -454,6 +484,7 @@
           "binary_sensor": "[%key:component::binary_sensor::title%]",
           "button": "[%key:component::button::title%]",
           "cover": "[%key:component::cover::title%]",
+          "device_tracker": "[%key:component::device_tracker::title%]",
           "event": "[%key:component::event::title%]",
           "fan": "[%key:component::fan::title%]",
           "image": "[%key:component::image::title%]",
@@ -558,10 +589,6 @@
     "config_format_triggers": {
       "description": "A trigger template configuration needs a trigger and at least one domain when defining an entity. This will be an configuration validation error in Home Assistant Core 2026.5.\n\n Please remove the orphaned trigger from the configuration.\n\n```\n{config}\n```",
       "title": "Incomplete template configuration"
-    },
-    "deprecated_battery_level": {
-      "description": "The template vacuum options `battery_level` and `battery_level_template` are being removed in 2026.8.\n\nPlease remove the `battery_level` or `battery_level_template` option from the YAML configuration for {entity_id} ({entity_name}).",
-      "title": "Deprecated battery level option in {entity_name}"
     }
   },
   "options": {
@@ -651,7 +678,6 @@
         },
         "title": "[%key:component::template::config::step::button::title%]"
       },
-
       "cover": {
         "data": {
           "close_cover": "[%key:component::template::config::step::cover::data::close_cover%]",
@@ -683,6 +709,34 @@
           }
         },
         "title": "[%key:component::template::config::step::cover::title%]"
+      },
+      "device_tracker": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "in_zones": "[%key:component::template::config::step::device_tracker::data::in_zones%]",
+          "latitude": "[%key:component::template::config::step::device_tracker::data::latitude%]",
+          "longitude": "[%key:component::template::config::step::device_tracker::data::longitude%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "in_zones": "[%key:component::template::config::step::device_tracker::data_description::in_zones%]",
+          "latitude": "[%key:component::template::config::step::device_tracker::data_description::latitude%]",
+          "longitude": "[%key:component::template::config::step::device_tracker::data_description::longitude%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "data": {
+              "availability": "[%key:component::template::common::availability%]",
+              "location_accuracy": "[%key:component::template::config::step::device_tracker::sections::advanced_options::data::location_accuracy%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]",
+              "location_accuracy": "[%key:component::template::config::step::device_tracker::sections::advanced_options::data_description::location_accuracy%]"
+            },
+            "name": "[%key:component::template::common::advanced_options%]"
+          }
+        },
+        "title": "[%key:component::template::config::step::device_tracker::title%]"
       },
       "event": {
         "data": {
@@ -1143,8 +1197,11 @@
         "conductivity": "[%key:component::sensor::entity_component::conductivity::name%]",
         "current": "[%key:component::sensor::entity_component::current::name%]",
         "data_rate": "[%key:component::sensor::entity_component::data_rate::name%]",
+        "data_size": "[%key:component::sensor::entity_component::data_size::name%]",
         "distance": "[%key:component::sensor::entity_component::distance::name%]",
+        "duration": "[%key:component::sensor::entity_component::duration::name%]",
         "energy": "[%key:component::sensor::entity_component::energy::name%]",
+        "energy_distance": "[%key:component::sensor::entity_component::energy_distance::name%]",
         "energy_storage": "[%key:component::sensor::entity_component::energy_storage::name%]",
         "frequency": "[%key:component::sensor::entity_component::frequency::name%]",
         "gas": "[%key:component::sensor::entity_component::gas::name%]",
@@ -1152,6 +1209,7 @@
         "illuminance": "[%key:component::sensor::entity_component::illuminance::name%]",
         "irradiance": "[%key:component::sensor::entity_component::irradiance::name%]",
         "moisture": "[%key:component::sensor::entity_component::moisture::name%]",
+        "monetary": "[%key:component::sensor::entity_component::monetary::name%]",
         "nitrogen_dioxide": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
         "nitrogen_monoxide": "[%key:component::sensor::entity_component::nitrogen_monoxide::name%]",
         "nitrous_oxide": "[%key:component::sensor::entity_component::nitrous_oxide::name%]",
@@ -1175,6 +1233,7 @@
         "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
         "temperature_delta": "[%key:component::sensor::entity_component::temperature_delta::name%]",
         "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
+        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]",
         "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
         "volume": "[%key:component::sensor::entity_component::volume::name%]",
         "volume_flow_rate": "[%key:component::sensor::entity_component::volume_flow_rate::name%]",
@@ -1199,8 +1258,12 @@
         "conductivity": "[%key:component::sensor::entity_component::conductivity::name%]",
         "current": "[%key:component::sensor::entity_component::current::name%]",
         "data_rate": "[%key:component::sensor::entity_component::data_rate::name%]",
+        "data_size": "[%key:component::sensor::entity_component::data_size::name%]",
+        "date": "[%key:component::sensor::entity_component::date::name%]",
         "distance": "[%key:component::sensor::entity_component::distance::name%]",
+        "duration": "[%key:component::sensor::entity_component::duration::name%]",
         "energy": "[%key:component::sensor::entity_component::energy::name%]",
+        "energy_distance": "[%key:component::sensor::entity_component::energy_distance::name%]",
         "energy_storage": "[%key:component::sensor::entity_component::energy_storage::name%]",
         "frequency": "[%key:component::sensor::entity_component::frequency::name%]",
         "gas": "[%key:component::sensor::entity_component::gas::name%]",
@@ -1208,6 +1271,7 @@
         "illuminance": "[%key:component::sensor::entity_component::illuminance::name%]",
         "irradiance": "[%key:component::sensor::entity_component::irradiance::name%]",
         "moisture": "[%key:component::sensor::entity_component::moisture::name%]",
+        "monetary": "[%key:component::sensor::entity_component::monetary::name%]",
         "nitrogen_dioxide": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
         "nitrogen_monoxide": "[%key:component::sensor::entity_component::nitrogen_monoxide::name%]",
         "nitrous_oxide": "[%key:component::sensor::entity_component::nitrous_oxide::name%]",
@@ -1230,6 +1294,8 @@
         "sulphur_dioxide": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]",
         "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
         "temperature_delta": "[%key:component::sensor::entity_component::temperature_delta::name%]",
+        "timestamp": "[%key:component::sensor::entity_component::timestamp::name%]",
+        "uptime": "[%key:component::sensor::entity_component::uptime::name%]",
         "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
         "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]",
         "voltage": "[%key:component::sensor::entity_component::voltage::name%]",

@@ -51,6 +51,7 @@ from .const import (
     UNIQUE_ID,
     VEHICLE_DATA,
     VEHICLE_DATA_ALT,
+    VEHICLE_DATA_ASLEEP,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -187,6 +188,23 @@ async def test_vehicle_stream(
         }
     )
     await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_status")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+async def test_vehicle_asleep_polling(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Polling an offline/asleep vehicle loads and reports disconnected."""
+
+    mock_vehicle_data.return_value = VEHICLE_DATA_ASLEEP
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+
+    assert entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get("binary_sensor.test_status")
     assert state is not None

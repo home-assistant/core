@@ -1,7 +1,7 @@
 """Config flow for Garages Amsterdam integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientResponseError
 from odp_amsterdam import ODPAmsterdam, VehicleType
@@ -21,6 +21,7 @@ class GaragesAmsterdamConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     _options: list[str] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

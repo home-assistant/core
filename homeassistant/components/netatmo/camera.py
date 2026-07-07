@@ -1,8 +1,7 @@
 """Support for the Netatmo cameras."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import aiohttp
 from pyatmo import ApiError as NetatmoApiError, modules as NaModules
@@ -10,6 +9,7 @@ from pyatmo.event import Event as NaEvent
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.const import ATTR_PERSONS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -20,12 +20,9 @@ from .const import (
     ATTR_CAMERA_LIGHT_MODE,
     ATTR_EVENT_TYPE,
     ATTR_PERSON,
-    ATTR_PERSONS,
     CAMERA_LIGHT_MODES,
     CAMERA_TRIGGERS,
     CONF_URL_SECURITY,
-    DATA_CAMERAS,
-    DATA_EVENTS,
     DOMAIN,
     EVENT_TYPE_CONNECTION,
     EVENT_TYPE_DISCONNECTION,
@@ -123,6 +120,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             ]
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
@@ -136,7 +134,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 )
             )
 
-        self.hass.data[DOMAIN][DATA_CAMERAS][self.device.entity_id] = self.device.name
+        self.data_handler.cameras[self.device.entity_id] = self.device.name
 
     @callback
     def handle_event(self, event: dict) -> None:
@@ -205,6 +203,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             self.async_write_ha_state()
             return
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -222,6 +221,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         return None
 
     @property
+    @override
     def supported_features(self) -> CameraEntityFeature:
         """Return supported features."""
         supported_features = CameraEntityFeature.ON_OFF
@@ -230,6 +230,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         return supported_features
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
         return {
@@ -243,14 +244,17 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             "light_state": self._light_state,
         }
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off camera."""
         await self.device.async_monitoring_off()
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn on camera."""
         await self.device.async_monitoring_on()
 
+    @override
     async def stream_source(self) -> str:
         """Return the stream source."""
         if self.device.is_local:
@@ -261,6 +265,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         return f"{self.device.vpn_url}/live/files/{self._quality}/index.m3u8"
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         self._attr_is_on = self.device.alim_status is not None
@@ -273,8 +278,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             self._attr_is_streaming = self.device.monitoring
             self._attr_motion_detection_enabled = self.device.monitoring
 
-        self.hass.data[DOMAIN][DATA_EVENTS][self.device.entity_id] = (
-            self.process_events(self.device.events)
+        self.data_handler.events[self.device.entity_id] = self.process_events(
+            self.device.events
         )
 
     def process_events(self, event_list: list[NaEvent]) -> dict:

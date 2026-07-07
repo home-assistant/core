@@ -1,5 +1,7 @@
 """Demo platform that offers a fake button entity."""
 
+from typing import override
+
 from homeassistant.components import persistent_notification
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
@@ -53,6 +55,7 @@ class DemoButton(ButtonEntity):
         )
         self._attr_name = entity_name
 
+    @override
     async def async_press(self) -> None:
         """Send out a persistent notification."""
         persistent_notification.async_create(

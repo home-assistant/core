@@ -2,8 +2,9 @@
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
-from reolink_aio.api import DUAL_LENS_MODELS
+from reolink_aio.api import DUAL_LENS_SINGLE_MOTION_MODELS
 
 from homeassistant.components.camera import (
     Camera,
@@ -28,6 +29,8 @@ class ReolinkCameraEntityDescription(
     """A class that describes camera entities for a camera channel."""
 
     stream: str
+    # a camera stream always comes from a single lens
+    lens_entity: bool = True
 
 
 CAMERA_ENTITIES = (
@@ -138,11 +141,12 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
         if "snapshots" not in entity_description.stream:
             self._attr_supported_features = CameraEntityFeature.STREAM
 
-        if self._host.api.model in DUAL_LENS_MODELS:
+        if self._host.api.model in DUAL_LENS_SINGLE_MOTION_MODELS:
             self._attr_translation_key = (
                 f"{entity_description.translation_key}_lens_{self._channel}"
             )
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         return await self._host.api.get_stream_source(
@@ -150,6 +154,7 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
         )
 
     @raise_translated_error
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:

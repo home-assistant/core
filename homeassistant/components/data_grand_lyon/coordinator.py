@@ -2,13 +2,16 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from aiohttp import ClientError, ClientResponseError
 from data_grand_lyon_ha import (
     DataGrandLyonClient,
+    TclParkAndRide,
     TclPassage,
     VelovStation,
     filter_tcl_passages_by_lines_stops,
+    find_tcl_park_and_ride_by_id,
     find_velov_stations_by_ids,
     sort_tcl_passages_by_time,
 )
@@ -20,10 +23,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     CONF_LINE,
+    CONF_PARK_ID,
     CONF_STATION_ID,
     CONF_STOP_ID,
     DOMAIN,
     LOGGER,
+    SUBENTRY_TYPE_PARK_AND_RIDE,
     SUBENTRY_TYPE_STOP,
     SUBENTRY_TYPE_VELOV_STATION,
 )
@@ -35,6 +40,7 @@ class DataGrandLyonData:
 
     tcl_coordinator: DataGrandLyonTclCoordinator
     velov_coordinator: DataGrandLyonVelovCoordinator
+    park_and_ride_coordinator: DataGrandLyonParkAndRideCoordinator
 
 
 type DataGrandLyonConfigEntry = ConfigEntry[DataGrandLyonData]
@@ -61,6 +67,7 @@ class DataGrandLyonTclCoordinator(DataUpdateCoordinator[dict[str, list[TclPassag
             update_interval=timedelta(minutes=5),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, list[TclPassage]]:
         """Fetch data for all monitored stops."""
         stop_subentries = list(
@@ -127,6 +134,7 @@ class DataGrandLyonVelovCoordinator(DataUpdateCoordinator[dict[str, VelovStation
             update_interval=timedelta(minutes=5),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, VelovStation]:
         """Fetch data for all monitored Vélo'v stations."""
         velov_subentries = list(
@@ -166,3 +174,66 @@ class DataGrandLyonVelovCoordinator(DataUpdateCoordinator[dict[str, VelovStation
                     subentry.subentry_id,
                 )
         return velov_stations
+
+
+class DataGrandLyonParkAndRideCoordinator(
+    DataUpdateCoordinator[dict[str, TclParkAndRide]]
+):
+    """Coordinator for TCL park-and-ride (P+R) facilities."""
+
+    config_entry: DataGrandLyonConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: DataGrandLyonConfigEntry,
+        client: DataGrandLyonClient,
+    ) -> None:
+        """Initialize the coordinator."""
+        self.client = client
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=entry,
+            name=f"{DOMAIN}_park_and_ride",
+            update_interval=timedelta(minutes=5),
+        )
+
+    @override
+    async def _async_update_data(self) -> dict[str, TclParkAndRide]:
+        """Fetch data for all monitored park-and-ride facilities."""
+        park_subentries = list(
+            self.config_entry.get_subentries_of_type(SUBENTRY_TYPE_PARK_AND_RIDE)
+        )
+        if not park_subentries:
+            return {}
+
+        try:
+            all_parks = await self.client.get_tcl_park_and_rides()
+        except ClientResponseError as err:
+            if err.status in (401, 403):
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="auth_failed",
+                ) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_park_and_ride",
+            ) from err
+        except (ClientError, TimeoutError) as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_park_and_ride",
+            ) from err
+
+        parks: dict[str, TclParkAndRide] = {}
+        for subentry in park_subentries:
+            park = find_tcl_park_and_ride_by_id(all_parks, subentry.data[CONF_PARK_ID])
+            if park is not None:
+                parks[subentry.subentry_id] = park
+            else:
+                LOGGER.warning(
+                    "Park-and-ride not found for subentry %s",
+                    subentry.subentry_id,
+                )
+        return parks

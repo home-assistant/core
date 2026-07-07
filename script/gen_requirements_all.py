@@ -17,10 +17,9 @@ from script.hassfest.model import Config, Integration
 # Requirements which can't be installed on all systems because they
 # rely on additional system packages. Requirements listed in
 # EXCLUDED_REQUIREMENTS_ALL will be commented-out in
-# requirements_all.txt and requirements_test_all.txt.
+# requirements_all.txt.
 EXCLUDED_REQUIREMENTS_ALL = {
     "atenpdu",  # depends on pysnmp which is not maintained at this time
-    "avion",
     "beewi-smartclim",  # depends on bluepy
     "bluepy",
     "evdev",
@@ -97,7 +96,7 @@ uuid==1000000000.0.0
 # even newer versions seem to introduce new issues, it's useful
 # for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.10.0
+anyio==4.13.0
 h11==0.16.0
 httpcore==1.0.9
 
@@ -207,7 +206,7 @@ num2words==0.5.14
 # pymodbus does not follow SemVer, and it keeps getting
 # downgraded or upgraded by custom components
 # This ensures all use the same version
-pymodbus==3.11.2
+pymodbus==3.13.1
 
 # Pin pytest-rerunfailures to prevent accidental breaks
 pytest-rerunfailures==16.0.1

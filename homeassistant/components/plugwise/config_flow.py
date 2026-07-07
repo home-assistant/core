@@ -1,7 +1,7 @@
 """Config flow for Plugwise integration."""
 
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 from plugwise import Smile
 from plugwise.exceptions import (
@@ -122,6 +122,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
     product: str = UNKNOWN_SMILE
     _username: str = DEFAULT_USERNAME
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -178,6 +179,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_user()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         # This is an Anna, and there is already an Adam flow in progress
@@ -190,6 +192,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return False
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

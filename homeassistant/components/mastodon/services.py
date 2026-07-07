@@ -38,6 +38,8 @@ from .const import (
     ATTR_AVATAR_MIME_TYPE,
     ATTR_BOT,
     ATTR_CONTENT_WARNING,
+    ATTR_DELETE_AVATAR,
+    ATTR_DELETE_HEADER,
     ATTR_DISCOVERABLE,
     ATTR_DISPLAY_NAME,
     ATTR_DURATION,
@@ -46,12 +48,14 @@ from .const import (
     ATTR_HEADER_MIME_TYPE,
     ATTR_HIDE_NOTIFICATIONS,
     ATTR_IDEMPOTENCY_KEY,
+    ATTR_IN_REPLY_TO,
     ATTR_LANGUAGE,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
     ATTR_MEDIA_WARNING,
     ATTR_NOTE,
     ATTR_QUOTE_APPROVAL_POLICY,
+    ATTR_QUOTED_STATUS,
     ATTR_STATUS,
     ATTR_VALUE,
     ATTR_VISIBILITY,
@@ -124,6 +128,8 @@ SERVICE_POST_SCHEMA = vol.Schema(
         vol.Optional(ATTR_MEDIA): str,
         vol.Optional(ATTR_MEDIA_DESCRIPTION): str,
         vol.Optional(ATTR_MEDIA_WARNING): bool,
+        vol.Optional(ATTR_IN_REPLY_TO): str,
+        vol.Optional(ATTR_QUOTED_STATUS): str,
     }
 )
 
@@ -133,8 +139,10 @@ SERVICE_UPDATE_PROFILE_SCHEMA = vol.Schema(
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Optional(ATTR_DISPLAY_NAME): str,
         vol.Optional(ATTR_NOTE): str,
-        vol.Optional(ATTR_AVATAR): MediaSelector({"accept": ["image/*"]}),
-        vol.Optional(ATTR_HEADER): MediaSelector({"accept": ["image/*"]}),
+        vol.Exclusive(ATTR_AVATAR, ATTR_AVATAR): MediaSelector({"accept": ["image/*"]}),
+        vol.Exclusive(ATTR_DELETE_AVATAR, ATTR_AVATAR): cv.boolean,
+        vol.Exclusive(ATTR_HEADER, ATTR_HEADER): MediaSelector({"accept": ["image/*"]}),
+        vol.Exclusive(ATTR_DELETE_HEADER, ATTR_HEADER): cv.boolean,
         vol.Optional(ATTR_LOCKED): bool,
         vol.Optional(ATTR_BOT): bool,
         vol.Optional(ATTR_DISCOVERABLE): bool,
@@ -309,6 +317,8 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
     media_path: str | None = call.data.get(ATTR_MEDIA)
     media_description: str | None = call.data.get(ATTR_MEDIA_DESCRIPTION)
     media_warning: str | None = call.data.get(ATTR_MEDIA_WARNING)
+    in_reply_to: str | None = call.data.get(ATTR_IN_REPLY_TO)
+    quoted_status: str | None = call.data.get(ATTR_QUOTED_STATUS)
 
     if idempotency_key and len(idempotency_key) < 4:
         raise ServiceValidationError(
@@ -330,6 +340,8 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
             media_path=media_path,
             media_description=media_description,
             sensitive=media_warning,
+            in_reply_to_id=in_reply_to,
+            quoted_status_id=quoted_status,
         )
     )
 
@@ -404,9 +416,21 @@ async def _async_update_profile(call: ServiceCall) -> ServiceResponse | None:
             for field in fields
             if field[ATTR_NAME].strip()
         ]
+    delete_avatar = params.pop("delete_avatar", False)
+    delete_header = params.pop("delete_header", False)
     try:
-        response: Account = await call.hass.async_add_executor_job(
-            lambda: client.account_update_credentials(**params)
+
+        def _update_profile() -> Any:
+            if delete_avatar:
+                client.account_delete_avatar()
+            if delete_header:
+                client.account_delete_header()
+            if call.return_response or params:
+                return client.account_update_credentials(**params)
+            return None
+
+        response: Account | None = await call.hass.async_add_executor_job(
+            _update_profile
         )
     except MastodonUnauthorizedError as error:
         entry.async_start_reauth(call.hass)

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -46,11 +46,13 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Jellyfin."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the Jellyfin config flow."""
         self.client_device_id: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -58,6 +60,8 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            user_input[CONF_URL] = user_input[CONF_URL].rstrip("/")
+
             if self.client_device_id is None:
                 self.client_device_id = _generate_client_device_id()
 
@@ -135,6 +139,7 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: JellyfinConfigEntry,
     ) -> OptionsFlowHandler:
