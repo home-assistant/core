@@ -1,5 +1,6 @@
 """Test the adapter."""
 
+import base64
 from unittest.mock import MagicMock
 
 from matter_server.common.models import EventType
@@ -79,6 +80,60 @@ async def test_device_registry_mac_address(
         assert entry.connections == set()
     else:
         assert entry.connections == {(dr.CONNECTION_NETWORK_MAC, expected_mac)}
+
+
+async def test_device_registry_multiple_mac_addresses(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test all operational WiFi/Ethernet interfaces are added as connections."""
+    wifi_mac = bytes([0x02, 0x00, 0x00, 0x00, 0x00, 0x01])
+    ethernet_mac = bytes([0x02, 0x00, 0x00, 0x00, 0x00, 0x02])
+    override_attributes = {
+        "0/51/0": [
+            {
+                "0": "wlan0",
+                "1": True,
+                "2": None,
+                "3": None,
+                "4": base64.b64encode(wifi_mac).decode(),
+                "5": [],
+                "6": [],
+                "7": 1,  # InterfaceTypeEnum.kWiFi
+            },
+            {
+                "0": "eth0",
+                "1": True,
+                "2": None,
+                "3": None,
+                "4": base64.b64encode(ethernet_mac).decode(),
+                "5": [],
+                "6": [],
+                "7": 2,  # InterfaceTypeEnum.kEthernet
+            },
+        ]
+    }
+    node = create_node_from_fixture("mock_onoff_light", override_attributes)
+    matter_client.get_nodes.return_value = [node]
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "http://mock-matter-server-url"}
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+    assert entry.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "02:00:00:00:00:01"),
+        (dr.CONNECTION_NETWORK_MAC, "02:00:00:00:00:02"),
+    }
 
 
 @pytest.mark.usefixtures("matter_node")

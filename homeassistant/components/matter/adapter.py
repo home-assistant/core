@@ -28,14 +28,15 @@ def get_clean_name(name: str | None) -> str | None:
     return name.strip() or None
 
 
-def _get_mac_address(node: MatterNode) -> str | None:
-    """Return the MAC address of the node's operational WiFi/Ethernet interface, if any."""
+def _get_mac_addresses(node: MatterNode) -> set[str]:
+    """Return the MAC addresses of the node's operational WiFi/Ethernet interfaces."""
     interfaces = node.get_attribute_value(
         0,
         clusters.GeneralDiagnostics,
         clusters.GeneralDiagnostics.Attributes.NetworkInterfaces,
     )
     interface_type = clusters.GeneralDiagnostics.Enums.InterfaceTypeEnum
+    mac_addresses: set[str] = set()
     for interface in interfaces or []:
         if not interface.isOperational:
             continue
@@ -48,8 +49,8 @@ def _get_mac_address(node: MatterNode) -> str | None:
             or interface.hardwareAddress == b"\x00" * 6
         ):
             continue
-        return dr.format_mac(interface.hardwareAddress.hex())
-    return None
+        mac_addresses.add(dr.format_mac(interface.hardwareAddress.hex()))
+    return mac_addresses
 
 
 class MatterAdapter:
@@ -237,10 +238,11 @@ class MatterAdapter:
             model_id = str(product_id) if (product_id := basic_info.productID) else None
 
         connections: set[tuple[str, str]] = set()
-        if not endpoint.is_bridged_device and (
-            mac_address := _get_mac_address(endpoint.node)
-        ):
-            connections.add((dr.CONNECTION_NETWORK_MAC, mac_address))
+        if not endpoint.is_bridged_device:
+            connections = {
+                (dr.CONNECTION_NETWORK_MAC, mac_address)
+                for mac_address in _get_mac_addresses(endpoint.node)
+            }
 
         dr.async_get(self.hass).async_get_or_create(
             name=name,
