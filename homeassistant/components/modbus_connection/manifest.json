@@ -1,6 +1,7 @@
 {
   "domain": "modbus_connection",
   "name": "Modbus Connection",
+  "after_dependencies": ["usb"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/modbus_connection",
