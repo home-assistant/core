@@ -111,9 +111,13 @@ async def test_setup_missing_activity_scope(
 
     assert hass.states.get("sensor.google_health_steps") is None
     assert hass.states.get("sensor.google_health_distance") is None
+    assert hass.states.get("sensor.google_health_active_calories") is None
+    assert hass.states.get("sensor.google_health_total_calories") is None
+    assert hass.states.get("sensor.google_health_floors") is None
 
     assert hass.states.get("sensor.google_health_weight") is not None
     assert hass.states.get("sensor.google_health_resting_heart_rate") is not None
+    assert hass.states.get("sensor.google_health_body_fat") is not None
 
 
 @pytest.mark.usefixtures("mock_google_health_client")
@@ -137,9 +141,13 @@ async def test_setup_missing_measurements_scope(
 
     assert hass.states.get("sensor.google_health_weight") is None
     assert hass.states.get("sensor.google_health_resting_heart_rate") is None
+    assert hass.states.get("sensor.google_health_body_fat") is None
 
     assert hass.states.get("sensor.google_health_steps") is not None
     assert hass.states.get("sensor.google_health_distance") is not None
+    assert hass.states.get("sensor.google_health_active_calories") is not None
+    assert hass.states.get("sensor.google_health_total_calories") is not None
+    assert hass.states.get("sensor.google_health_floors") is not None
 
 
 async def test_setup_oauth_implementation_unavailable(
