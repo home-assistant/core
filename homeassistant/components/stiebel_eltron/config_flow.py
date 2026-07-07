@@ -65,10 +65,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow."""
-        config_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        assert config_entry is not None
+        config_entry = self._get_reconfigure_entry()
 
         errors: dict[str, str] = {}
         if user_input is not None:
