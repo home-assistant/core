@@ -29,20 +29,24 @@ def get_clean_name(name: str | None) -> str | None:
 
 
 def _get_mac_address(node: MatterNode) -> str | None:
-    """Return the MAC address of the node's operational network interface, if any."""
+    """Return the MAC address of the node's operational WiFi/Ethernet interface, if any."""
     interfaces = node.get_attribute_value(
         0,
         clusters.GeneralDiagnostics,
         clusters.GeneralDiagnostics.Attributes.NetworkInterfaces,
     )
+    interface_type = clusters.GeneralDiagnostics.Enums.InterfaceTypeEnum
     for interface in interfaces or []:
         if not interface.isOperational:
             continue
-        # Only 6-byte (WiFi/Ethernet) addresses are MAC addresses; Thread
-        # interfaces report an 8-byte EUI-64 with no matching connection type.
-        if len(interface.hardwareAddress) != 6:
+        # Thread (and other non-WiFi/Ethernet) interfaces don't have a MAC
+        # address (e.g. Thread reports an 8-byte EUI-64 instead).
+        if interface.type not in (interface_type.kWiFi, interface_type.kEthernet):
             continue
-        if interface.hardwareAddress == b"\x00" * 6:
+        if (
+            len(interface.hardwareAddress) != 6
+            or interface.hardwareAddress == b"\x00" * 6
+        ):
             continue
         return dr.format_mac(interface.hardwareAddress.hex())
     return None

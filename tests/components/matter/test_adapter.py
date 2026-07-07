@@ -53,19 +53,32 @@ async def test_device_registry_single_node_device(
 
 
 @pytest.mark.usefixtures("matter_node")
-@pytest.mark.parametrize("node_fixture", ["color_temperature_light"])
+@pytest.mark.parametrize(
+    ("node_fixture", "unique_id", "expected_mac"),
+    [
+        # operational Ethernet interface with a valid hardware address
+        ("mock_cooktop", "000000000000002B", "02:00:00:00:00:01"),
+        # operational Thread interface: reports an 8-byte EUI-64, not a MAC
+        ("eve_contact_sensor", "0000000000000009", None),
+    ],
+)
 async def test_device_registry_mac_address(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    unique_id: str,
+    expected_mac: str | None,
 ) -> None:
-    """Test the device's MAC address is added as a connection."""
+    """Test the device's MAC address is only added for WiFi/Ethernet interfaces."""
     entry = device_registry.async_get_device(
         identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-0000000000000005-MatterNodeDevice")
+            (DOMAIN, f"deviceid_00000000000004D2-{unique_id}-MatterNodeDevice")
         }
     )
     assert entry is not None
-    assert entry.connections == {(dr.CONNECTION_NETWORK_MAC, "00:17:88:2c:8c:b8")}
+    if expected_mac is None:
+        assert entry.connections == set()
+    else:
+        assert entry.connections == {(dr.CONNECTION_NETWORK_MAC, expected_mac)}
 
 
 @pytest.mark.usefixtures("matter_node")
