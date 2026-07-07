@@ -284,6 +284,7 @@ FLOWS = {
         "google_cloud",
         "google_drive",
         "google_generative_ai_conversation",
+        "google_health",
         "google_mail",
         "google_photos",
         "google_sheets",
