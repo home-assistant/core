@@ -1,0 +1,338 @@
+// Sandbox control-channel wire protocol.
+//
+// Single source of truth for the protobuf messages exchanged between the HA
+// Core integration (`homeassistant/components/sandbox`) and the sandbox
+// runtime (`hass_client`). The generated `_pb2.py` + `_pb2.pyi` are checked
+// into BOTH mirrors (the two sides never cross-import); regenerate with
+// `sandbox/proto/generate.sh` after editing this file.
+//
+// Field conventions:
+//   * Genuinely dynamic payloads (service_data, target, state attributes,
+//     capabilities, flow `data`/`errors`/`context`, the wrapped Store
+//     envelope) cross as `google.protobuf.Struct`; the serialized
+//     voluptuous schema (a list of field dicts) crosses as
+//     `google.protobuf.ListValue`. Everything else is an explicit field.
+//   * Context security: only `context_id` ever crosses from the sandbox.
+//     `parent_id` / `user_id` are NEVER on the wire — main resolves the id
+//     to its own authoritative Context at dispatch time.
+
+syntax = "proto3";
+
+package sandbox;
+
+import "google/protobuf/struct.proto";
+
+// --- Envelope -------------------------------------------------------------
+
+// One wire message. `type` keeps the existing string-keyed dispatch and is
+// set on responses too, so a stateless codec can look up the result class
+// from `type` on both encode and decode.
+message Frame {
+  uint32 id = 1;            // 0 = push (no reply); >0 = call / response
+  string type = 2;          // e.g. "sandbox/register_entity"
+  oneof body {
+    bytes request = 3;      // serialized request message (call or push)
+    Response response = 4;  // response to a call we received
+  }
+}
+
+message Response {
+  bool ok = 1;
+  bytes result = 2;         // serialized result message (set when ok)
+  Error error = 3;          // set when ok = false
+}
+
+// Carries fidelity #7's structured voluptuous data natively so the peer can
+// rebuild the original vol.Invalid / vol.MultipleInvalid with its path.
+message Error {
+  string message = 1;
+  string type = 2;                    // exception class name
+  repeated InvalidError invalid = 3;  // voluptuous error path(s)
+  bool multiple = 4;                  // true = MultipleInvalid, false = Invalid
+}
+
+message InvalidError {
+  string message = 1;
+  repeated string path = 2;
+}
+
+// --- Shared sub-messages --------------------------------------------------
+
+// A two-element pair. Used for DeviceInfo identifiers / connections (a set
+// of (domain, id) pairs on HA's side) and via_device (one pair).
+message DevicePair {
+  string key = 1;
+  string value = 2;
+}
+
+// Mirror of HA's DeviceInfo TypedDict. Set/tuple-shaped fields become
+// repeated DevicePair; entry_type is the enum's string value. Only the keys
+// the entity bridge actually forwards are modelled; unset scalar strings
+// (default "") are treated as absent on the main side.
+message DeviceInfo {
+  repeated DevicePair identifiers = 1;
+  repeated DevicePair connections = 2;
+  optional DevicePair via_device = 3;
+  string entry_type = 4;
+  string name = 5;
+  string manufacturer = 6;
+  string model = 7;
+  string model_id = 8;
+  string sw_version = 9;
+  string hw_version = 10;
+  string serial_number = 11;
+  string suggested_area = 12;
+  string configuration_url = 13;
+  string default_name = 14;
+  string default_manufacturer = 15;
+  string default_model = 16;
+  string translation_key = 17;
+}
+
+// --- entry_setup / entry_unload (main -> sandbox) -------------------------
+
+// Where the sandbox should source the integration's code from. Makes the
+// sandbox stateless: built-ins ride the bundled `homeassistant` package
+// (no-op), custom (HACS) integrations carry a git source the sandbox fetches
+// at startup. Main pins the source to an exact commit `ref` (sha) before it
+// crosses the wire — never a moving tag — see `sources.py`.
+message IntegrationSource {
+  string kind = 1;    // "builtin" | "git"
+  // git-only fields (unset for builtin):
+  string url = 2;     // repository url, e.g. https://github.com/owner/repo
+  string ref = 3;     // exact commit sha (main pins tag -> sha)
+  string tag = 4;     // human-readable version, for logs only
+  string domain = 5;  // the custom integration's domain
+  string subdir = 6;  // path within the repo, e.g. custom_components/<domain>
+}
+
+message EntrySetup {
+  string entry_id = 1;
+  string domain = 2;
+  string title = 3;
+  google.protobuf.Struct data = 4;
+  google.protobuf.Struct options = 5;
+  string source = 6;
+  optional string unique_id = 7;
+  int32 version = 8;
+  int32 minor_version = 9;
+  IntegrationSource integration_source = 10;
+}
+
+message EntrySetupResult {
+  bool ok = 1;
+  optional string reason = 2;
+}
+
+message EntryUnload {
+  string entry_id = 1;
+}
+
+message EntryUnloadResult {
+  bool ok = 1;
+}
+
+// --- call_service (main -> sandbox) ---------------------------------------
+
+message CallService {
+  string domain = 1;
+  string service = 2;
+  google.protobuf.Struct target = 3;        // dynamic
+  google.protobuf.Struct service_data = 4;  // dynamic
+  optional string context_id = 5;           // wire-safe: only the id
+  bool return_response = 6;
+}
+
+// Typed envelope so every call-service response goes through the same shape;
+// the dynamic payload sits inside `data`.
+message ServiceResponse {
+  google.protobuf.Struct data = 1;
+}
+
+message CallServiceResult {
+  optional ServiceResponse response = 1;    // unset when no response returned
+}
+
+// --- shutdown / ping (main -> sandbox) ------------------------------------
+
+message Shutdown {}
+
+message ShutdownResult {
+  bool ok = 1;
+  int32 unloaded = 2;
+  optional google.protobuf.Struct restore_state = 3;  // wrapped Store envelope
+}
+
+message Ping {}
+
+message PingResult {
+  string pong = 1;
+}
+
+// --- ready handshake (sandbox -> main, push) ------------------------------
+
+message Ready {}
+
+// --- config flow (main -> sandbox) ----------------------------------------
+
+message FlowInit {
+  string handler = 1;
+  google.protobuf.Struct context = 2;  // dynamic
+  google.protobuf.Struct data = 3;     // dynamic (initial flow data)
+}
+
+message FlowStep {
+  string flow_id = 1;
+  google.protobuf.Struct user_input = 2;  // dynamic
+}
+
+message FlowAbort {
+  string flow_id = 1;
+}
+
+message FlowAbortResult {}
+
+// Marshalled FlowResult. Scalar fields are explicit; the dynamic dicts
+// (data / errors / context / description_placeholders) are Struct; the
+// serialized voluptuous schema is a ListValue of field dicts.
+message FlowResult {
+  string type = 1;
+  optional string flow_id = 2;
+  optional string handler = 3;
+  optional string step_id = 4;
+  optional string reason = 5;
+  optional string title = 6;
+  optional string description = 7;
+  optional bool last_step = 8;
+  optional string preview = 9;
+  optional int32 version = 10;
+  optional int32 minor_version = 11;
+  google.protobuf.Struct data = 12;
+  google.protobuf.Struct options = 13;
+  google.protobuf.Struct errors = 14;
+  google.protobuf.Struct description_placeholders = 15;
+  google.protobuf.Struct context = 16;
+  google.protobuf.ListValue data_schema = 17;
+  // True when a data_schema existed on the sandbox flow but could not be
+  // serialized — main then renders a schema-less form rather than abort.
+  bool has_data_schema = 18;
+}
+
+// --- register_entity (sandbox -> main) ------------------------------------
+
+// Identity: mirrors HA's homeassistant.helpers.entity.EntityDescription
+// dataclass + the entity's DeviceInfo.
+message EntityInfo {
+  message Description {
+    optional string name = 1;
+    optional string icon = 2;
+    optional string entity_category = 3;
+    optional string device_class = 4;
+    int32 supported_features = 5;
+    optional string translation_key = 6;
+  }
+  optional Description description = 1;
+  optional DeviceInfo device_info = 2;
+}
+
+// Runtime starting state — what HA needs to surface the entity for the
+// first time.
+message InitialState {
+  optional string state = 1;
+  google.protobuf.Struct capabilities = 2;  // dynamic
+  google.protobuf.Struct attributes = 3;    // dynamic
+}
+
+// Outer wire message for register_entity. Sub-messages group by HA's own
+// organization: EntityInfo = identity; InitialState = runtime start.
+message EntityDescription {
+  string entry_id = 1;
+  string domain = 2;
+  string sandbox_entity_id = 3;
+  optional string unique_id = 4;
+  bool has_entity_name = 5;
+  EntityInfo info = 6;
+  InitialState initial = 7;
+}
+
+message RegisterEntityResult {
+  string entity_id = 1;
+}
+
+message UnregisterEntity {
+  string sandbox_entity_id = 1;
+}
+
+message UnregisterEntityResult {
+  bool ok = 1;
+}
+
+// --- state_changed (sandbox -> main, push) --------------------------------
+
+// Flattened — the old nested `new_state` wrapper is gone. Context never
+// crosses with parent_id / user_id; the id alone is wire-safe.
+message StateChanged {
+  string sandbox_entity_id = 1;
+  optional string state = 2;
+  google.protobuf.Struct attributes = 3;  // dynamic
+  optional string context_id = 4;
+}
+
+// --- register_service / unregister_service (sandbox -> main) --------------
+
+message RegisterService {
+  string domain = 1;
+  string service = 2;
+  string supports_response = 3;          // "none" / "optional" / "only"
+  google.protobuf.ListValue schema = 4;  // serialized voluptuous, empty = none
+}
+
+message RegisterServiceResult {
+  bool ok = 1;
+  bool installed = 2;
+}
+
+message UnregisterService {
+  string domain = 1;
+  string service = 2;
+}
+
+message UnregisterServiceResult {
+  bool ok = 1;
+  bool removed = 2;
+}
+
+// --- fire_event (sandbox -> main, push) -----------------------------------
+
+message FireEvent {
+  string event_type = 1;
+  google.protobuf.Struct event_data = 2;  // dynamic
+  optional string context_id = 3;
+}
+
+// --- store_load / store_save / store_remove (sandbox -> main) -------------
+
+message StoreLoad {
+  string key = 1;
+}
+
+message StoreLoadResult {
+  optional google.protobuf.Struct data = 1;  // wrapped envelope, unset = miss
+}
+
+message StoreSave {
+  string key = 1;
+  google.protobuf.Struct data = 2;  // wrapped envelope
+}
+
+message StoreSaveResult {
+  bool ok = 1;
+}
+
+message StoreRemove {
+  string key = 1;
+}
+
+message StoreRemoveResult {
+  bool ok = 1;
+}
