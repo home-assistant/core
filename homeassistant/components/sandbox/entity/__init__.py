@@ -13,6 +13,7 @@ domains use the same mechanical pattern.
 
 import contextlib
 from enum import IntFlag
+import importlib
 from typing import TYPE_CHECKING, Any, cast, override
 
 from homeassistant.const import EntityCategory
@@ -210,95 +211,50 @@ class SandboxProxyEntity(Entity):
         )
 
 
-# Lazy import to avoid a circular dependency at module import time
-# (bridge imports build_proxy → entity imports proxies → proxies import
-# the domain platform; the domain platforms can import sandbox
-# indirectly via helpers).
 def build_proxy(
     bridge: SandboxBridge, description: SandboxEntityDescription
 ) -> SandboxProxyEntity:
-    """Return the domain-specific proxy class for ``description.domain``."""
-    cls = _DOMAIN_PROXIES.get(description.domain, SandboxProxyEntity)
-    return cls(bridge, description)
+    """Return a domain-specific proxy for ``description.domain``.
 
-
-def _build_registry() -> dict[str, type[SandboxProxyEntity]]:
-    """Lazy-build the domain → proxy-class map.
-
-    Importing every domain proxy eagerly at module import time would force
-    every domain platform module (``homeassistant.components.light``, …)
-    to load on integration boot. Hand-rolled to avoid the import storm.
+    Falls back to the generic :class:`SandboxProxyEntity` for a domain
+    with no dedicated module.
     """
-    from . import (  # noqa: PLC0415
-        alarm_control_panel,
-        binary_sensor,
-        button,
-        calendar,
-        climate,
-        cover,
-        date,
-        datetime,
-        device_tracker,
-        event,
-        fan,
-        humidifier,
-        lawn_mower,
-        light,
-        lock,
-        media_player,
-        notify,
-        number,
-        remote,
-        scene,
-        select,
-        sensor,
-        siren,
-        switch,
-        text,
-        time,
-        update,
-        vacuum,
-        valve,
-        water_heater,
-        weather,
-    )
-
-    return {
-        "alarm_control_panel": alarm_control_panel.SandboxAlarmControlPanelEntity,
-        "binary_sensor": binary_sensor.SandboxBinarySensorEntity,
-        "button": button.SandboxButtonEntity,
-        "calendar": calendar.SandboxCalendarEntity,
-        "climate": climate.SandboxClimateEntity,
-        "cover": cover.SandboxCoverEntity,
-        "date": date.SandboxDateEntity,
-        "datetime": datetime.SandboxDateTimeEntity,
-        "device_tracker": device_tracker.SandboxDeviceTrackerEntity,
-        "event": event.SandboxEventEntity,
-        "fan": fan.SandboxFanEntity,
-        "humidifier": humidifier.SandboxHumidifierEntity,
-        "lawn_mower": lawn_mower.SandboxLawnMowerEntity,
-        "light": light.SandboxLightEntity,
-        "lock": lock.SandboxLockEntity,
-        "media_player": media_player.SandboxMediaPlayerEntity,
-        "notify": notify.SandboxNotifyEntity,
-        "number": number.SandboxNumberEntity,
-        "remote": remote.SandboxRemoteEntity,
-        "scene": scene.SandboxSceneEntity,
-        "select": select.SandboxSelectEntity,
-        "sensor": sensor.SandboxSensorEntity,
-        "siren": siren.SandboxSirenEntity,
-        "switch": switch.SandboxSwitchEntity,
-        "text": text.SandboxTextEntity,
-        "time": time.SandboxTimeEntity,
-        "update": update.SandboxUpdateEntity,
-        "vacuum": vacuum.SandboxVacuumEntity,
-        "valve": valve.SandboxValveEntity,
-        "water_heater": water_heater.SandboxWaterHeaterEntity,
-        "weather": weather.SandboxWeatherEntity,
-    }
+    return proxy_class_for(description.domain)(bridge, description)
 
 
-_DOMAIN_PROXIES: dict[str, type[SandboxProxyEntity]] = _build_registry()
+def proxy_class_for(domain: str) -> type[SandboxProxyEntity]:
+    """Resolve (and memoize) the proxy class for one domain.
+
+    Imports only the requested domain's proxy module — and through it that
+    one domain's component package — on first use. Importing all 31 proxy
+    modules eagerly measured ~384 ms / +67 MB on a cold main instance, paid
+    inside the first ``register_entity`` RPC; per-domain laziness bounds
+    that to the domains a sandbox actually registers. The import itself
+    may block briefly, so the bridge warms this from the import executor
+    before touching it on the event loop.
+    """
+    if (cls := _DOMAIN_PROXIES.get(domain)) is not None:
+        return cls
+    try:
+        module = importlib.import_module(f".{domain}", __package__)
+    except ImportError:
+        cls = SandboxProxyEntity
+    else:
+        # Each proxy module defines exactly one SandboxProxyEntity subclass.
+        cls = next(
+            (
+                obj
+                for obj in vars(module).values()
+                if isinstance(obj, type)
+                and issubclass(obj, SandboxProxyEntity)
+                and obj.__module__ == module.__name__
+            ),
+            SandboxProxyEntity,
+        )
+    return _DOMAIN_PROXIES.setdefault(domain, cls)
+
+
+_DOMAIN_PROXIES: dict[str, type[SandboxProxyEntity]] = {}
 
 
 __all__ = [

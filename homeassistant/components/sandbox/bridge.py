@@ -497,7 +497,7 @@ class SandboxBridge:
         if existing is not None:
             existing.sandbox_update_description(description)
             return pb.RegisterEntityResult(entity_id=existing.entity_id or "")
-        proxy = self._build_proxy(description)
+        proxy = await self._async_build_proxy(description)
         platform = self._ensure_platform(entry, description.domain)
         await platform.async_add_entities([proxy])
         self._entities[description.sandbox_entity_id] = proxy
@@ -779,9 +779,17 @@ class SandboxBridge:
         self._platforms[key] = platform
         return platform
 
-    def _build_proxy(self, description: SandboxEntityDescription) -> Any:
-        from .entity import build_proxy  # noqa: PLC0415 — break import cycle
+    async def _async_build_proxy(self, description: SandboxEntityDescription) -> Any:
+        from .entity import (  # noqa: PLC0415 — break import cycle
+            build_proxy,
+            proxy_class_for,
+        )
 
+        # First use of a domain imports its proxy module (and that domain's
+        # component package) — do it off the event loop.
+        await self.hass.async_add_import_executor_job(
+            proxy_class_for, description.domain
+        )
         return build_proxy(self, description)
 
     @callback
