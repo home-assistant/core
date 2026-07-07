@@ -29,7 +29,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.data_entry_flow import BaseServiceInfo, FlowResultType, UnknownFlow
 from homeassistant.helpers import (
     area_registry as ar,
@@ -152,12 +152,20 @@ class FlowRunner:
         channel.register("sandbox/flow_abort", self._handle_flow_abort)
 
     async def async_stop(self) -> None:
-        """Tear down in-progress flows."""
+        """Tear down in-progress flows and stop the private hass.
+
+        ``async_stop`` shuts down the executor ``HomeAssistant.__init__``
+        created and cancels pending timers — without it, every in-process
+        (test-lane) sandbox leaks a thread pool and delay-save timers onto
+        the shared loop. In production the process exits anyway.
+        """
         flow_manager = self.hass.config_entries.flow
         for progress in list(flow_manager.async_progress(include_uninitialized=True)):
             with contextlib.suppress(UnknownFlow):
                 flow_manager.async_abort(progress["flow_id"])
         await self.hass.async_block_till_done()
+        if self.hass.state is not CoreState.stopped:
+            await self.hass.async_stop(force=True)
 
     async def _handle_flow_init(self, msg: pb.FlowInit) -> pb.FlowResult:
         context = struct_to_dict(msg.context)

@@ -420,3 +420,43 @@ async def test_phase13_proxy_smoke(
         assert calls[0].domain == domain
         assert calls[0].service == expected_service
         assert struct_to_dict(calls[0].target) == {"entity_id": [sandbox_entity_id]}
+
+
+async def test_upsert_clears_dropped_device_class(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """A re-sent registration without device_class clears the mirrored attr.
+
+    Clearing is symmetric with setting: a field dropped from an upsert must
+    not stick from the previous registration.
+    """
+    bridge, main_channel, sandbox_channel = await _wire(hass)
+
+    def _payload(device_class: str | None) -> pb.EntityDescription:
+        return make_entity_description(
+            entry_id=entry.entry_id,
+            domain="cover",
+            sandbox_entity_id="cover.synthetic",
+            unique_id="sandbox-cover",
+            device_class=device_class,
+            supported_features=1,
+            initial_state="open",
+        )
+
+    try:
+        first = await sandbox_channel.call(
+            "sandbox/register_entity", _payload("garage")
+        )
+        proxy = bridge._entities["cover.synthetic"]
+        assert proxy._attr_device_class == "garage"
+
+        second = await sandbox_channel.call("sandbox/register_entity", _payload(None))
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+    assert first.entity_id == second.entity_id
+    assert proxy._attr_device_class is None
+    state = hass.states.get(second.entity_id)
+    assert state is not None
+    assert "device_class" not in state.attributes

@@ -105,9 +105,22 @@ class InProcessSandbox:
     group: str
     runtime: SandboxRuntime
     runtime_task: asyncio.Task[int]
+    channel: Any = None
 
     async def stop(self) -> None:
-        """Ask the runtime to exit, wait for the task to finish."""
+        """Gracefully shut the runtime down, then wait for the task.
+
+        Issues the same ``sandbox/shutdown`` call production uses so
+        entries unload and pending delay-saves flush — skipping it leaks
+        the private hass's timers onto the shared test loop.
+        """
+        if self.channel is not None and not self.channel.closed:
+            from hass_client.protocol import MSG_SHUTDOWN  # noqa: PLC0415
+
+            with contextlib.suppress(Exception):
+                await asyncio.wait_for(
+                    self.channel.call(MSG_SHUTDOWN, None), timeout=5.0
+                )
         with contextlib.suppress(RuntimeError):
             self.runtime.request_shutdown()
         try:
@@ -233,7 +246,9 @@ async def async_setup_inprocess_sandbox(
     data.bridges[group] = async_create_bridge(hass, group=group, channel=mgr_channel)
     mgr_channel.start()
 
-    return InProcessSandbox(group=group, runtime=runtime, runtime_task=runtime_task)
+    return InProcessSandbox(
+        group=group, runtime=runtime, runtime_task=runtime_task, channel=mgr_channel
+    )
 
 
 def _one_shot_channel_factory(channel: Any):

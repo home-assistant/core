@@ -6,10 +6,12 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.sandbox.channel import (
+    MAX_FRAME_SIZE,
     Channel,
     ChannelClosedError,
     ChannelRemoteError,
     Frame,
+    FrameTooLargeError,
 )
 
 from ._helpers import JsonCodec, make_channel_pair
@@ -264,6 +266,37 @@ async def test_concurrency_cap_queues_excess_handlers() -> None:
     finally:
         await channel_a.close()
         await channel_b.close()
+
+
+async def test_oversize_outbound_frame_fails_only_that_call(channels: tuple) -> None:
+    """An over-cap frame fails its own call; the channel stays usable.
+
+    Outbound: encoding past MAX_FRAME_SIZE raises FrameTooLargeError to the
+    caller instead of shipping a frame the peer would abort the channel on.
+    Reply-side: a handler whose reply is oversize gets converted into an
+    error response so the caller fails cleanly rather than hanging.
+    """
+    channel_a, channel_b = channels
+
+    async def echo(payload: dict) -> dict:
+        return {"echoed": payload["value"]}
+
+    async def big_reply(_payload: object) -> dict:
+        return {"blob": "y" * (MAX_FRAME_SIZE + 1)}
+
+    channel_b.register("test/echo", echo)
+    channel_b.register("test/big", big_reply)
+
+    with pytest.raises(FrameTooLargeError):
+        await channel_a.call("test/echo", {"value": "x" * (MAX_FRAME_SIZE + 1)})
+
+    with pytest.raises(ChannelRemoteError) as exc:
+        await asyncio.wait_for(channel_a.call("test/big", None), timeout=5.0)
+    assert exc.value.error_type == "FrameTooLargeError"
+
+    # Both failures stayed local to their calls — the channel still works.
+    result = await channel_a.call("test/echo", {"value": 42})
+    assert result == {"echoed": 42}
 
 
 class _ObservableTransport:

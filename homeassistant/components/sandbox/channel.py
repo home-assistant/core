@@ -442,6 +442,13 @@ class Channel:
 
     async def _write(self, frame: Frame) -> None:
         data = self._codec.encode(frame)
+        if len(data) > MAX_FRAME_SIZE:
+            # Enforced on write as well as read: shipping an oversize frame
+            # would make the *peer* abort the whole channel — one bad payload
+            # must fail only its own call, not restart the sandbox.
+            raise FrameTooLargeError(
+                f"outbound frame of {len(data)} bytes exceeds cap {MAX_FRAME_SIZE}"
+            )
         async with self._write_lock:
             await self._transport.write_frame(data)
 
@@ -599,8 +606,20 @@ class Channel:
                 return
             if self._closed:
                 return
-            with contextlib.suppress(Exception):
+            try:
                 await self._write(Frame.ok_response(call_id, result, msg_type))
+            except FrameTooLargeError as err:
+                # The reply is too big to ship; answer with an error frame so
+                # the caller fails cleanly instead of hanging or killing the
+                # channel.
+                with contextlib.suppress(Exception):
+                    await self._write(
+                        Frame.error_response(
+                            call_id, str(err), "FrameTooLargeError", msg_type=msg_type
+                        )
+                    )
+            except Exception:  # noqa: BLE001
+                return
 
 
 __all__ = [
