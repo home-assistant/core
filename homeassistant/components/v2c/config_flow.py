@@ -59,3 +59,40 @@ class V2CConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            evse = Trydan(
+                host,
+                client=get_async_client(self.hass, verify_ssl=False),
+            )
+            try:
+                data = await evse.get_data()
+            except TrydanError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                if data.ID:
+                    await self.async_set_unique_id(data.ID)
+                    self._abort_if_unique_id_mismatch(reason="another_device")
+
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, reconfigure_entry.data
+            ),
+            errors=errors,
+        )
