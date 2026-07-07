@@ -76,7 +76,9 @@ async def test_setup_entry_invalid_auth(
 
 @pytest.mark.usefixtures("mock_device_tracker_conf")
 async def test_yaml_import_invalid_auth(
-    hass: HomeAssistant, mock_luci_client: MagicMock
+    hass: HomeAssistant,
+    mock_luci_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test importing YAML config creates an issue on invalid auth."""
     mock_luci_client.is_logged_in.return_value = False
@@ -84,7 +86,6 @@ async def test_yaml_import_invalid_auth(
     assert await async_setup_component(hass, DEVICE_TRACKER_DOMAIN, YAML_CONFIG)
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(DOMAIN, "yaml_import_invalid_auth")
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.ERROR
@@ -93,7 +94,9 @@ async def test_yaml_import_invalid_auth(
 
 @pytest.mark.usefixtures("mock_device_tracker_conf")
 async def test_yaml_import_cannot_connect(
-    hass: HomeAssistant, mock_luci_client: MagicMock
+    hass: HomeAssistant,
+    mock_luci_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test importing YAML config creates an issue on connection failure."""
     mock_luci_client.is_logged_in.side_effect = RequestsConnectionError
@@ -101,7 +104,6 @@ async def test_yaml_import_cannot_connect(
     assert await async_setup_component(hass, DEVICE_TRACKER_DOMAIN, YAML_CONFIG)
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(DOMAIN, "yaml_import_cannot_connect")
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.ERROR
