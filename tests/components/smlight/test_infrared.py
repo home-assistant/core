@@ -48,7 +48,7 @@ async def test_infrared_setup_ultima(
     """Test infrared entities are created for Ultima devices."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("infrared.mock_title_ir_emitter")
+    state = hass.states.get("infrared.mock_title_infrared_emitter")
     assert state is not None
 
     state = hass.states.get("infrared.mock_title_infrared_receiver")
@@ -63,7 +63,7 @@ async def test_infrared_not_created_non_ultima(
     """Test infrared entities are not created for non-Ultima devices."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("infrared.mock_title_ir_emitter")
+    state = hass.states.get("infrared.mock_title_infrared_emitter")
     assert state is None
 
     state = hass.states.get("infrared.mock_title_infrared_receiver")
@@ -78,7 +78,7 @@ async def test_infrared_send_command(
     """Test sending IR command."""
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "infrared.mock_title_ir_emitter"
+    entity_id = "infrared.mock_title_infrared_emitter"
     state = hass.states.get(entity_id)
     assert state is not None
 
@@ -101,7 +101,7 @@ async def test_infrared_send_command_error(
     """Test connection error handling."""
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "infrared.mock_title_ir_emitter"
+    entity_id = "infrared.mock_title_infrared_emitter"
     state = hass.states.get(entity_id)
     assert state is not None
 
@@ -124,7 +124,7 @@ async def test_infrared_send_empty_command_error(
     """Test ValueError from pysmlight is surfaced as HomeAssistantError."""
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "infrared.mock_title_ir_emitter"
+    entity_id = "infrared.mock_title_infrared_emitter"
     state = hass.states.get(entity_id)
     assert state is not None
 
@@ -148,7 +148,7 @@ async def test_infrared_state_updated_after_send(
     """Test that entity state is updated with a timestamp after a successful send."""
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "infrared.mock_title_ir_emitter"
+    entity_id = "infrared.mock_title_infrared_emitter"
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNKNOWN
