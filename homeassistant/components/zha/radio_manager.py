@@ -184,8 +184,7 @@ class ZhaRadioManager:
         """Connect to the radio with the current config and then clean up.
 
         `device_resolver` is forwarded to zigpy so devices loaded from the
-        database are quirk-resolved; without it they are bare, un-quirked
-        devices (quirk resolution now lives in the ZHA gateway, not zigpy).
+        database are quirk-resolved to get quirk-defined device triggers.
         """
         assert self.radio_type is not None
 

@@ -160,9 +160,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     zha_gateway = await Gateway.async_from_config(zha_lib_data)
 
     # Load and cache device trigger information early. Quirks were registered by
-    # `Gateway.async_from_config` above, so pass the resolver to surface
-    # quirk-defined triggers (e.g. remote button presses); without it the cache
-    # would only hold the built-in triggers of bare, un-quirked devices.
+    # `Gateway.async_from_config` above, so pass the resolver to quirk devices
+    # and surface quirk-defined triggers (e.g. remote button presses).
     device_registry = dr.async_get(hass)
     radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
 
