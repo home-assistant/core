@@ -99,6 +99,8 @@ class Flexit(ClimateEntity):
         res = await self._async_read_int16_from_register(CALL_TYPE_REGISTER_HOLDING, 17)
         if self.fan_modes and res is not None and 0 <= res < len(self.fan_modes):
             self._attr_fan_mode = self.fan_modes[res]
+        else:
+            self._attr_fan_mode = None
         self._filter_hours = await self._async_read_uint16_from_register(
             CALL_TYPE_REGISTER_INPUT, 8
         )
@@ -139,7 +141,14 @@ class Flexit(ClimateEntity):
             CALL_TYPE_REGISTER_INPUT, 48
         )
 
-        if self._heating:
+        if None in (
+            self._heating,
+            self._cooling,
+            self._heat_recovery,
+            actual_air_speed,
+        ):
+            self._attr_hvac_action = None
+        elif self._heating:
             self._attr_hvac_action = HVACAction.HEATING
         elif self._cooling:
             self._attr_hvac_action = HVACAction.COOLING
@@ -191,12 +200,12 @@ class Flexit(ClimateEntity):
         self, register_type: str, register: int
     ) -> int | None:
         """Read register using the Modbus hub slave."""
-        result = await self._hub.async_pb_call(self._slave, register, 1, register_type)
-        if result is None:
-            _LOGGER.error("Error reading value from Flexit modbus adapter")
+        if (
+            value := await self._async_read_uint16_from_register(
+                register_type, register
+            )
+        ) is None:
             return None
-
-        value = result.registers[0]
         if value > 32767:  # Convert to signed 16-bit if negative number
             value -= 65536
         return value

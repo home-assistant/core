@@ -20,8 +20,9 @@ from homeassistant.components.flexit.climate import (
     CALL_TYPE_REGISTER_INPUT,
     CALL_TYPE_WRITE_REGISTER,
 )
+from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.modbus import DATA_MODBUS_HUBS, ModbusHub
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -83,6 +84,7 @@ async def _setup_flexit(
     )
     hass.data.setdefault(DATA_MODBUS_HUBS, {})[HUB_NAME] = hub
 
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(
         hass,
         CLIMATE_DOMAIN,
@@ -126,6 +128,23 @@ async def test_setup_ignores_negative_fan_mode_index(hass: HomeAssistant) -> Non
     registers = DEFAULT_REGISTERS.copy()
     registers[(CALL_TYPE_REGISTER_HOLDING, 17)] = 65535  # -1 after int16 conversion
     await _setup_flexit(hass, registers)
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_FAN_MODE] is None
+
+
+async def test_failed_fan_mode_read_clears_stale_value(hass: HomeAssistant) -> None:
+    """Test a failed fan mode read clears the previous fan mode."""
+    registers = DEFAULT_REGISTERS.copy()
+    await _setup_flexit(hass, registers)
+
+    registers[(CALL_TYPE_REGISTER_HOLDING, 17)] = None
+    await hass.services.async_call(
+        "homeassistant",
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).attributes[ATTR_FAN_MODE] is None
 
@@ -207,6 +226,15 @@ async def test_hvac_action(
     await _setup_flexit(hass, registers)
 
     assert hass.states.get(ENTITY_ID).attributes[ATTR_HVAC_ACTION] is expected_action
+
+
+async def test_hvac_action_unknown_on_failed_read(hass: HomeAssistant) -> None:
+    """Test hvac_action is unknown when any action register read fails."""
+    registers: dict[tuple[str, int], int | None] = DEFAULT_REGISTERS.copy()
+    registers[(CALL_TYPE_REGISTER_INPUT, 15)] = None
+    await _setup_flexit(hass, registers)
+
+    assert hass.states.get(ENTITY_ID).attributes.get(ATTR_HVAC_ACTION) is None
 
 
 async def test_extra_state_attributes(hass: HomeAssistant) -> None:
