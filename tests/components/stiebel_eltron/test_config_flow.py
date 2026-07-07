@@ -170,6 +170,34 @@ async def test_reconfigure_flow_errors(
     assert result["reason"] == "reconfigure_successful"
 
 
+async def test_reconfigure_flow_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure aborts if another entry already uses the given host/port."""
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Stiebel Eltron",
+        data={CONF_HOST: "2.2.2.2", CONF_PORT: 502},
+        entry_id="stiebel_eltron_002",
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    other_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "2.2.2.2", CONF_PORT: 502},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
 async def test_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:

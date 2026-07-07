@@ -91,9 +91,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_HOST, default=config_entry.data.get(CONF_HOST)
-                    ): str,
+vol.Required(CONF_HOST, default=config_entry.data[CONF_HOST]): str,
                     vol.Required(
                         CONF_PORT,
                         default=config_entry.data.get(CONF_PORT, DEFAULT_PORT),
