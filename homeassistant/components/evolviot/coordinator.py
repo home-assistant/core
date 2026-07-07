@@ -264,7 +264,7 @@ class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         value: Any,
     ) -> None:
         """Apply a local status value to a Home Assistant state payload."""
-        domain = str(entity.get("domain") or "")
+        domain = evolviot_entity_domain(entity)
         attributes = dict(state.get("attributes") or {})
         state["raw_value"] = value
 
@@ -317,7 +317,7 @@ def evolviot_entity_domain(entity: dict[str, Any]) -> str:
         return "color"
 
     if capabilities.get("supports_brightness") or "brightness" in key:
-        return "light"
+        return "number"
 
     return str(entity.get("domain") or "")
 

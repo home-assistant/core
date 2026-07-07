@@ -56,6 +56,20 @@ async def test_select_options_and_current_option(hass: HomeAssistant) -> None:
     assert entity.options == ["rainbow", "pulse", "wave"]
 
 
+async def test_select_uses_first_option_when_state_unknown(
+    hass: HomeAssistant,
+) -> None:
+    """Test select falls back to the first option while state is unknown."""
+    coordinator = _coordinator(hass)
+    coordinator.data["states"]["select.evolviot_pattern"]["state"] = "unknown"
+    entity = EvolvIOTSelect(
+        coordinator,
+        coordinator.entities["select.evolviot_pattern"],
+    )
+
+    assert entity.current_option == "rainbow"
+
+
 async def test_select_option_sends_value(hass: HomeAssistant) -> None:
     """Test selecting an option sends a value payload."""
     coordinator = _coordinator(hass)

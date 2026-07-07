@@ -44,7 +44,9 @@ class EvolvIOTSelect(EvolvIOTEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Return the current selected option."""
         value = self.backend_state.get("state", self.backend_state.get("raw_value"))
-        return None if value is None else str(value)
+        if value in (None, "", "unknown", "unavailable"):
+            return self.options[0] if self.options else None
+        return str(value)
 
     @property
     def options(self) -> list[str]:
@@ -61,6 +63,12 @@ class EvolvIOTSelect(EvolvIOTEntity, SelectEntity):
         value_list = attributes.get("value_list") or control.get("value_list")
         if isinstance(value_list, list):
             return [str(value) for value in value_list]
+        if isinstance(value_list, str):
+            return [
+                value.strip()
+                for value in value_list.split(",")
+                if value.strip()
+            ]
 
         return []
 

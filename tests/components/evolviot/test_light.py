@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 from homeassistant.components.evolviot.api import EvolvIOTApi
 from homeassistant.components.evolviot.coordinator import EvolvIOTDataUpdateCoordinator
-from homeassistant.components.evolviot.light import EvolvIOTColorLight, EvolvIOTLight
+from homeassistant.components.evolviot.light import EvolvIOTColorLight
 from homeassistant.components.light import ATTR_RGB_COLOR, ColorMode
 from homeassistant.core import HomeAssistant
 
@@ -98,35 +98,3 @@ async def test_stale_switch_color_entity_is_classified_as_color(
     ]
     assert coordinator.entities_for_domain("switch") == []
 
-
-async def test_brightness_name_fallback_is_classified_as_brightness_light(
-    hass: HomeAssistant,
-) -> None:
-    """Test brightness metadata without capabilities is classified as light."""
-    coordinator = EvolvIOTDataUpdateCoordinator(
-        hass,
-        AsyncMock(spec=EvolvIOTApi),
-        "test-entry",
-    )
-    coordinator.async_set_updated_data(
-        {
-            "entities": {
-                "switch.evolviot_brightness": {
-                    "entity_id": "switch.evolviot_brightness",
-                    "unique_id": "LDC123/brightness",
-                    "domain": "switch",
-                    "name": "LDC brightness",
-                },
-            },
-        }
-    )
-    entity = EvolvIOTLight(
-        coordinator,
-        coordinator.entities["switch.evolviot_brightness"],
-    )
-
-    assert coordinator.entities_for_domain("light") == [
-        coordinator.entities["switch.evolviot_brightness"]
-    ]
-    assert coordinator.entities_for_domain("switch") == []
-    assert entity.supported_color_modes == {ColorMode.BRIGHTNESS}
