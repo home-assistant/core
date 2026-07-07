@@ -11,7 +11,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -77,7 +77,7 @@ class BlinkSyncModuleHA(
         """Update attributes for alarm control panel."""
         self.sync.attributes["network_info"] = self.api.networks
         self.sync.attributes["associated_cameras"] = list(self.sync.cameras)
-        self.sync.attributes[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
+        self.sync.attributes[EntityStateAttribute.ATTRIBUTION] = DEFAULT_ATTRIBUTION
         self._attr_extra_state_attributes = self.sync.attributes
         self._attr_alarm_state = (
             AlarmControlPanelState.ARMED_AWAY
