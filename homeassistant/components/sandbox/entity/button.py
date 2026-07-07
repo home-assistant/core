@@ -1,6 +1,6 @@
 """Sandbox proxy for ``button`` entities."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import Context
@@ -12,6 +12,7 @@ from . import SandboxProxyEntity
 class SandboxButtonEntity(SandboxProxyEntity, ButtonEntity):
     """Proxy for a ``button`` entity in a sandbox."""
 
+    @override
     def sandbox_apply_state(
         self,
         state: str | None,
@@ -30,6 +31,7 @@ class SandboxButtonEntity(SandboxProxyEntity, ButtonEntity):
             self._ButtonEntity__last_pressed_isoformat = state
         super().sandbox_apply_state(state, attributes, context)
 
+    @override
     async def async_press(self) -> None:
         """Forward press as a ``button.press`` service call."""
         await self._call_service("press")

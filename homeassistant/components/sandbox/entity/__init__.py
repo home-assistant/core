@@ -13,7 +13,7 @@ domains use the same mechanical pattern.
 
 import contextlib
 from enum import IntFlag
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from homeassistant.const import EntityCategory
 from homeassistant.core import Context
@@ -84,6 +84,7 @@ class SandboxProxyEntity(Entity):
         return features
 
     @property
+    @override
     def available(self) -> bool:
         """Available iff the sandbox is reachable and the entity has state."""
         if not self._sandbox_available:
@@ -92,6 +93,7 @@ class SandboxProxyEntity(Entity):
         return state not in (None, "unavailable")
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Sandbox proxies expose attributes through typed properties.
 

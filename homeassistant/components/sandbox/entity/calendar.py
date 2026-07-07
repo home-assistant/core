@@ -1,7 +1,7 @@
 """Sandbox proxy for ``calendar`` entities."""
 
 import datetime
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 
@@ -61,10 +61,12 @@ class SandboxCalendarEntity(SandboxProxyEntity, CalendarEntity):
     """
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return ``None`` — the next-event listing is not proxied yet."""
         return None
 
+    @override
     async def async_get_events(
         self, hass: Any, start_date: Any, end_date: Any
     ) -> list[CalendarEvent]:
@@ -81,10 +83,12 @@ class SandboxCalendarEntity(SandboxProxyEntity, CalendarEntity):
             for event in entity_response.get("events", [])
         ]
 
+    @override
     async def async_create_event(self, **kwargs: Any) -> None:
         """Forward create as ``calendar.create_event``."""
         await self._call_service("create_event", **kwargs)
 
+    @override
     async def async_update_event(
         self,
         uid: str,
@@ -101,6 +105,7 @@ class SandboxCalendarEntity(SandboxProxyEntity, CalendarEntity):
             recurrence_range=recurrence_range,
         )
 
+    @override
     async def async_delete_event(
         self,
         uid: str,

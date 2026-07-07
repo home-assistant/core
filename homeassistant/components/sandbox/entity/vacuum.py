@@ -1,6 +1,6 @@
 """Sandbox proxy for ``vacuum`` entities."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
@@ -26,6 +26,7 @@ class SandboxVacuumEntity(SandboxProxyEntity, StateVacuumEntity):
     _features_flag = VacuumEntityFeature
 
     @property
+    @override
     def activity(self) -> VacuumActivity | None:
         """Return the cached vacuum activity."""
         value = self._state_cache.get("state")
@@ -37,43 +38,53 @@ class SandboxVacuumEntity(SandboxProxyEntity, StateVacuumEntity):
             return None
 
     @property
+    @override
     def fan_speed(self) -> str | None:
         """Return the cached fan speed."""
         return self._state_cache.get(ATTR_FAN_SPEED)
 
     @property
+    @override
     def fan_speed_list(self) -> list[str]:
         """Return the configured fan speed list."""
         return list(self.description.capabilities.get(ATTR_FAN_SPEED_LIST) or [])
 
+    @override
     async def async_start(self) -> None:
         """Forward start."""
         await self._call_service("start")
 
+    @override
     async def async_pause(self) -> None:
         """Forward pause."""
         await self._call_service("pause")
 
+    @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Forward stop."""
         await self._call_service("stop", **kwargs)
 
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Forward return_to_base."""
         await self._call_service("return_to_base", **kwargs)
 
+    @override
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Forward clean_spot."""
         await self._call_service("clean_spot", **kwargs)
 
+    @override
     async def async_locate(self, **kwargs: Any) -> None:
         """Forward locate."""
         await self._call_service("locate", **kwargs)
 
+    @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Forward set_fan_speed."""
         await self._call_service("set_fan_speed", fan_speed=fan_speed, **kwargs)
 
+    @override
     async def async_send_command(
         self,
         command: str,
@@ -86,6 +97,7 @@ class SandboxVacuumEntity(SandboxProxyEntity, StateVacuumEntity):
             payload["params"] = params
         await self._call_service("send_command", **payload)
 
+    @override
     async def async_get_segments(self) -> list[Segment]:
         """Return the cleanable segments via ``EntityQuery``."""
         response = await self._entity_query("async_get_segments")

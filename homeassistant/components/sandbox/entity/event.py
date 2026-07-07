@@ -1,6 +1,6 @@
 """Sandbox proxy for ``event`` entities."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.event import ATTR_EVENT_TYPE, EventEntity
 from homeassistant.core import Context
@@ -20,10 +20,12 @@ class SandboxEventEntity(SandboxProxyEntity, EventEntity):
     """
 
     @property
+    @override
     def event_types(self) -> list[str]:
         """Surface the cached list of event types."""
         return list(self.description.capabilities.get("event_types") or [])
 
+    @override
     def sandbox_apply_state(
         self,
         state: str | None,

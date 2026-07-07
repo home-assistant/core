@@ -1,6 +1,6 @@
 """Sandbox proxy for ``lock`` entities."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature, LockState
 
@@ -14,6 +14,7 @@ class SandboxLockEntity(SandboxProxyEntity, LockEntity):
     _features_flag = LockEntityFeature
 
     @property
+    @override
     def is_locked(self) -> bool | None:
         """Derive locked from cached state."""
         state = self._state_cache.get("state")
@@ -22,49 +23,59 @@ class SandboxLockEntity(SandboxProxyEntity, LockEntity):
         return state == LockState.LOCKED
 
     @property
+    @override
     def is_locking(self) -> bool | None:
         """True iff cached state is ``locking``."""
         return self._state_cache.get("state") == LockState.LOCKING
 
     @property
+    @override
     def is_unlocking(self) -> bool | None:
         """True iff cached state is ``unlocking``."""
         return self._state_cache.get("state") == LockState.UNLOCKING
 
     @property
+    @override
     def is_open(self) -> bool | None:
         """True iff cached state is ``open``."""
         return self._state_cache.get("state") == LockState.OPEN
 
     @property
+    @override
     def is_opening(self) -> bool | None:
         """True iff cached state is ``opening``."""
         return self._state_cache.get("state") == LockState.OPENING
 
     @property
+    @override
     def is_jammed(self) -> bool | None:
         """True iff cached state is ``jammed``."""
         return self._state_cache.get("state") == LockState.JAMMED
 
     @property
+    @override
     def code_format(self) -> str | None:
         """Return the configured code format."""
         value = self.description.capabilities.get("code_format")
         return str(value) if value is not None else None
 
     @property
+    @override
     def changed_by(self) -> str | None:
         """Return the cached changed_by."""
         return self._state_cache.get("changed_by")
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Forward lock."""
         await self._call_service("lock", **kwargs)
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Forward unlock."""
         await self._call_service("unlock", **kwargs)
 
+    @override
     async def async_open(self, **kwargs: Any) -> None:
         """Forward open."""
         await self._call_service("open", **kwargs)

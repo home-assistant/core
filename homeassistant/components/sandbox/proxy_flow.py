@@ -28,7 +28,7 @@ from collections.abc import Mapping
 import dataclasses
 from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.data_entry_flow import FlowResultType
@@ -120,6 +120,7 @@ class SandboxFlowProxy(ConfigFlow):
         """
         return self._sandbox_group
 
+    @override
     def __getattribute__(self, name: str) -> Any:
         """Catch every ``async_step_*`` access and forward to the sandbox.
 
@@ -350,6 +351,7 @@ class SandboxFlowProxy(ConfigFlow):
         )
         return self.async_abort(reason="sandbox_unsupported_result_type")
 
+    @override
     def async_remove(self) -> None:
         """Tell the sandbox to drop its flow when the framework discards us."""
         if self._sandbox_flow_id is None or self._terminated:
