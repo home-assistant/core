@@ -3,14 +3,10 @@
 import asyncio
 from collections.abc import Mapping
 import time
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigSubentryFlow,
-    SubentryFlowResult,
-)
-from homeassistant.const import CONF_DEVICE_ID
+from homeassistant.config_entries import ConfigEntry, SubentryFlowResult
+from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES
 from homeassistant.helpers import translation
 
 if TYPE_CHECKING:
@@ -26,7 +22,6 @@ from .const import (
     ENTRY_TYPE_NEO_SENSOR,
     ENTRY_TYPE_TRANSMITTER,
     LEARNING_TIMEOUT,
-    SUBENTRY_DEVICE,
 )
 
 
@@ -89,16 +84,8 @@ class EasywaveDeviceFlowMixin:
         return None
 
     def _configured_devices(self) -> list[dict[str, Any]]:
-        """Return device records stored as hub subentries."""
-        return [
-            {
-                CONF_DEVICE_ID: subentry.unique_id,
-                CONF_DEVICE_TITLE: subentry.title,
-                CONF_DEVICE_DATA: dict(subentry.data),
-            }
-            for subentry in self._get_entry().subentries.values()
-            if subentry.subentry_type == SUBENTRY_DEVICE and subentry.unique_id
-        ]
+        """Return device records stored in the gateway config entry options."""
+        return list(self._get_entry().options.get(CONF_DEVICES, []))
 
     def _is_duplicate(
         self,
@@ -126,11 +113,23 @@ class EasywaveDeviceFlowMixin:
     def _save_device(
         self, title: str, unique_id: str, data: dict[str, Any]
     ) -> SubentryFlowResult:
-        """Persist a new device as a hub subentry."""
-        return cast(ConfigSubentryFlow, self).async_create_entry(
-            title=title,
-            unique_id=unique_id,
-            data=data,
+        """Persist a new device in the gateway config entry options."""
+        entry = self._get_entry()
+        devices = self._configured_devices()
+        devices.append(
+            {
+                CONF_DEVICE_ID: unique_id,
+                CONF_DEVICE_TITLE: title,
+                CONF_DEVICE_DATA: data,
+            }
+        )
+        self.hass.config_entries.async_update_entry(
+            entry,
+            options={**entry.options, CONF_DEVICES: devices},
+        )
+        return self.async_abort(
+            reason="device_added",
+            description_placeholders={"device_name": title},
         )
 
     async def _async_format_neo_sensor_list(

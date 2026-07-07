@@ -6,6 +6,7 @@ from easywave_home_control.codec import SensorLearnPayload, SensorTelegramEvent
 
 from homeassistant.components.easywave.const import (
     CONF_BUTTON_COUNT,
+    CONF_DEVICE_TITLE,
     CONF_ENTRY_TYPE,
     CONF_GROUPING_MODE,
     CONF_OPERATING_TYPE,
@@ -22,6 +23,7 @@ from homeassistant.components.easywave.const import (
     TRANSMITTER_SWITCH_IMPULSE,
 )
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -156,25 +158,27 @@ async def test_transmitter_flow_group_impulse(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], user_input={"title": "Hall Remote"}
     )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Hall Remote"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "device_added"
+    assert result["description_placeholders"] == {"device_name": "Hall Remote"}
 
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry is not None
-    subentries = [
+    devices = entry.options[CONF_DEVICES]
+    assert len(devices) == 1
+    device = devices[0]
+    assert device["data"][CONF_ENTRY_TYPE] == ENTRY_TYPE_TRANSMITTER
+    assert device["data"][CONF_TRANSMITTER_SERIAL] == MOCK_TRANSMITTER_SERIAL
+    assert device["data"][CONF_OPERATING_TYPE] == "1"
+    assert device["data"][CONF_BUTTON_COUNT] == 4
+    assert device["data"][CONF_GROUPING_MODE] == TRANSMITTER_GROUPING_GROUP
+    assert device["data"][CONF_SWITCH_MODE] == TRANSMITTER_SWITCH_IMPULSE
+    assert device[CONF_DEVICE_TITLE] == "Hall Remote"
+    assert not [
         subentry
         for subentry in entry.subentries.values()
         if subentry.subentry_type == SUBENTRY_DEVICE
     ]
-    assert len(subentries) == 1
-    subentry = subentries[0]
-    assert subentry.data[CONF_ENTRY_TYPE] == ENTRY_TYPE_TRANSMITTER
-    assert subentry.data[CONF_TRANSMITTER_SERIAL] == MOCK_TRANSMITTER_SERIAL
-    assert subentry.data[CONF_OPERATING_TYPE] == "1"
-    assert subentry.data[CONF_BUTTON_COUNT] == 4
-    assert subentry.data[CONF_GROUPING_MODE] == TRANSMITTER_GROUPING_GROUP
-    assert subentry.data[CONF_SWITCH_MODE] == TRANSMITTER_SWITCH_IMPULSE
-    assert subentry.title == "Hall Remote"
 
 
 async def test_transmitter_flow_timeout_then_retry(
@@ -289,22 +293,18 @@ async def test_neo_sensor_flow_full(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], user_input={"title": "Living Room Sensor"}
     )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Living Room Sensor"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "device_added"
 
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry is not None
-    subentries = [
-        subentry
-        for subentry in entry.subentries.values()
-        if subentry.subentry_type == SUBENTRY_DEVICE
-    ]
-    assert len(subentries) == 1
-    subentry = subentries[0]
-    assert subentry.data[CONF_ENTRY_TYPE] == ENTRY_TYPE_NEO_SENSOR
-    assert subentry.data[CONF_SENSOR_SERIAL] == MOCK_SENSOR_SERIAL
-    assert subentry.data[CONF_SENSOR_CAPABILITIES] == NEO_SENSOR_CAPABILITIES
-    assert subentry.title == "Living Room Sensor"
+    devices = entry.options[CONF_DEVICES]
+    assert len(devices) == 1
+    device = devices[0]
+    assert device["data"][CONF_ENTRY_TYPE] == ENTRY_TYPE_NEO_SENSOR
+    assert device["data"][CONF_SENSOR_SERIAL] == MOCK_SENSOR_SERIAL
+    assert device["data"][CONF_SENSOR_CAPABILITIES] == NEO_SENSOR_CAPABILITIES
+    assert device[CONF_DEVICE_TITLE] == "Living Room Sensor"
 
 
 async def test_neo_sensor_flow_duplicate_rejected(
@@ -343,3 +343,101 @@ async def test_device_flow_aborts_when_disconnected(
     result = await _start_device_flow(hass, mock_config_entry)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "device_not_connected"
+
+
+async def test_device_flow_aborts_without_runtime_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the device flow aborts when the gateway is not set up."""
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = None
+
+    result = await _start_device_flow(hass, mock_config_entry)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "device_not_connected"
+
+
+async def test_transmitter_flow_buttons_1(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test transmitter learning flow with a single button."""
+    telegram = _make_transmitter_telegram()
+    coordinator = _make_coordinator(telegram=telegram)
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = _make_connected_runtime(coordinator)
+
+    result = await _start_device_flow(hass, mock_config_entry)
+    assert result["step_id"] == "button_count_select"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "buttons_1"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "transmitter_confirm"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={"title": "Single Button Remote"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "device_added"
+
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry is not None
+    assert entry.options[CONF_DEVICES][0]["data"][CONF_BUTTON_COUNT] == 1
+
+
+async def test_neo_sensor_flow_abort_learning(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that aborting neo sensor learning from timeout cancels the flow."""
+    coordinator = _make_coordinator(telegram=None)
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = _make_connected_runtime(coordinator)
+
+    result = await _start_neo_sensor_flow(hass, mock_config_entry)
+    with patch(
+        "homeassistant.components.easywave.config_flow_learning.LEARNING_TIMEOUT", -1
+    ):
+        result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "learn_timeout_sensor"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "abort_learn"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "learning_cancelled"
+
+
+async def test_learning_task_oserror_shows_timeout(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test OSError during learning is treated as a timeout."""
+    coordinator = _make_coordinator(telegram=None)
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = _make_connected_runtime(coordinator)
+
+    result = await _start_device_flow(hass, mock_config_entry)
+    assert result["step_id"] == "button_count_select"
+
+    with (
+        patch(
+            "homeassistant.components.easywave.config_flow_learning.LEARNING_TIMEOUT",
+            30,
+        ),
+        patch(
+            "homeassistant.components.easywave.config_flow_learning.EasywaveDeviceFlowMixin._listen_for_telegram",
+            side_effect=OSError("serial error"),
+        ),
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {"next_step_id": "buttons_4"}
+        )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "learn_timeout_transmitter"

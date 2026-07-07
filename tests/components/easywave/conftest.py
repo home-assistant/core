@@ -8,7 +8,9 @@ import pytest
 
 from homeassistant.components.easywave.const import (
     CONF_BUTTON_COUNT,
+    CONF_DEVICE_DATA,
     CONF_DEVICE_PATH,
+    CONF_DEVICE_TITLE,
     CONF_ENTRY_TYPE,
     CONF_GROUPING_MODE,
     CONF_OPERATING_TYPE,
@@ -29,6 +31,7 @@ from homeassistant.components.easywave.const import (
     TRANSMITTER_SWITCH_IMPULSE,
 )
 from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from tests.common import MockConfigEntry
@@ -103,6 +106,21 @@ def _neo_sensor_device_record(
     )
 
 
+def _devices_options(*records: ConfigSubentryData) -> dict[str, list[dict[str, Any]]]:
+    """Return config entry options for stored devices."""
+    return {
+        CONF_DEVICES: [
+            {
+                CONF_DEVICE_ID: record["unique_id"],
+                CONF_DEVICE_TITLE: record["title"],
+                CONF_DEVICE_DATA: dict(record["data"]),
+            }
+            for record in records
+            if record["unique_id"]
+        ]
+    }
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock gateway ConfigEntry."""
@@ -126,7 +144,7 @@ def mock_config_entry_with_transmitter() -> MockConfigEntry:
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
-        subentries_data=[_transmitter_device_record()],
+        options=_devices_options(_transmitter_device_record()),
     )
 
 
@@ -140,7 +158,7 @@ def mock_config_entry_with_neo_sensor() -> MockConfigEntry:
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
-        subentries_data=[_neo_sensor_device_record()],
+        options=_devices_options(_neo_sensor_device_record()),
     )
 
 

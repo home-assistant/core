@@ -9,6 +9,7 @@ from homeassistant.components.homeassistant.triggers import event as event_trigg
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
+    CONF_DEVICES,
     CONF_DOMAIN,
     CONF_EVENT,
     CONF_PLATFORM,
@@ -21,6 +22,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_BUTTON_COUNT,
+    CONF_DEVICE_DATA,
     CONF_ENTRY_TYPE,
     CONF_SWITCH_MODE,
     DOMAIN,
@@ -32,7 +34,6 @@ from .const import (
     EVENT_TYPE_BUTTON_RELEASE,
     EVENT_TYPE_GATEWAY_CONNECTED,
     EVENT_TYPE_GATEWAY_DISCONNECTED,
-    SUBENTRY_DEVICE,
     TRANSMITTER_SWITCH_IMPULSE,
 )
 
@@ -104,9 +105,8 @@ def _find_easywave_config_entry(
         if easywave_id == entry.entry_id:
             return entry
         if any(
-            subentry.subentry_type == SUBENTRY_DEVICE
-            and subentry.unique_id == easywave_id
-            for subentry in entry.subentries.values()
+            stored[CONF_DEVICE_ID] == easywave_id
+            for stored in entry.options.get(CONF_DEVICES, [])
         ):
             return entry
 
@@ -132,12 +132,9 @@ def _get_device_data(
     if easywave_id == entry.entry_id:
         return _GATEWAY_MARKER
 
-    for subentry in entry.subentries.values():
-        if (
-            subentry.subentry_type == SUBENTRY_DEVICE
-            and subentry.unique_id == easywave_id
-        ):
-            return dict(subentry.data)
+    for stored in entry.options.get(CONF_DEVICES, []):
+        if stored[CONF_DEVICE_ID] == easywave_id:
+            return dict(stored[CONF_DEVICE_DATA])
     return None
 
 

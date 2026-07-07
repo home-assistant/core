@@ -32,6 +32,7 @@ from .conftest import (
     MOCK_ENTRY_DATA,
     MOCK_NEO_SENSOR_DEVICE_ID,
     MOCK_TRANSMITTER_DEVICE_ID,
+    _devices_options,
     _neo_sensor_device_record,
     _transmitter_device_record,
 )
@@ -84,7 +85,7 @@ def _make_gateway_entry(*device_records: ConfigSubentryData) -> MockConfigEntry:
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
-        subentries_data=list(device_records) if device_records else [],
+        options=_devices_options(*device_records) if device_records else {},
     )
 
 

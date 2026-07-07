@@ -8,6 +8,7 @@ from homeassistant.components.easywave import (
     get_devices,
 )
 from homeassistant.components.easywave.const import DOMAIN, SUBENTRY_DEVICE
+from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
@@ -15,6 +16,7 @@ from .conftest import (
     MOCK_ENTRY_DATA,
     MOCK_NEO_SENSOR_DEVICE_ID,
     MOCK_TRANSMITTER_DEVICE_ID,
+    _devices_options,
     _neo_sensor_device_record,
     _transmitter_device_record,
 )
@@ -192,10 +194,10 @@ async def test_remove_config_entry_device_removes_child(
         domain=DOMAIN,
         data=MOCK_ENTRY_DATA,
         unique_id="easywave_gw",
-        subentries_data=[
+        options=_devices_options(
             _neo_sensor_device_record(title="Neo Sensor"),
             _transmitter_device_record(title="Transmitter"),
-        ],
+        ),
     )
     entry.add_to_hass(hass)
 
@@ -208,28 +210,24 @@ async def test_remove_config_entry_device_removes_child(
 
     result = await async_remove_config_entry_device(hass, entry, child_device)
     assert result is True
-    subentries = [
-        subentry
-        for subentry in entry.subentries.values()
-        if subentry.subentry_type == SUBENTRY_DEVICE
-    ]
-    assert len(subentries) == 1
-    assert subentries[0].unique_id == MOCK_TRANSMITTER_DEVICE_ID
+    devices = entry.options[CONF_DEVICES]
+    assert len(devices) == 1
+    assert devices[0][CONF_DEVICE_ID] == MOCK_TRANSMITTER_DEVICE_ID
 
 
-async def test_get_devices_returns_hub_subentries(
+async def test_get_devices_returns_configured_devices(
     hass: HomeAssistant,
 ) -> None:
-    """Test get_devices returns configured hub subentries."""
+    """Test get_devices returns configured devices from options."""
     entry = MockConfigEntry(
         version=1,
         domain=DOMAIN,
         data=MOCK_ENTRY_DATA,
         unique_id="easywave_gw",
-        subentries_data=[
+        options=_devices_options(
             _neo_sensor_device_record(title="Neo Sensor"),
             _transmitter_device_record(title="Transmitter"),
-        ],
+        ),
     )
     entry.add_to_hass(hass)
 
@@ -240,3 +238,68 @@ async def test_get_devices_returns_hub_subentries(
         MOCK_TRANSMITTER_DEVICE_ID,
     }
     assert {device.title for device in devices} == {"Neo Sensor", "Transmitter"}
+
+
+async def test_options_update_triggers_reload(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Changing device options reloads the config entry."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config.country = "DE"
+
+    t_patch, c_patch, f_patch, _ = _patch_transceiver_and_coordinator()
+    with t_patch, c_patch, f_patch:
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    with patch.object(
+        hass.config_entries, "async_reload", new=AsyncMock()
+    ) as mock_reload:
+        for listener in mock_config_entry.update_listeners:
+            await listener(hass, mock_config_entry)
+
+    mock_reload.assert_awaited_once_with(mock_config_entry.entry_id)
+
+
+async def test_remove_config_entry_device_rejects_unknown_identifier(
+    hass: HomeAssistant,
+) -> None:
+    """Devices without an Easywave identifier cannot be removed."""
+    entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        data=MOCK_ENTRY_DATA,
+        unique_id="easywave_gw",
+    )
+    entry.add_to_hass(hass)
+
+    device_registry = dr.async_get(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("other", "device")},
+        name="Other Device",
+    )
+
+    assert await async_remove_config_entry_device(hass, entry, other_device) is False
+
+
+async def test_remove_config_entry_device_rejects_orphan_device(
+    hass: HomeAssistant,
+) -> None:
+    """Devices not stored in options cannot be removed."""
+    entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        data=MOCK_ENTRY_DATA,
+        unique_id="easywave_gw",
+        options=_devices_options(_transmitter_device_record()),
+    )
+    entry.add_to_hass(hass)
+
+    device_registry = dr.async_get(hass)
+    orphan_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "unknown_device")},
+        name="Unknown",
+    )
+
+    assert await async_remove_config_entry_device(hass, entry, orphan_device) is False

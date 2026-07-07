@@ -19,6 +19,7 @@ from .conftest import (
     MOCK_ENTRY_DATA,
     MOCK_TRANSMITTER_SERIAL,
     _device_subentry_data,
+    _devices_options,
     _transmitter_device_record,
 )
 
@@ -29,7 +30,7 @@ MOCK_DEVICE_ID = f"transmitter_{MOCK_TRANSMITTER_SERIAL}"
 
 def _make_gateway(extra_data: dict[str, object]) -> MockConfigEntry:
     """Return a gateway entry with a transmitter device using given data."""
-    subentry = _transmitter_device_record(
+    subentry_data = _transmitter_device_record(
         title="Test Transmitter",
         button_count=int(extra_data.get(CONF_BUTTON_COUNT, 4)),
         switch_mode=str(extra_data.get(CONF_SWITCH_MODE, TRANSMITTER_SWITCH_IMPULSE)),
@@ -37,7 +38,7 @@ def _make_gateway(extra_data: dict[str, object]) -> MockConfigEntry:
             extra_data.get(CONF_GROUPING_MODE, TRANSMITTER_GROUPING_GROUP)
         ),
     )
-    data = dict(subentry["data"])
+    data = dict(subentry_data["data"])
     data.update(extra_data)
     return MockConfigEntry(
         version=1,
@@ -46,9 +47,11 @@ def _make_gateway(extra_data: dict[str, object]) -> MockConfigEntry:
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
-        subentries_data=[
-            _device_subentry_data(subentry["unique_id"], subentry["title"], data)
-        ],
+        options=_devices_options(
+            _device_subentry_data(
+                subentry_data["unique_id"], subentry_data["title"], data
+            )
+        ),
     )
 
 

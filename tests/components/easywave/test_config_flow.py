@@ -245,6 +245,23 @@ def test_supported_subentry_types() -> None:
     ) == {SUBENTRY_DEVICE: EasywaveDeviceSubentryFlowHandler}
 
 
+async def test_abort_if_hub_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test hub guard aborts when an entry already exists."""
+    mock_config_entry.add_to_hass(hass)
+
+    flow = EasywaveConfigFlow()
+    flow.hass = hass
+    flow.context = {}
+
+    result = flow._abort_if_hub_already_configured()
+
+    assert result is not None
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_user_flow_device_disappeared(hass: HomeAssistant) -> None:
     """Test user step shows error when selected device is no longer available."""
     port1 = _make_port()

@@ -31,12 +31,10 @@
       "abort": {
         "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
         "cannot_get_gateway_serial": "Could not retrieve gateway serial from the RX11. Please try again.",
+        "device_added": "The device **{device_name}** is now available and entities have been created.",
         "device_not_connected": "The RX11 USB Transceiver is not connected.\n\nTo add a new device, the RX11 must be reachable.\nPlease check the USB connection.",
         "learning_cancelled": "Learning mode was cancelled.",
         "no_device_learned": "No device was detected."
-      },
-      "create_entry": {
-        "default": "The device **{title}** is now available and entities have been created."
       },
       "entry_type": "Device",
       "initiate_flow": {

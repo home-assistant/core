@@ -17,6 +17,7 @@ from homeassistant.setup import async_setup_component
 from .conftest import (
     MOCK_ENTRY_DATA,
     MOCK_TRANSMITTER_DEVICE_ID,
+    _devices_options,
     _transmitter_device_record,
 )
 
@@ -72,7 +73,7 @@ async def _async_setup_entry(
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
-        subentries_data=[device],
+        options=_devices_options(device),
     )
     entry.add_to_hass(hass)
     hass.config.country = "DE"
