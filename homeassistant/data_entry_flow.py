@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 import logging
 from types import MappingProxyType
-from typing import Any, Generic, Required, TypedDict, TypeVar, cast
+from typing import Any, Generic, Required, TypedDict, TypeVar, cast, override
 
 import voluptuous as vol
 
@@ -637,6 +637,15 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     __no_progress_task_reported = False
     deprecated_show_progress = False
 
+    __current_step_id: str | None = None
+
+    @override
+    def __getattribute__(self, name: str) -> Any:
+        """Get attribute."""
+        if name.startswith("async_step_"):
+            self.__current_step_id = name.removeprefix("async_step_")
+        return super().__getattribute__(name)
+
     @property
     def source(self) -> str | None:
         """Source that initialized the flow."""
@@ -714,8 +723,11 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             last_step=last_step,  # Display next or submit button in frontend
             preview=preview,  # Display preview component in frontend
         )
+
         if step_id is not None:
             flow_result["step_id"] = step_id
+        elif self.__current_step_id is not None:
+            flow_result["step_id"] = self.__current_step_id
         return flow_result
 
     @callback
@@ -775,6 +787,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         )
         if step_id is not None:
             flow_result["step_id"] = step_id
+        elif self.__current_step_id is not None:
+            flow_result["step_id"] = self.__current_step_id
         return flow_result
 
     @callback
@@ -825,6 +839,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         )
         if step_id is not None:
             flow_result["step_id"] = step_id
+        elif self.__current_step_id is not None:
+            flow_result["step_id"] = self.__current_step_id
         return flow_result
 
     @callback
@@ -881,6 +897,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             flow_result["sort"] = sort
         if step_id is not None:
             flow_result["step_id"] = step_id
+        elif self.__current_step_id is not None:
+            flow_result["step_id"] = self.__current_step_id
         return flow_result
 
     @callback
