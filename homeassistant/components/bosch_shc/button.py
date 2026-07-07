@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import override
 
 from boschshcpy.device import SHCDevice
@@ -21,8 +20,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import BoschConfigEntry
 from .const import DOMAIN
 from .entity import SHCEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -169,7 +166,6 @@ class SHCScenarioButton(ButtonEntity):
         try:
             self._scenario.trigger()
         except (SHCException, RequestException) as err:
-            _LOGGER.error("Failed to trigger scenario %s: %s", self._scenario.name, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="scenario_trigger_failed",
@@ -200,7 +196,6 @@ class SHCButton(SHCEntity, ButtonEntity):
         try:
             self.entity_description.press_fn(self._device)
         except (SHCException, RequestException) as err:
-            _LOGGER.error("Failed to press %s: %s", self._device.name, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="button_press_failed",
