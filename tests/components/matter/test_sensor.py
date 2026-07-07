@@ -910,6 +910,60 @@ async def test_bridged_device_reachable_updates_availability(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("node_fixture", ["device_diagnostics"])
+async def test_wifi_diagnostics_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test WiFiNetworkDiagnostics cluster sensors."""
+    # ChannelNumber (cluster 54, attr 3) = 3
+    state = hass.states.get("sensor.m5stamp_lighting_app_wi_fi_channel")
+    assert state
+    assert state.state == "3"
+
+    entry = entity_registry.async_get("sensor.m5stamp_lighting_app_wi_fi_channel")
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+    # SecurityType (cluster 54, attr 1) = 4 (WPA2)
+    state = hass.states.get("sensor.m5stamp_lighting_app_wi_fi_security_type")
+    assert state
+    assert state.state == "wpa2"
+
+    set_node_attribute(matter_node, 0, 54, 1, 5)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.m5stamp_lighting_app_wi_fi_security_type")
+    assert state
+    assert state.state == "wpa3"
+
+    # WiFiVersion (cluster 54, attr 2) = 3 (Wi-Fi 4/n)
+    state = hass.states.get("sensor.m5stamp_lighting_app_wi_fi_version")
+    assert state
+    assert state.state == "wifi_4"
+
+
+@pytest.mark.parametrize("node_fixture", ["device_diagnostics"])
+async def test_wifi_diagnostics_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test WiFiNetworkDiagnostics sensors are disabled by default."""
+    for entity_id in (
+        "sensor.m5stamp_lighting_app_wi_fi_channel",
+        "sensor.m5stamp_lighting_app_wi_fi_security_type",
+        "sensor.m5stamp_lighting_app_wi_fi_version",
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry, f"Expected {entity_id} to be registered"
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("node_fixture", ["device_diagnostics"])
 async def test_wifi_rssi_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
