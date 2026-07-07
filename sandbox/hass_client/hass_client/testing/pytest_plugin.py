@@ -33,7 +33,11 @@ import pytest
 import pytest_asyncio
 
 from hass_client.sandbox import SandboxRuntime
-from hass_client.testing._autotag import configure_compat_plugin, engagement_count
+from hass_client.testing._autotag import (
+    configure_compat_plugin,
+    engagement_count,
+    tagged_count,
+)
 from hass_client.testing._inproc import make_inproc_channel_pair
 
 if TYPE_CHECKING:
@@ -88,7 +92,8 @@ def pytest_terminal_summary(
     sets up config entries means the lane regressed to a no-op.
     """
     terminalreporter.write_line(
-        f"sandbox-compat: router entry_setup engaged {engagement_count()} time(s)"
+        f"sandbox-compat: router entry_setup engaged {engagement_count()} time(s),"
+        f" {tagged_count()} entries tagged"
     )
 
 

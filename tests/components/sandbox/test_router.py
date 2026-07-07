@@ -22,10 +22,11 @@ from homeassistant.config_entries import (
     ConfigFlowContext,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from ._helpers import FakeSandboxManager, make_channel_pair
 
-from tests.common import MockConfigEntry, MockModule, mock_integration
+from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
 
 
 @pytest.fixture(name="manager")
@@ -263,3 +264,56 @@ async def test_async_setup_entry_returns_none_when_not_sandboxed(
 
     assert result is None
     assert manager.start_calls == []
+
+
+async def test_component_setup_path_routes_tagged_entries(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """setup.py's per-entry boot path consults the router.
+
+    HA boot (and any ``async_setup_component``) sets existing entries up via
+    ``entry.async_setup_locked`` — never ``ConfigEntries.async_setup`` — so
+    the router consult must live on ``ConfigEntry.async_setup`` or a
+    sandboxed entry silently runs its integration on main at every restart.
+    """
+    channel_a, channel_b = make_channel_pair()
+    received: list[pb.EntrySetup] = []
+
+    async def _entry_setup(payload: pb.EntrySetup) -> pb.EntrySetupResult:
+        received.append(payload)
+        return pb.EntrySetupResult(ok=True)
+
+    channel_b.register("sandbox/entry_setup", _entry_setup)
+    channel_a.start()
+    channel_b.start()
+    manager.install("built-in", channel_a)
+
+    local_setup_calls: list[str] = []
+
+    async def _local_setup_entry(hass_: HomeAssistant, entry_: ConfigEntry) -> bool:
+        local_setup_calls.append(entry_.entry_id)
+        return True
+
+    mock_integration(
+        hass,
+        MockModule("test_bootpath", async_setup_entry=_local_setup_entry),
+    )
+    mock_platform(hass, "test_bootpath.config_flow", None)
+    entry = MockConfigEntry(
+        domain="test_bootpath",
+        title="Boot",
+        sandbox="built-in",
+    )
+    entry.add_to_hass(hass)
+    hass.config_entries.router = SandboxFlowRouter(hass, cast(SandboxManager, manager))
+
+    try:
+        assert await async_setup_component(hass, "test_bootpath", {})
+        await hass.async_block_till_done()
+    finally:
+        await channel_a.close()
+        await channel_b.close()
+
+    assert [msg.entry_id for msg in received] == [entry.entry_id]
+    assert local_setup_calls == []
+    assert entry.state is ConfigEntryState.LOADED
