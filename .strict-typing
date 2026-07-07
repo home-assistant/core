@@ -43,7 +43,6 @@ homeassistant.components
 homeassistant.components.abode.*
 homeassistant.components.acaia.*
 homeassistant.components.accuweather.*
-homeassistant.components.acer_projector.*
 homeassistant.components.acmeda.*
 homeassistant.components.actiontec.*
 homeassistant.components.actron_air.*
@@ -77,7 +76,6 @@ homeassistant.components.amberelectric.*
 homeassistant.components.ambient_network.*
 homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
-homeassistant.components.ampio.*
 homeassistant.components.analytics.*
 homeassistant.components.analytics_insights.*
 homeassistant.components.android_ip_webcam.*
@@ -142,6 +140,7 @@ homeassistant.components.canary.*
 homeassistant.components.casper_glow.*
 homeassistant.components.centriconnect.*
 homeassistant.components.cert_expiry.*
+homeassistant.components.chef_iq.*
 homeassistant.components.clickatell.*
 homeassistant.components.clicksend.*
 homeassistant.components.climate.*
@@ -348,6 +347,7 @@ homeassistant.components.light.*
 homeassistant.components.linkplay.*
 homeassistant.components.litejet.*
 homeassistant.components.litterrobot.*
+homeassistant.components.llama_cpp.*
 homeassistant.components.local_ip.*
 homeassistant.components.local_todo.*
 homeassistant.components.lock.*
@@ -379,6 +379,7 @@ homeassistant.components.min_max.*
 homeassistant.components.minecraft_server.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
+homeassistant.components.modbus_connection.*
 homeassistant.components.modem_callerid.*
 homeassistant.components.mold_indicator.*
 homeassistant.components.monzo.*
@@ -626,6 +627,7 @@ homeassistant.components.waqi.*
 homeassistant.components.water_heater.*
 homeassistant.components.watts.*
 homeassistant.components.watttime.*
+homeassistant.components.wattwaechter.*
 homeassistant.components.weather.*
 homeassistant.components.web_rtc.*
 homeassistant.components.webhook.*
@@ -642,6 +644,7 @@ homeassistant.components.xbox.*
 homeassistant.components.xiaomi_ble.*
 homeassistant.components.yale_smart_alarm.*
 homeassistant.components.yalexs_ble.*
+homeassistant.components.yoto.*
 homeassistant.components.youtube.*
 homeassistant.components.zeroconf.*
 homeassistant.components.zinvolt.*

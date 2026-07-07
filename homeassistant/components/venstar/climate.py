@@ -1,6 +1,6 @@
 """Support for Venstar WiFi Thermostats."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -132,6 +132,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         self._attr_unique_id = config.entry_id
 
     @property
+    @override
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = (
@@ -151,6 +152,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         return features
 
     @property
+    @override
     def temperature_unit(self) -> str:
         """Return the unit of measurement, as defined by the API."""
         if self._client.tempunits == self._client.TEMPUNITS_F:
@@ -158,16 +160,19 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         return UnitOfTemperature.CELSIUS
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._client.get_indoor_temp()
 
     @property
+    @override
     def current_humidity(self) -> float | None:
         """Return the current humidity."""
         return self._client.get_indoor_humidity()
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return current operation mode ie. heat, cool, auto."""
         if self._client.mode == self._client.MODE_HEAT:
@@ -179,6 +184,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         return HVACMode.OFF
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return current operation mode ie. heat, cool, auto."""
         if self._client.state == self._client.STATE_IDLE:
@@ -190,6 +196,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         return HVACAction.OFF
 
     @property
+    @override
     def fan_mode(self) -> str:
         """Return the current fan mode."""
         if self._client.fan == self._client.FAN_ON:
@@ -197,6 +204,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         return FAN_AUTO
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         return {
@@ -205,6 +213,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         }
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the target temperature we try to reach."""
         if self._client.mode == self._client.MODE_HEAT:
@@ -214,6 +223,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature_low(self) -> float | None:
         """Return the lower bound temp if auto mode is on."""
         if self._client.mode == self._client.MODE_AUTO:
@@ -221,6 +231,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature_high(self) -> float | None:
         """Return the upper bound temp if auto mode is on."""
         if self._client.mode == self._client.MODE_AUTO:
@@ -228,11 +239,13 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def target_humidity(self) -> float | None:
         """Return the humidity we try to reach."""
         return self._client.hum_setpoint
 
     @property
+    @override
     def preset_mode(self) -> str:
         """Return current preset."""
         if self._client.away:
@@ -256,6 +269,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             _LOGGER.error("Failed to change the operation mode")
         return success
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
         set_temp = True
@@ -293,6 +307,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
                 _LOGGER.error("Failed to change the temperature")
         self.schedule_update_ha_state()
 
+    @override
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if fan_mode == STATE_ON:
@@ -304,11 +319,13 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             _LOGGER.error("Failed to change the fan mode")
         self.schedule_update_ha_state()
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         self._set_operation_mode(hvac_mode)
         self.schedule_update_ha_state()
 
+    @override
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         success = self._client.set_hum_setpoint(humidity)
@@ -317,6 +334,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             _LOGGER.error("Failed to change the target humidity level")
         self.schedule_update_ha_state()
 
+    @override
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the hold mode."""
         if preset_mode == PRESET_AWAY:

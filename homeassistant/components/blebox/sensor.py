@@ -4,6 +4,7 @@ from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 import blebox_uniapi.sensor
 
@@ -14,16 +15,16 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
     UnitOfApparentPower,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfRatio,
+    UnitOfReactiveEnergy,
     UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -51,19 +52,19 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
     BleBoxSensorEntityDescription(
         key="pm1",
         device_class=SensorDeviceClass.PM1,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BleBoxSensorEntityDescription(
         key="pm2_5",
         device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BleBoxSensorEntityDescription(
         key="pm10",
         device_class=SensorDeviceClass.PM10,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BleBoxSensorEntityDescription(
@@ -82,7 +83,7 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
     BleBoxSensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BleBoxSensorEntityDescription(
@@ -96,6 +97,20 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    BleBoxSensorEntityDescription(
+        key="forwardReactiveEnergy",
+        translation_key="forward_reactive_energy",
+        device_class=SensorDeviceClass.REACTIVE_ENERGY,
+        native_unit_of_measurement=UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    BleBoxSensorEntityDescription(
+        key="reverseReactiveEnergy",
+        translation_key="reverse_reactive_energy",
+        device_class=SensorDeviceClass.REACTIVE_ENERGY,
+        native_unit_of_measurement=UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     BleBoxSensorEntityDescription(
         key="forwardActiveEnergy",
@@ -163,7 +178,7 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
     BleBoxSensorEntityDescription(
         key="co2",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BleBoxSensorEntityDescription(
@@ -224,11 +239,13 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
             self._attr_translation_placeholders = {"index": str(index)}
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         return self.entity_description.value_fn(self._feature.native_value)
 
     @property
+    @override
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if implemented."""
         if self.state_class != SensorStateClass.TOTAL:

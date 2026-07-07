@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from pyportainer import (
     DockerContainerState,
@@ -33,6 +34,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+from .util import sanitize_container_name
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
@@ -123,6 +125,7 @@ class PortainerBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             Callable[[list[tuple[PortainerCoordinatorData, PortainerVolumeData]]], None]
         ] = []
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the Portainer Data Update Coordinator."""
         try:
@@ -150,6 +153,7 @@ class PortainerBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     async def update_data(self) -> _DataT:
         """Update coordinator data."""
 
+    @override
     async def _async_update_data(self) -> _DataT:
         """Fetch per coordinator specific data."""
         try:
@@ -183,6 +187,7 @@ class PortainerCoordinator(
     docker_disk_space: PortainerDockerDiskSpaceCoordinator | None = None
     _update_interval = DEFAULT_SCAN_INTERVAL
 
+    @override
     async def update_data(self) -> dict[int, PortainerCoordinatorData]:
         """Fetch data from Portainer API."""
         _LOGGER.debug(
@@ -259,7 +264,7 @@ class PortainerCoordinator(
 
             # Map containers, started and stopped
             for container in containers:
-                container_name = self._get_container_name(container.names[0])
+                container_name = sanitize_container_name(container.names[0])
                 prev_container = (
                     prev_endpoint.containers.get(container_name)
                     if prev_endpoint
@@ -309,7 +314,7 @@ class PortainerCoordinator(
                 container_stats = dict(
                     zip(
                         (
-                            self._get_container_name(container.names[0])
+                            sanitize_container_name(container.names[0])
                             for container in active_containers
                         ),
                         await asyncio.gather(
@@ -427,10 +432,6 @@ class PortainerCoordinator(
             for stack_callback in self.new_stacks_callbacks:
                 stack_callback(new_stack_data)
 
-    def _get_container_name(self, container_name: str) -> str:
-        """Sanitize to get a proper container name."""
-        return container_name.replace("/", " ").strip()
-
 
 class PortainerDockerDiskSpaceCoordinator(
     PortainerBaseCoordinator[dict[int, DockerSystemDF]]
@@ -440,6 +441,7 @@ class PortainerDockerDiskSpaceCoordinator(
     config_entry: PortainerConfigEntry
     _update_interval = DEFAULT_DF_SCAN_INTERVAL
 
+    @override
     async def update_data(self) -> dict[int, DockerSystemDF]:
         """Fetch Docker disk space data independently from Portainer API."""
         endpoints = await self.portainer.get_endpoints()

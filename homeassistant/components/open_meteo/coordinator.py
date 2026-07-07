@@ -1,5 +1,7 @@
 """DataUpdateCoordinator for the Open-Meteo integration."""
 
+from typing import override
+
 from open_meteo import (
     DailyParameters,
     Forecast,
@@ -39,6 +41,7 @@ class OpenMeteoDataUpdateCoordinator(DataUpdateCoordinator[Forecast]):
         session = async_get_clientsession(hass)
         self.open_meteo = OpenMeteo(session=session)
 
+    @override
     async def _async_update_data(self) -> Forecast:
         """Fetch data from Sensibo."""
         if (zone := self.hass.states.get(self.config_entry.data[CONF_ZONE])) is None:

@@ -8,7 +8,7 @@ from enum import Enum, auto
 import logging
 from pathlib import Path
 import time
-from typing import IO, Any, cast
+from typing import IO, Any, cast, override
 
 from hassil.expression import Expression, Group, ListReference, TextChunk
 from hassil.intents import (
@@ -244,12 +244,14 @@ class DefaultAgent(ConversationEntity):
         # LRU cache to avoid unnecessary intent matching
         self._intent_cache = IntentCache(capacity=128)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to intents updates when added to hass."""
         self._unsub_intents = get_agent_manager(self.hass).subscribe_intents(
             self._update_intents
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from intents updates when removed from hass."""
         if self._unsub_intents is not None:
@@ -272,6 +274,7 @@ class DefaultAgent(ConversationEntity):
             self._trigger_intents = None
 
     @property
+    @override
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return get_languages()
@@ -428,6 +431,7 @@ class DefaultAgent(ConversationEntity):
 
         return result_dict
 
+    @override
     async def _async_handle_message(
         self,
         user_input: ConversationInput,
@@ -801,6 +805,10 @@ class DefaultAgent(ConversationEntity):
                 else:
                     num_unmatched_entities += 1
 
+            # Literal text matched is the dominant signal
+            same_text_matched = (maybe_result is not None) and (
+                result.text_chunks_matched == maybe_result.text_chunks_matched
+            )
             if (
                 (maybe_result is None)  # first result
                 or (
@@ -809,22 +817,25 @@ class DefaultAgent(ConversationEntity):
                 )
                 or (
                     # More entities matched
-                    num_matched_entities > best_num_matched_entities
+                    same_text_matched
+                    and (num_matched_entities > best_num_matched_entities)
                 )
                 or (
                     # Fewer unmatched entities
-                    (num_matched_entities == best_num_matched_entities)
+                    same_text_matched
+                    and (num_matched_entities == best_num_matched_entities)
                     and (num_unmatched_entities < best_num_unmatched_entities)
                 )
                 or (
                     # Prefer unmatched ranges
-                    (num_matched_entities == best_num_matched_entities)
+                    same_text_matched
+                    and (num_matched_entities == best_num_matched_entities)
                     and (num_unmatched_entities == best_num_unmatched_entities)
                     and (num_unmatched_ranges > best_num_unmatched_ranges)
                 )
                 or (
                     # Prefer match failures with entities
-                    (result.text_chunks_matched == maybe_result.text_chunks_matched)
+                    same_text_matched
                     and (num_unmatched_entities == best_num_unmatched_entities)
                     and (num_unmatched_ranges == best_num_unmatched_ranges)
                     and (
@@ -852,7 +863,7 @@ class DefaultAgent(ConversationEntity):
                 )
 
         # Build filtered slot list
-        text_lower = text.strip().lower()
+        text_lower = remove_punctuation(text).strip().lower()
         return TextSlotList(
             name="name",
             values=[
@@ -889,7 +900,8 @@ class DefaultAgent(ConversationEntity):
             for name in intent.async_get_entity_aliases(
                 self.hass, entity_entry, state=state
             ):
-                yield (name, name, context)
+                # Strip punctuation so aliases match the cleaned input text.
+                yield (remove_punctuation(name).strip(), name, context)
 
     def _recognize_strict(
         self,
@@ -976,6 +988,7 @@ class DefaultAgent(ConversationEntity):
         # Intents have changed, so we must clear the cache
         self._intent_cache.clear()
 
+    @override
     async def async_prepare(self, language: str | None = None) -> None:
         """Load intents for a language."""
         if language is None:
@@ -1162,7 +1175,7 @@ class DefaultAgent(ConversationEntity):
         areas = ar.async_get(self.hass)
         area_names = []
         for area in areas.async_list_areas():
-            area_names.append((area.name, area.name))
+            area_names.append((remove_punctuation(area.name).strip(), area.name))
             if not area.aliases:
                 continue
 
@@ -1171,13 +1184,13 @@ class DefaultAgent(ConversationEntity):
                 if not alias:
                     continue
 
-                area_names.append((alias, alias))
+                area_names.append((remove_punctuation(alias).strip(), alias))
 
         # Expose all floors.
         floors = fr.async_get(self.hass)
         floor_names = []
         for floor in floors.async_list_floors():
-            floor_names.append((floor.name, floor.name))
+            floor_names.append((remove_punctuation(floor.name).strip(), floor.name))
             if not floor.aliases:
                 continue
 
@@ -1186,7 +1199,7 @@ class DefaultAgent(ConversationEntity):
                 if not alias:
                     continue
 
-                floor_names.append((alias, floor.name))
+                floor_names.append((remove_punctuation(alias).strip(), floor.name))
 
         # Build trie
         self._exposed_names_trie = Trie()

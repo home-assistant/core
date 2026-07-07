@@ -120,7 +120,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - reasonX should be the name of the invalid dependency
     "adax": {"adax": {"async-timeout"}, "adax-local": {"async-timeout"}},
     "airthings": {"airthings-cloud": {"async-timeout"}},
-    "ampio": {"asmog": {"async-timeout"}},
     "apache_kafka": {"aiokafka": {"async-timeout"}},
     "aseko_pool_live": {"gql": {"backoff"}},
     "blackbird": {

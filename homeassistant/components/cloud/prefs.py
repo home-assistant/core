@@ -1,7 +1,7 @@
 """Preference management for cloud."""
 
 from collections.abc import Callable, Coroutine
-from typing import Any
+from typing import Any, override
 import uuid
 
 from hass_nabucasa.voice import MAP_VOICE, Gender
@@ -58,6 +58,7 @@ GOOGLE_SETTINGS_VERSION = 3
 class CloudPreferencesStore(Store):
     """Store cloud preferences."""
 
+    @override
     async def _async_migrate_func(
         self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
     ) -> dict[str, Any]:

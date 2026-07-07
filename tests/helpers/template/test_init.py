@@ -1,6 +1,7 @@
 """Test Home Assistant template helper methods."""
 
 from datetime import datetime
+import gc
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -597,8 +598,8 @@ def test_render_complex_handling_non_template_values(hass: HomeAssistant) -> Non
     ) == {True: 1, False: 2}
 
 
-async def test_cache_garbage_collection(hass: HomeAssistant) -> None:
-    """Test caching a template."""
+async def test_compiled_code_cache(hass: HomeAssistant) -> None:
+    """Test the compiled code cache outlives the Template object."""
     template_string = (
         "{% set dict = {'foo': 'x&y', 'bar': 42} %} {{ dict | urlencode }}"
     )
@@ -610,17 +611,59 @@ async def test_cache_garbage_collection(hass: HomeAssistant) -> None:
     env = tpl._env
     assert env.template_cache.get(template_string)
 
-    tpl2 = template.Template(
-        (template_string),
-        hass,
-    )
-    tpl2.ensure_valid()
+    del tpl
+    gc.collect()
     assert env.template_cache.get(template_string)
 
+    with patch.object(
+        template.TemplateEnvironment, "compile", side_effect=AssertionError
+    ):
+        tpl2 = template.Template(
+            (template_string),
+            hass,
+        )
+        tpl2.ensure_valid()
+    assert tpl2.async_render() == "foo=x%26y&bar=42"
+
+
+async def test_compiled_code_cache_is_bounded(hass: HomeAssistant) -> None:
+    """Test the compiled code cache does not grow without bound."""
+    tpl = template.Template("{{ 'env getter' }}", hass)
+    tpl.ensure_valid()
+    env = tpl._env
     del tpl
-    assert env.template_cache.get(template_string)
-    del tpl2
-    assert not env.template_cache.get(template_string)
+    for i in range(template.COMPILED_CODE_PIN_SIZE + 10):
+        template.Template(f"{{{{ {i} }}}}", hass).ensure_valid()
+    gc.collect()
+    assert len(env.compiled_code_pin) == template.COMPILED_CODE_PIN_SIZE
+    assert len(env.template_cache) == template.COMPILED_CODE_PIN_SIZE
+
+
+async def test_compiled_code_cache_alive_templates(hass: HomeAssistant) -> None:
+    """Test live Template objects keep their cache entries beyond the pin size."""
+    template_string = "{{ 'kept alive' }}"
+    tpl = template.Template(template_string, hass)
+    tpl.ensure_valid()
+    env = tpl._env
+
+    # Overflow the strong pin with other templates
+    for i in range(template.COMPILED_CODE_PIN_SIZE + 10):
+        template.Template(f"{{{{ {i} }}}}", hass).ensure_valid()
+    gc.collect()
+    assert template_string not in env.compiled_code_pin
+
+    # The live Template still keeps the weak cache entry alive,
+    # so an identical template does not recompile.
+    with patch.object(
+        template.TemplateEnvironment, "compile", side_effect=AssertionError
+    ):
+        tpl2 = template.Template(template_string, hass)
+        tpl2.ensure_valid()
+    assert tpl2.async_render() == "kept alive"
+
+    # A cache hit for a template that is alive anyway does not
+    # take up a pin slot.
+    assert template_string not in env.compiled_code_pin
 
 
 def test_is_template_string() -> None:
@@ -867,6 +910,20 @@ async def test_parse_result(hass: HomeAssistant) -> None:
         # ("+48100200300", "+48100200300"),  # phone number
         ("010", "010"),
         ("0011101.00100001010001", "0011101.00100001010001"),
+        # Plain string states are not Python literals and must be returned
+        # unchanged (literal_eval raises and the original render is used).
+        ("on", "on"),
+        ("off", "off"),
+        ("unavailable", "unavailable"),
+        ("home", "home"),
+        ("standby", "standby"),
+        ("True story", "True story"),
+        # Keyword and collection literals must still be parsed.
+        ("True", True),
+        ("False", False),
+        ("None", None),
+        # "set()" is the only call expression literal_eval accepts (empty set).
+        ("set()", set()),
     ):
         assert render(hass, tpl) == result
 
