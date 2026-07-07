@@ -185,7 +185,13 @@ async def test_migrate_entry_v1_to_v2_merge_same_api_key(
         entry_type=dr.DeviceEntryType.SERVICE,
     )
 
-    # Create old entities for entry2 to verify they are migrated
+    # Create old entities for both entries to verify they are migrated
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "profile_one_dns_queries",
+        config_entry=entry1,
+    )
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -223,11 +229,16 @@ async def test_migrate_entry_v1_to_v2_merge_same_api_key(
     assert device_def is not None
     assert entry1.entry_id in device_def.config_entries
 
-    # Verify entity from entry2 was migrated to entry1
-    entity_entry = entity_registry.async_get("sensor.nextdns_profile_two_dns_queries")
-    assert entity_entry is not None
-    assert entity_entry.config_entry_id == entry1.entry_id
-    assert entity_entry.config_subentry_id is not None
+    # Verify entities from both entries were migrated to entry1
+    entity_entry_1 = entity_registry.async_get("sensor.nextdns_profile_one_dns_queries")
+    assert entity_entry_1 is not None
+    assert entity_entry_1.config_entry_id == entry1.entry_id
+    assert entity_entry_1.config_subentry_id is not None
+
+    entity_entry_2 = entity_registry.async_get("sensor.nextdns_profile_two_dns_queries")
+    assert entity_entry_2 is not None
+    assert entity_entry_2.config_entry_id == entry1.entry_id
+    assert entity_entry_2.config_subentry_id is not None
 
 
 async def test_migrate_entry_v1_to_v2_disabled_entry(
