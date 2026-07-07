@@ -1,6 +1,7 @@
 """Tests for Google Health integration lifecycle (init/unloading)."""
 
 from collections.abc import Awaitable, Callable
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from google_health_api.exceptions import (
@@ -11,12 +12,14 @@ from google_health_api.exceptions import (
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.google_health.coordinator import POLLING_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_google_health_client")
@@ -173,11 +176,12 @@ async def test_runtime_auth_error(
         "Token expired"
     )
 
-    # Trigger update on the coordinator
-    activity_coordinator = config_entry.runtime_data.activity_coordinator
-    assert activity_coordinator is not None
-
-    await activity_coordinator.async_refresh()
+    # Trigger update by advancing time
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + POLLING_INTERVAL + timedelta(seconds=1),
+    )
+    await hass.async_block_till_done()
 
     # Verify that the flow was initiated
     flows = hass.config_entries.flow.async_progress()
