@@ -73,7 +73,7 @@ class EntryRunner:
         # sun times / distances / unit conversions against main's location
         # and units, not the bare-hass defaults. Idempotent, cheap.
         if msg.HasField("core_config"):
-            await _apply_core_config(self.hass, msg.core_config)
+            await apply_core_config(self.hass, msg.core_config)
 
         # Fetch the integration code before setup so a stateless sandbox can
         # load custom (HACS) integrations whose code isn't bundled. Built-in
@@ -205,12 +205,15 @@ class EntryRunner:
         return result
 
 
-async def _apply_core_config(hass: HomeAssistant, cfg: pb.CoreConfig) -> None:
+async def apply_core_config(hass: HomeAssistant, cfg: pb.CoreConfig) -> None:
     """Apply main's core-config snapshot to the sandbox's private hass.
 
     Direct attribute writes, deliberately not ``Config.async_update``: the
-    private hass has no Store backing and must not persist the values or fire
-    ``EVENT_CORE_CONFIG_UPDATE`` on its bus. The time zone goes through the
+    private hass has no Store backing and must not persist the values. This
+    function fires no event either — the live-update handler
+    (``SandboxRuntime._handle_core_config``) fires
+    ``EVENT_CORE_CONFIG_UPDATE`` itself, while the entry_setup snapshot is
+    applied silently before setup. The time zone goes through the
     async setter so ``dt_util``'s default timezone follows. Every value comes
     from main's own (validated) config, so a bad unit-system/time-zone name is
     a contract violation and surfaces as a failed entry_setup rather than

@@ -177,6 +177,51 @@ class _InProcessSandboxProcess:
         return True
 
 
+def _install_settling_block_till_done(
+    hass: HomeAssistant, runtime: SandboxRuntime, mgr_channel: Any
+) -> None:
+    """Make main's ``async_block_till_done`` settle the sandbox round-trip.
+
+    Vanilla integration tests assume local synchronous semantics: after
+    ``await hass.async_block_till_done()`` they expect entities and states
+    to be visible. With a sandbox in the middle, registrations and pushes
+    are still in flight on the (same-loop) channel and the entity bridge's
+    single-writer queue. Iterate until a pass sees the private hass idle,
+    the bridge queue drained, and no channel dispatch task in flight, then
+    settle main once more for anything late pushes scheduled.
+    """
+    original = hass.async_block_till_done
+
+    async def settled(wait_background_tasks: bool = False) -> None:
+        await original(wait_background_tasks=wait_background_tasks)
+        rt_channel = runtime.channel
+        # Wall-clock bound, not just an iteration cap: a pathological private
+        # hass (timer churn from clock-jump tests) must cost each
+        # block_till_done a couple of seconds at worst, not minutes.
+        deadline = asyncio.get_running_loop().time() + 2.0
+        for _ in range(200):
+            if asyncio.get_running_loop().time() > deadline:
+                break
+            sandbox_hass = runtime.hass
+            bridge = runtime.entity_bridge
+            if sandbox_hass is not None:
+                await sandbox_hass.async_block_till_done()
+            if bridge is not None:
+                await bridge.async_drain()
+            if not mgr_channel._inflight and (  # noqa: SLF001
+                rt_channel is None or not rt_channel._inflight  # noqa: SLF001
+            ):
+                await asyncio.sleep(0)
+                if not mgr_channel._inflight and (  # noqa: SLF001
+                    rt_channel is None or not rt_channel._inflight  # noqa: SLF001
+                ):
+                    break
+            await asyncio.sleep(0)
+        await original(wait_background_tasks=wait_background_tasks)
+
+    hass.async_block_till_done = settled  # type: ignore[method-assign]
+
+
 async def async_setup_inprocess_sandbox(
     hass: HomeAssistant,
     *,
@@ -239,6 +284,10 @@ async def async_setup_inprocess_sandbox(
     # is the controlled minimum needed to inject our in-memory channel.
     process = _InProcessSandboxProcess(group, mgr_channel)
     manager._sandboxes[group] = process  # noqa: SLF001
+
+    # Tests observe the bridge through main's block_till_done — teach it
+    # to settle the whole sandbox round-trip first.
+    _install_settling_block_till_done(hass, runtime, mgr_channel)
 
     # Mirror what the integration's ``_on_channel_ready`` does when the
     # real ``SandboxProcess`` opens its channel — register the bridge.

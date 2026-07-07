@@ -121,6 +121,22 @@ class EntityBridge:
             EVENT_DEVICE_REGISTRY_UPDATED, self._on_device_registry_updated
         )
 
+    async def async_drain(self, *, timeout: float = 2.0) -> None:
+        """Wait until every queued slot has been written to the channel.
+
+        Test-lane hook: vanilla integration tests assume local synchronous
+        setup semantics, so the compat plugins settle the bridge after
+        ``async_block_till_done``. Bounded: an entity storm (clock-jump
+        tests leave self-rescheduling updates behind) refills the queue
+        every loop tick, and an unbounded drain would spin until the test's
+        teardown finally kills the churn.
+        """
+        deadline = asyncio.get_running_loop().time() + timeout
+        while (
+            self._pending or self._writing is not None
+        ) and asyncio.get_running_loop().time() < deadline:
+            await asyncio.sleep(0)
+
     async def async_stop(self) -> None:
         """Detach the listeners and stop the writer task."""
         for attr in (
@@ -260,6 +276,13 @@ class EntityBridge:
             )
             return None
         entry_id = _entry_id_for(entity)
+        if entry_id is None:
+            # An integration's own-domain entity (sun.sun, …) is added via a
+            # bare EntityComponent with no config-entry linkage. When exactly
+            # one loaded entry owns the entity's domain, it is that entry's.
+            entries = self.hass.config_entries.async_entries(domain)
+            if len(entries) == 1:
+                entry_id = entries[0].entry_id
         if entry_id is None:
             _LOGGER.debug(
                 "EntityBridge: %s has no owning config entry; not bridging",
