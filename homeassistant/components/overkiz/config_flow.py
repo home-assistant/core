@@ -11,7 +11,11 @@ from pyoverkiz.auth.credentials import (
     UsernamePasswordCredentials,
 )
 from pyoverkiz.client import GatewayCandidate, OverkizClient
-from pyoverkiz.const import SERVERS_WITH_LOCAL_API, SUPPORTED_SERVERS
+from pyoverkiz.const import (
+    REXEL_OAUTH_CLIENT_ID,
+    SERVERS_WITH_LOCAL_API,
+    SUPPORTED_SERVERS,
+)
 from pyoverkiz.enums import APIType, Server
 from pyoverkiz.exceptions import (
     ApplicationNotAllowedError,
@@ -28,6 +32,10 @@ from pyoverkiz.obfuscate import obfuscate_id
 from pyoverkiz.utils import create_local_server_config, is_overkiz_gateway
 import voluptuous as vol
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
@@ -133,7 +141,7 @@ class OverkizConfigFlow(
 
             # Rexel authenticates via OAuth2 (Azure AD B2C with PKCE).
             if self._server == Server.REXEL:
-                return await self.async_step_pick_implementation()
+                return await self._async_step_rexel_oauth()
 
             return await self.async_step_cloud()
 
@@ -160,7 +168,7 @@ class OverkizConfigFlow(
 
             # Rexel authenticates via OAuth2 (Azure AD B2C with PKCE).
             if self._server == Server.REXEL:
-                return await self.async_step_pick_implementation()
+                return await self._async_step_rexel_oauth()
 
             return await self.async_step_cloud()
 
@@ -178,6 +186,20 @@ class OverkizConfigFlow(
             ),
             description_placeholders={"local_api_docs": LOCAL_API_DOCS_URL},
         )
+
+    async def _async_step_rexel_oauth(self) -> ConfigFlowResult:
+        """Start the Rexel OAuth2 flow, ensuring its client credential exists.
+
+        Rexel's public OAuth2 client is auto-imported at startup, but a user can
+        remove it from the Application credentials menu. Re-importing here means a
+        fresh setup always has it available, without requiring a restart.
+        """
+        await async_import_client_credential(
+            self.hass,
+            DOMAIN,
+            ClientCredential(REXEL_OAUTH_CLIENT_ID, "", name="Rexel"),
+        )
+        return await self.async_step_pick_implementation()
 
     async def async_step_cloud(
         self, user_input: dict[str, Any] | None = None
