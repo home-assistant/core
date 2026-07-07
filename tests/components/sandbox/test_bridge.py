@@ -395,7 +395,7 @@ async def test_proxy_method_exception_translated(
     # We need to test the bridge's direct call path; build the proxy by
     # hand instead of going through register_entity.
     description = SandboxEntityDescription.from_proto(register)
-    proxy_cls = bridge._build_proxy(description).__class__
+    proxy_cls = (await bridge._async_build_proxy(description)).__class__
     proxy = proxy_cls(bridge, description)
 
     try:
@@ -425,7 +425,7 @@ async def test_unknown_service_translated_to_home_assistant_error(
         sandbox_entity_id="light.x",
         unique_id="x",
     )
-    proxy_cls = bridge._build_proxy(description).__class__
+    proxy_cls = (await bridge._async_build_proxy(description)).__class__
     proxy = proxy_cls(bridge, description)
 
     try:
