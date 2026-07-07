@@ -1023,3 +1023,55 @@ async def test_options_flow_not_loaded(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_options_flow_auth_error(
+    hass: HomeAssistant,
+    mock_ultima_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow auth error handling when disabling set_ble_proxy raises SmlightAuthError and reauth completes."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    mock_ultima_client.set_ble_proxy.side_effect = SmlightAuthError
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "ble_scanner_mode": "disabled",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    progress_flows = [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["handler"] == DOMAIN and flow["context"].get("source") == "reauth"
+    ]
+    assert len(progress_flows) == 1
+    reauth_flow = progress_flows[0]
+
+    mock_ultima_client.authenticate.side_effect = None
+    mock_ultima_client.check_auth_needed.return_value = True
+
+    reauth_result = await hass.config_entries.flow.async_configure(
+        reauth_flow["flow_id"],
+        {
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+        },
+    )
+
+    assert reauth_result["type"] is FlowResultType.ABORT
+    assert reauth_result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_USERNAME: MOCK_USERNAME,
+        CONF_PASSWORD: MOCK_PASSWORD,
+        CONF_HOST: MOCK_HOST,
+    }

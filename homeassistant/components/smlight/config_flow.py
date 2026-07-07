@@ -353,8 +353,11 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                     await coordinator.client.set_ble_proxy(
                         scanner_mode != BLEScannerMode.DISABLED
                     )
-                except SmlightConnectionError, SmlightAuthError:
+                except SmlightConnectionError:
                     errors["base"] = "cannot_connect"
+                except SmlightAuthError:
+                    errors["base"] = "invalid_auth"
+                    self.config_entry.async_start_reauth(self.hass)
 
             if not errors:
                 return self.async_create_entry(title="", data=user_input)

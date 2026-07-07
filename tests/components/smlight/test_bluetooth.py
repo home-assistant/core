@@ -7,7 +7,8 @@ from pysmlight.models import BleFeatures
 import pytest
 
 from homeassistant.components.bluetooth import BluetoothScanningMode
-from homeassistant.components.smlight.const import CONF_BLE_SCANNER_MODE
+from homeassistant.components.smlight.bluetooth import get_ble_scanner_mode
+from homeassistant.components.smlight.const import CONF_BLE_SCANNER_MODE, BLEScannerMode
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -185,3 +186,13 @@ async def test_bluetooth_scanner_options_device_proxy_disabled(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_connect_scanner.assert_not_called()
     mock_ultima_client.set_ble_proxy.assert_not_called()
+
+
+async def test_get_ble_scanner_mode_no_ble(
+    hass: HomeAssistant,
+    mock_smlight_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test get_ble_scanner_mode when BLE is not supported by the hardware."""
+    info = await mock_smlight_client.get_info()
+    assert get_ble_scanner_mode(mock_config_entry, info) is BLEScannerMode.DISABLED
