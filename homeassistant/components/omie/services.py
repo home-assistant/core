@@ -44,7 +44,7 @@ SERVICE_GET_PRICES_SCHEMA: Final = vol.Schema(
 )
 
 _QUARTER_HOUR: Final = dt.timedelta(minutes=15)
-_SERIES_BY_AREA: Final = {Country.ES: "es_spot_price", Country.PT: "pt_spot_price"}
+_SERIES_BY_COUNTRY: Final = {Country.ES: "es_spot_price", Country.PT: "pt_spot_price"}
 
 
 async def _get_prices_for_date(call: ServiceCall) -> ServiceResponse:
@@ -91,7 +91,7 @@ async def _get_prices_for_date(call: ServiceCall) -> ServiceResponse:
         ) from err
 
     return {
-        area.value: [
+        country.value: [
             {
                 "start": start.isoformat(),
                 # Add in UTC otherwise the end will be wrong across DST changes
@@ -102,8 +102,8 @@ async def _get_prices_for_date(call: ServiceCall) -> ServiceResponse:
             }
             for start, price_mwh in pick_series_cet(results, series_name).items()
         ]
-        for area, series_name in _SERIES_BY_AREA.items()
-        if area in countries
+        for country, series_name in _SERIES_BY_COUNTRY.items()
+        if country in countries
     }
 
 
