@@ -73,7 +73,6 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
     """
 
     _attr_name = None
-    _attr_translation_key = "room_climate_control"
     _attr_target_temperature_step = 0.5
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_max_temp = 30.0
@@ -196,15 +195,21 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
         if temperature is None:
             return
 
-        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
-            self.set_hvac_mode(hvac_mode)
-
-        if self.hvac_mode == HVACMode.OFF:
+        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
+        if hvac_mode == HVACMode.OFF or (
+            hvac_mode is None and self.hvac_mode == HVACMode.OFF
+        ):
+            # Reject before touching the device — applying hvac_mode=off
+            # first would turn it off as a side effect of a call that's
+            # about to fail anyway.
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="set_temperature_while_off",
                 translation_placeholders={"name": self._device.name},
             )
+
+        if hvac_mode is not None:
+            self.set_hvac_mode(hvac_mode)
 
         if hvac_mode == HVACMode.AUTO:
             # The schedule controls the setpoint in AUTO; honour the mode
@@ -219,13 +224,8 @@ class SHCClimateControlEntity(SHCEntity, ClimateEntity):
                 translation_placeholders={"name": self._device.name},
             )
 
-        # SHC rejects a setpoint write while operationMode=AUTOMATIC. Drop to
-        # MANUAL first — matching the Bosch app. A bare temperature write
-        # (or one paired with hvac_mode=cool, which doesn't touch
-        # operation_mode) can still reach here with AUTOMATIC in effect; an
-        # explicit hvac_mode=heat has already flipped it to MANUAL above via
-        # set_hvac_mode, and hvac_mode=auto returned earlier — either way,
-        # unconditionally checking here is always correct.
+        # SHC rejects a setpoint write while operationMode=AUTOMATIC; drop to
+        # MANUAL first, matching the Bosch app.
         if (
             self._device.operation_mode
             == SHCClimateControl.RoomClimateControlService.OperationMode.AUTOMATIC

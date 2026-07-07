@@ -561,6 +561,34 @@ async def test_climate_control_set_temperature_fails_when_off(
     assert device.setpoint_temperature == original_setpoint
 
 
+async def test_climate_control_set_temperature_with_hvac_mode_off_leaves_device_unchanged(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+) -> None:
+    """A rejected set_temperature(hvac_mode=off) must not turn the device off first."""
+    device = _make_climate_device(
+        supports_cooling=True, summer_mode=False, operation_mode=OM_CC.MANUAL
+    )
+    mock_session.device_helper.climate_controls = [device]
+    await _setup_climate_platform(hass, mock_config_entry, mock_session)
+    (entity_id,) = hass.states.async_entity_ids(CLIMATE_DOMAIN)
+    original_setpoint = device.setpoint_temperature
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_TEMPERATURE: 22.0,
+                ATTR_HVAC_MODE: HVACMode.OFF,
+            },
+            blocking=True,
+        )
+
+    assert device.summer_mode is False
+    assert device.setpoint_temperature == original_setpoint
+
+
 async def test_climate_control_set_temperature_fails_when_boost(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
 ) -> None:
