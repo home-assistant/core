@@ -6,14 +6,12 @@ from typing import Any, override
 import numpy as np
 
 from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
     CONF_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     SensorEntity,
+    SensorEntityCapabilityAttribute,
 )
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
     CONF_MAXIMUM,
@@ -24,6 +22,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     Event,
@@ -172,16 +171,18 @@ class CompensationSensor(SensorEntity):
 
         if self.native_unit_of_measurement is None and self._source_attribute is None:
             self._attr_native_unit_of_measurement = new_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
             )
 
         if self._attr_device_class is None and (
-            device_class := new_state.attributes.get(ATTR_DEVICE_CLASS)
+            device_class := new_state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         ):
             self._attr_device_class = device_class
 
         if self._attr_state_class is None and (
-            state_class := new_state.attributes.get(ATTR_STATE_CLASS)
+            state_class := new_state.attributes.get(
+                SensorEntityCapabilityAttribute.STATE_CLASS
+            )
         ):
             self._attr_state_class = state_class
 
