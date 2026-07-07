@@ -898,8 +898,38 @@ async def test_options_flow(
     mock_ultima_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test options flow for BLE scanner mode."""
+    """Test options flow does not call the hardware API when switching between non-disabled modes."""
     mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "ble_scanner_mode": "passive",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "ble_scanner_mode": "passive",
+    }
+    mock_ultima_client.set_ble_proxy.assert_not_called()
+
+
+async def test_options_flow_enable_from_disabled(
+    hass: HomeAssistant,
+    mock_ultima_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow toggles the remote adapter on when transitioning from disabled."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={"ble_scanner_mode": "disabled"}
+    )
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -925,7 +955,7 @@ async def test_options_flow_error(
     mock_ultima_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test options flow error handling when set_ble_proxy fails and then succeeds on retry."""
+    """Test options flow error handling when disabling set_ble_proxy fails and succeeds on retry."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -980,3 +1010,16 @@ async def test_options_flow_no_ble(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {}
+
+
+async def test_options_flow_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow returns cannot_connect error when config entry has not finished loading."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"base": "cannot_connect"}

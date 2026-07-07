@@ -321,6 +321,19 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle options flow."""
+        errors: dict[str, str] = {}
+
+        if not hasattr(self.config_entry, "runtime_data"):
+            errors["base"] = "cannot_connect"
+            return self.async_show_form(
+                step_id="init",
+                data_schema=self.add_suggested_values_to_schema(
+                    BLE_SCANNER_SCHEMA,
+                    user_input or {CONF_BLE_SCANNER_MODE: BLEScannerMode.DISABLED},
+                ),
+                errors=errors,
+            )
+
         coordinator = self.config_entry.runtime_data.data
         info = coordinator.data.info
         errors = {}
@@ -329,12 +342,17 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             return await self.async_step_no_settings()
 
         if user_input is not None:
-            scanner_mode = user_input[CONF_BLE_SCANNER_MODE]
+            scanner_mode = BLEScannerMode(user_input[CONF_BLE_SCANNER_MODE])
+            user_input[CONF_BLE_SCANNER_MODE] = scanner_mode
             current_mode = get_ble_scanner_mode(self.config_entry, info)
-            if scanner_mode != current_mode:
-                remote_adapter_enabled = scanner_mode != BLEScannerMode.DISABLED
+
+            if (scanner_mode == BLEScannerMode.DISABLED) != (
+                current_mode == BLEScannerMode.DISABLED
+            ):
                 try:
-                    await coordinator.client.set_ble_proxy(remote_adapter_enabled)
+                    await coordinator.client.set_ble_proxy(
+                        scanner_mode != BLEScannerMode.DISABLED
+                    )
                 except SmlightConnectionError, SmlightAuthError:
                     errors["base"] = "cannot_connect"
 
