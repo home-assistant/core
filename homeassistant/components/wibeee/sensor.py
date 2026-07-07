@@ -10,6 +10,7 @@ whose keys are present in the initial phase data.
 """
 
 import logging
+from typing import override
 
 from pywibeee import WibeeeDeviceInfo
 
@@ -49,20 +50,11 @@ async def async_setup_entry(
 
     # Discover phases from initial data (hardware-dependent).
     # Single-phase: fase1 + fase4. Three-phase: fase1-3 + fase4.
-    data = coordinator.data
-    if data is None:
-        _LOGGER.warning(
-            "No data available for Wibeee %s (%s); no sensors created",
-            device_info.mac_addr_short,
-            device_info.ip_addr,
-        )
-        return
-
-    # Filter to known phases only
+    data = coordinator.data or {}
     discovered_phases = [p for p in data if p in PHASE_NAMES]
     if not discovered_phases:
         _LOGGER.warning(
-            "No phases found for Wibeee %s (%s)",
+            "No usable phase data for Wibeee %s (%s); no sensors created",
             device_info.mac_addr_short,
             device_info.ip_addr,
         )
@@ -161,6 +153,7 @@ class WibeeeSensor(CoordinatorEntity[WibeeeCoordinator], SensorEntity):
         self._attr_device_info = _build_device_info(device_info, phase_key)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the sensor value."""
         data = self.coordinator.data
@@ -178,6 +171,7 @@ class WibeeeSensor(CoordinatorEntity[WibeeeCoordinator], SensorEntity):
             return None
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the coordinator has data for this sensor.
 

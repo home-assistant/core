@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for Wibeee energy monitors."""
 
 import logging
-from typing import Any
+from typing import Any, override
 from xml.etree.ElementTree import ParseError as XMLParseError
 
 import aiohttp
@@ -41,6 +41,7 @@ class WibeeeCoordinator(DataUpdateCoordinator[WibeeeData]):
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> WibeeeData:
         """Fetch data from the Wibeee device."""
         try:
