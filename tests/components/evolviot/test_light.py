@@ -65,3 +65,35 @@ async def test_color_light_sends_rgb_value(hass: HomeAssistant) -> None:
     await entity.async_turn_on(**{ATTR_RGB_COLOR: (0, 128, 255)})
 
     entity._async_send_command.assert_awaited_once_with({"value": "0,128,255"})
+
+
+async def test_stale_switch_color_entity_is_classified_as_color(
+    hass: HomeAssistant,
+) -> None:
+    """Test stale switch color metadata is classified as color."""
+    coordinator = EvolvIOTDataUpdateCoordinator(
+        hass,
+        AsyncMock(spec=EvolvIOTApi),
+        "test-entry",
+    )
+    coordinator.async_set_updated_data(
+        {
+            "entities": {
+                "switch.evolviot_color": {
+                    "entity_id": "switch.evolviot_color",
+                    "unique_id": "LDC123/color",
+                    "domain": "switch",
+                    "control": {
+                        "key": "color",
+                        "presentation": "color_palette",
+                    },
+                    "capabilities": {"supports_color": True},
+                },
+            },
+        }
+    )
+
+    assert coordinator.entities_for_domain("color") == [
+        coordinator.entities["switch.evolviot_color"]
+    ]
+    assert coordinator.entities_for_domain("switch") == []

@@ -62,7 +62,7 @@ class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return [
             entity
             for entity in self.entities.values()
-            if str(entity.get("domain") or "") == domain
+            if evolviot_entity_domain(entity) == domain
         ]
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -293,3 +293,27 @@ class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         if attributes:
             state["attributes"] = attributes
+
+
+def evolviot_entity_domain(entity: dict[str, Any]) -> str:
+    """Return the Home Assistant domain for an EvolvIOT backend entity."""
+    capabilities = entity.get("capabilities") or {}
+    control = entity.get("control") or {}
+    key = str(control.get("key") or "").lower()
+    presentation = str(control.get("presentation") or "").lower()
+
+    if (
+        capabilities.get("supports_select")
+        or key == "pattern"
+        or presentation == "dropdown"
+    ):
+        return "select"
+
+    if (
+        capabilities.get("supports_color")
+        or key == "color"
+        or presentation == "color_palette"
+    ):
+        return "color"
+
+    return str(entity.get("domain") or "")
