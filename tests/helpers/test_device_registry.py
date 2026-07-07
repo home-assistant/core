@@ -2361,6 +2361,41 @@ async def test_async_get_device_composite_reuses_pre_migration_id(
     assert resolved.config_entry_id == entry_a.entry_id
 
 
+async def test_async_get_device_composite_id_stable_across_calls(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """A composite over independent devices keeps a stable id across repeated lookups.
+
+    So an integration that fires or stores async_get_device(connections=...).id - e.g. a
+    device tracker attaching by MAC, or an event device_id - does not churn a fresh id
+    each call (there is no pre-migration composite_device_id to reuse here).
+    """
+    entry_1 = MockConfigEntry(domain="itg1")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="itg2")
+    entry_2.add_to_hass(hass)
+    mac = (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")
+    device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, connections={mac}
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, connections={mac}
+    )
+
+    first = device_registry.async_get_device(connections={mac})
+    second = device_registry.async_get_device(connections={mac})
+    assert first.id not in device_registry.devices  # synthesized composite
+    assert first.id == second.id  # stable across calls
+
+    # Still stable after an unrelated device change (lookup rebuilt, id reused)
+    entry_3 = MockConfigEntry(domain="itg3")
+    entry_3.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry_3.entry_id, connections={mac}
+    )
+    assert device_registry.async_get_device(connections={mac}).id == first.id
+
+
 async def test_composite_device_id_survives_registry_change(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:

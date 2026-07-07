@@ -1116,6 +1116,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self._composite_device_queries: OrderedDict[
             str, tuple[set[tuple[str, str]], set[tuple[str, str]]]
         ] = OrderedDict()
+        # Reverse map (identifiers, connections) -> composite id, kept in sync with
+        # _composite_device_queries. Can be removed in HA Core 2027.8.
+        self._composite_device_ids_by_query: dict[
+            tuple[frozenset[tuple[str, str]], frozenset[tuple[str, str]]], str
+        ] = {}
         self._store = DeviceRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -1229,16 +1234,42 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             composite_id = pre_migration_id
         else:
             # A runtime ambiguity between independent devices sharing an identifier or
-            # connection: remember the lookup so async_get and the shims can rebuild the
-            # composite against the current registry.
-            composite_id = uuid_util.random_uuid_hex()
-            self._composite_device_queries[composite_id] = (
-                set(identifiers or ()),
-                set(connections or ()),
-            )
-            if len(self._composite_device_queries) > _COMPOSITE_QUERY_CACHE_SIZE:
-                self._composite_device_queries.popitem(last=False)
+            # connection: reuse a stable id for this lookup (so a fired/stored composite
+            # id does not churn) and remember the lookup so async_get and the shims can
+            # rebuild the composite against the current registry.
+            composite_id = self._composite_id_for_query(identifiers, connections)
         return self._restore_composite_device(composite_id, matches)
+
+    @callback
+    def _composite_id_for_query(
+        self,
+        identifiers: set[tuple[str, str]] | None,
+        connections: set[tuple[str, str]] | None,
+    ) -> str:
+        """Return a stable synthesized composite id for an ambiguous lookup.
+
+        A repeated lookup returns the same id (bounded, least-recently-used evicted), so
+        a composite id an integration fires in an event or stores as a device_id stays
+        stable across calls instead of being re-minted each time.
+        """
+        query_key = (frozenset(identifiers or ()), frozenset(connections or ()))
+        if (
+            composite_id := self._composite_device_ids_by_query.get(query_key)
+        ) is not None:
+            self._composite_device_queries.move_to_end(composite_id)
+            return composite_id
+        composite_id = uuid_util.random_uuid_hex()
+        self._composite_device_queries[composite_id] = (
+            set(identifiers or ()),
+            set(connections or ()),
+        )
+        self._composite_device_ids_by_query[query_key] = composite_id
+        if len(self._composite_device_queries) > _COMPOSITE_QUERY_CACHE_SIZE:
+            _, evicted_query = self._composite_device_queries.popitem(last=False)
+            self._composite_device_ids_by_query.pop(
+                (frozenset(evicted_query[0]), frozenset(evicted_query[1])), None
+            )
+        return composite_id
 
     @callback
     def _async_matching_devices(
