@@ -270,6 +270,10 @@ class TimerListEntity(Entity):
         self.async_write_ha_state()
 
 
+# Imported at the end so the reusable entity can subclass TimerListEntity above.
+from .local import InMemoryTimerListEntity as InMemoryTimerListEntity  # noqa: E402
+
+
 async def _async_start_timer(
     entity: TimerListEntity, call: ServiceCall
 ) -> dict[str, Any]:
