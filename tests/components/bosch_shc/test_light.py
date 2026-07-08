@@ -381,19 +381,19 @@ async def test_light_action_error(
             raise SHCException("Test error")
         return read_value
 
-    setattr(
+    with patch.object(
         type(device),
         property_name,
         PropertyMock(side_effect=_raise_on_write),
-    )
+        create=True,
+    ):
+        await _setup_light_platform(hass, mock_config_entry, mock_session)
+        (entity_id,) = hass.states.async_entity_ids(LIGHT_DOMAIN)
 
-    await _setup_light_platform(hass, mock_config_entry, mock_session)
-    (entity_id,) = hass.states.async_entity_ids(LIGHT_DOMAIN)
-
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            service,
-            {ATTR_ENTITY_ID: entity_id, **service_data},
-            blocking=True,
-        )
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                LIGHT_DOMAIN,
+                service,
+                {ATTR_ENTITY_ID: entity_id, **service_data},
+                blocking=True,
+            )
