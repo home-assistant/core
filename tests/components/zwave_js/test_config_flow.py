@@ -1188,6 +1188,34 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
 
 
 @pytest.mark.parametrize(
+    ("service_info", "expected_home_id"),
+    [
+        (ESPHOME_DISCOVERY_INFO, "0x000004d2"),  # 1234
+        (ESPHOME_DISCOVERY_INFO_CLEAN, "Unknown"),
+    ],
+)
+@pytest.mark.usefixtures("supervisor", "addon_info")
+async def test_esphome_discovery_title_placeholders(
+    hass: HomeAssistant,
+    service_info: ESPHomeServiceInfo,
+    expected_home_id: str,
+) -> None:
+    """Test ESPHome discovery sets title placeholders for the flow_title."""
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=service_info,
+    )
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    title_placeholders = flows[0]["context"]["title_placeholders"]
+    assert title_placeholders["host"] == "192.168.1.100"
+    assert title_placeholders["port"] == "6053"
+    assert title_placeholders["home_id"] == expected_home_id
+
+
+@pytest.mark.parametrize(
     "service_info", [ESPHOME_DISCOVERY_INFO, ESPHOME_DISCOVERY_INFO_CLEAN]
 )
 @pytest.mark.usefixtures("supervisor", "addon_info")
