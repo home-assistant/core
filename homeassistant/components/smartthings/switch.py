@@ -327,6 +327,8 @@ EXECUTE_WORKAROUND_SWITCHES: dict[
     Capability | str, SmartThingsExecuteSwitchEntityDescription
 ] = {
     # Note: API arguments are reversed - "Light_Off" option turns the light ON
+    # Disabled by default: not all matching devices have a panel LED, and we
+    # cannot detect this from capabilities alone; users opt in per device.
     Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING: SmartThingsExecuteSwitchEntityDescription(
         key=Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING,
         translation_key="display_lighting",
@@ -334,6 +336,7 @@ EXECUTE_WORKAROUND_SWITCHES: dict[
         on_argument=["/mode/vs/0", {"x.com.samsung.da.options": ["Light_Off"]}],
         off_argument=["/mode/vs/0", {"x.com.samsung.da.options": ["Light_On"]}],
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
     ),
 }
 
