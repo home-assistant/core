@@ -25,14 +25,13 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import NX584ConfigEntry, async_import_yaml_config
+from .const import DEFAULT_HOST, DEFAULT_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
-DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "NX584"
-DEFAULT_PORT = 5007
 SERVICE_BYPASS_ZONE = "bypass_zone"
 SERVICE_UNBYPASS_ZONE = "unbypass_zone"
 ATTR_ZONE = "zone"

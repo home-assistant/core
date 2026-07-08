@@ -61,8 +61,9 @@ async def test_setup_entry_not_ready(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("nx584_client")
 async def test_unload_entry(
-    hass: HomeAssistant, nx584_client: MagicMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test unloading a config entry."""
     mock_config_entry.add_to_hass(hass)

@@ -27,14 +27,14 @@ from . import NX584ConfigEntry, async_import_yaml_config
 from .const import (
     CONF_EXCLUDE_ZONES,
     CONF_ZONE_TYPES,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
     EXCLUDE_ZONES_SCHEMA,
     ZONE_TYPES_SCHEMA,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_HOST = "localhost"
-DEFAULT_PORT = 5007
 BYPASS_ZONE_FLAGS = {"Bypass", "Inhibit"}
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
