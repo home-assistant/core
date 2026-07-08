@@ -36,7 +36,7 @@ async def test_holiday_calendar_entity(
     """Test HolidayCalendarEntity functionality."""
     await hass.config.async_set_time_zone(time_zone)
     zone = await dt_util.async_get_time_zone(time_zone)
-    freezer.move_to(datetime(2023, 1, 1, 0, 1, 1, tzinfo=zone))  # New Years Day
+    freezer.move_to(datetime(2023, 3, 27, 0, 1, 1, tzinfo=zone))  # Seward's Day
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -65,9 +65,9 @@ async def test_holiday_calendar_entity(
         "calendar.united_states_ak": {
             "events": [
                 {
-                    "start": "2023-01-01",
-                    "end": "2023-01-02",
-                    "summary": "New Year's Day",
+                    "start": "2023-03-27",
+                    "end": "2023-03-28",
+                    "summary": "Seward's Day",
                     "location": "United States, AK",
                 }
             ]
@@ -79,8 +79,8 @@ async def test_holiday_calendar_entity(
     assert state.state == "on"
 
     freezer.move_to(
-        datetime(2023, 1, 2, 0, 1, 1, tzinfo=zone)
-    )  # Day after New Years Day
+        datetime(2023, 3, 28, 0, 1, 1, tzinfo=zone)
+    )  # Day after Seward's Day
 
     state = hass.states.get("calendar.united_states_ak")
     assert state is not None
@@ -94,7 +94,7 @@ async def test_holiday_calendar_entity(
         SERVICE_GET_EVENTS,
         {
             "entity_id": "calendar.united_states_ak",
-            "end_date_time": dt_util.now() + timedelta(days=1),
+            "end_date_time": dt_util.now() + timedelta(days=100),
         },
         blocking=True,
         return_response=True,
@@ -103,9 +103,9 @@ async def test_holiday_calendar_entity(
         "calendar.united_states_ak": {
             "events": [
                 {
-                    "start": "2024-01-01",
-                    "end": "2024-01-02",
-                    "summary": "New Year's Day",
+                    "start": "2024-03-25",
+                    "end": "2024-03-26",
+                    "summary": "Seward's Day",
                     "location": "United States, AK",
                 }
             ]
@@ -124,7 +124,7 @@ async def test_default_language(
     """Test default language."""
     await hass.config.async_set_time_zone(time_zone)
     zone = await dt_util.async_get_time_zone(time_zone)
-    freezer.move_to(datetime(2023, 1, 1, 12, tzinfo=zone))
+    freezer.move_to(datetime(2023, 10, 9, 12, tzinfo=zone))
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -151,9 +151,9 @@ async def test_default_language(
         "calendar.france_bl": {
             "events": [
                 {
-                    "start": "2023-01-01",
-                    "end": "2023-01-02",
-                    "summary": "New Year's Day",
+                    "start": "2023-10-09",
+                    "end": "2023-10-10",
+                    "summary": "Abolition of Slavery",
                     "location": "France, BL",
                 }
             ]
@@ -180,9 +180,9 @@ async def test_default_language(
         "calendar.france_bl": {
             "events": [
                 {
-                    "start": "2023-01-01",
-                    "end": "2023-01-02",
-                    "summary": "Jour de l'an",
+                    "start": "2023-10-09",
+                    "end": "2023-10-10",
+                    "summary": "Abolition de l'esclavage",
                     "location": "France, BL",
                 }
             ]
@@ -421,18 +421,7 @@ async def test_categories(
         blocking=True,
         return_response=True,
     )
-    assert response == {
-        "calendar.germany": {
-            "events": [
-                {
-                    "start": "2025-12-25",
-                    "end": "2025-12-26",
-                    "summary": "Christmas Day",
-                    "location": "Germany",
-                }
-            ]
-        }
-    }
+    assert response == {"calendar.germany": {"events": []}}
 
 
 async def test_no_update_when_disabled(
