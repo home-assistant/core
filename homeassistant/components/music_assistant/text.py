@@ -10,13 +10,12 @@ from music_assistant_models.player import PlayerOption, PlayerOptionType
 from homeassistant.components.text import TextEntity, TextEntityDescription
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
-from .const import DOMAIN, LOGGER
+from .const import LOGGER
 from .entity import MusicAssistantPlayerOptionEntity
-from .helpers import catch_musicassistant_error
+from .helpers import catch_musicassistant_error, get_party_device_info
 
 PLAYER_OPTIONS_TEXT: Final[dict[str, bool]] = {
     # translation_key: enabled_by_default
@@ -151,11 +150,7 @@ class MusicAssistantPartyModeText(TextEntity):
         self.instance_id = instance_id
         self.config_key = config_key
         self.entity_description = entity_description
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, instance_id)},
-            name="Party Mode Plugin",
-            manufacturer="Music Assistant",
-        )
+        self._attr_device_info = get_party_device_info(instance_id)
         self._attr_unique_id = f"{instance_id}_{config_key}"
 
     @override

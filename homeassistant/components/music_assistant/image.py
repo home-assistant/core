@@ -13,13 +13,13 @@ import segno
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
 
 from . import MusicAssistantConfigEntry
-from .const import DOMAIN, LOGGER, PARTY_URL_POLL_INTERVAL
+from .const import LOGGER, PARTY_URL_POLL_INTERVAL
+from .helpers import get_party_device_info
 
 
 async def async_setup_entry(
@@ -69,11 +69,7 @@ class MusicAssistantPartyModeImage(ImageEntity):
         self.instance_id = instance_id
         self.entity_description = entity_description
         self._current_url: str | None = None
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, instance_id)},
-            name="Party Mode Plugin",
-            manufacturer="Music Assistant",
-        )
+        self._attr_device_info = get_party_device_info(instance_id)
         self._attr_unique_id = f"{instance_id}_{entity_description.key}"
         self._image_bytes: bytes | None = None
 

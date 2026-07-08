@@ -9,6 +9,9 @@ from music_assistant_models.errors import MusicAssistantError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.device_registry import DeviceInfo
+
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
@@ -44,3 +47,12 @@ def get_music_assistant_client(
     if entry.state is not ConfigEntryState.LOADED:
         raise ServiceValidationError("Entry not loaded")
     return entry.runtime_data.mass
+
+
+def get_party_device_info(instance_id: str) -> DeviceInfo:
+    """Return device info for Party Mode."""
+    return DeviceInfo(
+        identifiers={(DOMAIN, instance_id)},
+        name="Party Mode Plugin",
+        manufacturer="Music Assistant",
+    )
