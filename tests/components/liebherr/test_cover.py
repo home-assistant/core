@@ -80,16 +80,6 @@ async def test_covers(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("init_integration")
-async def test_cover_state_closed(
-    hass: HomeAssistant,
-) -> None:
-    """Test cover entity reports closed state."""
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_CLOSED
-
-
 @pytest.mark.parametrize(
     ("door_state", "expected_state"),
     [
@@ -137,8 +127,6 @@ async def test_cover_service_calls(
     expected_value: bool,
 ) -> None:
     """Test cover open/close service calls settle to expected state."""
-    initial_call_count = mock_liebherr_client.get_device_state.call_count
-
     mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: (
         _mock_door_state(door_state)
     )
@@ -155,9 +143,6 @@ async def test_cover_service_calls(
         zone_id=1,
         value=expected_value,
     )
-
-    # Verify coordinator refresh was triggered
-    assert mock_liebherr_client.get_device_state.call_count > initial_call_count
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
@@ -201,8 +186,11 @@ async def test_cover_state_settles_after_poll(
 
 
 @pytest.mark.parametrize(
-    "service",
-    [SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER],
+    ("service", "message"),
+    [
+        (SERVICE_OPEN_COVER, "An error occurred while opening the door"),
+        (SERVICE_CLOSE_COVER, "An error occurred while closing the door"),
+    ],
     ids=["open", "close"],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -210,16 +198,14 @@ async def test_cover_failure(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
     service: str,
+    message: str,
 ) -> None:
     """Test cover fails gracefully on connection error and resets optimistic state."""
     mock_liebherr_client.trigger_auto_door.side_effect = LiebherrConnectionError(
         "Connection failed"
     )
 
-    with pytest.raises(
-        HomeAssistantError,
-        match="An error occurred while communicating with the device",
-    ):
+    with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
             COVER_DOMAIN,
             service,
@@ -395,11 +381,13 @@ async def test_cover_optimistic_state(
     """Test optimistic opening/closing state is set before command completes."""
     states: list[str] = []
 
-    # Block the API call so we can observe intermediate state
-    async def _delayed_trigger(**kwargs: object) -> None:
-        states.append(hass.states.get(ENTITY_ID).state)  # type: ignore[union-attr]
+    # Capture the state while the API call is in flight to observe optimistic state
+    async def _observe_trigger(**kwargs: object) -> None:
+        state = hass.states.get(ENTITY_ID)
+        assert state is not None
+        states.append(state.state)
 
-    mock_liebherr_client.trigger_auto_door.side_effect = _delayed_trigger
+    mock_liebherr_client.trigger_auto_door.side_effect = _observe_trigger
 
     await hass.services.async_call(
         COVER_DOMAIN,

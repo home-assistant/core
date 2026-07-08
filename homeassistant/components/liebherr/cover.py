@@ -33,11 +33,10 @@ def _create_cover_entities(
         entities.extend(
             LiebherrAutoDoor(
                 coordinator=coordinator,
-                zone_id=control.zone_id,
+                zone_id=zone_id,
                 has_multiple_zones=has_multiple_zones,
             )
-            for control in coordinator.data.controls
-            if isinstance(control, AutoDoorControl)
+            for zone_id in coordinator.data.get_auto_door_controls()
         )
 
     return entities
@@ -139,38 +138,34 @@ class LiebherrAutoDoor(LiebherrEntity, CoverEntity):
             return False
         return not self._optimistic_state
 
-    @override
-    async def async_open_cover(self, **kwargs: Any) -> None:
-        """Open the door."""
-        self._optimistic_state = True
+    async def _async_set_door(self, value: bool) -> None:
+        """Open or close the door."""
+        self._optimistic_state = value
         self.async_write_ha_state()
         try:
             await self._async_send_command(
                 self.coordinator.client.trigger_auto_door(
                     device_id=self.coordinator.device_id,
                     zone_id=self._zone_id,
-                    value=True,
+                    value=value,
                 )
             )
-        except HomeAssistantError:
+        except HomeAssistantError as err:
             self._optimistic_state = None
             self.async_write_ha_state()
-            raise
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="open_auto_door_error"
+                if value
+                else "close_auto_door_error",
+            ) from err
+
+    @override
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the door."""
+        await self._async_set_door(True)
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the door."""
-        self._optimistic_state = False
-        self.async_write_ha_state()
-        try:
-            await self._async_send_command(
-                self.coordinator.client.trigger_auto_door(
-                    device_id=self.coordinator.device_id,
-                    zone_id=self._zone_id,
-                    value=False,
-                )
-            )
-        except HomeAssistantError:
-            self._optimistic_state = None
-            self.async_write_ha_state()
-            raise
+        await self._async_set_door(False)

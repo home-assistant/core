@@ -217,8 +217,14 @@
     }
   },
   "exceptions": {
+    "close_auto_door_error": {
+      "message": "An error occurred while closing the door"
+    },
     "communication_error": {
       "message": "An error occurred while communicating with the device"
+    },
+    "open_auto_door_error": {
+      "message": "An error occurred while opening the door"
     }
   }
 }
