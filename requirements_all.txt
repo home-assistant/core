@@ -1201,7 +1201,7 @@ h2==4.3.0
 ha-ffmpeg==3.2.2
 
 # homeassistant.components.iotawatt
-ha-iotawattpy==0.1.2
+ha-iotawattpy==0.2.1
 
 # homeassistant.components.philips_js
 ha-philipsjs==3.2.4
@@ -1362,7 +1362,7 @@ influxdb-client==1.50.0
 influxdb==5.3.2
 
 # homeassistant.components.infrared
-infrared-protocols==6.5.0
+infrared-protocols==6.6.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.4.4
@@ -3159,7 +3159,7 @@ tesla-fleet-api==1.5.4
 tesla-powerwall==0.5.3
 
 # homeassistant.components.tesla_wall_connector
-tesla-wall-connector==1.1.0
+tesla-wall-connector==1.2.0
 
 # homeassistant.components.teslemetry
 teslemetry-stream==0.9.1
