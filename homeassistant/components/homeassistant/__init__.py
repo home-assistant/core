@@ -324,7 +324,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             {
                 vol.Required(ATTR_LATITUDE): cv.latitude,
                 vol.Required(ATTR_LONGITUDE): cv.longitude,
-                vol.Optional(ATTR_ELEVATION): int,
+                vol.Optional(ATTR_ELEVATION): vol.Coerce(int),
             }
         ),
     )
