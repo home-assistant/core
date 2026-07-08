@@ -393,6 +393,10 @@
         "no_selection": "No DPT selected"
       }
     },
+    "dpt_reference": {
+      "description": "Browse supported KNX datapoint types",
+      "title": "DPT reference"
+    },
     "entities": {
       "create": {
         "_": {
