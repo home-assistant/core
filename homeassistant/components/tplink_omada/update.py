@@ -54,7 +54,7 @@ class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_name = "Firmware"
+    _attr_translation_key = "firmware"
 
     def __init__(self, coordinator: OmadaControllerCoordinator) -> None:
         """Initialize the controller update entity."""
@@ -76,11 +76,14 @@ class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
     @property
     def _hardware_update(self) -> OmadaHardwareUpdateInfo | None:
         """Return controller hardware firmware update data."""
-        return (
-            self.coordinator.data.updates.hardware
-            if self._update_info is self.coordinator.data.updates.hardware
-            else None
-        )
+        updates = self.coordinator.data.updates
+        hardware = updates.hardware
+        software = updates.software
+        if hardware and hardware.upgrade:
+            return hardware
+        if software and software.upgrade:
+            return None
+        return hardware
 
     @property
     @override
@@ -150,6 +153,7 @@ class OmadaDeviceUpdate(
         | UpdateEntityFeature.RELEASE_NOTES
     )
     _attr_device_class = UpdateDeviceClass.FIRMWARE
+    _attr_translation_key = "firmware"
 
     def __init__(
         self,

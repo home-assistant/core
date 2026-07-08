@@ -145,11 +145,7 @@ class OmadaControllerDeviceStatusSensor(OmadaControllerEntity, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return (
-            OmadaDeviceStatus.CONNECTED.value
-            if self.coordinator.data.info.configured
-            else OmadaDeviceStatus.DISCONNECTED.value
-        )
+        return OmadaDeviceStatus.CONNECTED.value
 
 
 class OmadaDeviceSensor(OmadaDeviceEntity[OmadaDevicesCoordinator], SensorEntity):
