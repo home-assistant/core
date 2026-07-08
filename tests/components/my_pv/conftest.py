@@ -71,5 +71,6 @@ def mock_my_pv_connection() -> Generator[AsyncMock]:
         connection.fetch_data = AsyncMock(return_value={"temp1": 543})
         connection.set_setup_value = AsyncMock(return_value=True)
         connection.send_command = AsyncMock(return_value=True)
+        connection.uri = "http://127.0.0.1/"
 
         yield connection
