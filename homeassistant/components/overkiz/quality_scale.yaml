@@ -32,22 +32,8 @@ rules:
   action-exceptions: done
   docs-installation-parameters: done
   integration-owner: done
-  parallel-updates:
-    status: todo
-    comment: |
-      No platform defines the PARALLEL_UPDATES constant yet. Read-only platforms (binary_sensor, sensor)
-      should set it to 0; action platforms should declare an explicit limit.
-  test-coverage:
-    status: todo
-    comment: |
-      Several test gaps are still visible:
-      test_form_cloud and test_form_only_cloud_supported only check that setup was called, not the created entry data or unique ID;
-      test_form_invalid_auth_cloud still stops at the error form instead of proving the flow can recover to ABORT or CREATE_ENTRY;
-      test_dhcp_flow and test_zeroconf_flow still do not assert the discovered unique ID;
-      test_init.py still uses async_setup_component() instead of hass.config_entries.async_setup();
-      tests should patch the library where it is used (homeassistant.components.overkiz.OverkizClient),
-      not the integration's own create_cloud_client/create_local_client helpers, and a single shared
-      patch fixture should cover both the config flow and the normal tests.
+  parallel-updates: todo
+  test-coverage: todo
   docs-configuration-parameters:
     status: exempt
     comment: The integration does not provide configuration parameters.
@@ -57,11 +43,7 @@ rules:
   docs-examples: todo
   discovery-update-info: done
   entity-device-class: done
-  entity-translations:
-    status: todo
-    comment: |
-      OverkizEntity still sets _attr_name = None in the base class, and OverkizDescriptiveEntity still assigns raw description.name strings.
-      Name handling should be moved to the entities that really need custom names so translated entity names can be implemented consistently.
+  entity-translations: todo
   docs-data-update: done
   entity-disabled-by-default: done
   discovery: done
@@ -70,21 +52,12 @@ rules:
   docs-supported-devices: done
   icon-translations: todo
   docs-known-limitations: done
-  stale-devices:
-    status: todo
-    comment: |
-      On DEVICE_REMOVED, coordinator.py deletes the whole device from the registry.
-      It should instead remove only this config entry from the device (async_update_device with remove_config_entry_id)
-      and delete the device only when no config entries remain, since the device may be shared with other integrations.
+  stale-devices: todo
   docs-supported-functions: todo
   repair-issues: todo
   reconfiguration-flow: todo
   entity-category: done
-  dynamic-devices:
-    status: todo
-    comment: |
-      coordinator.py reloads the config entry when Overkiz emits DEVICE_CREATED or DEVICE_UPDATED.
-      This still needs a clear determination of whether reloading on new devices is sufficient for this rule, or whether devices should be added without a full integration reload.
+  dynamic-devices: todo
   docs-troubleshooting: todo
   diagnostics: done
   docs-use-cases: todo
