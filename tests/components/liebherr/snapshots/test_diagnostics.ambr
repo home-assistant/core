@@ -93,6 +93,13 @@
               'type': 'PresentationLightControl',
               'value': 3,
             }),
+            dict({
+              'name': 'autodoor',
+              'type': 'AutoDoorControl',
+              'value': 'closed',
+              'zone_id': 1,
+              'zone_position': 'top',
+            }),
           ]),
           'device': dict({
             'device_id': 'test_device_id',
