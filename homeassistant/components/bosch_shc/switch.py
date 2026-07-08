@@ -172,7 +172,7 @@ class SHCSwitch(SHCEntity[SHCDevice], SwitchEntity):
         """Return the state of the switch."""
         return (
             getattr(self._device, self.entity_description.on_key)
-            == self.entity_description.on_value
+            is self.entity_description.on_value
         )
 
     @override
