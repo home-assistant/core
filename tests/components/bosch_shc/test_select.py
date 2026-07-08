@@ -227,9 +227,9 @@ async def test_motion_sensitivity(
 
     state = hass.states.get("select.test_device_motion_sensitivity")
     assert state is not None
-    assert state.state == "MIDDLE"
+    assert state.state == "middle"
 
-    await _select_option(hass, "select.test_device_motion_sensitivity", "HIGH")
+    await _select_option(hass, "select.test_device_motion_sensitivity", "high")
     assert (
         device.motion_sensitivity
         == PirSensorConfigurationService.MotionSensitivity.HIGH
@@ -258,10 +258,10 @@ async def test_orientation_light_response(
 
     state = hass.states.get("select.test_device_orientation_light_response_time")
     assert state is not None
-    assert state.state == "LONG"
+    assert state.state == "long"
 
     await _select_option(
-        hass, "select.test_device_orientation_light_response_time", "SHORT"
+        hass, "select.test_device_orientation_light_response_time", "short"
     )
     assert device.long_poll_interval == PollControlService.PollControlState.SHORT
 
@@ -277,14 +277,14 @@ async def test_smart_sensitivity_security_and_comfort(
     assert hass.states.get("select.test_device_security_sensitivity_level") is not None
     assert hass.states.get("select.test_device_comfort_sensitivity_level") is not None
 
-    await _select_option(hass, "select.test_device_security_sensitivity_level", "LOW")
+    await _select_option(hass, "select.test_device_security_sensitivity_level", "low")
     device.set_smart_sensitivity_manual_level.assert_called_once_with(
         SmartSensitivityControlService.SmartSensitivityContext.SECURITY,
         SmartSensitivityControlService.MotionSensitivity.LOW,
     )
     device.set_smart_sensitivity_manual_level.reset_mock()
 
-    await _select_option(hass, "select.test_device_comfort_sensitivity_level", "HIGH")
+    await _select_option(hass, "select.test_device_comfort_sensitivity_level", "high")
     device.set_smart_sensitivity_manual_level.assert_called_once_with(
         SmartSensitivityControlService.SmartSensitivityContext.COMFORT,
         SmartSensitivityControlService.MotionSensitivity.HIGH,
@@ -301,9 +301,9 @@ async def test_vibration_sensitivity(
 
     state = hass.states.get("select.test_device_vibration_sensitivity")
     assert state is not None
-    assert state.state == "MEDIUM"
+    assert state.state == "medium"
 
-    await _select_option(hass, "select.test_device_vibration_sensitivity", "HIGH")
+    await _select_option(hass, "select.test_device_vibration_sensitivity", "high")
     assert device.sensitivity == VibrationSensorService.SensitivityState.HIGH
 
 
@@ -335,10 +335,10 @@ async def test_state_after_power_outage(
 
     state = hass.states.get("select.test_device_state_after_power_outage")
     assert state is not None
-    assert state.state == "OFF"
+    assert state.state == "off"
 
     await _select_option(
-        hass, "select.test_device_state_after_power_outage", "LAST_STATE"
+        hass, "select.test_device_state_after_power_outage", "last_state"
     )
     assert (
         device.state_after_power_outage
@@ -369,9 +369,9 @@ async def test_smoke_sensitivity(
 
     state = hass.states.get("select.test_device_smoke_sensitivity")
     assert state is not None
-    assert state.state == "MIDDLE"
+    assert state.state == "middle"
 
-    await _select_option(hass, "select.test_device_smoke_sensitivity", "HIGH")
+    await _select_option(hass, "select.test_device_smoke_sensitivity", "high")
     assert (
         device.smoke_sensitivity == SmokeSensitivityService.SmokeSensitivityLevel.HIGH
     )
@@ -387,9 +387,9 @@ async def test_display_direction(
 
     state = hass.states.get("select.room_thermostat_2_display_direction")
     assert state is not None
-    assert state.state == "NORMAL"
+    assert state.state == "normal"
 
-    await _select_option(hass, "select.room_thermostat_2_display_direction", "REVERSED")
+    await _select_option(hass, "select.room_thermostat_2_display_direction", "reversed")
     assert device.display_direction == DisplayDirection.Direction.REVERSED
 
 
@@ -403,10 +403,10 @@ async def test_displayed_temperature(
 
     state = hass.states.get("select.room_thermostat_2_displayed_temperature")
     assert state is not None
-    assert state.state == "SETPOINT"
+    assert state.state == "setpoint"
 
     await _select_option(
-        hass, "select.room_thermostat_2_displayed_temperature", "MEASURED"
+        hass, "select.room_thermostat_2_displayed_temperature", "measured"
     )
     assert (
         device.displayed_temperature
@@ -429,11 +429,11 @@ async def test_valve_and_heater_type(
     valve_state = hass.states.get("select.gen2_thermostat_valve_type")
     heater_state = hass.states.get("select.gen2_thermostat_heater_type")
     assert valve_state is not None
-    assert valve_state.state == "NORMALLY_CLOSE"
+    assert valve_state.state == "normally_close"
     assert heater_state is not None
-    assert heater_state.state == "RADIATOR"
+    assert heater_state.state == "radiator"
 
-    await _select_option(hass, "select.gen2_thermostat_valve_type", "NORMALLY_OPEN")
+    await _select_option(hass, "select.gen2_thermostat_valve_type", "normally_open")
     assert device.valve_type == WallThermostatConfiguration.ValveType.NORMALLY_OPEN
 
 
@@ -447,7 +447,7 @@ async def test_terminal_type_only_for_roomthermostat2(
 
     state = hass.states.get("select.room_thermostat_2_terminal_type")
     assert state is not None
-    assert state.state == "NOT_CONNECTED"
+    assert state.state == "not_connected"
 
     await _select_option(
         hass, "select.room_thermostat_2_terminal_type", "FLOOR_SENSOR_CONNECTED"
@@ -500,15 +500,15 @@ async def test_switch_configuration_selects(
     setattr(mock_session.device_helper, device_helper_attr, [device])
     await _setup_select_platform(hass, mock_config_entry, mock_session)
 
-    assert hass.states.get("select.test_device_switch_type").state == "PUSHBUTTON"
-    assert hass.states.get("select.test_device_actuator_type").state == "NORMALLY_OPEN"
-    assert hass.states.get("select.test_device_output_mode").state == "ATTACHED"
+    assert hass.states.get("select.test_device_switch_type").state == "pushbutton"
+    assert hass.states.get("select.test_device_actuator_type").state == "normally_open"
+    assert hass.states.get("select.test_device_output_mode").state == "attached"
 
-    await _select_option(hass, "select.test_device_switch_type", "SWITCH")
+    await _select_option(hass, "select.test_device_switch_type", "switch")
     assert device.switch_type == SwitchConfiguration.SwitchType.SWITCH
 
-    await _select_option(hass, "select.test_device_actuator_type", "NORMALLY_CLOSED")
+    await _select_option(hass, "select.test_device_actuator_type", "normally_closed")
     assert device.actuator_type == SwitchConfiguration.ActuatorType.NORMALLY_CLOSED
 
-    await _select_option(hass, "select.test_device_output_mode", "DETACHED")
+    await _select_option(hass, "select.test_device_output_mode", "detached")
     assert device.output_mode == SwitchConfiguration.OutputMode.DETACHED

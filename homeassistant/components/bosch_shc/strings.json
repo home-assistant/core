@@ -46,49 +46,132 @@
   "entity": {
     "select": {
       "actuator_type": {
-        "name": "Actuator type"
+        "name": "Actuator type",
+        "state": {
+          "normally_closed": "Normally closed",
+          "normally_open": "Normally open",
+          "unsupported": "Unsupported"
+        }
       },
       "display_direction": {
-        "name": "Display direction"
+        "name": "Display direction",
+        "state": {
+          "normal": "[%key:common::state::normal%]",
+          "reversed": "Reversed"
+        }
       },
       "displayed_temperature": {
-        "name": "Displayed temperature"
+        "name": "Displayed temperature",
+        "state": {
+          "measured": "Measured",
+          "setpoint": "Setpoint"
+        }
       },
       "heater_type": {
-        "name": "Heater type"
+        "name": "Heater type",
+        "state": {
+          "convector_active": "Convector (active)",
+          "convector_passive": "Convector (passive)",
+          "floor_heating": "Floor heating",
+          "floor_heating_low_energy": "Floor heating (low energy)",
+          "radiator": "Radiator"
+        }
       },
       "motion_sensitivity": {
-        "name": "Motion sensitivity"
+        "name": "Motion sensitivity",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "Middle"
+        }
       },
       "orientation_light_response": {
-        "name": "Orientation light response time"
+        "name": "Orientation light response time",
+        "state": {
+          "long": "Long",
+          "short": "Short"
+        }
       },
       "output_mode": {
-        "name": "Output mode"
+        "name": "Output mode",
+        "state": {
+          "attached": "Attached",
+          "detached": "Detached",
+          "detached_long_press": "Detached (long press)",
+          "detached_short_press": "Detached (short press)",
+          "unsupported": "[%key:component::bosch_shc::entity::select::actuator_type::state::unsupported%]"
+        }
       },
       "smart_sensitivity_comfort": {
-        "name": "Comfort sensitivity level"
+        "name": "Comfort sensitivity level",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:component::bosch_shc::entity::select::motion_sensitivity::state::middle%]"
+        }
       },
       "smart_sensitivity_security": {
-        "name": "Security sensitivity level"
+        "name": "Security sensitivity level",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:component::bosch_shc::entity::select::motion_sensitivity::state::middle%]"
+        }
       },
       "smoke_sensitivity": {
-        "name": "Smoke sensitivity"
+        "name": "Smoke sensitivity",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:component::bosch_shc::entity::select::motion_sensitivity::state::middle%]"
+        }
       },
       "state_after_power_outage": {
-        "name": "State after power outage"
+        "name": "State after power outage",
+        "state": {
+          "last_state": "Last state",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
       },
       "switch_type": {
-        "name": "Switch type"
+        "name": "Switch type",
+        "state": {
+          "no_switch": "No switch",
+          "none": "None",
+          "pushbutton": "Pushbutton",
+          "switch": "Switch"
+        }
       },
       "terminal_type": {
-        "name": "Terminal type"
+        "name": "Terminal type",
+        "state": {
+          "floor_sensor_connected": "Floor sensor connected",
+          "floor_sensor_displayed": "Floor sensor displayed",
+          "floor_sensor_displayed_and_used_for_regulation": "Floor sensor displayed and used for regulation",
+          "floor_sensor_used_for_regulation": "Floor sensor used for regulation",
+          "not_connected": "Not connected",
+          "outdoor_sensor_connected": "Outdoor sensor connected",
+          "volt_free_sensor_connected": "Volt-free sensor connected",
+          "volt_free_sensor_connected_and_used_for_operation": "Volt-free sensor connected and used for operation"
+        }
       },
       "valve_type": {
-        "name": "Valve type"
+        "name": "Valve type",
+        "state": {
+          "normally_close": "[%key:component::bosch_shc::entity::select::actuator_type::state::normally_closed%]",
+          "normally_open": "[%key:component::bosch_shc::entity::select::actuator_type::state::normally_open%]"
+        }
       },
       "vibration_sensitivity": {
-        "name": "Vibration sensitivity"
+        "name": "Vibration sensitivity",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "very_high": "[%key:common::state::very_high%]",
+          "very_low": "[%key:common::state::very_low%]"
+        }
       }
     },
     "sensor": {

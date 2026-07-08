@@ -7,8 +7,8 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'NORMAL',
-        'REVERSED',
+        'normal',
+        'reversed',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -46,8 +46,8 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen2 Thermostat Display direction',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'NORMAL',
-        'REVERSED',
+        'normal',
+        'reversed',
       ]),
     }),
     'context': <ANY>,
@@ -55,7 +55,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'NORMAL',
+    'state': 'normal',
   })
 # ---
 # name: test_selects[select.gen2_thermostat_displayed_temperature-entry]
@@ -66,8 +66,8 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'SETPOINT',
-        'MEASURED',
+        'setpoint',
+        'measured',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -105,8 +105,8 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen2 Thermostat Displayed temperature',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'SETPOINT',
-        'MEASURED',
+        'setpoint',
+        'measured',
       ]),
     }),
     'context': <ANY>,
@@ -114,7 +114,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'SETPOINT',
+    'state': 'setpoint',
   })
 # ---
 # name: test_selects[select.gen2_thermostat_heater_type-entry]
@@ -125,11 +125,11 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'FLOOR_HEATING',
-        'FLOOR_HEATING_LOW_ENERGY',
-        'RADIATOR',
-        'CONVECTOR_PASSIVE',
-        'CONVECTOR_ACTIVE',
+        'floor_heating',
+        'floor_heating_low_energy',
+        'radiator',
+        'convector_passive',
+        'convector_active',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -167,11 +167,11 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen2 Thermostat Heater type',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'FLOOR_HEATING',
-        'FLOOR_HEATING_LOW_ENERGY',
-        'RADIATOR',
-        'CONVECTOR_PASSIVE',
-        'CONVECTOR_ACTIVE',
+        'floor_heating',
+        'floor_heating_low_energy',
+        'radiator',
+        'convector_passive',
+        'convector_active',
       ]),
     }),
     'context': <ANY>,
@@ -179,7 +179,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'RADIATOR',
+    'state': 'radiator',
   })
 # ---
 # name: test_selects[select.gen2_thermostat_valve_type-entry]
@@ -190,8 +190,8 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'NORMALLY_CLOSE',
-        'NORMALLY_OPEN',
+        'normally_close',
+        'normally_open',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -229,8 +229,8 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen2 Thermostat Valve type',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'NORMALLY_CLOSE',
-        'NORMALLY_OPEN',
+        'normally_close',
+        'normally_open',
       ]),
     }),
     'context': <ANY>,
@@ -238,7 +238,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'NORMALLY_CLOSE',
+    'state': 'normally_close',
   })
 # ---
 # name: test_selects[select.room_thermostat_2_display_direction-entry]
@@ -249,8 +249,8 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'NORMAL',
-        'REVERSED',
+        'normal',
+        'reversed',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -288,8 +288,8 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Thermostat 2 Display direction',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'NORMAL',
-        'REVERSED',
+        'normal',
+        'reversed',
       ]),
     }),
     'context': <ANY>,
@@ -297,7 +297,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'NORMAL',
+    'state': 'normal',
   })
 # ---
 # name: test_selects[select.room_thermostat_2_displayed_temperature-entry]
@@ -308,8 +308,8 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'SETPOINT',
-        'MEASURED',
+        'setpoint',
+        'measured',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -347,8 +347,8 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Thermostat 2 Displayed temperature',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'SETPOINT',
-        'MEASURED',
+        'setpoint',
+        'measured',
       ]),
     }),
     'context': <ANY>,
@@ -356,7 +356,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'SETPOINT',
+    'state': 'setpoint',
   })
 # ---
 # name: test_selects[select.room_thermostat_2_terminal_type-entry]
@@ -367,14 +367,14 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'NOT_CONNECTED',
-        'FLOOR_SENSOR_CONNECTED',
-        'FLOOR_SENSOR_USED_FOR_REGULATION',
-        'FLOOR_SENSOR_DISPLAYED',
-        'FLOOR_SENSOR_DISPLAYED_AND_USED_FOR_REGULATION',
-        'VOLT_FREE_SENSOR_CONNECTED',
-        'VOLT_FREE_SENSOR_CONNECTED_AND_USED_FOR_OPERATION',
-        'OUTDOOR_SENSOR_CONNECTED',
+        'not_connected',
+        'floor_sensor_connected',
+        'floor_sensor_used_for_regulation',
+        'floor_sensor_displayed',
+        'floor_sensor_displayed_and_used_for_regulation',
+        'volt_free_sensor_connected',
+        'volt_free_sensor_connected_and_used_for_operation',
+        'outdoor_sensor_connected',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -412,14 +412,14 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Thermostat 2 Terminal type',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'NOT_CONNECTED',
-        'FLOOR_SENSOR_CONNECTED',
-        'FLOOR_SENSOR_USED_FOR_REGULATION',
-        'FLOOR_SENSOR_DISPLAYED',
-        'FLOOR_SENSOR_DISPLAYED_AND_USED_FOR_REGULATION',
-        'VOLT_FREE_SENSOR_CONNECTED',
-        'VOLT_FREE_SENSOR_CONNECTED_AND_USED_FOR_OPERATION',
-        'OUTDOOR_SENSOR_CONNECTED',
+        'not_connected',
+        'floor_sensor_connected',
+        'floor_sensor_used_for_regulation',
+        'floor_sensor_displayed',
+        'floor_sensor_displayed_and_used_for_regulation',
+        'volt_free_sensor_connected',
+        'volt_free_sensor_connected_and_used_for_operation',
+        'outdoor_sensor_connected',
       ]),
     }),
     'context': <ANY>,
@@ -427,7 +427,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'NOT_CONNECTED',
+    'state': 'not_connected',
   })
 # ---
 # name: test_selects[select.test_device_actuator_type-entry]
@@ -438,9 +438,9 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'NORMALLY_CLOSED',
-        'NORMALLY_OPEN',
-        'UNSUPPORTED',
+        'normally_closed',
+        'normally_open',
+        'unsupported',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -478,9 +478,9 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Actuator type',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'NORMALLY_CLOSED',
-        'NORMALLY_OPEN',
-        'UNSUPPORTED',
+        'normally_closed',
+        'normally_open',
+        'unsupported',
       ]),
     }),
     'context': <ANY>,
@@ -488,7 +488,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'NORMALLY_OPEN',
+    'state': 'normally_open',
   })
 # ---
 # name: test_selects[select.test_device_comfort_sensitivity_level-entry]
@@ -499,9 +499,9 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'HIGH',
-        'MIDDLE',
-        'LOW',
+        'high',
+        'middle',
+        'low',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -539,9 +539,9 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Comfort sensitivity level',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'HIGH',
-        'MIDDLE',
-        'LOW',
+        'high',
+        'middle',
+        'low',
       ]),
     }),
     'context': <ANY>,
@@ -549,7 +549,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'HIGH',
+    'state': 'high',
   })
 # ---
 # name: test_selects[select.test_device_motion_sensitivity-entry]
@@ -560,9 +560,9 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'HIGH',
-        'MIDDLE',
-        'LOW',
+        'high',
+        'middle',
+        'low',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -600,9 +600,9 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Motion sensitivity',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'HIGH',
-        'MIDDLE',
-        'LOW',
+        'high',
+        'middle',
+        'low',
       ]),
     }),
     'context': <ANY>,
@@ -610,7 +610,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'MIDDLE',
+    'state': 'middle',
   })
 # ---
 # name: test_selects[select.test_device_orientation_light_response_time-entry]
@@ -621,8 +621,8 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'LONG',
-        'SHORT',
+        'long',
+        'short',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -660,8 +660,8 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Orientation light response time',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'LONG',
-        'SHORT',
+        'long',
+        'short',
       ]),
     }),
     'context': <ANY>,
@@ -669,7 +669,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'LONG',
+    'state': 'long',
   })
 # ---
 # name: test_selects[select.test_device_output_mode-entry]
@@ -680,11 +680,11 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'ATTACHED',
-        'DETACHED',
-        'DETACHED_SHORT_PRESS',
-        'DETACHED_LONG_PRESS',
-        'UNSUPPORTED',
+        'attached',
+        'detached',
+        'detached_short_press',
+        'detached_long_press',
+        'unsupported',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -722,11 +722,11 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Output mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'ATTACHED',
-        'DETACHED',
-        'DETACHED_SHORT_PRESS',
-        'DETACHED_LONG_PRESS',
-        'UNSUPPORTED',
+        'attached',
+        'detached',
+        'detached_short_press',
+        'detached_long_press',
+        'unsupported',
       ]),
     }),
     'context': <ANY>,
@@ -734,7 +734,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'ATTACHED',
+    'state': 'attached',
   })
 # ---
 # name: test_selects[select.test_device_security_sensitivity_level-entry]
@@ -745,9 +745,9 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'HIGH',
-        'MIDDLE',
-        'LOW',
+        'high',
+        'middle',
+        'low',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -785,9 +785,9 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Security sensitivity level',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'HIGH',
-        'MIDDLE',
-        'LOW',
+        'high',
+        'middle',
+        'low',
       ]),
     }),
     'context': <ANY>,
@@ -795,7 +795,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'HIGH',
+    'state': 'high',
   })
 # ---
 # name: test_selects[select.test_device_smoke_sensitivity-entry]
@@ -806,9 +806,9 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'HIGH',
-        'MIDDLE',
-        'LOW',
+        'high',
+        'middle',
+        'low',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -846,9 +846,9 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Smoke sensitivity',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'HIGH',
-        'MIDDLE',
-        'LOW',
+        'high',
+        'middle',
+        'low',
       ]),
     }),
     'context': <ANY>,
@@ -856,7 +856,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'MIDDLE',
+    'state': 'middle',
   })
 # ---
 # name: test_selects[select.test_device_state_after_power_outage-entry]
@@ -867,9 +867,9 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'OFF',
-        'ON',
-        'LAST_STATE',
+        'off',
+        'on',
+        'last_state',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -907,9 +907,9 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device State after power outage',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'OFF',
-        'ON',
-        'LAST_STATE',
+        'off',
+        'on',
+        'last_state',
       ]),
     }),
     'context': <ANY>,
@@ -917,7 +917,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'OFF',
+    'state': 'off',
   })
 # ---
 # name: test_selects[select.test_device_switch_type-entry]
@@ -928,10 +928,10 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'NONE',
-        'PUSHBUTTON',
-        'SWITCH',
-        'NO_SWITCH',
+        'none',
+        'pushbutton',
+        'switch',
+        'no_switch',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -969,10 +969,10 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Switch type',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'NONE',
-        'PUSHBUTTON',
-        'SWITCH',
-        'NO_SWITCH',
+        'none',
+        'pushbutton',
+        'switch',
+        'no_switch',
       ]),
     }),
     'context': <ANY>,
@@ -980,7 +980,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'PUSHBUTTON',
+    'state': 'pushbutton',
   })
 # ---
 # name: test_selects[select.test_device_vibration_sensitivity-entry]
@@ -991,11 +991,11 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'VERY_HIGH',
-        'HIGH',
-        'MEDIUM',
-        'LOW',
-        'VERY_LOW',
+        'very_high',
+        'high',
+        'medium',
+        'low',
+        'very_low',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1033,11 +1033,11 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Vibration sensitivity',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'VERY_HIGH',
-        'HIGH',
-        'MEDIUM',
-        'LOW',
-        'VERY_LOW',
+        'very_high',
+        'high',
+        'medium',
+        'low',
+        'very_low',
       ]),
     }),
     'context': <ANY>,
@@ -1045,6 +1045,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'MEDIUM',
+    'state': 'medium',
   })
 # ---

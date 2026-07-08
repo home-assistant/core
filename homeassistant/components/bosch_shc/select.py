@@ -38,11 +38,15 @@ PARALLEL_UPDATES = 1
 
 
 def _attr_value_fn(attr: str) -> Callable[[SHCDevice], str | None]:
-    """Return a value_fn reading an enum-valued device attribute by name."""
+    """Return a value_fn reading an enum-valued device attribute by name.
+
+    The option is lower-cased so it matches HA's snake_case option/state
+    convention and can be looked up in strings.json's entity state translations.
+    """
 
     def _value_fn(device: SHCDevice) -> str | None:
         value = getattr(device, attr)
-        return value.name if value is not None else None
+        return value.name.lower() if value is not None else None
 
     return _value_fn
 
@@ -51,7 +55,7 @@ def _attr_set_fn(attr: str, enum_cls: type[Enum]) -> Callable[[SHCDevice, str], 
     """Return a set_fn writing an enum member (looked up by option name) by attr name."""
 
     def _set_fn(device: SHCDevice, option: str) -> None:
-        setattr(device, attr, enum_cls[option])
+        setattr(device, attr, enum_cls[option.upper()])
 
     return _set_fn
 
@@ -66,7 +70,7 @@ def _get_smart_sensitivity(
     level = sensitivity.get("manualLevel")
     if level is None:
         return None
-    return level.name if hasattr(level, "name") else str(level)
+    return level.name.lower() if hasattr(level, "name") else str(level)
 
 
 def _set_smart_sensitivity(
@@ -74,7 +78,7 @@ def _set_smart_sensitivity(
     context: SmartSensitivityControlService.SmartSensitivityContext,
     option: str,
 ) -> None:
-    level = SmartSensitivityControlService.MotionSensitivity[option]
+    level = SmartSensitivityControlService.MotionSensitivity[option.upper()]
     device.set_smart_sensitivity_manual_level(context, level)
 
 
@@ -108,9 +112,9 @@ SELECT_DESCRIPTIONS: dict[str, SHCSelectEntityDescription] = {
         translation_key=MOTION_SENSITIVITY_SELECT,
         entity_category=EntityCategory.CONFIG,
         options=[
-            PirSensorConfigurationService.MotionSensitivity.HIGH.name,
-            PirSensorConfigurationService.MotionSensitivity.MIDDLE.name,
-            PirSensorConfigurationService.MotionSensitivity.LOW.name,
+            PirSensorConfigurationService.MotionSensitivity.HIGH.name.lower(),
+            PirSensorConfigurationService.MotionSensitivity.MIDDLE.name.lower(),
+            PirSensorConfigurationService.MotionSensitivity.LOW.name.lower(),
         ],
         value_fn=_attr_value_fn("motion_sensitivity"),
         set_fn=_attr_set_fn(
@@ -122,8 +126,8 @@ SELECT_DESCRIPTIONS: dict[str, SHCSelectEntityDescription] = {
         translation_key=ORIENTATION_LIGHT_RESPONSE_SELECT,
         entity_category=EntityCategory.CONFIG,
         options=[
-            PollControlService.PollControlState.LONG.name,
-            PollControlService.PollControlState.SHORT.name,
+            PollControlService.PollControlState.LONG.name.lower(),
+            PollControlService.PollControlState.SHORT.name.lower(),
         ],
         value_fn=_attr_value_fn("long_poll_interval"),
         set_fn=_attr_set_fn("long_poll_interval", PollControlService.PollControlState),
@@ -133,9 +137,9 @@ SELECT_DESCRIPTIONS: dict[str, SHCSelectEntityDescription] = {
         translation_key=SMART_SENSITIVITY_SECURITY_SELECT,
         entity_category=EntityCategory.CONFIG,
         options=[
-            SmartSensitivityControlService.MotionSensitivity.HIGH.name,
-            SmartSensitivityControlService.MotionSensitivity.MIDDLE.name,
-            SmartSensitivityControlService.MotionSensitivity.LOW.name,
+            SmartSensitivityControlService.MotionSensitivity.HIGH.name.lower(),
+            SmartSensitivityControlService.MotionSensitivity.MIDDLE.name.lower(),
+            SmartSensitivityControlService.MotionSensitivity.LOW.name.lower(),
         ],
         value_fn=lambda device: _get_smart_sensitivity(
             device, SmartSensitivityControlService.SmartSensitivityContext.SECURITY
@@ -151,9 +155,9 @@ SELECT_DESCRIPTIONS: dict[str, SHCSelectEntityDescription] = {
         translation_key=SMART_SENSITIVITY_COMFORT_SELECT,
         entity_category=EntityCategory.CONFIG,
         options=[
-            SmartSensitivityControlService.MotionSensitivity.HIGH.name,
-            SmartSensitivityControlService.MotionSensitivity.MIDDLE.name,
-            SmartSensitivityControlService.MotionSensitivity.LOW.name,
+            SmartSensitivityControlService.MotionSensitivity.HIGH.name.lower(),
+            SmartSensitivityControlService.MotionSensitivity.MIDDLE.name.lower(),
+            SmartSensitivityControlService.MotionSensitivity.LOW.name.lower(),
         ],
         value_fn=lambda device: _get_smart_sensitivity(
             device, SmartSensitivityControlService.SmartSensitivityContext.COMFORT
@@ -169,11 +173,11 @@ SELECT_DESCRIPTIONS: dict[str, SHCSelectEntityDescription] = {
         translation_key=VIBRATION_SENSITIVITY_SELECT,
         entity_category=EntityCategory.CONFIG,
         options=[
-            VibrationSensorService.SensitivityState.VERY_HIGH.name,
-            VibrationSensorService.SensitivityState.HIGH.name,
-            VibrationSensorService.SensitivityState.MEDIUM.name,
-            VibrationSensorService.SensitivityState.LOW.name,
-            VibrationSensorService.SensitivityState.VERY_LOW.name,
+            VibrationSensorService.SensitivityState.VERY_HIGH.name.lower(),
+            VibrationSensorService.SensitivityState.HIGH.name.lower(),
+            VibrationSensorService.SensitivityState.MEDIUM.name.lower(),
+            VibrationSensorService.SensitivityState.LOW.name.lower(),
+            VibrationSensorService.SensitivityState.VERY_LOW.name.lower(),
         ],
         value_fn=_attr_value_fn("sensitivity"),
         set_fn=_attr_set_fn("sensitivity", VibrationSensorService.SensitivityState),
@@ -183,9 +187,9 @@ SELECT_DESCRIPTIONS: dict[str, SHCSelectEntityDescription] = {
         translation_key=STATE_AFTER_POWER_OUTAGE_SELECT,
         entity_category=EntityCategory.CONFIG,
         options=[
-            PowerSwitchConfigurationService.StateAfterPowerOutage.OFF.name,
-            PowerSwitchConfigurationService.StateAfterPowerOutage.ON.name,
-            PowerSwitchConfigurationService.StateAfterPowerOutage.LAST_STATE.name,
+            PowerSwitchConfigurationService.StateAfterPowerOutage.OFF.name.lower(),
+            PowerSwitchConfigurationService.StateAfterPowerOutage.ON.name.lower(),
+            PowerSwitchConfigurationService.StateAfterPowerOutage.LAST_STATE.name.lower(),
         ],
         value_fn=_attr_value_fn("state_after_power_outage"),
         set_fn=_attr_set_fn(
@@ -198,9 +202,9 @@ SELECT_DESCRIPTIONS: dict[str, SHCSelectEntityDescription] = {
         translation_key=SMOKE_SENSITIVITY_SELECT,
         entity_category=EntityCategory.CONFIG,
         options=[
-            SmokeSensitivityService.SmokeSensitivityLevel.HIGH.name,
-            SmokeSensitivityService.SmokeSensitivityLevel.MIDDLE.name,
-            SmokeSensitivityService.SmokeSensitivityLevel.LOW.name,
+            SmokeSensitivityService.SmokeSensitivityLevel.HIGH.name.lower(),
+            SmokeSensitivityService.SmokeSensitivityLevel.MIDDLE.name.lower(),
+            SmokeSensitivityService.SmokeSensitivityLevel.LOW.name.lower(),
         ],
         value_fn=_attr_value_fn("smoke_sensitivity"),
         set_fn=_attr_set_fn(
@@ -212,8 +216,8 @@ SELECT_DESCRIPTIONS: dict[str, SHCSelectEntityDescription] = {
         translation_key=DISPLAY_DIRECTION_SELECT,
         entity_category=EntityCategory.CONFIG,
         options=[
-            DisplayDirection.Direction.NORMAL.name,
-            DisplayDirection.Direction.REVERSED.name,
+            DisplayDirection.Direction.NORMAL.name.lower(),
+            DisplayDirection.Direction.REVERSED.name.lower(),
         ],
         value_fn=_attr_value_fn("display_direction"),
         set_fn=_attr_set_fn("display_direction", DisplayDirection.Direction),
@@ -223,8 +227,8 @@ SELECT_DESCRIPTIONS: dict[str, SHCSelectEntityDescription] = {
         translation_key=DISPLAYED_TEMPERATURE_SELECT,
         entity_category=EntityCategory.CONFIG,
         options=[
-            DisplayedTemperatureConfiguration.DisplayedTemperature.SETPOINT.name,
-            DisplayedTemperatureConfiguration.DisplayedTemperature.MEASURED.name,
+            DisplayedTemperatureConfiguration.DisplayedTemperature.SETPOINT.name.lower(),
+            DisplayedTemperatureConfiguration.DisplayedTemperature.MEASURED.name.lower(),
         ],
         value_fn=_attr_value_fn("displayed_temperature"),
         set_fn=_attr_set_fn(
@@ -237,8 +241,8 @@ SELECT_DESCRIPTIONS: dict[str, SHCSelectEntityDescription] = {
         translation_key=VALVE_TYPE_SELECT,
         entity_category=EntityCategory.CONFIG,
         options=[
-            WallThermostatConfiguration.ValveType.NORMALLY_CLOSE.name,
-            WallThermostatConfiguration.ValveType.NORMALLY_OPEN.name,
+            WallThermostatConfiguration.ValveType.NORMALLY_CLOSE.name.lower(),
+            WallThermostatConfiguration.ValveType.NORMALLY_OPEN.name.lower(),
         ],
         value_fn=_attr_value_fn("valve_type"),
         set_fn=_attr_set_fn("valve_type", WallThermostatConfiguration.ValveType),
@@ -248,11 +252,11 @@ SELECT_DESCRIPTIONS: dict[str, SHCSelectEntityDescription] = {
         translation_key=HEATER_TYPE_SELECT,
         entity_category=EntityCategory.CONFIG,
         options=[
-            WallThermostatConfiguration.HeaterType.FLOOR_HEATING.name,
-            WallThermostatConfiguration.HeaterType.FLOOR_HEATING_LOW_ENERGY.name,
-            WallThermostatConfiguration.HeaterType.RADIATOR.name,
-            WallThermostatConfiguration.HeaterType.CONVECTOR_PASSIVE.name,
-            WallThermostatConfiguration.HeaterType.CONVECTOR_ACTIVE.name,
+            WallThermostatConfiguration.HeaterType.FLOOR_HEATING.name.lower(),
+            WallThermostatConfiguration.HeaterType.FLOOR_HEATING_LOW_ENERGY.name.lower(),
+            WallThermostatConfiguration.HeaterType.RADIATOR.name.lower(),
+            WallThermostatConfiguration.HeaterType.CONVECTOR_PASSIVE.name.lower(),
+            WallThermostatConfiguration.HeaterType.CONVECTOR_ACTIVE.name.lower(),
         ],
         value_fn=_attr_value_fn("heater_type"),
         set_fn=_attr_set_fn("heater_type", WallThermostatConfiguration.HeaterType),
@@ -262,14 +266,14 @@ SELECT_DESCRIPTIONS: dict[str, SHCSelectEntityDescription] = {
         translation_key=TERMINAL_TYPE_SELECT,
         entity_category=EntityCategory.CONFIG,
         options=[
-            TerminalConfiguration.Type.NOT_CONNECTED.name,
-            TerminalConfiguration.Type.FLOOR_SENSOR_CONNECTED.name,
-            TerminalConfiguration.Type.FLOOR_SENSOR_USED_FOR_REGULATION.name,
-            TerminalConfiguration.Type.FLOOR_SENSOR_DISPLAYED.name,
-            TerminalConfiguration.Type.FLOOR_SENSOR_DISPLAYED_AND_USED_FOR_REGULATION.name,
-            TerminalConfiguration.Type.VOLT_FREE_SENSOR_CONNECTED.name,
-            TerminalConfiguration.Type.VOLT_FREE_SENSOR_CONNECTED_AND_USED_FOR_OPERATION.name,
-            TerminalConfiguration.Type.OUTDOOR_SENSOR_CONNECTED.name,
+            TerminalConfiguration.Type.NOT_CONNECTED.name.lower(),
+            TerminalConfiguration.Type.FLOOR_SENSOR_CONNECTED.name.lower(),
+            TerminalConfiguration.Type.FLOOR_SENSOR_USED_FOR_REGULATION.name.lower(),
+            TerminalConfiguration.Type.FLOOR_SENSOR_DISPLAYED.name.lower(),
+            TerminalConfiguration.Type.FLOOR_SENSOR_DISPLAYED_AND_USED_FOR_REGULATION.name.lower(),
+            TerminalConfiguration.Type.VOLT_FREE_SENSOR_CONNECTED.name.lower(),
+            TerminalConfiguration.Type.VOLT_FREE_SENSOR_CONNECTED_AND_USED_FOR_OPERATION.name.lower(),
+            TerminalConfiguration.Type.OUTDOOR_SENSOR_CONNECTED.name.lower(),
         ],
         value_fn=_attr_value_fn("terminal_type"),
         set_fn=_attr_set_fn("terminal_type", TerminalConfiguration.Type),
@@ -279,10 +283,10 @@ SELECT_DESCRIPTIONS: dict[str, SHCSelectEntityDescription] = {
         translation_key=SWITCH_TYPE_SELECT,
         entity_category=EntityCategory.CONFIG,
         options=[
-            SwitchConfiguration.SwitchType.NONE.name,
-            SwitchConfiguration.SwitchType.PUSHBUTTON.name,
-            SwitchConfiguration.SwitchType.SWITCH.name,
-            SwitchConfiguration.SwitchType.NO_SWITCH.name,
+            SwitchConfiguration.SwitchType.NONE.name.lower(),
+            SwitchConfiguration.SwitchType.PUSHBUTTON.name.lower(),
+            SwitchConfiguration.SwitchType.SWITCH.name.lower(),
+            SwitchConfiguration.SwitchType.NO_SWITCH.name.lower(),
         ],
         value_fn=_attr_value_fn("switch_type"),
         set_fn=_attr_set_fn("switch_type", SwitchConfiguration.SwitchType),
@@ -292,9 +296,9 @@ SELECT_DESCRIPTIONS: dict[str, SHCSelectEntityDescription] = {
         translation_key=ACTUATOR_TYPE_SELECT,
         entity_category=EntityCategory.CONFIG,
         options=[
-            SwitchConfiguration.ActuatorType.NORMALLY_CLOSED.name,
-            SwitchConfiguration.ActuatorType.NORMALLY_OPEN.name,
-            SwitchConfiguration.ActuatorType.UNSUPPORTED.name,
+            SwitchConfiguration.ActuatorType.NORMALLY_CLOSED.name.lower(),
+            SwitchConfiguration.ActuatorType.NORMALLY_OPEN.name.lower(),
+            SwitchConfiguration.ActuatorType.UNSUPPORTED.name.lower(),
         ],
         value_fn=_attr_value_fn("actuator_type"),
         set_fn=_attr_set_fn("actuator_type", SwitchConfiguration.ActuatorType),
@@ -304,11 +308,11 @@ SELECT_DESCRIPTIONS: dict[str, SHCSelectEntityDescription] = {
         translation_key=OUTPUT_MODE_SELECT,
         entity_category=EntityCategory.CONFIG,
         options=[
-            SwitchConfiguration.OutputMode.ATTACHED.name,
-            SwitchConfiguration.OutputMode.DETACHED.name,
-            SwitchConfiguration.OutputMode.DETACHED_SHORT_PRESS.name,
-            SwitchConfiguration.OutputMode.DETACHED_LONG_PRESS.name,
-            SwitchConfiguration.OutputMode.UNSUPPORTED.name,
+            SwitchConfiguration.OutputMode.ATTACHED.name.lower(),
+            SwitchConfiguration.OutputMode.DETACHED.name.lower(),
+            SwitchConfiguration.OutputMode.DETACHED_SHORT_PRESS.name.lower(),
+            SwitchConfiguration.OutputMode.DETACHED_LONG_PRESS.name.lower(),
+            SwitchConfiguration.OutputMode.UNSUPPORTED.name.lower(),
         ],
         value_fn=_attr_value_fn("output_mode"),
         set_fn=_attr_set_fn("output_mode", SwitchConfiguration.OutputMode),
