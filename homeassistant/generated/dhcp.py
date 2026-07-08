@@ -1581,6 +1581,7 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "wibeee",
+        "hostname": "wibeee*",
         "macaddress": "001EC0*",
     },
     {
