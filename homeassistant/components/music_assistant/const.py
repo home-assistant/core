@@ -1,9 +1,12 @@
 """Constants for Music Assistant Component."""
 
+from datetime import timedelta
 import logging
 
 DOMAIN = "music_assistant"
 DOMAIN_EVENT = f"{DOMAIN}_event"
+
+PARTY_URL_POLL_INTERVAL = timedelta(minutes=10)
 
 DEFAULT_NAME = "Music Assistant"
 

@@ -1,6 +1,6 @@
 """Music Assistant Sensor platform."""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import override
 
 from music_assistant_client.client import MusicAssistantClient
@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
 from . import MusicAssistantConfigEntry
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, PARTY_URL_POLL_INTERVAL
 
 
 async def async_setup_entry(
@@ -83,7 +83,7 @@ class MusicAssistantPartyModeSensor(SensorEntity):
             async_track_time_interval(
                 self.hass,
                 self._handle_timer,
-                timedelta(hours=1),
+                PARTY_URL_POLL_INTERVAL,
             )
         )
 

@@ -1,6 +1,6 @@
 """Music Assistant Image platform."""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import io
 from typing import override
 
@@ -19,7 +19,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
 
 from . import MusicAssistantConfigEntry
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, PARTY_URL_POLL_INTERVAL
 
 
 async def async_setup_entry(
@@ -91,7 +91,7 @@ class MusicAssistantPartyModeImage(ImageEntity):
             async_track_time_interval(
                 self.hass,
                 self._handle_timer,
-                timedelta(hours=1),
+                PARTY_URL_POLL_INTERVAL,
             )
         )
 
