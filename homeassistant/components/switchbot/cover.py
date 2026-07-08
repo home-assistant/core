@@ -6,13 +6,12 @@ from typing import Any, override
 import switchbot
 
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -77,11 +76,14 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Run when entity about to be added."""
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
-        if not last_state or ATTR_CURRENT_POSITION not in last_state.attributes:
+        if (
+            not last_state
+            or CoverEntityStateAttribute.CURRENT_POSITION not in last_state.attributes
+        ):
             return
 
         self._attr_current_cover_position = last_state.attributes.get(
-            ATTR_CURRENT_POSITION
+            CoverEntityStateAttribute.CURRENT_POSITION
         )
         self._last_run_success = last_state.attributes.get("last_run_success")
         if self._attr_current_cover_position is not None:
@@ -172,11 +174,15 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Run when entity about to be added."""
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
-        if not last_state or ATTR_CURRENT_TILT_POSITION not in last_state.attributes:
+        if (
+            not last_state
+            or CoverEntityStateAttribute.CURRENT_TILT_POSITION
+            not in last_state.attributes
+        ):
             return
 
         self._attr_current_cover_tilt_position = last_state.attributes.get(
-            ATTR_CURRENT_TILT_POSITION
+            CoverEntityStateAttribute.CURRENT_TILT_POSITION
         )
         self._last_run_success = last_state.attributes.get("last_run_success")
         if (_tilt := self._attr_current_cover_tilt_position) is not None:
@@ -260,11 +266,14 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Run when entity about to be added."""
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
-        if not last_state or ATTR_CURRENT_POSITION not in last_state.attributes:
+        if (
+            not last_state
+            or CoverEntityStateAttribute.CURRENT_POSITION not in last_state.attributes
+        ):
             return
 
         self._attr_current_cover_position = last_state.attributes.get(
-            ATTR_CURRENT_POSITION
+            CoverEntityStateAttribute.CURRENT_POSITION
         )
         self._last_run_success = last_state.attributes.get("last_run_success")
         if self._attr_current_cover_position is not None:
