@@ -9,7 +9,6 @@ from homeassistant.const import Platform
 DOMAIN = "duco"
 PLATFORMS = [Platform.FAN, Platform.SELECT, Platform.SENSOR]
 SCAN_INTERVAL = timedelta(seconds=10)
-NODE_NAME_UPDATE_INTERVAL = timedelta(days=1)
 BOX_NODE_ID = 1
 VENTILATION_CAPABLE_NODE_TYPES: tuple[NodeType, ...] = (
     NodeType.BOX,

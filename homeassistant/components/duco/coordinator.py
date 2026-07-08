@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass, replace
-from datetime import datetime
 import logging
 from typing import cast, override
 
@@ -19,9 +18,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, NODE_NAME_UPDATE_INTERVAL, SCAN_INTERVAL
+from .const import DOMAIN, SCAN_INTERVAL
 from .validation import UnsupportedBoardError, async_get_supported_board_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +47,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
     _supports_time_filter_remain: bool
     _configured_node_names: dict[int, str]
     _known_node_names: dict[int, str]
-    _last_node_name_refresh: datetime | None
     _node_name_update_callbacks: list[NodeNameUpdateCallback]
 
     def __init__(
@@ -68,21 +65,13 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         )
         self.client = client
         self._configured_node_names = {}
-        self._last_node_name_refresh = None
         self.mac = cast(str, config_entry.unique_id)
         self._known_node_names = {}
         self._node_name_update_callbacks = []
         self._supports_time_filter_remain = True
 
-    async def _async_refresh_node_names(self) -> None:
-        """Refresh cached node names from Duco at most once per day."""
-        now = dt_util.utcnow()
-        if (
-            self._last_node_name_refresh is not None
-            and now - self._last_node_name_refresh < NODE_NAME_UPDATE_INTERVAL
-        ):
-            return
-
+    async def _async_load_node_names(self) -> None:
+        """Load configured Duco node names during setup."""
         try:
             configured_node_names = await self.client.async_get_node_configs(
                 parameter="Name"
@@ -96,7 +85,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             for node in configured_node_names.nodes
             if node.name is not None
         }
-        self._last_node_name_refresh = now
 
     @callback
     def async_add_node_name_listener(
@@ -138,6 +126,8 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 translation_key="api_error",
             ) from err
 
+        await self._async_load_node_names()
+
     @override
     async def _async_update_data(self) -> DucoData:
         """Fetch node data from the Duco box."""
@@ -153,8 +143,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 translation_domain=DOMAIN,
                 translation_key="api_error",
             ) from err
-
-        await self._async_refresh_node_names()
 
         if self._configured_node_names:
             nodes = [

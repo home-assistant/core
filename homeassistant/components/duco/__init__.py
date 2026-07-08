@@ -33,10 +33,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DucoConfigEntry) -> bool
     )
 
     coordinator = DucoCoordinator(hass, entry, client)
-    await coordinator.async_config_entry_first_refresh()
-
-    entry.runtime_data = coordinator
-
     device_registry = dr.async_get(hass)
     mac = coordinator.mac
 
@@ -57,6 +53,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: DucoConfigEntry) -> bool
     entry.async_on_unload(
         coordinator.async_add_node_name_listener(_async_sync_node_names)
     )
+
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

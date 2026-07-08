@@ -304,7 +304,7 @@ async def test_node_name_refresh_updates_device_registry_name(
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test Duco node names refresh on setup and then once per day."""
+    """Test Duco node names update on reload, not during periodic polling."""
     mock_duco_client.async_get_node_configs.side_effect = [
         _node_configs_with_primary_name(mock_nodes, "Kitchen"),
         _node_configs_with_primary_name(mock_nodes, "Living Room"),
@@ -318,7 +318,7 @@ async def test_node_name_refresh_updates_device_registry_name(
     assert device.name == "Kitchen"
     assert mock_duco_client.async_get_node_configs.call_count == 1
 
-    freezer.tick(30)
+    freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -326,9 +326,8 @@ async def test_node_name_refresh_updates_device_registry_name(
     assert device.name == "Kitchen"
     assert mock_duco_client.async_get_node_configs.call_count == 1
 
-    freezer.tick(timedelta(days=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     device = _get_duco_node_device(device_registry)
     assert device.name == "Living Room"
@@ -343,7 +342,7 @@ async def test_node_name_refresh_retries_after_transient_failure(
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test node name refresh retries on the next poll after a transient failure."""
+    """Test node name fetch retries on reload after a transient setup failure."""
     mock_duco_client.async_get_node_configs.side_effect = [
         DucoError("temporary name fetch failure"),
         _node_configs_with_primary_name(mock_nodes, "Kitchen"),
@@ -357,9 +356,16 @@ async def test_node_name_refresh_retries_after_transient_failure(
     assert device.name == mock_nodes[0].general.name
     assert mock_duco_client.async_get_node_configs.call_count == 1
 
-    freezer.tick(30)
+    freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = _get_duco_node_device(device_registry)
+    assert device.name == mock_nodes[0].general.name
+    assert mock_duco_client.async_get_node_configs.call_count == 1
+
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     device = _get_duco_node_device(device_registry)
     assert device.name == "Kitchen"
