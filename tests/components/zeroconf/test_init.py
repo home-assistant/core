@@ -14,6 +14,7 @@ from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.components.network import SIGNAL_NETWORK_ADAPTERS_CHANGED
 from homeassistant.components.zeroconf import discovery
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
@@ -25,6 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
@@ -197,6 +199,22 @@ async def test_setup(hass: HomeAssistant, mock_async_zeroconf: MagicMock) -> Non
     # Test instance is set.
     assert "zeroconf" in hass.data
     assert await zeroconf.async_get_async_instance(hass) is mock_async_zeroconf
+
+
+async def test_network_adapters_changed_updates_interfaces(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
+    """Test zeroconf reconciles its sockets when the network adapters change."""
+    with patch.object(hass.config_entries.flow, "async_init"):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    async_dispatcher_send(hass, SIGNAL_NETWORK_ADAPTERS_CHANGED)
+    await hass.async_block_till_done()
+
+    assert mock_async_zeroconf.async_update_interfaces.mock_calls == [
+        call(interfaces=InterfaceChoice.Default, ip_version=IPVersion.V4Only)
+    ]
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")

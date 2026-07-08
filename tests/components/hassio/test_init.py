@@ -55,6 +55,7 @@ from homeassistant.components.hassio import (
 from homeassistant.components.hassio.config import STORAGE_KEY
 from homeassistant.components.hassio.const import (
     DATA_KEY_SUPERVISOR_ISSUES,
+    EVENT_SUPERVISOR_EVENT,
     HASSIO_MAIN_UPDATE_INTERVAL,
     REQUEST_REFRESH_DELAY,
 )
@@ -67,6 +68,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -250,6 +252,37 @@ async def test_setup_onboarding_supervisor_update_error(
     entry = hass.config_entries.async_entries("hassio")[0]
     assert entry.state is ConfigEntryState.SETUP_RETRY
     supervisor_client.supervisor.update.assert_called_once()
+
+
+@pytest.mark.usefixtures("supervisor_client")
+@pytest.mark.parametrize(
+    ("update_key", "expected_calls"),
+    [("network", 1), ("supervisor", 0)],
+    ids=["network", "supervisor"],
+)
+async def test_supervisor_network_event_reloads_adapters(
+    hass: HomeAssistant,
+    update_key: str,
+    expected_calls: int,
+) -> None:
+    """Test only a Supervisor network event reloads the network adapters."""
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+        await hass.async_block_till_done()
+
+    with patch("homeassistant.components.network.async_reload_adapters") as mock_reload:
+        async_dispatcher_send(
+            hass,
+            EVENT_SUPERVISOR_EVENT,
+            {
+                "event": "supervisor_update",
+                "update_key": update_key,
+                "data": {},
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_reload.mock_calls) == expected_calls
 
 
 async def test_setup_app_panel(hass: HomeAssistant) -> None:

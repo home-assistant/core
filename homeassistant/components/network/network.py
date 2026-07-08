@@ -63,6 +63,18 @@ class Network:
         self.adapters = await async_load_adapters()
         await storage_load_task
 
+    async def async_reload(self) -> bool:
+        """Reload adapters from the system, returning True if they changed.
+
+        Freshly loaded adapters are unconfigured (all disabled), so the new
+        set must be configured before it can be compared against the current,
+        already configured adapters.
+        """
+        previous = self.adapters
+        self.adapters = await async_load_adapters()
+        self.async_configure()
+        return self.adapters != previous
+
     @callback
     def async_configure(self) -> None:
         """Configure from storage."""
