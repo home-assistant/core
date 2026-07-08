@@ -80,7 +80,4 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a Besen config entry."""
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        await entry.runtime_data.async_shutdown()
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
