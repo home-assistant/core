@@ -158,6 +158,27 @@ async def test_setup_entry_ignores_lan_info_failures(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
+async def test_setup_entry_ignores_node_name_config_failures(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test setup falls back to API node names when node config fetch fails."""
+    mock_duco_client.async_get_node_configs.side_effect = DucoError("node config error")
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    device = _get_duco_node_device(device_registry)
+    assert device.name == mock_nodes[0].general.name
+    assert mock_duco_client.async_get_node_configs.call_count == 1
+
+
 @pytest.mark.parametrize("unsupported_board_info", UNSUPPORTED_BOARD_INFOS)
 async def test_setup_entry_unsupported_board_info(
     hass: HomeAssistant,
