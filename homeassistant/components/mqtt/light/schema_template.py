@@ -19,6 +19,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightEntityStateAttribute,
     filter_supported_color_modes,
 )
 from homeassistant.const import (
@@ -361,17 +362,23 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         last_state = await self.async_get_last_state()
         if self._optimistic and last_state:
             self._attr_is_on = last_state.state == STATE_ON
-            if last_state.attributes.get(ATTR_BRIGHTNESS):
-                self._attr_brightness = last_state.attributes.get(ATTR_BRIGHTNESS)
-            if last_state.attributes.get(ATTR_HS_COLOR):
-                self._attr_hs_color = last_state.attributes.get(ATTR_HS_COLOR)
-                self._update_color_mode()
-            if last_state.attributes.get(ATTR_COLOR_TEMP_KELVIN):
-                self._attr_color_temp_kelvin = last_state.attributes.get(
-                    ATTR_COLOR_TEMP_KELVIN
+            if last_state.attributes.get(LightEntityStateAttribute.BRIGHTNESS):
+                self._attr_brightness = last_state.attributes.get(
+                    LightEntityStateAttribute.BRIGHTNESS
                 )
-            if last_state.attributes.get(ATTR_EFFECT):
-                self._attr_effect = last_state.attributes.get(ATTR_EFFECT)
+            if last_state.attributes.get(LightEntityStateAttribute.HS_COLOR):
+                self._attr_hs_color = last_state.attributes.get(
+                    LightEntityStateAttribute.HS_COLOR
+                )
+                self._update_color_mode()
+            if last_state.attributes.get(LightEntityStateAttribute.COLOR_TEMP_KELVIN):
+                self._attr_color_temp_kelvin = last_state.attributes.get(
+                    LightEntityStateAttribute.COLOR_TEMP_KELVIN
+                )
+            if last_state.attributes.get(LightEntityStateAttribute.EFFECT):
+                self._attr_effect = last_state.attributes.get(
+                    LightEntityStateAttribute.EFFECT
+                )
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
