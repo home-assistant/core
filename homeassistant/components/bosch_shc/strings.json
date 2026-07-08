@@ -75,10 +75,10 @@
   },
   "exceptions": {
     "light_turn_off_failed": {
-      "message": "Failed to turn off {name}: {error}"
+      "message": "Failed to turn off {name}"
     },
     "light_turn_on_failed": {
-      "message": "Failed to turn on {name}: {error}"
+      "message": "Failed to turn on {name}"
     }
   }
 }

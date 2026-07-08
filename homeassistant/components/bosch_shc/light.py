@@ -1,5 +1,6 @@
 """Platform for light integration."""
 
+import logging
 from typing import Any, NoReturn, override
 
 from boschshcpy import SHCLight, SHCMicromoduleDimmer
@@ -31,15 +32,18 @@ from .entity import SHCEntity
 
 PARALLEL_UPDATES = 1
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def _raise_write_error(
     device: SHCDevice, translation_key: str, err: SHCException | RequestException
 ) -> NoReturn:
     """Convert a boschshcpy device-write failure into a translated HomeAssistantError."""
+    _LOGGER.debug("Write to %s failed: %s", device.name, err)
     raise HomeAssistantError(
         translation_domain=DOMAIN,
         translation_key=translation_key,
-        translation_placeholders={"name": device.name, "error": str(err)},
+        translation_placeholders={"name": device.name},
     ) from err
 
 
