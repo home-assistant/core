@@ -1,4 +1,9 @@
-"""Transceiver abstraction for Easywave Core."""
+"""Thin Home Assistant wrapper around easywave_home_control.EasywaveGateway.
+
+Connection management, health checks, and protocol handling live in the
+easywave-home-control library. This module only adapts the gateway API to
+Home Assistant callbacks and entity lifecycle.
+"""
 
 from collections.abc import Callable
 import logging

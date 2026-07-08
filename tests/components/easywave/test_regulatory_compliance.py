@@ -1,8 +1,5 @@
 """Tests for regulatory compliance in the Easywave Core integration."""
 
-from typing import Any
-from unittest.mock import AsyncMock, patch
-
 from homeassistant.components.easywave.const import (
     ALLOWED_COUNTRIES_868MHZ,
     DOMAIN,
@@ -14,25 +11,9 @@ from homeassistant.components.easywave.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
+from .conftest import async_setup_easywave_entry
+
 from tests.common import MockConfigEntry
-
-
-def _patch_for_successful_setup() -> tuple[Any, Any, Any]:
-    """Return context managers for a successful setup."""
-    mock_coordinator = AsyncMock()
-    mock_coordinator.async_setup = AsyncMock(return_value=True)
-    mock_coordinator.async_shutdown = AsyncMock()
-    return (
-        patch("homeassistant.components.easywave.RX11Transceiver"),
-        patch(
-            "homeassistant.components.easywave.EasywaveCoordinator",
-            return_value=mock_coordinator,
-        ),
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-            return_value=None,
-        ),
-    )
 
 
 class TestCountryValidation:
@@ -98,14 +79,7 @@ class TestIntegrationSetupCompliance:
         self, hass: HomeAssistant, mock_config_entry: MockConfigEntry
     ) -> None:
         """Test that setup succeeds when country is allowed."""
-        mock_config_entry.add_to_hass(hass)
-        hass.config.country = "DE"
-
-        t_patch, c_patch, f_patch = _patch_for_successful_setup()
-        with t_patch, c_patch, f_patch:
-            result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-        assert result is True
+        await async_setup_easywave_entry(hass, mock_config_entry, country="DE")
 
     async def test_setup_fails_with_disallowed_country(
         self, hass: HomeAssistant, mock_config_entry: MockConfigEntry
@@ -114,22 +88,15 @@ class TestIntegrationSetupCompliance:
         mock_config_entry.add_to_hass(hass)
         hass.config.country = "US"
 
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-        assert result is False
+        assert (
+            await hass.config_entries.async_setup(mock_config_entry.entry_id) is False
+        )
 
     async def test_setup_succeeds_with_no_country_configured(
         self, hass: HomeAssistant, mock_config_entry: MockConfigEntry
     ) -> None:
         """Test that setup succeeds when no country is configured."""
-        mock_config_entry.add_to_hass(hass)
-        hass.config.country = None
-
-        t_patch, c_patch, f_patch = _patch_for_successful_setup()
-        with t_patch, c_patch, f_patch:
-            result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-        assert result is True
+        await async_setup_easywave_entry(hass, mock_config_entry, country=None)
 
     async def test_repair_issue_created_on_disallowed_country(
         self, hass: HomeAssistant, mock_config_entry: MockConfigEntry
@@ -152,14 +119,8 @@ class TestIntegrationSetupCompliance:
         self, hass: HomeAssistant, mock_config_entry: MockConfigEntry
     ) -> None:
         """Test that stale repair issues are removed when country is allowed."""
-        mock_config_entry.add_to_hass(hass)
-        hass.config.country = "FR"
+        await async_setup_easywave_entry(hass, mock_config_entry, country="FR")
 
-        t_patch, c_patch, f_patch = _patch_for_successful_setup()
-        with t_patch, c_patch, f_patch:
-            result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-        assert result is True
         issues = ir.async_get(hass)
         issue = issues.async_get_issue(
             DOMAIN, f"frequency_not_permitted_{mock_config_entry.entry_id}"

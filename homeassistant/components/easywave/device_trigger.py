@@ -79,8 +79,12 @@ _GATEWAY_MARKER = _GatewayMarker()
 def _stored_device_data(entry: ConfigEntry, easywave_id: str) -> dict[str, Any] | None:
     """Return stored device data for a child device identifier."""
     for device in get_stored_devices(entry):
-        if device.get(CONF_DEVICE_ID) == easywave_id:
-            return dict(device[CONF_DEVICE_DATA])
+        if device.get(CONF_DEVICE_ID) != easywave_id:
+            continue
+        device_data = device.get(CONF_DEVICE_DATA)
+        if not isinstance(device_data, dict):
+            return None
+        return dict(device_data)
     return None
 
 

@@ -1,8 +1,5 @@
 """Tests for Easywave purpose-specific triggers."""
 
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
-
 from homeassistant.components.easywave.const import (
     DOMAIN,
     EVENT_EASYWAVE,
@@ -22,41 +19,11 @@ from .conftest import (
     MOCK_TRANSMITTER_DEVICE_ID,
     _devices_options,
     _transmitter_device_record,
+    async_setup_easywave_entry,
 )
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
-
-
-def _patch_integration() -> tuple[Any, Any, MagicMock]:
-    """Return patches for transceiver and coordinator."""
-    mock_transceiver = MagicMock()
-    mock_transceiver.is_connected = True
-    mock_transceiver.usb_serial_number = "12345"
-    mock_transceiver.hw_version = "1.0"
-    mock_transceiver.fw_version = "2.0"
-    mock_transceiver.device_path = "/dev/ttyACM0"
-
-    mock_coordinator = MagicMock()
-    mock_coordinator.async_config_entry_first_refresh = AsyncMock()
-    mock_coordinator.async_shutdown = AsyncMock()
-    mock_coordinator.async_add_listener = MagicMock(return_value=lambda: None)
-    mock_coordinator.transceiver = mock_transceiver
-    mock_coordinator.is_offline = False
-    mock_coordinator.register_transmitter_entities = MagicMock()
-    mock_coordinator.unregister_transmitter_entity = MagicMock()
-    mock_coordinator.data = {"is_connected": True, "device_path": "/dev/ttyACM0"}
-    mock_coordinator.ensure_telegram_listener = MagicMock()
-
-    transceiver_patch = patch(
-        "homeassistant.components.easywave.RX11Transceiver",
-        return_value=mock_transceiver,
-    )
-    coordinator_patch = patch(
-        "homeassistant.components.easywave.EasywaveCoordinator",
-        return_value=mock_coordinator,
-    )
-    return transceiver_patch, coordinator_patch, mock_coordinator
 
 
 async def _async_setup_entry(
@@ -79,12 +46,7 @@ async def _async_setup_entry(
         unique_id="easywave_12345",
         options=_devices_options(device),
     )
-    entry.add_to_hass(hass)
-    hass.config.country = "DE"
-    t_patch, c_patch, _ = _patch_integration()
-    with t_patch, c_patch:
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await async_setup_easywave_entry(hass, entry)
     return entry
 
 

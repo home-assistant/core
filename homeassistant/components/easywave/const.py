@@ -6,13 +6,11 @@ from typing import Final
 
 DOMAIN: Final = "easywave"
 
-# ── Radio Frequency / Regulatory Compliance ─────────────────────────────────
 # Home Assistant requires integrations to verify that RF hardware is permitted
 # in the user's configured country. The RX11 USB Transceiver operates on
 # 868 MHz (EU ISM band), which is only allowed in CEPT member countries.
 FREQUENCY_868MHZ: Final = "868 MHz"
 
-# ── USB Device Registry ──────────────────────────────────────────────────────
 # Single source of truth for supported USB sticks.
 # Adding a new device here is sufficient — config flow and discovery pick it up
 # automatically. Also update the `usb` list in manifest.json.
@@ -29,12 +27,10 @@ USB_DEVICE_NAMES: Final[dict[tuple[int, int], dict[str, str]]] = {
 
 SUPPORTED_USB_IDS: Final = frozenset(USB_DEVICE_NAMES.keys())
 
-# ── Coordinator Update Interval ──────────────────────────────────────────────
 # Periodic polling interval for USB device reconnection attempts
 DEVICE_SCAN_INTERVAL: Final = timedelta(seconds=30)
 
 
-# ── Config Entry Keys ────────────────────────────────────────────────────────
 CONF_DEVICE_PATH: Final = "device_path"
 CONF_USB_VID: Final = "usb_vid"
 CONF_USB_PID: Final = "usb_pid"
@@ -131,7 +127,6 @@ EVENT_TYPE_BATTERY_NORMAL: Final = "battery_normal"
 EVENT_TYPE_GATEWAY_CONNECTED: Final = "gateway_connected"
 EVENT_TYPE_GATEWAY_DISCONNECTED: Final = "gateway_disconnected"
 
-# ── Config Entry / Device Storage ────────────────────────────────────────────
 CONF_DEVICE_TITLE: Final = "title"
 CONF_DEVICE_DATA: Final = "data"
 CONF_ENTRY_TYPE: Final = "entry_type"
@@ -143,14 +138,11 @@ SUBENTRY_TYPE_NEO_SENSOR: Final = "neo_sensor"
 ENTRY_TYPE_TRANSMITTER: Final = "transmitter"
 ENTRY_TYPE_NEO_SENSOR: Final = "neo_sensor"
 
-# ── Transmitter Configuration Keys ───────────────────────────────────────────
 CONF_TRANSMITTER_SERIAL: Final = "transmitter_serial"
 
-# ── EWneo Sensor Configuration Keys ────────────────────────────────────────────
 CONF_SENSOR_SERIAL: Final = "sensor_serial"
 CONF_SENSOR_CAPABILITIES: Final = "sensor_capabilities"
 
-# ── Transmitter operating configuration ─────────────────────────────────────
 CONF_OPERATING_TYPE: Final = "operating_type"
 CONF_BUTTON_COUNT: Final = "button_count"
 CONF_GROUPING_MODE: Final = "grouping_mode"
@@ -205,5 +197,4 @@ class EasywaveGatewayFeature(IntFlag):
     GATEWAY_STATUS = 32
 
 
-# ── Learning Mode ────────────────────────────────────────────────────────────
 LEARNING_TIMEOUT: Final = 30  # seconds

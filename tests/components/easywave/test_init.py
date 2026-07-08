@@ -1,10 +1,10 @@
 """Tests for the init module of the Easywave Core integration."""
 
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.easywave import async_remove_config_entry_device
 from homeassistant.components.easywave.const import DOMAIN
+from homeassistant.components.easywave.coordinator import EasywaveCoordinator
 from homeassistant.components.easywave.devices import get_devices
 from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES
 from homeassistant.core import HomeAssistant
@@ -18,61 +18,37 @@ from .conftest import (
     _devices_options,
     _neo_sensor_device_record,
     _transmitter_device_record,
+    async_setup_easywave_entry,
+    mock_easywave_transceiver,
 )
 
 from tests.common import MockConfigEntry
 
 
-def _patch_transceiver_and_coordinator() -> tuple[Any, Any, Any, Any]:
-    """Return context managers patching RX11Transceiver and EasywaveCoordinator."""
-    mock_transceiver = MagicMock()
-    mock_coordinator = AsyncMock()
-    mock_coordinator.async_config_entry_first_refresh = AsyncMock()
-    mock_coordinator.async_shutdown = AsyncMock()
-
-    transceiver_patch = patch(
-        "homeassistant.components.easywave.RX11Transceiver",
-        return_value=mock_transceiver,
-    )
-    coordinator_patch = patch(
-        "homeassistant.components.easywave.EasywaveCoordinator",
-        return_value=mock_coordinator,
-    )
-    forward_patch = patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-        return_value=None,
-    )
-    return transceiver_patch, coordinator_patch, forward_patch, mock_coordinator
-
-
 async def test_setup_entry_success(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test successful setup of config entry."""
-    mock_config_entry.add_to_hass(hass)
-    hass.config.country = "DE"
+    """Test successful setup wires a real coordinator and gateway device."""
+    transceiver = mock_easywave_transceiver()
+    await async_setup_easywave_entry(hass, mock_config_entry, transceiver)
 
-    t_patch, c_patch, f_patch, mock_coord = _patch_transceiver_and_coordinator()
-    with t_patch, c_patch, f_patch:
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    coordinator = mock_config_entry.runtime_data.coordinator
+    assert isinstance(coordinator, EasywaveCoordinator)
+    transceiver.connect.assert_awaited_once()
 
-    assert result is True
-    assert mock_coord.async_config_entry_first_refresh.called
-    assert mock_config_entry.runtime_data.coordinator is mock_coord
+    device = dr.async_get(hass).async_get_device(
+        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    )
+    assert device is not None
+    assert device.hw_version == "1.0"
+    assert device.sw_version == "2.0"
 
 
 async def test_setup_entry_country_allowed(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test setup succeeds with allowed country."""
-    mock_config_entry.add_to_hass(hass)
-    hass.config.country = "FR"
-
-    t_patch, c_patch, f_patch, _ = _patch_transceiver_and_coordinator()
-    with t_patch, c_patch, f_patch:
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    assert result is True
+    await async_setup_easywave_entry(hass, mock_config_entry, country="FR")
 
 
 async def test_setup_entry_country_not_allowed(
@@ -109,14 +85,8 @@ async def test_setup_entry_deletes_stale_repair_issue(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test stale repair issue is removed on successful setup."""
-    mock_config_entry.add_to_hass(hass)
-    hass.config.country = "DE"
+    await async_setup_easywave_entry(hass, mock_config_entry)
 
-    t_patch, c_patch, f_patch, _ = _patch_transceiver_and_coordinator()
-    with t_patch, c_patch, f_patch:
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    assert result is True
     issues = ir.async_get(hass)
     issue = issues.async_get_issue(
         DOMAIN, f"frequency_not_permitted_{mock_config_entry.entry_id}"
@@ -128,32 +98,22 @@ async def test_setup_entry_no_country(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test setup succeeds when no country is configured."""
-    mock_config_entry.add_to_hass(hass)
-    hass.config.country = None
-
-    t_patch, c_patch, f_patch, _ = _patch_transceiver_and_coordinator()
-    with t_patch, c_patch, f_patch:
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    assert result is True
+    await async_setup_easywave_entry(hass, mock_config_entry, country=None)
 
 
 async def test_unload_entry(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test unload of config entry shuts down coordinator."""
-    mock_config_entry.add_to_hass(hass)
-    hass.config.country = "DE"
-
-    t_patch, c_patch, f_patch, mock_coord = _patch_transceiver_and_coordinator()
-    with t_patch, c_patch, f_patch:
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    """Test unload of config entry shuts down the coordinator and transceiver."""
+    transceiver = mock_easywave_transceiver()
+    await async_setup_easywave_entry(hass, mock_config_entry, transceiver)
+    transceiver.dispose.reset_mock()
 
     with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
         result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
     assert result is True
-    assert mock_coord.async_shutdown.called
+    assert transceiver.dispose.await_count >= 1
 
 
 async def test_remove_config_entry_device_rejects_gateway(
@@ -243,12 +203,7 @@ async def test_options_update_triggers_reload(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Changing device options reloads the config entry."""
-    mock_config_entry.add_to_hass(hass)
-    hass.config.country = "DE"
-
-    t_patch, c_patch, f_patch, _ = _patch_transceiver_and_coordinator()
-    with t_patch, c_patch, f_patch:
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await async_setup_easywave_entry(hass, mock_config_entry)
 
     with patch.object(
         hass.config_entries, "async_reload", new=AsyncMock()

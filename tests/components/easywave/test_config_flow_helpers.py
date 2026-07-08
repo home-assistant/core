@@ -357,3 +357,20 @@ def test_is_duplicate_matches_sensor_serial_in_subentries(hass: HomeAssistant) -
         entry_type=ENTRY_TYPE_NEO_SENSOR,
         serial_hex=MOCK_SENSOR_SERIAL,
     )
+
+
+def test_is_duplicate_matches_serial_case_insensitively(hass: HomeAssistant) -> None:
+    """Duplicate checks ignore hex casing differences."""
+    entry = MockConfigEntry(
+        domain="easywave",
+        entry_id=MOCK_ENTRY_ID,
+        options=_devices_options(_transmitter_device_record(title="Other")),
+    )
+    entry.add_to_hass(hass)
+    helper = _FlowHelper(hass, entry)
+
+    assert helper._is_duplicate(
+        "transmitter_new",
+        entry_type=ENTRY_TYPE_TRANSMITTER,
+        serial_hex=MOCK_TRANSMITTER_SERIAL.upper(),
+    )

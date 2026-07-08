@@ -1,5 +1,6 @@
 """Pytest configuration and fixtures for Easywave Core tests."""
 
+import asyncio
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -32,6 +33,7 @@ from homeassistant.components.easywave.const import (
 )
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from tests.common import MockConfigEntry
@@ -122,6 +124,64 @@ def _devices_options(*records: ConfigSubentryData) -> dict[str, list[dict[str, A
     return {CONF_DEVICES: devices}
 
 
+async def async_terminate_listener_receive(timeout: float = 30.0) -> None:
+    """Stop the coordinator listener loop instead of spinning on None."""
+    raise asyncio.CancelledError
+
+
+def mock_easywave_transceiver(*, connected: bool = True) -> MagicMock:
+    """Return a connected transceiver mock with library-boundary defaults."""
+    transceiver = MagicMock()
+    transceiver.is_connected = connected
+    transceiver.device_path = "/dev/ttyACM0" if connected else None
+    transceiver.usb_serial_number = "12345"
+    transceiver.hw_version = "1.0"
+    transceiver.fw_version = "2.0"
+    transceiver.connect = AsyncMock(return_value=connected)
+    transceiver.reconnect = AsyncMock(return_value=connected)
+    transceiver.disconnect = AsyncMock()
+    transceiver.dispose = AsyncMock()
+    transceiver.set_disconnect_callback = MagicMock()
+    transceiver.set_connected_callback = MagicMock()
+    transceiver.cancel_pending_receives = AsyncMock()
+    transceiver.receive_telegram = AsyncMock(
+        side_effect=async_terminate_listener_receive
+    )
+    return transceiver
+
+
+async def async_stop_easywave_listener(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Cancel any coordinator telegram listener started during setup."""
+    if entry.runtime_data is None:
+        return
+    await entry.runtime_data.coordinator.suspend_telegram_listener()
+    await hass.async_block_till_done()
+
+
+async def async_setup_easywave_entry(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    transceiver: MagicMock | None = None,
+    *,
+    country: str | None = "DE",
+) -> MagicMock:
+    """Set up Easywave with a real coordinator and mocked hardware."""
+    transceiver = transceiver or mock_easywave_transceiver()
+    entry.add_to_hass(hass)
+    if country is not None:
+        hass.config.country = country
+    with patch(
+        "homeassistant.components.easywave.RX11Transceiver",
+        return_value=transceiver,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    await async_stop_easywave_listener(hass, entry)
+    return transceiver
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock gateway ConfigEntry."""
@@ -177,31 +237,6 @@ def mock_usb_discovery_info() -> UsbServiceInfo:
         manufacturer="ELDAT",
         description="RX11 USB Transceiver",
     )
-
-
-@pytest.fixture
-def mock_coordinator() -> MagicMock:
-    """Return a mock EasywaveCoordinator."""
-    coordinator = MagicMock()
-    coordinator.async_setup = AsyncMock(return_value=True)
-    coordinator.async_config_entry_first_refresh = AsyncMock()
-    coordinator.async_shutdown = AsyncMock()
-    coordinator.async_add_listener = MagicMock(return_value=lambda: None)
-    coordinator.ensure_telegram_listener = MagicMock()
-    coordinator.fire_device_event = MagicMock()
-    coordinator.register_transmitter_entities = MagicMock()
-    coordinator.unregister_transmitter_entity = MagicMock()
-    coordinator.register_sensor_entities = MagicMock()
-    coordinator.unregister_sensor_entity = MagicMock()
-    coordinator.is_offline = False
-    coordinator.data = {"is_connected": True, "device_path": "/dev/ttyACM0"}
-    coordinator.transceiver = MagicMock()
-    coordinator.transceiver.is_connected = True
-    coordinator.transceiver.usb_serial_number = "12345"
-    coordinator.transceiver.hw_version = "1.0"
-    coordinator.transceiver.fw_version = "2.0"
-    coordinator.transceiver.device_path = "/dev/ttyACM0"
-    return coordinator
 
 
 @pytest.fixture

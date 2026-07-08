@@ -107,10 +107,13 @@ class EasywaveDeviceFlowMixin:
         }.get(entry_type)
         if serial_key is None:
             return False
+        serial_hex = serial_hex.lower()
         return any(
-            device[CONF_DEVICE_DATA].get(serial_key) == serial_hex
+            isinstance(device_data := device.get(CONF_DEVICE_DATA), dict)
+            and device_data.get(CONF_ENTRY_TYPE) == entry_type
+            and isinstance(stored_serial := device_data.get(serial_key), str)
+            and stored_serial.lower() == serial_hex
             for device in devices
-            if device[CONF_DEVICE_DATA].get(CONF_ENTRY_TYPE) == entry_type
         )
 
     def _save_device(

@@ -13,34 +13,15 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .conftest import MOCK_GATEWAY_TITLE
+from .conftest import MOCK_GATEWAY_TITLE, mock_easywave_transceiver
 
 from tests.common import MockConfigEntry
 
 
-async def _terminate_listener_receive(timeout: float = 30.0) -> None:
-    """Stop the coordinator listener loop instead of spinning on None."""
-    raise asyncio.CancelledError
-
-
 @pytest.fixture
 def mock_transceiver() -> MagicMock:
-    """Return a mock RX11Transceiver."""
-    transceiver = MagicMock()
-    transceiver.is_connected = True
-    transceiver.device_path = "/dev/ttyACM0"
-    transceiver.usb_serial_number = "12345"
-    transceiver.hw_version = "1.0"
-    transceiver.fw_version = "2.0"
-    transceiver.connect = AsyncMock(return_value=True)
-    transceiver.reconnect = AsyncMock(return_value=True)
-    transceiver.disconnect = AsyncMock()
-    transceiver.dispose = AsyncMock()
-    transceiver.set_disconnect_callback = MagicMock()
-    transceiver.set_connected_callback = MagicMock()
-    transceiver.receive_telegram = AsyncMock(side_effect=_terminate_listener_receive)
-    transceiver.cancel_pending_receives = AsyncMock()
-    return transceiver
+    """Return a mock RX11Transceiver at the hardware boundary."""
+    return mock_easywave_transceiver()
 
 
 @pytest.fixture

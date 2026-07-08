@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from easywave_home_control.codec import (
     ButtonFunction,
@@ -37,42 +37,14 @@ from .conftest import (
     _devices_options,
     _neo_sensor_device_record,
     _transmitter_device_record,
+    async_setup_easywave_entry,
+    async_stop_easywave_listener,
+    mock_easywave_transceiver,
 )
 
 from tests.common import MockConfigEntry, async_capture_events
 
 NEO_SENSOR_CAPABILITIES = (1 << 4) | (1 << 5)
-
-
-async def _terminate_listener_receive(timeout: float = 30.0) -> None:
-    """Stop the coordinator listener loop instead of spinning on None."""
-    raise asyncio.CancelledError
-
-
-def _mock_transceiver() -> MagicMock:
-    """Return a connected transceiver mock for integration tests."""
-    transceiver = MagicMock()
-    transceiver.is_connected = True
-    transceiver.device_path = "/dev/ttyACM0"
-    transceiver.usb_serial_number = "12345"
-    transceiver.hw_version = "1.0"
-    transceiver.fw_version = "2.0"
-    transceiver.connect = AsyncMock(return_value=True)
-    transceiver.reconnect = AsyncMock(return_value=True)
-    transceiver.dispose = AsyncMock()
-    transceiver.set_disconnect_callback = MagicMock()
-    transceiver.set_connected_callback = MagicMock()
-    transceiver.cancel_pending_receives = AsyncMock()
-    transceiver.receive_telegram = AsyncMock(side_effect=_terminate_listener_receive)
-    return transceiver
-
-
-async def _stop_telegram_listener(hass: HomeAssistant, entry: MockConfigEntry) -> None:
-    """Cancel any coordinator telegram listener started during setup."""
-    if entry.runtime_data is None:
-        return
-    await entry.runtime_data.coordinator.suspend_telegram_listener()
-    await hass.async_block_till_done()
 
 
 async def _setup_entry(
@@ -81,19 +53,12 @@ async def _setup_entry(
     transceiver: MagicMock,
 ) -> None:
     """Set up Easywave with a real coordinator and mocked hardware."""
-    entry.add_to_hass(hass)
-    hass.config.country = "DE"
-    with patch(
-        "homeassistant.components.easywave.RX11Transceiver",
-        return_value=transceiver,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-    await _stop_telegram_listener(hass, entry)
+    await async_setup_easywave_entry(hass, entry, transceiver)
 
 
 async def _teardown_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Stop listener tasks and unload the config entry."""
-    await _stop_telegram_listener(hass, entry)
+    await async_stop_easywave_listener(hass, entry)
     if entry.state is ConfigEntryState.LOADED:
         await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -145,7 +110,7 @@ async def test_button_press_telegram_fires_device_event(
     hass: HomeAssistant,
 ) -> None:
     """Button push telegrams fire device automation events for known transmitters."""
-    transceiver = _mock_transceiver()
+    transceiver = mock_easywave_transceiver()
     entry = MockConfigEntry(
         version=1,
         domain=DOMAIN,
@@ -183,7 +148,7 @@ async def test_button_press_low_battery_skips_press_event(
     hass: HomeAssistant,
 ) -> None:
     """Low-battery telegrams do not fire button press automation events."""
-    transceiver = _mock_transceiver()
+    transceiver = mock_easywave_transceiver()
     entry = MockConfigEntry(
         version=1,
         domain=DOMAIN,
@@ -219,7 +184,7 @@ async def test_button_press_unknown_transmitter_is_ignored(
     hass: HomeAssistant,
 ) -> None:
     """Button push telegrams from unknown transmitters are ignored."""
-    transceiver = _mock_transceiver()
+    transceiver = mock_easywave_transceiver()
     entry = MockConfigEntry(
         version=1,
         domain=DOMAIN,
@@ -253,7 +218,7 @@ async def test_button_release_telegram_fires_device_event(
     hass: HomeAssistant,
 ) -> None:
     """Button release telegrams fire device automation events."""
-    transceiver = _mock_transceiver()
+    transceiver = mock_easywave_transceiver()
     entry = MockConfigEntry(
         version=1,
         domain=DOMAIN,
@@ -308,7 +273,7 @@ async def test_neo_sensor_temperature_updates_from_telegram(
     hass: HomeAssistant,
 ) -> None:
     """Neo sensor measurement telegrams update the temperature entity state."""
-    transceiver = _mock_transceiver()
+    transceiver = mock_easywave_transceiver()
     entry = MockConfigEntry(
         version=1,
         domain=DOMAIN,
@@ -340,7 +305,7 @@ async def test_neo_sensor_temperature_matches_serial_case_insensitively(
     hass: HomeAssistant,
 ) -> None:
     """Configured neo sensor serials match regardless of hex case."""
-    transceiver = _mock_transceiver()
+    transceiver = mock_easywave_transceiver()
     upper_serial = MOCK_NEO_SENSOR_SERIAL.upper()
     entry = MockConfigEntry(
         version=1,
