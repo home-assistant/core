@@ -60,6 +60,7 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         device: MyPVDevice,
     ) -> None:
         """Initialize my-PV Data Update Coordinator."""
+        assert device.serial_number
         super().__init__(
             hass,
             _LOGGER,
@@ -96,7 +97,7 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
     async def async_disconnect(self) -> bool:
         """Disconnect from my-PV.
 
-        To be called when coordinator is unloaded, e.g. when device is removed or HA is shutdown.
+        To be called when coordinator is unloaded, e.g. when device is removed or HA is shut down.
         """
         return await self.device.disconnect()
 
