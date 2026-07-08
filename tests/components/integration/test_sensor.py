@@ -750,77 +750,136 @@ async def test_units(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("source_sensor", "source_unit", "source_class", "device_class", "expected_class"),
+    ("source_config", "device_config", "expected_class"),
     [
         # Water supports the m³ unit, so it will be allowed
         (
-            "sensor.cubic_meters_per_hour",
-            "m³/h",
-            None,
-            SensorDeviceClass.WATER,
+            {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
+            {
+                "sensor": {
+                    "platform": "integration",
+                    "name": "integration",
+                    "source": "sensor.cubic_meters_per_hour",
+                    "round": 2,
+                    "method": "trapezoidal",
+                    "unit_time": UnitOfTime.HOURS,
+                    "device_class": SensorDeviceClass.WATER,
+                }
+            },
             SensorDeviceClass.WATER,
         ),
         # Energy does not support this unit, so the device class will not be applied
-        ("sensor.cubic_meters_per_hour", "m³/h", None, SensorDeviceClass.ENERGY, None),
-        # With no user-supplied device class, infer it from the source sensor (which has none for this test source)
-        ("sensor.cubic_meters_per_hour", "m³/h", None, None, None),
-        # With no user-supplied device class, infer it from the source sensor (which is energy for this test source)
         (
-            "sensor.power",
-            UnitOfPower.KILO_WATT,
-            SensorDeviceClass.POWER,
+            {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
+            {
+                "sensor": {
+                    "platform": "integration",
+                    "name": "integration",
+                    "source": "sensor.cubic_meters_per_hour",
+                    "round": 2,
+                    "method": "trapezoidal",
+                    "unit_time": UnitOfTime.HOURS,
+                    "device_class": SensorDeviceClass.ENERGY,
+                }
+            },
             None,
+        ),
+        # With no user-supplied device class, infer None from the class-less source sensor
+        (
+            {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
+            {
+                "sensor": {
+                    "platform": "integration",
+                    "name": "integration",
+                    "source": "sensor.cubic_meters_per_hour",
+                    "round": 2,
+                    "method": "trapezoidal",
+                    "unit_time": UnitOfTime.HOURS,
+                }
+            },
+            None,
+        ),
+        # With no user-supplied device class, infer Energy from the source Power sensor
+        (
+            {
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+            },
+            {
+                "sensor": {
+                    "platform": "integration",
+                    "name": "integration",
+                    "source": "sensor.power",
+                    "round": 2,
+                    "method": "trapezoidal",
+                    "unit_time": UnitOfTime.HOURS,
+                }
+            },
             SensorDeviceClass.ENERGY,
         ),
-        # Date is not allowed because it has no supported state class
-        ("sensor.cubic_meters_per_hour", "m³/h", None, SensorDeviceClass.DATE, None),
+        # User supplied Date class is ignored because it has no supported state class
+        (
+            {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
+            {
+                "sensor": {
+                    "platform": "integration",
+                    "name": "integration",
+                    "source": "sensor.cubic_meters_per_hour",
+                    "round": 2,
+                    "method": "trapezoidal",
+                    "unit_time": UnitOfTime.HOURS,
+                    "device_class": SensorDeviceClass.DATE,
+                }
+            },
+            None,
+        ),
         # Monetary allows any unit, so the device class will be applied even if the unit is nonsense
         (
-            "sensor.cubic_meters_per_hour",
-            "m³/h",
-            None,
-            SensorDeviceClass.MONETARY,
+            {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
+            {
+                "sensor": {
+                    "platform": "integration",
+                    "name": "integration",
+                    "source": "sensor.cubic_meters_per_hour",
+                    "round": 2,
+                    "method": "trapezoidal",
+                    "unit_time": UnitOfTime.HOURS,
+                    "device_class": SensorDeviceClass.MONETARY,
+                }
+            },
             SensorDeviceClass.MONETARY,
         ),
         # Cope with invalid device class in the source sensor. Should result in no inferred device class
         (
-            "sensor.bad_sensor_class",
-            UnitOfPower.KILO_WATT,
-            "NotADeviceClass",
-            None,
+            {
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT,
+                ATTR_DEVICE_CLASS: "NotADeviceClass",
+            },
+            {
+                "sensor": {
+                    "platform": "integration",
+                    "name": "integration",
+                    "source": "sensor.bad_sensor_class",
+                    "round": 2,
+                    "method": "trapezoidal",
+                    "unit_time": UnitOfTime.HOURS,
+                }
+            },
             None,
         ),
     ],
 )
 async def test_device_class_user(
     hass: HomeAssistant,
-    source_sensor: str,
-    source_unit: str,
-    source_class: SensorDeviceClass | str | None,
-    device_class: SensorDeviceClass | None,
+    source_config: dict[str, Any],
+    device_config: dict[str, dict[str, Any]],
     expected_class: SensorDeviceClass | None,
 ) -> None:
     """Test the user-supplied device class hint is applied based on unit and state class compatibility."""
-    config = {
-        "sensor": {
-            "platform": "integration",
-            "name": "integration",
-            "source": source_sensor,
-            "round": 2,
-            "method": "trapezoidal",
-            "unit_time": UnitOfTime.HOURS,
-        }
-    }
-    if device_class is not None:
-        config["sensor"]["device_class"] = device_class
 
-    source_config = {ATTR_UNIT_OF_MEASUREMENT: source_unit}
-    if source_class is not None:
-        source_config[ATTR_DEVICE_CLASS] = source_class
+    assert await async_setup_component(hass, "sensor", device_config)
 
-    assert await async_setup_component(hass, "sensor", config)
-
-    entity_id = config["sensor"]["source"]
+    entity_id = device_config["sensor"]["source"]
 
     await _setup_device_class_test(hass, entity_id)
 
