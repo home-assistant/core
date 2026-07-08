@@ -224,7 +224,7 @@ class InputNumber(collection.CollectionEntity, NumberEntity, RestoreEntity):
         self._attr_native_max_value = config[CONF_MAX]
         self._attr_native_step = config[CONF_STEP]
         self._attr_unique_id = config[CONF_ID]
-        self._attr_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @classmethod
     @override
