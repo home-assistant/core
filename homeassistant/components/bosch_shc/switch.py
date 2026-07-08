@@ -30,9 +30,7 @@ class SHCSwitchEntityDescription(SwitchEntityDescription):
     """Class describing SHC switch entities."""
 
     on_key: str
-    # The device-service State enums (PowerSwitchService.State.ON etc.) are
-    # plain Enum subclasses, not str -- StateType (str | int | float | None)
-    # doesn't actually describe what's stored/compared here.
+    # Plain Enum members are stored/compared here, not StateType.
     on_value: Enum
     should_poll: bool
 

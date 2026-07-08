@@ -30,8 +30,7 @@ class SHCData:
     """Runtime data for the Bosch SHC integration."""
 
     session: SHCSession
-    # The SHC controller's own unique_id, used as the parent identifier for
-    # every device entity created by the platforms below.
+    # The SHC controller's unique_id; parent identifier for every device entity.
     parent_id: str
 
 
@@ -58,8 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
         raise ConfigEntryNotReady from err
 
     shc_info = session.information
-    # Always populated by this point: SHCSession's synchronous, non-lazy
-    # construction above already raised if authentication/enumeration failed.
+    # Always populated: the synchronous SHCSession construction above already raised otherwise.
     assert shc_info is not None
     assert shc_info.unique_id is not None
     if (
