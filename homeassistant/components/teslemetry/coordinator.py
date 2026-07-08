@@ -50,7 +50,7 @@ ENERGY_INFO_INTERVAL = timedelta(seconds=30)
 ENERGY_HISTORY_INTERVAL = timedelta(seconds=60)
 METADATA_INTERVAL = timedelta(hours=1)
 
-# Insufficient credits will not resolve itself quickly, so back off polling
+# Insufficient credits will not resolve themselves quickly, so back off polling
 # instead of hammering the API at the coordinator's normal interval.
 INSUFFICIENT_CREDITS_RETRY_AFTER = timedelta(hours=1).total_seconds()
 
