@@ -182,13 +182,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=RELOAD_SERVICE_SCHEMA,
     )
 
-    strip_keys = {"area_id", "device_id", "entity_id", "floor_id", "label_id"}
-
     async def set_color(entity: InputColor, call: ServiceCall) -> None:
         """Set an input color from a service call."""
-        color_shape = {
-            key: value for key, value in call.data.items() if key not in strip_keys
-        }
+        color_shape = homeassistant.helpers.service.remove_entity_service_fields(call)
         try:
             await entity.async_set_color(**color_shape)
         except ColorInputError as err:
