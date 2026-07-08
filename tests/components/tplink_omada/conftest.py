@@ -238,6 +238,8 @@ def mock_omada_clients_only_client(
         client = client_mock.return_value
 
         client.get_site_client.return_value = mock_omada_clients_only_site_client
+        client.login.return_value = "12345"
+        client.get_controller_name.return_value = "OC200"
         client.get_controller_info = AsyncMock(return_value=_mock_controller_info())
         client.check_firmware_updates = AsyncMock(
             return_value=_mock_controller_update_info()
