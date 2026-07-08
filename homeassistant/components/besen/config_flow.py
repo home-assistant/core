@@ -10,7 +10,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import bluetooth
-from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.components.bluetooth import (
+    BluetoothServiceInfoBleak,
+    async_discovered_service_info,
+)
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import selector
@@ -40,18 +43,29 @@ PIN_SCHEMA = vol.All(
     vol.Match(r"^\d{6}$"),
 )
 
-MANUAL_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ADDRESS): selector.TextSelector(),
-        vol.Required(CONF_PIN, default=DEFAULT_PIN): PIN_SCHEMA,
-    }
-)
-
 PIN_ONLY_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PIN, default=DEFAULT_PIN): PIN_SCHEMA,
     }
 )
+
+
+def _user_schema(
+    discoveries: dict[str, BluetoothServiceInfoBleak],
+) -> vol.Schema:
+    """Return the user step schema."""
+
+    return vol.Schema(
+        {
+            vol.Required(CONF_ADDRESS): vol.In(
+                {
+                    address: discovery.name or address
+                    for address, discovery in discoveries.items()
+                }
+            ),
+            vol.Required(CONF_PIN, default=DEFAULT_PIN): PIN_SCHEMA,
+        }
+    )
 
 
 async def _async_validate_input(
@@ -101,6 +115,7 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._discovered_address: str | None = None
         self._discovered_name: str | None = None
+        self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
 
     @override
     async def async_step_bluetooth(
@@ -178,16 +193,17 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            address = _normalize_address(user_input[CONF_ADDRESS])
+            address = user_input[CONF_ADDRESS]
             pin = user_input[CONF_PIN]
-            await self.async_set_unique_id(address)
+            discovery_info = self._discovered_devices[address]
+            await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             try:
                 title = await _async_validate_input(
                     self.hass,
                     address=address,
                     pin=pin,
-                    name=None,
+                    name=discovery_info.name,
                 )
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
@@ -203,12 +219,29 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=title,
                     data={
                         CONF_ADDRESS: address,
+                        CONF_NAME: discovery_info.name,
                         CONF_PIN: pin,
                     },
                 )
 
+        if not self._discovered_devices:
+            await bluetooth.async_request_active_scan(self.hass)
+            current_addresses = self._async_current_ids(include_ignore=False)
+            for discovery_info in async_discovered_service_info(self.hass):
+                address = _normalize_address(discovery_info.address)
+                if (
+                    address in current_addresses
+                    or address in self._discovered_devices
+                    or not (discovery_info.name or "").startswith("ACP#")
+                ):
+                    continue
+                self._discovered_devices[address] = discovery_info
+
+        if not self._discovered_devices:
+            return self.async_abort(reason="no_devices_found")
+
         return self.async_show_form(
             step_id="user",
-            data_schema=MANUAL_SCHEMA,
+            data_schema=_user_schema(self._discovered_devices),
             errors=errors,
         )

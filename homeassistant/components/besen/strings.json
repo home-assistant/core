@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "not_supported": "This Bluetooth device is not a supported Besen charger."
     },
     "error": {
@@ -28,10 +29,10 @@
           "pin": "[%key:common::config_flow::data::pin%]"
         },
         "data_description": {
-          "address": "The BLE address of the charger advertising as ACP#...",
+          "address": "The discovered Besen charger to set up.",
           "pin": "The 6-digit Bluetooth PIN configured on the charger."
         },
-        "description": "Enter the Bluetooth address and PIN for your charger.",
+        "description": "Select the discovered charger and enter its Bluetooth PIN.",
         "title": "Set up Besen"
       }
     }

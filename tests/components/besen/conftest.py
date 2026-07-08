@@ -112,6 +112,17 @@ def mock_ble_device(enable_bluetooth: None) -> Generator[Mock]:
         yield mock_ble_device
 
 
+@pytest.fixture(autouse=True)
+def mock_discovered_service_info(enable_bluetooth: None) -> Generator[Mock]:
+    """Mock discovered Bluetooth devices."""
+
+    with patch(
+        "homeassistant.components.besen.config_flow.async_discovered_service_info",
+        return_value=[FAKE_SERVICE_INFO],
+    ) as mock_discovered_service_info:
+        yield mock_discovered_service_info
+
+
 @pytest.fixture
 def mock_besen_client() -> Generator[Mock]:
     """Patch the integration Besen client."""

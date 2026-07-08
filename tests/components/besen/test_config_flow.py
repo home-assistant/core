@@ -69,6 +69,7 @@ def _assert_user_create_entry(result: dict) -> None:
     assert result["title"] == "BS20"
     assert result["data"] == {
         CONF_ADDRESS: FIXTURE_ADDRESS,
+        CONF_NAME: FIXTURE_NAME,
         CONF_PIN: FIXTURE_PIN,
     }
     assert result["options"] == {}
@@ -251,7 +252,7 @@ async def test_user_step_success(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_ADDRESS: f" {FIXTURE_DISCOVERY_ADDRESS} ",
+            CONF_ADDRESS: FIXTURE_ADDRESS,
             CONF_PIN: FIXTURE_PIN,
         },
     )
@@ -275,7 +276,7 @@ async def test_user_step_rejects_invalid_pin(
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_ADDRESS: FIXTURE_DISCOVERY_ADDRESS,
+                CONF_ADDRESS: FIXTURE_ADDRESS,
                 CONF_PIN: "12345",
             },
         )
@@ -283,7 +284,7 @@ async def test_user_step_rejects_invalid_pin(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_ADDRESS: FIXTURE_DISCOVERY_ADDRESS,
+            CONF_ADDRESS: FIXTURE_ADDRESS,
             CONF_PIN: FIXTURE_PIN,
         },
     )
@@ -317,7 +318,7 @@ async def test_user_step_errors_can_recover(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_ADDRESS: FIXTURE_DISCOVERY_ADDRESS, CONF_PIN: FIXTURE_PIN},
+        {CONF_ADDRESS: FIXTURE_ADDRESS, CONF_PIN: FIXTURE_PIN},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -326,7 +327,7 @@ async def test_user_step_errors_can_recover(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_ADDRESS: FIXTURE_DISCOVERY_ADDRESS, CONF_PIN: FIXTURE_PIN},
+        {CONF_ADDRESS: FIXTURE_ADDRESS, CONF_PIN: FIXTURE_PIN},
     )
 
     _assert_user_create_entry(result)
@@ -348,7 +349,7 @@ async def test_user_step_no_connectable_path_can_recover(
     mock_ble_device.return_value = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_ADDRESS: FIXTURE_DISCOVERY_ADDRESS, CONF_PIN: FIXTURE_PIN},
+        {CONF_ADDRESS: FIXTURE_ADDRESS, CONF_PIN: FIXTURE_PIN},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -358,7 +359,7 @@ async def test_user_step_no_connectable_path_can_recover(
     mock_ble_device.return_value = _discovery().device
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_ADDRESS: FIXTURE_DISCOVERY_ADDRESS, CONF_PIN: FIXTURE_PIN},
+        {CONF_ADDRESS: FIXTURE_ADDRESS, CONF_PIN: FIXTURE_PIN},
     )
 
     _assert_user_create_entry(result)
@@ -370,17 +371,69 @@ async def test_user_step_existing_device_aborts(
 ) -> None:
     """Test manual setup aborts for an already configured charger."""
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
     mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ADDRESS: FIXTURE_ADDRESS, CONF_PIN: FIXTURE_PIN},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_user_step_no_devices_found_aborts(
+    hass: HomeAssistant,
+    mock_discovered_service_info: Mock,
+) -> None:
+    """Test manual setup aborts when no unconfigured chargers are discovered."""
+
+    mock_discovered_service_info.return_value = []
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_ADDRESS: FIXTURE_DISCOVERY_ADDRESS, CONF_PIN: FIXTURE_PIN},
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_step_ignores_bluetooth_flow_in_progress(
+    hass: HomeAssistant,
+    mock_besen_client: Mock,
+) -> None:
+    """Test manual setup can finish when a Bluetooth flow is already in progress."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=_discovery(),
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ADDRESS: FIXTURE_ADDRESS, CONF_PIN: FIXTURE_PIN},
+    )
+
+    _assert_user_create_entry(result)
