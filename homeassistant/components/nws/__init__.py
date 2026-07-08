@@ -8,14 +8,7 @@ import logging
 from pynws import NwsNoDataError, SimpleNWS, call_with_retry
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    Platform,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import debounce, entity_registry as er
@@ -43,6 +36,7 @@ from .const import (
     RETRY_STOP,
 )
 from .coordinator import NWSObservationDataUpdateCoordinator
+from .helpers import location_coordinates
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,8 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
                 translation_key="entity_unavailable",
                 translation_placeholders={"entity_id": location_entity_id},
             )
-        latitude = state.attributes[ATTR_LATITUDE]
-        longitude = state.attributes[ATTR_LONGITUDE]
+        latitude, longitude = location_coordinates(state)
         station = None
     else:
         latitude = entry.data[CONF_LATITUDE]
@@ -217,8 +210,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
             new_state = event.data["new_state"]
             if new_state is None or not has_location(new_state):
                 return
-            new_lat = new_state.attributes[ATTR_LATITUDE]
-            new_lon = new_state.attributes[ATTR_LONGITUDE]
+            new_lat, new_lon = location_coordinates(new_state)
             if (
                 new_lat == entry.runtime_data.latitude
                 and new_lon == entry.runtime_data.longitude

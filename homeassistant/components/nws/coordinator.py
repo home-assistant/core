@@ -8,7 +8,7 @@ import aiohttp
 from aiohttp import ClientResponseError
 from pynws import NwsError, NwsNoDataError, SimpleNWS, call_with_retry
 
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import debounce
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -33,6 +33,7 @@ from .const import (
     RETRY_STOP,
     UPDATE_TIME_PERIOD,
 )
+from .helpers import location_coordinates
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,8 +91,7 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
                 self._location_entity_id,
             )
             return
-        new_lat = state.attributes[ATTR_LATITUDE]
-        new_lon = state.attributes[ATTR_LONGITUDE]
+        new_lat, new_lon = location_coordinates(state)
         if self._previous_position is not None:
             prev_lat, prev_lon = self._previous_position
             if new_lat == prev_lat and new_lon == prev_lon:

@@ -8,13 +8,7 @@ from pynws import SimpleNWS
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -24,6 +18,7 @@ from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
 from . import base_unique_id
 from .const import CONF_LOCATION_ENTITY, CONF_STATION, DOMAIN
+from .helpers import location_coordinates
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -129,13 +124,14 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._async_abort_entries_match(
                         {CONF_LOCATION_ENTITY: entity_entry.id}
                     )
+                    latitude, longitude = location_coordinates(state)
                     try:
                         await validate_input(
                             self.hass,
                             {
                                 CONF_API_KEY: user_input[CONF_API_KEY],
-                                CONF_LATITUDE: state.attributes[ATTR_LATITUDE],
-                                CONF_LONGITUDE: state.attributes[ATTR_LONGITUDE],
+                                CONF_LATITUDE: latitude,
+                                CONF_LONGITUDE: longitude,
                             },
                         )
                         return self.async_create_entry(title=location_entity, data=data)
