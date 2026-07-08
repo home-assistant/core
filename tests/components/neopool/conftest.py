@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.neopool.const import (
+    CONF_USE_LIGHT,
     CURRENT_VERSION,
     DEFAULT_PORT,
     DEFAULT_UNIT_ID,
@@ -113,6 +114,25 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_config_entry_light() -> MockConfigEntry:
+    """Return a config entry with the pool light option enabled."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        version=CURRENT_VERSION,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_NAME: MOCK_NAME,
+            "unit_id": DEFAULT_UNIT_ID,
+            "modbus_framer": "tcp",
+        },
+        options={CONF_USE_LIGHT: True},
+    )
+
+
+@pytest.fixture
 def mock_neopool_client() -> Generator[MagicMock]:
     """Patch the NeoPoolModbusClient and return a configurable mock instance."""
     with (
@@ -127,6 +147,8 @@ def mock_neopool_client() -> Generator[MagicMock]:
     ):
         mock_client = mock_client_cls.return_value
         mock_client.async_read_all = AsyncMock(return_value=dict(MOCK_POOL_DATA))
+        mock_client.read_all_timers = AsyncMock(return_value={})
+        mock_client.async_set_relay_state = AsyncMock(return_value={})
         mock_client.close = AsyncMock()
         yield mock_client
 

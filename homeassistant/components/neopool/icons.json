@@ -1,5 +1,14 @@
 {
   "entity": {
+    "light": {
+      "light": {
+        "default": "mdi:lightbulb-off",
+        "state": {
+          "off": "mdi:lightbulb-off",
+          "on": "mdi:lightbulb-on"
+        }
+      }
+    },
     "sensor": {
       "filt_mode": {
         "default": "mdi:water-sync",

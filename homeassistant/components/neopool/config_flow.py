@@ -13,8 +13,11 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import callback
 
 from .const import CURRENT_VERSION, DEFAULT_PORT, DEFAULT_UNIT_ID, DOMAIN
+from .coordinator import NeoPoolConfigEntry
+from .options_flow import NeoPoolOptionsFlowHandler
 
 
 async def _async_probe(user_input: dict[str, Any]) -> tuple[str | None, str | None]:
@@ -37,6 +40,15 @@ class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NeoPool."""
 
     VERSION = CURRENT_VERSION
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: NeoPoolConfigEntry,
+    ) -> NeoPoolOptionsFlowHandler:
+        """Return the options flow handler."""
+        return NeoPoolOptionsFlowHandler()
 
     @override
     async def async_step_user(
