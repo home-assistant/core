@@ -163,22 +163,16 @@ def get_accessory(  # noqa: C901
             # An explicit type in the entity config overrides the routing below.
             a_type = CLIMATE_TYPES[climate_type]
         else:
-            # Route to HeaterCooler only when the entity exposes two or more
-            # ordered fan speeds (timing modes like auto or circulate do not
-            # count) or a real swing mode; otherwise the Thermostat keeps
-            # handling it and existing accessories are preserved.
             attributes = state.attributes
+            # Timing fan modes like auto or circulate do not count as speeds.
             has_fan = bool(features & ClimateEntityFeature.FAN_MODE) and (
                 len(get_fan_modes_and_speeds(attributes)[1]) >= 2
             )
             has_swing = bool(features & ClimateEntityFeature.SWING_MODE) and (
                 get_swing_on_mode(attributes) is not None
             )
-            # The HeaterCooler service cannot control a humidity setpoint, so
-            # entities that expose one (whole-home thermostats with a dehumidifier,
-            # e.g. econet) stay on the Thermostat, which supports it natively.
-            # Humidity that is only reported for display is kept via a linked
-            # sensor on the HeaterCooler.
+            # HeaterCooler cannot control a humidity setpoint; entities that
+            # expose one (e.g. econet) stay on the Thermostat, which can.
             has_target_humidity = bool(features & ClimateEntityFeature.TARGET_HUMIDITY)
             if (has_fan or has_swing) and not has_target_humidity:
                 a_type = "HeaterCooler"
