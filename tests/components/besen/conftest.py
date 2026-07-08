@@ -1,10 +1,8 @@
 """Fixtures for the Besen integration tests."""
 
-from collections.abc import Callable, Generator
-from dataclasses import dataclass
+from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
-from besen.client import BesenClient
 from besen.models import BesenData, ChargerConfig, ChargerInfo, ChargeStatus
 import pytest
 
@@ -13,6 +11,8 @@ from homeassistant.components.besen.const import DOMAIN
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
+
+from . import publish_besen_state
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
@@ -48,23 +48,6 @@ FAKE_SERVICE_INFO = BluetoothServiceInfoBleak(
 )
 
 
-@dataclass
-class BesenClientFixture:
-    """Mocked Besen client and helpers."""
-
-    client: Mock
-    constructor: Mock
-    remove_listener: Mock
-    listeners: list[Callable[[BesenData], None]]
-
-    def publish_state(self, state: BesenData) -> None:
-        """Publish a state update from the mocked client."""
-
-        self.client.state = state
-        for listener in list(self.listeners):
-            listener(state)
-
-
 def charger_state(
     *,
     charger_status: bool | None = True,
@@ -96,17 +79,16 @@ def charger_state(
     )
 
 
-def _create_client_mock() -> Mock:
-    """Create a mocked Besen client instance."""
+def _configure_client_mock(client: Mock) -> None:
+    """Configure a mocked Besen client instance."""
 
-    client = Mock(spec=BesenClient)
     client.address = FIXTURE_ADDRESS
     client.state = charger_state()
     client.async_start = AsyncMock()
     client.async_stop = AsyncMock()
     client.async_start_charging = AsyncMock()
     client.async_stop_charging = AsyncMock()
-    return client
+    client.add_listener.return_value = Mock()
 
 
 @pytest.fixture(autouse=True)
@@ -131,64 +113,30 @@ def mock_ble_device(enable_bluetooth: None) -> Generator[Mock]:
 
 
 @pytest.fixture
-def mock_besen_client() -> Generator[BesenClientFixture]:
+def mock_besen_client() -> Generator[Mock]:
     """Patch the integration Besen client."""
 
-    client = _create_client_mock()
-    listeners: list[Callable[[BesenData], None]] = []
-    remove_listener = Mock()
-
-    def add_listener(
-        listener: Callable[[BesenData], None],
-    ) -> Callable[[], None]:
-        listeners.append(listener)
-
-        def remove() -> None:
-            remove_listener()
-            if listener in listeners:
-                listeners.remove(listener)
-
-        return remove
-
-    client.add_listener.side_effect = add_listener
-
-    with patch(
-        "homeassistant.components.besen.BesenClient",
-        return_value=client,
-    ) as constructor:
-        fixture = BesenClientFixture(
-            client=client,
-            constructor=constructor,
-            remove_listener=remove_listener,
-            listeners=listeners,
-        )
+    with (
+        patch(
+            "homeassistant.components.besen.BesenClient", autospec=True
+        ) as mock_client,
+        patch(
+            "homeassistant.components.besen.config_flow.BesenClient",
+            new=mock_client,
+        ),
+    ):
+        client = mock_client.return_value
+        _configure_client_mock(client)
 
         async def async_start_charging() -> None:
-            fixture.publish_state(charger_state(charger_status=True))
+            publish_besen_state(client, charger_state(charger_status=True))
 
         async def async_stop_charging() -> None:
-            fixture.publish_state(charger_state(charger_status=False))
+            publish_besen_state(client, charger_state(charger_status=False))
 
         client.async_start_charging.side_effect = async_start_charging
         client.async_stop_charging.side_effect = async_stop_charging
-        yield fixture
-
-
-@pytest.fixture
-def mock_validation_client() -> Generator[BesenClientFixture]:
-    """Patch the config flow Besen client."""
-
-    client = _create_client_mock()
-    with patch(
-        "homeassistant.components.besen.config_flow.BesenClient",
-        return_value=client,
-    ) as constructor:
-        yield BesenClientFixture(
-            client=client,
-            constructor=constructor,
-            remove_listener=Mock(),
-            listeners=[],
-        )
+        yield client
 
 
 @pytest.fixture

@@ -18,7 +18,6 @@ from .conftest import (
     FIXTURE_DISCOVERY_ADDRESS,
     FIXTURE_NAME,
     FIXTURE_PIN,
-    BesenClientFixture,
 )
 
 from tests.common import MockConfigEntry
@@ -91,8 +90,10 @@ async def test_bluetooth_step_unsupported_name_aborts(
     assert result["reason"] == "not_supported"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_bluetooth_step_sets_discovered_context(
     hass: HomeAssistant,
+    mock_besen_client: Mock,
 ) -> None:
     """Test Bluetooth discovery normalizes the address and asks for confirmation."""
 
@@ -105,11 +106,18 @@ async def test_bluetooth_step_sets_discovered_context(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PIN: FIXTURE_PIN},
+    )
+
+    _assert_bluetooth_create_entry(result)
+
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_bluetooth_confirm_success(
     hass: HomeAssistant,
-    mock_validation_client: BesenClientFixture,
+    mock_besen_client: Mock,
 ) -> None:
     """Test Bluetooth confirmation creates an entry."""
 
@@ -128,13 +136,8 @@ async def test_bluetooth_confirm_success(
     )
 
     _assert_bluetooth_create_entry(result)
-    assert mock_validation_client.constructor.call_args.kwargs["address"] == (
-        FIXTURE_ADDRESS
-    )
-    assert mock_validation_client.constructor.call_args.kwargs["pin"] == FIXTURE_PIN
-    assert mock_validation_client.constructor.call_args.kwargs["advertised_name"] == (
-        FIXTURE_NAME
-    )
+    mock_besen_client.async_start.assert_awaited_once()
+    mock_besen_client.async_stop.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
@@ -148,13 +151,13 @@ async def test_bluetooth_confirm_success(
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_bluetooth_confirm_errors_can_recover(
     hass: HomeAssistant,
-    mock_validation_client: BesenClientFixture,
+    mock_besen_client: Mock,
     exception: Exception,
     error: str,
 ) -> None:
     """Test Bluetooth confirmation errors can recover."""
 
-    mock_validation_client.client.async_start.side_effect = [exception, None]
+    mock_besen_client.async_start.side_effect = [exception, None]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -183,7 +186,7 @@ async def test_bluetooth_confirm_errors_can_recover(
 async def test_bluetooth_confirm_no_connectable_path_can_recover(
     hass: HomeAssistant,
     mock_ble_device: Mock,
-    mock_validation_client: BesenClientFixture,
+    mock_besen_client: Mock,
 ) -> None:
     """Test Bluetooth confirmation recovers after a path becomes available."""
 
@@ -233,7 +236,7 @@ async def test_bluetooth_flow_existing_device_aborts(
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_step_success(
     hass: HomeAssistant,
-    mock_validation_client: BesenClientFixture,
+    mock_besen_client: Mock,
 ) -> None:
     """Test manual setup creates an entry."""
 
@@ -256,8 +259,10 @@ async def test_user_step_success(
     _assert_user_create_entry(result)
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_step_rejects_invalid_pin(
     hass: HomeAssistant,
+    mock_besen_client: Mock,
 ) -> None:
     """Test the user step PIN schema rejects invalid values."""
 
@@ -275,6 +280,16 @@ async def test_user_step_rejects_invalid_pin(
             },
         )
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ADDRESS: FIXTURE_DISCOVERY_ADDRESS,
+            CONF_PIN: FIXTURE_PIN,
+        },
+    )
+
+    _assert_user_create_entry(result)
+
 
 @pytest.mark.parametrize(
     ("exception", "error"),
@@ -287,13 +302,13 @@ async def test_user_step_rejects_invalid_pin(
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_step_errors_can_recover(
     hass: HomeAssistant,
-    mock_validation_client: BesenClientFixture,
+    mock_besen_client: Mock,
     exception: Exception,
     error: str,
 ) -> None:
     """Test manual setup errors can recover."""
 
-    mock_validation_client.client.async_start.side_effect = [exception, None]
+    mock_besen_client.async_start.side_effect = [exception, None]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -321,7 +336,7 @@ async def test_user_step_errors_can_recover(
 async def test_user_step_no_connectable_path_can_recover(
     hass: HomeAssistant,
     mock_ble_device: Mock,
-    mock_validation_client: BesenClientFixture,
+    mock_besen_client: Mock,
 ) -> None:
     """Test manual setup recovers after a path becomes available."""
 
