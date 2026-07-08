@@ -189,37 +189,37 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
     @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        await self._bridge.player.pause()
+        await self._active_player.pause()
 
     @exception_wrap
     @override
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self._bridge.player.resume()
+        await self._active_player.resume()
 
     @exception_wrap
     @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        await self._bridge.player.stop()
+        await self._active_player.stop()
 
     @exception_wrap
     @override
     async def async_media_next_track(self) -> None:
         """Send next command."""
-        await self._bridge.player.next()
+        await self._active_player.next()
 
     @exception_wrap
     @override
     async def async_media_previous_track(self) -> None:
         """Send previous command."""
-        await self._bridge.player.previous()
+        await self._active_player.previous()
 
     @exception_wrap
     @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
-        await self._bridge.player.set_loop_mode(REPEAT_MAP_INV[repeat])
+        await self._active_player.set_loop_mode(REPEAT_MAP_INV[repeat])
 
     @override
     async def async_browse_media(
@@ -253,13 +253,13 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
             media_id = play_item.url
 
         url = async_process_play_media_url(self.hass, media_id)
-        await self._bridge.player.play(url)
+        await self._active_player.play(url)
 
     @exception_wrap
     async def async_play_preset(self, preset_number: int) -> None:
         """Play preset number."""
         try:
-            await self._bridge.player.play_preset(preset_number)
+            await self._active_player.play_preset(preset_number)
         except ValueError as err:
             raise HomeAssistantError(err) from err
 
@@ -267,7 +267,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
     @override
     async def async_media_seek(self, position: float) -> None:
         """Seek to a position."""
-        await self._bridge.player.seek(round(position))
+        await self._active_player.seek(round(position))
 
     @exception_wrap
     @override
@@ -371,11 +371,11 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         self._attr_supported_features = DEFAULT_FEATURES
 
         if self._bridge.player.status == PlayingStatus.PLAYING:
-            # A follower mirrors the media info from the group leader, but the
-            # transport controls act on its own device, so the seekable features
-            # stay gated on the follower's own player.
+            # A follower mirrors the media info from the group leader and routes
+            # its transport controls to the leader, so the seekable features
+            # follow the leader's player as well.
             player = self._active_player
-            if self._bridge.player.total_length != 0:
+            if player.total_length != 0:
                 self._attr_supported_features = (
                     self._attr_supported_features | SEEKABLE_FEATURES
                 )
