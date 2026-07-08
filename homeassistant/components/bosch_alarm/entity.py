@@ -90,6 +90,7 @@ class BoschAlarmAreaEntity(BoschAlarmEntity):
             self._area.status_observer.attach(self.schedule_update_ha_state)
 
     @override
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
         await super().async_will_remove_from_hass()
@@ -124,6 +125,7 @@ class BoschAlarmPointEntity(BoschAlarmEntity):
         self._point.status_observer.attach(self.schedule_update_ha_state)
 
     @override
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
         await super().async_will_remove_from_hass()
@@ -153,6 +155,7 @@ class BoschAlarmDoorEntity(BoschAlarmEntity):
         self._door.status_observer.attach(self.schedule_update_ha_state)
 
     @override
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
         await super().async_will_remove_from_hass()
@@ -182,6 +185,7 @@ class BoschAlarmOutputEntity(BoschAlarmEntity):
         self._output.status_observer.attach(self.schedule_update_ha_state)
 
     @override
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
         await super().async_will_remove_from_hass()
