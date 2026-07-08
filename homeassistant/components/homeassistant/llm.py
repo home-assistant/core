@@ -8,7 +8,7 @@ from typing import Any, override
 import voluptuous as vol
 
 from homeassistant.components.llm import LLMTools
-from homeassistant.components.sensor import async_rounded_state
+from homeassistant.components.sensor import SensorDeviceClass, async_rounded_state
 from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -115,7 +115,8 @@ def async_get_exposed_entities(
 
             # Convert timestamp device_class states from UTC to local time
             if (
-                state.attributes.get(EntityStateAttribute.DEVICE_CLASS) == "timestamp"
+                state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
+                == SensorDeviceClass.TIMESTAMP
                 and state.state
             ):
                 if (parsed_utc := dt_util.parse_datetime(state.state)) is not None:
