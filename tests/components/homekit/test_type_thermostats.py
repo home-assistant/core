@@ -2968,3 +2968,35 @@ async def test_thermostat_with_capitalized_fan_modes(
     assert len(call_set_fan_mode) == 2
     assert call_set_fan_mode[-1].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == "Low"
+
+
+async def test_climate_base_fan_swing_guards(hass: HomeAssistant, hk_driver) -> None:
+    """Test the shared fan and swing setters no-op without predefined modes."""
+    entity_id = "climate.test"
+    hass.states.async_set(
+        entity_id,
+        HVACMode.HEAT,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.OFF],
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    call_set_fan_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE)
+    call_set_swing_mode = async_mock_service(
+        hass, CLIMATE_DOMAIN, SERVICE_SET_SWING_MODE
+    )
+
+    # No predefined fan speeds, so a fan speed write is ignored.
+    acc._set_fan_speed(50)
+    # No swing mode, so a swing write is ignored.
+    acc._set_swing_mode(1)
+    await hass.async_block_till_done()
+
+    assert len(call_set_fan_mode) == 0
+    assert len(call_set_swing_mode) == 0

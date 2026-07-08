@@ -3,6 +3,7 @@
 from itertools import chain
 from typing import Any, cast, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import CabinOverheatProtectionTemp, Scope
 from tesla_fleet_api.teslemetry import Vehicle
 
@@ -65,7 +66,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingClimateEntity(
                     vehicle, TeslemetryClimateSide.DRIVER, entry.runtime_data.scopes
                 )
-                if vehicle.poll or vehicle.firmware < "2024.44.25"
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.44.25")
                 else TeslemetryStreamingClimateEntity(
                     vehicle, TeslemetryClimateSide.DRIVER, entry.runtime_data.scopes
                 )
@@ -75,7 +76,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingCabinOverheatProtectionEntity(
                     vehicle, entry.runtime_data.scopes
                 )
-                if vehicle.poll or vehicle.firmware < "2024.44.25"
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.44.25")
                 else TeslemetryStreamingCabinOverheatProtectionEntity(
                     vehicle, entry.runtime_data.scopes
                 )
