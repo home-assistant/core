@@ -10,6 +10,8 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
+from pynintendoparental.device import Device
+
 from .const import ATTR_BONUS_TIME, DOMAIN
 from .coordinator import NintendoParentalControlsConfigEntry
 
@@ -52,44 +54,47 @@ def async_setup_services(
     )
 
 
-def _get_nintendo_device_id(dev: dr.DeviceEntry) -> str | None:
-    """Get the Nintendo device ID from a device entry."""
-    for identifier in dev.identifiers:
-        if identifier[0] == DOMAIN:
-            return identifier[1].split("_")[-1]
-    return None
-
-
-async def async_add_bonus_time(call: ServiceCall) -> None:
-    """Add bonus time to a device."""
+def _get_nintendo_device(hass: HomeAssistant, device_id: str) -> Device:
+    """Get the Nintendo device from a device ID."""
     config_entry: NintendoParentalControlsConfigEntry | None
-    data = call.data
-    device_id: str = data[ATTR_DEVICE_ID]
-    bonus_time: int = data[ATTR_BONUS_TIME]
-    device = dr.async_get(call.hass).async_get(device_id)
+    device = dr.async_get(hass).async_get(device_id)
     if device is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="device_not_found",
         )
     for entry_id in device.config_entries:
-        config_entry = call.hass.config_entries.async_get_entry(entry_id)
+        config_entry = hass.config_entries.async_get_entry(entry_id)
         if config_entry is not None and config_entry.domain == DOMAIN:
             break
-    nintendo_device_id = _get_nintendo_device_id(device)
-    if config_entry and nintendo_device_id:
-        return await config_entry.runtime_data.api.devices[
-            nintendo_device_id
-        ].add_extra_time(bonus_time)
+    nintendo_device_id = None
+    for identifier in device.identifiers:
+        if identifier[0] == DOMAIN:
+            nintendo_device_id = identifier[1].split("_")[-1]
+            break
+    if (
+        nintendo_device_id
+        and config_entry
+        and nintendo_device_id in config_entry.runtime_data.api.devices
+    ):
+        return config_entry.runtime_data.api.devices[nintendo_device_id]
     raise ServiceValidationError(
         translation_domain=DOMAIN,
         translation_key="invalid_device",
     )
 
 
+async def async_add_bonus_time(call: ServiceCall) -> None:
+    """Add bonus time to a device."""
+    data = call.data
+    device_id: str = data[ATTR_DEVICE_ID]
+    bonus_time: int = data[ATTR_BONUS_TIME]
+    device = _get_nintendo_device(call.hass, device_id)
+    return await device.add_extra_time(bonus_time)
+
+
 async def async_update_pin_code(call: ServiceCall) -> None:
     """Update the PIN code for a device."""
-    config_entry: NintendoParentalControlsConfigEntry | None = None
     data = call.data
     device_id: str = data[ATTR_DEVICE_ID]
     new_pin: str = data[CONF_PIN]
@@ -98,23 +103,5 @@ async def async_update_pin_code(call: ServiceCall) -> None:
             translation_domain=DOMAIN,
             translation_key="invalid_pin_length",
         )
-    device = dr.async_get(call.hass).async_get(device_id)
-    if device is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="device_not_found",
-        )
-    for entry_id in device.config_entries:
-        entry = call.hass.config_entries.async_get_entry(entry_id)
-        if entry is not None and entry.domain == DOMAIN:
-            config_entry = entry
-            break
-    nintendo_device_id = _get_nintendo_device_id(device)
-    if config_entry and nintendo_device_id:
-        device = config_entry.runtime_data.api.devices.get(nintendo_device_id)
-        if device is not None:
-            return await device.set_new_pin(new_pin)
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="invalid_device",
-    )
+    device = _get_nintendo_device(call.hass, device_id)
+    return await device.set_new_pin(new_pin)
