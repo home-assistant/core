@@ -15,6 +15,8 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
+    FAN_AUTO,
+    FAN_ON,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
@@ -36,6 +38,7 @@ from .climate_util import temperature_attribute_to_homekit
 from .const import (
     CHAR_ACTIVE,
     CHAR_COOLING_THRESHOLD_TEMPERATURE,
+    CHAR_CURRENT_FAN_STATE,
     CHAR_CURRENT_HEATER_COOLER_STATE,
     CHAR_CURRENT_HUMIDITY,
     CHAR_CURRENT_TEMPERATURE,
@@ -43,6 +46,7 @@ from .const import (
     CHAR_NAME,
     CHAR_ROTATION_SPEED,
     CHAR_SWING_MODE,
+    CHAR_TARGET_FAN_STATE,
     CHAR_TARGET_HEATER_COOLER_STATE,
     PROP_MAX_VALUE,
     PROP_MIN_STEP,
@@ -164,9 +168,23 @@ class HeaterCooler(HomeKitClimateAccessory):
                 )
             )
 
+        # The HeaterCooler service has no auto fan control, so when the entity
+        # exposes an auto fan mode (and a manual mode to switch back to) the fan
+        # is exposed through a full linked fan service instead; the rotation
+        # speed then lives there, since per the HomeKit spec it only belongs on
+        # the HeaterCooler when the fan cannot be independently controlled.
+        if FAN_AUTO in self.fan_modes and (
+            FAN_ON in self.fan_modes or self.ordered_fan_speeds
+        ):
+            self.fan_chars.append(CHAR_TARGET_FAN_STATE)
+            if self.ordered_fan_speeds:
+                self.fan_chars.append(CHAR_ROTATION_SPEED)
+            if attributes.get(ATTR_HVAC_ACTION) is not None:
+                self.fan_chars.append(CHAR_CURRENT_FAN_STATE)
+
         # Fan/swing modes are detected in the base class; only advertise the
         # characteristics when the entity exposes predefined modes.
-        if self.ordered_fan_speeds:
+        if self.ordered_fan_speeds and not self.fan_chars:
             chars.append(CHAR_ROTATION_SPEED)
         if self.swing_on_mode is not None:
             chars.append(CHAR_SWING_MODE)
@@ -213,7 +231,7 @@ class HeaterCooler(HomeKitClimateAccessory):
                 properties=temp_properties,
             )
 
-        if self.ordered_fan_speeds:
+        if self.ordered_fan_speeds and not self.fan_chars:
             self.char_speed = serv.configure_char(
                 CHAR_ROTATION_SPEED,
                 value=100,
@@ -221,6 +239,9 @@ class HeaterCooler(HomeKitClimateAccessory):
             )
         if self.swing_on_mode is not None:
             self.char_swing = serv.configure_char(CHAR_SWING_MODE, value=0)
+
+        if self.fan_chars:
+            self._configure_fan_service(serv)
 
         # The Heater Cooler service has no humidity characteristic, so surface a
         # reported current humidity through a linked humidity sensor. Like the
@@ -449,9 +470,12 @@ class HeaterCooler(HomeKitClimateAccessory):
             (humidity := attributes.get(ATTR_CURRENT_HUMIDITY)), (int, float)
         ):
             self.char_current_humidity.set_value(humidity)
-        # The base char updaters no-op when the entity exposes no fan/swing.
-        self._update_fan_speed_char(attributes)
-        self._update_swing_char(attributes)
+        if self.fan_chars:
+            self._async_update_fan_service(new_state)
+        else:
+            # The base char updaters no-op when the entity exposes no fan/swing.
+            self._update_fan_speed_char(attributes)
+            self._update_swing_char(attributes)
 
     def _update_temperature_thresholds(self, state: State) -> None:
         """Update HomeKit temperature thresholds based on HA state."""

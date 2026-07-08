@@ -33,12 +33,18 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.homekit.accessories import HomeDriver
+from homeassistant.components.homekit.climate_base import (
+    FAN_STATE_ACTIVE,
+    FAN_STATE_IDLE,
+)
 from homeassistant.components.homekit.const import (
     CHAR_ACTIVE,
     CHAR_COOLING_THRESHOLD_TEMPERATURE,
+    CHAR_CURRENT_FAN_STATE,
     CHAR_HEATING_THRESHOLD_TEMPERATURE,
     CHAR_ROTATION_SPEED,
     CHAR_SWING_MODE,
+    CHAR_TARGET_FAN_STATE,
     CHAR_TARGET_HEATER_COOLER_STATE,
     PROP_MAX_VALUE,
     PROP_MIN_STEP,
@@ -1873,3 +1879,156 @@ async def test_heatercooler_derive_action_auto_with_thresholds(
     )
     await hass.async_block_till_done()
     assert acc.char_current_state.value == HC_IDLE
+
+
+async def test_heatercooler_auto_fan_mode_linked_fan_service(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test an auto fan mode exposes the fan through a linked fan service."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        ),
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        ATTR_FAN_MODES: ["auto", "low", "high"],
+        ATTR_FAN_MODE: "auto",
+        ATTR_HVAC_ACTION: HVACAction.COOLING,
+    }
+
+    hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # The rotation speed lives on the fan service, not the HeaterCooler
+    assert CHAR_TARGET_FAN_STATE in acc.fan_chars
+    assert CHAR_ROTATION_SPEED in acc.fan_chars
+    assert CHAR_CURRENT_FAN_STATE in acc.fan_chars
+    assert acc.char_target_fan_state.value == 1
+    assert acc.char_current_fan_state.value == FAN_STATE_ACTIVE
+    assert acc.char_fan_active.value == 1
+
+    # Leaving auto selects the middle manual speed; re-enabling restores auto
+    call_set_fan_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE)
+    acc.char_target_fan_state.client_update_value(0)
+    await hass.async_block_till_done()
+    assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == "low"
+
+    acc.char_target_fan_state.client_update_value(1)
+    await hass.async_block_till_done()
+    assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == "auto"
+
+    # A manual fan mode is reflected back into the fan service chars
+    hass.states.async_set(
+        entity_id,
+        HVACMode.COOL,
+        {**base_attrs, ATTR_FAN_MODE: "high", ATTR_HVAC_ACTION: HVACAction.IDLE},
+    )
+    await hass.async_block_till_done()
+    assert acc.char_target_fan_state.value == 0
+    assert acc.char_speed.value == 100
+    assert acc.char_current_fan_state.value == FAN_STATE_IDLE
+
+    # Turning the unit off turns the fan inactive
+    hass.states.async_set(entity_id, HVACMode.OFF, base_attrs)
+    await hass.async_block_till_done()
+    assert acc.char_fan_active.value == 0
+
+
+async def test_heatercooler_auto_fan_service_without_speeds(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test auto plus on fan modes get a fan service without a speed slider."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        ),
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        ATTR_FAN_MODES: ["auto", "on"],
+        ATTR_FAN_MODE: "on",
+    }
+
+    hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert CHAR_TARGET_FAN_STATE in acc.fan_chars
+    assert CHAR_ROTATION_SPEED not in acc.fan_chars
+    assert not hasattr(acc, "char_speed")
+    assert acc.char_target_fan_state.value == 0
+
+    # Leaving auto falls back to the on mode
+    call_set_fan_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE)
+    acc.char_target_fan_state.client_update_value(0)
+    await hass.async_block_till_done()
+    assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == "on"
+
+
+async def test_heatercooler_fan_active_resets_without_off_mode(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a fan off write resets to on when the fan has no off mode."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        ),
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        ATTR_FAN_MODES: ["auto", "low", "high"],
+        ATTR_FAN_MODE: "low",
+    }
+
+    hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    call_set_fan_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE)
+    acc.char_fan_active.client_update_value(0)
+    await hass.async_block_till_done()
+    assert len(call_set_fan_mode) == 0
+    assert acc.char_fan_active.value == 1
+
+
+async def test_heatercooler_fan_active_toggles_with_off_mode(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test the fan active toggle maps to the fan off and on modes."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        ),
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        ATTR_FAN_MODES: ["auto", "off", "low", "high"],
+        ATTR_FAN_MODE: "low",
+    }
+
+    hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    call_set_fan_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE)
+    acc.char_fan_active.client_update_value(0)
+    await hass.async_block_till_done()
+    assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == "off"
+
+    acc.char_fan_active.client_update_value(1)
+    await hass.async_block_till_done()
+    assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == "low"
