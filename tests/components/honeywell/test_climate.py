@@ -147,10 +147,21 @@ async def test_dynamic_attributes(
     assert attributes["current_humidity"] == 50
 
 
-async def test_hvac_action_unreported_equipment_status(
-    hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
+@pytest.mark.parametrize(
+    ("equipment_output_status", "expected_action"),
+    [
+        pytest.param(None, None, id="unreported"),
+        pytest.param(0, HVACAction.IDLE, id="reported_idle"),
+    ],
+)
+async def test_hvac_action_equipment_status(
+    hass: HomeAssistant,
+    device: MagicMock,
+    config_entry: MagicMock,
+    equipment_output_status: int | None,
+    expected_action: HVACAction | None,
 ) -> None:
-    """Test hvac_action is unknown when the device never reports EquipmentOutputStatus.
+    """Test hvac_action reflects the raw EquipmentOutputStatus value.
 
     Some thermostat models never send EquipmentOutputStatus to the cloud API
     (it stays None, not 0). hvac_action should be unknown in that case rather
@@ -160,7 +171,7 @@ async def test_hvac_action_unreported_equipment_status(
 
     entity_id = f"climate.{device.name}"
     device.system_mode = "cool"
-    device.raw_ui_data["EquipmentOutputStatus"] = None
+    device.raw_ui_data["EquipmentOutputStatus"] = equipment_output_status
 
     async_fire_time_changed(
         hass,
@@ -170,28 +181,7 @@ async def test_hvac_action_unreported_equipment_status(
 
     state = hass.states.get(entity_id)
     assert state.state == HVACMode.COOL
-    assert ATTR_HVAC_ACTION not in state.attributes
-
-
-async def test_hvac_action_reported_idle(
-    hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
-) -> None:
-    """Test hvac_action stays idle when the device explicitly reports 0."""
-    await init_integration(hass, config_entry)
-
-    entity_id = f"climate.{device.name}"
-    device.system_mode = "cool"
-    device.raw_ui_data["EquipmentOutputStatus"] = 0
-
-    async_fire_time_changed(
-        hass,
-        utcnow() + SCAN_INTERVAL,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state.state == HVACMode.COOL
-    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
+    assert state.attributes.get(ATTR_HVAC_ACTION) == expected_action
 
 
 async def test_mode_service_calls(
