@@ -1,7 +1,7 @@
 """Support for the Hive switches."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from apyhiveapi import Hive
 
@@ -64,11 +64,13 @@ class HiveSwitch(HiveEntity, SwitchEntity):
         self.entity_description = entity_description
 
     @refresh_system
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.hive.switch.turnOn(self.device)
 
     @refresh_system
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.hive.switch.turnOff(self.device)

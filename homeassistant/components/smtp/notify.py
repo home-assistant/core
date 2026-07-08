@@ -1,5 +1,6 @@
 """Mail (SMTP) notification service."""
 
+from contextlib import suppress
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import email.utils
@@ -13,7 +14,7 @@ from smtplib import (
 )
 from socket import gaierror
 from ssl import SSLContext
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -183,6 +184,7 @@ class MailNotifyEntity(NotifyEntity):
         )
         self._attr_name = subentry.title
 
+    @override
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send an email message via notify.send_message action."""
 
@@ -198,6 +200,9 @@ class MailNotifyEntity(NotifyEntity):
 
         msg["From"] = email.utils.formataddr(
             (self._entry.data.get(CONF_SENDER_NAME), self._entry.data[CONF_SENDER])
+        )
+        msg["To"] = email.utils.formataddr(
+            (self._subentry.title, self._subentry.unique_id)
         )
         msg["X-Mailer"] = "Home Assistant"
         msg["Date"] = email.utils.format_datetime(dt_util.now())
@@ -236,7 +241,8 @@ class MailNotifyEntity(NotifyEntity):
                         translation_key="send_mail_connection_error",
                     ) from e
             finally:
-                client.quit()
+                with suppress(SMTPException):
+                    client.quit()
 
 
 class MailNotificationService(SmtpClient, BaseNotificationService):
@@ -262,6 +268,7 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
             ssl_context=ssl_context,
         )
 
+    @override
     def send_message(self, message: str, **kwargs: Any) -> None:
         """Build and send a message to a user.
 
@@ -314,12 +321,19 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
                 break
             except SMTPServerDisconnected:
                 _LOGGER.warning(
-                    "SMTPServerDisconnected sending mail: retrying connection"
+                    "SMTPServerDisconnected sending mail: retrying connection",
+                    exc_info=_LOGGER.isEnabledFor(logging.DEBUG),
                 )
-                mail.quit()
+                with suppress(SMTPException):
+                    mail.quit()
                 mail = self.connect()
             except SMTPException:
-                _LOGGER.warning("SMTPException sending mail: retrying connection")
-                mail.quit()
+                _LOGGER.warning(
+                    "SMTPException sending mail: retrying connection",
+                    exc_info=_LOGGER.isEnabledFor(logging.DEBUG),
+                )
+                with suppress(SMTPException):
+                    mail.quit()
                 mail = self.connect()
-        mail.quit()
+        with suppress(SMTPException):
+            mail.quit()

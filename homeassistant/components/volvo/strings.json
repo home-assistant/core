@@ -364,20 +364,8 @@
     "command_failure": {
       "message": "Command {command} failed. Status: {status}. Message: {message}"
     },
-    "entry_not_found": {
-      "message": "Entry not found: {entry_id}"
-    },
-    "entry_not_loaded": {
-      "message": "Entry not loaded: {entry_id}"
-    },
     "image_error": {
       "message": "Unable to load vehicle image from: {url}"
-    },
-    "invalid_entry": {
-      "message": "Invalid entry: {entry_id}"
-    },
-    "invalid_entry_id": {
-      "message": "Invalid entry ID: {entry_id}"
     },
     "invalid_image_type": {
       "message": "Invalid image type: {image_type}"

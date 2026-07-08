@@ -1,6 +1,6 @@
 """Config Flow for the zamg integration."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from zamg import ZamgData
@@ -19,6 +19,7 @@ class ZamgConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _client: ZamgData | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

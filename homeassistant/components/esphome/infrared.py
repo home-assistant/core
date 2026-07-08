@@ -2,7 +2,7 @@
 
 import functools
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aioesphomeapi import EntityInfo, EntityState, InfraredCapability, InfraredInfo
 from aioesphomeapi.client import InfraredRFReceiveEventModel
@@ -31,6 +31,7 @@ class _EsphomeInfraredEntity(EsphomeEntity[InfraredInfo, EntityState]):
     """Common base for ESPHome infrared entities."""
 
     @callback
+    @override
     def _on_device_update(self) -> None:
         """Call when device updates or entry data changes."""
         super()._on_device_update()
@@ -43,6 +44,7 @@ class EsphomeInfraredEmitterEntity(_EsphomeInfraredEntity, InfraredEmitterEntity
     """ESPHome infrared emitter entity using native API."""
 
     @convert_api_error_ha_error
+    @override
     async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command."""
         timings = command.get_raw_timings()
@@ -61,11 +63,13 @@ class EsphomeInfraredReceiverEntity(_EsphomeInfraredEntity, InfraredReceiverEnti
 
     _unsub_receive: CALLBACK_TYPE | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks including IR receive subscription."""
         await super().async_added_to_hass()
         self._async_subscribe_receive()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from the device on entity removal."""
         await super().async_will_remove_from_hass()
@@ -85,6 +89,7 @@ class EsphomeInfraredReceiverEntity(_EsphomeInfraredEntity, InfraredReceiverEnti
         )
 
     @callback
+    @override
     def _on_device_update(self) -> None:
         """Call when device updates or entry data changes."""
         super()._on_device_update()
