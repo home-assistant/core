@@ -26,7 +26,6 @@ class NX584Data:
     """Runtime data for a nx584 config entry."""
 
     client: client.Client
-    url: str
 
 
 type NX584ConfigEntry = ConfigEntry[NX584Data]
@@ -44,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NX584ConfigEntry) -> boo
     except requests.exceptions.ConnectionError as ex:
         raise ConfigEntryNotReady(f"Unable to connect to {url}") from ex
 
-    entry.runtime_data = NX584Data(client=alarm_client, url=url)
+    entry.runtime_data = NX584Data(client=alarm_client)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

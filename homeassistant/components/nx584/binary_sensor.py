@@ -16,7 +16,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -36,8 +36,6 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 5007
 BYPASS_ZONE_FLAGS = {"Bypass", "Inhibit"}
-SERVICE_BYPASS = "bypass"
-SERVICE_UNBYPASS = "unbypass"
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -75,7 +73,6 @@ def _build_zone_sensors(
         zone["number"]: NX584ZoneSensor(
             zone,
             zone_types.get(zone["number"], BinarySensorDeviceClass.OPENING),
-            client,
         )
         for zone in zones
         if zone["number"] not in exclude
@@ -90,14 +87,6 @@ async def async_setup_platform(
 ) -> None:
     """Set up the NX584 binary sensor platform from YAML, importing it as a config entry."""
     await async_import_yaml_config(hass, config)
-
-
-def _async_register_services() -> None:
-    """Register the bypass/unbypass entity services for zone sensors."""
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(SERVICE_BYPASS, None, "zone_bypass")
-    platform.async_register_entity_service(SERVICE_UNBYPASS, None, "zone_unbypass")
 
 
 async def async_setup_entry(
@@ -124,8 +113,6 @@ async def async_setup_entry(
     watcher.start()
     entry.async_on_unload(watcher.stop)
 
-    _async_register_services()
-
 
 class NX584ZoneSensor(BinarySensorEntity):
     """Representation of a NX584 zone as a sensor."""
@@ -136,12 +123,10 @@ class NX584ZoneSensor(BinarySensorEntity):
         self,
         zone: dict[str, Any],
         zone_type: BinarySensorDeviceClass,
-        client: nx584_client.Client,
     ) -> None:
         """Initialize the nx594 binary sensor."""
         self._zone = zone
         self._attr_device_class = zone_type
-        self._client = client
 
     @property
     @override
@@ -164,14 +149,6 @@ class NX584ZoneSensor(BinarySensorEntity):
             "zone_number": self._zone["number"],
             "bypassed": self._zone.get("bypassed", False),
         }
-
-    def zone_bypass(self) -> None:
-        """Bypass this zone."""
-        self._client.set_bypass(self._zone["number"], True)
-
-    def zone_unbypass(self) -> None:
-        """Un-bypass this zone."""
-        self._client.set_bypass(self._zone["number"], False)
 
 
 class NX584Watcher(threading.Thread):

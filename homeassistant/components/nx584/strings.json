@@ -42,10 +42,6 @@
     }
   },
   "services": {
-    "bypass": {
-      "description": "Bypasses the zone represented by this sensor.",
-      "name": "Bypass"
-    },
     "bypass_zone": {
       "description": "Bypasses a zone.",
       "fields": {
@@ -55,10 +51,6 @@
         }
       },
       "name": "Bypass zone"
-    },
-    "unbypass": {
-      "description": "Un-bypasses the zone represented by this sensor.",
-      "name": "Un-bypass"
     },
     "unbypass_zone": {
       "description": "Un-Bypasses a zone.",

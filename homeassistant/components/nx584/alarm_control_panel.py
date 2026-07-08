@@ -81,7 +81,7 @@ async def async_setup_entry(
     """Set up the NX584 alarm control panel from a config entry."""
     data = entry.runtime_data
 
-    entity = NX584Alarm(entry.title, data.client, data.url)
+    entity = NX584Alarm(entry.title, data.client)
     async_add_entities([entity])
 
     _async_register_services()
@@ -97,11 +97,10 @@ class NX584Alarm(AlarmControlPanelEntity):
     )
     _attr_code_arm_required = False
 
-    def __init__(self, name: str, alarm_client: client.Client, url: str) -> None:
+    def __init__(self, name: str, alarm_client: client.Client) -> None:
         """Init the nx584 alarm panel."""
         self._attr_name = name
         self._alarm = alarm_client
-        self._url = url
 
     def update(self) -> None:
         """Process new events from panel."""
@@ -110,8 +109,8 @@ class NX584Alarm(AlarmControlPanelEntity):
             zones = self._alarm.list_zones()
         except requests.exceptions.ConnectionError as ex:
             _LOGGER.error(
-                "Unable to connect to %(host)s: %(reason)s",
-                {"host": self._url, "reason": ex},
+                "Unable to connect to %(name)s: %(reason)s",
+                {"name": self._attr_name, "reason": ex},
             )
             self._attr_available = False
             return

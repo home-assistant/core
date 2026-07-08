@@ -77,7 +77,7 @@ def test_update_marks_entity_unavailable_on_connection_error() -> None:
     """Test that a connection error is handled and marks the entity unavailable."""
     client = mock.MagicMock()
     client.list_partitions.side_effect = requests.exceptions.ConnectionError
-    alarm = nx584.NX584Alarm("NX584", client, "http://1.1.1.1:5007")
+    alarm = nx584.NX584Alarm("NX584", client)
 
     alarm.update()
 
@@ -88,7 +88,7 @@ def test_update_marks_entity_unavailable_when_no_partitions_reported() -> None:
     """Test that a missing partition list is handled and marks the entity unavailable."""
     client = mock.MagicMock()
     client.list_partitions.return_value = []
-    alarm = nx584.NX584Alarm("NX584", client, "http://1.1.1.1:5007")
+    alarm = nx584.NX584Alarm("NX584", client)
 
     alarm.update()
 
@@ -99,7 +99,7 @@ def test_update_restores_availability_after_reconnect() -> None:
     """Test the entity becomes available again once the panel is reachable again."""
     client = mock.MagicMock()
     client.list_partitions.side_effect = requests.exceptions.ConnectionError
-    alarm = nx584.NX584Alarm("NX584", client, "http://1.1.1.1:5007")
+    alarm = nx584.NX584Alarm("NX584", client)
     alarm.update()
     assert alarm.available is False
 
