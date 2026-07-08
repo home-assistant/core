@@ -297,6 +297,19 @@ class Searcher:
             self._async_search_entity(entity_entry.entity_id, entry_point=False)
 
     @callback
+    def _async_search_integration(self, domain: str) -> None:
+        """Find results for an integration."""
+        for entry in self.hass.config_entries.async_entries(domain):
+            self._add(ItemType.CONFIG_ENTRY, entry.entry_id)
+            self._async_search_config_entry(entry.entry_id)
+
+        for entity_id, source in self._entity_sources.items():
+            if source["domain"] != domain:
+                continue
+            self._add(ItemType.ENTITY, entity_id)
+            self._async_search_entity(entity_id, entry_point=False)
+
+    @callback
     def _async_search_device(self, device_id: str, *, entry_point: bool = True) -> None:
         """Find results for a device."""
         if not (device_entry := self._async_resolve_up_device(device_id)):
