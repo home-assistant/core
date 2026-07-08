@@ -299,9 +299,9 @@
     "water_heater": {
       "boiler_temperature": {
         "name": "Boiler temperature",
-        "state":{
+        "state": {
           "comfort": "Comfort",
-          "eco": "Eco",            
+          "eco": "Eco"
         }
       },
       "dhw_temperature": {
