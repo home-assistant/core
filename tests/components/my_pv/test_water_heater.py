@@ -218,7 +218,7 @@ async def test_water_heater_set_operation_electric(
     mock_config_entry: MockConfigEntry,
     mock_my_pv_connection: AsyncMock,
 ) -> None:
-    """Test turning the water heater on."""
+    """Test setting the operation mode to electric."""
 
     mock_config_entry.add_to_hass(hass)
 
