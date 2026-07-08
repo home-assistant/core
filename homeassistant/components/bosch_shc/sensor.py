@@ -42,11 +42,8 @@ class SHCSensorEntityDescription(SensorEntityDescription):
     attributes_fn: Callable[[SHCDevice], dict[str, Any]] | None = None
 
 
-# SHCSensorEntityDescription.value_fn/attributes_fn are declared against the
-# generic SHCDevice (matching self._device's type in SHCSensor below), but
-# each entry here is only ever wired up (in async_setup_entry) to specific
-# device_helper lists whose concrete element type actually has the attribute
-# being accessed. The casts below reflect exactly that per-entry pairing.
+# Each entry's value_fn/attributes_fn is only ever wired to a device_helper
+# list whose concrete type actually has the attribute the cast below asserts.
 _TemperatureDevice = SHCThermostat | SHCWallThermostat | SHCTwinguard
 _HumidityDevice = SHCWallThermostat | SHCTwinguard
 _PowerMeterDevice = SHCSmartPlug | SHCLightSwitchBSM | SHCSmartPlugCompact

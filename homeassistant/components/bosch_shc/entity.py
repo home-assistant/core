@@ -22,12 +22,8 @@ async def async_remove_devices(
         dev_registry.async_update_device(device.id, remove_config_entry_id=entry_id)
 
 
-# SHCBaseEntity is shared by SHCEntity (always backed by a real SHCDevice) and
-# SHCDomainEntity (always backed by the single SHCIntrusionSystem domain
-# service) -- the two are never interchangeable at runtime. Binding each
-# subclass hierarchy to its own concrete type parameter (rather than leaving
-# `_device` typed as the full union on the shared base) lets mypy know which
-# attributes are actually available at each call site.
+# Parameterized so each subclass's _device is statically its real concrete
+# type (SHCEntity's SHCDevice vs. SHCDomainEntity's SHCIntrusionSystem).
 class SHCBaseEntity[_DeviceT: (SHCDevice | SHCIntrusionSystem)](Entity):
     """Base representation of a SHC entity."""
 
