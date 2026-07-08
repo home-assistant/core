@@ -14,7 +14,11 @@ from pysnooz.commands import (
 )
 import voluptuous as vol
 
-from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
+from homeassistant.components.fan import (
+    FanEntity,
+    FanEntityFeature,
+    FanEntityStateAttribute,
+)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -109,7 +113,9 @@ class SnoozFan(FanEntity, RestoreEntity):
                 self._is_on = last_state.state == STATE_ON
             else:
                 self._is_on = None
-            self._percentage = last_state.attributes.get(ATTR_PERCENTAGE)
+            self._percentage = last_state.attributes.get(
+                FanEntityStateAttribute.PERCENTAGE
+            )
 
         self.async_on_remove(self._async_subscribe_to_device_change())
 
