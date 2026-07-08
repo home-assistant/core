@@ -893,6 +893,38 @@ async def test_device_class_user(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == expected_class
 
 
+async def test_device_class_user_incompatible_logs_warning(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an incompatible configured device class logs a warning."""
+    caplog.set_level("WARNING", logger="homeassistant.components.integration.sensor")
+    config = {
+        "sensor": {
+            "platform": "integration",
+            "name": "integration",
+            "source": "sensor.cubic_meters_per_hour",
+            "round": 2,
+            "method": "trapezoidal",
+            "unit_time": UnitOfTime.HOURS,
+            "device_class": SensorDeviceClass.ENERGY,
+        }
+    }
+    assert await async_setup_component(hass, "sensor", config)
+
+    entity_id = config["sensor"]["source"]
+
+    await _setup_device_class_test(hass, entity_id)
+
+    hass.states.async_set(
+        entity_id, 300, {ATTR_UNIT_OF_MEASUREMENT: "m³/h"}, force_update=True
+    )
+
+    await hass.async_block_till_done()
+
+    # Ensure warning was emitted for invalid device class for unit
+    assert "Specified device class" in caplog.text
+
+
 @pytest.mark.parametrize("method", ["trapezoidal", "left", "right"])
 async def test_device_class(hass: HomeAssistant, method) -> None:
     """Test integration sensor units using a power source."""
