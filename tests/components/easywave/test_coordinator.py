@@ -25,6 +25,7 @@ from homeassistant.components.easywave.const import (
 )
 from homeassistant.components.easywave.coordinator import EasywaveCoordinator
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import MOCK_TRANSMITTER_DEVICE_ID, MOCK_TRANSMITTER_SERIAL
@@ -46,6 +47,7 @@ def mock_transceiver() -> MagicMock:
     transceiver.disconnect = AsyncMock()
     transceiver.dispose = AsyncMock()
     transceiver.set_disconnect_callback = MagicMock()
+    transceiver.set_connected_callback = MagicMock()
     return transceiver
 
 
@@ -101,6 +103,7 @@ def test_coordinator_init_offline(
 async def test_async_setup_connected(
     coordinator: EasywaveCoordinator,
     mock_transceiver: MagicMock,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test successful setup when transceiver connects."""
     await coordinator._async_setup()
@@ -108,6 +111,14 @@ async def test_async_setup_connected(
     assert coordinator.is_offline is False
     mock_transceiver.connect.assert_awaited_once()
     mock_transceiver.set_disconnect_callback.assert_called_once()
+    mock_transceiver.set_connected_callback.assert_called_once()
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, coordinator.config_entry.entry_id)}
+    )
+    assert device is not None
+    assert device.hw_version == "1.0"
+    assert device.sw_version == "2.0"
 
 
 async def test_async_setup_offline(
@@ -198,16 +209,32 @@ async def test_update_data_online(
 async def test_update_data_reconnect_success(
     coordinator: EasywaveCoordinator,
     mock_transceiver: MagicMock,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test update reconnects successfully from offline."""
+    device_registry.async_get_or_create(
+        config_entry_id=coordinator.config_entry.entry_id,
+        identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+        name="RX11 USB Transceiver",
+    )
     coordinator.is_offline = True
     mock_transceiver.reconnect = AsyncMock(return_value=True)
+    mock_transceiver.hw_version = "RX11 v1.0"
+    mock_transceiver.fw_version = "FW 2.3.4"
 
     data = await coordinator._async_update_data()
 
     assert coordinator.is_offline is False
     mock_transceiver.set_disconnect_callback.assert_called()
+    mock_transceiver.set_connected_callback.assert_called()
     assert data["is_connected"] is True
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, coordinator.config_entry.entry_id)}
+    )
+    assert device is not None
+    assert device.hw_version == "RX11 v1.0"
+    assert device.sw_version == "FW 2.3.4"
 
 
 async def test_update_data_reconnect_fails(

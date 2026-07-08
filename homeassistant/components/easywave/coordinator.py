@@ -26,6 +26,7 @@ from .const import (
     EVENT_TYPE_BUTTON_PRESS,
     EVENT_TYPE_BUTTON_RELEASE,
 )
+from .gateway_device import update_gateway_device
 from .transceiver import RX11Transceiver
 
 if TYPE_CHECKING:
@@ -76,9 +77,8 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.is_offline = not connected
 
             if connected:
-                self.transceiver.set_disconnect_callback(
-                    self._on_transceiver_disconnect
-                )
+                self._register_transceiver_callbacks()
+                update_gateway_device(self.hass, self.config_entry, self.transceiver)
             else:
                 _LOGGER.warning(
                     "RX11 device not found, entering offline mode. "
@@ -86,6 +86,16 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 )
         except (OSError, TimeoutError) as err:
             raise UpdateFailed(f"Setup failed: {err}") from err
+
+    def _register_transceiver_callbacks(self) -> None:
+        """Register connection lifecycle callbacks on the transceiver."""
+        self.transceiver.set_disconnect_callback(self._on_transceiver_disconnect)
+        self.transceiver.set_connected_callback(self._on_transceiver_connected)
+
+    @callback
+    def _on_transceiver_connected(self) -> None:
+        """Update the gateway device registry when the transceiver connects."""
+        update_gateway_device(self.hass, self.config_entry, self.transceiver)
 
     @callback
     def _on_transceiver_disconnect(self) -> None:
@@ -127,9 +137,9 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 connected = await self.transceiver.reconnect()
                 if connected:
                     self.is_offline = False
-                    # Re-register disconnect callback for new connection
-                    self.transceiver.set_disconnect_callback(
-                        self._on_transceiver_disconnect
+                    self._register_transceiver_callbacks()
+                    update_gateway_device(
+                        self.hass, self.config_entry, self.transceiver
                     )
                     # Restart telegram listener if any entities need it
                     if self._has_telegram_listeners:
