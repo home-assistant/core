@@ -2,13 +2,15 @@
 
 from unittest.mock import patch
 
+import pytest
 import requests
 
 from homeassistant import config_entries
+from homeassistant.components.nx584 import config_flow
 from homeassistant.components.nx584.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from tests.common import MockConfigEntry
 
@@ -42,6 +44,29 @@ async def test_form_user(hass: HomeAssistant) -> None:
     assert result2["title"] == TEST_DATA[CONF_HOST]
     assert result2["data"] == TEST_DATA
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_rejects_invalid_port(hass: HomeAssistant) -> None:
+    """Test the user step schema rejects an out-of-range port."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with pytest.raises(InvalidData):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**TEST_DATA, CONF_PORT: 99999}
+        )
+
+
+async def test_validate_connection_brackets_ipv6_host(hass: HomeAssistant) -> None:
+    """Test the client URL brackets an IPv6 host, as required by the URL spec."""
+    with patch(
+        "homeassistant.components.nx584.config_flow.client.Client"
+    ) as mock_client_cls:
+        mock_client_cls.return_value.list_zones.return_value = []
+        await config_flow._async_validate_connection(hass, "::1", 5007)
+
+    mock_client_cls.assert_called_once_with("http://[::1]:5007")
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -356,6 +381,33 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options == {"exclude_zones": [2], "zone_types": {3: "motion"}}
+
+
+async def test_options_flow_missing_exclude_zones_defaults_to_empty(
+    hass: HomeAssistant,
+) -> None:
+    """Test omitting exclude_zones from the submission doesn't raise KeyError."""
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_DATA)
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.nx584.client.Client") as mock_client_cls,
+        patch("homeassistant.components.nx584.binary_sensor.NX584Watcher"),
+    ):
+        mock_client_cls.return_value.list_zones.return_value = []
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={"zone_types": {"3": "motion"}},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options == {"exclude_zones": [], "zone_types": {3: "motion"}}
 
 
 async def test_options_flow_invalid_input(hass: HomeAssistant) -> None:

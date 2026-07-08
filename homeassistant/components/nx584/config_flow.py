@@ -6,6 +6,7 @@ from typing import Any, override
 from nx584 import client
 import requests
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -15,6 +16,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import ObjectSelector
 from homeassistant.helpers.typing import ConfigType
 
@@ -32,8 +34,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 
@@ -47,7 +49,8 @@ OPTIONS_SCHEMA = vol.Schema(
 
 async def _async_validate_connection(hass: HomeAssistant, host: str, port: int) -> None:
     """Raise requests.exceptions.ConnectionError if the panel can't be reached."""
-    alarm_client = client.Client(f"http://{host}:{port}")
+    url = str(URL.build(scheme="http", host=host, port=port))
+    alarm_client = client.Client(url)
     await hass.async_add_executor_job(alarm_client.list_zones)
 
 
@@ -154,9 +157,11 @@ class NX584OptionsFlowHandler(OptionsFlowWithReload):
             try:
                 options = {
                     CONF_EXCLUDE_ZONES: EXCLUDE_ZONES_SCHEMA(
-                        user_input[CONF_EXCLUDE_ZONES]
+                        user_input.get(CONF_EXCLUDE_ZONES, [])
                     ),
-                    CONF_ZONE_TYPES: ZONE_TYPES_SCHEMA(user_input[CONF_ZONE_TYPES]),
+                    CONF_ZONE_TYPES: ZONE_TYPES_SCHEMA(
+                        user_input.get(CONF_ZONE_TYPES, {})
+                    ),
                 }
             except vol.Invalid:
                 errors["base"] = "invalid_zone_options"

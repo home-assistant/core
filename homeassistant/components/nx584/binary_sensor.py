@@ -66,7 +66,7 @@ def _build_zone_sensors(
 
     version = [int(v) for v in client.get_version().split(".")]
     if version < [1, 1]:
-        _LOGGER.error("NX584 is too old to use for sensors (>=0.2 required)")
+        _LOGGER.error("NX584 is too old to use for sensors (>=1.1 required)")
         return None
 
     return {
@@ -104,6 +104,8 @@ async def async_setup_entry(
     zone_sensors = await hass.async_add_executor_job(
         _build_zone_sensors, data.client, exclude_zones, zone_types
     )
+    if zone_sensors is None:
+        return
     if not zone_sensors:
         _LOGGER.warning("No zones found on NX584")
         return

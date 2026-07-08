@@ -1,5 +1,6 @@
 """The tests for the nx584 sensor platform."""
 
+import logging
 from unittest import mock
 from unittest.mock import MagicMock
 
@@ -208,6 +209,37 @@ async def test_async_setup_entry_applies_options(
     assert (
         hass.states.get("binary_sensor.inside").attributes["device_class"] == "motion"
     )
+
+
+async def test_async_setup_entry_skips_zone_sensors_on_version_too_old(
+    hass: HomeAssistant,
+    fake_zones: list[dict[str, object]],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an old firmware version isn't misreported as 'no zones found'."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 5007},
+        title="NX584",
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        mock.patch("homeassistant.components.nx584.client.Client") as mock_client_cls,
+        mock.patch(
+            "homeassistant.components.nx584.binary_sensor.NX584Watcher"
+        ) as mock_watcher_cls,
+        caplog.at_level(logging.WARNING),
+    ):
+        mock_client = mock_client_cls.return_value
+        mock_client.list_zones.return_value = fake_zones
+        mock_client.get_version.return_value = "1.0"
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert not mock_watcher_cls.called
+    assert "No zones found on NX584" not in caplog.text
 
 
 async def test_async_setup_entry_stops_watcher_on_unload(
