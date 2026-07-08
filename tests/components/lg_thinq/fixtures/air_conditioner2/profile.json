@@ -1,96 +1,76 @@
 {
-  "notification": {
-    "push": ["WATER_IS_FULL"]
-  },
   "property": {
     "airConJobMode": {
       "currentJobMode": {
         "mode": ["r", "w"],
         "type": "enum",
         "value": {
-          "r": ["AIR_CLEAN", "COOL", "AIR_DRY"],
-          "w": ["AIR_CLEAN", "COOL", "AIR_DRY"]
+          "r": ["FAN", "COOL", "AIR_DRY"],
+          "w": ["FAN", "COOL", "AIR_DRY"]
         }
       }
     },
     "airFlow": {
+      "windStep": {
+        "mode": ["r", "w"],
+        "type": "range",
+        "value": {
+          "r": {
+            "max": 7,
+            "min": 1,
+            "step": 1
+          },
+          "w": {
+            "max": 7,
+            "min": 1,
+            "step": 1
+          }
+        }
+      },
       "windStrength": {
         "mode": ["r", "w"],
         "type": "enum",
         "value": {
-          "r": ["LOW", "MID", "HIGH", "AUTO"],
-          "w": ["LOW", "MID", "HIGH", "AUTO"]
+          "r": ["SLOW", "LOW", "MID", "HIGH", "AUTO"],
+          "w": ["SLOW", "LOW", "MID", "HIGH", "AUTO"]
         }
-      }
-    },
-    "airQualitySensor": {
-      "PM1": {
-        "mode": ["r"],
-        "type": "number"
       },
-      "PM10": {
-        "mode": ["r"],
-        "type": "number"
-      },
-      "PM2": {
-        "mode": ["r"],
-        "type": "number"
-      },
-      "humidity": {
-        "mode": ["r"],
-        "type": "number"
-      },
-      "monitoringEnabled": {
+      "windStrengthDetail": {
         "mode": ["r", "w"],
         "type": "enum",
         "value": {
-          "r": ["ON_WORKING", "ALWAYS"],
-          "w": ["ON_WORKING", "ALWAYS"]
+          "r": [
+            "BREEZE",
+            "NATURE",
+            "SLOW",
+            "SLOW_LOW",
+            "LOW",
+            "LOW_MID",
+            "MID",
+            "MID_HIGH",
+            "HIGH"
+          ],
+          "w": [
+            "BREEZE",
+            "NATURE",
+            "SLOW",
+            "SLOW_LOW",
+            "LOW",
+            "LOW_MID",
+            "MID",
+            "MID_HIGH",
+            "HIGH"
+          ]
         }
-      },
-      "oder": {
-        "mode": ["r"],
-        "type": "number"
-      },
-      "totalPollution": {
-        "mode": ["r"],
-        "type": "number"
-      }
-    },
-    "filterInfo": {
-      "filterLifetime": {
-        "mode": ["r"],
-        "type": "number"
-      },
-      "usedTime": {
-        "mode": ["r"],
-        "type": "number"
       }
     },
     "operation": {
-      "airCleanOperationMode": {
-        "mode": ["w"],
-        "type": "enum",
-        "value": {
-          "w": ["START", "STOP"]
-        }
-      },
       "airConOperationMode": {
         "mode": ["r", "w"],
         "type": "enum",
         "value": {
           "r": ["POWER_ON", "POWER_OFF"],
           "w": ["POWER_ON", "POWER_OFF"]
-        }
-      }
-    },
-    "powerSave": {
-      "powerSaveEnabled": {
-        "mode": ["r", "w"],
-        "type": "boolean",
-        "value": {
-          "r": [false, true],
-          "w": [false, true]
         }
       }
     },
@@ -179,50 +159,6 @@
         },
         "unit": "F"
       }
-    ],
-    "timer": {
-      "relativeHourToStart": {
-        "mode": ["r", "w"],
-        "type": "number"
-      },
-      "relativeHourToStop": {
-        "mode": ["r", "w"],
-        "type": "number"
-      },
-      "relativeMinuteToStart": {
-        "mode": ["r", "w"],
-        "type": "number"
-      },
-      "relativeMinuteToStop": {
-        "mode": ["r", "w"],
-        "type": "number"
-      },
-      "absoluteHourToStart": {
-        "mode": ["r", "w"],
-        "type": "number"
-      },
-      "absoluteMinuteToStart": {
-        "mode": ["r", "w"],
-        "type": "number"
-      }
-    },
-    "windDirection": {
-      "rotateUpDown": {
-        "type": "boolean",
-        "mode": ["r", "w"],
-        "value": {
-          "r": [true, false],
-          "w": [true, false]
-        }
-      },
-      "rotateLeftRight": {
-        "type": "boolean",
-        "mode": ["r", "w"],
-        "value": {
-          "r": [true, false],
-          "w": [true, false]
-        }
-      }
-    }
+    ]
   }
 }
