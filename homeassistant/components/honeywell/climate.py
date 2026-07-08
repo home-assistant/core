@@ -300,6 +300,12 @@ class HoneywellUSThermostat(ClimateEntity):
         """Return the current running hvac operation if supported."""
         if self.hvac_mode == HVACMode.OFF:
             return HVACAction.OFF
+        # Some thermostat models never report equipment run status to the
+        # cloud API (raw EquipmentOutputStatus is None, not 0). Treating
+        # that the same as a genuine "off" report shows a misleading
+        # "Idle" while the system may actually be heating or cooling.
+        if self._device.raw_ui_data.get("EquipmentOutputStatus") is None:
+            return None
         return HW_MODE_TO_HA_HVAC_ACTION.get(self._device.equipment_output_status)
 
     @property
