@@ -26,11 +26,31 @@ from . import assert_adds_messages, assert_no_messages, walk_checker
         pytest.param(
             """
     class Entity:
+        async def async_will_remove_from_hass(self) -> None:
+            pass
+    """,
+            id="no_parent",
+        ),
+        pytest.param(
+            """
+    class Entity:
         async def async_added_to_hass(self) -> None:
             \"\"\"Some docstring.\"\"\"
 
     class Child(Entity):
         async def async_added_to_hass(self) -> None:
+            x = 2
+        """,
+            id="empty_parent_implementation",
+        ),
+        pytest.param(
+            """
+    class Entity:
+        async def async_will_remove_from_hass(self) -> None:
+            \"\"\"Some docstring.\"\"\"
+
+    class Child(Entity):
+        async def async_will_remove_from_hass(self) -> None:
             x = 2
         """,
             id="empty_parent_implementation",
@@ -51,12 +71,37 @@ from . import assert_adds_messages, assert_no_messages, walk_checker
         pytest.param(
             """
     class Entity:
+        async def async_will_remove_from_hass(self) -> None:
+            \"\"\"Some docstring.\"\"\"
+            pass
+
+    class Child(Entity):
+        async def async_will_remove_from_hass(self) -> None:
+            x = 2
+        """,
+            id="empty_parent_implementation2",
+        ),
+        pytest.param(
+            """
+    class Entity:
         async def async_added_to_hass(self) -> None:
             x = 2
 
     class Child(Entity):
         async def async_added_to_hass(self) -> None:
             await super().async_added_to_hass()
+        """,
+            id="correct_super_call",
+        ),
+        pytest.param(
+            """
+    class Entity:
+        async def async_will_remove_from_hass(self) -> None:
+            x = 2
+
+    class Child(Entity):
+        async def async_will_remove_from_hass(self) -> None:
+            await super().async_will_remove_from_hass()
         """,
             id="correct_super_call",
         ),
@@ -75,12 +120,36 @@ from . import assert_adds_messages, assert_no_messages, walk_checker
         pytest.param(
             """
     class Entity:
+        async def async_will_remove_from_hass(self) -> None:
+            x = 2
+
+    class Child(Entity):
+        async def async_will_remove_from_hass(self) -> None:
+            return await super().async_will_remove_from_hass()
+        """,
+            id="super_call_in_return",
+        ),
+        pytest.param(
+            """
+    class Entity:
         def added_to_hass(self) -> None:
             x = 2
 
     class Child(Entity):
         def added_to_hass(self) -> None:
             super().added_to_hass()
+        """,
+            id="super_call_not_async",
+        ),
+        pytest.param(
+            """
+    class Entity:
+        def async_will_remove_from_hass(self) -> None:
+            x = 2
+
+    class Child(Entity):
+        def async_will_remove_from_hass(self) -> None:
+            super().async_will_remove_from_hass()
         """,
             id="super_call_not_async",
         ),
@@ -102,7 +171,30 @@ from . import assert_adds_messages, assert_no_messages, walk_checker
         ),
         pytest.param(
             """
+    class Entity:
+        async def async_will_remove_from_hass(self) -> None:
+            \"\"\"\"\"\"
+
+    class Coordinator:
+        async def async_will_remove_from_hass(self) -> None:
+            x = 2
+
+    class Child(Entity, Coordinator):
+        async def async_will_remove_from_hass(self) -> None:
+            await super().async_will_remove_from_hass()
+        """,
+            id="multiple_inheritance",
+        ),
+        pytest.param(
+            """
         async def async_added_to_hass() -> None:
+            x = 2
+        """,
+            id="not_a_method",
+        ),
+        pytest.param(
+            """
+        async def async_addasync_will_remove_from_hassed_to_hass() -> None:
             x = 2
         """,
             id="not_a_method",
@@ -146,11 +238,37 @@ def test_enforce_super_call(
         pytest.param(
             """
     class Entity:
+        def async_will_remove_from_hass(self) -> None:
+            x = 2
+
+    class Child(Entity):
+        def async_will_remove_from_hass(self) -> None:
+            x = 3
+    """,
+            1,
+            id="no_super_call_remove",
+        ),
+        pytest.param(
+            """
+    class Entity:
         async def async_added_to_hass(self) -> None:
             x = 2
 
     class Child(Entity):
         async def async_added_to_hass(self) -> None:
+            x = 3
+    """,
+            1,
+            id="no_super_call_async",
+        ),
+        pytest.param(
+            """
+    class Entity:
+        async def async_will_remove_from_hass(self) -> None:
+            x = 2
+
+    class Child(Entity):
+        async def async_will_remove_from_hass(self) -> None:
             x = 3
     """,
             1,
@@ -172,6 +290,19 @@ def test_enforce_super_call(
         pytest.param(
             """
     class Entity:
+        async def async_will_remove_from_hass(self) -> None:
+            x = 2
+
+    class Child(Entity):
+        async def async_will_remove_from_hass(self) -> None:
+            await Entity.async_will_remove_from_hass()
+    """,
+            1,
+            id="explicit_call_to_base_implementation",
+        ),
+        pytest.param(
+            """
+    class Entity:
         async def async_added_to_hass(self) -> None:
             \"\"\"\"\"\"
 
@@ -181,6 +312,23 @@ def test_enforce_super_call(
 
     class Child(Entity, Coordinator):
         async def async_added_to_hass(self) -> None:
+            x = 3
+    """,
+            2,
+            id="multiple_inheritance",
+        ),
+        pytest.param(
+            """
+    class Entity:
+        async def async_will_remove_from_hass(self) -> None:
+            \"\"\"\"\"\"
+
+    class Coordinator:
+        async def async_will_remove_from_hass(self) -> None:
+            x = 2
+
+    class Child(Entity, Coordinator):
+        async def async_will_remove_from_hass(self) -> None:
             x = 3
     """,
             2,
@@ -201,7 +349,12 @@ def test_enforce_super_call_bad(
     with (
         patch(
             "pylint_home_assistant.checkers.super_call.METHODS",
-            new={"added_to_hass", "async_added_to_hass"},
+            new={
+                "added_to_hass",
+                "async_added_to_hass",
+                "will_remove_from_hass",
+                "async_will_remove_from_hass",
+            },
         ),
         assert_adds_messages(
             linter,
