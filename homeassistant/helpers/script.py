@@ -76,6 +76,7 @@ from homeassistant.core import (
     State,
     SupportsResponse,
     callback,
+    valid_entity_id,
 )
 from homeassistant.util import slugify
 from homeassistant.util.async_ import create_eager_task
@@ -1709,6 +1710,12 @@ class Script:
             elif action == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
                 referenced.add(step[CONF_DEVICE_ID])
 
+            elif action == cv.SCRIPT_ACTION_FIRE_EVENT:
+                if (event_data := step.get(CONF_EVENT_DATA)) and isinstance(
+                    device_id := event_data.get(ATTR_DEVICE_ID), str
+                ):
+                    referenced.add(device_id)
+
             elif action == cv.SCRIPT_ACTION_CHOOSE:
                 for choice in step[CONF_CHOOSE]:
                     for cond in choice[CONF_CONDITIONS]:
@@ -1763,6 +1770,14 @@ class Script:
 
             elif action == cv.SCRIPT_ACTION_ACTIVATE_SCENE:
                 referenced.add(step[CONF_SCENE])
+
+            elif action == cv.SCRIPT_ACTION_FIRE_EVENT:
+                if (
+                    (event_data := step.get(CONF_EVENT_DATA))
+                    and isinstance(entity_id := event_data.get(ATTR_ENTITY_ID), str)
+                    and valid_entity_id(entity_id)
+                ):
+                    referenced.add(entity_id)
 
             elif action == cv.SCRIPT_ACTION_CHOOSE:
                 for choice in step[CONF_CHOOSE]:
