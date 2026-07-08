@@ -1,9 +1,10 @@
 """Fan platform for the Duco integration."""
 
 import logging
+from typing import override
 
-from duco.exceptions import DucoError, DucoRateLimitError
-from duco.models import Node, NodeType, VentilationState
+from duco_connectivity.exceptions import DucoError, DucoRateLimitError
+from duco_connectivity.models import Node, NodeType, VentilationState
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
@@ -62,7 +63,8 @@ async def async_setup_entry(
     """Set up Duco fan entities."""
     coordinator = entry.runtime_data
 
-    # BOX is always node 1 and is never dynamically added or removed, so no listener needed.
+    # BOX is always node 1 and is never dynamically added
+    # or removed, so no listener needed.
     async_add_entities(
         DucoVentilationFanEntity(coordinator, node)
         for node in coordinator.data.nodes.values()
@@ -85,6 +87,7 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{node.node_id}"
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed as a percentage, or None when in AUTO mode."""
         node = self._node
@@ -93,6 +96,7 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
         return _STATE_TO_PERCENTAGE.get(node.ventilation.state)
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode (auto when Duco controls, else None)."""
         node = self._node
@@ -102,11 +106,13 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
             return PRESET_AUTO
         return None
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode: 'auto' hands control back to Duco."""
         self._valid_preset_mode_or_raise(preset_mode)
         await self._async_set_state(VentilationState.AUTO)
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the fan speed as a percentage (maps to low/medium/high)."""
         if percentage == 0:
@@ -131,6 +137,5 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_set_state",
-                translation_placeholders={"error": repr(err)},
             ) from err
         await self.coordinator.async_refresh()

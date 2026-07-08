@@ -1,6 +1,6 @@
 """Support for Victron GX sensors."""
 
-from typing import Any
+from typing import Any, override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
@@ -34,10 +34,16 @@ METRIC_TYPE_TO_DEVICE_CLASS: dict[MetricType, SensorDeviceClass] = {
     MetricType.FREQUENCY: SensorDeviceClass.FREQUENCY,
     MetricType.ELECTRIC_STORAGE_PERCENTAGE: SensorDeviceClass.BATTERY,
     MetricType.TEMPERATURE: SensorDeviceClass.TEMPERATURE,
+    MetricType.HUMIDITY: SensorDeviceClass.HUMIDITY,
+    MetricType.PRESSURE: SensorDeviceClass.PRESSURE,
+    MetricType.DISTANCE: SensorDeviceClass.DISTANCE,
+    MetricType.POWER_FACTOR: SensorDeviceClass.POWER_FACTOR,
+    MetricType.COST: SensorDeviceClass.MONETARY,
     MetricType.SPEED: SensorDeviceClass.SPEED,
     MetricType.LIQUID_VOLUME: SensorDeviceClass.VOLUME_STORAGE,
     MetricType.DURATION: SensorDeviceClass.DURATION,
     MetricType.ENUM: SensorDeviceClass.ENUM,
+    MetricType.IRRADIANCE: SensorDeviceClass.IRRADIANCE,
 }
 
 METRIC_NATURE_TO_STATE_CLASS: dict[MetricNature, SensorStateClass] = {
@@ -96,14 +102,11 @@ class VictronSensor(VictronBaseEntity, SensorEntity):
             self._attr_state_class = METRIC_NATURE_TO_STATE_CLASS.get(
                 metric.metric_nature
             )
-        # Only set native_unit_of_measurement when a device_class is present.
-        # Entities without a device_class get their display unit from
-        # the translation files instead.
-        if self._attr_device_class is not None:
-            self._attr_native_unit_of_measurement = metric.unit_of_measurement
+        self._attr_native_unit_of_measurement = self._native_unit_of_measurement()
         self._attr_native_value = VictronSensor._normalize_value(metric.value)
 
     @callback
+    @override
     def _on_update_cb(self, value: Any) -> None:
         self._attr_native_value = VictronSensor._normalize_value(value)
         self.async_write_ha_state()

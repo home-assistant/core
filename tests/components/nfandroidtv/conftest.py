@@ -17,9 +17,16 @@ from tests.common import MockConfigEntry
 def mock_notifications_android_tv() -> Generator[MagicMock]:
     """Mock notifications_android_tv."""
 
-    with patch(
-        "homeassistant.components.nfandroidtv.config_flow.Notifications", autospec=True
-    ) as mock_client:
+    with (
+        patch(
+            "homeassistant.components.nfandroidtv.Notifications",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.nfandroidtv.config_flow.Notifications",
+            new=mock_client,
+        ),
+    ):
         client = mock_client.return_value
         client.cls = mock_client
 

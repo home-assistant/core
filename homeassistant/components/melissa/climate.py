@@ -1,7 +1,7 @@
 """Support for Melissa Climate A/C."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -78,6 +78,7 @@ class MelissaClimate(ClimateEntity):
         self._cur_settings = None
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
         if self._cur_settings is not None:
@@ -85,6 +86,7 @@ class MelissaClimate(ClimateEntity):
         return None
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self._data:
@@ -92,6 +94,7 @@ class MelissaClimate(ClimateEntity):
         return None
 
     @property
+    @override
     def current_humidity(self) -> float | None:
         """Return the current humidity value."""
         if self._data:
@@ -99,6 +102,7 @@ class MelissaClimate(ClimateEntity):
         return None
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return the current operation mode."""
         if self._cur_settings is None:
@@ -115,22 +119,26 @@ class MelissaClimate(ClimateEntity):
         return self.melissa_op_to_hass(self._cur_settings[self._api.MODE])
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self._cur_settings is None:
             return None
         return self._cur_settings[self._api.TEMP]
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         await self.async_send({self._api.TEMP: temp})
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         melissa_fan_mode = self.hass_fan_to_melissa(fan_mode)
         await self.async_send({self._api.FAN: melissa_fan_mode})
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set operation mode."""
         if hvac_mode == HVACMode.OFF:

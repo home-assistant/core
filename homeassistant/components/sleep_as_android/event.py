@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import override
 
 from homeassistant.components.event import (
     EventDeviceClass,
@@ -150,6 +151,7 @@ class SleepAsAndroidEventEntity(SleepAsAndroidEntity, EventEntity):
     entity_description: SleepAsAndroidEventEntityDescription
 
     @callback
+    @override
     def _async_handle_event(self, webhook_id: str, data: dict[str, str]) -> None:
         """Handle the Sleep as Android event."""
         event = MAP_EVENTS.get(data[ATTR_EVENT], data[ATTR_EVENT])

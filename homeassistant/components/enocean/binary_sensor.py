@@ -1,5 +1,7 @@
 """Support for EnOcean binary sensors."""
 
+from typing import override
+
 from enocean_async import ERP1Telegram
 import voluptuous as vol
 
@@ -66,6 +68,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         self._attr_unique_id = f"{combine_hex(dev_id)}-{device_class}"
         self._attr_name = dev_name
 
+    @override
     def value_changed(self, telegram: ERP1Telegram) -> None:
         """Fire an event with the data that have changed.
 

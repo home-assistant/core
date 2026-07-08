@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiopyarr import ArrAuthenticationException, ArrException
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
@@ -19,9 +19,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
+    CONF_MORE_OPTIONS,
     CONF_UPCOMING_DAYS,
     CONF_WANTED_MAX_ITEMS,
     DEFAULT_UPCOMING_DAYS,
@@ -59,6 +61,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> SonarrOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SonarrOptionsFlowHandler()
@@ -84,6 +87,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -91,6 +95,11 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            more_options = user_input.pop(CONF_MORE_OPTIONS, {})
+            user_input[CONF_VERIFY_SSL] = more_options.get(
+                CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
+            )
+
             # aiopyarr defaults to the service port if one isn't given
             # this is counter to standard practice where http = 80
             # and https = 443.
@@ -100,9 +109,6 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if self.source == SOURCE_REAUTH:
                 user_input = {**self._get_reauth_entry().data, **user_input}
-
-            if CONF_VERIFY_SSL not in user_input:
-                user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
 
             try:
                 await _validate_input(self.hass, user_input)
@@ -125,29 +131,33 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=parsed.host or "Sonarr", data=user_input
                 )
 
-        data_schema = self._get_user_data_schema()
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(data_schema),
+            data_schema=self._get_user_data_schema(),
             errors=errors,
         )
 
-    def _get_user_data_schema(self) -> dict[vol.Marker, type]:
+    def _get_user_data_schema(self) -> vol.Schema:
         """Get the data schema to display user form."""
         if self.source == SOURCE_REAUTH:
-            return {vol.Required(CONF_API_KEY): str}
+            return vol.Schema({vol.Required(CONF_API_KEY): str})
 
-        data_schema: dict[vol.Marker, type] = {
-            vol.Required(CONF_URL): str,
-            vol.Required(CONF_API_KEY): str,
-        }
-
-        if self.show_advanced_options:
-            data_schema[vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL)] = (
-                bool
-            )
-
-        return data_schema
+        return vol.Schema(
+            {
+                vol.Required(CONF_URL): str,
+                vol.Required(CONF_API_KEY): str,
+                vol.Required(CONF_MORE_OPTIONS): section(
+                    vol.Schema(
+                        {
+                            vol.Optional(
+                                CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
+                            ): bool,
+                        }
+                    ),
+                    SectionConfig(collapsed=True),
+                ),
+            }
+        )
 
 
 class SonarrOptionsFlowHandler(OptionsFlowWithReload):

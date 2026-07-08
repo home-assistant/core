@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from subarulink import Controller as SubaruAPI
 
@@ -81,6 +81,7 @@ class SubaruButton(ButtonEntity):
         self._attr_unique_id = f"{vin}_{description.key}"
         self._attr_device_info = get_device_info(vehicle_info)
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         arg = (

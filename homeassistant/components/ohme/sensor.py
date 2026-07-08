@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from ohme import ChargerStatus, OhmeApiClient
 
@@ -115,6 +116,7 @@ class OhmeSensor(OhmeEntity, SensorEntity):
     entity_description: OhmeSensorDescription
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.client)
