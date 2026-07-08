@@ -121,7 +121,6 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
         self._mode_off = self.device.get(DHW_MODE) == STATE_OFF
         self._operation_mode: str = STATE_OFF
 
-	
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
