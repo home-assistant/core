@@ -82,7 +82,7 @@ async def test_flow_user_validation_error(
     status_code: HTTPStatus,
     error_key: str,
 ) -> None:
-    """Test the user flow shows an error when credential validation fails."""
+    """Test the user flow shows an error when credential validation fails, then recovers."""
     mock_send_sms.return_value = MagicMock(status_code=status_code)
 
     result = await hass.config_entries.flow.async_init(
@@ -95,11 +95,18 @@ async def test_flow_user_validation_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error_key}
 
+    mock_send_sms.return_value = MagicMock(status_code=HTTPStatus.OK)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_flow_user_validation_unknown_error(
     hass: HomeAssistant, mock_send_sms: MagicMock
 ) -> None:
-    """Test the user flow shows an unknown error when send_sms raises."""
+    """Test the user flow shows an unknown error when send_sms raises, then recovers."""
     mock_send_sms.side_effect = Exception("unexpected")
 
     result = await hass.config_entries.flow.async_init(
@@ -111,6 +118,14 @@ async def test_flow_user_validation_unknown_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
+
+    mock_send_sms.side_effect = None
+    mock_send_sms.return_value = MagicMock(status_code=HTTPStatus.OK)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_import_dedup_by_title_same_name_is_rejected(
