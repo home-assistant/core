@@ -72,6 +72,9 @@
     }
   },
   "exceptions": {
+    "command_error": {
+      "message": "Error executing {command} on {entity}: {error}"
+    },
     "encrypted_mode_auth_failed": {
       "message": "Token and session ID are required in encrypted mode."
     },
