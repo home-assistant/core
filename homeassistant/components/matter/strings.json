@@ -198,7 +198,6 @@
         }
       },
       "doorbell": {
-        "name": "Doorbell",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -212,7 +211,6 @@
               "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
               "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
               "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
-              "ring": "Ring",
               "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
               "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
             }
