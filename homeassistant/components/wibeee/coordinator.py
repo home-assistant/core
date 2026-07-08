@@ -1,34 +1,36 @@
 """DataUpdateCoordinator for Wibeee energy monitors."""
 
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 from xml.etree.ElementTree import ParseError as XMLParseError
 
 import aiohttp
 from pywibeee import WibeeeAPI
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL
 
+if TYPE_CHECKING:
+    from . import WibeeeConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
-type WibeeeData = dict[str, dict[str, Any]] | None
+type WibeeeData = dict[str, dict[str, Any]]
 
 
 class WibeeeCoordinator(DataUpdateCoordinator[WibeeeData]):
     """Coordinator that polls a Wibeee energy monitor for sensor data."""
 
-    config_entry: ConfigEntry
+    config_entry: WibeeeConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         api: WibeeeAPI,
         *,
-        config_entry: ConfigEntry,
+        config_entry: WibeeeConfigEntry,
         name: str,
     ) -> None:
         """Initialize the coordinator."""

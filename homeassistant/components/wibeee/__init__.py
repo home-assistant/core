@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_MAC_ADDRESS, CONF_WIBEEE_ID
 from .coordinator import WibeeeCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -32,8 +31,6 @@ type WibeeeConfigEntry = ConfigEntry[WibeeeRuntimeData]
 async def async_setup_entry(hass: HomeAssistant, entry: WibeeeConfigEntry) -> bool:
     """Set up Wibeee from a config entry."""
     host = entry.data[CONF_HOST]
-    mac_addr = entry.data[CONF_MAC_ADDRESS]
-    wibeee_id = entry.data.get(CONF_WIBEEE_ID, "WIBEEE")
 
     session = async_get_clientsession(hass)
     api = WibeeeAPI(session, host)
@@ -44,13 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WibeeeConfigEntry) -> bo
         raise ConfigEntryNotReady(f"Could not connect to Wibeee at {host}") from err
 
     if device_info is None:
-        device_info = WibeeeDeviceInfo(
-            wibeee_id=wibeee_id,
-            mac_addr=mac_addr,
-            model="Unknown",
-            firmware_version="Unknown",
-            ip_addr=host,
-        )
+        raise ConfigEntryNotReady(f"No device info received from Wibeee at {host}")
 
     coordinator = WibeeeCoordinator(
         hass,

@@ -264,7 +264,7 @@ async def async_setup_entry(
 
     # Discover phases from initial data (hardware-dependent).
     # Single-phase: fase1 + fase4. Three-phase: fase1-3 + fase4.
-    data = coordinator.data or {}
+    data = coordinator.data
     discovered_phases = [p for p in data if p in PHASE_NAMES]
     if not discovered_phases:
         _LOGGER.warning(
@@ -288,7 +288,6 @@ async def async_setup_entry(
             description=description,
         )
         for phase_key in sorted_phases
-        if isinstance(data.get(phase_key), dict)
         for sensor_key, description in SENSOR_TYPES.items()
         if sensor_key in data[phase_key]
     ]
@@ -370,15 +369,7 @@ class WibeeeSensor(CoordinatorEntity[WibeeeCoordinator], SensorEntity):
     @override
     def native_value(self) -> float | None:
         """Return the sensor value."""
-        data = self.coordinator.data
-        if not isinstance(data, dict):
-            return None
-        phase_data = data.get(self._phase_key)
-        if not isinstance(phase_data, dict):
-            return None
-        value = phase_data.get(self.entity_description.key)
-        if value is None:
-            return None
+        value = self.coordinator.data[self._phase_key][self.entity_description.key]
         try:
             return float(value)
         except ValueError, TypeError:
@@ -387,24 +378,5 @@ class WibeeeSensor(CoordinatorEntity[WibeeeCoordinator], SensorEntity):
     @property
     @override
     def available(self) -> bool:
-        """Return True if the coordinator has data for this sensor.
-
-        Extends CoordinatorEntity.available (which checks coordinator
-        connectivity) with phase/key-level granularity and value validation.
-        """
-        if not super().available:
-            return False
-        data = self.coordinator.data
-        if not isinstance(data, dict):
-            return False
-        phase_data = data.get(self._phase_key)
-        if not isinstance(phase_data, dict):
-            return False
-        value = phase_data.get(self.entity_description.key)
-        if value is None:
-            return False
-        try:
-            float(value)
-        except ValueError, TypeError:
-            return False
-        return True
+        """Return True if the coordinator has a valid value for this sensor."""
+        return super().available and self.native_value is not None
