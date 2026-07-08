@@ -1,0 +1,61 @@
+set_color:
+  target:
+    entity:
+      integration: input_color
+      domain: input_color
+  fields:
+    hex_value:
+      example: "#FF8000"
+      selector:
+        text:
+    rgb_color:
+      example: "[255, 128, 0]"
+      selector:
+        color_rgb:
+    hs_color:
+      example: "[30, 100]"
+      selector:
+        object:
+    xy_color:
+      example: "[0.5, 0.4]"
+      selector:
+        object:
+    color_temp_kelvin:
+      example: 4000
+      selector:
+        color_temp:
+          unit: kelvin
+          min: 1000
+          max: 20000
+    color_name:
+      example: crimson
+      selector:
+        text:
+    brightness:
+      example: 200
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: slider
+
+set_brightness:
+  target:
+    entity:
+      integration: input_color
+      domain: input_color
+  fields:
+    brightness:
+      required: true
+      example: 180
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: slider
+
+clear_brightness:
+  target:
+    entity:
+      integration: input_color
+      domain: input_color

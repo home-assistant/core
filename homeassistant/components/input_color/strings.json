@@ -1,0 +1,99 @@
+{
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::input_color::title%]",
+      "state_attributes": {
+        "brightness": {
+          "name": "Brightness"
+        },
+        "color_temp_kelvin": {
+          "name": "Color temperature"
+        },
+        "editable": {
+          "name": "[%key:common::generic::ui_managed%]",
+          "state": {
+            "false": "[%key:common::state::no%]",
+            "true": "[%key:common::state::yes%]"
+          }
+        },
+        "hex_color": {
+          "name": "Hex color"
+        },
+        "hs_color": {
+          "name": "HS color"
+        },
+        "kind": {
+          "name": "Kind",
+          "state": {
+            "chromatic": "Chromatic",
+            "white": "White"
+          }
+        },
+        "rgb_color": {
+          "name": "RGB color"
+        },
+        "source_hex": {
+          "name": "Source hex"
+        },
+        "xy_color": {
+          "name": "CIE xy color"
+        }
+      }
+    }
+  },
+  "services": {
+    "reload": {
+      "description": "Reloads helpers from the YAML-configuration.",
+      "name": "Reload input colors"
+    },
+    "set_color": {
+      "name": "Set color",
+      "description": "Set the stored color.",
+      "fields": {
+        "hex_value": {
+          "name": "Hex",
+          "description": "Hex color, for example #FF8000."
+        },
+        "rgb_color": {
+          "name": "RGB",
+          "description": "RGB triplet, components 0-255."
+        },
+        "hs_color": {
+          "name": "HS",
+          "description": "Hue (0-360) and saturation (0-100)."
+        },
+        "xy_color": {
+          "name": "CIE xy",
+          "description": "CIE 1931 chromaticity (x, y), each 0-1."
+        },
+        "color_temp_kelvin": {
+          "name": "Color temperature",
+          "description": "Color temperature in Kelvin."
+        },
+        "color_name": {
+          "name": "Color name",
+          "description": "CSS3 color name, for example crimson."
+        },
+        "brightness": {
+          "name": "Brightness",
+          "description": "Optional brightness 0-255 stored alongside the color."
+        }
+      }
+    },
+    "set_brightness": {
+      "name": "Set brightness",
+      "description": "Set the stored brightness.",
+      "fields": {
+        "brightness": {
+          "name": "Brightness",
+          "description": "Brightness 0-255."
+        }
+      }
+    },
+    "clear_brightness": {
+      "name": "Clear brightness",
+      "description": "Clear the stored brightness."
+    }
+  },
+  "title": "Input color"
+}

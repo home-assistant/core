@@ -2047,6 +2047,7 @@ NO_QUALITY_SCALE = [
     "image_upload",
     "input_boolean",
     "input_button",
+    "input_color",
     "input_datetime",
     "input_number",
     "input_select",
