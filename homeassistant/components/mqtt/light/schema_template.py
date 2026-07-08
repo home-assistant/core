@@ -362,23 +362,21 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         last_state = await self.async_get_last_state()
         if self._optimistic and last_state:
             self._attr_is_on = last_state.state == STATE_ON
-            if last_state.attributes.get(LightEntityStateAttribute.BRIGHTNESS):
-                self._attr_brightness = last_state.attributes.get(
-                    LightEntityStateAttribute.BRIGHTNESS
-                )
-            if last_state.attributes.get(LightEntityStateAttribute.HS_COLOR):
-                self._attr_hs_color = last_state.attributes.get(
-                    LightEntityStateAttribute.HS_COLOR
-                )
+            if brightness := last_state.attributes.get(
+                LightEntityStateAttribute.BRIGHTNESS
+            ):
+                self._attr_brightness = brightness
+            if hs_color := last_state.attributes.get(
+                LightEntityStateAttribute.HS_COLOR
+            ):
+                self._attr_hs_color = hs_color
                 self._update_color_mode()
-            if last_state.attributes.get(LightEntityStateAttribute.COLOR_TEMP_KELVIN):
-                self._attr_color_temp_kelvin = last_state.attributes.get(
-                    LightEntityStateAttribute.COLOR_TEMP_KELVIN
-                )
-            if last_state.attributes.get(LightEntityStateAttribute.EFFECT):
-                self._attr_effect = last_state.attributes.get(
-                    LightEntityStateAttribute.EFFECT
-                )
+            if color_temp_kelvin := last_state.attributes.get(
+                LightEntityStateAttribute.COLOR_TEMP_KELVIN
+            ):
+                self._attr_color_temp_kelvin = color_temp_kelvin
+            if effect := last_state.attributes.get(LightEntityStateAttribute.EFFECT):
+                self._attr_effect = effect
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
