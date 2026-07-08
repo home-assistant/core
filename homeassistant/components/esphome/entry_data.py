@@ -45,7 +45,7 @@ from aioesphomeapi import (
     UserService,
     ValveInfo,
     WaterHeaterInfo,
-    build_unique_id,
+    build_device_unique_id,
 )
 from aioesphomeapi.model import ButtonInfo
 from bleak_esphome.backend.device import ESPHomeBluetoothDevice
@@ -101,22 +101,6 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     ValveInfo: Platform.VALVE,
     WaterHeaterInfo: Platform.WATER_HEATER,
 }
-
-
-def build_device_unique_id(mac: str, entity_info: EntityInfo) -> str:
-    """Build unique ID for entity, appending @device_id if it belongs to a sub-device.
-
-    This wrapper around build_unique_id ensures that entities belonging to sub-devices
-    have their device_id appended to the unique_id to handle proper migration when
-    entities move between devices.
-    """
-    base_unique_id = build_unique_id(mac, entity_info)
-
-    # If entity belongs to a sub-device, append @device_id
-    if entity_info.device_id:
-        return f"{base_unique_id}@{entity_info.device_id}"
-
-    return base_unique_id
 
 
 class StoreData(TypedDict, total=False):
@@ -310,11 +294,31 @@ class RuntimeEntryData:
         infos_by_type: defaultdict[type[EntityInfo], list[EntityInfo]] = defaultdict(
             list
         )
+        ent_reg = er.async_get(hass)
+        registry_get_entity = ent_reg.async_get_entity_id
         for info in infos:
             info_type = type(info)
             if platform := info_types_to_platform.get(info_type):
                 needed_platforms.add(platform)
                 infos_by_type[info_type].append(info)
+                # Migrate legacy unique ids to the version 3 format that fixes
+                # UTF-8 collisions. Skip when a version 3 id already exists so a
+                # downgrade then upgrade keeps the original entity. When two
+                # legacy ids collided (the bug this fixes) only one registry
+                # entry exists for it, so the first iterated info claims it and
+                # the rest get fresh version 3 ids.
+                old_unique_id = build_device_unique_id(mac, info, version=1)
+                new_unique_id = build_device_unique_id(mac, info, version=3)
+                if (
+                    old_unique_id != new_unique_id
+                    and (
+                        old_entry := registry_get_entity(
+                            platform, DOMAIN, old_unique_id
+                        )
+                    )
+                    and not registry_get_entity(platform, DOMAIN, new_unique_id)
+                ):
+                    ent_reg.async_update_entity(old_entry, new_unique_id=new_unique_id)
             else:
                 _LOGGER.warning(
                     "Entity type %s is not supported in this version of Home Assistant",
