@@ -1,6 +1,5 @@
 """Package to test the get_accessory method."""
 
-from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -627,7 +626,7 @@ def test_type_camera(type_name, entity_id, state, attrs) -> None:
     ],
 )
 def test_climate_accessory_selection(
-    type_name: str, entity_id: str, state: str, attrs: dict[str, Any]
+    type_name: str, entity_id: str, state: str, attrs: dict[str, object]
 ) -> None:
     """Test climate entities map to HeaterCooler or Thermostat by fan/swing."""
     mock_type = Mock()
@@ -660,7 +659,7 @@ def test_climate_accessory_selection(
     ],
 )
 def test_climate_accessory_type_override(
-    config_type: str, attrs: dict[str, Any], type_name: str
+    config_type: str, attrs: dict[str, object], type_name: str
 ) -> None:
     """Test an explicit type in the entity config overrides climate routing."""
     mock_type = Mock()

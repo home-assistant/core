@@ -364,8 +364,15 @@ class HeaterCooler(HomeKitClimateAccessory):
                 )
             )
         else:
+            # A mode written in the same batch decides the setpoint side, since
+            # the entity state still holds the pre-change mode.
+            requested_mode: HVACMode | None = None
+            if (
+                target_mode := char_values.get(CHAR_TARGET_HEATER_COOLER_STATE)
+            ) is not None:
+                requested_mode = self._hk_to_ha_target.get(target_mode)
             self._handle_single_temp_changes(
-                service_calls, cooling_temp, heating_temp, current_state
+                service_calls, cooling_temp, heating_temp, current_state, requested_mode
             )
 
     def _handle_single_temp_changes(
@@ -374,6 +381,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         cooling_temp: float | None,
         heating_temp: float | None,
         current_state: State | None,
+        requested_mode: HVACMode | None,
     ) -> None:
         """Handle temperature changes for single-temperature entities."""
         if not current_state:
@@ -384,7 +392,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         # write to the other side is ignored. Range and other modes fall back to
         # whichever threshold moved, and Auto picks the one furthest from the
         # current setpoint.
-        current_mode = current_state.state
+        current_mode = requested_mode or current_state.state
         selected_temp = None
         if current_mode == HVACMode.COOL:
             selected_temp = cooling_temp

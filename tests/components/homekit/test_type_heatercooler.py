@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
 import pytest
 
 from homeassistant.components.climate import (
@@ -49,6 +50,7 @@ from homeassistant.components.homekit.const import (
     PROP_MAX_VALUE,
     PROP_MIN_STEP,
     PROP_MIN_VALUE,
+    SERV_HEATER_COOLER,
 )
 from homeassistant.components.homekit.type_heatercooler import (
     HC_COOLING,
@@ -70,6 +72,26 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.common import async_mock_service
+
+
+def _write_chars(
+    hk_driver: HomeDriver, acc: HeaterCooler, char_values: dict[str, float]
+) -> None:
+    """Write characteristic values through the HAP client path."""
+    serv = acc.get_service(SERV_HEATER_COOLER)
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: serv.get_characteristic(name).to_HAP()[HAP_REPR_IID],
+                    HAP_REPR_VALUE: value,
+                }
+                for name, value in char_values.items()
+            ]
+        },
+        "mock_addr",
+    )
 
 
 async def test_heatercooler_basic(hass: HomeAssistant, hk_driver: HomeDriver) -> None:
@@ -667,7 +689,9 @@ async def test_heatercooler_set_active_off(
     )
 
     # Turning off alongside a temperature write should only set the OFF mode
-    acc._set_chars({CHAR_ACTIVE: 0, CHAR_COOLING_THRESHOLD_TEMPERATURE: 22.0})
+    _write_chars(
+        hk_driver, acc, {CHAR_ACTIVE: 0, CHAR_COOLING_THRESHOLD_TEMPERATURE: 22.0}
+    )
     await hass.async_block_till_done()
 
     assert len(call_set_hvac_mode) == 1
@@ -700,7 +724,7 @@ async def test_heatercooler_set_active_off_no_off_mode(
     assert acc._supports_off is False
 
     call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
-    acc._set_chars({CHAR_ACTIVE: 0})
+    _write_chars(hk_driver, acc, {CHAR_ACTIVE: 0})
     await hass.async_block_till_done()
 
     assert len(call_set_hvac_mode) == 0
@@ -732,7 +756,7 @@ async def test_heatercooler_set_active_on(
     call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
 
     # Set active to 1 (on) when currently off
-    acc._set_chars({CHAR_ACTIVE: 1})
+    _write_chars(hk_driver, acc, {CHAR_ACTIVE: 1})
     await hass.async_block_till_done()
 
     assert len(call_set_hvac_mode) == 1
@@ -766,7 +790,7 @@ async def test_heatercooler_set_active_on_heat_only(
     assert acc._last_known_mode == HVACMode.HEAT
 
     call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
-    acc._set_chars({CHAR_ACTIVE: 1})
+    _write_chars(hk_driver, acc, {CHAR_ACTIVE: 1})
     await hass.async_block_till_done()
 
     assert len(call_set_hvac_mode) == 1
@@ -803,12 +827,14 @@ async def test_heatercooler_set_chars_dispatch_order(
         "async_call_service",
         side_effect=lambda domain, service, data: services.append(service),
     ):
-        acc._set_chars(
+        _write_chars(
+            hk_driver,
+            acc,
             {
                 CHAR_ACTIVE: 1,
                 CHAR_COOLING_THRESHOLD_TEMPERATURE: 22.0,
                 CHAR_ROTATION_SPEED: 100,
-            }
+            },
         )
         await hass.async_block_till_done()
 
@@ -848,7 +874,7 @@ async def test_heatercooler_set_target_mode(
     ]
 
     for hk_mode, _expected_ha_mode in mode_tests:
-        acc._set_chars({CHAR_TARGET_HEATER_COOLER_STATE: hk_mode})
+        _write_chars(hk_driver, acc, {CHAR_TARGET_HEATER_COOLER_STATE: hk_mode})
         await hass.async_block_till_done()
 
     assert len(call_set_hvac_mode) == 3
@@ -882,7 +908,7 @@ async def test_heatercooler_set_temperature_single(
     )
 
     # Set heating temperature in HEAT mode
-    acc._set_chars({CHAR_HEATING_THRESHOLD_TEMPERATURE: 22.0})
+    _write_chars(hk_driver, acc, {CHAR_HEATING_THRESHOLD_TEMPERATURE: 22.0})
     await hass.async_block_till_done()
 
     assert len(call_set_temperature) == 1
@@ -893,7 +919,7 @@ async def test_heatercooler_set_temperature_single(
     hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)
     await hass.async_block_till_done()
 
-    acc._set_chars({CHAR_COOLING_THRESHOLD_TEMPERATURE: 18.0})
+    _write_chars(hk_driver, acc, {CHAR_COOLING_THRESHOLD_TEMPERATURE: 18.0})
     await hass.async_block_till_done()
 
     assert len(call_set_temperature) == 2
@@ -931,11 +957,13 @@ async def test_heatercooler_set_temperature_dual(
     )
 
     # Set both temperatures
-    acc._set_chars(
+    _write_chars(
+        hk_driver,
+        acc,
         {
             CHAR_COOLING_THRESHOLD_TEMPERATURE: 26.0,
             CHAR_HEATING_THRESHOLD_TEMPERATURE: 16.0,
-        }
+        },
     )
     await hass.async_block_till_done()
 
@@ -970,24 +998,23 @@ async def test_heatercooler_set_fan_speed(
 
     call_set_fan_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE)
 
-    # Test different speed percentages
+    # A None mode means the write is ignored and dispatches no service call
     speed_tests = [
-        (0, None),  # 0% -> no service call
-        (25, FAN_LOW),  # 25% -> low
-        (50, FAN_MIDDLE),  # 50% -> middle
-        (75, FAN_MEDIUM),  # 75% -> medium
-        (100, FAN_HIGH),  # 100% -> high
+        (0, None),
+        (25, FAN_LOW),
+        (50, FAN_MIDDLE),
+        (75, FAN_MEDIUM),
+        (100, FAN_HIGH),
     ]
 
-    for speed_percent, _expected_fan_mode in speed_tests:
-        acc._set_chars({CHAR_ROTATION_SPEED: speed_percent})
+    for speed_percent, _ in speed_tests:
+        _write_chars(hk_driver, acc, {CHAR_ROTATION_SPEED: speed_percent})
         await hass.async_block_till_done()
 
-    # 0% is ignored, the remaining four map to each ordered speed
-    assert len(call_set_fan_mode) == 4
-    expected_calls = [FAN_LOW, FAN_MIDDLE, FAN_MEDIUM, FAN_HIGH]
-    for i, expected_mode in enumerate(expected_calls):
-        assert call_set_fan_mode[i].data[ATTR_FAN_MODE] == expected_mode
+    expected_calls = [mode for _, mode in speed_tests if mode is not None]
+    assert len(call_set_fan_mode) == len(expected_calls)
+    for call, expected_mode in zip(call_set_fan_mode, expected_calls, strict=True):
+        assert call.data[ATTR_FAN_MODE] == expected_mode
 
 
 async def test_heatercooler_set_swing_mode(
@@ -1018,14 +1045,14 @@ async def test_heatercooler_set_swing_mode(
     )
 
     # Test swing on
-    acc._set_chars({CHAR_SWING_MODE: 1})
+    _write_chars(hk_driver, acc, {CHAR_SWING_MODE: 1})
     await hass.async_block_till_done()
 
     assert len(call_set_swing_mode) == 1
     assert call_set_swing_mode[0].data[ATTR_SWING_MODE] == "both"  # swing_on_mode
 
     # Test swing off
-    acc._set_chars({CHAR_SWING_MODE: 0})
+    _write_chars(hk_driver, acc, {CHAR_SWING_MODE: 0})
     await hass.async_block_till_done()
 
     assert len(call_set_swing_mode) == 2
@@ -1057,12 +1084,13 @@ async def test_heatercooler_capitalized_fan_modes(
 
     call_set_fan_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE)
 
-    # The rotation speed writes must use the entity's original casing
-    acc._set_chars({CHAR_ROTATION_SPEED: 100})
+    # The auto mode puts the speed on the fan service; the rotation speed
+    # writes must use the entity's original casing
+    acc.char_speed.client_update_value(100)
     await hass.async_block_till_done()
     assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == "High"
 
-    acc._set_chars({CHAR_ROTATION_SPEED: 25})
+    acc.char_speed.client_update_value(25)
     await hass.async_block_till_done()
     assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == "Low"
 
@@ -1098,11 +1126,11 @@ async def test_heatercooler_capitalized_swing_modes(
     call_set_swing_mode = async_mock_service(
         hass, CLIMATE_DOMAIN, SERVICE_SET_SWING_MODE
     )
-    acc._set_chars({CHAR_SWING_MODE: 1})
+    _write_chars(hk_driver, acc, {CHAR_SWING_MODE: 1})
     await hass.async_block_till_done()
     assert call_set_swing_mode[0].data[ATTR_SWING_MODE] == "On"
 
-    acc._set_chars({CHAR_SWING_MODE: 0})
+    _write_chars(hk_driver, acc, {CHAR_SWING_MODE: 0})
     await hass.async_block_till_done()
     assert call_set_swing_mode[1].data[ATTR_SWING_MODE] == "Off"
 
@@ -1237,7 +1265,7 @@ async def test_heatercooler_single_temp_no_entity_state(
     hass.states.async_remove(entity_id)
     await hass.async_block_till_done()
 
-    acc._set_chars({CHAR_COOLING_THRESHOLD_TEMPERATURE: 22.0})
+    _write_chars(hk_driver, acc, {CHAR_COOLING_THRESHOLD_TEMPERATURE: 22.0})
     await hass.async_block_till_done()
 
     assert len(call_set_temperature) == 0
@@ -1350,7 +1378,7 @@ async def test_heatercooler_complex_temperature_selection(
     hass.states.async_set(entity_id, state, base_attrs)
     await hass.async_block_till_done()
 
-    acc._set_chars(chars)
+    _write_chars(hk_driver, acc, chars)
     await hass.async_block_till_done()
 
     assert call_set_temperature[-1].data[ATTR_TEMPERATURE] == pytest.approx(
@@ -1480,11 +1508,13 @@ async def test_heatercooler_heat_cool_no_current_temp_diff(
     hass.states.async_set(entity_id, HVACMode.HEAT_COOL, base_attrs)
     await hass.async_block_till_done()
 
-    acc._set_chars(
+    _write_chars(
+        hk_driver,
+        acc,
         {
             CHAR_COOLING_THRESHOLD_TEMPERATURE: 22.0,
             CHAR_HEATING_THRESHOLD_TEMPERATURE: 18.0,
-        }
+        },
     )
     await hass.async_block_till_done()
     assert call_set_temperature[-1].data[ATTR_TEMPERATURE] == pytest.approx(
@@ -1540,7 +1570,7 @@ async def test_heatercooler_off_at_startup_activates_displayed_mode(
     # The tile shows Auto, so turning on must activate Auto, not the first mode.
     assert acc.char_target_state.value == HC_TARGET_AUTO
     call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
-    acc._set_chars({CHAR_ACTIVE: 1})
+    _write_chars(hk_driver, acc, {CHAR_ACTIVE: 1})
     await hass.async_block_till_done()
     assert call_set_hvac_mode[-1].data[ATTR_HVAC_MODE] == HVACMode.AUTO
 
@@ -1572,7 +1602,7 @@ async def test_heatercooler_power_on_restores_last_active_mode(
 
     # Turning back on restores the mode the tile is showing.
     call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
-    acc._set_chars({CHAR_ACTIVE: 1})
+    _write_chars(hk_driver, acc, {CHAR_ACTIVE: 1})
     await hass.async_block_till_done()
     assert call_set_hvac_mode[-1].data[ATTR_HVAC_MODE] == HVACMode.HEAT
 
@@ -1600,9 +1630,51 @@ async def test_heatercooler_cool_mode_ignores_heating_threshold(
         hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE
     )
     # Cool mode uses the cooling threshold; a heating-threshold write is ignored.
-    acc._set_chars({CHAR_HEATING_THRESHOLD_TEMPERATURE: 18.0})
+    _write_chars(hk_driver, acc, {CHAR_HEATING_THRESHOLD_TEMPERATURE: 18.0})
     await hass.async_block_till_done()
     assert len(call_set_temperature) == 0
+
+
+async def test_heatercooler_batched_mode_decides_setpoint_side(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a mode written in the same batch decides the setpoint side."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        ATTR_TEMPERATURE: 22.0,
+    }
+
+    hass.states.async_set(entity_id, HVACMode.HEAT, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
+    call_set_temperature = async_mock_service(
+        hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE
+    )
+
+    # The entity is still heating, but the batch switches to Cool, so the
+    # cooling threshold is the setpoint rather than being ignored.
+    _write_chars(
+        hk_driver,
+        acc,
+        {
+            CHAR_TARGET_HEATER_COOLER_STATE: HC_TARGET_COOL,
+            CHAR_COOLING_THRESHOLD_TEMPERATURE: 24.0,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert call_set_hvac_mode[-1].data[ATTR_HVAC_MODE] == HVACMode.COOL
+    assert call_set_temperature[-1].data[ATTR_TEMPERATURE] == pytest.approx(
+        24.0, abs=0.1
+    )
 
 
 async def test_heatercooler_fan_only_target_falls_back(
