@@ -318,7 +318,11 @@ class HomeKitClimateAccessory(HomeAccessory):
         self.async_call_service(CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE, params)
 
     def _set_fan_auto(self, auto: int) -> None:
-        """Send the climate fan mode for a HomeKit fan auto toggle."""
+        """Send the climate fan mode for a HomeKit fan auto toggle.
+
+        Subclasses must only add CHAR_TARGET_FAN_STATE to ``fan_chars`` when
+        FAN_AUTO is in ``fan_modes``; this setter assumes the mode exists.
+        """
         _LOGGER.debug("%s: Set fan auto to %s", self.entity_id, auto)
         mode = self.fan_modes[FAN_AUTO] if auto else self._get_on_mode()
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
