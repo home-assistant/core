@@ -69,14 +69,14 @@ async def test_async_setup_entry_failed_first_refresh(
 
     with (
         patch(
-            "homeassistant.components.my_pv.MyPVCoordinator.async_config_entry_first_refresh",
+            "homeassistant.components.my_pv.MyPVCoordinator._async_update_data",
             side_effect=UpdateFailed(),
         ),
     ):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures("mock_my_pv_client")
