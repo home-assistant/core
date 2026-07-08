@@ -578,6 +578,9 @@ async def test_search(
         ItemType.AREA: {kitchen_area.id},
         ItemType.FLOOR: {first_floor.floor_id},
     }
+    assert search(ItemType.AUTOMATION, "automation.label") == {
+        ItemType.LABEL: {label_christmas.label_id},
+    }
     assert search(ItemType.AUTOMATION, "automation.group") == {
         ItemType.AREA: {bedroom_area.id, living_room_area.id, kitchen_area.id},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id, hue_config_entry.entry_id},
@@ -980,6 +983,9 @@ async def test_search(
     assert search(ItemType.SCRIPT, "script.area") == {
         ItemType.AREA: {kitchen_area.id},
         ItemType.FLOOR: {first_floor.floor_id},
+    }
+    assert search(ItemType.SCRIPT, "script.label") == {
+        ItemType.LABEL: {label_other.label_id},
     }
     assert search(ItemType.SCRIPT, "script.group") == {
         ItemType.AREA: {bedroom_area.id, living_room_area.id, kitchen_area.id},
