@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
@@ -111,6 +111,7 @@ class MatterAttributeSelectEntity(MatterEntity, SelectEntity):
 
     entity_description: MatterSelectEntityDescription
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected mode."""
         value_convert = self.entity_description.ha_to_device
@@ -121,6 +122,7 @@ class MatterAttributeSelectEntity(MatterEntity, SelectEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value: Nullable | int | None
@@ -137,6 +139,7 @@ class MatterMapSelectEntity(MatterAttributeSelectEntity):
     entity_description: MatterMapSelectEntityDescription
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         # the options can dynamically change based on the state of the device
@@ -158,6 +161,7 @@ class MatterMapSelectEntity(MatterAttributeSelectEntity):
 class MatterModeSelectEntity(MatterAttributeSelectEntity):
     """Representation of a select entity from Matter (Mode) Cluster attribute(s)."""
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected mode."""
         cluster: SelectCluster = self._endpoint.get_cluster(
@@ -173,6 +177,7 @@ class MatterModeSelectEntity(MatterAttributeSelectEntity):
             break
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         # NOTE: cluster can be ModeSelect or a variant of that,
@@ -201,6 +206,7 @@ class MatterDoorLockOperatingModeSelectEntity(MatterAttributeSelectEntity):
     entity_description: MatterMapSelectEntityDescription
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         # Get the bitmap of supported operating modes
@@ -235,6 +241,7 @@ class MatterListSelectEntity(MatterEntity, SelectEntity):
 
     entity_description: MatterListSelectEntityDescription
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         option_id = self._attr_options.index(option)
@@ -254,6 +261,7 @@ class MatterListSelectEntity(MatterEntity, SelectEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         list_values_raw = self.get_matter_attribute_value(

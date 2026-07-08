@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from teltasync import Teltasync, TeltonikaAuthenticationError, TeltonikaConnectionError
 import voluptuous as vol
@@ -96,6 +96,7 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
     MINOR_VERSION = 1
     _discovered_host: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -189,6 +190,7 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

@@ -6,11 +6,13 @@ These APIs are the only documented way to interact with the bluetooth integratio
 import asyncio
 from asyncio import Future
 from collections.abc import Callable, Iterable
+from contextlib import ExitStack
 from typing import TYPE_CHECKING, cast
 
 from bleak import BleakScanner
 from habluetooth import (
     BaseHaScanner,
+    BluetoothReachabilityIntent,
     BluetoothScannerDevice,
     BluetoothScanningMode,
     HaBleakScannerWrapper,
@@ -109,6 +111,14 @@ def async_ble_device_from_address(
 
 
 @hass_callback
+def async_address_reachability_diagnostics(
+    hass: HomeAssistant, address: str, intent: BluetoothReachabilityIntent
+) -> str:
+    """Return a human readable explanation of why an address may be unreachable."""
+    return _get_manager(hass).async_address_reachability_diagnostics(address, intent)
+
+
+@hass_callback
 def async_scanner_devices_by_address(
     hass: HomeAssistant, address: str, connectable: bool = True
 ) -> list[BluetoothScannerDevice]:
@@ -169,15 +179,20 @@ async def async_process_advertisements(
         if not done.done() and callback(service_info):
             done.set_result(service_info)
 
-    unload = _get_manager(hass).async_register_callback(
-        _async_discovered_device, match_dict, mode, scan_duration=timeout
-    )
+    manager = _get_manager(hass)
 
-    try:
+    with ExitStack() as stack:
+        unload = manager.async_register_callback(
+            _async_discovered_device, match_dict, mode
+        )
+        stack.callback(unload)
+
+        if mode is BluetoothScanningMode.ACTIVE:
+            task = hass.async_create_task(manager.async_request_active_scan(timeout))
+            stack.callback(task.cancel)
+
         async with asyncio.timeout(timeout):
             return await done
-    finally:
-        unload()
 
 
 @hass_callback

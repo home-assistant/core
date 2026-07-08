@@ -1,7 +1,7 @@
 """Config flow for Aussie Broadband integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from aussiebb.asyncio import AussieBB, AuthenticationException
@@ -44,6 +44,7 @@ class AussieBroadbandConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}
         return None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

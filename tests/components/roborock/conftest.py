@@ -1,13 +1,14 @@
 """Global fixtures for Roborock integration."""
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from copy import deepcopy
+from dataclasses import asdict
 import logging
 import pathlib
 import tempfile
 from typing import Any
-from unittest.mock import AsyncMock, Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import pytest
 from roborock import (
@@ -41,6 +42,7 @@ from roborock.devices.traits.v1.clean_summary import CleanSummaryTrait
 from roborock.devices.traits.v1.command import CommandTrait
 from roborock.devices.traits.v1.common import V1TraitMixin
 from roborock.devices.traits.v1.consumeable import ConsumableTrait
+from roborock.devices.traits.v1.device_features import DeviceFeaturesTrait
 from roborock.devices.traits.v1.do_not_disturb import DoNotDisturbTrait
 from roborock.devices.traits.v1.dust_collection_mode import DustCollectionModeTrait
 from roborock.devices.traits.v1.home import HomeTrait
@@ -55,6 +57,7 @@ from roborock.devices.traits.v1.valley_electricity_timer import (
 )
 from roborock.devices.traits.v1.volume import SoundVolumeTrait
 from roborock.devices.traits.v1.wash_towel_mode import WashTowelModeTrait
+from roborock.map.b01_q10_map_parser import Q10Room
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
 
 from homeassistant.components.roborock.const import (
@@ -165,6 +168,46 @@ def create_b01_q7_trait() -> Mock:
     return b01_trait
 
 
+def attach_update_listeners(trait: Mock) -> Callable[[], None]:
+    """Give a mock Q10 trait working add_update_listener support.
+
+    Returns a callback that notifies all currently registered listeners,
+    mimicking a push update from the device.
+    """
+    listeners: list[Callable[[], None]] = []
+
+    def add_update_listener(cb: Callable[[], None]) -> Callable[[], None]:
+        listeners.append(cb)
+        return lambda: listeners.remove(cb)
+
+    trait.add_update_listener = Mock(side_effect=add_update_listener)
+
+    def notify() -> None:
+        for cb in listeners:
+            cb()
+
+    return notify
+
+
+def make_q10_switch_trait(
+    on_change: Callable[[bool], None] | None = None,
+) -> AsyncMock:
+    """Create a mock Q10 switch-like trait (is_on / enable / disable)."""
+    trait = AsyncMock()
+    trait.is_on = True
+    notify = attach_update_listeners(trait)
+
+    def _set(value: bool) -> None:
+        trait.is_on = value
+        if on_change is not None:
+            on_change(value)
+        notify()
+
+    trait.enable = AsyncMock(side_effect=lambda: _set(True))
+    trait.disable = AsyncMock(side_effect=lambda: _set(False))
+    return trait
+
+
 def create_b01_q10_trait() -> Mock:
     """Create B01 Q10 trait for Q10 devices.
 
@@ -179,11 +222,37 @@ def create_b01_q10_trait() -> Mock:
     for attr_name, value in vars(status_data).items():
         if not attr_name.startswith("_"):
             setattr(status, attr_name, value)
+    status.not_disturb = True
     q10_trait.status = status
 
     q10_trait.vacuum = AsyncMock()
     q10_trait.command = AsyncMock()
     q10_trait.refresh = AsyncMock()
+    q10_trait.do_not_disturb = make_q10_switch_trait(
+        on_change=lambda value: setattr(q10_trait.status, "not_disturb", value)
+    )
+    q10_trait.child_lock = make_q10_switch_trait()
+    q10_trait.dust_collection = make_q10_switch_trait()
+    # The button light trait is write-only (enable/disable, no is_on)
+    q10_trait.button_light = Mock(spec=["enable", "disable"])
+    q10_trait.button_light.enable = AsyncMock()
+    q10_trait.button_light.disable = AsyncMock()
+
+    q10_trait.volume = AsyncMock()
+    q10_trait.volume.volume = 50
+    volume_notify = attach_update_listeners(q10_trait.volume)
+
+    async def _set_volume(volume: int) -> None:
+        q10_trait.volume.volume = volume
+        volume_notify()
+
+    q10_trait.volume.set_volume = AsyncMock(side_effect=_set_volume)
+    q10_trait.map = Mock()
+    q10_trait.map.image_content = b"\x89PNG-q10"
+    q10_trait.map.rooms = [
+        Q10Room(id=9, raw_name="rr_bedroom", pixel_value=36, pixel_count=100),
+        Q10Room(id=10, raw_name="rr_living_room", pixel_value=40, pixel_count=200),
+    ]
     return q10_trait
 
 
@@ -271,12 +340,9 @@ def make_mock_switch(
     return trait
 
 
-def make_dnd_timer(dataclass_template: RoborockBase) -> AsyncMock:
-    """Make a function for the fake timer trait that emulates the real behavior."""
-    dnd_trait = make_mock_switch(
-        trait_spec=DoNotDisturbTrait,
-        dataclass_template=dataclass_template,
-    )
+def make_dnd_timer(dataclass_template: RoborockBase) -> DoNotDisturbTrait:
+    """Create a DoNotDisturbTrait for testing."""
+    dnd_trait = DoNotDisturbTrait(**asdict(dataclass_template))
 
     async def set_dnd_timer(timer: DnDTimer) -> None:
         dnd_trait.start_hour = timer.start_hour
@@ -285,16 +351,19 @@ def make_dnd_timer(dataclass_template: RoborockBase) -> AsyncMock:
         dnd_trait.end_minute = timer.end_minute
         dnd_trait.enabled = timer.enabled
 
-    dnd_trait.set_dnd_timer = AsyncMock()
-    dnd_trait.set_dnd_timer.side_effect = set_dnd_timer
+    dnd_trait.set_dnd_timer = AsyncMock(side_effect=set_dnd_timer)
+    dnd_trait.enable = AsyncMock(side_effect=lambda: setattr(dnd_trait, "enabled", 1))
+    dnd_trait.disable = AsyncMock(side_effect=lambda: setattr(dnd_trait, "enabled", 0))
+    dnd_trait.refresh = AsyncMock()
     return dnd_trait
 
 
-def make_valley_electric_timer(dataclass_template: RoborockBase) -> AsyncMock:
-    """Make a function for the fake timer trait that emulates the real behavior."""
-    valley_electric_timer_trait = make_mock_switch(
-        trait_spec=ValleyElectricityTimerTrait,
-        dataclass_template=dataclass_template,
+def make_valley_electric_timer(
+    dataclass_template: RoborockBase,
+) -> ValleyElectricityTimerTrait:
+    """Create a ValleyElectricityTimerTrait for testing."""
+    valley_electric_timer_trait = ValleyElectricityTimerTrait(
+        **asdict(dataclass_template)
     )
 
     async def set_timer(timer: ValleyElectricityTimer) -> None:
@@ -304,8 +373,14 @@ def make_valley_electric_timer(dataclass_template: RoborockBase) -> AsyncMock:
         valley_electric_timer_trait.end_minute = timer.end_minute
         valley_electric_timer_trait.enabled = timer.enabled
 
-    valley_electric_timer_trait.set_timer = AsyncMock()
-    valley_electric_timer_trait.set_timer.side_effect = set_timer
+    valley_electric_timer_trait.set_timer = AsyncMock(side_effect=set_timer)
+    valley_electric_timer_trait.enable = AsyncMock(
+        side_effect=lambda: setattr(valley_electric_timer_trait, "enabled", 1)
+    )
+    valley_electric_timer_trait.disable = AsyncMock(
+        side_effect=lambda: setattr(valley_electric_timer_trait, "enabled", 0)
+    )
+    valley_electric_timer_trait.refresh = AsyncMock()
     return valley_electric_timer_trait
 
 
@@ -344,6 +419,18 @@ def make_home_trait(
     return home_trait
 
 
+def make_device_features() -> Mock:
+    """Create fake device features."""
+    device_features = MagicMock(spec=DeviceFeaturesTrait)
+    device_features.is_supported_drying = True
+    device_features.is_support_water_mode = True
+    device_features.is_clean_fluid_delivery_supported = True
+    device_features.is_support_clean_estimate = True
+    device_features.is_clean_route_setting_supported = True
+    device_features.is_field_supported.return_value = True
+    return device_features
+
+
 def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
     """Create v1 properties for each fake device."""
     v1_properties = AsyncMock(spec=PropertiesApi)
@@ -351,6 +438,7 @@ def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
         trait_spec=StatusTrait,
         dataclass_template=STATUS,
     )
+    v1_properties.device_features = make_device_features()
     _fan_speed_mapping = {m.code: m.value for m in VacuumModes}
     _water_mode_mapping = {m.code: m.value for m in WaterModes}
     _mop_route_mapping = {m.code: m.value for m in CleanRoutes}
@@ -507,15 +595,42 @@ def device_manager_fixture(
     return device_manager
 
 
+class MockDeviceManagerContext:
+    """Context for mock device manager."""
+
+    ready_callback: Callable[[RoborockDevice], None] | None = None
+    initial_devices: list[RoborockDevice] | None = None
+
+
+@pytest.fixture(name="device_manager_context")
+def device_manager_context_fixture(
+    fake_devices: list[FakeDevice],
+) -> MockDeviceManagerContext:
+    """Fixture to provide device manager context."""
+    context = MockDeviceManagerContext()
+    context.initial_devices = fake_devices
+    return context
+
+
 @pytest.fixture(name="fake_create_device_manager", autouse=True)
 def fake_create_device_manager_fixture(
     device_manager: AsyncMock,
-) -> None:
+    device_manager_context: MockDeviceManagerContext,
+) -> Generator[None]:
     """Fixture to create a fake device manager."""
+
+    async def _fake_create_device_manager(*args: Any, **kwargs: Any) -> AsyncMock:
+        ready_callback = kwargs.get("ready_callback")
+        assert ready_callback
+        device_manager_context.ready_callback = ready_callback
+        for device in device_manager_context.initial_devices:
+            ready_callback(device)
+        return device_manager
+
     with patch(
         "homeassistant.components.roborock.create_device_manager",
-    ) as mock_create_device_manager:
-        mock_create_device_manager.return_value = device_manager
+        side_effect=_fake_create_device_manager,
+    ):
         yield
 
 

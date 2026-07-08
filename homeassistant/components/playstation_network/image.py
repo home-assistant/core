@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.config_entries import ConfigSubentry
@@ -128,6 +128,7 @@ class PlaystationNetworkImageBaseEntity(PlaystationNetworkServiceEntity, ImageEn
         self._attr_image_url = self.entity_description.image_url_fn(coordinator.data)
         self._attr_image_last_updated = dt_util.utcnow()
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if TYPE_CHECKING:

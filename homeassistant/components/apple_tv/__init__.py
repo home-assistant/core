@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from random import randrange
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyatv import connect, exceptions, scan
 from pyatv.conf import AppleTV
@@ -145,6 +145,7 @@ class AppleTVManager(DeviceListener):
         if self.is_on:
             await self.connect()
 
+    @override
     def connection_lost(self, exception: Exception) -> None:
         """Device was unexpectedly disconnected.
 
@@ -156,6 +157,7 @@ class AppleTVManager(DeviceListener):
         self._connection_was_lost = True
         self._handle_disconnect()
 
+    @override
     def connection_closed(self) -> None:
         """Device connection was (intentionally) closed.
 

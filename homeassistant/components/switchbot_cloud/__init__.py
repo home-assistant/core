@@ -16,15 +16,21 @@ from switchbot_api import (
     SwitchBotDeviceOfflineError,
 )
 
-from homeassistant.components import webhook
+from homeassistant.components import cloud, webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.network import NoURLAvailableError
+from homeassistant.helpers.typing import ConfigType
 
-from .const import DEVICE_SUPPORT_MAP, DOMAIN, ENTRY_TITLE
+from .const import CONF_CLOUDHOOK_URL, DEVICE_SUPPORT_MAP, DOMAIN, ENTRY_TITLE
 from .coordinator import SwitchBotCoordinator
+from .service import async_register_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema("switchbot_cloud")
 
 _LOGGER = getLogger(__name__)
 PLATFORMS: list[Platform] = [
@@ -291,13 +297,6 @@ async def make_device_data(
         )
         devices_data.humidifiers.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type == "AI Art Frame":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.buttons.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
-        devices_data.images.append((device, coordinator))
 
     await make_new_device_data(
         hass, entry, api, device, devices_data, coordinators_by_id
@@ -350,13 +349,18 @@ async def make_new_device_data(
             target_list.append((device, coordinator))
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Switchbot Cloud."""
+    async_register_services(hass)
+    return True
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: SwitchbotCloudConfigEntry
 ) -> bool:
     """Set up SwitchBot via API from a config entry."""
     token = entry.data[CONF_API_TOKEN]
     secret = entry.data[CONF_API_KEY]
-
     api = SwitchBotAPI(
         token=token, secret=secret, session=async_get_clientsession(hass)
     )
@@ -381,6 +385,22 @@ async def async_setup_entry(
 
     await _initialize_webhook(hass, entry, api, coordinators_by_id)
 
+    async def _handle_cloud_connection_change(
+        state: cloud.CloudConnectionState,
+    ) -> None:
+        """Re-register the SwitchBot webhook when the cloud (re)connects.
+
+        On a local-only install the cloud may only become available after this
+        entry is set up. When that happens we create (and persist) a cloudhook
+        and re-register it with SwitchBot's cloud so push devices work.
+        """
+        if state is cloud.CloudConnectionState.CLOUD_CONNECTED:
+            await _initialize_webhook(hass, entry, api, coordinators_by_id)
+
+    entry.async_on_unload(
+        cloud.async_listen_connection_change(hass, _handle_cloud_connection_change)
+    )
+
     return True
 
 
@@ -388,7 +408,12 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: SwitchbotCloudConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    if unload_ok and CONF_WEBHOOK_ID in entry.data:
+        webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+
+    return unload_ok
 
 
 async def _initialize_webhook(
@@ -410,24 +435,27 @@ async def _initialize_webhook(
 
             hass.config_entries.async_update_entry(entry, data=new_data)
 
-        # register webhook
+        try:
+            webhook_url = await _async_get_webhook_url(hass, entry)
+        except NoURLAvailableError:
+            _LOGGER.warning(
+                "SwitchBot Cloud webhook not configured because no external URL is available"
+            )
+            return
+
         webhook_name = ENTRY_TITLE
         if entry.title != ENTRY_TITLE:
             webhook_name = f"{ENTRY_TITLE} {entry.title}"
 
-        with contextlib.suppress(Exception):
-            webhook.async_register(
-                hass,
-                DOMAIN,
-                webhook_name,
-                entry.data[CONF_WEBHOOK_ID],
-                _create_handle_webhook(coordinators_by_id),
-            )
-
-        webhook_url = webhook.async_generate_url(
+        webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+        webhook.async_register(
             hass,
+            DOMAIN,
+            webhook_name,
             entry.data[CONF_WEBHOOK_ID],
+            _create_handle_webhook(coordinators_by_id),
         )
+
         # check if webhook is configured in switchbot cloud
 
         try:
@@ -463,14 +491,56 @@ async def _initialize_webhook(
                     "Registered Switchbot cloud webhook at hass: %s", webhook_url
                 )
 
-            for coordinator in coordinators_by_id.values():
-                coordinator.webhook_subscription_listener(True)
-
             _LOGGER.debug("Registered Switchbot cloud webhook at: %s", webhook_url)
         except SwitchBotDeviceOfflineError as e:
             _LOGGER.error("Failed to connect Switchbot cloud device: %s", e)
         except SwitchBotConnectionError as e:
             _LOGGER.error("Failed to connect Switchbot cloud device: %s", e)
+
+
+async def _async_get_webhook_url(
+    hass: HomeAssistant, entry: SwitchbotCloudConfigEntry
+) -> str:
+    """Return the URL to register with SwitchBot's cloud for this entry.
+
+    When a Nabu Casa cloud subscription is active we create (and persist) a
+    cloudhook and prefer it, so local-only installs without a public
+    ``external_url`` can still receive SwitchBot push events. Creating a
+    cloudhook requires the cloud connection to be established; when a
+    subscription is active but not yet connected, we fall back to the local URL
+    and let the connection-change listener create the cloudhook once connected.
+    Without a subscription we use the locally generated webhook URL.
+    """
+    if cloud.async_active_subscription(hass):
+        if CONF_CLOUDHOOK_URL in entry.data:
+            return str(entry.data[CONF_CLOUDHOOK_URL])
+        if cloud.async_is_connected(hass):
+            webhook_id = entry.data[CONF_WEBHOOK_ID]
+            cloudhook_url = await cloud.async_get_or_create_cloudhook(hass, webhook_id)
+            hass.config_entries.async_update_entry(
+                entry, data={**entry.data, CONF_CLOUDHOOK_URL: cloudhook_url}
+            )
+            _LOGGER.debug("Created SwitchBot Cloud cloudhook: %s", cloudhook_url)
+            return cloudhook_url
+
+    return webhook.async_generate_url(
+        hass,
+        entry.data[CONF_WEBHOOK_ID],
+        allow_internal=False,
+    )
+
+
+async def async_remove_entry(
+    hass: HomeAssistant, entry: SwitchbotCloudConfigEntry
+) -> None:
+    """Clean up the cloudhook (if any) when the entry is removed."""
+    if CONF_CLOUDHOOK_URL not in entry.data:
+        return
+    with contextlib.suppress(cloud.CloudNotAvailable):
+        await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
+        _LOGGER.debug(
+            "Removed SwitchBot Cloud cloudhook (%s)", entry.data[CONF_WEBHOOK_ID]
+        )
 
 
 def _create_handle_webhook(
@@ -504,12 +574,19 @@ def _create_handle_webhook(
         _LOGGER.debug("Received data from switchbot webhook: %s", repr(data))
         device_mac = data["context"]["deviceMac"]
 
-        if device_mac not in coordinators_by_id:
-            _LOGGER.error(
-                "Received data for unknown entity from switchbot webhook: %s", data
+        registered_device_macs = [
+            coordinator.data.get("deviceMac") or coordinator.data.get("deviceId")
+            for coordinator in coordinators_by_id.values()
+            if coordinator.manageable_by_webhook() and coordinator.data is not None
+        ]
+        if device_mac not in registered_device_macs:
+            _LOGGER.debug(
+                "Received data for an unregistered webhook entity from SwitchBot Webhook: %s",
+                data,
             )
             return
-
-        coordinators_by_id[device_mac].async_set_updated_data(data["context"])
+        coordinator = coordinators_by_id[device_mac]
+        coordinator.webhook_subscription_listener(True)
+        coordinator.async_set_updated_data(data["context"])
 
     return _internal_handle_webhook

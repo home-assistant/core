@@ -1,6 +1,7 @@
 """Update platform for the ntfy integration."""
 
 from enum import StrEnum
+from typing import override
 
 from homeassistant.components.update import (
     UpdateEntity,
@@ -72,32 +73,38 @@ class NtfyUpdateEntity(NtfyCommonBaseEntity, UpdateEntity):
             self._attr_device_info.update({"sw_version": self.installed_version})
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Current version."""
         return self.coordinator.data.version if self.coordinator.data else None
 
     @property
+    @override
     def title(self) -> str | None:
         """Title of the release."""
 
         return f"ntfy {self.update_checker.data.name}"
 
     @property
+    @override
     def release_url(self) -> str | None:
         """URL to the full release notes."""
 
         return self.update_checker.data.html_url
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version."""
 
         return self.update_checker.data.tag_name.removeprefix("v")
 
+    @override
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
         return self.update_checker.data.body
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass.
 
@@ -109,6 +116,7 @@ class NtfyUpdateEntity(NtfyCommonBaseEntity, UpdateEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.update_checker.last_update_success

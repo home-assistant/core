@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import logging
 import re
-from typing import Any, cast
+from typing import Any, cast, override
 
 import jwt
 from tesla_fleet_api import TeslaFleetApi
@@ -47,10 +47,12 @@ class OAuth2FlowHandler(
         self.apis: list[TeslaFleetApi] = []
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return LOGGER
 
+    @override
     async def async_oauth_create_entry(
         self,
         data: dict[str, Any],

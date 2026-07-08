@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2026.7.0.dev0"
+version = "2026.8.0.dev0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -28,7 +28,7 @@ dependencies = [
   # module level in `bootstrap.py` and its requirements thus need to be in
   # requirements.txt to ensure they are always installed
   "aiogithubapi==26.0.0",
-  "aiohttp==3.13.5",
+  "aiohttp==3.14.1",
   "aiohttp_cors==0.8.1",
   "aiohttp-fast-zlib==0.3.0",
   "aiohttp-asyncmdnsresolver==0.2.0",
@@ -57,7 +57,7 @@ dependencies = [
   "lru-dict==1.4.1",
   "PyJWT==2.12.1",
   # PyJWT has loose dependency. We want the latest one.
-  "cryptography==48.0.0",
+  "cryptography==48.0.1",
   "Pillow==12.2.0",
   "propcache==0.5.2",
   "pyOpenSSL==26.2.0",
@@ -68,19 +68,19 @@ dependencies = [
   "PyYAML==6.0.3",
   "requests==2.34.2",
   "securetar==2026.4.1",
-  "SQLAlchemy==2.0.49",
+  "SQLAlchemy==2.0.51",
   "standard-aifc==3.13.0",
   "standard-telnetlib==3.13.0",
   "typing-extensions>=4.15.0,<5.0",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.11.16",
+  "uv==0.11.26",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
-  "voluptuous-openapi==0.3.0",
+  "voluptuous-openapi==0.4.1",
   "yarl==1.24.2",
   "webrtc-models==0.3.0",
-  "zeroconf==0.149.16",
+  "zeroconf==0.150.0",
 ]
 
 [project.urls]
@@ -648,48 +648,13 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.15.14"
+required-version = ">=0.15.20"
 
 [tool.ruff.lint]
 select = [
   "A001",   # Variable {name} is shadowing a Python builtin
   "ASYNC",  # flake8-async
-  "B002",   # Python does not support the unary prefix increment
-  "B003",   # Assigning to os.environ doesn't clear the environment
-  "B004",   # Using hasattr(x, "__call__") instead of callable(x)
-  "B005",   # Using .strip() with multi-character strings is misleading
-  "B006",   # Do not use mutable data structures for argument defaults
-  "B007",   # Loop control variable {name} not used within loop body
-  "B009",   # Do not call getattr with a constant attribute value. It is not any safer than normal property access.
-  "B010",   # Do not call setattr with a constant attribute value. It is not any safer than normal property access.
-  "B011",   # Do not call assert False since python -O removes these calls
-  "B012",   # Use of break/continue/return inside a finally block
-  "B013",   # A length-one tuple literal is redundant in exception handlers
-  "B014",   # Exception handler with duplicate exception
-  "B015",   # Pointless comparison. Did you mean to assign a value? Otherwise, prepend assert or remove it.
-  "B016",   # Cannot raise a literal. Did you intend to return it or raise an exception?
-  "B017",   # pytest.raises(BaseException) should be considered evil
-  "B018",   # Found useless attribute access. Either assign it to a variable or remove it.
-  "B020",   # Loop control variable overrides iterable it iterates
-  "B021",   # f-string used as docstring
-  "B022",   # No arguments passed to contextlib.suppress
-  "B023",   # Function definition does not bind loop variable {name}
-  "B024",   # `{name}` is an abstract base class, but it has no abstract methods or properties
-  "B025",   # try-except* block with duplicate exception {name}
-  "B026",   # Star-arg unpacking after a keyword argument is strongly discouraged
-  "B027",   # Empty method in abstract base class without abstract decorator
-  "B028",   # No explicit stacklevel keyword argument found in warnings.warn
-  "B029",   # Using except (): with an empty tuple is a no-op
-  "B030",   # Except handlers should only be exception classes
-  "B031",   # Using the result of the groupby() generator
-  "B032",   # Possible unintentional type annotation (using :). Did you mean to assign (using =)?
-  "B033",   # Set should not contain duplicate items
-  "B034",   # re.sub/subn/split should pass count/maxsplit as keyword arguments
-  "B035",   # Dictionary comprehension uses static key
-  "B039",   # ContextVar with mutable literal or function call as default
-  "B904",   # Use raise from to specify exception cause
-  "B905",   # zip() without an explicit strict= parameter
-  "B911",   # itertools.batched() without explicit strict= parameter
+  "B",      # flake8-bugbear
   "BLE",
   "C",      # complexity
   "COM818", # Trailing comma on bare tuple prohibited
@@ -721,34 +686,7 @@ select = [
   "PYI",    # flake8-pyi
   "RET",    # flake8-return
   "RSE",    # flake8-raise
-  "RUF005", # Consider iterable unpacking instead of concatenation
-  "RUF006", # Store a reference to the return value of asyncio.create_task
-  "RUF007", # Prefer itertools.pairwise() over zip() when iterating over successive pairs
-  "RUF008", # Do not use mutable default values for dataclass attributes
-  "RUF010", # Use explicit conversion flag
-  "RUF013", # PEP 484 prohibits implicit Optional
-  "RUF016", # Slice in indexed access to type {value_type} uses type {index_type} instead of an integer
-  "RUF017", # Avoid quadratic list summation
-  "RUF018", # Avoid assignment expressions in assert statements
-  "RUF019", # Unnecessary key check before dictionary access
-  "RUF020", # {never_like} | T is equivalent to T
-  "RUF021", # Parenthesize a and b expressions when chaining and and or together, to make the precedence clear
-  "RUF022", # Sort __all__
-  "RUF023", # Sort __slots__
-  "RUF024", # Do not pass mutable objects as values to dict.fromkeys
-  "RUF026", # default_factory is a positional-only argument to defaultdict
-  "RUF030", # print() call in assert statement is likely unintentional
-  "RUF032", # Decimal() called with float literal argument
-  "RUF033", # __post_init__ method with argument defaults
-  "RUF034", # Useless if-else condition
-  "RUF037", # Unnecessary empty iterable within deque call
-  "RUF046", # Unnecessary cast to int
-  "RUF051", # Use dict.pop(key, None) instead of if-key-in-dict-del
-  "RUF057", # Unnecessary round call
-  "RUF059", # unused-unpacked-variable
-  "RUF100", # Unused `noqa` directive
-  "RUF101", # noqa directives that use redirected rule codes
-  "RUF200", # Failed to parse pyproject.toml: {message}
+  "RUF",    # Ruff-specific rules (see `ignore` for exclusions)
   "S107",   # Possible hardcoded password assigned to function default
   "S102",   # Use of exec detected
   "S103",   # bad-file-permissions
@@ -786,6 +724,8 @@ ignore = [
   "ASYNC109", # Async function definition with a `timeout` parameter Use `asyncio.timeout` instead
   "ASYNC110", # Use `asyncio.Event` instead of awaiting `asyncio.sleep` in a `while` loop
   "ASYNC240", # Use an async function for entering the file system
+  "B008",     # Do not perform function call in argument defaults; commonly used in Home Assistant (e.g. cv.* validators)
+  "B019",     # Use of functools.lru_cache or functools.cache on methods can lead to memory leaks
   "D202",     # No blank lines allowed after function docstring
   "D203",     # 1 blank line required before class docstring
   "D213",     # Multi-line docstring summary should start at the second line
@@ -806,9 +746,9 @@ ignore = [
   "PT011",   # pytest.raises({exception}) is too broad, set the `match` parameter or use a more specific exception
   "PT018",   # Assertion should be broken down into multiple parts
   "RUF001",  # String contains ambiguous unicode character.
-  "RUF002",  # Docstring contains ambiguous unicode character.
-  "RUF003",  # Comment contains ambiguous unicode character.
+  "RUF012",  # Mutable class attributes should be annotated with typing.ClassVar
   "RUF015",  # Prefer next(...) over single element slice
+  "RUF043",  # Pattern passed to match= contains metacharacters but is neither escaped nor raw
   "SIM102",  # Use a single if statement instead of nested if statements
   "SIM103",  # Return the condition {condition} directly
   "SIM108",  # Use ternary operator {contents} instead of if-else-block

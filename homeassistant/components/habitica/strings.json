@@ -17,7 +17,7 @@
     "date_description": "The to-do's due date.",
     "date_name": "Due date",
     "developer_options_description": "Additional features available in developer mode.",
-    "developer_options_name": "Advanced settings",
+    "developer_options_name": "Developer options",
     "every_x_description": "The number of intervals (days, weeks, months, or years) after which the daily repeats, based on the chosen repetition interval. A value of 0 makes the daily inactive ('Grey Daily').",
     "every_x_name": "Repeat every X",
     "frequency_daily_description": "The repetition interval of a daily.",

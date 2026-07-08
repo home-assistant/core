@@ -1,6 +1,7 @@
 """Tests for the Alexa Devices integration."""
 
-from unittest.mock import AsyncMock
+import asyncio
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -11,7 +12,12 @@ from homeassistant.components.alexa_devices.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -160,3 +166,61 @@ async def test_http2_reauth_required(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == "reauth"
+
+
+async def test_http2_reauth_callback_triggers_reauth(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test on_reauth_required callback passed to start_http2_processing triggers reauth."""
+    captured_callback = None
+    http2_task: asyncio.Task | None = None
+
+    async def capture_callback(_client, on_reauth_required=None) -> asyncio.Task:
+        nonlocal captured_callback, http2_task
+        captured_callback = on_reauth_required
+        http2_task = hass.loop.create_task(asyncio.sleep(3600))
+        return http2_task
+
+    mock_amazon_devices_client.start_http2_processing.side_effect = capture_callback
+
+    with patch.object(mock_config_entry, "async_start_reauth") as mock_reauth:
+        await setup_integration(hass, mock_config_entry)
+
+        assert captured_callback is not None
+        await captured_callback()
+
+    mock_reauth.assert_called_once_with(hass)
+
+    assert http2_task is not None
+    http2_task.cancel()
+    await asyncio.gather(http2_task, return_exceptions=True)
+
+
+async def test_http2_stop_processing_called_on_unload(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test stop_http2_processing is called on unload."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_amazon_devices_client.stop_http2_processing.assert_awaited_once()
+
+
+async def test_http2_stop_processing_called_on_shutdown(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test stop_http2_processing is awaited when Home Assistant stops."""
+    await setup_integration(hass, mock_config_entry)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_amazon_devices_client.stop_http2_processing.assert_awaited_once()
