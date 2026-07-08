@@ -38,16 +38,26 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def dhcp_software(request: pytest.FixtureRequest) -> str:
+    """Return the DHCP software the mock config entry is created with."""
+    return getattr(request, "param", DEFAULT_DHCP_SOFTWARE)
+
+
+@pytest.fixture
+def mock_config_entry(dhcp_software: str) -> MockConfigEntry:
     """Return a mock config entry."""
-    return MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG, CONF_DHCP_SOFTWARE: dhcp_software},
+        title=MOCK_HOST,
+    )
 
 
 @pytest.fixture
 def mock_ubus() -> Generator[MagicMock]:
     """Mock the Ubus client with the raw router API responses."""
     with (
-        patch("homeassistant.components.ubus.coordinator.Ubus") as mock,
+        patch("homeassistant.components.ubus.coordinator.Ubus", autospec=True) as mock,
         patch("homeassistant.components.ubus.config_flow.Ubus", new=mock),
     ):
         instance = mock.return_value

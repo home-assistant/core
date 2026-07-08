@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
+
 from homeassistant.components.ubus.const import CONF_DHCP_SOFTWARE, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -62,12 +64,23 @@ async def test_user_flow_cannot_connect(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_invalid_credentials(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_ubus: MagicMock
+@pytest.mark.parametrize(
+    "connect",
+    [
+        pytest.param(
+            {"side_effect": PermissionError("Access denied")}, id="access_denied"
+        ),
+        pytest.param({"side_effect": None, "return_value": None}, id="no_session"),
+    ],
+)
+async def test_user_flow_invalid_auth(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_ubus: MagicMock,
+    connect: dict,
 ) -> None:
-    """Test the user flow reports an error when login returns no session."""
-    mock_ubus.return_value.connect.side_effect = None
-    mock_ubus.return_value.connect.return_value = None
+    """Test the user flow reports invalid credentials and then recovers."""
+    mock_ubus.return_value.connect.configure_mock(**connect)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -77,7 +90,16 @@ async def test_user_flow_invalid_credentials(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_ubus.return_value.connect.configure_mock(
+        side_effect=None, return_value="session-id"
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_already_configured(

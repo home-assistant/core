@@ -125,9 +125,3 @@ class UbusScannerEntity(CoordinatorEntity[UbusDataUpdateCoordinator], ScannerEnt
     def hostname(self) -> str | None:
         """Return the hostname of the device."""
         return self.coordinator.data.get(self._mac)
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Return the host of the router serving this device."""
-        return {"host": self.coordinator.host}

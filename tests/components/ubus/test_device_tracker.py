@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.ubus.const import CONF_DHCP_SOFTWARE, DOMAIN
+from homeassistant.components.ubus.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -23,26 +23,24 @@ from tests.common import MockConfigEntry
         pytest.param("odhcpd", {"my-phone", "my-laptop"}, id="odhcpd"),
         pytest.param("none", {MAC_PHONE, MAC_LAPTOP}, id="none"),
     ],
+    indirect=["dhcp_software"],
 )
 async def test_only_authorized_clients_are_tracked(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    dhcp_software: str,
     expected_names: set[str],
 ) -> None:
     """Test that authorized clients become entities and names resolve per backend."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={**MOCK_CONFIG, CONF_DHCP_SOFTWARE: dhcp_software},
-        title=MOCK_HOST,
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
 
     assert {e.unique_id for e in entries} == {MAC_PHONE, MAC_LAPTOP}
     assert MAC_GUEST not in {e.unique_id for e in entries}

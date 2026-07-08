@@ -7,6 +7,11 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import CONF_DHCP_SOFTWARE, DEFAULT_DHCP_SOFTWARE, DHCP_SOFTWARES, DOMAIN
 
@@ -15,8 +20,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_DHCP_SOFTWARE, default=DEFAULT_DHCP_SOFTWARE): vol.In(
-            DHCP_SOFTWARES
+        vol.Required(CONF_DHCP_SOFTWARE, default=DEFAULT_DHCP_SOFTWARE): SelectSelector(
+            SelectSelectorConfig(
+                options=DHCP_SOFTWARES,
+                translation_key="dhcp_software",
+                mode=SelectSelectorMode.DROPDOWN,
+            )
         ),
     }
 )
@@ -31,11 +40,13 @@ def validate_connection(data: dict[str, Any]) -> None:
     )
     try:
         session_id = ubus.connect()
-    except (ConnectionError, PermissionError, TypeError) as err:
+    except PermissionError as err:
+        raise InvalidAuth from err
+    except (ConnectionError, TypeError) as err:
         # openwrt-ubus-rpc raises TypeError when the HTTP request itself fails.
         raise CannotConnect from err
     if session_id is None:
-        raise CannotConnect
+        raise InvalidAuth
 
 
 class UbusConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -55,6 +66,8 @@ class UbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(validate_connection, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
             else:
                 return self.async_create_entry(
                     title=user_input[CONF_HOST], data=user_input
@@ -70,7 +83,7 @@ class UbusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await self.hass.async_add_executor_job(validate_connection, import_data)
-        except CannotConnect:
+        except CannotConnect, InvalidAuth:
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(title=import_data[CONF_HOST], data=import_data)
@@ -78,3 +91,7 @@ class UbusConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(Exception):
     """Error to indicate we cannot connect to the router."""
+
+
+class InvalidAuth(Exception):
+    """Error to indicate the credentials are invalid."""
