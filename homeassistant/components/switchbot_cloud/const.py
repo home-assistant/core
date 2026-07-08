@@ -124,8 +124,8 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "WoIOSensor": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
     "Hub 2": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
     "MeterPro": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
-    "MeterPro(CO2)": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
     "Smart Lock": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR, Platform.LOCK)
     ),
+    "MeterPro(CO2)": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
 }
