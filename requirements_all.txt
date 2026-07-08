@@ -401,7 +401,7 @@ aiorecollect==2023.09.0
 aioridwell==2025.09.0
 
 # homeassistant.components.ruckus_unleashed
-aioruckus==0.42
+aioruckus==0.46.3
 
 # homeassistant.components.russound_rio
 # homeassistant.components.russound_rnet
