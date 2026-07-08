@@ -110,7 +110,7 @@ def run_one(integration: str, plugin: str, *, timeout: float = 300.0) -> Result:
                 "-p",
                 plugin,
                 str(test_dir),
-                "--tb=no",
+                "--tb=line",
                 "-q",
                 "--no-header",
                 "--no-cov",
@@ -118,6 +118,10 @@ def run_one(integration: str, plugin: str, *, timeout: float = 300.0) -> Result:
             capture_output=True,
             text=True,
             timeout=timeout,
+            # Wide terminal so the short-summary failure reasons aren't
+            # truncated to 80 columns — the error dumps feed failure
+            # clustering and need the full one-line reason.
+            env={**os.environ, "COLUMNS": "220"},
             # Core env has every test dep (freezegun, pytest-aiohttp, …);
             # the hass_client env is intentionally minimal and can't load
             # ``tests/conftest.py``.
