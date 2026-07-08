@@ -189,6 +189,7 @@ class ATASensor(MelCloudHomeATAUnitEntity, SensorEntity):
         return self.entity_description.value_fn(self.unit, self.coordinator)
 
     @property
+    @override
     def last_reset(self) -> datetime | None:
         """Return start of month for TOTAL energy sensors."""
         if self.entity_description.state_class == SensorStateClass.TOTAL:
@@ -219,6 +220,7 @@ class ATWSensor(MelCloudHomeATWUnitEntity, SensorEntity):
         return self.entity_description.value_fn(self.unit, self.coordinator)
 
     @property
+    @override
     def last_reset(self) -> datetime | None:
         """Return start of month for TOTAL energy sensors."""
         if self.entity_description.state_class == SensorStateClass.TOTAL:
