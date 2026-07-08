@@ -48,22 +48,8 @@ def _discovery(name: str | None = FIXTURE_NAME) -> BluetoothServiceInfoBleak:
     )
 
 
-def _assert_bluetooth_create_entry(result: dict) -> None:
-    """Assert a successful Bluetooth flow result."""
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "BS20"
-    assert result["data"] == {
-        CONF_ADDRESS: FIXTURE_ADDRESS,
-        CONF_NAME: FIXTURE_NAME,
-        CONF_PIN: FIXTURE_PIN,
-    }
-    assert result["options"] == {}
-    assert result["result"].unique_id == FIXTURE_ADDRESS
-
-
-def _assert_user_create_entry(result: dict) -> None:
-    """Assert a successful user flow result."""
+def _assert_create_entry(result: dict) -> None:
+    """Assert a successful flow result."""
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "BS20"
@@ -111,7 +97,7 @@ async def test_bluetooth_step_sets_discovered_context(
         {CONF_PIN: FIXTURE_PIN},
     )
 
-    _assert_bluetooth_create_entry(result)
+    _assert_create_entry(result)
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -135,7 +121,7 @@ async def test_bluetooth_confirm_success(
         {CONF_PIN: FIXTURE_PIN},
     )
 
-    _assert_bluetooth_create_entry(result)
+    _assert_create_entry(result)
     mock_besen_client.async_start.assert_awaited_once()
     mock_besen_client.async_stop.assert_awaited_once()
 
@@ -179,7 +165,7 @@ async def test_bluetooth_confirm_errors_can_recover(
         {CONF_PIN: FIXTURE_PIN},
     )
 
-    _assert_bluetooth_create_entry(result)
+    _assert_create_entry(result)
 
 
 @pytest.mark.usefixtures("mock_besen_client", "mock_setup_entry")
@@ -211,7 +197,7 @@ async def test_bluetooth_confirm_no_connectable_path_can_recover(
         {CONF_PIN: FIXTURE_PIN},
     )
 
-    _assert_bluetooth_create_entry(result)
+    _assert_create_entry(result)
 
 
 async def test_bluetooth_flow_existing_device_aborts(
@@ -254,7 +240,7 @@ async def test_user_step_success(
         },
     )
 
-    _assert_user_create_entry(result)
+    _assert_create_entry(result)
 
 
 @pytest.mark.usefixtures("mock_besen_client", "mock_setup_entry")
@@ -285,7 +271,7 @@ async def test_user_step_rejects_invalid_pin(
         },
     )
 
-    _assert_user_create_entry(result)
+    _assert_create_entry(result)
 
 
 @pytest.mark.parametrize(
@@ -326,7 +312,7 @@ async def test_user_step_errors_can_recover(
         {CONF_ADDRESS: FIXTURE_ADDRESS, CONF_PIN: FIXTURE_PIN},
     )
 
-    _assert_user_create_entry(result)
+    _assert_create_entry(result)
 
 
 @pytest.mark.usefixtures("mock_besen_client", "mock_setup_entry")
@@ -357,7 +343,7 @@ async def test_user_step_no_connectable_path_can_recover(
         {CONF_ADDRESS: FIXTURE_ADDRESS, CONF_PIN: FIXTURE_PIN},
     )
 
-    _assert_user_create_entry(result)
+    _assert_create_entry(result)
 
 
 async def test_user_step_existing_device_aborts(
@@ -430,4 +416,4 @@ async def test_user_step_ignores_bluetooth_flow_in_progress(
         {CONF_ADDRESS: FIXTURE_ADDRESS, CONF_PIN: FIXTURE_PIN},
     )
 
-    _assert_user_create_entry(result)
+    _assert_create_entry(result)
