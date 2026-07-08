@@ -130,6 +130,12 @@ class UniFiScannerEntity(
 
     @property
     @override
+    def unique_id(self) -> str:
+        """Return a unique identifier for this device."""
+        return f"{self._mac}_{self.coordinator.config_entry.entry_id}"
+
+    @property
+    @override
     def ip_address(self) -> str | None:
         """Return the IP address of the device."""
         if device := self.coordinator.data.get(self._mac):
