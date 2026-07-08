@@ -278,6 +278,7 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
     ) -> None:
         """Install an update."""
         await update_os(self.hass, version, backup)
+        await self.coordinator.async_refresh()
 
     @override
     async def async_release_notes(self) -> str | None:
