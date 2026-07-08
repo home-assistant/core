@@ -5,6 +5,7 @@
   "config_flow": true,
   "dhcp": [
     {
+      "hostname": "wibeee*",
       "macaddress": "001EC0*"
     }
   ],
