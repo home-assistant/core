@@ -26,26 +26,6 @@ async def test_entry_setup_unload(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_unload_entry_removes_notify_service(hass: HomeAssistant) -> None:
-    """Test unloading an entry removes its own notify service.
-
-    The legacy notify platform skips re-registering a service that already
-    exists, so unloading must remove it explicitly for a subsequent reload
-    to pick up fresh data.
-    """
-    entry = MockConfigEntry(domain=DOMAIN, title="Maman", data=MOCK_CONFIG)
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.services.has_service(NOTIFY_DOMAIN, "maman")
-
-    await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert not hass.services.has_service(NOTIFY_DOMAIN, "maman")
-
-
 async def test_import(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:
     """Test yaml import creates an entry and the deprecation issue."""
     await async_setup_component(

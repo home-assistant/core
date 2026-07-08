@@ -2,12 +2,11 @@
 
 from freesms import FreeClient
 
-from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.components import notify as hass_notify
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
-from homeassistant.util import slugify
 
 from .const import DOMAIN
 
@@ -36,5 +35,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreeMobileConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: FreeMobileConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.services.async_remove(NOTIFY_DOMAIN, slugify(entry.title))
+    await hass_notify.async_reload(hass, DOMAIN)
     return True
