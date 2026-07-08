@@ -38,20 +38,38 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_my_pv_client() -> Generator[AsyncMock]:
-    """Mock the my-PV client across the integration."""
+def mock_my_pv_connection() -> Generator[AsyncMock]:
+    """Mock the my-PV connection across the integration."""
     with (
         patch(
-            "homeassistant.components.my_pv.MyPVLocalDevice",
+            "my_pv.connection.MyPVConnection",
             autospec=True,
-        ) as mock_client,
-        patch(
-            "homeassistant.components.my_pv.config_flow.MyPVLocalDevice",
-            new=mock_client,
-        ),
+        ) as mock_connection,
+        patch("my_pv.MyPVHTTPConnection", new=mock_connection),
+        patch("my_pv.MyPVHTTPSConnection", new=mock_connection),
     ):
-        client = mock_client.return_value
-        client.serial_number = ELWA2_SERIAL_NUMBER
-        client.model = "AC ELWA 2"
+        connection = mock_connection.return_value
+        connection.mypv_dev = {
+            "device": "AC ELWA 2",
+            "number": 1,
+            "sn": ELWA2_SERIAL_NUMBER,
+            "fwversion": "e0002200",
+        }
+        connection.fetch_setup = AsyncMock(
+            return_value={
+                "device": "AC ELWA 2",
+                "fwversion": "e0002200",
+                "fwvers_bl": 101,
+                "psversion": "ep108",
+                "hwvers": "v1.5A",
+                "serialno": ELWA2_SERIAL_NUMBER,
+                "macadr": "98-6d-35-c0-00-00",
+                "devmode": 1,
+                "ww1target": 621,
+            }
+        )
+        connection.fetch_data = AsyncMock(return_value={"temp1": 543})
+        connection.set_setup_value = AsyncMock(return_value=True)
+        connection.send_command = AsyncMock(return_value=True)
 
-        yield client
+        yield connection
