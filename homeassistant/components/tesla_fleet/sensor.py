@@ -33,7 +33,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
 
 from . import TeslaFleetConfigEntry
-from .const import ENERGY_HISTORY_FIELDS, TeslaFleetState
+from .const import ENERGY_HISTORY_FIELDS
 from .entity import (
     TeslaFleetEnergyHistoryEntity,
     TeslaFleetEnergyInfoEntity,
@@ -517,12 +517,6 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        if self.coordinator.data.get("state") != TeslaFleetState.ONLINE:
-            if (sensor_data := await self.async_get_last_sensor_data()) is not None:
-                self._attr_native_value = sensor_data.native_value
-                if isinstance(sensor_data.native_value, float | int):
-                    self._previous_value = float(sensor_data.native_value)
-
         if (
             self.entity_description.key in CHARGE_ENERGY_RESET_KEYS
             and (last_state := await self.async_get_last_state()) is not None
@@ -572,8 +566,10 @@ class TeslaFleetVehicleTimeSensorEntity(TeslaFleetVehicleEntity, SensorEntity):
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = isinstance(self._value, int | float) and self._value > 0
-        if self._attr_available:
+        if self._attr_available and self.coordinator.updated_once:
             self._attr_native_value = self._get_timestamp(self._value)
+        else:
+            self._attr_native_value = None
 
 
 class TeslaFleetEnergyLiveSensorEntity(TeslaFleetEnergyLiveEntity, SensorEntity):
