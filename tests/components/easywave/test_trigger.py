@@ -17,6 +17,8 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import (
     MOCK_ENTRY_DATA,
+    MOCK_ENTRY_ID,
+    MOCK_GATEWAY_TITLE,
     MOCK_TRANSMITTER_DEVICE_ID,
     _devices_options,
     _transmitter_device_record,
@@ -70,7 +72,8 @@ async def _async_setup_entry(
     entry = MockConfigEntry(
         version=1,
         domain=DOMAIN,
-        title="Easywave Gateway",
+        entry_id=MOCK_ENTRY_ID,
+        title=MOCK_GATEWAY_TITLE,
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",

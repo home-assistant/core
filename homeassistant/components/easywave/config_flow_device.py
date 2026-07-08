@@ -140,7 +140,7 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
     async def async_step_transmitter_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Confirm the learned transmitter and save."""
+        """Confirm the learned transmitter and create a subentry."""
         if self._learned_device is None:
             return self.async_abort(reason="no_device_learned")
 
@@ -210,7 +210,7 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
     async def async_step_sensor_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Confirm the learned neo sensor and save."""
+        """Confirm the learned neo sensor and create a subentry."""
         if self._learned_device is None:
             return self.async_abort(reason="no_device_learned")
 

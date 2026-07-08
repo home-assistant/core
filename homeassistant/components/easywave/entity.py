@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 @dataclass
 class EasywaveDeviceEntry:
-    """Device configuration stored on the hub config entry."""
+    """Device configuration stored on the gateway config entry."""
 
     device_id: str
     title: str

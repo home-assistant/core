@@ -17,6 +17,8 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
     MOCK_ENTRY_DATA,
+    MOCK_ENTRY_ID,
+    MOCK_GATEWAY_TITLE,
     MOCK_TRANSMITTER_SERIAL,
     _device_subentry_data,
     _devices_options,
@@ -43,7 +45,8 @@ def _make_gateway(extra_data: dict[str, object]) -> MockConfigEntry:
     return MockConfigEntry(
         version=1,
         domain=DOMAIN,
-        title="Easywave Gateway",
+        entry_id=MOCK_ENTRY_ID,
+        title=MOCK_GATEWAY_TITLE,
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
@@ -70,6 +73,7 @@ def _patch_integration() -> tuple[Any, Any, Any, Any]:
     mock_coordinator.async_add_listener = MagicMock(return_value=lambda: None)
     mock_coordinator.transceiver = mock_transceiver
     mock_coordinator.is_offline = False
+    mock_coordinator.ensure_telegram_listener = MagicMock()
     mock_coordinator.register_transmitter_entities = MagicMock()
     mock_coordinator.unregister_transmitter_entity = MagicMock()
     mock_coordinator.data = {"is_connected": True, "device_path": "/dev/ttyACM0"}
@@ -129,3 +133,6 @@ async def test_last_button_sensor_restores_state(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "b"
+
+    assert await hass.config_entries.async_unload(gateway.entry_id)
+    await hass.async_block_till_done()

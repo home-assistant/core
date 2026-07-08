@@ -9,7 +9,6 @@ from homeassistant.components.homeassistant.triggers import event as event_trigg
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
-    CONF_DEVICES,
     CONF_DOMAIN,
     CONF_EVENT,
     CONF_PLATFORM,
@@ -36,6 +35,7 @@ from .const import (
     EVENT_TYPE_GATEWAY_DISCONNECTED,
     TRANSMITTER_SWITCH_IMPULSE,
 )
+from .devices import get_stored_devices
 
 CONF_SUBTYPE = "subtype"
 
@@ -76,20 +76,12 @@ class _GatewayMarker:
 _GATEWAY_MARKER = _GatewayMarker()
 
 
-def _stored_device_id(stored: Any) -> str | None:
-    """Return a device id from a stored options record."""
-    if not isinstance(stored, dict):
-        return None
-    device_id = stored.get(CONF_DEVICE_ID)
-    return device_id if isinstance(device_id, str) else None
-
-
-def _stored_device_data(stored: Any) -> dict[str, Any] | None:
-    """Return device data from a stored options record."""
-    if not isinstance(stored, dict):
-        return None
-    data = stored.get(CONF_DEVICE_DATA)
-    return data if isinstance(data, dict) else None
+def _stored_device_data(entry: ConfigEntry, easywave_id: str) -> dict[str, Any] | None:
+    """Return stored device data for a child device identifier."""
+    for device in get_stored_devices(entry):
+        if device.get(CONF_DEVICE_ID) == easywave_id:
+            return dict(device[CONF_DEVICE_DATA])
+    return None
 
 
 def _find_easywave_config_entry(
@@ -120,10 +112,7 @@ def _find_easywave_config_entry(
     for entry in hass.config_entries.async_loaded_entries(DOMAIN):
         if easywave_id == entry.entry_id:
             return entry
-        if any(
-            _stored_device_id(stored) == easywave_id
-            for stored in entry.options.get(CONF_DEVICES, [])
-        ):
+        if _stored_device_data(entry, easywave_id) is not None:
             return entry
 
     return None
@@ -148,10 +137,8 @@ def _get_device_data(
     if easywave_id == entry.entry_id:
         return _GATEWAY_MARKER
 
-    for stored in entry.options.get(CONF_DEVICES, []):
-        if _stored_device_id(stored) == easywave_id:
-            if (data := _stored_device_data(stored)) is not None:
-                return data
+    if device_data := _stored_device_data(entry, easywave_id):
+        return device_data
     return None
 
 

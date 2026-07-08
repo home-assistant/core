@@ -10,9 +10,7 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.loader import async_get_integration
 
 from .const import (
-    CONF_DEVICE_DATA,
     CONF_DEVICE_PATH,
-    CONF_DEVICE_TITLE,
     CONF_USB_PID,
     DOMAIN,
     EasywaveGatewayFeature as EasywaveGatewayFeature,
@@ -21,7 +19,7 @@ from .const import (
     is_country_allowed_for_frequency,
 )
 from .coordinator import EasywaveCoordinator
-from .entity import EasywaveDeviceEntry
+from .devices import get_stored_devices
 from .gateway_device import update_gateway_device
 from .transceiver import RX11Transceiver
 
@@ -42,18 +40,6 @@ type EasywaveConfigEntry = ConfigEntry[EasywaveRuntimeData]
 # Platform registered for this integration. USB connectivity is handled in
 # __init__.py / coordinator / transceiver / config_flow, not here.
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-
-def get_devices(entry: EasywaveConfigEntry) -> list[EasywaveDeviceEntry]:
-    """Return all device configurations stored in config entry options."""
-    return [
-        EasywaveDeviceEntry(
-            device_id=device[CONF_DEVICE_ID],
-            title=device[CONF_DEVICE_TITLE],
-            data=dict(device[CONF_DEVICE_DATA]),
-        )
-        for device in entry.options.get(CONF_DEVICES, [])
-    ]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> bool:
@@ -106,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> 
 
 
 async def _async_reload_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> None:
-    """Reload the entry when options (device list) change."""
+    """Reload the entry when device options change."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
@@ -129,7 +115,6 @@ async def async_remove_config_entry_device(
     the user must remove the whole config entry instead. Child devices are
     stored in config entry options and can be removed freely.
     """
-    # The gateway device uses entry_id as its identifier.
     if (DOMAIN, config_entry.entry_id) in device_entry.identifiers:
         return False
 
@@ -144,17 +129,15 @@ async def async_remove_config_entry_device(
     if device_id is None:
         return False
 
-    devices = config_entry.options.get(CONF_DEVICES, [])
-    if not any(device[CONF_DEVICE_ID] == device_id for device in devices):
+    devices = get_stored_devices(config_entry)
+    updated_devices = [
+        device for device in devices if device.get(CONF_DEVICE_ID) != device_id
+    ]
+    if len(updated_devices) == len(devices):
         return False
 
     hass.config_entries.async_update_entry(
         config_entry,
-        options={
-            **config_entry.options,
-            CONF_DEVICES: [
-                device for device in devices if device[CONF_DEVICE_ID] != device_id
-            ],
-        },
+        options={**dict(config_entry.options), CONF_DEVICES: updated_devices},
     )
     return True

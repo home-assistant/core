@@ -134,7 +134,6 @@ EVENT_TYPE_GATEWAY_DISCONNECTED: Final = "gateway_disconnected"
 # ── Config Entry / Device Storage ────────────────────────────────────────────
 CONF_DEVICE_TITLE: Final = "title"
 CONF_DEVICE_DATA: Final = "data"
-
 CONF_ENTRY_TYPE: Final = "entry_type"
 
 SUBENTRY_DEVICE: Final = "device"

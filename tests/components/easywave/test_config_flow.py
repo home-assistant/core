@@ -168,7 +168,7 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Easywave Gateway"
+    assert result["title"] == "RX11 USB Transceiver"
     assert result["data"][CONF_DEVICE_PATH] == "/dev/ttyACM0"
     assert result["data"][CONF_USB_VID] == 0x155A
     assert result["data"][CONF_USB_PID] == 0x1014
@@ -323,7 +323,7 @@ async def test_usb_discovery_flow_creates_entry(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Easywave Gateway"
+    assert result["title"] == "RX11 USB Transceiver"
     assert result["data"][CONF_USB_VID] == 0x155A
     assert result["data"][CONF_USB_PID] == 0x1014
 

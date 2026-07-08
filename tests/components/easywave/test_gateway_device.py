@@ -1,11 +1,11 @@
 """Tests for Easywave gateway device registry helpers."""
 
-from homeassistant.components.easywave.const import DOMAIN
+from homeassistant.components.easywave.const import CONF_USB_PRODUCT, DOMAIN
 from homeassistant.components.easywave.gateway_device import update_gateway_device
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import MOCK_ENTRY_DATA
+from .conftest import MOCK_ENTRY_DATA, MOCK_GATEWAY_TITLE
 
 from tests.common import MockConfigEntry
 
@@ -17,7 +17,7 @@ async def test_update_gateway_device_registers_versions(
     """Gateway device registry entry includes hardware and firmware versions."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="Easywave Gateway",
+        title=MOCK_GATEWAY_TITLE,
         data=MOCK_ENTRY_DATA,
     )
     entry.add_to_hass(hass)
@@ -39,6 +39,7 @@ async def test_update_gateway_device_registers_versions(
     assert device.hw_version == "RX11 v1.0"
     assert device.sw_version == "FW 2.3.4"
     assert device.serial_number == "67890"
+    assert device.name == MOCK_ENTRY_DATA[CONF_USB_PRODUCT]
 
 
 async def test_update_gateway_device_updates_existing_entry(
@@ -48,7 +49,7 @@ async def test_update_gateway_device_updates_existing_entry(
     """Reconnecting updates previously missing gateway versions."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="Easywave Gateway",
+        title=MOCK_GATEWAY_TITLE,
         data=MOCK_ENTRY_DATA,
     )
     entry.add_to_hass(hass)

@@ -65,6 +65,10 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._sensor_entities: list[Any] = []
         self._listener_task: asyncio.Task[None] | None = None
 
+    def _update_gateway_device(self) -> None:
+        """Update the gateway device in the device registry."""
+        update_gateway_device(self.hass, self.config_entry, self.transceiver)
+
     @override
     async def _async_setup(self) -> None:
         """Set up coordinator and attempt initial connection.
@@ -78,7 +82,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
             if connected:
                 self._register_transceiver_callbacks()
-                update_gateway_device(self.hass, self.config_entry, self.transceiver)
+                self._update_gateway_device()
             else:
                 _LOGGER.warning(
                     "RX11 device not found, entering offline mode. "
@@ -95,7 +99,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @callback
     def _on_transceiver_connected(self) -> None:
         """Update the gateway device registry when the transceiver connects."""
-        update_gateway_device(self.hass, self.config_entry, self.transceiver)
+        self._update_gateway_device()
 
     @callback
     def _on_transceiver_disconnect(self) -> None:
@@ -138,9 +142,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 if connected:
                     self.is_offline = False
                     self._register_transceiver_callbacks()
-                    update_gateway_device(
-                        self.hass, self.config_entry, self.transceiver
-                    )
+                    self._update_gateway_device()
                     # Restart telegram listener if any entities need it
                     if self._has_telegram_listeners:
                         self._start_telegram_listener()

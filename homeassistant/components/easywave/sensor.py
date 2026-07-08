@@ -26,7 +26,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import EasywaveConfigEntry, get_devices
+from . import EasywaveConfigEntry
 from .const import (
     CONF_BUTTON_COUNT,
     CONF_DEVICE_PATH,
@@ -48,6 +48,7 @@ from .const import (
     transmitter_trigger_features,
 )
 from .coordinator import EasywaveCoordinator
+from .devices import get_devices
 from .entity import (
     EasywaveDeviceEntry,
     EasywaveNeoSensorEntity,
@@ -63,7 +64,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Easywave sensors for the gateway and configured devices."""
-    # Gateway status sensor — always one per gateway entry.
     coordinator = entry.runtime_data.coordinator
     async_add_entities([EasywaveGatewaySensor(entry, coordinator)])
 

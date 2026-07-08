@@ -10,7 +10,6 @@ from homeassistant.components import automation, device_automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.easywave import device_trigger
 from homeassistant.components.easywave.const import (
-    CONF_DEVICE_DATA,
     DOMAIN,
     EVENT_EASYWAVE,
     EVENT_TYPE_BATTERY_LOW,
@@ -31,6 +30,8 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import (
     MOCK_ENTRY_DATA,
+    MOCK_ENTRY_ID,
+    MOCK_GATEWAY_TITLE,
     MOCK_NEO_SENSOR_DEVICE_ID,
     MOCK_TRANSMITTER_DEVICE_ID,
     _devices_options,
@@ -82,7 +83,8 @@ def _make_gateway_entry(*device_records: ConfigSubentryData) -> MockConfigEntry:
     return MockConfigEntry(
         version=1,
         domain=DOMAIN,
-        title="Easywave Gateway",
+        entry_id=MOCK_ENTRY_ID,
+        title=MOCK_GATEWAY_TITLE,
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
@@ -467,24 +469,10 @@ async def test_get_trigger_capabilities(hass: HomeAssistant) -> None:
     assert await device_trigger.async_get_trigger_capabilities(hass, {}) == {}
 
 
-def test_stored_device_helpers_ignore_invalid_records() -> None:
-    """Malformed stored device records are ignored safely."""
-    assert device_trigger._stored_device_id("invalid") is None
-    assert device_trigger._stored_device_data("invalid") is None
-    assert device_trigger._stored_device_id({CONF_DEVICE_ID: 123}) is None
-    assert device_trigger._stored_device_data({CONF_DEVICE_ID: "device"}) is None
-    assert (
-        device_trigger._stored_device_data(
-            {CONF_DEVICE_ID: "device", CONF_DEVICE_DATA: "invalid"}
-        )
-        is None
-    )
-    assert (
-        device_trigger._stored_device_data(
-            {CONF_DEVICE_ID: "device", CONF_DEVICE_DATA: {}}
-        )
-        == {}
-    )
+def test_stored_device_data_returns_none_when_missing() -> None:
+    """Missing stored device records are ignored safely."""
+    entry = MockConfigEntry(domain=DOMAIN, subentries_data=())
+    assert device_trigger._stored_device_data(entry, "unknown_device") is None
 
 
 async def test_get_triggers_ignores_non_dict_device_data(

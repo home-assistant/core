@@ -1,16 +1,26 @@
 """Tests for the Easywave coordinator."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from homeassistant.components.easywave.const import DEVICE_SCAN_INTERVAL, DOMAIN
 from homeassistant.components.easywave.coordinator import EasywaveCoordinator
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
+from .conftest import MOCK_GATEWAY_TITLE
+
 from tests.common import MockConfigEntry
+
+
+async def _terminate_listener_receive(timeout: float = 30.0) -> None:
+    """Stop the coordinator listener loop instead of spinning on None."""
+    raise asyncio.CancelledError
 
 
 @pytest.fixture
@@ -28,7 +38,8 @@ def mock_transceiver() -> MagicMock:
     transceiver.dispose = AsyncMock()
     transceiver.set_disconnect_callback = MagicMock()
     transceiver.set_connected_callback = MagicMock()
-    transceiver.receive_telegram = AsyncMock(return_value=None)
+    transceiver.receive_telegram = AsyncMock(side_effect=_terminate_listener_receive)
+    transceiver.cancel_pending_receives = AsyncMock()
     return transceiver
 
 
@@ -37,7 +48,7 @@ def mock_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="Easywave Gateway",
+        title=MOCK_GATEWAY_TITLE,
         data={"device_path": "/dev/ttyACM0"},
     )
 
@@ -50,6 +61,7 @@ def coordinator(
 ) -> EasywaveCoordinator:
     """Return an EasywaveCoordinator instance."""
     mock_entry.add_to_hass(hass)
+    mock_entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
     return EasywaveCoordinator(hass, mock_transceiver, mock_entry)
 
 
@@ -105,6 +117,7 @@ async def test_first_refresh_enters_offline_mode_when_connect_fails(
 ) -> None:
     """First refresh enters offline mode when the transceiver cannot connect."""
     mock_transceiver.connect = AsyncMock(return_value=False)
+    mock_transceiver.reconnect = AsyncMock(return_value=False)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -116,11 +129,14 @@ async def test_first_refresh_raises_update_failed_on_connect_error(
     coordinator: EasywaveCoordinator,
     mock_transceiver: MagicMock,
 ) -> None:
-    """First refresh raises UpdateFailed when connect raises."""
+    """First refresh raises ConfigEntryNotReady when connect raises."""
     mock_transceiver.connect = AsyncMock(side_effect=OSError("port error"))
 
-    with pytest.raises(UpdateFailed):
+    with pytest.raises(ConfigEntryNotReady):
         await coordinator.async_config_entry_first_refresh()
+
+    assert coordinator.last_update_success is False
+    assert isinstance(coordinator.last_exception, UpdateFailed)
 
 
 async def test_transceiver_disconnect_marks_coordinator_offline(
@@ -237,15 +253,16 @@ async def test_refresh_reraises_update_failed(
     coordinator: EasywaveCoordinator,
     mock_transceiver: MagicMock,
 ) -> None:
-    """UpdateFailed from reconnect is re-raised during refresh."""
+    """UpdateFailed from reconnect is recorded during refresh."""
     await coordinator.async_config_entry_first_refresh()
     coordinator.is_offline = True
     mock_transceiver.reconnect = AsyncMock(side_effect=UpdateFailed("fail"))
 
-    with pytest.raises(UpdateFailed):
-        await coordinator.async_refresh()
+    await coordinator.async_refresh()
 
     assert coordinator.is_offline is True
+    assert coordinator.last_update_success is False
+    assert isinstance(coordinator.last_exception, UpdateFailed)
 
 
 async def test_refresh_wraps_os_error_in_update_failed(
@@ -257,10 +274,12 @@ async def test_refresh_wraps_os_error_in_update_failed(
     coordinator.is_offline = True
     mock_transceiver.reconnect = AsyncMock(side_effect=OSError("boom"))
 
-    with pytest.raises(UpdateFailed, match="boom"):
-        await coordinator.async_refresh()
+    await coordinator.async_refresh()
 
     assert coordinator.is_offline is True
+    assert coordinator.last_update_success is False
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert str(coordinator.last_exception) == "Update failed: boom"
 
 
 async def test_telegram_listener_restarts_after_suspend_resume(
@@ -268,17 +287,27 @@ async def test_telegram_listener_restarts_after_suspend_resume(
     mock_transceiver: MagicMock,
 ) -> None:
     """Suspending and resuming the listener restarts telegram polling."""
+
+    async def receive_side_effect(timeout: float = 30.0) -> None:
+        raise asyncio.CancelledError
+
+    mock_transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
+
     await coordinator.async_config_entry_first_refresh()
     entity = MagicMock()
-    coordinator.register_sensor_entities([entity])
-    coordinator.ensure_telegram_listener()
+    try:
+        coordinator.register_sensor_entities([entity])
+        await coordinator.hass.async_block_till_done(wait_background_tasks=True)
 
-    await coordinator.suspend_telegram_listener()
-    mock_transceiver.receive_telegram.reset_mock()
-    coordinator.resume_telegram_listener()
-    await coordinator.hass.async_block_till_done(wait_background_tasks=True)
+        await coordinator.suspend_telegram_listener()
+        mock_transceiver.receive_telegram.reset_mock()
+        coordinator.resume_telegram_listener()
+        await coordinator.hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_transceiver.receive_telegram.assert_called()
+        mock_transceiver.receive_telegram.assert_called()
+    finally:
+        await coordinator.suspend_telegram_listener()
+        await coordinator.async_shutdown()
 
 
 async def test_async_shutdown(

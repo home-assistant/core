@@ -208,7 +208,7 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
             return self.async_create_entry(
-                title="Easywave Gateway",
+                title=d["product"],
                 data={
                     CONF_DEVICE_PATH: d["device"],
                     CONF_USB_VID: d["vid"],

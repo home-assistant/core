@@ -23,6 +23,7 @@ from .const import (
     ENTRY_TYPE_TRANSMITTER,
     LEARNING_TIMEOUT,
 )
+from .devices import get_stored_devices
 
 
 class EasywaveDeviceFlowMixin:
@@ -84,8 +85,8 @@ class EasywaveDeviceFlowMixin:
         return None
 
     def _configured_devices(self) -> list[dict[str, Any]]:
-        """Return device records stored in the gateway config entry options."""
-        return list(self._get_entry().options.get(CONF_DEVICES, []))
+        """Return device records stored on the config entry."""
+        return get_stored_devices(self._get_entry())
 
     def _is_duplicate(
         self,
@@ -107,15 +108,17 @@ class EasywaveDeviceFlowMixin:
         if serial_key is None:
             return False
         return any(
-            device[CONF_DEVICE_DATA].get(serial_key) == serial_hex for device in devices
+            device[CONF_DEVICE_DATA].get(serial_key) == serial_hex
+            for device in devices
+            if device[CONF_DEVICE_DATA].get(CONF_ENTRY_TYPE) == entry_type
         )
 
     def _save_device(
-        self, title: str, unique_id: str, data: dict[str, Any]
+        self, *, title: str, unique_id: str, data: dict[str, Any]
     ) -> SubentryFlowResult:
-        """Persist a new device in the gateway config entry options."""
+        """Persist a learned device on the gateway config entry."""
         entry = self._get_entry()
-        devices = self._configured_devices()
+        devices = get_stored_devices(entry)
         devices.append(
             {
                 CONF_DEVICE_ID: unique_id,
@@ -125,7 +128,7 @@ class EasywaveDeviceFlowMixin:
         )
         self.hass.config_entries.async_update_entry(
             entry,
-            options={**entry.options, CONF_DEVICES: devices},
+            options={**dict(entry.options), CONF_DEVICES: devices},
         )
         return self.async_abort(
             reason="device_added",

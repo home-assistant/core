@@ -18,17 +18,18 @@ from homeassistant.components.easywave.config_flow_device import (
     _normalize_learned_transmitter,
 )
 from homeassistant.components.easywave.const import (
-    CONF_DEVICE_DATA,
-    CONF_DEVICE_TITLE,
-    CONF_ENTRY_TYPE,
-    CONF_SENSOR_SERIAL,
-    CONF_TRANSMITTER_SERIAL,
     ENTRY_TYPE_NEO_SENSOR,
     ENTRY_TYPE_TRANSMITTER,
 )
-from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from .conftest import (
+    MOCK_ENTRY_ID,
+    _devices_options,
+    _neo_sensor_device_record,
+    _transmitter_device_record,
+)
 
 from tests.common import MockConfigEntry
 
@@ -125,7 +126,7 @@ def test_is_duplicate_without_matching_serial_key(
     expected: bool,
 ) -> None:
     """Duplicate checks without a serial key only match device ids."""
-    entry = MockConfigEntry(domain="easywave", options={CONF_DEVICES: []})
+    entry = MockConfigEntry(domain="easywave", subentries_data=())
     entry.add_to_hass(hass)
     helper = _FlowHelper(hass, entry)
 
@@ -141,7 +142,7 @@ def test_is_duplicate_without_matching_serial_key(
 
 def test_next_default_name_unknown_entry_type(hass: HomeAssistant) -> None:
     """Unknown entry types do not produce a default name."""
-    entry = MockConfigEntry(domain="easywave", options={CONF_DEVICES: []})
+    entry = MockConfigEntry(domain="easywave", subentries_data=())
     entry.add_to_hass(hass)
     helper = _FlowHelper(hass, entry)
 
@@ -152,7 +153,7 @@ async def test_listen_for_telegram_skips_unmatched_messages(
     hass: HomeAssistant,
 ) -> None:
     """Learning keeps listening until a matching telegram arrives."""
-    entry = MockConfigEntry(domain="easywave", options={CONF_DEVICES: []})
+    entry = MockConfigEntry(domain="easywave", subentries_data=())
     entry.add_to_hass(hass)
     helper = _FlowHelper(hass, entry)
     coordinator = MagicMock()
@@ -186,7 +187,7 @@ async def test_listen_for_telegram_skips_unmatched_messages(
 
 async def test_await_learning_task_shows_progress(hass: HomeAssistant) -> None:
     """An in-flight learning task shows the progress step."""
-    entry = MockConfigEntry(domain="easywave", options={CONF_DEVICES: []})
+    entry = MockConfigEntry(domain="easywave", subentries_data=())
     entry.add_to_hass(hass)
     entry.runtime_data = MagicMock(
         coordinator=MagicMock(transceiver=MagicMock(is_connected=True))
@@ -198,7 +199,7 @@ async def test_await_learning_task_shows_progress(hass: HomeAssistant) -> None:
     helper._accept_telegram = _normalize_learned_transmitter
 
     async def slow_learning(_coordinator: Any) -> dict[str, Any]:
-        await asyncio.sleep(3600)
+        await asyncio.Future()
         return {}
 
     helper._learn_task = hass.async_create_task(
@@ -206,22 +207,24 @@ async def test_await_learning_task_shows_progress(hass: HomeAssistant) -> None:
         "easywave_device_learning",
     )
 
-    result = await helper._await_learning_task(
-        progress_action="waiting_for_transmitter",
-        confirm_step="transmitter_confirm",
-        learn_step="learn_transmitter",
-    )
+    try:
+        result = await helper._await_learning_task(
+            progress_action="waiting_for_transmitter",
+            confirm_step="transmitter_confirm",
+            learn_step="learn_transmitter",
+        )
 
-    assert result["type"] is FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "learn_transmitter"
-    helper._learn_task.cancel()
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "learn_transmitter"
+    finally:
+        helper._learn_task.cancel()
 
 
 async def test_await_learning_task_aborts_when_disconnected(
     hass: HomeAssistant,
 ) -> None:
     """Learning aborts when the gateway disconnects before listening."""
-    entry = MockConfigEntry(domain="easywave", options={CONF_DEVICES: []})
+    entry = MockConfigEntry(domain="easywave", subentries_data=())
     entry.add_to_hass(hass)
     entry.runtime_data = MagicMock(
         coordinator=MagicMock(transceiver=MagicMock(is_connected=False))
@@ -240,7 +243,7 @@ async def test_await_learning_task_aborts_when_disconnected(
 
 async def test_learn_transmitter_and_sensor_steps_delegate(hass: HomeAssistant) -> None:
     """Dedicated learn steps delegate to the shared learn handler."""
-    entry = MockConfigEntry(domain="easywave", options={CONF_DEVICES: []})
+    entry = MockConfigEntry(domain="easywave", subentries_data=())
     entry.add_to_hass(hass)
     entry.runtime_data = MagicMock(
         coordinator=MagicMock(transceiver=MagicMock(is_connected=False))
@@ -258,7 +261,7 @@ async def test_transmitter_confirm_aborts_without_learned_device(
     hass: HomeAssistant,
 ) -> None:
     """Transmitter confirmation aborts when learning did not produce data."""
-    entry = MockConfigEntry(domain="easywave", options={CONF_DEVICES: []})
+    entry = MockConfigEntry(domain="easywave", subentries_data=())
     entry.add_to_hass(hass)
     helper = _FlowHelper(hass, entry)
     helper._learned_device = None
@@ -273,7 +276,7 @@ async def test_sensor_confirm_aborts_without_learned_device(
     hass: HomeAssistant,
 ) -> None:
     """Neo sensor confirmation aborts when learning did not produce data."""
-    entry = MockConfigEntry(domain="easywave", options={CONF_DEVICES: []})
+    entry = MockConfigEntry(domain="easywave", subentries_data=())
     entry.add_to_hass(hass)
     helper = _FlowHelper(hass, entry)
     helper._learned_device = None
@@ -286,7 +289,7 @@ async def test_sensor_confirm_aborts_without_learned_device(
 
 async def test_neo_sensor_flow_aborts_when_disconnected(hass: HomeAssistant) -> None:
     """Neo sensor setup aborts when the gateway is disconnected."""
-    entry = MockConfigEntry(domain="easywave", options={CONF_DEVICES: []})
+    entry = MockConfigEntry(domain="easywave", subentries_data=())
     entry.add_to_hass(hass)
     entry.runtime_data = MagicMock(
         coordinator=MagicMock(transceiver=MagicMock(is_connected=False))
@@ -305,7 +308,7 @@ async def test_transmitter_button_count_steps(
     count_key: str,
 ) -> None:
     """Button count menu options set the expected transmitter button count."""
-    entry = MockConfigEntry(domain="easywave", options={CONF_DEVICES: []})
+    entry = MockConfigEntry(domain="easywave", subentries_data=())
     entry.add_to_hass(hass)
     entry.runtime_data = MagicMock(
         coordinator=MagicMock(transceiver=MagicMock(is_connected=False))
@@ -322,22 +325,12 @@ async def test_transmitter_button_count_steps(
     assert helper._button_count == {"buttons_2": 2, "buttons_3": 3}[count_key]
 
 
-def test_is_duplicate_matches_serial_in_options(hass: HomeAssistant) -> None:
+def test_is_duplicate_matches_serial_in_subentries(hass: HomeAssistant) -> None:
     """Duplicate checks match configured transmitter serials."""
     entry = MockConfigEntry(
         domain="easywave",
-        options={
-            CONF_DEVICES: [
-                {
-                    CONF_DEVICE_ID: "transmitter_other",
-                    CONF_DEVICE_TITLE: "Other",
-                    CONF_DEVICE_DATA: {
-                        CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
-                        CONF_TRANSMITTER_SERIAL: MOCK_TRANSMITTER_SERIAL,
-                    },
-                }
-            ]
-        },
+        entry_id=MOCK_ENTRY_ID,
+        options=_devices_options(_transmitter_device_record(title="Other")),
     )
     entry.add_to_hass(hass)
     helper = _FlowHelper(hass, entry)
@@ -349,22 +342,12 @@ def test_is_duplicate_matches_serial_in_options(hass: HomeAssistant) -> None:
     )
 
 
-def test_is_duplicate_matches_sensor_serial_in_options(hass: HomeAssistant) -> None:
+def test_is_duplicate_matches_sensor_serial_in_subentries(hass: HomeAssistant) -> None:
     """Duplicate checks match configured neo sensor serials."""
     entry = MockConfigEntry(
         domain="easywave",
-        options={
-            CONF_DEVICES: [
-                {
-                    CONF_DEVICE_ID: "neo_sensor_other",
-                    CONF_DEVICE_TITLE: "Other",
-                    CONF_DEVICE_DATA: {
-                        CONF_ENTRY_TYPE: ENTRY_TYPE_NEO_SENSOR,
-                        CONF_SENSOR_SERIAL: MOCK_SENSOR_SERIAL,
-                    },
-                }
-            ]
-        },
+        entry_id=MOCK_ENTRY_ID,
+        options=_devices_options(_neo_sensor_device_record(title="Other")),
     )
     entry.add_to_hass(hass)
     helper = _FlowHelper(hass, entry)

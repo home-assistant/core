@@ -45,6 +45,8 @@ MOCK_ENTRY_DATA = {
     CONF_USB_PRODUCT: "RX11 USB Transceiver",
 }
 
+MOCK_ENTRY_ID = "easywave_test_entry_id"
+MOCK_GATEWAY_TITLE = MOCK_ENTRY_DATA[CONF_USB_PRODUCT]
 MOCK_TRANSMITTER_SERIAL = "aa" * 16
 MOCK_TRANSMITTER_DEVICE_ID = f"transmitter_{MOCK_TRANSMITTER_SERIAL}"
 MOCK_NEO_SENSOR_SERIAL = "bb" * 16
@@ -56,7 +58,7 @@ def _device_subentry_data(
     title: str,
     data: dict[str, Any],
 ) -> ConfigSubentryData:
-    """Return a device subentry for config entry tests."""
+    """Return a device record shaped like a config subentry."""
     return ConfigSubentryData(
         data=data,
         subentry_type=SUBENTRY_DEVICE,
@@ -73,7 +75,7 @@ def _transmitter_device_record(
     switch_mode: str | None = None,
     grouping_mode: str | None = None,
 ) -> ConfigSubentryData:
-    """Return a transmitter device subentry for config entry tests."""
+    """Return a transmitter device record for config entry tests."""
     return _device_subentry_data(
         f"transmitter_{serial}",
         title,
@@ -94,7 +96,7 @@ def _neo_sensor_device_record(
     serial: str = MOCK_NEO_SENSOR_SERIAL,
     capabilities: int = 0,
 ) -> ConfigSubentryData:
-    """Return a neo sensor device subentry for config entry tests."""
+    """Return a neo sensor device record for config entry tests."""
     return _device_subentry_data(
         f"neo_sensor_{serial}",
         title,
@@ -107,18 +109,17 @@ def _neo_sensor_device_record(
 
 
 def _devices_options(*records: ConfigSubentryData) -> dict[str, list[dict[str, Any]]]:
-    """Return config entry options for stored devices."""
-    return {
-        CONF_DEVICES: [
-            {
-                CONF_DEVICE_ID: record["unique_id"],
-                CONF_DEVICE_TITLE: record["title"],
-                CONF_DEVICE_DATA: dict(record["data"]),
-            }
-            for record in records
-            if record["unique_id"]
-        ]
-    }
+    """Return config entry options with stored child devices."""
+    devices = [
+        {
+            CONF_DEVICE_ID: record["unique_id"],
+            CONF_DEVICE_TITLE: record["title"],
+            CONF_DEVICE_DATA: dict(record["data"]),
+        }
+        for record in records
+        if record["unique_id"]
+    ]
+    return {CONF_DEVICES: devices}
 
 
 @pytest.fixture
@@ -127,7 +128,8 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         version=1,
         domain=DOMAIN,
-        title="Easywave Gateway",
+        entry_id=MOCK_ENTRY_ID,
+        title=MOCK_GATEWAY_TITLE,
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
@@ -140,7 +142,8 @@ def mock_config_entry_with_transmitter() -> MockConfigEntry:
     return MockConfigEntry(
         version=1,
         domain=DOMAIN,
-        title="Easywave Gateway",
+        entry_id=MOCK_ENTRY_ID,
+        title=MOCK_GATEWAY_TITLE,
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
@@ -154,7 +157,8 @@ def mock_config_entry_with_neo_sensor() -> MockConfigEntry:
     return MockConfigEntry(
         version=1,
         domain=DOMAIN,
-        title="Easywave Gateway",
+        entry_id=MOCK_ENTRY_ID,
+        title=MOCK_GATEWAY_TITLE,
         data=MOCK_ENTRY_DATA,
         source="usb",
         unique_id="easywave_12345",
@@ -180,9 +184,17 @@ def mock_coordinator() -> MagicMock:
     """Return a mock EasywaveCoordinator."""
     coordinator = MagicMock()
     coordinator.async_setup = AsyncMock(return_value=True)
+    coordinator.async_config_entry_first_refresh = AsyncMock()
     coordinator.async_shutdown = AsyncMock()
     coordinator.async_add_listener = MagicMock(return_value=lambda: None)
+    coordinator.ensure_telegram_listener = MagicMock()
+    coordinator.fire_device_event = MagicMock()
+    coordinator.register_transmitter_entities = MagicMock()
+    coordinator.unregister_transmitter_entity = MagicMock()
+    coordinator.register_sensor_entities = MagicMock()
+    coordinator.unregister_sensor_entity = MagicMock()
     coordinator.is_offline = False
+    coordinator.data = {"is_connected": True, "device_path": "/dev/ttyACM0"}
     coordinator.transceiver = MagicMock()
     coordinator.transceiver.is_connected = True
     coordinator.transceiver.usb_serial_number = "12345"
