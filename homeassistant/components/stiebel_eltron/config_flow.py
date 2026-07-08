@@ -8,12 +8,14 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
     TextSelector,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DEFAULT_PORT, DOMAIN
 
@@ -49,6 +51,41 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for STIEBEL ELTRON."""
 
     VERSION = 1
+
+    _discovered_host: str
+
+    @override
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle DHCP discovery."""
+        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+        self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
+
+        error = await check_controller_model(discovery_info.ip, DEFAULT_PORT)
+        if error is not None:
+            return self.async_abort(reason=error)
+
+        self._discovered_host = discovery_info.ip
+        self.context["title_placeholders"] = {CONF_HOST: discovery_info.ip}
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Allow the user to confirm adding the discovered device."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title="Stiebel Eltron",
+                data={CONF_HOST: self._discovered_host, CONF_PORT: DEFAULT_PORT},
+            )
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders={CONF_HOST: self._discovered_host},
+        )
 
     @override
     async def async_step_user(
