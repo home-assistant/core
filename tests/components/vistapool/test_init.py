@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioaquarite import AquariteError, AuthenticationError
@@ -16,7 +15,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .conftest import MOCK_POOL_ID, MOCK_POOL_NAME
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 _SECOND_POOL_ID = "ZYXWVU9876543210"
 _SECOND_POOL_NAME = "Spa"
@@ -323,11 +322,13 @@ async def test_apply_optimistic_self_expires_without_push(
     coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
     mock_vistapool_client.fetch_pool_data.reset_mock()
 
-    with patch.object(vp_coordinator, "OPTIMISTIC_TTL_SECONDS", 0.05):
-        coordinator.apply_optimistic("light.status", 1)
-        assert coordinator.data["light"]["status"] == 1
-        await asyncio.sleep(0.1)
-        await hass.async_block_till_done()
+    coordinator.apply_optimistic("light.status", 1)
+    assert coordinator.data["light"]["status"] == 1
+
+    # The expiry is a raw loop timer, so force-fire scheduled handles instead
+    # of waiting on wall-clock time.
+    async_fire_time_changed(hass, fire_all=True)
+    await hass.async_block_till_done()
 
     mock_vistapool_client.fetch_pool_data.assert_called()
     assert coordinator.data["light"]["status"] == 0
