@@ -1,8 +1,7 @@
 """Test the Free Mobile notify platform."""
 
-from collections.abc import Generator
 from http import HTTPStatus
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -15,13 +14,6 @@ from homeassistant.exceptions import HomeAssistantError
 from . import MOCK_CONFIG
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def mock_send_sms() -> Generator[MagicMock]:
-    """Mock the Free Mobile SMS client's send_sms call."""
-    with patch("freesms.FreeClient.send_sms") as mock_send_sms:
-        yield mock_send_sms
 
 
 @pytest.fixture

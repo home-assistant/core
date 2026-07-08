@@ -26,14 +26,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup
 
 
-@pytest.fixture
-def mock_send_sms() -> Generator[MagicMock]:
-    """Mock the Free Mobile SMS client's send_sms call."""
-    with patch("freesms.FreeClient.send_sms") as mock:
-        mock.return_value = MagicMock(status_code=HTTPStatus.OK)
-        yield mock
-
-
 async def test_flow_user(hass: HomeAssistant, mock_send_sms: MagicMock) -> None:
     """Test user initialized flow creates an entry titled after the username."""
     result = await hass.config_entries.flow.async_init(
