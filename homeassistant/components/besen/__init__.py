@@ -54,7 +54,7 @@ async def async_setup_entry(
         pin=pin,
         ble_device_provider=_ble_device_provider,
         logger=_LOGGER,
-        advertised_name=entry.data.get(CONF_NAME),
+        advertised_name=entry.data[CONF_NAME],
     )
     coordinator = BesenCoordinator(hass, entry, client)
 
