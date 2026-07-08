@@ -31,12 +31,11 @@ async def async_setup_entry(
     shc_info = session.information
     if TYPE_CHECKING:
         assert shc_info is not None and shc_info.unique_id is not None
-    parent_id = shc_info.unique_id
 
     entities: list[BinarySensorEntity] = [
         ShutterContactSensor(
             device=binary_sensor,
-            parent_id=parent_id,
+            parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
         )
         for binary_sensor in (
@@ -48,7 +47,7 @@ async def async_setup_entry(
     entities.extend(
         BatterySensor(
             device=binary_sensor,
-            parent_id=parent_id,
+            parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
         )
         for binary_sensor in (
@@ -84,7 +83,7 @@ class ShutterContactSensor(SHCEntity[SHCShutterContact], BinarySensorEntity):
             "GENERIC": BinarySensorDeviceClass.WINDOW,
         }
         self._attr_device_class = switcher.get(
-            self._device.device_class or "", BinarySensorDeviceClass.WINDOW
+            self._device.device_class or "GENERIC", BinarySensorDeviceClass.WINDOW
         )
 
     @property

@@ -28,12 +28,11 @@ async def async_setup_entry(
     shc_info = session.information
     if TYPE_CHECKING:
         assert shc_info is not None and shc_info.unique_id is not None
-    parent_id = shc_info.unique_id
 
     async_add_entities(
         ShutterControlCover(
             device=cover,
-            parent_id=parent_id,
+            parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
         )
         for cover in session.device_helper.shutter_controls
