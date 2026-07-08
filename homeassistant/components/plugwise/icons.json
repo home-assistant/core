@@ -113,9 +113,6 @@
       "cooling_ena_switch": {
         "default": "mdi:snowflake-thermometer"
       },
-      "dhw_cm_switch": {
-        "default": "mdi:water-plus"
-      },
       "lock": {
         "default": "mdi:lock"
       }

@@ -289,9 +289,6 @@
       "cooling_ena_switch": {
         "name": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]"
       },
-      "dhw_cm_switch": {
-        "name": "DHW comfort mode"
-      },
       "lock": {
         "name": "[%key:component::lock::title%]"
       },
