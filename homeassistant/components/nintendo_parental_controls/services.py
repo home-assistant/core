@@ -93,7 +93,7 @@ async def async_update_pin_code(call: ServiceCall) -> None:
     data = call.data
     device_id: str = data[ATTR_DEVICE_ID]
     new_pin: str = data[CONF_PIN]
-    if len(new_pin) < 4 or len(new_pin) > 8:
+    if not new_pin.isdigit() or len(new_pin) < 4 or len(new_pin) > 8:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_pin_length",
@@ -111,9 +111,9 @@ async def async_update_pin_code(call: ServiceCall) -> None:
             break
     nintendo_device_id = _get_nintendo_device_id(device)
     if config_entry and nintendo_device_id:
-        return await config_entry.runtime_data.api.devices[
-            nintendo_device_id
-        ].set_new_pin(new_pin)
+        device = config_entry.runtime_data.api.devices.get(nintendo_device_id)
+        if device is not None:
+            return await device.set_new_pin(new_pin)
     raise ServiceValidationError(
         translation_domain=DOMAIN,
         translation_key="invalid_device",
