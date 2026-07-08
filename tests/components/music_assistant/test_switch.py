@@ -1,6 +1,6 @@
 """Test Music Assistant switch entities."""
 
-from unittest.mock import MagicMock, call
+from unittest.mock import AsyncMock, MagicMock, call
 
 from music_assistant_models.enums import EventType
 from syrupy.assertion import SnapshotAssertion
@@ -41,6 +41,7 @@ async def test_switch_action(
     entity_id = "switch.test_player_1_enhancer"
 
     await setup_integration_from_fixtures(hass, music_assistant_client)
+    music_assistant_client.send_command.reset_mock()
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
@@ -112,8 +113,8 @@ async def test_ignored(
     registry_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry_id=config_entry.entry_id
     )
-    # only a single player option available
-    assert sum(1 for entry in registry_entries if entry.domain == SWITCH_DOMAIN) == 1
+    # only a single player option available + 12 party switches
+    assert sum(1 for entry in registry_entries if entry.domain == SWITCH_DOMAIN) == 13
 
 
 async def test_name_translation_availability(
@@ -129,3 +130,55 @@ async def test_name_translation_availability(
         assert translations.get(f"{prefix}{translation_key}.name") is not None, (
             f"{translation_key} is missing in strings.json for platform switch"
         )
+
+
+async def test_party_switch_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test party switch set action."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "switch.party_mode_plugin_enable_guest_access"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+
+    # toggle on -> off and verify
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    assert music_assistant_client.config.save_provider_config.call_count == 1
+    assert music_assistant_client.config.save_provider_config.call_args == call(
+        provider_domain="party",
+        instance_id="party_instance",
+        values={"enable_guest_access": False},
+    )
+
+
+async def test_party_switch_external_update(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test party switch external update."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    entity_id = "switch.party_mode_plugin_enable_guest_access"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+
+    # Simulate external update
+    provider_config = await music_assistant_client.config.get_provider_config(
+        "party_instance"
+    )
+    provider_config.values["enable_guest_access"].value = False
+    music_assistant_client.config.get_provider_config = AsyncMock(
+        return_value=provider_config
+    )
+    await trigger_subscription_callback(
+        hass, music_assistant_client, EventType.PROVIDERS_UPDATED, "party_instance"
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF

@@ -1,6 +1,6 @@
 """Test Music Assistant text entities."""
 
-from unittest.mock import MagicMock, call
+from unittest.mock import AsyncMock, MagicMock, call
 
 from music_assistant_models.enums import EventType
 from syrupy.assertion import SnapshotAssertion
@@ -47,6 +47,7 @@ async def test_text_set_action(
     option_value = "new name"
 
     await setup_integration_from_fixtures(hass, music_assistant_client)
+    music_assistant_client.send_command.reset_mock()
     state = hass.states.get(entity_id)
     assert state
 
@@ -113,8 +114,8 @@ async def test_ignored(
     registry_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry_id=config_entry.entry_id
     )
-    # we only have a single non read-only player option
-    assert sum(1 for entry in registry_entries if entry.domain == TEXT_DOMAIN) == 1
+    # we only have a single non read-only player option + 2 party texts
+    assert sum(1 for entry in registry_entries if entry.domain == TEXT_DOMAIN) == 3
 
 
 async def test_name_translation_availability(
@@ -130,3 +131,48 @@ async def test_name_translation_availability(
         assert translations.get(f"{prefix}{translation_key}.name") is not None, (
             f"{translation_key} is missing in strings.json for platform text"
         )
+
+
+async def test_party_text_action_and_update(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test party text action and update."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "text.party_mode_plugin_qr_text"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Scan to join"
+
+    # test action
+    await hass.services.async_call(
+        TEXT_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_VALUE: "New Text",
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.config.save_provider_config.call_count == 1
+    assert music_assistant_client.config.save_provider_config.call_args == call(
+        provider_domain="party",
+        instance_id="party_instance",
+        values={"qr_text": "New Text"},
+    )
+
+    # test external update
+    provider_config = await music_assistant_client.config.get_provider_config(
+        "party_instance"
+    )
+    provider_config.values["qr_text"].value = "Updated"
+    music_assistant_client.config.get_provider_config = AsyncMock(
+        return_value=provider_config
+    )
+    await trigger_subscription_callback(
+        hass, music_assistant_client, EventType.PROVIDERS_UPDATED, "party_instance"
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Updated"

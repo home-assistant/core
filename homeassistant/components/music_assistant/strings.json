@@ -145,22 +145,22 @@
       "equalizer_mid": {
         "name": "Equalizer mid"
       },
-      "party_mode_party_add_queue_limit": {
+      "party_mode_add_to_queue_limit": {
         "name": "Add to Queue Limit"
       },
-      "party_mode_party_add_queue_refill_minutes": {
+      "party_mode_add_to_queue_refill_minutes": {
         "name": "Add to Queue Refill (Minutes)"
       },
-      "party_mode_party_boost_limit": {
+      "party_mode_boost_limit": {
         "name": "Boost Limit"
       },
-      "party_mode_party_boost_refill_minutes": {
+      "party_mode_boost_refill_minutes": {
         "name": "Boost Refill (Minutes)"
       },
-      "party_mode_party_skip_song_limit": {
+      "party_mode_skip_song_limit": {
         "name": "Skip Song Limit"
       },
-      "party_mode_party_skip_song_refill_minutes": {
+      "party_mode_skip_song_refill_minutes": {
         "name": "Skip Song Refill (Minutes)"
       },
       "subwoofer_volume": {
@@ -311,6 +311,9 @@
       },
       "party_mode_anti_burn_in": {
         "name": "Anti burn-in"
+      },
+      "party_mode_display_lyrics": {
+        "name": "Display Lyrics"
       },
       "party_mode_enable_add_queue": {
         "name": "Enable guest add to queue"

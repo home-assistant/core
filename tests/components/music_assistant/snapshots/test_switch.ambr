@@ -1,4 +1,616 @@
 # serializer version: 1
+# name: test_switch_entities[switch.party_mode_plugin_anti_burn_in-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.party_mode_plugin_anti_burn_in',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Anti burn-in',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:television-shimmer',
+    'original_name': 'Anti burn-in',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'party_mode_anti_burn_in',
+    'unique_id': 'party_instance_anti_burn_in',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_anti_burn_in-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Anti burn-in',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:television-shimmer',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.party_mode_plugin_anti_burn_in',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_display_lyrics-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.party_mode_plugin_display_lyrics',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Display Lyrics',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:script-text',
+    'original_name': 'Display Lyrics',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'party_mode_display_lyrics',
+    'unique_id': 'party_instance_display_lyrics',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_display_lyrics-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Display Lyrics',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:script-text',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.party_mode_plugin_display_lyrics',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_enable_guest_access-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.party_mode_plugin_enable_guest_access',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Enable guest access',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:account-group',
+    'original_name': 'Enable guest access',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'party_mode_enable_guest_access',
+    'unique_id': 'party_instance_enable_guest_access',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_enable_guest_access-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Enable guest access',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:account-group',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.party_mode_plugin_enable_guest_access',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_enable_guest_add_to_queue-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.party_mode_plugin_enable_guest_add_to_queue',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Enable guest add to queue',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:playlist-plus',
+    'original_name': 'Enable guest add to queue',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'party_mode_enable_add_queue',
+    'unique_id': 'party_instance_enable_add_queue',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_enable_guest_add_to_queue-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Enable guest add to queue',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:playlist-plus',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.party_mode_plugin_enable_guest_add_to_queue',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_enable_guest_boost-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.party_mode_plugin_enable_guest_boost',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Enable guest boost',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:rocket-launch',
+    'original_name': 'Enable guest boost',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'party_mode_enable_boost',
+    'unique_id': 'party_instance_enable_boost',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_enable_guest_boost-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Enable guest boost',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:rocket-launch',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.party_mode_plugin_enable_guest_boost',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_enable_rate_limiting-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.party_mode_plugin_enable_rate_limiting',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Enable rate limiting',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:speedometer',
+    'original_name': 'Enable rate limiting',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'party_mode_enable_rate_limiting',
+    'unique_id': 'party_instance_enable_rate_limiting',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_enable_rate_limiting-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Enable rate limiting',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:speedometer',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.party_mode_plugin_enable_rate_limiting',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_enable_skip_song-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.party_mode_plugin_enable_skip_song',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Enable Skip Song',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:skip-next',
+    'original_name': 'Enable Skip Song',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'party_mode_enable_skip_song',
+    'unique_id': 'party_instance_enable_skip_song',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_enable_skip_song-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Enable Skip Song',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:skip-next',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.party_mode_plugin_enable_skip_song',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_hide_back_button-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.party_mode_plugin_hide_back_button',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hide Back Button',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:arrow-left-box',
+    'original_name': 'Hide Back Button',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'party_mode_hide_back_button',
+    'unique_id': 'party_instance_hide_back_button',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_hide_back_button-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Hide Back Button',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:arrow-left-box',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.party_mode_plugin_hide_back_button',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_highlight_ahead-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.party_mode_plugin_highlight_ahead',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Highlight Ahead',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:format-color-highlight',
+    'original_name': 'Highlight Ahead',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'party_mode_highlight_ahead',
+    'unique_id': 'party_instance_highlight_ahead',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_highlight_ahead-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Highlight Ahead',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:format-color-highlight',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.party_mode_plugin_highlight_ahead',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_karaoke_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.party_mode_plugin_karaoke_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Karaoke mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:microphone',
+    'original_name': 'Karaoke mode',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'party_mode_karaoke_mode',
+    'unique_id': 'party_instance_karaoke_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_karaoke_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Karaoke mode',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:microphone',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.party_mode_plugin_karaoke_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_prevent_duplicate_tracks-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.party_mode_plugin_prevent_duplicate_tracks',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Prevent Duplicate Tracks',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:playlist-check',
+    'original_name': 'Prevent Duplicate Tracks',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'party_mode_prevent_duplicate_tracks',
+    'unique_id': 'party_instance_prevent_duplicate_tracks',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_prevent_duplicate_tracks-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Prevent Duplicate Tracks',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:playlist-check',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.party_mode_plugin_prevent_duplicate_tracks',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_show_progress_bar-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.party_mode_plugin_show_progress_bar',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Show Progress Bar',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:progress-clock',
+    'original_name': 'Show Progress Bar',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'party_mode_show_progress_bar',
+    'unique_id': 'party_instance_show_progress_bar',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.party_mode_plugin_show_progress_bar-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Show Progress Bar',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:progress-clock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.party_mode_plugin_show_progress_bar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_switch_entities[switch.test_player_1_enhancer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

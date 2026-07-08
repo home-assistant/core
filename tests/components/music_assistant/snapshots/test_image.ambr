@@ -1,0 +1,54 @@
+# serializer version: 1
+# name: test_image_entities[image.party_mode_plugin_guest_qr_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.party_mode_plugin_guest_qr_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Guest qr code',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:qrcode',
+    'original_name': 'Guest qr code',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'party_mode_qr',
+    'unique_id': 'party_instance_party_mode_qr',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_entities[image.party_mode_plugin_guest_qr_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: 'f4ccae1b5a598eba4a2f156d8169c448bc040865ae4e52e49a4e0e65ab474d2b',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.party_mode_plugin_guest_qr_code?token=f4ccae1b5a598eba4a2f156d8169c448bc040865ae4e52e49a4e0e65ab474d2b',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Guest qr code',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:qrcode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.party_mode_plugin_guest_qr_code',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-07-08T14:09:21.263041+00:00',
+  })
+# ---

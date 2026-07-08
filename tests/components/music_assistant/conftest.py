@@ -8,7 +8,13 @@ from music_assistant_client.music import Music
 from music_assistant_client.player_queues import PlayerQueues
 from music_assistant_client.players import Players
 from music_assistant_models.api import ServerInfoMessage
-from music_assistant_models.config_entries import PlayerConfig
+from music_assistant_models.config_entries import (
+    ConfigEntry,
+    PlayerConfig,
+    ProviderConfig,
+)
+from music_assistant_models.enums import ConfigEntryType, ProviderType
+from music_assistant_models.provider import ProviderInstance
 import pytest
 
 from homeassistant.components.music_assistant.config_flow import CONF_URL
@@ -84,7 +90,156 @@ async def music_assistant_client_fixture() -> AsyncGenerator[MagicMock]:
                 for player in client.players
             ]
 
-        client.config.get_player_configs = get_player_configs
+        client.config.get_player_configs = AsyncMock(side_effect=get_player_configs)
+
+        async def get_provider_config(instance_id: str) -> ProviderConfig | None:
+            if instance_id == "party_instance":
+                return ProviderConfig(
+                    type=ProviderType.PLUGIN,
+                    domain="party",
+                    instance_id="party_instance",
+                    values={
+                        # Switches
+                        "enable_guest_access": ConfigEntry(
+                            key="enable_guest_access",
+                            type=ConfigEntryType.BOOLEAN,
+                            value=True,
+                        ),
+                        "karaoke_mode": ConfigEntry(
+                            key="karaoke_mode",
+                            type=ConfigEntryType.BOOLEAN,
+                            value=False,
+                        ),
+                        "highlight_ahead": ConfigEntry(
+                            key="highlight_ahead",
+                            type=ConfigEntryType.BOOLEAN,
+                            value=True,
+                        ),
+                        "hide_back_button": ConfigEntry(
+                            key="hide_back_button",
+                            type=ConfigEntryType.BOOLEAN,
+                            value=False,
+                        ),
+                        "show_progress_bar": ConfigEntry(
+                            key="show_progress_bar",
+                            type=ConfigEntryType.BOOLEAN,
+                            value=True,
+                        ),
+                        "enable_rate_limiting": ConfigEntry(
+                            key="enable_rate_limiting",
+                            type=ConfigEntryType.BOOLEAN,
+                            value=False,
+                        ),
+                        "enable_add_queue": ConfigEntry(
+                            key="enable_add_queue",
+                            type=ConfigEntryType.BOOLEAN,
+                            value=True,
+                        ),
+                        "prevent_duplicate_tracks": ConfigEntry(
+                            key="prevent_duplicate_tracks",
+                            type=ConfigEntryType.BOOLEAN,
+                            value=True,
+                        ),
+                        "enable_boost": ConfigEntry(
+                            key="enable_boost",
+                            type=ConfigEntryType.BOOLEAN,
+                            value=False,
+                        ),
+                        "enable_skip_song": ConfigEntry(
+                            key="enable_skip_song",
+                            type=ConfigEntryType.BOOLEAN,
+                            value=False,
+                        ),
+                        "anti_burn_in": ConfigEntry(
+                            key="anti_burn_in", type=ConfigEntryType.BOOLEAN, value=True
+                        ),
+                        # Texts
+                        "party_name": ConfigEntry(
+                            key="party_name", type=ConfigEntryType.STRING, value="Party"
+                        ),
+                        "qr_text": ConfigEntry(
+                            key="qr_text",
+                            type=ConfigEntryType.STRING,
+                            value="Scan to join",
+                        ),
+                        # Numbers
+                        "add_to_queue_limit": ConfigEntry(
+                            key="add_to_queue_limit",
+                            type=ConfigEntryType.INTEGER,
+                            value=20,
+                        ),
+                        "add_to_queue_refill_minutes": ConfigEntry(
+                            key="add_to_queue_refill_minutes",
+                            type=ConfigEntryType.INTEGER,
+                            value=5,
+                        ),
+                        "boost_limit": ConfigEntry(
+                            key="boost_limit", type=ConfigEntryType.INTEGER, value=8
+                        ),
+                        "boost_refill_minutes": ConfigEntry(
+                            key="boost_refill_minutes",
+                            type=ConfigEntryType.INTEGER,
+                            value=10,
+                        ),
+                        "skip_song_limit": ConfigEntry(
+                            key="skip_song_limit", type=ConfigEntryType.INTEGER, value=5
+                        ),
+                        "skip_song_refill_minutes": ConfigEntry(
+                            key="skip_song_refill_minutes",
+                            type=ConfigEntryType.INTEGER,
+                            value=15,
+                        ),
+                        # Selects
+                        "player": ConfigEntry(
+                            key="player",
+                            type=ConfigEntryType.STRING,
+                            value="00:00:00:00:00:01",
+                        ),
+                        "request_badge_color": ConfigEntry(
+                            key="request_badge_color",
+                            type=ConfigEntryType.STRING,
+                            value="2d6a4f",
+                        ),
+                        "boost_badge_color": ConfigEntry(
+                            key="boost_badge_color",
+                            type=ConfigEntryType.STRING,
+                            value="3f51b5",
+                        ),
+                    },
+                )
+            return None
+
+        client.config.get_provider_config = AsyncMock(side_effect=get_provider_config)
+        client.config.save_provider_config = AsyncMock()
+
+        async def get_providers() -> list[ProviderInstance]:
+            """Mock get providers."""
+            return [
+                ProviderInstance(
+                    type=ProviderType.PLUGIN,
+                    domain="party",
+                    name="Party Mode",
+                    instance_id="party_instance",
+                    supported_features=set(),
+                    available=True,
+                )
+            ]
+
+        client.get_providers = AsyncMock(side_effect=get_providers)
+
+        def get_provider(domain: str) -> ProviderInstance | None:
+            if domain == "party":
+                return ProviderInstance(
+                    type=ProviderType.PLUGIN,
+                    domain="party",
+                    name="Party Mode Plugin",
+                    instance_id="party_instance",
+                    supported_features=set(),
+                    available=True,
+                )
+            return None
+
+        client.get_provider = MagicMock(side_effect=get_provider)
 
         yield client
 

@@ -1,6 +1,6 @@
 """Test Music Assistant number entities."""
 
-from unittest.mock import MagicMock, call
+from unittest.mock import AsyncMock, MagicMock, call
 
 from music_assistant_models.enums import EventType
 import pytest
@@ -49,6 +49,7 @@ async def test_number_set_action(
     option_value = 3
 
     await setup_integration_from_fixtures(hass, music_assistant_client)
+    music_assistant_client.send_command.reset_mock()
     state = hass.states.get(entity_id)
     assert state
 
@@ -132,8 +133,8 @@ async def test_ignored(
     registry_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry_id=config_entry.entry_id
     )
-    # we only have two non read-only player options, bass and treble
-    assert sum(1 for entry in registry_entries if entry.domain == NUMBER_DOMAIN) == 2
+    # we only have two non read-only player options, bass and treble + 6 party options
+    assert sum(1 for entry in registry_entries if entry.domain == NUMBER_DOMAIN) == 8
 
 
 async def test_name_translation_availability(
@@ -149,3 +150,59 @@ async def test_name_translation_availability(
         assert translations.get(f"{prefix}{translation_key}.name") is not None, (
             f"{translation_key} is missing in strings.json for platform number"
         )
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "config_key", "value", "expected_initial"),
+    [
+        ("number.party_mode_plugin_boost_limit", "boost_limit", 5, 8),
+        ("number.party_mode_plugin_add_to_queue_limit", "add_to_queue_limit", 25, 20),
+        ("number.party_mode_plugin_skip_song_limit", "skip_song_limit", 3, 5),
+    ],
+)
+async def test_party_number_action_and_update(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    entity_id: str,
+    config_key: str,
+    value: int,
+    expected_initial: int,
+) -> None:
+    """Test party number action and update."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert int(float(state.state)) == expected_initial
+
+    # test action
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_VALUE: value,
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.config.save_provider_config.call_count == 1
+    assert music_assistant_client.config.save_provider_config.call_args == call(
+        provider_domain="party",
+        instance_id="party_instance",
+        values={config_key: value},
+    )
+
+    # test external update
+    provider_config = await music_assistant_client.config.get_provider_config(
+        "party_instance"
+    )
+    provider_config.values[config_key].value = 25
+    music_assistant_client.config.get_provider_config = AsyncMock(
+        return_value=provider_config
+    )
+    await trigger_subscription_callback(
+        hass, music_assistant_client, EventType.PROVIDERS_UPDATED, "party_instance"
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert int(float(state.state)) == 25

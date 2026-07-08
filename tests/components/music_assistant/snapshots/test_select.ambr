@@ -1,4 +1,236 @@
 # serializer version: 1
+# name: test_select_entities[select.party_mode_plugin_boost_badge_color-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '2d6a4f',
+        'b55522',
+        'e91e63',
+        'f06292',
+        '9c27b0',
+        '673ab7',
+        '3f51b5',
+        '00bcd4',
+        '009688',
+        '4caf50',
+        '8bc34a',
+        'e64a19',
+        'ffc107',
+        'ffeb3b',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.party_mode_plugin_boost_badge_color',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Boost Badge Color',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:palette',
+    'original_name': 'Boost Badge Color',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'party_mode_boost_badge_color',
+    'unique_id': 'party_instance_boost_badge_color',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[select.party_mode_plugin_boost_badge_color-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Boost Badge Color',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:palette',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '2d6a4f',
+        'b55522',
+        'e91e63',
+        'f06292',
+        '9c27b0',
+        '673ab7',
+        '3f51b5',
+        '00bcd4',
+        '009688',
+        '4caf50',
+        '8bc34a',
+        'e64a19',
+        'ffc107',
+        'ffeb3b',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.party_mode_plugin_boost_badge_color',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3f51b5',
+  })
+# ---
+# name: test_select_entities[select.party_mode_plugin_party_player-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'Auto',
+        'My Super Test Player 2',
+        'Test Group Player 1',
+        'Test Player 1',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.party_mode_plugin_party_player',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Party Player',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:speaker-multiple',
+    'original_name': 'Party Player',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'party_mode_party_player',
+    'unique_id': 'party_instance_player',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[select.party_mode_plugin_party_player-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Party Player',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:speaker-multiple',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'Auto',
+        'My Super Test Player 2',
+        'Test Group Player 1',
+        'Test Player 1',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.party_mode_plugin_party_player',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Test Player 1',
+  })
+# ---
+# name: test_select_entities[select.party_mode_plugin_request_badge_color-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '2d6a4f',
+        'b55522',
+        'e91e63',
+        'f06292',
+        '9c27b0',
+        '673ab7',
+        '3f51b5',
+        '00bcd4',
+        '009688',
+        '4caf50',
+        '8bc34a',
+        'e64a19',
+        'ffc107',
+        'ffeb3b',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.party_mode_plugin_request_badge_color',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Request Badge Color',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:palette',
+    'original_name': 'Request Badge Color',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'party_mode_request_badge_color',
+    'unique_id': 'party_instance_request_badge_color',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[select.party_mode_plugin_request_badge_color-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Request Badge Color',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:palette',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '2d6a4f',
+        'b55522',
+        'e91e63',
+        'f06292',
+        '9c27b0',
+        '673ab7',
+        '3f51b5',
+        '00bcd4',
+        '009688',
+        '4caf50',
+        '8bc34a',
+        'e64a19',
+        'ffc107',
+        'ffeb3b',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.party_mode_plugin_request_badge_color',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2d6a4f',
+  })
+# ---
 # name: test_select_entities[select.test_player_1_link_audio_delay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

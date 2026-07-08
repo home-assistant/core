@@ -143,6 +143,7 @@ PARTY_MODE_SWITCHES = {
     "enable_boost": ("mdi:rocket-launch", EntityCategory.CONFIG),
     "enable_skip_song": ("mdi:skip-next", EntityCategory.CONFIG),
     "anti_burn_in": ("mdi:television-shimmer", EntityCategory.CONFIG),
+    "display_lyrics": ("mdi:script-text", EntityCategory.CONFIG),
 }
 
 

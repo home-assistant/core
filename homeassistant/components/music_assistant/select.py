@@ -252,14 +252,14 @@ class MusicAssistantPartyModeSelect(SelectEntity):
                 self._attr_options = list(self._option_name_to_id.keys())
 
             party_config = await self.mass.config.get_provider_config(self.instance_id)
-            if value := party_config.get_value(self.config_key):
-                if self.config_key == "player":
-                    self._attr_current_option = self._option_id_to_name.get(
-                        str(value), "Auto"
-                    )
-                elif isinstance(value, str):
-                    # value is hex, strip the "#" and lowercase it
-                    self._attr_current_option = value.replace("#", "").lower()
+            value = party_config.get_value(self.config_key)
+            if self.config_key == "player":
+                self._attr_current_option = self._option_id_to_name.get(
+                    str(value), "Auto"
+                )
+            elif value and isinstance(value, str):
+                # value is hex, strip the "#" and lowercase it
+                self._attr_current_option = value.replace("#", "").lower()
             self._attr_available = True
         except Exception:  # noqa: BLE001
             self._attr_available = False

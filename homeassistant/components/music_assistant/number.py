@@ -1,5 +1,6 @@
 """Music Assistant Number platform."""
 
+import logging
 from typing import Final, override
 
 from music_assistant_client.client import MusicAssistantClient
@@ -17,6 +18,8 @@ from . import DOMAIN, MusicAssistantConfigEntry
 from .entity import MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
 
+LOGGER = logging.getLogger(__name__)
+
 PLAYER_OPTIONS_NUMBER: Final[dict[str, bool]] = {
     # translation_key: enabled_by_default
     "bass": True,
@@ -31,12 +34,12 @@ PLAYER_OPTIONS_NUMBER: Final[dict[str, bool]] = {
 }
 
 PARTY_MODE_NUMBERS = {
-    "party_add_queue_limit": ("mdi:playlist-plus", 5, 50, EntityCategory.CONFIG),
-    "party_add_queue_refill_minutes": ("mdi:timer", 1, 30, EntityCategory.CONFIG),
-    "party_boost_limit": ("mdi:rocket-launch", 1, 10, EntityCategory.CONFIG),
-    "party_boost_refill_minutes": ("mdi:timer", 5, 120, EntityCategory.CONFIG),
-    "party_skip_song_limit": ("mdi:skip-next", 1, 5, EntityCategory.CONFIG),
-    "party_skip_song_refill_minutes": ("mdi:timer", 15, 180, EntityCategory.CONFIG),
+    "add_to_queue_limit": ("mdi:playlist-plus", 5, 50, EntityCategory.CONFIG),
+    "add_to_queue_refill_minutes": ("mdi:timer", 1, 30, EntityCategory.CONFIG),
+    "boost_limit": ("mdi:rocket-launch", 1, 10, EntityCategory.CONFIG),
+    "boost_refill_minutes": ("mdi:timer", 5, 120, EntityCategory.CONFIG),
+    "skip_song_limit": ("mdi:skip-next", 1, 5, EntityCategory.CONFIG),
+    "skip_song_refill_minutes": ("mdi:timer", 15, 180, EntityCategory.CONFIG),
 }
 
 
@@ -93,7 +96,7 @@ async def async_setup_entry(
             MusicAssistantPartyModeNumber(
                 mass,
                 instance_id,
-                config_key=number_key.replace("party_", ""),
+                config_key=number_key,
                 entity_description=NumberEntityDescription(
                     key=number_key,
                     translation_key=f"party_mode_{number_key}",
@@ -209,7 +212,8 @@ class MusicAssistantPartyModeNumber(NumberEntity):
             if isinstance(value, (int, float, str)):
                 self._attr_native_value = float(value)
             self._attr_available = True
-        except Exception:  # noqa: BLE001
+        except Exception as e:  # noqa: BLE001
+            LOGGER.debug("ERROR IN NUMBER UPDATE: %s", e)
             self._attr_available = False
 
     @catch_musicassistant_error
