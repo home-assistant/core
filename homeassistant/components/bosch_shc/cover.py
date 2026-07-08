@@ -1,6 +1,6 @@
 """Platform for cover integration."""
 
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from boschshcpy import SHCShutterControl, ShutterControlService
 
@@ -25,11 +25,10 @@ async def async_setup_entry(
     """Set up the SHC cover platform."""
     session = config_entry.runtime_data
 
-    # See __init__.py's async_setup_entry: session.information (and its
-    # unique_id) are always populated by the time platform setup runs.
     shc_info = session.information
-    assert shc_info is not None
-    assert shc_info.unique_id is not None
+    if TYPE_CHECKING:
+        assert shc_info is not None
+        assert shc_info.unique_id is not None
     parent_id = shc_info.unique_id
 
     async_add_entities(

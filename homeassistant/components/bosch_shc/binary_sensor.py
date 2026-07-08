@@ -1,6 +1,6 @@
 """Platform for binarysensor integration."""
 
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from boschshcpy import (
     BatteryLevelService,
@@ -28,11 +28,10 @@ async def async_setup_entry(
     """Set up the SHC binary sensor platform."""
     session = config_entry.runtime_data
 
-    # See __init__.py's async_setup_entry: session.information (and its
-    # unique_id) are always populated by the time platform setup runs.
     shc_info = session.information
-    assert shc_info is not None
-    assert shc_info.unique_id is not None
+    if TYPE_CHECKING:
+        assert shc_info is not None
+        assert shc_info.unique_id is not None
     parent_id = shc_info.unique_id
 
     entities: list[BinarySensorEntity] = [
@@ -85,11 +84,8 @@ class ShutterContactSensor(SHCEntity[SHCShutterContact], BinarySensorEntity):
             "FRENCH_WINDOW": BinarySensorDeviceClass.DOOR,
             "GENERIC": BinarySensorDeviceClass.WINDOW,
         }
-        device_class = self._device.device_class
-        self._attr_device_class = (
-            switcher.get(device_class, BinarySensorDeviceClass.WINDOW)
-            if device_class is not None
-            else BinarySensorDeviceClass.WINDOW
+        self._attr_device_class = switcher.get(
+            self._device.device_class or "", BinarySensorDeviceClass.WINDOW
         )
 
     @property
