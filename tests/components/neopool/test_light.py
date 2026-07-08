@@ -10,6 +10,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.neopool.const import FOLLOW_UP_REFRESH_DELAY
 from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -244,3 +245,55 @@ async def test_all_entities(
         key=lambda e: e.entity_id,
     )
     assert entries == snapshot
+
+
+async def test_light_write_schedules_follow_up_refresh(
+    hass: HomeAssistant,
+    mock_config_entry_light: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A successful write triggers a second refresh after the follow-up delay."""
+    await setup_integration(hass, mock_config_entry_light)
+    entity_id = _light_entity_id(hass, mock_config_entry_light)
+
+    mock_neopool_client.async_set_relay_state = AsyncMock(
+        return_value={"Pool Light": True}
+    )
+    reads_before = mock_neopool_client.async_read_all.await_count
+    await _turn_on(hass, entity_id)
+
+    freezer.tick(timedelta(seconds=FOLLOW_UP_REFRESH_DELAY + 0.5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_neopool_client.async_read_all.await_count > reads_before
+
+
+async def test_light_timer_data_merged_into_coordinator(
+    hass: HomeAssistant,
+    mock_config_entry_light: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """Timer block fields are merged into coordinator data as relay_light_* keys."""
+    mock_neopool_client.read_all_timers = AsyncMock(
+        return_value={
+            "relay_light": {
+                "enable": TimerRelayMode.ALWAYS_OFF,
+                "on": 3600,
+                "interval": 7200,
+                "period": 86400,
+                "countdown": 120,
+                "stop": 5400,
+            }
+        }
+    )
+    await setup_integration(hass, mock_config_entry_light)
+
+    coordinator = mock_config_entry_light.runtime_data
+    assert coordinator.data["relay_light_enable"] == TimerRelayMode.ALWAYS_OFF
+    assert coordinator.data["relay_light_start"] == 3600
+    assert coordinator.data["relay_light_interval"] == 7200
+    assert coordinator.data["relay_light_period"] == 86400
+    assert coordinator.data["relay_light_countdown"] == 120
+    assert coordinator.data["relay_light_stop"] == 5400
