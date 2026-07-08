@@ -365,8 +365,8 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         self._attr_state = STATE_MAP[self._bridge.player.status]
         self._attr_volume_level = self._bridge.player.volume / 100
         self._attr_is_volume_muted = self._bridge.player.muted
-        self._attr_repeat = REPEAT_MAP[self._bridge.player.loop_mode]
-        self._attr_shuffle = self._bridge.player.loop_mode == LoopMode.RANDOM_PLAYBACK
+        self._attr_repeat = REPEAT_MAP[self._active_player.loop_mode]
+        self._attr_shuffle = self._active_player.loop_mode == LoopMode.RANDOM_PLAYBACK
         self._attr_sound_mode = self._bridge.player.equalizer_mode.value
         self._attr_supported_features = DEFAULT_FEATURES
 
