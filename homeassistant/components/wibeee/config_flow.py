@@ -112,41 +112,6 @@ class WibeeeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration of the device IP address."""
-        errors: dict[str, str] = {}
-        reconfigure_entry = self._get_reconfigure_entry()
-
-        if user_input is not None:
-            try:
-                _, unique_id, data = await validate_input(self.hass, user_input)
-            except NoDeviceInfo:
-                errors[CONF_HOST] = "no_device_info"
-            except Exception:
-                _LOGGER.exception("Unexpected exception during reconfigure")
-                errors["base"] = "unknown"
-            else:
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_mismatch(reason="wrong_device")
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry, data_updates=data
-                )
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_HOST,
-                        default=reconfigure_entry.data.get(CONF_HOST, ""),
-                    ): str
-                }
-            ),
-            errors=errors,
-        )
-
 
 class NoDeviceInfo(HomeAssistantError):
     """Error to indicate we could not get info from a Wibeee device."""
