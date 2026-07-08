@@ -1,5 +1,6 @@
 """The Bosch Smart Home Controller integration."""
 
+from dataclasses import dataclass
 import logging
 
 from boschshcpy import SHCSession
@@ -24,7 +25,17 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-type BoschConfigEntry = ConfigEntry[SHCSession]
+@dataclass
+class SHCData:
+    """Runtime data for the Bosch SHC integration."""
+
+    session: SHCSession
+    # The SHC controller's own unique_id, used as the parent identifier for
+    # every device entity created by the platforms below.
+    parent_id: str
+
+
+type BoschConfigEntry = ConfigEntry[SHCData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> bool:
@@ -47,15 +58,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
         raise ConfigEntryNotReady from err
 
     shc_info = session.information
-    # SHCSession is constructed with lazy=False above, so its constructor runs
-    # _enumerate_all() -> authenticate() synchronously: authenticate() either
-    # raises (in which case the SHCSession(...) call above already raised, and
-    # we never reach this line) or unconditionally populates
-    # _shc_information. So `information` is guaranteed non-None here.
+    # Always populated by this point: SHCSession's synchronous, non-lazy
+    # construction above already raised if authentication/enumeration failed.
     assert shc_info is not None
-    # get_unique_id() (called from SHCInformation.__init__ above) always sets
-    # _unique_id to a str before returning, on every code path that doesn't
-    # raise SHCConnectionError -- so unique_id is also guaranteed non-None here.
     assert shc_info.unique_id is not None
     if (
         shc_info.updateState is not None
@@ -63,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
     ):
         _LOGGER.warning("Please check for software updates in the Bosch Smart Home App")
 
-    entry.runtime_data = session
+    entry.runtime_data = SHCData(session=session, parent_id=shc_info.unique_id)
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -92,6 +97,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> bool:
     """Unload a config entry."""
-    await hass.async_add_executor_job(entry.runtime_data.stop_polling)
+    await hass.async_add_executor_job(entry.runtime_data.session.stop_polling)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
