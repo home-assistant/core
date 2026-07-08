@@ -1,7 +1,7 @@
 """Middleware to handle forwarded data by a reverse proxy."""
 
 from collections.abc import Awaitable, Callable
-from ipaddress import IPv4Network, IPv6Network, ip_address
+from ipaddress import IPv4Network, IPv6Network, ip_address, ip_network
 import logging
 
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
@@ -95,6 +95,8 @@ def async_setup_forwarded(
 
         connected_ip = ip_address(request.transport.get_extra_info("peername")[0])
 
+        trusted_networks = [ip_network(p) for p in trusted_proxies]
+
         # We have X-Forwarded-For, but config does not agree
         if not use_x_forwarded_for:
             _LOGGER.error(
@@ -107,7 +109,7 @@ def async_setup_forwarded(
             raise HTTPBadRequest
 
         # Ensure the IP of the connected peer is trusted
-        if not any(connected_ip in ip_network(trusted_proxy) for trusted_proxy in trusted_proxies):
+        if not any(connected_ip in trusted_network for trusted_network in trusted_networks):
             _LOGGER.error(
                 "Received X-Forwarded-For header from an untrusted proxy %s",
                 connected_ip,
@@ -133,7 +135,7 @@ def async_setup_forwarded(
         # Find the last trusted index in the X-Forwarded-For list
         forwarded_for_index = 0
         for forwarded_ip in forwarded_for:
-            if any(forwarded_ip in ip_network(trusted_proxy) for trusted_proxy in trusted_proxies):
+            if any(forwarded_ip in trusted_network for trusted_network in trusted_networks):
                 forwarded_for_index += 1
                 continue
             overrides["remote"] = str(forwarded_ip)
