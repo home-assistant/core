@@ -50,6 +50,7 @@ from homeassistant.util import dt as dt_util, slugify
 
 from . import UnifiConfigEntry
 from .const import DEVICE_STATES
+from .device_tracker import async_client_allowed_fn
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
@@ -106,11 +107,16 @@ def async_client_uptime_value_fn(hub: UnifiHub, client: Client) -> datetime:
 
 @callback
 def async_wired_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
-    """Check if client is wired and allowed."""
+    """Check if client is wired, tracked and reports a link speed.
+
+    Gate on the tracking options so the sensor (and its client device) is only
+    created for clients the user actually tracks, instead of every wired client
+    the controller has ever seen.
+    """
     client = hub.api.clients[obj_id]
     if not client.is_wired or client.wired_rate_mbps <= 0:
         return False
-    return True
+    return async_client_allowed_fn(hub, obj_id)
 
 
 @callback
