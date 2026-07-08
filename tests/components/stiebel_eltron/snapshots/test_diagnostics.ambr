@@ -1,0 +1,22 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'cooling_status': False,
+      'current_humidity': 45.0,
+      'current_temp': 21.0,
+      'filter_alarm': False,
+      'heating_status': True,
+      'operating_mode': 'AUTOMATIC',
+      'target_temp': 22.5,
+    }),
+    'entry_data': dict({
+      'host': '**REDACTED**',
+      'port': 502,
+    }),
+    'modbus': dict({
+      'is_connected': True,
+    }),
+    'model': 'LWZ',
+  })
+# ---

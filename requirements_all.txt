@@ -7,7 +7,7 @@
 AEMET-OpenData==0.6.4
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.35
+AIOSomecomfort==0.0.37
 
 # homeassistant.components.adax
 Adax-local==0.3.0
@@ -401,7 +401,7 @@ aiorecollect==2023.09.0
 aioridwell==2025.09.0
 
 # homeassistant.components.ruckus_unleashed
-aioruckus==0.42
+aioruckus==0.46.3
 
 # homeassistant.components.russound_rio
 # homeassistant.components.russound_rnet
@@ -1133,6 +1133,9 @@ google-cloud-texttospeech==2.25.1
 # homeassistant.components.google_generative_ai_conversation
 google-genai==1.59.0
 
+# homeassistant.components.google_health
+google-health-api==0.5.1
+
 # homeassistant.components.google_travel_time
 google-maps-routing==0.6.15
 
@@ -1198,7 +1201,7 @@ h2==4.3.0
 ha-ffmpeg==3.2.2
 
 # homeassistant.components.iotawatt
-ha-iotawattpy==0.1.2
+ha-iotawattpy==0.2.1
 
 # homeassistant.components.philips_js
 ha-philipsjs==3.2.4
@@ -1359,7 +1362,7 @@ influxdb-client==1.50.0
 influxdb==5.3.2
 
 # homeassistant.components.infrared
-infrared-protocols==6.5.0
+infrared-protocols==6.6.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.4.4
@@ -2335,7 +2338,7 @@ pylitterbot==2025.5.0
 pylutron-caseta==0.28.0
 
 # homeassistant.components.lutron
-pylutron==0.4.1
+pylutron==0.4.2
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -3156,7 +3159,7 @@ tesla-fleet-api==1.5.4
 tesla-powerwall==0.5.3
 
 # homeassistant.components.tesla_wall_connector
-tesla-wall-connector==1.1.0
+tesla-wall-connector==1.2.0
 
 # homeassistant.components.teslemetry
 teslemetry-stream==0.9.1
