@@ -190,10 +190,11 @@ class C4WebsocketConnectionTracker:
             return
         _LOGGER.info("WebSocket connection to Control4 re-established")
         item_callbacks = self.entry.runtime_data[CONF_WEBSOCKET].item_callbacks
-        for item_id, callback in item_callbacks.items():
+        for item_id, callbacks in item_callbacks.items():
             item_attributes = await director_get_entry_variables(self.hass, self.entry, item_id)
             message = {"evtName": "OnDataToUI", "iddevice": item_id, "data": item_attributes}
-            await callback(item_id, message)
+            for callback in list(callbacks):
+                await callback(item_id, message)
         self._was_disconnected = False
 
     async def disconnect_callback(self) -> None:
@@ -201,8 +202,9 @@ class C4WebsocketConnectionTracker:
         _LOGGER.warning("WebSocket connection to Control4 lost, attempting reconnection")
         self._was_disconnected = True
         item_callbacks = self.entry.runtime_data[CONF_WEBSOCKET].item_callbacks
-        for item_id, callback in item_callbacks.items():
-            await callback(item_id, False)
+        for item_id, callbacks in item_callbacks.items():
+            for callback in list(callbacks):
+                await callback(item_id, False)
 
 
 class RefreshTokensObject:

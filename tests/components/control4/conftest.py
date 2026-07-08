@@ -83,8 +83,10 @@ def mock_c4_director() -> Generator[MagicMock]:
         ),
     ):
         mock_director = mock_director_class.return_value
-        all_items = json.loads(load_fixture("director_all_items.json", DOMAIN))
-        mock_director.get_all_item_info = AsyncMock(return_value=all_items)
+        mock_director.director_bearer_token = "test"
+        mock_director.get_all_item_info = AsyncMock(
+            return_value=json.loads(load_fixture("director_all_items.json", DOMAIN))
+        )
         mock_director.get_ui_configuration = AsyncMock(
             return_value=json.loads(load_fixture("ui_configuration.json", DOMAIN))
         )
@@ -92,9 +94,24 @@ def mock_c4_director() -> Generator[MagicMock]:
         yield mock_director
 
 
+@pytest.fixture(autouse=True)
+def mock_c4_websocket() -> Generator[MagicMock]:
+    """Mock C4Websocket to prevent real WebSocket connections during tests."""
+    with patch(
+        "homeassistant.components.control4.C4Websocket", autospec=True
+    ) as mock_ws_class:
+        mock_ws = mock_ws_class.return_value
+        mock_ws.sio_connect = AsyncMock()
+        mock_ws.sio_disconnect = AsyncMock()
+        mock_ws.add_item_callback = MagicMock()
+        mock_ws.remove_item_callback = MagicMock()
+        mock_ws.item_callbacks = {}
+        yield mock_ws
+
+
 @pytest.fixture
 def mock_update_variables() -> Generator[AsyncMock]:
-    """Mock the update_variables_for_config_entry function."""
+    """Mock the update_variables_for_config_entry function for media_player."""
 
     async def _mock_update_variables(*args, **kwargs):
         return {

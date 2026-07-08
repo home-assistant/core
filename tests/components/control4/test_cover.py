@@ -1,15 +1,12 @@
 """Test Control4 Cover."""
 
 from collections.abc import Generator
-from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.control4.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
@@ -31,7 +28,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "cover.test_controller_living_room_shade"
 
@@ -73,14 +70,14 @@ def mock_cover_update_variables(
 ) -> Generator[AsyncMock]:
     """Mock update_variables for cover platform."""
 
-    async def _mock_update_variables(*args, **kwargs):
-        return mock_cover_variables
+    async def _mock_get_entry_variables(hass, entry, item_id):
+        return mock_cover_variables.get(item_id, {})
 
     with patch(
-        "homeassistant.components.control4.cover.update_variables_for_config_entry",
+        "homeassistant.components.control4.cover.director_get_entry_variables",
         new=_mock_update_variables,
-    ) as mock_update:
-        yield mock_update
+    ) as mock_get:
+        yield mock_get
 
 
 @pytest.fixture
@@ -317,19 +314,20 @@ async def test_cover_partial_variables(
     "mock_cover_update_variables",
     "init_integration",
 )
-async def test_cover_unavailable_when_data_disappears(
+async def test_cover_unavailable_on_websocket_disconnect(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_cover_variables: dict,
 ) -> None:
-    """Cover becomes unavailable if coordinator stops returning its idx."""
+    """Cover becomes unavailable when the WebSocket disconnect callback fires."""
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
-    mock_cover_variables.clear()
-    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
-    async_fire_time_changed(hass)
+    entity = next(
+        e
+        for e in hass.data["entity_components"]["cover"].entities
+        if e.entity_id == ENTITY_ID
+    )
+    await entity._update_callback(entity._idx, False)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
