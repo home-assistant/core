@@ -52,7 +52,7 @@ from homeassistant.components.homekit.const import (
     PROP_MIN_VALUE,
     SERV_HEATER_COOLER,
 )
-from homeassistant.components.homekit.type_heatercooler import (
+from homeassistant.components.homekit.type_heater_coolers import (
     HC_COOLING,
     HC_HEATING,
     HC_IDLE,
