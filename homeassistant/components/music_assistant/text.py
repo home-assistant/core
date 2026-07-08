@@ -13,7 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, MusicAssistantConfigEntry
+from . import MusicAssistantConfigEntry
+from .const import DOMAIN, LOGGER
 from .entity import MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
 
@@ -183,13 +184,17 @@ class MusicAssistantPartyModeText(TextEntity):
             else:
                 self._attr_native_value = ""
             self._attr_available = True
-        except Exception:  # noqa: BLE001
+        except Exception as err:  # noqa: BLE001
+            LOGGER.debug("Error in text update: %s", err)
             self._attr_available = False
 
     @catch_musicassistant_error
     @override
     async def async_set_value(self, value: str) -> None:
         """Set a new value."""
+        LOGGER.debug(
+            "Setting text %s to %s for %s", self.config_key, value, self.instance_id
+        )
         await self.mass.config.save_provider_config(
             provider_domain="party",
             instance_id=self.instance_id,

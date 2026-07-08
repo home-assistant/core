@@ -14,7 +14,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .entity import MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
 
@@ -195,7 +195,8 @@ class MusicAssistantPartyModeSwitch(SwitchEntity):
             party_config = await self.mass.config.get_provider_config(self.instance_id)
             self._attr_is_on = bool(party_config.get_value(self.config_key))
             self._attr_available = True
-        except Exception:  # noqa: BLE001
+        except Exception as err:  # noqa: BLE001
+            LOGGER.debug("Error in switch update: %s", err)
             self._attr_available = False
 
     @catch_musicassistant_error
@@ -212,6 +213,9 @@ class MusicAssistantPartyModeSwitch(SwitchEntity):
 
     async def _async_set_state(self, state: bool) -> None:
         """Set state."""
+        LOGGER.debug(
+            "Setting switch %s to %s for %s", self.config_key, state, self.instance_id
+        )
         await self.mass.config.save_provider_config(
             provider_domain="party",
             instance_id=self.instance_id,

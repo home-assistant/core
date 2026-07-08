@@ -1,6 +1,5 @@
 """Music Assistant Number platform."""
 
-import logging
 from typing import Final, override
 
 from music_assistant_client.client import MusicAssistantClient
@@ -14,11 +13,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, MusicAssistantConfigEntry
+from . import MusicAssistantConfigEntry
+from .const import DOMAIN, LOGGER
 from .entity import MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
-
-LOGGER = logging.getLogger(__name__)
 
 PLAYER_OPTIONS_NUMBER: Final[dict[str, bool]] = {
     # translation_key: enabled_by_default
@@ -212,14 +210,17 @@ class MusicAssistantPartyModeNumber(NumberEntity):
             if isinstance(value, (int, float, str)):
                 self._attr_native_value = float(value)
             self._attr_available = True
-        except Exception as e:  # noqa: BLE001
-            LOGGER.debug("ERROR IN NUMBER UPDATE: %s", e)
+        except Exception as err:  # noqa: BLE001
+            LOGGER.debug("Error in number update: %s", err)
             self._attr_available = False
 
     @catch_musicassistant_error
     @override
     async def async_set_native_value(self, value: float) -> None:
-        """Set a new value."""
+        """Update the current value."""
+        LOGGER.debug(
+            "Setting number %s to %s for %s", self.config_key, value, self.instance_id
+        )
         await self.mass.config.save_provider_config(
             provider_domain="party",
             instance_id=self.instance_id,
