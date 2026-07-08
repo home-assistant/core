@@ -659,12 +659,14 @@ class SmartThingsExecuteSwitch(SmartThingsEntity, SwitchEntity, RestoreEntity):
             f"{device.device.device_id}_{MAIN}_{entity_description.key}"
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last known state from prior HA session."""
         await super().async_added_to_hass()
         if (last_state := await self.async_get_last_state()) is not None:
             self._attr_is_on = last_state.state == STATE_ON
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.execute_device_command(
@@ -675,6 +677,7 @@ class SmartThingsExecuteSwitch(SmartThingsEntity, SwitchEntity, RestoreEntity):
         self._attr_is_on = False
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.execute_device_command(
