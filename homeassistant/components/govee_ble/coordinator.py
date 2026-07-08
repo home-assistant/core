@@ -21,13 +21,22 @@ from .const import CONF_DEVICE_TYPE, DOMAIN
 
 type GoveeBLEConfigEntry = ConfigEntry[GoveeBLEBluetoothProcessorCoordinator]
 
+# Models such as the H5074 carry their measurements only in the scan response,
+# so the scanner must stay active long enough to capture one; the default 10s
+# window misses them most cycles. 30s is the longest active window habluetooth
+# allows (AUTO_WINDOW_MAX_DURATION) and reliably spans a full broadcast cycle.
+ACTIVE_SCAN_DURATION = 30.0
+
 
 def process_service_info(
     hass: HomeAssistant,
     entry: GoveeBLEConfigEntry,
     service_info: BluetoothServiceInfoBleak,
 ) -> SensorUpdate:
-    """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
+    """Process a BluetoothServiceInfoBleak.
+
+    Runs side effects and returns sensor data.
+    """
     coordinator = entry.runtime_data
     data = coordinator.device_data
     update = data.update(service_info)
@@ -62,18 +71,30 @@ class GoveeBLEBluetoothProcessorCoordinator(
         hass: HomeAssistant,
         logger: Logger,
         address: str,
-        mode: BluetoothScanningMode,
         update_method: Callable[[BluetoothServiceInfoBleak], SensorUpdate],
         device_data: GoveeBluetoothDeviceData,
         entry: ConfigEntry,
     ) -> None:
         """Initialize the Govee BLE Bluetooth Passive Update Processor Coordinator."""
-        super().__init__(hass, logger, address, mode, update_method)
+        self.model_info: ModelInfo | None = None
+        # Active scanning is only needed for models that carry their payload in
+        # the scan response; passively broadcasting models would otherwise be
+        # scanned needlessly, costing fleet radio time and sensor battery.
+        # When the model is not yet known, scan actively so a scan-response-only
+        # model can still be discovered.
+        mode = BluetoothScanningMode.ACTIVE
+        scan_duration: float | None = None
+        if device_type := entry.data.get(CONF_DEVICE_TYPE):
+            self.model_info = model_info = get_model_info(device_type)
+            if model_info.requires_active_scan:
+                scan_duration = ACTIVE_SCAN_DURATION
+            else:
+                mode = BluetoothScanningMode.PASSIVE
+        super().__init__(
+            hass, logger, address, mode, update_method, scan_duration=scan_duration
+        )
         self.device_data = device_data
         self.entry = entry
-        self.model_info: ModelInfo | None = None
-        if device_type := entry.data.get(CONF_DEVICE_TYPE):
-            self.set_model_info(device_type)
 
     def set_model_info(self, device_type: str) -> None:
         """Set the model info."""

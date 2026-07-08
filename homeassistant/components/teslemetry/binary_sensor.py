@@ -2,8 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
+from tesla_fleet_api import firmware_at_least
 from teslemetry_stream.vehicle import TeslemetryStreamVehicle
 
 from homeassistant.components.binary_sensor import (
@@ -557,7 +558,7 @@ async def async_setup_entry(
             if (
                 not vehicle.poll
                 and description.streaming_listener
-                and vehicle.firmware >= description.streaming_firmware
+                and firmware_at_least(vehicle.firmware, description.streaming_firmware)
             ):
                 entities.append(
                     TeslemetryVehicleStreamingBinarySensorEntity(vehicle, description)
@@ -600,6 +601,7 @@ class TeslemetryVehiclePollingBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
 
@@ -625,6 +627,7 @@ class TeslemetryVehicleStreamingBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -661,6 +664,7 @@ class TeslemetryEnergyLiveBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
         self._attr_is_on = self.entity_description.polling_value_fn(self._value)
@@ -682,6 +686,7 @@ class TeslemetryEnergyInfoBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
         self._attr_is_on = self.entity_description.polling_value_fn(self._value)

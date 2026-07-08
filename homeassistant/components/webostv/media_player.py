@@ -7,7 +7,7 @@ from datetime import timedelta
 from functools import wraps
 from http import HTTPStatus
 import logging
-from typing import Any, Concatenate, cast
+from typing import Any, Concatenate, cast, override
 
 from aiowebostv import WebOsTvPairError, WebOsTvState
 
@@ -19,7 +19,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -133,6 +133,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         self._supported_features = MediaPlayerEntityFeature(0)
         self._update_states()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Connect and subscribe to dispatcher signals and state updates."""
         await super().async_added_to_hass()
@@ -154,11 +155,13 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         ):
             self._supported_features = (
                 state.attributes.get(
-                    ATTR_SUPPORTED_FEATURES, MediaPlayerEntityFeature(0)
+                    EntityStateAttribute.SUPPORTED_FEATURES,
+                    MediaPlayerEntityFeature(0),
                 )
                 & ~MediaPlayerEntityFeature.TURN_ON
             )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Call disconnect on removal."""
         self._client.unregister_state_update_callback(self.async_handle_state_update)
@@ -254,7 +257,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             }
 
     def _update_sources(self) -> None:
-        """Update list of sources from current source, apps, inputs and configured list."""
+        """Update list of sources from current source and apps."""
         tv_state = self._client.tv_state
         source_list = self._source_list
         self._source_list = {}
@@ -333,6 +336,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             update_client_key(self.hass, self._entry)
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self._turn_on:
@@ -341,31 +345,37 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         return self._supported_features
 
     @cmd
+    @override
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         await self._client.power_off()
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn on media player."""
         await self._turn_on.async_run(self.hass, self._context)
 
     @cmd
+    @override
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
         await self._client.volume_up()
 
     @cmd
+    @override
     async def async_volume_down(self) -> None:
         """Volume down media player."""
         await self._client.volume_down()
 
     @cmd
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        tv_volume = int(round(volume * 100))
+        tv_volume = round(volume * 100)
         await self._client.set_volume(tv_volume)
 
     @cmd
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         await self._client.set_mute(mute)
@@ -376,6 +386,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         return await self._client.change_sound_output(sound_output)
 
     @cmd
+    @override
     async def async_media_play_pause(self) -> None:
         """Simulate play pause media player."""
         if self._paused:
@@ -384,6 +395,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             await self.async_media_pause()
 
     @cmd
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if (source_dict := self._source_list.get(source)) is None:
@@ -401,6 +413,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             await self._client.set_input(source_dict["id"])
 
     @cmd
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -438,23 +451,27 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
                 await self._client.set_channel(partial_match_channel_id)
 
     @cmd
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         self._paused = False
         await self._client.play()
 
     @cmd
+    @override
     async def async_media_pause(self) -> None:
         """Send media pause command to media player."""
         self._paused = True
         await self._client.pause()
 
     @cmd
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command to media player."""
         await self._client.stop()
 
     @cmd
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         if self._client.tv_state.current_app_id == LIVE_TV_APP_ID:
@@ -463,6 +480,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             await self._client.fast_forward()
 
     @cmd
+    @override
     async def async_media_previous_track(self) -> None:
         """Send the previous track command."""
         if self._client.tv_state.current_app_id == LIVE_TV_APP_ID:
@@ -480,6 +498,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         """Send a command."""
         return await self._client.request(command, payload=kwargs.get(ATTR_PAYLOAD))
 
+    @override
     async def _async_fetch_image(self, url: str) -> tuple[bytes | None, str | None]:
         """Retrieve an image.
 

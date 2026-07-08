@@ -1,6 +1,7 @@
 """Support for ONVIF Cameras with FFmpeg as decoder."""
 
 import asyncio
+from typing import override
 
 from haffmpeg.camera import CameraMjpeg
 from onvif.exceptions import ONVIFError
@@ -117,14 +118,17 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         self._attr_name = f"{device.name} {profile.name}"
 
     @property
+    @override
     def use_stream_for_stills(self) -> bool:
         """Whether or not to use stream to generate stills."""
         return bool(self.stream and self.stream.dynamic_stream_settings.preload_stream)
 
+    @override
     async def stream_source(self):
         """Return the stream source."""
         return await self._async_get_stream_uri()
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -136,6 +140,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
                     self.profile.token, self._basic_auth
                 ):
                     return image
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except ONVIFError as err:
                 LOGGER.error(
                     "Fetch snapshot image failed from %s, falling back to FFmpeg; %s",
@@ -157,6 +162,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
             height=height,
         )
 
+    @override
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         LOGGER.debug("Handling mjpeg stream from camera '%s'", self.device.name)

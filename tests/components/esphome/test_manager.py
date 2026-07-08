@@ -9,7 +9,9 @@ from unittest.mock import AsyncMock, Mock, call, patch
 from aioesphomeapi import (
     APIClient,
     APIConnectionError,
+    APIVersion,
     AreaInfo,
+    BluetoothProxyFeature,
     DeviceInfo,
     EncryptionPlaintextAPIError,
     ExecuteServiceResponse,
@@ -157,7 +159,7 @@ async def test_esphome_device_service_calls_not_allowed(
         device_info={"esphome_version": "2023.3.0"},
     )
     await hass.async_block_till_done()
-    mock_esphome_test = async_mock_service(hass, "esphome", "test")
+    mock_esphome_test = async_mock_service(hass, DOMAIN, "test")
     device.mock_service_call(
         HomeassistantServiceCall(
             service="esphome.test",
@@ -1014,7 +1016,7 @@ async def test_connection_aborted_wrong_device(
     caplog: pytest.LogCaptureFixture,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test we abort the connection if the unique id is a mac and neither name or mac match."""
+    """Test we abort if unique id is a mac and neither name nor mac match."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1073,7 +1075,7 @@ async def test_connection_aborted_wrong_device(
     new_combined_info = AsyncMock(return_value=(device_info, [], []))
     mock_client.device_info_and_list_entities = new_combined_info
     result = await hass.config_entries.flow.async_init(
-        "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=service_info
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -1153,7 +1155,7 @@ async def test_connection_aborted_wrong_device_same_name(
     new_combined_info = AsyncMock(return_value=(device_info, [], []))
     mock_client.device_info_and_list_entities = new_combined_info
     result = await hass.config_entries.flow.async_init(
-        "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=service_info
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -1931,8 +1933,8 @@ async def test_assist_in_progress_issue_deleted(
     Remove this cleanup after 2026.4
     """
     entry = entity_registry.async_get_or_create(
-        domain=DOMAIN,
-        platform="binary_sensor",
+        domain="binary_sensor",
+        platform=DOMAIN,
         unique_id="11:22:33:44:55:AA-assist_in_progress",
     )
     ir.async_create_issue(
@@ -1954,7 +1956,7 @@ async def test_assist_in_progress_issue_deleted(
     )
     assert (
         entity_registry.async_get_entity_id(
-            DOMAIN, "binary_sensor", "11:22:33:44:55:AA-assist_in_progress"
+            "binary_sensor", DOMAIN, "11:22:33:44:55:AA-assist_in_progress"
         )
         is None
     )
@@ -2588,7 +2590,7 @@ async def test_manager_handle_dynamic_encryption_key_device_set_key_fails(
     mock_esphome_device: MockESPHomeDeviceType,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test _handle_dynamic_encryption_key when noise_encryption_set_key returns False."""
+    """Test dynamic encryption key when set_key returns False."""
     mac_address = "11:22:33:44:55:aa"
     test_key_bytes = b"test_key_32_bytes_long_exactly!"
     mock_token_bytes.return_value = test_key_bytes
@@ -2658,7 +2660,7 @@ async def test_manager_handle_dynamic_encryption_key_connection_error(
     mock_esphome_device: MockESPHomeDeviceType,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test _handle_dynamic_encryption_key when noise_encryption_set_key raises APIConnectionError."""
+    """Test dynamic encryption key when set_key raises APIConnectionError."""
     mac_address = "11:22:33:44:55:aa"
     test_key_bytes = b"test_key_32_bytes_long_exactly!"
     mock_token_bytes.return_value = test_key_bytes
@@ -2708,7 +2710,8 @@ async def test_manager_handle_dynamic_encryption_key_connection_error(
     await device.mock_disconnect(True)
     await device.mock_connect()
 
-    # Verify key generation was attempted twice (once during setup, once during reconnect)
+    # Verify key generation was attempted twice
+    # (once during setup, once during reconnect)
     # This is expected because the first attempt failed with connection error
     assert mock_token_bytes.call_count == 2
     mock_token_bytes.assert_called_with(32)
@@ -2796,7 +2799,7 @@ async def test_no_zwave_proxy_subscribe_without_feature_flags(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test Z-Wave proxy request subscription is not registered without feature flags."""
+    """Test Z-Wave proxy subscription skipped without feature flags."""
     device_info = {
         "name": "test-device",
         "mac_address": "11:22:33:44:55:AA",
@@ -2902,7 +2905,7 @@ async def test_execute_service_response_type_optional_without_return(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test execute_service with SupportsResponseType.OPTIONAL when caller doesn't request response."""
+    """Test execute_service OPTIONAL when caller skips response."""
     service = UserService(
         name="optional_service",
         key=1,
@@ -2945,7 +2948,7 @@ async def test_execute_service_response_type_optional_with_return(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test execute_service with SupportsResponseType.OPTIONAL when caller requests response."""
+    """Test execute_service OPTIONAL when caller requests response."""
     service = UserService(
         name="optional_service",
         key=1,
@@ -3273,3 +3276,124 @@ async def test_service_registration_response_types(
         hass.services.supports_response(DOMAIN, "test_status_service")
         == SupportsResponse.NONE
     )
+
+
+def _create_cached_bluetooth_proxy_entry(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    bluetooth_proxy_feature_flags: BluetoothProxyFeature,
+) -> tuple[MockConfigEntry, DeviceInfo]:
+    """Create an entry with cached device info so setup knows the proxy state."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="11:22:33:44:55:aa",
+        data={
+            CONF_HOST: "test.local",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_BLUETOOTH_MAC_ADDRESS: "AA:BB:CC:DD:EE:FC",
+        },
+    )
+    entry.add_to_hass(hass)
+    device_info = DeviceInfo(
+        name="test",
+        mac_address="11:22:33:44:55:AA",
+        bluetooth_mac_address="AA:BB:CC:DD:EE:FC",
+        bluetooth_proxy_feature_flags=bluetooth_proxy_feature_flags,
+    )
+    storage_key = f"{DOMAIN}.{entry.entry_id}"
+    hass_storage[storage_key] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": storage_key,
+        "data": {
+            "device_info": device_info.to_dict(),
+            "api_version": APIVersion(1, 9).to_dict(),
+        },
+    }
+    return entry, device_info
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_bluetooth_proxy_waits_for_scanner_at_startup(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test setup waits for a cached bluetooth proxy to register its scanner."""
+    entry, device_info = _create_cached_bluetooth_proxy_entry(
+        hass, hass_storage, BluetoothProxyFeature.PASSIVE_SCAN
+    )
+    connect_event = asyncio.Event()
+    reached_connect = asyncio.Event()
+
+    async def _block_until_released() -> tuple[DeviceInfo, list[Any], list[Any]]:
+        reached_connect.set()
+        await connect_event.wait()
+        return (device_info, [], [])
+
+    mock_client.device_info_and_list_entities = _block_until_released
+
+    setup_task = hass.async_create_task(hass.config_entries.async_setup(entry.entry_id))
+    async with asyncio.timeout(2):
+        await reached_connect.wait()
+
+    # Setup must still be waiting for the scanner to be registered.
+    assert not setup_task.done()
+
+    connect_event.set()
+    async with asyncio.timeout(2):
+        assert await setup_task is True
+    assert entry.runtime_data.first_connect_done.is_set()
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_bluetooth_proxy_startup_wait_times_out(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test setup finishes if a cached bluetooth proxy never connects."""
+    entry, device_info = _create_cached_bluetooth_proxy_entry(
+        hass, hass_storage, BluetoothProxyFeature.PASSIVE_SCAN
+    )
+    connect_event = asyncio.Event()
+
+    async def _never_returns() -> tuple[DeviceInfo, list[Any], list[Any]]:
+        await connect_event.wait()
+        return (device_info, [], [])
+
+    mock_client.device_info_and_list_entities = _never_returns
+
+    with patch("homeassistant.components.esphome.manager.STARTUP_SCANNER_WAIT", 0.05):
+        async with asyncio.timeout(2):
+            assert await hass.config_entries.async_setup(entry.entry_id) is True
+
+    connect_event.set()
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_non_bluetooth_device_does_not_wait_at_startup(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test setup does not wait for a device that is not a bluetooth proxy."""
+    entry, device_info = _create_cached_bluetooth_proxy_entry(
+        hass, hass_storage, BluetoothProxyFeature(0)
+    )
+    connect_event = asyncio.Event()
+
+    async def _never_returns() -> tuple[DeviceInfo, list[Any], list[Any]]:
+        await connect_event.wait()
+        return (device_info, [], [])
+
+    mock_client.device_info_and_list_entities = _never_returns
+
+    # The connection is blocked, but without proxy flags setup must not wait.
+    async with asyncio.timeout(2):
+        assert await hass.config_entries.async_setup(entry.entry_id) is True
+
+    connect_event.set()
+    await hass.async_block_till_done()

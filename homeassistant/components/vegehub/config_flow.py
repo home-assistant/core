@@ -1,7 +1,7 @@
 """Config flow for the VegeHub integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from vegehub import VegeHub
 import voluptuous as vol
@@ -33,6 +33,7 @@ class VegeHubConfigFlow(ConfigFlow, domain=DOMAIN):
     _hostname: str
     webhook_id: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -63,6 +64,7 @@ class VegeHubConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:

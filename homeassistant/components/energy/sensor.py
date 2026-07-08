@@ -5,20 +5,20 @@ from collections.abc import Callable, Mapping
 import copy
 from dataclasses import dataclass
 import logging
-from typing import Any, Final, Literal, cast
+from typing import Any, Final, Literal, cast, override
 
 from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
-    ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityCapabilityAttribute,
+    SensorEntityStateAttribute,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.sensor.recorder import (  # pylint: disable=home-assistant-component-root-import
     reset_detected,
 )
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
+    EntityStateAttribute,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfVolume,
@@ -191,7 +191,8 @@ class SensorManager:
                     to_remove,
                 )
 
-            # Handle grid export compensation (unified format uses different price fields)
+            # Handle grid export compensation
+            # (unified format uses different price fields)
             if energy_source["type"] == "grid":
                 self._process_grid_export_sensor(
                     energy_source,
@@ -221,7 +222,8 @@ class SensorManager:
         if config.get(adapter.total_money_key) is not None:
             return
 
-        # Skip if the energy stat is not configured (e.g., export-only or power-only grids)
+        # Skip if the energy stat is not configured
+        # (e.g., export-only or power-only grids)
         stat_energy = config.get(adapter.stat_energy_key)
         if not stat_energy:
             return
@@ -307,7 +309,8 @@ class SensorManager:
         source_type = energy_source.get("type")
 
         if source_type in ("battery", "grid"):
-            # Both battery and grid now use unified format with power_config at top level
+            # Both battery and grid now use unified format
+            # with power_config at top level
             power_config = energy_source.get("power_config")
             if power_config and self._needs_power_sensor(power_config):
                 self._create_or_keep_power_sensor(
@@ -366,10 +369,12 @@ class EnergyCostSensor(SensorEntity):
     - entity_energy_price: Entity ID providing price per unit (e.g., $/kWh)
     - number_energy_price: Fixed price per unit
 
-    Note: For grid export compensation, the unified format uses different field names
-    (entity_energy_price_export, number_energy_price_export). The _process_grid_export_sensor
-    method in SensorManager creates a wrapper config that maps these to the standard
-    field names (entity_energy_price, number_energy_price) so this class can use them.
+    Note: For grid export compensation, the unified format uses
+    different field names (entity_energy_price_export,
+    number_energy_price_export). The _process_grid_export_sensor
+    method in SensorManager creates a wrapper config that maps
+    these to the standard field names (entity_energy_price,
+    number_energy_price) so this class can use them.
     """
 
     _attr_entity_registry_visible_default = False
@@ -392,8 +397,8 @@ class EnergyCostSensor(SensorEntity):
         self._attr_state_class = SensorStateClass.TOTAL
         self._config = config
         self._last_energy_sensor_state: State | None = None
-        # add_finished is set when either of async_added_to_hass or add_to_platform_abort
-        # is called
+        # add_finished is set when either of async_added_to_hass
+        # or add_to_platform_abort is called
         self.add_finished: asyncio.Future[None] = (
             asyncio.get_running_loop().create_future()
         )
@@ -431,7 +436,9 @@ class EnergyCostSensor(SensorEntity):
         if energy_state is None:
             return
 
-        state_class = energy_state.attributes.get(ATTR_STATE_CLASS)
+        state_class = energy_state.attributes.get(
+            SensorEntityCapabilityAttribute.STATE_CLASS
+        )
         if state_class not in SUPPORTED_STATE_CLASSES:
             if not self._wrong_state_class_reported:
                 self._wrong_state_class_reported = True
@@ -445,7 +452,7 @@ class EnergyCostSensor(SensorEntity):
         # last_reset must be set if the sensor is SensorStateClass.MEASUREMENT
         if (
             state_class == SensorStateClass.MEASUREMENT
-            and ATTR_LAST_RESET not in energy_state.attributes
+            and SensorEntityStateAttribute.LAST_RESET not in energy_state.attributes
         ):
             return
 
@@ -473,22 +480,28 @@ class EnergyCostSensor(SensorEntity):
         if energy_price is None:
             return
 
-        energy_unit: str | None = energy_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        energy_unit: str | None = energy_state.attributes.get(
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
+        )
 
         if energy_unit is None or energy_unit not in valid_units:
             if not self._wrong_unit_reported:
                 self._wrong_unit_reported = True
                 _LOGGER.warning(
                     "Found unexpected unit %s for %s",
-                    energy_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT),
+                    energy_state.attributes.get(
+                        EntityStateAttribute.UNIT_OF_MEASUREMENT
+                    ),
                     energy_state.entity_id,
                 )
             return
 
         if (
             state_class != SensorStateClass.TOTAL_INCREASING
-            and energy_state.attributes.get(ATTR_LAST_RESET)
-            != self._last_energy_sensor_state.attributes.get(ATTR_LAST_RESET)
+            and energy_state.attributes.get(SensorEntityStateAttribute.LAST_RESET)
+            != self._last_energy_sensor_state.attributes.get(
+                SensorEntityStateAttribute.LAST_RESET
+            )
         ) or (
             state_class == SensorStateClass.TOTAL_INCREASING
             and reset_detected(
@@ -539,7 +552,7 @@ class EnergyCostSensor(SensorEntity):
         energy_price = float(energy_price_state.state)
 
         energy_price_unit: str | None = energy_price_state.attributes.get(
-            ATTR_UNIT_OF_MEASUREMENT, ""
+            EntityStateAttribute.UNIT_OF_MEASUREMENT, ""
         ).partition("/")[2]
 
         # For backwards compatibility we don't validate the unit of the price
@@ -564,6 +577,7 @@ class EnergyCostSensor(SensorEntity):
 
         return converter(energy_price, energy_unit, energy_price_unit)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         energy_state = self.hass.states.get(self._config[self._adapter.stat_energy_key])
@@ -599,11 +613,13 @@ class EnergyCostSensor(SensorEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
         _set_result_unless_done(self.add_finished)
         super().add_to_platform_abort()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Handle removing from hass."""
         self.hass.data[DOMAIN]["cost_sensors"].pop(
@@ -617,11 +633,13 @@ class EnergyCostSensor(SensorEntity):
         self._config = config
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the units of measurement."""
         return self.hass.config.currency
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return the unique ID of the sensor."""
         entity_registry = er.async_get(self.hass)
@@ -664,6 +682,12 @@ class EnergyPowerSensor(SensorEntity):
         self._is_inverted = "stat_rate_inverted" in config
         self._is_combined = "stat_rate_from" in config and "stat_rate_to" in config
 
+        # Combined mode always emits Watts because _update_state converts
+        # heterogeneous source units to W internally. Inverted mode copies
+        # the source unit in _update_state to track source changes.
+        if self._is_combined:
+            self._attr_native_unit_of_measurement = UnitOfPower.WATT
+
         # Determine source sensors
         if self._is_inverted:
             self._source_sensors = [config["stat_rate_inverted"]]
@@ -680,6 +704,7 @@ class EnergyPowerSensor(SensorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         if self._is_inverted:
@@ -714,7 +739,7 @@ class EnergyPowerSensor(SensorEntity):
                 return
 
             self._attr_native_unit_of_measurement = source_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
             )
             self._attr_native_value = value * -1
 
@@ -739,8 +764,12 @@ class EnergyPowerSensor(SensorEntity):
                 return
 
             # Get units from state attributes
-            discharge_unit = discharge_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            charge_unit = charge_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            discharge_unit = discharge_state.attributes.get(
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
+            )
+            charge_unit = charge_state.attributes.get(
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
+            )
 
             # Convert to Watts if units are present
             if discharge_unit:
@@ -754,6 +783,7 @@ class EnergyPowerSensor(SensorEntity):
 
             self._attr_native_value = discharge - charge
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         # Set name based on source sensor(s)
@@ -764,11 +794,6 @@ class EnergyPowerSensor(SensorEntity):
             # Check first sensor
             if source_entry := entity_reg.async_get(self._source_sensors[0]):
                 device_id = source_entry.device_id
-                # Combined mode always emits Watts because we convert
-                # heterogeneous source units internally. For inverted mode the
-                # unit is copied from the source state in _update_state.
-                if self._is_combined:
-                    self._attr_native_unit_of_measurement = UnitOfPower.WATT
                 # Get source name from registry
                 source_name = source_entry.name or source_entry.original_name
             # Assign power sensor to same device as source sensor(s)
@@ -824,6 +849,7 @@ class EnergyPowerSensor(SensorEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
         _set_result_unless_done(self.add_finished)

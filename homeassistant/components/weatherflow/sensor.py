@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, override
 
 from pyweatherflowudp.const import EVENT_RAPID_WIND
 from pyweatherflowudp.device import (
@@ -351,13 +351,16 @@ class WeatherFlowSensorEntity(SensorEntity):
 
         self._attr_unique_id = f"{device.serial_number}_{description.key}"
 
-        # In the case of the USA - we may want to have a suggested US unit which differs from the internal suggested units
+        # In the case of the USA - we may want to have a
+        # suggested US unit which differs from the internal
+        # suggested units
         if description.imperial_suggested_unit is not None and not is_metric:
             self._attr_suggested_unit_of_measurement = (
                 description.imperial_suggested_unit
             )
 
     @property
+    @override
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         if self.entity_description.state_class == SensorStateClass.TOTAL:
@@ -371,6 +374,7 @@ class WeatherFlowSensorEntity(SensorEntity):
         self._attr_native_value = value
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to events."""
         self._async_update_state()

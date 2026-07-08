@@ -6,6 +6,7 @@ from homeassistant.components.subaru.const import (
     API_GEN_1,
     API_GEN_2,
     API_GEN_3,
+    API_GEN_4,
     VEHICLE_API_GEN,
     VEHICLE_HAS_EV,
     VEHICLE_HAS_REMOTE_SERVICE,
@@ -21,6 +22,7 @@ from homeassistant.components.subaru.const import (
 TEST_VIN_1_G1 = "JF2ABCDE6L0000001"
 TEST_VIN_2_EV = "JF2ABCDE6L0000002"
 TEST_VIN_3_G3 = "JF2ABCDE6L0000003"
+TEST_VIN_4_G4 = "JF2ABCDE6L0000004"
 
 VEHICLE_DATA = {
     TEST_VIN_1_G1: {
@@ -52,6 +54,17 @@ VEHICLE_DATA = {
         VEHICLE_NAME: "test_vehicle_3",
         VEHICLE_HAS_EV: False,
         VEHICLE_API_GEN: API_GEN_3,
+        VEHICLE_HAS_REMOTE_START: True,
+        VEHICLE_HAS_REMOTE_SERVICE: True,
+        VEHICLE_HAS_SAFETY_SERVICE: True,
+    },
+    TEST_VIN_4_G4: {
+        VEHICLE_VIN: TEST_VIN_4_G4,
+        VEHICLE_MODEL_YEAR: "2026",
+        VEHICLE_MODEL_NAME: "Outback",
+        VEHICLE_NAME: "test_vehicle_4",
+        VEHICLE_HAS_EV: False,
+        VEHICLE_API_GEN: API_GEN_4,
         VEHICLE_HAS_REMOTE_START: True,
         VEHICLE_HAS_REMOTE_SERVICE: True,
         VEHICLE_HAS_SAFETY_SERVICE: True,

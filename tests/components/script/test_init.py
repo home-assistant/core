@@ -7,7 +7,7 @@ from unittest.mock import ANY, Mock, patch
 
 import pytest
 
-from homeassistant.components import labs, script
+from homeassistant.components import script
 from homeassistant.components.script import DOMAIN, EVENT_SCRIPT_STARTED, ScriptEntity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -79,7 +79,7 @@ async def test_passing_variables(hass: HomeAssistant) -> None:
 
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "test": {
@@ -103,7 +103,7 @@ async def test_passing_variables(hass: HomeAssistant) -> None:
     assert calls[0].data["hello"] == "world"
 
     await hass.services.async_call(
-        "script", "test", {"greeting": "universe"}, context=context
+        DOMAIN, "test", {"greeting": "universe"}, context=context
     )
 
     await hass.async_block_till_done()
@@ -148,7 +148,7 @@ async def test_turn_on_off_toggle(
         }
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "test": {
@@ -203,9 +203,9 @@ async def test_setup_with_invalid_configs(
     hass: HomeAssistant, config, nbr_script_entities
 ) -> None:
     """Test setup with invalid configs."""
-    assert await async_setup_component(hass, "script", {"script": config})
+    assert await async_setup_component(hass, DOMAIN, {"script": config})
 
-    assert len(hass.states.async_entity_ids("script")) == nbr_script_entities
+    assert len(hass.states.async_entity_ids(DOMAIN)) == nbr_script_entities
 
 
 @pytest.mark.parametrize(
@@ -261,7 +261,7 @@ async def test_bad_config_validation_critical(
     )
 
     # Make sure one bad script does not prevent other scripts from setting up
-    assert hass.states.async_entity_ids("script") == ["script.good_script"]
+    assert hass.states.async_entity_ids(DOMAIN) == ["script.good_script"]
 
 
 @pytest.mark.parametrize(
@@ -271,7 +271,7 @@ async def test_bad_config_validation_critical(
             "bad_script",
             {},
             "could not be validated",
-            "required key not provided @ data['sequence']",
+            "required key not provided @ data['sequence']. Got None",
             "validation_failed_schema",
         ),
         (
@@ -285,7 +285,22 @@ async def test_bad_config_validation_critical(
                 },
             },
             "failed to setup sequence",
-            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd.",
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+            ". Got {'alias': 'bad_script',",
+            "validation_failed_sequence",
+        ),
+        (
+            "bad_script",
+            {
+                "sequence": {
+                    "wait_for_trigger": [
+                        {"platform": "event", "event_type": "valid"},
+                        {"platform": "not_a_platform"},
+                    ],
+                },
+            },
+            "failed to setup sequence",
+            "Invalid trigger 'not_a_platform' specified. Got {'alias': 'bad_script',",
             "validation_failed_sequence",
         ),
     ],
@@ -337,7 +352,7 @@ async def test_bad_config_validation(
     assert issues[0]["translation_placeholders"]["error"].startswith(details)
 
     # Make sure both scripts are setup
-    assert set(hass.states.async_entity_ids("script")) == {
+    assert set(hass.states.async_entity_ids(DOMAIN)) == {
         "script.bad_script",
         "script.good_script",
     }
@@ -385,7 +400,7 @@ async def test_reload_service(hass: HomeAssistant, running) -> None:
 
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "test": {
@@ -561,7 +576,7 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
     # Test 1: has "description" but no "fields"
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "test": {
@@ -640,7 +655,7 @@ async def test_shared_context(hass: HomeAssistant) -> None:
     hass.bus.async_listen(EVENT_SCRIPT_STARTED, run_mock)
 
     assert await async_setup_component(
-        hass, "script", {"script": {"test": {"sequence": [{"event": event}]}}}
+        hass, DOMAIN, {"script": {"test": {"sequence": [{"event": event}]}}}
     )
 
     await hass.services.async_call(
@@ -673,11 +688,11 @@ async def test_logging_script_error(
     """Test logging script error."""
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {"script": {"hello": {"sequence": [{"action": "non.existing"}]}}},
     )
     with pytest.raises(ServiceNotFound) as err:
-        await hass.services.async_call("script", "hello", blocking=True)
+        await hass.services.async_call(DOMAIN, "hello", blocking=True)
 
     assert err.value.domain == "non"
     assert err.value.service == "existing"
@@ -686,7 +701,7 @@ async def test_logging_script_error(
 
 async def test_turning_no_scripts_off(hass: HomeAssistant) -> None:
     """Test it is possible to turn two scripts off."""
-    assert await async_setup_component(hass, "script", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     # Testing it doesn't raise
     await hass.services.async_call(
@@ -948,7 +963,7 @@ async def test_config_basic(
     """Test passing info in config."""
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "test_script": {
@@ -973,7 +988,7 @@ async def test_config_multiple_domains(hass: HomeAssistant) -> None:
     """Test splitting configuration over multiple domains."""
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "first_script": {
@@ -1043,7 +1058,7 @@ async def test_concurrent_script(hass: HomeAssistant, concurrently) -> None:
         call_script_2 = {"action": "script.script2"}
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "script1": {
@@ -1051,7 +1066,9 @@ async def test_concurrent_script(hass: HomeAssistant, concurrently) -> None:
                     "sequence": [
                         call_script_2,
                         {
-                            "wait_template": "{{ is_state('input_boolean.test1', 'on') }}"
+                            "wait_template": (
+                                "{{ is_state('input_boolean.test1', 'on') }}"
+                            )
                         },
                         {"action": "test.script", "data": {"value": "script1"}},
                     ],
@@ -1061,7 +1078,9 @@ async def test_concurrent_script(hass: HomeAssistant, concurrently) -> None:
                     "sequence": [
                         {"action": "test.script", "data": {"value": "script2a"}},
                         {
-                            "wait_template": "{{ is_state('input_boolean.test2', 'on') }}"
+                            "wait_template": (
+                                "{{ is_state('input_boolean.test2', 'on') }}"
+                            )
                         },
                         {"action": "test.script", "data": {"value": "script2b"}},
                     ],
@@ -1082,7 +1101,7 @@ async def test_concurrent_script(hass: HomeAssistant, concurrently) -> None:
     hass.states.async_set("input_boolean.test1", "off")
     hass.states.async_set("input_boolean.test2", "off")
 
-    await hass.services.async_call("script", "script1")
+    await hass.services.async_call(DOMAIN, "script1")
     await asyncio.wait_for(service_called.wait(), 1)
     service_called.clear()
 
@@ -1123,14 +1142,16 @@ async def test_script_variables(
     """Test defining scripts."""
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "script1": {
                     "variables": {
                         "this_variable": "{{this.entity_id}}",
                         "test_var": "from_config",
-                        "templated_config_var": "{{ var_from_service | default('config-default') }}",
+                        "templated_config_var": (
+                            "{{ var_from_service | default('config-default') }}"
+                        ),
                     },
                     "sequence": [
                         {
@@ -1177,7 +1198,7 @@ async def test_script_variables(
     mock_calls = async_mock_service(hass, "test", "script")
 
     await hass.services.async_call(
-        "script", "script1", {"var_from_service": "hello"}, blocking=True
+        DOMAIN, "script1", {"var_from_service": "hello"}, blocking=True
     )
 
     assert len(mock_calls) == 1
@@ -1189,7 +1210,7 @@ async def test_script_variables(
     assert mock_calls[0].data.get("this_variable") == "script.script1"
 
     await hass.services.async_call(
-        "script", "script1", {"test_var": "from_service"}, blocking=True
+        DOMAIN, "script1", {"test_var": "from_service"}, blocking=True
     )
 
     assert len(mock_calls) == 2
@@ -1198,7 +1219,7 @@ async def test_script_variables(
 
     # Call script with vars but no templates in it
     await hass.services.async_call(
-        "script", "script2", {"test_var": "from_service"}, blocking=True
+        DOMAIN, "script2", {"test_var": "from_service"}, blocking=True
     )
 
     assert len(mock_calls) == 3
@@ -1206,11 +1227,11 @@ async def test_script_variables(
 
     assert "Error rendering variables" not in caplog.text
     with pytest.raises(TemplateError):
-        await hass.services.async_call("script", "script3", blocking=True)
+        await hass.services.async_call(DOMAIN, "script3", blocking=True)
     assert "Error rendering variables" in caplog.text
     assert len(mock_calls) == 3
 
-    await hass.services.async_call("script", "script3", {"break": 0}, blocking=True)
+    await hass.services.async_call(DOMAIN, "script3", {"break": 0}, blocking=True)
 
     assert len(mock_calls) == 4
     assert mock_calls[3].data["value"] == 1
@@ -1219,11 +1240,11 @@ async def test_script_variables(
 async def test_script_this_var_always(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test script always has reference to this, even with no variables are configured."""
+    """Test script has reference to this even without variables."""
 
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "script1": {
@@ -1241,7 +1262,7 @@ async def test_script_this_var_always(
     )
     mock_calls = async_mock_service(hass, "test", "script")
 
-    await hass.services.async_call("script", "script1", blocking=True)
+    await hass.services.async_call(DOMAIN, "script1", blocking=True)
 
     assert len(mock_calls) == 1
     # Verify this available to all templates
@@ -1263,7 +1284,7 @@ async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
 
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "no_last_triggered": {
@@ -1308,7 +1329,7 @@ async def test_recursive_script(
 
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "script1": {
@@ -1329,7 +1350,7 @@ async def test_recursive_script(
 
     hass.services.async_register("test", "script", async_service_handler)
 
-    await hass.services.async_call("script", "script1")
+    await hass.services.async_call(DOMAIN, "script1")
     await asyncio.wait_for(service_called.wait(), 1)
 
     assert warning_msg in caplog.text
@@ -1358,7 +1379,7 @@ async def test_recursive_script_indirect(
 
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "script1": {
@@ -1397,7 +1418,7 @@ async def test_recursive_script_indirect(
 
     hass.services.async_register("test", "script", async_service_handler)
 
-    await hass.services.async_call("script", "script1")
+    await hass.services.async_call(DOMAIN, "script1")
     await asyncio.wait_for(service_called.wait(), 1)
 
     assert warning_msg in caplog.text
@@ -1476,7 +1497,7 @@ async def test_recursive_script_turn_on(
 
         hass.services.async_register("test", "script_done", async_service_handler)
 
-        await hass.services.async_call("script", "script1")
+        await hass.services.async_call(DOMAIN, "script1")
         await asyncio.wait_for(service_called.wait(), 1)
 
         # Trigger 1st stage script shutdown
@@ -1497,7 +1518,7 @@ async def test_setup_with_duplicate_scripts(
     """Test setup with duplicate configs."""
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script one": {
                 "duplicate": {
@@ -1512,7 +1533,7 @@ async def test_setup_with_duplicate_scripts(
         },
     )
     assert "Duplicate script detected with name: 'duplicate'" in caplog.text
-    assert len(hass.states.async_entity_ids("script")) == 1
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 1
 
 
 async def test_websocket_config(
@@ -1525,7 +1546,7 @@ async def test_websocket_config(
     }
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "hello": config,
@@ -1580,7 +1601,7 @@ async def test_script_service_changed_entity_id(
     # Make sure the service of a script with overridden entity_id works
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "test": {
@@ -1600,7 +1621,8 @@ async def test_script_service_changed_entity_id(
     assert len(calls) == 1
     assert calls[0].data["entity_id"] == "script.custom_entity_id"
 
-    # Change entity while the script entity is loaded, and make sure the service still works
+    # Change entity while the script entity is loaded, and make sure
+    # the service still works
     entry = entity_registry.async_update_entity(
         entry.entity_id, new_entity_id="script.custom_entity_id_2"
     )
@@ -1633,7 +1655,7 @@ async def test_blueprint_script(hass: HomeAssistant, calls: list[ServiceCall]) -
         },
     )
     await hass.services.async_call(
-        "script", "test_script", {"var_from_service": "hello"}, blocking=True
+        DOMAIN, "test_script", {"var_from_service": "hello"}, blocking=True
     )
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -1666,7 +1688,8 @@ async def test_blueprint_script(hass: HomeAssistant, calls: list[ServiceCall]) -
                 "a_number": 5,
             },
             "Blueprint 'Call service' generated invalid script",
-            "value should be a string for dictionary value @ data['sequence'][0]['action']",
+            "value should be a string for dictionary value"
+            " @ data['sequence'][0]['action']",
         ),
     ],
 )
@@ -1761,7 +1784,7 @@ async def test_responses(hass: HomeAssistant, response: Any) -> None:
     mock_restore_cache(hass, ())
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "test": {
@@ -1796,7 +1819,7 @@ async def test_responses_no_response(hass: HomeAssistant) -> None:
     mock_restore_cache(hass, ())
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "test": {
@@ -1866,69 +1889,8 @@ async def test_script_queued_mode(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    await hass.services.async_call("script", "test_main", blocking=True)
+    await hass.services.async_call(DOMAIN, "test_main", blocking=True)
     assert calls == 4
-
-
-async def test_reload_when_labs_flag_changes(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test scripts are reloaded when labs flag changes."""
-    event = "test_event"
-    hass.states.async_set("test.script", "off")
-
-    ws_client = await hass_ws_client(hass)
-
-    assert await async_setup_component(
-        hass,
-        "script",
-        {
-            "script": {
-                "test": {
-                    "sequence": [
-                        {"event": event},
-                        {"wait_template": "{{ is_state('test.script', 'on') }}"},
-                    ]
-                }
-            }
-        },
-    )
-    assert await async_setup_component(hass, labs.DOMAIN, {})
-
-    assert hass.states.get(ENTITY_ID) is not None
-    assert hass.services.has_service(script.DOMAIN, "test")
-
-    for enabled, active_object_id, inactive_object_ids in (
-        (False, "test2", ("test",)),
-        (True, "test3", ("test", "test2")),
-    ):
-        with patch(
-            "homeassistant.config.load_yaml_config_file",
-            return_value={
-                "script": {active_object_id: {"sequence": [{"delay": {"seconds": 5}}]}}
-            },
-        ):
-            await ws_client.send_json_auto_id(
-                {
-                    "type": "labs/update",
-                    "domain": "automation",
-                    "preview_feature": "new_triggers_conditions",
-                    "enabled": enabled,
-                }
-            )
-
-            msg = await ws_client.receive_json()
-            assert msg["success"]
-            await hass.async_block_till_done()
-
-        for inactive_object_id in inactive_object_ids:
-            state = hass.states.get(f"script.{inactive_object_id}")
-            assert state.attributes["restored"] is True
-            assert not hass.services.has_service(script.DOMAIN, inactive_object_id)
-
-        assert hass.states.get(f"script.{active_object_id}") is not None
-        assert hass.services.has_service(script.DOMAIN, active_object_id)
 
 
 async def test_remove_script_entity_unloads_script(hass: HomeAssistant) -> None:

@@ -1,7 +1,7 @@
 """Binary sensor for Shelly."""
 
 from dataclasses import dataclass
-from typing import Final, cast
+from typing import Final, cast, override
 
 from aioshelly.const import MODEL_FLOOD_G4, RPC_GENERATIONS
 
@@ -89,6 +89,7 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
                 self._attr_translation_key = "input_with_number"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if RPC sensor state is on."""
         return bool(self.attribute_value)
@@ -98,6 +99,7 @@ class RpcPresenceBinarySensor(RpcBinarySensor):
     """Represent a RPC binary sensor entity for presence component."""
 
     @property
+    @override
     def available(self) -> bool:
         """Available."""
         available = super().available
@@ -348,6 +350,11 @@ RPC_SENSORS: Final = {
         device_class=BinarySensorDeviceClass.OCCUPANCY,
         entity_class=RpcPresenceBinarySensor,
     ),
+    "occupancy": RpcBinarySensorDescription(
+        key="occupancy",
+        sub_key="value",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+    ),
     "cury_tilt": RpcBinarySensorDescription(
         key="cury",
         sub_key="errors",
@@ -455,6 +462,7 @@ class BlockBinarySensor(ShellyBlockAttributeEntity, BinarySensorEntity):
     entity_description: BlockBinarySensorDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if sensor state is on."""
         return bool(self.attribute_value)
@@ -466,6 +474,7 @@ class RestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
     entity_description: RestBinarySensorDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if REST sensor state is on."""
         return bool(self.attribute_value)
@@ -478,12 +487,14 @@ class BlockSleepingBinarySensor(
 
     entity_description: BlockBinarySensorDescription
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self.last_state = await self.async_get_last_state()
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if sensor state is on."""
         if self.block is not None:
@@ -516,12 +527,14 @@ class RpcSleepingBinarySensor(
         if coordinator.device.initialized:
             self.configure_translation_attributes()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self.last_state = await self.async_get_last_state()
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if RPC sensor state is on."""
         if self.coordinator.device.initialized:

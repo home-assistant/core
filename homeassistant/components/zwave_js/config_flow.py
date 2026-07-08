@@ -6,7 +6,7 @@ from contextlib import suppress
 from datetime import datetime
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -268,7 +268,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 # If the RF region is not set, we need to ask the user to select it.
                 return await self.async_step_rf_region()
         if config_updates := self._addon_config_updates:
-            # If we have updates to the add-on config, set them before starting the add-on.
+            # If we have updates to the add-on config,
+            # set them before starting the add-on.
             self._addon_config_updates = {}
             await self._async_set_addon_config(config_updates)
 
@@ -381,7 +382,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if new_addon_config == addon_config:
             return
 
-        if addon_info.state == AddonState.RUNNING:
+        if addon_info.state is AddonState.RUNNING:
             self.restart_addon = True
         # Copy the add-on config to keep the objects separate.
         self.original_addon_config = dict(addon_config)
@@ -410,6 +411,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return discovery_info_config
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -444,6 +446,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             ],
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -483,6 +486,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB Discovery."""
         if not is_hassio(self.hass):
@@ -629,6 +633,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -731,7 +736,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         addon_info = await self._async_get_addon_info()
 
-        if addon_info.state == AddonState.RUNNING:
+        if addon_info.state is AddonState.RUNNING:
             addon_config = addon_info.options
             # Use the options set by USB/ESPHome discovery
             if not self._adapter_discovered:
@@ -756,7 +761,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return await self.async_step_finish_addon_setup_user()
 
-        if addon_info.state == AddonState.NOT_RUNNING:
+        if addon_info.state is AddonState.NOT_RUNNING:
             return await self.async_step_configure_addon_user()
 
         return await self.async_step_install_addon()
@@ -1229,7 +1234,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         addon_info = await self._async_get_addon_info()
 
-        if addon_info.state == AddonState.NOT_INSTALLED:
+        if addon_info.state is AddonState.NOT_INSTALLED:
             return await self.async_step_install_addon()
 
         return await self.async_step_configure_addon_reconfigure()
@@ -1267,7 +1272,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
             await self._async_set_addon_config(addon_config_updates)
 
-            if addon_info.state == AddonState.RUNNING and not self.restart_addon:
+            if addon_info.state is AddonState.RUNNING and not self.restart_addon:
                 return await self.async_step_finish_addon_setup_reconfigure()
 
             if (
@@ -1409,7 +1414,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="restore_failed",
             description_placeholders={
                 "file_path": str(self.backup_filepath),
-                "file_url": f"data:application/octet-stream;base64,{base64.b64encode(self.backup_data).decode('ascii')}",
+                "file_url": (
+                    "data:application/octet-stream;base64,"
+                    f"{base64.b64encode(self.backup_data).decode('ascii')}"
+                ),
                 "file_name": self.backup_filepath.name,
             },
         )
@@ -1556,8 +1564,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     return self.async_abort(reason="already_configured")
 
-            # We are not aborting if home ID configured here, we just want to make sure that it's set
-            # We will update a USB based config entry automatically in `async_step_finish_addon_setup_user`
+            # We are not aborting if home ID configured
+            # here, we just want to make sure that it's set
+            # We will update a USB based config entry
+            # automatically in
+            # `async_step_finish_addon_setup_user`
             await self.async_set_unique_id(
                 str(discovery_info.zwave_home_id), raise_on_progress=False
             )
@@ -1617,7 +1628,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         # save the backup to a file just in case
         self.backup_filepath = Path(
             self.hass.config.path(
-                f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"
+                f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"  # pylint: disable=home-assistant-enforce-naive-now
             )
         )
         try:
@@ -1712,7 +1723,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the driver from the config entry."""
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
-        if config_entry.state != ConfigEntryState.LOADED:
+        if config_entry.state is not ConfigEntryState.LOADED:
             raise AbortFlow("Configuration entry is not loaded")
         client: Client = config_entry.runtime_data.client
         assert client.driver is not None

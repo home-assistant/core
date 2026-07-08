@@ -1,6 +1,7 @@
 """Fixtures for the Nord Pool integration."""
 
 from collections.abc import AsyncGenerator
+from http import HTTPStatus
 import json
 from typing import Any
 
@@ -79,6 +80,17 @@ async def get_data_from_library(
         "GET",
         url=API + "/DayAheadPrices",
         params={
+            "date": "2025-10-01",
+            "market": "DayAhead",
+            "deliveryArea": "SE3,SE4",
+            "currency": "EUR",
+        },
+        json=load_json[0],
+    )
+    aioclient_mock.request(
+        "GET",
+        url=API + "/DayAheadPrices",
+        params={
             "date": "2025-09-30",
             "market": "DayAhead",
             "deliveryArea": "SE3,SE4",
@@ -96,6 +108,28 @@ async def get_data_from_library(
             "currency": "SEK",
         },
         json=load_json[2],
+    )
+    aioclient_mock.request(
+        "GET",
+        url=API + "/DayAheadPrices",
+        params={
+            "date": "2025-10-03",
+            "market": "DayAhead",
+            "deliveryArea": "SE3,SE4",
+            "currency": "SEK",
+        },
+        status=HTTPStatus.NO_CONTENT,
+    )
+    aioclient_mock.request(
+        "GET",
+        url=API + "/DayAheadPrices",
+        params={
+            "date": "2025-10-04",
+            "market": "DayAhead",
+            "deliveryArea": "SE3,SE4",
+            "currency": "SEK",
+        },
+        status=HTTPStatus.NO_CONTENT,
     )
     client = NordPoolClient(aioclient_mock.create_session(hass.loop))
     yield client

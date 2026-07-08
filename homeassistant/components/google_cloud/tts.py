@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, cast, override
 
 from google.api_core.exceptions import GoogleAPIError, Unauthenticated
 from google.api_core.retry import AsyncRetry
@@ -193,7 +193,8 @@ class BaseGoogleCloudProvider:
                 ssml_gender=gender,
                 name=voice,
             ),
-            # Avoid: "This voice does not support speaking rate or pitch parameters at this time."
+            # Avoid: "This voice does not support speaking rate
+            # or pitch parameters at this time."
             # by not specifying the fields unless they differ from the defaults
             audio_config=texttospeech.AudioConfig(
                 audio_encoding=encoding,
@@ -253,6 +254,7 @@ class GoogleCloudTTSEntity(BaseGoogleCloudProvider, TextToSpeechEntity):
         )
         self._entry = entry
 
+    @override
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
@@ -280,6 +282,7 @@ class GoogleCloudTTSProvider(BaseGoogleCloudProvider, Provider):
         super().__init__(client, voices, language, options_schema)
         self.name = "Google Cloud TTS"
 
+    @override
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:

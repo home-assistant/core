@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
+from typing import override
 
 from pydrawise import HydrawiseBase
 from pydrawise.schema import Controller, ControllerWaterUseSummary, Sensor, User, Zone
@@ -82,8 +83,13 @@ class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
         self.new_zones_callbacks: list[
             Callable[[Iterable[tuple[Zone, Controller]]], None]
         ] = []
+
+    @callback
+    def async_track_zones(self) -> None:
+        """Begin tracking zone and controller add/remove on updates."""
         self.async_add_listener(self._add_remove_zones)
 
+    @override
     async def _async_update_data(self) -> HydrawiseData:
         """Fetch the latest data from Hydrawise."""
         # Don't fetch zones. We'll fetch them for each controller later.
@@ -198,6 +204,24 @@ class HydrawiseWaterUseDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
         self.api = api
         self._main_coordinator = main_coordinator
 
+    @callback
+    def async_track_zones(self) -> None:
+        """Begin tracking zone and controller add/remove on updates."""
+        self._main_coordinator.async_add_listener(self._sync_data_from_main)
+
+    @callback
+    def _sync_data_from_main(self) -> None:
+        """Sync data references from the main coordinator after it updates."""
+        if self.data is None or self._main_coordinator.data is None:
+            return  # type: ignore[unreachable]
+        main_data = self._main_coordinator.data
+        self.data.user = main_data.user
+        self.data.controllers = main_data.controllers
+        self.data.zones = main_data.zones
+        self.data.zone_id_to_controller = main_data.zone_id_to_controller
+        self.data.sensors = main_data.sensors
+
+    @override
     async def _async_update_data(self) -> HydrawiseData:
         """Fetch the latest data from Hydrawise."""
         daily_water_summary: dict[int, ControllerWaterUseSummary] = {}

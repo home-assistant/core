@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from aiowithings import (
     Activity,
@@ -156,13 +156,15 @@ MEASUREMENT_SENSORS: dict[
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    MeasurementType.DIASTOLIC_BLOOD_PRESSURE: WithingsMeasurementSensorEntityDescription(
-        key="diastolic_blood_pressure_mmhg",
-        measurement_type=MeasurementType.DIASTOLIC_BLOOD_PRESSURE,
-        translation_key="diastolic_blood_pressure",
-        native_unit_of_measurement=UnitOfPressure.MMHG,
-        device_class=SensorDeviceClass.PRESSURE,
-        state_class=SensorStateClass.MEASUREMENT,
+    MeasurementType.DIASTOLIC_BLOOD_PRESSURE: (
+        WithingsMeasurementSensorEntityDescription(
+            key="diastolic_blood_pressure_mmhg",
+            measurement_type=MeasurementType.DIASTOLIC_BLOOD_PRESSURE,
+            translation_key="diastolic_blood_pressure",
+            native_unit_of_measurement=UnitOfPressure.MMHG,
+            device_class=SensorDeviceClass.PRESSURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        )
     ),
     MeasurementType.SYSTOLIC_BLOOD_PRESSURE: WithingsMeasurementSensorEntityDescription(
         key="systolic_blood_pressure_mmhg",
@@ -241,26 +243,32 @@ MEASUREMENT_SENSORS: dict[
         translation_key="visceral_fat_index",
         entity_registry_enabled_default=False,
     ),
-    MeasurementType.ELECTRODERMAL_ACTIVITY_FEET: WithingsMeasurementSensorEntityDescription(
-        key="electrodermal_activity_feet",
-        measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_FEET,
-        translation_key="electrodermal_activity_feet",
-        native_unit_of_measurement=PERCENTAGE,
-        entity_registry_enabled_default=False,
+    MeasurementType.ELECTRODERMAL_ACTIVITY_FEET: (
+        WithingsMeasurementSensorEntityDescription(
+            key="electrodermal_activity_feet",
+            measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_FEET,
+            translation_key="electrodermal_activity_feet",
+            native_unit_of_measurement=PERCENTAGE,
+            entity_registry_enabled_default=False,
+        )
     ),
-    MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT: WithingsMeasurementSensorEntityDescription(
-        key="electrodermal_activity_left_foot",
-        measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT,
-        translation_key="electrodermal_activity_left_foot",
-        native_unit_of_measurement=PERCENTAGE,
-        entity_registry_enabled_default=False,
+    MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT: (
+        WithingsMeasurementSensorEntityDescription(
+            key="electrodermal_activity_left_foot",
+            measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT,
+            translation_key="electrodermal_activity_left_foot",
+            native_unit_of_measurement=PERCENTAGE,
+            entity_registry_enabled_default=False,
+        )
     ),
-    MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT: WithingsMeasurementSensorEntityDescription(
-        key="electrodermal_activity_right_foot",
-        measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT,
-        translation_key="electrodermal_activity_right_foot",
-        native_unit_of_measurement=PERCENTAGE,
-        entity_registry_enabled_default=False,
+    MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT: (
+        WithingsMeasurementSensorEntityDescription(
+            key="electrodermal_activity_right_foot",
+            measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT,
+            translation_key="electrodermal_activity_right_foot",
+            native_unit_of_measurement=PERCENTAGE,
+            entity_registry_enabled_default=False,
+        )
     ),
 }
 
@@ -849,7 +857,7 @@ async def async_setup_entry(
                                 config_entry_id
                             )
                         )
-                        and config_entry.state == ConfigEntryState.LOADED
+                        and config_entry.state is ConfigEntryState.LOADED
                         for config_entry_id in device.config_entries
                     ):
                         continue
@@ -874,7 +882,8 @@ async def async_setup_entry(
 
     if not entities:
         LOGGER.warning(
-            "No data found for Withings entry %s, sensors will be added when new data is available",
+            "No data found for Withings entry %s, sensors"
+            " will be added when new data is available",
             entry.title,
         )
 
@@ -908,6 +917,7 @@ class WithingsMeasurementSensor(
     """Implementation of a Withings measurement sensor."""
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the entity."""
         return self.coordinator.data[
@@ -918,6 +928,7 @@ class WithingsMeasurementSensor(
         ]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the sensor is available."""
         return (
@@ -939,6 +950,7 @@ class WithingsSleepSensor(
     """Implementation of a Withings sleep sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         if not self.coordinator.data:
@@ -955,6 +967,7 @@ class WithingsGoalsSensor(
     """Implementation of a Withings goals sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         assert self.coordinator.data
@@ -970,6 +983,7 @@ class WithingsActivitySensor(
     """Implementation of a Withings activity sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         if not self.coordinator.data:
@@ -977,6 +991,7 @@ class WithingsActivitySensor(
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def last_reset(self) -> datetime:
         """These values reset every day."""
         return dt_util.start_of_local_day()
@@ -991,6 +1006,7 @@ class WithingsWorkoutSensor(
     """Implementation of a Withings workout sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         if not self.coordinator.data:
@@ -1014,6 +1030,7 @@ class WithingsDeviceSensor(WithingsDeviceEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         return self.entity_description.value_fn(self.device)

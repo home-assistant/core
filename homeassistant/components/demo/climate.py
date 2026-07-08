@@ -1,6 +1,6 @@
 """Demo platform that offers a fake climate device."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -166,100 +166,120 @@ class DemoClimate(ClimateEntity):
         self._attr_target_humidity_step = target_humidity_step
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique id."""
         return self._unique_id
 
     @property
+    @override
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
     @property
+    @override
     def current_temperature(self) -> float:
         """Return the current temperature."""
         return self._current_temperature
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._target_temperature
 
     @property
+    @override
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         return self._target_temperature_high
 
     @property
+    @override
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         return self._target_temperature_low
 
     @property
+    @override
     def current_humidity(self) -> float | None:
         """Return the current humidity."""
         return self._current_humidity
 
     @property
+    @override
     def target_humidity(self) -> float | None:
         """Return the humidity we try to reach."""
         return self._target_humidity
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return current operation ie. heat, cool, idle."""
         return self._hvac_action
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac target hvac state."""
         return self._hvac_mode
 
     @property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         return self._hvac_modes
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return preset mode."""
         return self._preset
 
     @property
+    @override
     def preset_modes(self) -> list[str] | None:
         """Return preset modes."""
         return self._preset_modes
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return self._current_fan_mode
 
     @property
+    @override
     def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
         return self._fan_modes
 
     @property
+    @override
     def swing_mode(self) -> str | None:
         """Return the swing setting."""
         return self._current_swing_mode
 
     @property
+    @override
     def swing_modes(self) -> list[str]:
         """List of available swing modes."""
         return self._swing_modes
 
     @property
+    @override
     def swing_horizontal_mode(self) -> str | None:
         """Return the swing setting."""
         return self._current_swing_horizontal_mode
 
     @property
+    @override
     def swing_horizontal_modes(self) -> list[str]:
         """List of available swing modes."""
         return self._swing_horizontal_modes
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
@@ -274,31 +294,37 @@ class DemoClimate(ClimateEntity):
             self._hvac_mode = hvac_mode
         self.async_write_ha_state()
 
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new humidity level."""
         self._target_humidity = humidity
         self.async_write_ha_state()
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new swing mode."""
         self._current_swing_mode = swing_mode
         self.async_write_ha_state()
 
+    @override
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set new swing mode."""
         self._current_swing_horizontal_mode = swing_horizontal_mode
         self.async_write_ha_state()
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         self._current_fan_mode = fan_mode
         self.async_write_ha_state()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         self._hvac_mode = hvac_mode
         self.async_write_ha_state()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Update preset_mode on."""
         self._preset = preset_mode

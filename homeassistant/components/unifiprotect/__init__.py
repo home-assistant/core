@@ -84,7 +84,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     except NotAuthorized as err:
         data_service.auth_retries += 1
         if data_service.auth_retries > AUTH_RETRIES:
-            raise ConfigEntryAuthFailed(err) from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="entry_auth_failed",
+            ) from err
         raise ConfigEntryNotReady from err
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
         raise ConfigEntryNotReady from err
@@ -156,12 +159,31 @@ async def _async_setup_entry(
     await async_migrate_data(hass, entry, data_service.api, bootstrap)
     data_service.async_setup()
 
-    # Prime the public bootstrap. The devices websocket subscription was already
-    # registered in async_setup() per library docs (subscribe first, then prime).
+    # Prime the public bootstrap (subscribe-then-prime, per library docs). Camera
+    # streams depend on it, so a failed prime retries instead of building
+    # streamless cameras.
     try:
         await data_service.api.update_public()
-    except Exception:  # noqa: BLE001
-        _LOGGER.debug("Public API bootstrap update failed", exc_info=True)
+    except NotAuthorized as err:
+        # A public 401 means a bad/revoked API key (independent of the private
+        # session); route to reauth instead of retrying forever.
+        await data_service.async_stop()
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="api_key_required",
+        ) from err
+    except (TimeoutError, ClientError, ServerDisconnectedError) as err:
+        # async_setup() already subscribed the websockets and started polling;
+        # tear them down so a setup retry does not leak another set.
+        await data_service.async_stop()
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="public_bootstrap_failed",
+        ) from err
+
+    # The bootstrap is primed above (a failed prime aborts setup and HA retries),
+    # so the public events websocket can be subscribed here.
+    data_service.async_subscribe_public_events()
 
     # Load PTZ patrol data before loading platforms
     await data_service.async_load_ptz_patrols()
@@ -234,9 +256,6 @@ async def async_remove_config_entry_device(
 async def async_migrate_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     """Migrate entry."""
     _LOGGER.debug("Migrating configuration from version %s", entry.version)
-
-    if entry.version > 1:
-        return False
 
     if entry.version == 1:
         options = dict(entry.options)

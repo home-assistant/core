@@ -109,8 +109,8 @@ async def test_binary_sensor(
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
-            "hassio",
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            DOMAIN,
+            {"hassio": {}},
         )
         assert result
     await hass.async_block_till_done()
@@ -140,8 +140,8 @@ async def test_mount_binary_sensor(
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
-            "hassio",
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            DOMAIN,
+            {"hassio": {}},
         )
         assert result
     await hass.async_block_till_done()
@@ -212,7 +212,7 @@ async def test_mount_refresh_after_issue(
     supervisor_client: AsyncMock,
     hass_supervisor_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test hassio mount state is refreshed after an issue was send by the supervisor."""
+    """Test hassio mount state is refreshed after an issue was sent by supervisor."""
     # Add a mount.
     mock_mounts: list[CIFSMountResponse | NFSMountResponse] = [
         CIFSMountResponse(
@@ -236,8 +236,8 @@ async def test_mount_refresh_after_issue(
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
-            "hassio",
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            DOMAIN,
+            {"hassio": {}},
         )
         assert result
     await hass.async_block_till_done()

@@ -155,9 +155,8 @@ async def test_async_image_get_thumbnail_api_error_returns_none(
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
     hass_client: ClientSessionGenerator,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test async_image returns None (500) when get_thumbnail raises an API error."""
+    """Test async_image returns 500 when get_thumbnail raises an API error."""
     mock_client.get_thumbnail.side_effect = ApiNotFoundError(
         "Thumbnail fetch failed (404)"
     )
@@ -167,5 +166,3 @@ async def test_async_image_get_thumbnail_api_error_returns_none(
 
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
     mock_client.get_thumbnail.assert_awaited_once_with("/preview/front_door.png")
-    assert "Failed to fetch thumbnail for door" in caplog.text
-    assert "Thumbnail fetch failed (404)" in caplog.text

@@ -3,6 +3,7 @@
 from datetime import timedelta
 import logging
 from time import time
+from typing import override
 
 from lacrosse_view import HTTPError, LaCrosse, Location, LoginError, Sensor
 
@@ -11,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, SCAN_INTERVAL
+from .const import DOMAIN, SCAN_INTERVAL, STALE_DATA_THRESHOLD
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,11 +51,12 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
 
+    @override
     async def _async_update_data(self) -> list[Sensor]:
         """Get the data for LaCrosse View."""
         now = int(time())
 
-        if self.last_update < now - 59 * 60:  # Get new token once in a hour
+        if now - self.last_update > 59 * 60:
             _LOGGER.debug("Refreshing token")
             self.last_update = now
             try:
@@ -66,17 +68,18 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
             _LOGGER.debug("Getting devices")
             try:
                 self.devices = await self.api.get_devices(
-                    location=Location(id=self.id, name=self.name),
+                    location=Location(id=self.id, name=self.name)
                 )
             except HTTPError as error:
                 raise UpdateFailed from error
 
-        # Fetch last hour of data
         for sensor in self.devices:
             try:
-                data = await self.api.get_sensor_status(
+                sensor.data = await self.api.get_sensor_status_filtered(
                     sensor=sensor,
                     tz=self.hass.config.time_zone,
+                    stale_threshold=STALE_DATA_THRESHOLD,
+                    previous_data=sensor.data,
                 )
             except HTTPError as error:
                 error_data = error.args[1] if len(error.args) > 1 else None
@@ -84,34 +87,14 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
                     isinstance(error_data, dict)
                     and error_data.get("error") == "no_readings"
                 ):
-                    sensor.data = None
                     _LOGGER.debug("No readings for %s", sensor.name)
+                    sensor.data = None
                     continue
                 raise UpdateFailed(
-                    translation_domain=DOMAIN, translation_key="update_error"
+                    translation_domain=DOMAIN,
+                    translation_key="update_error",
                 ) from error
 
-            _LOGGER.debug("Got data: %s", data)
-
-            if data_error := data.get("error"):
-                if data_error == "no_readings":
-                    sensor.data = None
-                    _LOGGER.debug("No readings for %s", sensor.name)
-                    continue
-                _LOGGER.debug("Error: %s", data_error)
-                raise UpdateFailed(
-                    translation_domain=DOMAIN, translation_key="update_error"
-                )
-
-            current_data = data.get("data", {}).get("current")
-            if current_data is None:
-                sensor.data = None
-                _LOGGER.debug("No current data payload for %s", sensor.name)
-                continue
-
-            sensor.data = current_data
-
-        # Verify that we have permission to read the sensors
         for sensor in self.devices:
             if not sensor.permissions.get("read", False):
                 raise ConfigEntryAuthFailed(

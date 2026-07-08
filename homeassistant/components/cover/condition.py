@@ -1,12 +1,13 @@
 """Provides conditions for covers."""
 
 from collections.abc import Mapping
+from typing import override
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.condition import Condition, EntityConditionBase
 
-from .const import ATTR_IS_CLOSED, DOMAIN, CoverDeviceClass
+from .const import DOMAIN, CoverDeviceClass, CoverEntityStateAttribute
 from .models import CoverDomainSpec
 
 
@@ -15,6 +16,7 @@ class CoverConditionBase(EntityConditionBase):
 
     _domain_specs: Mapping[str, CoverDomainSpec]
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected cover state."""
         domain_spec = self._domain_specs[entity_state.domain]
@@ -37,7 +39,9 @@ def make_cover_is_open_condition(
         _domain_specs = {
             domain: CoverDomainSpec(
                 device_class=dc,
-                value_source=ATTR_IS_CLOSED if domain == DOMAIN else None,
+                value_source=(
+                    CoverEntityStateAttribute.IS_CLOSED if domain == DOMAIN else None
+                ),
                 target_value=False if domain == DOMAIN else STATE_ON,
             )
             for domain, dc in device_classes.items()
@@ -57,7 +61,9 @@ def make_cover_is_closed_condition(
         _domain_specs = {
             domain: CoverDomainSpec(
                 device_class=dc,
-                value_source=ATTR_IS_CLOSED if domain == DOMAIN else None,
+                value_source=(
+                    CoverEntityStateAttribute.IS_CLOSED if domain == DOMAIN else None
+                ),
                 target_value=True if domain == DOMAIN else STATE_OFF,
             )
             for domain, dc in device_classes.items()

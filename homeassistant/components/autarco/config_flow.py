@@ -1,7 +1,7 @@
 """Config flow for Autarco integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from autarco import Autarco, AutarcoAuthenticationError, AutarcoConnectionError
 import voluptuous as vol
@@ -29,6 +29,7 @@ STEP_REAUTH_SCHEMA = vol.Schema(
 class AutarcoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Autarco."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
