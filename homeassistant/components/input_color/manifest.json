@@ -4,6 +4,5 @@
   "codeowners": ["@home-assistant/core"],
   "documentation": "https://www.home-assistant.io/integrations/input_color",
   "integration_type": "helper",
-  "iot_class": "local_push",
   "quality_scale": "internal"
 }

@@ -48,9 +48,6 @@ async def _async_reproduce_state(
             FIELD_HEX: state.attributes.get(ATTR_HEX_COLOR, state.state),
         }
 
-    if (brightness := state.attributes.get(ATTR_BRIGHTNESS)) is not None:
-        service_data[ATTR_BRIGHTNESS] = brightness
-
     await hass.services.async_call(
         DOMAIN, SERVICE_SET_COLOR, service_data, context=context, blocking=True
     )

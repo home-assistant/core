@@ -8384,8 +8384,7 @@
     },
     "input_color": {
       "integration_type": "helper",
-      "config_flow": false,
-      "iot_class": "local_push"
+      "config_flow": false
     },
     "input_datetime": {
       "integration_type": "helper",
