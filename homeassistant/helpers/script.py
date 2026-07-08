@@ -1669,6 +1669,15 @@ class Script:
                 if CONF_ELSE in step:
                     Script._find_referenced_target(target, referenced, step[CONF_ELSE])
 
+            elif action == cv.SCRIPT_ACTION_REPEAT:
+                for cond in step[CONF_REPEAT].get(CONF_WHILE, []):
+                    referenced |= condition.async_extract_targets(cond, target)
+                for cond in step[CONF_REPEAT].get(CONF_UNTIL, []):
+                    referenced |= condition.async_extract_targets(cond, target)
+                Script._find_referenced_target(
+                    target, referenced, step[CONF_REPEAT][CONF_SEQUENCE]
+                )
+
             elif action == cv.SCRIPT_ACTION_PARALLEL:
                 for script in step[CONF_PARALLEL]:
                     Script._find_referenced_target(
@@ -1730,6 +1739,15 @@ class Script:
                 Script._find_referenced_devices(referenced, step[CONF_THEN])
                 if CONF_ELSE in step:
                     Script._find_referenced_devices(referenced, step[CONF_ELSE])
+
+            elif action == cv.SCRIPT_ACTION_REPEAT:
+                for cond in step[CONF_REPEAT].get(CONF_WHILE, []):
+                    referenced |= condition.async_extract_devices(cond)
+                for cond in step[CONF_REPEAT].get(CONF_UNTIL, []):
+                    referenced |= condition.async_extract_devices(cond)
+                Script._find_referenced_devices(
+                    referenced, step[CONF_REPEAT][CONF_SEQUENCE]
+                )
 
             elif action == cv.SCRIPT_ACTION_PARALLEL:
                 for script in step[CONF_PARALLEL]:
@@ -1793,6 +1811,15 @@ class Script:
                 Script._find_referenced_entities(referenced, step[CONF_THEN])
                 if CONF_ELSE in step:
                     Script._find_referenced_entities(referenced, step[CONF_ELSE])
+
+            elif action == cv.SCRIPT_ACTION_REPEAT:
+                for cond in step[CONF_REPEAT].get(CONF_WHILE, []):
+                    referenced |= condition.async_extract_entities(cond)
+                for cond in step[CONF_REPEAT].get(CONF_UNTIL, []):
+                    referenced |= condition.async_extract_entities(cond)
+                Script._find_referenced_entities(
+                    referenced, step[CONF_REPEAT][CONF_SEQUENCE]
+                )
 
             elif action == cv.SCRIPT_ACTION_PARALLEL:
                 for script in step[CONF_PARALLEL]:
