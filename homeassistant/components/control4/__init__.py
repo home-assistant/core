@@ -1,7 +1,6 @@
 """The Control4 integration."""
 
 from dataclasses import dataclass
-import json
 import logging
 from typing import Any
 
@@ -84,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
     config = entry.data
     account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD], account_session)
     try:
-        await account.getAccountBearerToken()
+        await account.get_account_bearer_token()
     except client_exceptions.ClientError as exception:
         _LOGGER.error("Error connecting to Control4 account API: %s", exception)
         raise ConfigEntryNotReady(
@@ -103,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
     controller_unique_id: str = config[CONF_CONTROLLER_UNIQUE_ID]
 
     director_token_dict = await call_c4_api_retry(
-        account.getDirectorBearerToken, controller_unique_id
+        account.get_director_bearer_token, controller_unique_id
     )
 
     director_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
@@ -111,9 +110,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
         config[CONF_HOST], director_token_dict[CONF_TOKEN], director_session
     )
 
-    controller_href = (await call_c4_api_retry(account.getAccountControllers))["href"]
+    controller_href = (await call_c4_api_retry(account.get_account_controllers))["href"]
     director_sw_version = await call_c4_api_retry(
-        account.getControllerOSVersion, controller_href
+        account.get_controller_os_version, controller_href
     )
 
     _, model, mac_address = controller_unique_id.split("_", 3)
@@ -132,7 +131,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
 
     # Store all items found on controller for platforms to use
     try:
-        all_items_raw = await director.getAllItemInfo()
+        director_all_items: list[
+            dict[str, Any]
+        ] = await director.get_all_items_by_category()
     except (TimeoutError, client_exceptions.ClientError) as err:
         _LOGGER.error(
             "Timeout connecting to Control4 controller at %s",
@@ -142,13 +143,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
             f"Timeout connecting to Control4 controller at {config[CONF_HOST]}"
         ) from err
 
-    director_all_items: list[dict[str, Any]] = json.loads(all_items_raw)
-
     # Check if OS version is 3 or higher to get UI configuration
     ui_configuration: dict[str, Any] | None = None
     if int(director_sw_version.split(".")[0]) >= 3:
         try:
-            ui_config_raw = await director.getUiConfiguration()
+            ui_configuration = await director.get_ui_configuration()
         except (TimeoutError, client_exceptions.ClientError) as err:
             _LOGGER.error(
                 "Timeout getting UI configuration from Control4 controller at %s",
@@ -158,8 +157,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
                 "Timeout getting UI configuration from"
                 f" Control4 controller at {config[CONF_HOST]}"
             ) from err
-
-        ui_configuration = json.loads(ui_config_raw)
 
     # Load options from config entry
     scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)

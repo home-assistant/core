@@ -80,7 +80,7 @@ async def test_user_flow_errors(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_c4_account.getAccountBearerToken.side_effect = exception
+    mock_c4_account.get_account_bearer_token.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -94,7 +94,7 @@ async def test_user_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_c4_account.getAccountBearerToken.side_effect = None
+    mock_c4_account.get_account_bearer_token.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -130,7 +130,7 @@ async def test_user_flow_director_errors(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_c4_director.getAllItemInfo.side_effect = exception
+    mock_c4_director.get_all_items_by_category.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -144,7 +144,7 @@ async def test_user_flow_director_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_c4_director.getAllItemInfo.side_effect = None
+    mock_c4_director.get_all_items_by_category.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
