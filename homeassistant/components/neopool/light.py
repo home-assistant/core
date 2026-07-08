@@ -37,8 +37,8 @@ LIGHT_DESCRIPTIONS: dict[str, NeoPoolLightEntityDescription] = {
         key="light",
         translation_key="light",
         supported_fn=lambda data: (
-            "MBF_PAR_LIGHTING_GPIO" not in data
-            or is_valid_relay_gpio(data["MBF_PAR_LIGHTING_GPIO"] or 0)
+            "MBF_PAR_LIGHTING_GPIO" in data
+            and is_valid_relay_gpio(data["MBF_PAR_LIGHTING_GPIO"] or 0)
         ),
     ),
 }
@@ -114,9 +114,7 @@ class NeoPoolLight(NeoPoolEntity, LightEntity):
             ) from err
 
         # Optimistic update + schedule follow-up.
-        data = self.coordinator.data
-        data.update(overrides)
-        self.coordinator.async_set_updated_data(data)
+        self.coordinator.async_set_updated_data({**self.coordinator.data, **overrides})
         self.coordinator.request_refresh_with_followup()
 
     @property

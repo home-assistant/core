@@ -152,6 +152,7 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Fetch the latest data from the pool controller."""
         try:
             data = await self.client.async_read_all()
+            await self._read_timers_into_data(data)
         except (NeoPoolError, OSError, TimeoutError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -160,6 +161,4 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) from err
 
         self._check_gpio_registers(data)
-        await self._read_timers_into_data(data)
-
         return data
