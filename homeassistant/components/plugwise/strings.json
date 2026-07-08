@@ -106,10 +106,8 @@
       "select_dhw_mode": {
         "name": "DHW mode",
         "state": {
-          "auto": "[%key:common::state::auto%]",
-          "boost": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::boost%]",
           "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
-          "off": "[%key:common::state::off%]"
+          "eco": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]"
         }
       },
       "select_gateway_mode": {
@@ -303,11 +301,11 @@
       "dhw_temperature": {
         "name": "DHW temperature",
         "state": {
-          "auto": "Auto",
-          "boost": "Boost",
-          "comfort": "Comfort",
-          "eco": "Eco",
-          "off": "Off"
+          "auto": "[%key:common::state::auto%]",
+          "boost": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::boost%]",
+          "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
+          "eco": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
+          "off": "[%key:common::state::off%]"
         }
       }
     }
