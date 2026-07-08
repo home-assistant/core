@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import override
 
-from aioharmanluxury import HarmanLuxuryClient
+from aioharmanluxury import HarmanLuxuryClient, HarmanLuxuryError
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -47,13 +48,8 @@ class HarmanLuxuryMediaPlayer(
     _attr_has_entity_name = True
     _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
-    # The device volume is 0..99, so step by one native unit.
-    _attr_volume_step = 1 / 99
+    _attr_volume_step = 0.01
 
-    # Volume is always controllable. Transport availability is source-dependent
-    # (Spotify Connect / AirPlay are sender-controlled), so it is advertised
-    # dynamically from the device's own capability flags. Power is read-only on
-    # this platform and therefore not exposed as a control.
     _BASE_FEATURES = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_STEP
@@ -90,19 +86,15 @@ class HarmanLuxuryMediaPlayer(
     @property
     @override
     def supported_features(self) -> MediaPlayerEntityFeature:
-        """Return the currently available features.
-
-        Transport support is reported per-source by the device, so only the
-        actions the active source actually allows are advertised.
-        """
+        """Return the supported features."""
         features = self._BASE_FEATURES
         data = self.coordinator.data
-        if data.play_state == "paused":
-            features |= MediaPlayerEntityFeature.PLAY
         if data.can_pause:
-            features |= MediaPlayerEntityFeature.PAUSE
-        if data.play_state in ("playing", "paused"):
-            features |= MediaPlayerEntityFeature.STOP
+            features |= (
+                MediaPlayerEntityFeature.PLAY
+                | MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.STOP
+            )
         if data.can_next:
             features |= MediaPlayerEntityFeature.NEXT_TRACK
         if data.can_previous:
@@ -165,44 +157,59 @@ class HarmanLuxuryMediaPlayer(
         """Return when the media position was last retrieved."""
         return self.coordinator.position_updated_at
 
+    async def _async_control(self, command: str) -> None:
+        """Send a transport command and refresh."""
+        try:
+            await self._client.async_control(command)
+        except HarmanLuxuryError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="command_failed"
+            ) from err
+        await self.coordinator.async_request_refresh()
+
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
-        await self._client.async_set_volume(round(volume * 99))
+        try:
+            await self._client.async_set_volume(round(volume * 99))
+        except HarmanLuxuryError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="command_failed"
+            ) from err
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute the output."""
-        await self._client.async_set_mute(mute)
+        try:
+            await self._client.async_set_mute(mute)
+        except HarmanLuxuryError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="command_failed"
+            ) from err
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_media_play(self) -> None:
         """Resume playback."""
-        await self._client.async_control("play")
-        await self.coordinator.async_request_refresh()
+        await self._async_control("play")
 
     @override
     async def async_media_pause(self) -> None:
         """Pause playback."""
-        await self._client.async_control("pause")
-        await self.coordinator.async_request_refresh()
+        await self._async_control("pause")
 
     @override
     async def async_media_stop(self) -> None:
         """Stop playback."""
-        await self._client.async_control("stop")
-        await self.coordinator.async_request_refresh()
+        await self._async_control("stop")
 
     @override
     async def async_media_next_track(self) -> None:
         """Skip to the next track."""
-        await self._client.async_control("next")
-        await self.coordinator.async_request_refresh()
+        await self._async_control("next")
 
     @override
     async def async_media_previous_track(self) -> None:
         """Skip to the previous track."""
-        await self._client.async_control("previous")
-        await self.coordinator.async_request_refresh()
+        await self._async_control("previous")

@@ -23,6 +23,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -101,6 +102,21 @@ async def test_transport_commands(
         blocking=True,
     )
     mock_client.async_control.assert_awaited_once_with(command)
+
+
+async def test_command_error(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a failing device command raises a HomeAssistantError."""
+    await setup_integration(hass, mock_config_entry)
+    mock_client.async_control.side_effect = HarmanLuxuryError
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_MEDIA_PAUSE,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
 
 
 async def test_off_state(
