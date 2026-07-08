@@ -113,8 +113,8 @@ async def test_ignored(
     registry_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry_id=config_entry.entry_id
     )
-    # only a single player option available + 12 party switches
-    assert sum(1 for entry in registry_entries if entry.domain == SWITCH_DOMAIN) == 13
+    # only a single player option available + 11 party switches
+    assert sum(1 for entry in registry_entries if entry.domain == SWITCH_DOMAIN) == 12
 
 
 async def test_name_translation_availability(

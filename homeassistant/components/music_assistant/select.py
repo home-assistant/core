@@ -107,23 +107,30 @@ async def async_setup_entry(
     entry.runtime_data.platform_handlers.setdefault(Platform.SELECT, add_player)
 
     def add_party_mode(instance_id: str) -> None:
-        """Handle add party mode."""
-        entities: list[MusicAssistantPartyModeSelect] = [
-            MusicAssistantPartyModeSelect(
-                mass,
-                instance_id,
-                config_key=select_key,
-                entity_description=SelectEntityDescription(
-                    key=f"party_mode_{select_key}",
-                    translation_key=f"party_mode_{select_key}"
-                    if select_key != "player"
-                    else "party_mode_party_player",
-                    entity_category=category,
-                ),
-            )
-            for select_key, category in PARTY_MODE_SELECTS.items()
-        ]
-        async_add_entities(entities)
+        async def _add_entities() -> None:
+            entities: list[MusicAssistantPartyModeSelect] = []
+            if party_config := await mass.config.get_provider_config(instance_id):
+                for select_key, category in PARTY_MODE_SELECTS.items():
+                    if select_key not in party_config.values:
+                        continue
+
+                    entities.append(
+                        MusicAssistantPartyModeSelect(
+                            mass,
+                            instance_id,
+                            config_key=select_key,
+                            entity_description=SelectEntityDescription(
+                                key=f"party_mode_{select_key}",
+                                translation_key=f"party_mode_{select_key}"
+                                if select_key != "player"
+                                else "party_mode_party_player",
+                                entity_category=category,
+                            ),
+                        )
+                    )
+            async_add_entities(entities)
+
+        hass.create_task(_add_entities())
 
     entry.runtime_data.party_handlers.setdefault(Platform.SELECT, add_party_mode)
 

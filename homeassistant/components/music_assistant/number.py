@@ -86,28 +86,35 @@ async def async_setup_entry(
     entry.runtime_data.platform_handlers.setdefault(Platform.NUMBER, add_player)
 
     def add_party_mode(instance_id: str) -> None:
-        """Handle add party mode."""
-        entities: list[MusicAssistantPartyModeNumber] = [
-            MusicAssistantPartyModeNumber(
-                mass,
-                instance_id,
-                config_key=number_key,
-                entity_description=NumberEntityDescription(
-                    key=number_key,
-                    translation_key=f"party_mode_{number_key}",
-                    native_min_value=min_val,
-                    native_max_value=max_val,
-                    native_step=1,
-                    entity_category=category,
-                ),
-            )
-            for number_key, (
-                min_val,
-                max_val,
-                category,
-            ) in PARTY_MODE_NUMBERS.items()
-        ]
-        async_add_entities(entities)
+        async def _add_entities() -> None:
+            entities: list[MusicAssistantPartyModeNumber] = []
+            if party_config := await mass.config.get_provider_config(instance_id):
+                for number_key, (
+                    min_val,
+                    max_val,
+                    category,
+                ) in PARTY_MODE_NUMBERS.items():
+                    if number_key not in party_config.values:
+                        continue
+
+                    entities.append(
+                        MusicAssistantPartyModeNumber(
+                            mass,
+                            instance_id,
+                            config_key=number_key,
+                            entity_description=NumberEntityDescription(
+                                key=number_key,
+                                translation_key=f"party_mode_{number_key}",
+                                native_min_value=min_val,
+                                native_max_value=max_val,
+                                native_step=1,
+                                entity_category=category,
+                            ),
+                        )
+                    )
+            async_add_entities(entities)
+
+        hass.create_task(_add_entities())
 
     entry.runtime_data.party_handlers.setdefault(Platform.NUMBER, add_party_mode)
 
