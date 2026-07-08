@@ -62,8 +62,12 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
     (SubscriptionRequired, ConfigEntryState.SETUP_ERROR),
-    (InsufficientCredits, ConfigEntryState.SETUP_RETRY),
     (TeslaFleetError, ConfigEntryState.SETUP_RETRY),
+]
+
+VEHICLE_ERRORS = [
+    *ERRORS,
+    (InsufficientCredits, ConfigEntryState.SETUP_RETRY),
 ]
 
 
@@ -105,7 +109,7 @@ async def test_devices(
         assert device == snapshot(name=f"{device.identifiers}")
 
 
-@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
+@pytest.mark.parametrize(("side_effect", "state"), VEHICLE_ERRORS)
 async def test_vehicle_refresh_error(
     hass: HomeAssistant,
     mock_vehicle_data: AsyncMock,
@@ -143,20 +147,6 @@ async def test_energy_site_refresh_error(
 ) -> None:
     """Test coordinator refresh with an error."""
     mock_site_info.side_effect = side_effect
-    entry = await setup_platform(hass)
-    assert entry.state is state
-
-
-# Test Metadata Coordinator
-@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
-async def test_metadata_refresh_error(
-    hass: HomeAssistant,
-    mock_metadata: AsyncMock,
-    side_effect: TeslaFleetError,
-    state: ConfigEntryState,
-) -> None:
-    """Test coordinator refresh with an error."""
-    mock_metadata.side_effect = side_effect
     entry = await setup_platform(hass)
     assert entry.state is state
 
@@ -913,7 +903,6 @@ async def test_live_status_coordinator_refresh_error(
     "side_effect",
     [
         [InvalidToken],
-        [InsufficientCredits],
         [TeslaFleetError],
         [ENERGY_HISTORY, {"response": {}}],
     ],
@@ -1020,33 +1009,32 @@ async def test_dynamic_device_discovery_no_reload_without_changes(
 async def test_insufficient_credits_backs_off_polling(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    mock_live_status: AsyncMock,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
 ) -> None:
-    """Running out of credits should back off, not hammer the API every poll."""
+    """Running out of command credits should back off, not hammer the API every poll."""
     call_count = 0
 
-    def live_status_side_effect():
+    def vehicle_data_side_effect(**kwargs):
         nonlocal call_count
         call_count += 1
         if call_count == 1:
-            return deepcopy(LIVE_STATUS)
+            return deepcopy(VEHICLE_DATA)
         raise InsufficientCredits
 
-    mock_live_status.side_effect = live_status_side_effect
+    mock_vehicle_data.side_effect = vehicle_data_side_effect
 
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
     assert call_count == 1
 
-    freezer.tick(ENERGY_LIVE_INTERVAL)
+    freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert call_count == 2
     assert entry.state is ConfigEntryState.LOADED
 
-    live_coordinator = entry.runtime_data.energysites[0].live_coordinator
-    assert isinstance(live_coordinator.last_exception, UpdateFailed)
-    assert (
-        live_coordinator.last_exception.retry_after == INSUFFICIENT_CREDITS_RETRY_AFTER
-    )
+    coordinator = entry.runtime_data.vehicles[0].coordinator
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.retry_after == INSUFFICIENT_CREDITS_RETRY_AFTER

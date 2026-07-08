@@ -92,12 +92,6 @@ class TeslemetryMetadataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data = await self.teslemetry.metadata()
         except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
-        except InsufficientCredits as e:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_failed_insufficient_credits",
-                retry_after=INSUFFICIENT_CREDITS_RETRY_AFTER,
-            ) from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -209,12 +203,6 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
             data: dict[str, Any] = (await self.api.live_status())["response"]
         except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
-        except InsufficientCredits as e:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_failed_insufficient_credits",
-                retry_after=INSUFFICIENT_CREDITS_RETRY_AFTER,
-            ) from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -265,12 +253,6 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
             data = (await self.api.site_info())["response"]
         except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
-        except InsufficientCredits as e:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_failed_insufficient_credits",
-                retry_after=INSUFFICIENT_CREDITS_RETRY_AFTER,
-            ) from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -320,12 +302,6 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
         except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
-        except InsufficientCredits as e:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_failed_insufficient_credits",
-                retry_after=INSUFFICIENT_CREDITS_RETRY_AFTER,
-            ) from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
