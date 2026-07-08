@@ -7,6 +7,7 @@ from pylint.lint import PyLinter
 
 METHODS = {
     "async_added_to_hass",
+    "async_will_remove_from_hass",
 }
 
 
