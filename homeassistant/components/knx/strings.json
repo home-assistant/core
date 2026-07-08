@@ -986,6 +986,10 @@
         "title": "Create KNX entity",
         "type_selection": {
           "header": "Select entity type"
+        },
+        "yaml": {
+          "mode_hint": "This is an internal representation of the entity configuration and may change in future Home Assistant versions. YAML mode is intended for debugging, and for sharing or copying configurations — prefer the visual editor for everyday use.",
+          "yaml_error": "There are YAML errors and it cannot be parsed. Switching to the visual editor may cause pending changes to be lost."
         }
       },
       "description": "Add and manage KNX entities",
@@ -1033,6 +1037,10 @@
         "value_template": {
           "description": "Optionally transform the entity state or attribute value before sending it to KNX using a template. The template receives the entity state or attribute value as `value` variable.",
           "label": "Value template"
+        },
+        "yaml": {
+          "mode_hint": "This is an internal representation of the expose configuration and may change in future Home Assistant versions. YAML mode is intended for debugging, and for sharing or copying configurations — prefer the visual editor for everyday use.",
+          "yaml_error": "[%key:component::knx::config_panel::entities::create::yaml::yaml_error%]"
         }
       },
       "description": "Expose Home Assistant entity states to the KNX bus",
