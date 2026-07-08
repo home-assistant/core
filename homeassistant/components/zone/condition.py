@@ -5,10 +5,13 @@ from typing import Any, Unpack, cast, override
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    ATTR_IN_ZONES,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
+    DeviceTrackerEntityStateAttribute,
 )
-from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
+from homeassistant.components.person import (
+    DOMAIN as PERSON_DOMAIN,
+    PersonEntityStateAttribute,
+)
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
@@ -51,6 +54,17 @@ _CONDITION_SCHEMA = vol.Schema({CONF_OPTIONS: _OPTIONS_SCHEMA_DICT})
 _IN_ZONES_DOMAINS = {DEVICE_TRACKER_DOMAIN, PERSON_DOMAIN}
 
 
+def in_zones_attribute(state: State) -> str:
+    """Return the in_zones attribute matching the tracked entity domain.
+
+    Only person and device_tracker entities (``_IN_ZONES_DOMAINS``) report zone
+    membership; each exposes it under its own platform enum.
+    """
+    if state.domain == PERSON_DOMAIN:
+        return PersonEntityStateAttribute.IN_ZONES
+    return DeviceTrackerEntityStateAttribute.IN_ZONES
+
+
 def zone(
     hass: HomeAssistant,
     zone_ent: str | State | None,
@@ -90,7 +104,7 @@ def zone(
     # device_tracker) over recomputing membership from coordinates.
     if (
         entity.domain in _IN_ZONES_DOMAINS
-        and (in_zones := entity.attributes.get(ATTR_IN_ZONES)) is not None
+        and (in_zones := entity.attributes.get(in_zones_attribute(entity))) is not None
     ):
         return zone_ent.entity_id in in_zones
 
@@ -178,8 +192,10 @@ class ZoneCondition(Condition):
 
 
 _DOMAIN_SPECS: dict[str, DomainSpec] = {
-    "person": DomainSpec(value_source=ATTR_IN_ZONES),
-    "device_tracker": DomainSpec(value_source=ATTR_IN_ZONES),
+    PERSON_DOMAIN: DomainSpec(value_source=PersonEntityStateAttribute.IN_ZONES),
+    DEVICE_TRACKER_DOMAIN: DomainSpec(
+        value_source=DeviceTrackerEntityStateAttribute.IN_ZONES
+    ),
 }
 
 _ZONE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
@@ -205,7 +221,7 @@ class _ZoneTargetConditionBase(EntityConditionBase):
 
     def _in_target_zone(self, entity_state: State) -> bool:
         """Check if the entity is currently in the selected zone."""
-        in_zones = entity_state.attributes.get(ATTR_IN_ZONES) or ()
+        in_zones = entity_state.attributes.get(in_zones_attribute(entity_state)) or ()
         return self._zone in in_zones
 
 

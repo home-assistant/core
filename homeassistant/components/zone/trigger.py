@@ -5,15 +5,14 @@ from typing import TYPE_CHECKING, Any, cast, override
 
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import ATTR_IN_ZONES
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
     CONF_ENTITY_ID,
     CONF_EVENT,
     CONF_FOR,
     CONF_OPTIONS,
     CONF_TARGET,
     CONF_ZONE,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -45,7 +44,7 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import condition
-from .condition import _IN_ZONES_DOMAINS
+from .condition import _IN_ZONES_DOMAINS, in_zones_attribute
 from .const import DOMAIN
 
 EVENT_ENTER = "enter"
@@ -65,7 +64,8 @@ def _state_has_zone_info(state: State) -> bool:
     tracker); other entities are matched by their coordinates.
     """
     return location.has_location(state) or (
-        state.domain in _IN_ZONES_DOMAINS and ATTR_IN_ZONES in state.attributes
+        state.domain in _IN_ZONES_DOMAINS
+        and in_zones_attribute(state) in state.attributes
     )
 
 
@@ -168,7 +168,7 @@ class LegacyZoneTrigger(Trigger):
             if (event == EVENT_ENTER and not from_match and to_match) or (
                 event == EVENT_LEAVE and from_match and not to_match
             ):
-                description = f"{entity} {_EVENT_DESCRIPTION[event]} {zone_state.attributes[ATTR_FRIENDLY_NAME]}"
+                description = f"{entity} {_EVENT_DESCRIPTION[event]} {zone_state.attributes[EntityStateAttribute.FRIENDLY_NAME]}"
                 run_action(
                     {
                         "entity_id": entity,
@@ -199,7 +199,7 @@ class ZoneTriggerBase(EntityTriggerBase):
 
     def _in_target_zone(self, state: State) -> bool:
         """Check if the entity is in the selected zone."""
-        in_zones = state.attributes.get(ATTR_IN_ZONES) or ()
+        in_zones = state.attributes.get(in_zones_attribute(state)) or ()
         return self._zone in in_zones
 
 
