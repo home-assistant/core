@@ -6,7 +6,11 @@ from typing import Any, override
 from rf_protocols.codes.novy.cooker_hood import NovyCookerHoodButton
 from rf_protocols.commands.novy import NovyCookerHoodCommand
 
-from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
+from homeassistant.components.fan import (
+    FanEntity,
+    FanEntityFeature,
+    FanEntityStateAttribute,
+)
 from homeassistant.components.radio_frequency import async_send_command
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CODE
@@ -74,7 +78,7 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
         last = await self.async_get_last_state()
         if last is None:
             return
-        last_pct = last.attributes.get(ATTR_PERCENTAGE)
+        last_pct = last.attributes.get(FanEntityStateAttribute.PERCENTAGE)
         if isinstance(last_pct, (int, float)) and last_pct > 0:
             self._level = math.ceil(percentage_to_ranged_value(_SPEED_RANGE, last_pct))
 
