@@ -1045,6 +1045,37 @@ async def test_parse_result_resolves_enums_in_state_attributes(
 
 
 @pytest.mark.parametrize(
+    ("template_string", "expected_value"),
+    [
+        pytest.param(
+            "{{ dict(foo=\"{'a': 1}\") }}", "{'a': 1}", id="python-dict-literal"
+        ),
+        pytest.param("{{ dict(foo='{\"a\": 1}') }}", '{"a": 1}', id="json-object"),
+        pytest.param("{{ dict(foo='[1, 2, 3]') }}", "[1, 2, 3]", id="json-array"),
+        pytest.param("{{ dict(foo='(1, 2)') }}", "(1, 2)", id="tuple-literal"),
+        pytest.param("{{ dict(foo='{1, 2}') }}", "{1, 2}", id="set-literal"),
+        pytest.param("{{ dict(foo='123') }}", "123", id="int-like"),
+        pytest.param("{{ dict(foo='1.5') }}", "1.5", id="float-like"),
+        pytest.param("{{ dict(foo='True') }}", "True", id="bool-like"),
+        pytest.param("{{ dict(foo='null') }}", "null", id="json-null"),
+    ],
+)
+async def test_parse_result_dict_keeps_stringified_value(
+    hass: HomeAssistant, template_string: str, expected_value: str
+) -> None:
+    """dict() keeps a value that looks like a literal as a string, not re-parsed.
+
+    Common workaround (JSON payload templates, MQTT topics) to stop the template
+    parser from resolving a string value. The result must be a dict whose value
+    is the untouched string, even when that string is itself a valid literal.
+    """
+    result = render(hass, template_string)
+    assert isinstance(result, dict)
+    assert result == {"foo": expected_value}
+    assert isinstance(result["foo"], str)
+
+
+@pytest.mark.parametrize(
     "template_string",
     [
         "{{ no_such_variable }}",
