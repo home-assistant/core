@@ -128,6 +128,9 @@ class MelCloudHomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                {CONF_EMAIL: reauth_entry.data[CONF_EMAIL]},
+            ),
             errors=errors,
         )
