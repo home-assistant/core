@@ -183,7 +183,6 @@ class MusicAssistantPartyModeSwitch(SwitchEntity):
         await self.async_on_update()
         self.async_write_ha_state()
 
-    @catch_musicassistant_error
     async def async_on_update(self) -> None:
         """Update switch state."""
         try:
